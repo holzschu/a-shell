@@ -1,0 +1,6 @@
+framework module curl_ios {
+  umbrella header "curl_ios.h"
+
+  export *
+  module * { export * }
+}

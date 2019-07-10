@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "7C0F6D26-E0A7-4B2A-905A-DB537E0212B5"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "8D13EF09-2E1A-4846-9A5D-24EB1F6A0CE5"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "ios_isatty"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "8D13EF09-2E1A-4846-9A5D-24EB1F6A0CE5 - a2dfa769d4f9069"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ios_isatty"
+                  moduleName = "ios_system"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/ios_system/ios_system.m"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "896"
+                  endingLineNumber = "896"
+                  offsetFromSymbolStart = "11">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "0A99470B-16F0-4620-A409-9BE96CA01425"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "webViewPrint"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "0A99470B-16F0-4620-A409-9BE96CA01425 - f7a586d9794f4bc9"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "webViewPrint"
+                  moduleName = "ios_system"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/ios_system/ios_system.m"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "79"
+                  endingLineNumber = "79"
+                  offsetFromSymbolStart = "32">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>

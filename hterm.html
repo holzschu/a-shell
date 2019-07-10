@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>hterm test page</title>
+		<meta charset='utf-8'/>
+		<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1, user-scalable=no">
+		<!-- 
+	  <script src='../dist/js/hterm_deps.js'></script>
+	  <script src='../dist/js/hterm_resources.js'></script>
+	  --> 
+	  <!-- Dist version.-->
+	  <script src='hterm_all.js'></script>
+	  <!-- Live version.
+	   <script src='../js/hterm.js'></script>
+	   <script src='../js/hterm_accessibility_reader.js'></script>
+	   <script src='../js/hterm_contextmenu.js'></script>
+	   <script src='../js/hterm_frame.js'></script>
+	   <script src='../js/hterm_keyboard.js'></script>
+	   <script src='../js/hterm_keyboard_bindings.js'></script>
+	   <script src='../js/hterm_keyboard_keymap.js'></script>
+	   <script src='../js/hterm_keyboard_keypattern.js'></script>
+	   <script src='../js/hterm_options.js'></script>
+	   <script src='../js/hterm_parser.js'></script>
+	   <script src='../js/hterm_parser_identifiers.js'></script>
+	   <script src='../js/hterm_preference_manager.js'></script>
+	   <script src='../js/hterm_pubsub.js'></script>
+	   <script src='../js/hterm_screen.js'></script>
+	   <script src='../js/hterm_scrollport.js'></script>
+	   <script src='../js/hterm_terminal.js'></script>
+	   <script src='../js/hterm_terminal_io.js'></script>
+	   <script src='../js/hterm_text_attributes.js'></script>
+	   <script src='../js/hterm_vt.js'></script>
+	   <script src='../js/hterm_vt_character_map.js'></script>
+	   -->
+	   <style>
+html {
+	height: 100%;
+}
+body {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	margin: 0px;
+	padding: 0px;
+}
+#terminal {
+	display: block;
+	position: relative;
+	height: 100%;
+	width: 100%;
+	margin: 0px;
+	padding: 0px;
+}
+	   </style>
+	</head>
+
+	<body>
+		<div id='terminal' contenteditable='true'></div>
+		<script>
+			function initContent(io) {
+				const ver = lib.resource.getData('libdot/changelog/version');
+				const date = lib.resource.getData('libdot/changelog/date');
+				const pkg = `libdot ${ver} (${date})`;
+			};
+
+            function setupHterm() {
+				const term = new hterm.Terminal();
+				// TODO: adapt to dark / light mode and user prefs.
+				term.prefs_.set('foreground-color', '#00ff00');
+				term.prefs_.set('cursor-color', '#00ff00');
+				// Default monospaced fonts installed: Menlo and Courier. 
+				term.prefs_.set('font-family', 'Menlo');
+				term.prefs_.set('font-size', 18);
+				term.prefs_.set('cursor-blink', true); 
+				term.setInsertMode(true);
+				term.setReverseWraparound(true);
+				term.setWraparound(true);
+				// TODO: make prompt a global variable 
+				term.onTerminalReady = function() {
+					const io = this.io.push();
+					io.onVTKeystroke = (string) => {
+						/* if (window.commandRunning != '') {
+						// interactive commands: send everything to the command
+						// forward all keyboard input to the command:
+		             		io.print(string);
+							} else */ { 
+								if (io.currentCommand === '') { window.promptEnd = term.screen_.cursorPosition.column }
+								var cursorPosition = term.screen_.cursorPosition.column - window.promptEnd;  // remove prompt length
+								switch (string) {
+									case '\r':
+										io.println('');
+										if (window.commandRunning != '') {
+											// The command takes care of the prompt. Just send the input data:
+											window.webkit.messageHandlers.aShell.postMessage('input:' + io.currentCommand + '\n');
+											// remove temporarily stored command -- if any
+											if (window.maxCommandInsideCommandIndex < window.commandInsideCommandArray.length) {
+												window.commandInsideCommandArray.pop();
+											}
+											// only store non-empty commands:
+											// store commands sent:
+											if (io.currentCommand.length > 0) {
+												if (io.currentCommand != window.commandInsideCommandArray[window.maxCommandInsideCommandIndex - 1]) {
+													// only add command to history if it is different from the last one:
+													window.maxCommandInsideCommandIndex = window.commandInsideCommandArray.push(io.currentCommand); 
+												}
+											} 
+											while (window.maxCommandInsideCommandIndex >= 100) {
+												// We have stored more than 100 commands
+												window.commandInsideCommandArray.shift(); // remove first element
+												window.maxCommandInsideCommandIndex = window.commandInsideCommandArray.length;
+											} 
+											window.commandInsideCommandIndex = window.maxCommandInsideCommandIndex; 
+										} else {
+											if (io.currentCommand.length > 0) {
+												// Now is the time where we send the command to iOS: 
+												window.webkit.messageHandlers.aShell.postMessage('shell:' + io.currentCommand);
+												// and reinitialize:
+												window.commandRunning = io.currentCommand;
+												// remove temporarily stored command -- if any
+												if (window.maxCommandIndex < window.commandArray.length) {
+													window.commandArray.pop();
+												}
+												if (io.currentCommand != window.commandArray[window.maxCommandIndex - 1]) {
+													// only add command to history if it is different from the last one:
+													window.maxCommandIndex = window.commandArray.push(window.commandRunning); 
+													while (window.maxCommandIndex >= 100) {
+														// We have stored more than 100 commands
+														window.commandArray.shift(); // remove first element
+														window.maxCommandIndex = window.commandArray.length;
+													} 
+													window.commandIndex = window.maxCommandIndex; 
+												} 
+												// clear history inside command:
+												window.commandInsideCommandArray = [];
+												window.maxCommandInsideCommandIndex = 0;
+											} else {
+												io.print(window.prompt); 
+											}
+										}
+										io.currentCommand = '';
+										break;
+									case String.fromCharCode(127): // delete from iOS keyboard
+										if (cursorPosition > 0) { 
+											// io.print('\x1b[1D'); // move cursor back one char (both work)
+											io.print('\b'); // move cursor back one char
+											io.print('\x1b[0K'); // delete entire line
+											// print remainder of command line
+											io.print(io.currentCommand.slice(cursorPosition, io.currentCommand.length))
+											// move cursor back to where it was (don't use term.screen_.cursorPosition):
+											var wcwidth = io.currentCommand.slice(cursorPosition, io.currentCommand.length).length;
+											for (var i = 0; i < wcwidth; i++) {
+												io.print('\b'); 
+											}
+											// remove character from command at current position:
+											io.currentCommand = io.currentCommand.slice(0, cursorPosition - 1) + 
+												io.currentCommand.slice(cursorPosition, io.currentCommand.length); 
+										}
+										break;
+									case String.fromCharCode(27) + "[A":  // Up arrow
+										if (window.commandRunning != '') {
+											if (window.commandInsideCommandIndex > 0) {
+												if (window.commandInsideCommandIndex === window.maxCommandInsideCommandIndex) {
+													// Store current command: 
+													window.commandInsideCommandArray[window.commandInsideCommandIndex] = io.currentCommand;
+												}
+												// erase current line:
+												for (var i = 0; i < cursorPosition; i++) {
+													io.print('\b'); 
+												}
+												io.print('\x1b[0K'); // delete entire line
+												window.commandInsideCommandIndex -= 1;
+												io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
+												io.print(io.currentCommand);
+											}
+										} else {
+											if (window.commandIndex > 0) {
+												if (window.commandIndex === window.maxCommandIndex) {
+													// Store current command: 
+													window.commandArray[window.commandIndex] = io.currentCommand;
+												}
+												// erase current line:
+												for (var i = 0; i < cursorPosition; i++) {
+													io.print('\b'); 
+												}
+												io.print('\x1b[0K'); // delete entire line
+												window.commandIndex -= 1;
+
+												io.currentCommand = window.commandArray[window.commandIndex]; 
+												io.print(io.currentCommand);
+											} 
+										}
+										break;
+									case String.fromCharCode(27) + "[B":  // Down arrow
+										if (window.commandRunning != '') {
+											if (window.commandInsideCommandIndex < window.maxCommandInsideCommandIndex) {
+												// erase current line:
+												for (var i = 0; i < cursorPosition; i++) {
+													io.print('\b'); 
+												}
+												io.print('\x1b[0K'); // delete entire line
+												window.commandInsideCommandIndex += 1;
+												io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
+												io.print(io.currentCommand);
+											}
+										} else {
+											if (window.commandIndex < window.maxCommandIndex) {
+												// erase current line:
+												for (var i = 0; i < cursorPosition; i++) {
+													io.print('\b'); 
+												}
+												io.print('\x1b[0K'); // delete entire line
+												window.commandIndex += 1;
+												io.currentCommand = window.commandArray[window.commandIndex]; 
+												io.print(io.currentCommand);
+											}
+										}
+										break;
+									case String.fromCharCode(27) + "[D":  // Left arrow
+										if (cursorPosition > 0) { // prompt.length
+											io.print('\b'); // move cursor back one char
+										}
+										break;
+									case String.fromCharCode(27) + "[C":  // Right arrow
+										if (cursorPosition < io.currentCommand.length) {
+											io.print('\x1b[1C'); // move cursor forward one char
+										}
+										break; 
+									default:
+										// For debugging:
+										// var charcode = string.charCodeAt(0);
+										// window.webkit.messageHandlers.aShell.postMessage('' + charcode + " = " + string);
+										// insert character at cursor position
+										io.currentCommand = io.currentCommand.slice(0, cursorPosition) + string + 
+											io.currentCommand.slice(cursorPosition, io.currentCommand.length);
+										// window.webkit.messageHandlers.aShell.postMessage(io.currentCommand); 
+										io.print(string);
+										break;
+								}
+							}
+					};
+					io.sendString = io.print;
+					initContent(io);
+					io.print("> "); // first prompt
+					this.setCursorVisible(true);
+
+					this.keyboard.characterEncoding = 'raw';
+					// this.keyboard.bindings.addBinding('F11', 'PASS');
+					// this.keyboard.bindings.addBinding('Ctrl-R', 'PASS');
+				};
+				term.decorate(document.querySelector('#terminal'));
+				term.installKeyboard();
+				// Useful for console debugging.
+				window.term_ = term;
+				window.commandRunning = '';
+				window.commandArray = new Array();
+				window.commandInsideCommandArray = new Array();
+				window.commandIndex = 0;
+				window.maxCommandIndex = 0;
+				window.commandInsideCommandIndex = 0;
+				window.maxCommandInsideCommandIndex = 0;
+				window.prompt = "> "; // prompt for commands, configurable
+				window.promptEnd = 2; // prompt for commands, configurable
+			}
+
+            window.onload = function() {
+				lib.init(setupHterm);
+			};
+		</script>
+
+	</body>
+</html>

@@ -1,0 +1,6 @@
+framework module network_ios {
+  umbrella header "network_ios.h"
+
+  export *
+  module * { export * }
+}
