@@ -12,6 +12,7 @@
 		2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC422D2026E003985D6 /* UIDevice+Name.swift */; };
 		2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
 		224D10BB22CB247A00A234EE /* hterm.html in Resources */ = {isa = PBXBuildFile; fileRef = 224D10BA22CB247900A234EE /* hterm.html */; };
+		2291286722D9DAC40004A5EA /* UIColor+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291286622D9DAC40004A5EA /* UIColor+hexString.swift */; };
 		22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
 		22984EF222C93DBC00069497 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EF122C93DBC00069497 /* ContentView.swift */; };
@@ -60,6 +61,7 @@
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC822D24703003985D6 /* WkWebViewExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WkWebViewExtension.swift; sourceTree = SOURCE_ROOT; };
 		224D10BA22CB247900A234EE /* hterm.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = hterm.html; sourceTree = "<group>"; };
+		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+hexString.swift"; sourceTree = "<group>"; };
 		22984EEA22C93DBC00069497 /* a-Shell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "a-Shell.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		22984EED22C93DBC00069497 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		22984EEF22C93DBC00069497 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 		2208ACBB22CCE529003985D6 /* Util */ = {
 			isa = PBXGroup;
 			children = (
+				2291286622D9DAC40004A5EA /* UIColor+hexString.swift */,
 				2208ACC422D2026E003985D6 /* UIDevice+Name.swift */,
 				2208ACBE22CCE57E003985D6 /* String+C.swift */,
 			);
@@ -251,6 +254,7 @@
 			files = (
 				22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */,
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
+				2291286722D9DAC40004A5EA /* UIColor+hexString.swift in Sources */,
 				2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */,
 				2208ACBF22CCE57E003985D6 /* String+C.swift in Sources */,
 				22984EF222C93DBC00069497 /* ContentView.swift in Sources */,
