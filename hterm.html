@@ -10,28 +10,6 @@
 	  --> 
 	  <!-- Dist version.-->
 	  <script src='hterm_all.js'></script>
-	  <!-- Live version.
-	   <script src='../js/hterm.js'></script>
-	   <script src='../js/hterm_accessibility_reader.js'></script>
-	   <script src='../js/hterm_contextmenu.js'></script>
-	   <script src='../js/hterm_frame.js'></script>
-	   <script src='../js/hterm_keyboard.js'></script>
-	   <script src='../js/hterm_keyboard_bindings.js'></script>
-	   <script src='../js/hterm_keyboard_keymap.js'></script>
-	   <script src='../js/hterm_keyboard_keypattern.js'></script>
-	   <script src='../js/hterm_options.js'></script>
-	   <script src='../js/hterm_parser.js'></script>
-	   <script src='../js/hterm_parser_identifiers.js'></script>
-	   <script src='../js/hterm_preference_manager.js'></script>
-	   <script src='../js/hterm_pubsub.js'></script>
-	   <script src='../js/hterm_screen.js'></script>
-	   <script src='../js/hterm_scrollport.js'></script>
-	   <script src='../js/hterm_terminal.js'></script>
-	   <script src='../js/hterm_terminal_io.js'></script>
-	   <script src='../js/hterm_text_attributes.js'></script>
-	   <script src='../js/hterm_vt.js'></script>
-	   <script src='../js/hterm_vt_character_map.js'></script>
-	   -->
 	   <style>
 html {
 	height: 100%;
@@ -66,9 +44,6 @@ body {
 
             function setupHterm() {
 				const term = new hterm.Terminal();
-				// TODO: adapt to dark / light mode and user prefs.
-				term.prefs_.set('foreground-color', '#00ff00');
-				term.prefs_.set('cursor-color', '#00ff00');
 				// Default monospaced fonts installed: Menlo and Courier. 
 				term.prefs_.set('font-family', 'Menlo');
 				term.prefs_.set('font-size', 18);
@@ -226,6 +201,16 @@ body {
 											io.print('\x1b[1C'); // move cursor forward one char
 										}
 										break; 
+									case String.fromCharCode(9):  // Tab, so autocomplete
+										if (window.commandRunning == '') {
+											window.webkit.messageHandlers.aShell.postMessage('Received tab event');
+										} else {
+											io.currentCommand = io.currentCommand.slice(0, cursorPosition) + "    " + 
+												io.currentCommand.slice(cursorPosition, io.currentCommand.length);
+											// window.webkit.messageHandlers.aShell.postMessage(io.currentCommand); 
+											io.print("    ");
+										}
+										break;
 									default:
 										// For debugging:
 										// var charcode = string.charCodeAt(0);
@@ -244,7 +229,7 @@ body {
 					io.print("> "); // first prompt
 					this.setCursorVisible(true);
 
-					this.keyboard.characterEncoding = 'raw';
+					// this.keyboard.characterEncoding = 'raw';
 					// this.keyboard.bindings.addBinding('F11', 'PASS');
 					// this.keyboard.bindings.addBinding('Ctrl-R', 'PASS');
 				};

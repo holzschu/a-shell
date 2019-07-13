@@ -128,7 +128,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     var tabButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
         let tabButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right.to.line.alt")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(tabAction(_:)))
-        tabButton.tintColor = .black
         return tabButton
     }
 
@@ -136,34 +135,31 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     var upButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
         let upButton = UIBarButtonItem(image: UIImage(systemName: "arrow.up")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(upAction(_:)))
-        upButton.tintColor = .black
         return upButton
     }
     
     var downButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
         let downButton = UIBarButtonItem(image: UIImage(systemName: "arrow.down")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(downAction(_:)))
-        downButton.tintColor = .black
         return downButton
     }
     
     var leftButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
         let leftButton = UIBarButtonItem(image: UIImage(systemName: "arrow.left")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(leftAction(_:)))
-        leftButton.tintColor = .black
         return leftButton
     }
 
     var rightButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
         let rightButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(rightAction(_:)))
-        rightButton.tintColor = .black
         return rightButton
     }
 
     public lazy var editorToolbar: UIToolbar = {
         var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
         toolbar.items = [tabButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil), upButton, downButton, leftButton, rightButton]
+        toolbar.tintColor = .label
         return toolbar
     }()
     
@@ -344,6 +340,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
         NSLog("sceneDidBecomeActive: \(scene).")
+        // Window.term_ does not always exist when sceneDidBecomeActive is called. We *also* set window.foregroundColor, and then use that when we create term.
+        // If we set window.term_.prefs_, we need to reload it. Odd.
+        webView?.backgroundColor = UIColor.systemBackground
+        webView?.tintColor = UIColor.placeholderText
+        let traitCollection = webView!.traitCollection
+        var command = "window.term_.setForegroundColor('" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.setBackgroundColor('" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'); "
+        self.webView!.evaluateJavaScript(command) { (result, error) in
+            if error != nil {
+                NSLog("Error in setting foreground color, line = \(command)")
+                print(error)
+            }
+            if (result != nil) {
+                print(result)
+            }
+        }
+        //
+        print("text Color: \(UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString())")
+        print("back Color: \(UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString())")
     }
 
     func sceneWillResignActive(_ scene: UIScene) {

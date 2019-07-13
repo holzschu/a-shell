@@ -35,7 +35,7 @@ final class KeyboardResponder: BindableObject {
         if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
             currentHeight = keyboardSize.height
             if (!UIDevice.current.model.hasPrefix("iPad")) {
-                currentHeight -= toolbarHeight
+                // currentHeight -= toolbarHeight
             }
             // NSLog("keyboard size = \(keyboardSize)")
         }
