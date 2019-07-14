@@ -46,7 +46,7 @@ body {
 				const term = new hterm.Terminal();
 				// Default monospaced fonts installed: Menlo and Courier. 
 				term.prefs_.set('font-family', 'Menlo');
-				term.prefs_.set('font-size', 18);
+				term.prefs_.set('font-size', 15);
 				term.prefs_.set('cursor-blink', true); 
 				term.setInsertMode(true);
 				term.setReverseWraparound(true);
@@ -228,12 +228,14 @@ body {
 					initContent(io);
 					io.print("> "); // first prompt
 					this.setCursorVisible(true);
-
+					this.setForegroundColor(window.foregroundColor);
+					this.setBackgroundColor(window.backgroundColor);
 					// this.keyboard.characterEncoding = 'raw';
 					// this.keyboard.bindings.addBinding('F11', 'PASS');
 					// this.keyboard.bindings.addBinding('Ctrl-R', 'PASS');
 				};
 				term.decorate(document.querySelector('#terminal'));
+				
 				term.installKeyboard();
 				// Useful for console debugging.
 				window.term_ = term;

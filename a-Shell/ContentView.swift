@@ -68,6 +68,17 @@ struct Webview : UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {
         if (uiView.url != nil) { return } // Already loaded the page
         let htermFilePath = Bundle.main.path(forResource: "hterm", ofType: "html")
+        let traitCollection = uiView.traitCollection
+        var command = "window.foregroundColor = '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'; window.backgroundColor = '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'; "
+        uiView.evaluateJavaScript(command) { (result, error) in
+            if error != nil {
+                NSLog("Error in updateUIView, line = \(command)")
+                print(error)
+            }
+            if (result != nil) {
+                print(result)
+            }
+        }
         uiView.load(URLRequest(url: URL(fileURLWithPath: htermFilePath!)))
     }
 }

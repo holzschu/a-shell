@@ -341,14 +341,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
         NSLog("sceneDidBecomeActive: \(scene).")
         // Window.term_ does not always exist when sceneDidBecomeActive is called. We *also* set window.foregroundColor, and then use that when we create term.
-        // If we set window.term_.prefs_, we need to reload it. Odd.
-        webView?.backgroundColor = UIColor.systemBackground
-        webView?.tintColor = UIColor.placeholderText
         let traitCollection = webView!.traitCollection
         var command = "window.term_.setForegroundColor('" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.setBackgroundColor('" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'); "
         self.webView!.evaluateJavaScript(command) { (result, error) in
             if error != nil {
-                NSLog("Error in setting foreground color, line = \(command)")
+                NSLog("Error in sceneDidBecomeActive, line = \(command)")
+                print(error)
+            }
+            if (result != nil) {
+                print(result)
+            }
+        }
+        command = "window.term_.prefs_.set('foreground-color', '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.prefs_.set('background-color', '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'); "
+        self.webView!.evaluateJavaScript(command) { (result, error) in
+            if error != nil {
+                NSLog("Error in sceneDidBecomeActive, line = \(command)")
                 print(error)
             }
             if (result != nil) {

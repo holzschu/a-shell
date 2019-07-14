@@ -11859,10 +11859,8 @@ hterm.Terminal = function(opt_profileId) {
 
   // These prefs are cached so we don't have to read from local storage with
   // each output and keystroke.  They are initialized by the preference manager.
-  // this.backgroundColor_ = null;
-  this.backgroundColor_ = window.backgroundColor;
-  // this.foregroundColor_ = null;
-  this.foregroundColor_ = window.foregroundColor; 
+  this.backgroundColor_ = null;
+  this.foregroundColor_ = null;
   this.scrollOnOutput_ = null;
   this.scrollOnKeystroke_ = null;
   this.scrollWheelArrowKeys_ = null;
