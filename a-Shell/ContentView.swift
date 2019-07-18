@@ -59,6 +59,7 @@ struct Webview : UIViewRepresentable {
         config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
         config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
         webView = WKWebView(frame: .zero, configuration: config)
+        webView.keyboardDisplayRequiresUserAction = false
     }
     
     func makeUIView(context: Context) -> WKWebView  {

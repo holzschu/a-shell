@@ -30,6 +30,17 @@ body {
 	margin: 0px;
 	padding: 0px;
 }
+#autocomplete select {
+  -webkit-appearance: none;
+  outline: none;
+  border: none;
+  padding: 0px;
+  margin: 0px;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 150%;
+  width: auto;
+}
 	   </style>
 	</head>
 
@@ -42,6 +53,202 @@ body {
 				const pkg = `libdot ${ver} (${date})`;
 			};
 
+            function luminance(color) {
+				var colorArray = lib.colors.crackRGB(color);
+				return colorArray[0] * 0.2126 + colorArray[1] * 0.7152 + colorArray[2] *  0.0722;
+			}
+
+            function isVisible(menu) {
+				return menu.style.display != "none";
+			}
+
+            var lastDirectory = '';
+            var fileList = [];
+            var currentCommandCursorPosition;
+
+            function disableAutocompleteMenu(menu) {
+				menu.style.display = "none";
+				window.term_.focus();
+			}
+
+            // prints a string and move the rest of the command around, even if it is over multiple lines
+            function printString(string) {
+				var currentCommand = window.term_.io.currentCommand;
+				var lineCursor = Math.floor((currentCommandCursorPosition + window.promptEnd)/ window.term_.screenSize.width);
+				var lineEndCommand = Math.floor((currentCommand.length + window.promptEnd + string.length)/ window.term_.screenSize.width);
+				if ((currentCommand.length < window.term_.screenSize.width) || (lineCursor ==  lineEndCommand)) {
+					// simple version, we are on the last line (or there is only one line):
+					window.term_.io.print(string); 
+				} else {
+					// More complicated version, we are several lines above. 
+					// clear entire buffer, then reprint
+					window.term_.io.print('\x1b[0J'); // delete display after cursor
+					window.term_.io.print(string); 
+					// print remainder of command line
+					window.term_.io.print(currentCommand.slice(currentCommandCursorPosition, currentCommand.length))
+					// move cursor back to where it was (don't use term.screen_.cursorPosition):
+					var wcwidth = currentCommand.slice(currentCommandCursorPosition, currentCommand.length).length;
+					for (var i = 0; i < wcwidth; i++) {
+						window.term_.io.print('\b'); 
+					}
+				}
+			}
+
+            function pickCurrentValue() {
+				var menu = document.getElementById("autocomplete"); 
+				var selected = menu.getElementsByTagName("select")[0].value 
+				var currentCommand = window.term_.io.currentCommand;
+				var cursorPosition = window.term_.screen_.cursorPosition.column - window.promptEnd;
+				printString(selected);
+				window.term_.io.currentCommand = currentCommand.slice(0, currentCommandCursorPosition) + selected + 
+					currentCommand.slice(currentCommandCursorPosition, currentCommand.length);
+				// is not enough to push the rest of the command if it's longer than a line
+				currentCommandCursorPosition += selected.length;
+				disableAutocompleteMenu(menu);
+			}
+            
+            // called once the list of files has been updated, asynchronously. 
+            function updateFileMenu() {
+				var menu = document.getElementById("autocomplete"); 
+				var cursorPosition = window.term_.screen_.cursorPosition.column - window.promptEnd;
+				updateAutocompleteMenu(menu, window.term_.io, cursorPosition);
+			}
+
+            function updateAutocompleteMenu(popupMenu, io, cursorPosition) {
+				var select = "<select tabindex='-1'>";
+				var numFound = 0; 
+				var lastFound = '';
+				// string to use for research: from beginning of line to cursor position
+				var rootForMatch = io.currentCommand.slice(0, currentCommandCursorPosition);
+				var predicate = rootForMatch;
+				var n = predicate.lastIndexOf("|");
+				if (n < predicate.length) {
+					var predicate = predicate.substr(n + 1);
+				}
+				n = predicate.lastIndexOf(" ");
+				while ((n > 0) && (predicate[n-1] == "\\")) { 
+					// escaped space
+					n = predicate.lastIndexOf(" ", n - 1);
+				}
+				if (n < predicate.length) {
+					var predicate = predicate.substr(n + 1);
+				}
+				n = predicate.lastIndexOf(">");
+				if (n < predicate.length) {
+					var predicate = predicate.substr(n + 1);
+				}
+				if (predicate[0] == '-') return; // arguments to function, no autocomplete
+				// we have the string to use for matching (predicate). Is it a file or a command?
+				var beforePredicate = rootForMatch.substr(0, rootForMatch.lastIndexOf(predicate));
+				// remove all trailing spaces:
+				while ((beforePredicate.length > 0) && (beforePredicate.slice(-1) == " ")) {
+					beforePredicate = beforePredicate.slice(0, beforePredicate.length - 1)
+				}
+				var matchToCommands = false;
+				if (beforePredicate.length == 0) {
+					matchToCommands = true; // beginning of line, must be a command
+				} else if (beforePredicate.slice(-1) == "|") {
+					matchToCommands = true; // right after a pipe, must be a command
+				}
+				// otherwise, it's probably a file
+				if (matchToCommands) { 
+					for (var i = 0, len = commandList.length; i < len; i++) {
+						if (commandList[i].startsWith(predicate)) {
+							var value = commandList[i].replace(predicate, "") + ' '; // add a space at the end if it's a command; 
+							select += "<option value='" + value + "'>" + value + "</option>"
+							lastFound = value; 
+							numFound += 1;
+						}
+					}
+				} else {
+					if ((predicate[0] == "/") && (predicate.lastIndexOf("/") == 0)) {
+						// special case for root
+						directory = "/";
+						file = predicate.substr(1);
+					} else {
+						var lastSlash = predicate.lastIndexOf("/");
+						if ((predicate.length > 0) && (lastSlash < predicate.length)) {
+							var directory = predicate.substr(0, lastSlash); // include "/" in directory
+							var file = predicate.substr(lastSlash + 1); // don't include "/" in file name
+						} else {
+							var directory = ".";
+							var file = predicate;
+						}
+					}
+					// Need to get list of files from directory. 
+					if (directory == lastDirectory) {
+						for (var i = 0, len = fileList.length; i < len; i++) {
+							if (fileList[i].startsWith(file)) {
+								var value = fileList[i].replace(file, "")
+								select += "<option value='" + value + "'>" + value + "</option>"
+								lastFound = value; 
+								numFound += 1;
+							}
+						}
+					} else {
+						// asynchronous communication. Will have to execute the rest of the command too.
+						window.webkit.messageHandlers.aShell.postMessage('listDirectory:' + directory);
+						// numFound = 2; // ensure the menu is made visible even if the list is empty
+					}
+				}
+
+				// substring of io.currentCommand, ending at currentCommandCursorPosition, going back until first space or "/"
+				// list to use for autocomplete = commandList if at beginning of line (modulo spaces) or after | (module spaces)
+				// list of files inside directory otherwise. e.g. "../Library/Preferences/" (going back until next space)
+				// TODO: no autocomplete on file for commands that don't operate on files (difficult)
+				select +=  "</select>";
+				if (numFound > 1) {
+					popupMenu.innerHTML = select
+					// If list is not empty:
+					var select = popupMenu.getElementsByTagName("select")[0];
+					// We display the menu on top of the current line, but in a different color:
+					select.style.background = window.term_.getBackgroundColor();
+					if (luminance(window.term_.getBackgroundColor()) < luminance(window.term_.getForegroundColor())) {
+						// We are in dark mode. Use yellow font for higher contrast
+						select.style.color = "rgb(255, 255, 0)"
+					} else {
+						// We are in light mode. Use green font for higher contrast
+						select.style.color = "rgb(0, 255, 0)"
+					}
+					select.style.fontFamily = window.term_.getFontFamily();
+					select.style.fontSize = window.term_.getFontSize() + 'px';
+					popupMenu.onclick = function(e) {
+						// give back focus to the terminal, to avoid the popup menu.
+						// WKWebView popup menus have issues with hterm.js for now.
+						// It will be worth revisiting this issue after changes to hterm.
+						window.term_.focus();
+						e.preventDefault();
+					}					
+					popupMenu.onkeydown = function(e) {
+						// up and down arrows move between choices
+						if (e.keyCode == 40) {
+							// down arrow
+							window.term_.onVTKeystroke(String.fromCharCode(27) + "[B")
+							e.preventDefault();
+						} else if (e.keyCode == 38) {
+							// up arrow
+							window.term_.onVTKeystroke(String.fromCharCode(27) + "[A")
+							e.preventDefault();
+						} else {
+							// everything else is forwarded to the terminal:
+							// tab, enter = select current value
+							// escape = leave menu 
+							var s = String.fromCharCode(e.keyCode);
+							window.term_.onVTKeystroke(s.toLowerCase());
+						}
+					};
+					popupMenu.style.display = "inline";
+				} else {
+					if (numFound == 1) {
+						printString(lastFound);
+						io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + lastFound + 
+							io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
+						currentCommandCursorPosition += lastFound.length;
+					}
+					disableAutocompleteMenu(popupMenu); 
+				}
+			}
+
             function setupHterm() {
 				const term = new hterm.Terminal();
 				// Default monospaced fonts installed: Menlo and Courier. 
@@ -51,7 +258,13 @@ body {
 				term.setInsertMode(true);
 				term.setReverseWraparound(true);
 				term.setWraparound(true);
-				// TODO: make prompt a global variable 
+				// Autocomplete popup menu
+				complete = document.createElement("div")
+				complete.setAttribute("id", "autocomplete");
+				document.body.appendChild(complete); 
+				complete.style.position = 'absolute';
+				complete.style.display = "none"; // hidden by default
+				// 
 				term.onTerminalReady = function() {
 					const io = this.io.push();
 					io.onVTKeystroke = (string) => {
@@ -60,10 +273,31 @@ body {
 						// forward all keyboard input to the command:
 		             		io.print(string);
 							} else */ { 
-								if (io.currentCommand === '') { window.promptEnd = term.screen_.cursorPosition.column }
+								if (io.currentCommand === '') { 
+									// new line, reset things:
+									// where was the cursor when we started typing this command? 
+									window.promptEnd = term.screen_.cursorPosition.column;
+									// required because some commands can take several lines, especially on a phone.
+									window.promptLine = term.screen_.cursorPosition.row;
+									window.promptScroll = term.scrollPort_.getTopRowIndex();
+									currentCommandCursorPosition = 0; 
+								}
 								var cursorPosition = term.screen_.cursorPosition.column - window.promptEnd;  // remove prompt length
 								switch (string) {
 									case '\r':
+										if (isVisible(complete)) {
+											// Autocomplete menu being displayed + press return: select what's visible and remove
+											pickCurrentValue();
+											break;
+										}
+										// TODO: move autocomplete menu if it is over end of line
+										// Before executing command, move to end of line if not already there:
+										// Compute how many lines should we move downward:
+										var lineCursor = Math.floor((currentCommandCursorPosition + window.promptEnd)/ term.screenSize.width);
+										var lineEndCommand = Math.floor((io.currentCommand.length + window.promptEnd)/ term.screenSize.width);
+										for (var i = 0; i < lineEndCommand - lineCursor; i++) {
+											io.println('');
+										}
 										io.println('');
 										if (window.commandRunning != '') {
 											// The command takes care of the prompt. Just send the input data:
@@ -116,21 +350,37 @@ body {
 										io.currentCommand = '';
 										break;
 									case String.fromCharCode(127): // delete from iOS keyboard
-										if (cursorPosition > 0) { 
-											// io.print('\x1b[1D'); // move cursor back one char (both work)
-											io.print('\b'); // move cursor back one char
-											io.print('\x1b[0K'); // delete entire line
-											// print remainder of command line
-											io.print(io.currentCommand.slice(cursorPosition, io.currentCommand.length))
-											// move cursor back to where it was (don't use term.screen_.cursorPosition):
-											var wcwidth = io.currentCommand.slice(cursorPosition, io.currentCommand.length).length;
-											for (var i = 0; i < wcwidth; i++) {
-												io.print('\b'); 
+										if (currentCommandCursorPosition > 0) { 
+											var lineCursor = Math.floor((currentCommandCursorPosition + window.promptEnd)/ term.screenSize.width);
+											var lineEndCommand = Math.floor((io.currentCommand.length + window.promptEnd)/ term.screenSize.width);
+											if ((io.currentCommand.length < term.screenSize.width) || (lineCursor ==  lineEndCommand)) {
+												// simple version, we are on the last line (or there is only one line):
+												io.print('\b'); // move cursor back one char
+												io.print('\x1b[1P'); // delete 1 character before cursor
+											} else {
+												// More complicated version, we are several lines above. 
+												// clear entire buffer, then reprint
+												io.print('\b'); // move cursor back one char
+												io.print('\x1b[0J'); // delete display after cursor
+												// print remainder of command line
+												io.print(io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length))
+												// move cursor back to where it was (don't use term.screen_.cursorPosition):
+												var wcwidth = io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length).length;
+												for (var i = 0; i < wcwidth; i++) {
+													io.print('\b'); 
+												}
 											}
 											// remove character from command at current position:
-											io.currentCommand = io.currentCommand.slice(0, cursorPosition - 1) + 
-												io.currentCommand.slice(cursorPosition, io.currentCommand.length); 
+											io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition - 1) + 
+												io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length); 
+												
+											// if popup menu being displayed, remove it: (or recompute it?)
+											currentCommandCursorPosition -= 1;
+											disableAutocompleteMenu(complete);
 										}
+										break;
+									case String.fromCharCode(27):  // Escape. Make popup menu disappear
+										disableAutocompleteMenu(complete);
 										break;
 									case String.fromCharCode(27) + "[A":  // Up arrow
 										if (window.commandRunning != '') {
@@ -139,76 +389,99 @@ body {
 													// Store current command: 
 													window.commandInsideCommandArray[window.commandInsideCommandIndex] = io.currentCommand;
 												}
-												// erase current line:
-												for (var i = 0; i < cursorPosition; i++) {
-													io.print('\b'); 
-												}
-												io.print('\x1b[0K'); // delete entire line
+												io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor back to initial position
+												io.print('\x1b[0J'); // delete display after cursor
 												window.commandInsideCommandIndex -= 1;
 												io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
 												io.print(io.currentCommand);
+												currentCommandCursorPosition = io.currentCommand.length;
 											}
 										} else {
+											// popup menu being displayed, change it:
+											if (isVisible(complete)) {
+												var index = complete.getElementsByTagName("select")[0].selectedIndex; 
+												index -= 1;
+												if (index >= 0) {
+													complete.getElementsByTagName("select")[0].selectedIndex = index;
+												}
+												break;
+											}
 											if (window.commandIndex > 0) {
 												if (window.commandIndex === window.maxCommandIndex) {
 													// Store current command: 
 													window.commandArray[window.commandIndex] = io.currentCommand;
 												}
-												// erase current line:
-												for (var i = 0; i < cursorPosition; i++) {
-													io.print('\b'); 
-												}
-												io.print('\x1b[0K'); // delete entire line
+												var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
+												io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
+												io.print('\x1b[0J'); // delete display after cursor
 												window.commandIndex -= 1;
-
 												io.currentCommand = window.commandArray[window.commandIndex]; 
 												io.print(io.currentCommand);
+												currentCommandCursorPosition = io.currentCommand.length;
 											} 
 										}
 										break;
 									case String.fromCharCode(27) + "[B":  // Down arrow
 										if (window.commandRunning != '') {
 											if (window.commandInsideCommandIndex < window.maxCommandInsideCommandIndex) {
-												// erase current line:
-												for (var i = 0; i < cursorPosition; i++) {
-													io.print('\b'); 
-												}
-												io.print('\x1b[0K'); // delete entire line
+												io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
+												io.print('\x1b[0J'); // delete display after cursor
 												window.commandInsideCommandIndex += 1;
 												io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
 												io.print(io.currentCommand);
+												currentCommandCursorPosition = io.currentCommand.length;
 											}
 										} else {
-											if (window.commandIndex < window.maxCommandIndex) {
-												// erase current line:
-												for (var i = 0; i < cursorPosition; i++) {
-													io.print('\b'); 
+											// popup menu being displayed, change it:
+											if (isVisible(complete)) {
+												var index = complete.getElementsByTagName("select")[0].selectedIndex; 
+												index += 1;
+												if (index < complete.getElementsByTagName("select")[0].options.length) {
+													complete.getElementsByTagName("select")[0].selectedIndex = index;
 												}
-												io.print('\x1b[0K'); // delete entire line
+												break;
+											}
+											if (window.commandIndex < window.maxCommandIndex) {
+												var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
+												io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
+												io.print('\x1b[0J'); // delete display after cursor
 												window.commandIndex += 1;
 												io.currentCommand = window.commandArray[window.commandIndex]; 
 												io.print(io.currentCommand);
+												currentCommandCursorPosition = io.currentCommand.length;
 											}
 										}
 										break;
 									case String.fromCharCode(27) + "[D":  // Left arrow
-										if (cursorPosition > 0) { // prompt.length
+										if (currentCommandCursorPosition > 0) { // prompt.length
 											io.print('\b'); // move cursor back one char
+											disableAutocompleteMenu(complete);
+											currentCommandCursorPosition -= 1;
 										}
 										break;
 									case String.fromCharCode(27) + "[C":  // Right arrow
-										if (cursorPosition < io.currentCommand.length) {
+										if (currentCommandCursorPosition < io.currentCommand.length) {
 											io.print('\x1b[1C'); // move cursor forward one char
+											// recompute complete menu? For now, disable it.
+											disableAutocompleteMenu(complete);
+											currentCommandCursorPosition += 1;
 										}
 										break; 
 									case String.fromCharCode(9):  // Tab, so autocomplete
 										if (window.commandRunning == '') {
-											window.webkit.messageHandlers.aShell.postMessage('Received tab event');
+											if (isVisible(complete)) {
+												// hit tab when menu already visible = select current
+												pickCurrentValue();
+											} else {
+												// Work on autocomplete list / current command
+												updateAutocompleteMenu(complete, io, currentCommandCursorPosition); 
+											}
 										} else {
-											io.currentCommand = io.currentCommand.slice(0, cursorPosition) + "    " + 
-												io.currentCommand.slice(cursorPosition, io.currentCommand.length);
-											// window.webkit.messageHandlers.aShell.postMessage(io.currentCommand); 
-											io.print("    ");
+											// no autocomplete inside running commands. Just print 4 spaces.
+											// (spaces because tab confuse hterm)
+											io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + "    " + 
+												io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
+											printString("    ");
 										}
 										break;
 									default:
@@ -216,12 +489,21 @@ body {
 										// var charcode = string.charCodeAt(0);
 										// window.webkit.messageHandlers.aShell.postMessage('' + charcode + " = " + string);
 										// insert character at cursor position
-										io.currentCommand = io.currentCommand.slice(0, cursorPosition) + string + 
-											io.currentCommand.slice(cursorPosition, io.currentCommand.length);
-										// window.webkit.messageHandlers.aShell.postMessage(io.currentCommand); 
-										io.print(string);
+										printString(string);  // print before we update io.currentCommand
+										io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + string + 
+											io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
+										var lineCursor = Math.floor((currentCommandCursorPosition + window.promptEnd)/ term.screenSize.width);
+										var lineEndCommand = Math.floor((io.currentCommand.length + window.promptEnd)/ term.screenSize.width);
+										currentCommandCursorPosition += string.length;
+										if (isVisible(complete)) {
+											updateAutocompleteMenu(complete, io, currentCommandCursorPosition); 
+										}
 										break;
 								}
+								// Get cursor position. Display popup menu at current cursor position:
+								complete.style.position = 'absolute';
+								complete.style.top = term.scrollPort_.characterSize.height * term.screen_.cursorPosition.row + 'px'
+								complete.style.left = term.scrollPort_.characterSize.width * term.screen_.cursorPosition.column + 'px';
 							}
 					};
 					io.sendString = io.print;
@@ -248,10 +530,13 @@ body {
 				window.maxCommandInsideCommandIndex = 0;
 				window.prompt = "> "; // prompt for commands, configurable
 				window.promptEnd = 2; // prompt for commands, configurable
+				window.promptLine = 0; // term line on which the prompt started
+				window.promptScroll = 0; // scroll line on which the scrollPort was when the prompt started
 			}
 
             window.onload = function() {
 				lib.init(setupHterm);
+				window.term_.focus(); 
 			};
 		</script>
 

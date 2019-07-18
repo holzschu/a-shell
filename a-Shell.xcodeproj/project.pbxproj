@@ -31,6 +31,7 @@
 		22B1B82E22CB9ECD00F7C452 /* ssh_cmd.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B82822CB9ECD00F7C452 /* ssh_cmd.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B1B83022CB9ECD00F7C452 /* text.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B82922CB9ECD00F7C452 /* text.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B1B83222CB9ECD00F7C452 /* shell.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B82A22CB9ECD00F7C452 /* shell.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -82,6 +83,7 @@
 		22B1B82922CB9ECD00F7C452 /* text.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = text.framework; path = Frameworks/text.framework; sourceTree = "<group>"; };
 		22B1B82A22CB9ECD00F7C452 /* shell.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = shell.framework; path = Frameworks/shell.framework; sourceTree = "<group>"; };
 		22B1B83322CBC53700F7C452 /* a-Shell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell.entitlements"; sourceTree = "<group>"; };
+		22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "URL+isDirectory.swift"; path = "Util/URL+isDirectory.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +101,7 @@
 		2208ACBB22CCE529003985D6 /* Util */ = {
 			isa = PBXGroup;
 			children = (
+				22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */,
 				2291286622D9DAC40004A5EA /* UIColor+hexString.swift */,
 				2208ACC422D2026E003985D6 /* UIDevice+Name.swift */,
 				2208ACBE22CCE57E003985D6 /* String+C.swift */,
@@ -259,6 +262,7 @@
 				2208ACBF22CCE57E003985D6 /* String+C.swift in Sources */,
 				22984EF222C93DBC00069497 /* ContentView.swift in Sources */,
 				2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */,
+				22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -7378,7 +7378,7 @@ hterm.Options = function(opt_copy) {
   // terminal.
 
   this.wraparound = opt_copy ? opt_copy.wraparound : true;
-  this.reverseWraparound = opt_copy ? opt_copy.reverseWraparound : false;
+  this.reverseWraparound = opt_copy ? opt_copy.reverseWraparound : true; // was false
   this.originMode = opt_copy ? opt_copy.originMode : false;
   this.autoCarriageReturn = opt_copy ? opt_copy.autoCarriageReturn : false;
   this.cursorVisible = opt_copy ? opt_copy.cursorVisible : false;
@@ -11913,7 +11913,7 @@ hterm.Terminal = function(opt_profileId) {
   this.io = new hterm.Terminal.IO(this);
 
   // True if mouse-click-drag should scroll the terminal.
-  this.enableMouseDragScroll = true;
+  this.enableMouseDragScroll = false; // iOS was true;
 
   this.copyOnSelect = null;
   this.mouseRightClickPaste = null;

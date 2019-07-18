@@ -51,6 +51,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     var stdout_file: UnsafeMutablePointer<FILE>? = nil
     private let commandQueue = DispatchQueue(label: "executeCommand", qos: .utility) // low priority
     // Buttons and toolbars:
+    var selectorActive = false // if we are inside a picker (roll-up  menu), change the toolbar
 
     var fontSize: CGFloat {
         let deviceModel = UIDevice.current.model
@@ -124,7 +125,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             
         }
     }
-
+    
     var tabButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
         let tabButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right.to.line.alt")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(tabAction(_:)))
@@ -156,6 +157,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         return rightButton
     }
 
+    
     public lazy var editorToolbar: UIToolbar = {
         var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
         toolbar.items = [tabButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil), upButton, downButton, leftButton, rightButton]
@@ -192,8 +194,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 // Make sure we're running the right session
                 ios_switchSession(self.persistentIdentifier?.toCString())
                 ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
-                // Execute command:
-                ios_system(command)
+                // Execute command (remove spaces at the beginning and end):
+                ios_system(command.trimmingCharacters(in: .whitespacesAndNewlines))
                 // Send info to the stdout handler that the command has finished:
                 let writeOpen = fcntl(self.stdout_pipe!.fileHandleForWriting.fileDescriptor, F_GETFD)
                 let readOpen = fcntl(self.stdout_pipe!.fileHandleForReading.fileDescriptor, F_GETFD)
@@ -218,7 +220,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             var command = cmd
             command.removeFirst("width:".count)
             width = Int(command) ?? 80
-
         } else if (cmd.hasPrefix("height:")) {
             var command = cmd
             command.removeFirst("height:".count)
@@ -231,6 +232,45 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
             guard stdin_pipe != nil else { return }
             stdin_pipe!.fileHandleForWriting.write(data)
+        } else if (cmd.hasPrefix("listDirectory:")) {
+            var directory = cmd
+            directory.removeFirst("listDirectory:".count)
+            if (directory.count == 0) { return }
+            do {
+                NSLog("about to list: \(directory)")
+                var filePaths = try FileManager().contentsOfDirectory(atPath: directory.replacingOccurrences(of: "\\ ", with: " ")) // un-escape spaces
+                filePaths.sort()
+                var javascriptCommand = "fileList = ["
+                for filePath in filePaths {
+                    print(filePath)
+                    javascriptCommand += "\"" + filePath.replacingOccurrences(of: " ", with: "\\\\ ") // escape spaces
+                    let fullPath = directory.replacingOccurrences(of: "\\ ", with: " ") + "/" + filePath
+                    // NSLog("path = \(fullPath) , isDirectory: \(URL(fileURLWithPath: fullPath).isDirectory)")
+                    if URL(fileURLWithPath: fullPath).isDirectory {
+                        javascriptCommand += "/"
+                    }
+                    else {
+                        javascriptCommand += " "
+                    }
+                    javascriptCommand += "\", "
+                }
+                // We need to re-escapce spaces for string comparison to work in JS:
+                javascriptCommand += "]; lastDirectory = \"" + directory.replacingOccurrences(of: " ", with: "\\ ") + "\"; updateFileMenu(); "
+                // print(javascriptCommand)
+                DispatchQueue.main.async {
+                    self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
+                        if error != nil {
+                            print(error)
+                        }
+                        if (result != nil) {
+                            print(result)
+                        }
+                    }
+                }
+                // print("Found files: \(fileURLs)")
+            } catch {
+                NSLog("Error getting files from directory: \(directory): \(error.localizedDescription)")
+            }
         } else {
             // Usually debugging information
             NSLog("JavaScript message: \(message.body)")
@@ -285,6 +325,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidChange), name: UITextInputMode.currentInputModeDidChangeNotification, object: nil)
             // And another to be called each time the keyboard is resized (including when an external KB is connected):
             NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidChange), name: UIResponder.keyboardDidChangeFrameNotification, object: nil)
+            // initialize command list for autocomplete:
+            // TODO: also scan PATH for executable files. Difficult
+            guard var commandsArray = commandsAsArray() as! [String]? else { return }
+            commandsArray.sort() // make sure it's in alphabetical order
+            var javascriptCommand = "var commandList = ["
+            for command in commandsArray {
+                javascriptCommand += "\"" + command + "\", "
+            }
+            javascriptCommand += "];"
+            webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
+                if error != nil {
+                    NSLog("Error in creating command list, line = \(javascriptCommand)")
+                    print(error)
+                }
+                if (result != nil) {
+                    print(result)
+                }
+            }
         }
     }
 
@@ -362,9 +420,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 print(result)
             }
         }
-        //
-        print("text Color: \(UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString())")
-        print("back Color: \(UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString())")
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
@@ -397,7 +452,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         var parsedString = string.replacingOccurrences(of: "\"", with: "\\\"")
         while (parsedString.count > 0) {
             guard let firstReturn = parsedString.firstIndex(of: "\n") else {
-                var command = "window.term_.io.print(\"" + parsedString + "\");"
+                let command = "window.term_.io.print(\"" + parsedString + "\");"
                 DispatchQueue.main.async {
                     self.webView!.evaluateJavaScript(command) { (result, error) in
                         if error != nil {
@@ -412,7 +467,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 return
             }
             let firstLine = parsedString[..<firstReturn]
-            var command = "window.term_.io.println(\"" + firstLine + "\");"
+            let command = "window.term_.io.println(\"" + firstLine + "\");"
             DispatchQueue.main.async {
                 self.webView!.evaluateJavaScript(command) { (result, error) in
                     if error != nil {
