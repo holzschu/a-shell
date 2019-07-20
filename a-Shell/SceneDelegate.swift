@@ -237,13 +237,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             directory.removeFirst("listDirectory:".count)
             if (directory.count == 0) { return }
             do {
-                NSLog("about to list: \(directory)")
+                // NSLog("about to list: \(directory)")
                 var filePaths = try FileManager().contentsOfDirectory(atPath: directory.replacingOccurrences(of: "\\ ", with: " ")) // un-escape spaces
                 filePaths.sort()
                 var javascriptCommand = "fileList = ["
                 for filePath in filePaths {
-                    print(filePath)
-                    javascriptCommand += "\"" + filePath.replacingOccurrences(of: " ", with: "\\\\ ") // escape spaces
+                    // print(filePath)
+                    // escape spaces, replace "\r" in filenames with "?"
+                    javascriptCommand += "\"" + filePath.replacingOccurrences(of: " ", with: "\\\\ ").replacingOccurrences(of: "\r", with: "?")
                     let fullPath = directory.replacingOccurrences(of: "\\ ", with: " ") + "/" + filePath
                     // NSLog("path = \(fullPath) , isDirectory: \(URL(fileURLWithPath: fullPath).isDirectory)")
                     if URL(fileURLWithPath: fullPath).isDirectory {
@@ -256,7 +257,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 }
                 // We need to re-escapce spaces for string comparison to work in JS:
                 javascriptCommand += "]; lastDirectory = \"" + directory.replacingOccurrences(of: " ", with: "\\ ") + "\"; updateFileMenu(); "
-                // print(javascriptCommand)
+                print(javascriptCommand)
                 DispatchQueue.main.async {
                     self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
                         if error != nil {
@@ -449,7 +450,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
 
     private func outputToWebView(string: String) {
         guard (webView != nil) else { return }
-        var parsedString = string.replacingOccurrences(of: "\"", with: "\\\"")
+        // Some file names have "\r" in them. It crashes ls. Might be an issue later with interactive commands.
+        var parsedString = string.replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "?")
         while (parsedString.count > 0) {
             guard let firstReturn = parsedString.firstIndex(of: "\n") else {
                 let command = "window.term_.io.print(\"" + parsedString + "\");"
