@@ -13,8 +13,6 @@ import ios_system
 
 var messageHandlerAdded = false
 var externalKeyboardPresent: Bool?
-let endOfTransmission = "\u{0004}"  // control-D, used to signal end of transmission
-let escape = "\u{001B}"
 let toolbarHeight: CGFloat = 35
 
 // Need: dictionary connecting userContentController with output streams.
@@ -51,7 +49,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     var stdout_file: UnsafeMutablePointer<FILE>? = nil
     private let commandQueue = DispatchQueue(label: "executeCommand", qos: .utility) // low priority
     // Buttons and toolbars:
-    var selectorActive = false // if we are inside a picker (roll-up  menu), change the toolbar
+    var controlOn = false;
+    // control codes:
+    let interrupt = "\u{0003}"  // control-C, used to kill the process
+    let endOfTransmission = "\u{0004}"  // control-D, used to signal end of transmission
+    let escape = "\u{001B}"
+
 
     var fontSize: CGFloat {
         let deviceModel = UIDevice.current.model
@@ -70,6 +73,45 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     
     @objc private func tabAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + "\u{0009}" + "\");") { (result, error) in
+            if error != nil {
+                print(error)
+            }
+            if (result != nil) {
+                print(result)
+            }
+        }
+    }
+
+    @objc private func controlAction(_ sender: UIBarButtonItem) {
+        controlOn = !controlOn;
+        if (controlOn) {
+            let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
+            // let configuration = UIImage.SymbolConfiguration(scale: .large)
+            editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration)
+            webView?.evaluateJavaScript("window.controlOn = true;") { (result, error) in
+                if error != nil {
+                    print(error)
+                }
+                if (result != nil) {
+                    print(result)
+                }
+            }
+        } else {
+            let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
+            editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
+            webView?.evaluateJavaScript("window.controlOn = false;") { (result, error) in
+                if error != nil {
+                    print(error)
+                }
+                if (result != nil) {
+                    print(result)
+                }
+            }
+        }
+    }
+    
+    @objc private func escapeAction(_ sender: UIBarButtonItem) {
+        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "\");") { (result, error) in
             if error != nil {
                 print(error)
             }
@@ -132,7 +174,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         return tabButton
     }
 
+    var controlButton: UIBarButtonItem {
+        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
+        // Was control
+        let controlButton = UIBarButtonItem(image: UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(controlAction(_:)))
+        return controlButton
+    }
     
+    var escapeButton: UIBarButtonItem {
+        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
+        let escapeButton = UIBarButtonItem(image: UIImage(systemName: "escape")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(escapeAction(_:)))
+        return escapeButton
+    }
+    
+
     var upButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
         let upButton = UIBarButtonItem(image: UIImage(systemName: "arrow.up")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(upAction(_:)))
@@ -160,8 +215,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     
     public lazy var editorToolbar: UIToolbar = {
         var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
-        toolbar.items = [tabButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil), upButton, downButton, leftButton, rightButton]
         toolbar.tintColor = .label
+        toolbar.items = [tabButton, controlButton, escapeButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil), upButton, downButton, leftButton, rightButton]
         return toolbar
     }()
     
@@ -179,7 +234,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             stdin_pipe = Pipe()
             guard stdin_pipe != nil else { return }
             stdin_file = fdopen(stdin_pipe!.fileHandleForReading.fileDescriptor, "r")
-            guard stdin_file != nil else { return }
+            // TODO: Having stdin_file == nil requires more than just return. Think about it.
+            guard stdin_file != nil else {
+                NSLog("Can't open stdin_file: \(String(cString: strerror(errno)))")
+                return
+            }
             // Get file for stdout/stderr that can be written to
             stdout_pipe = Pipe()
             guard stdout_pipe != nil else { return }
@@ -201,7 +260,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 let readOpen = fcntl(self.stdout_pipe!.fileHandleForReading.fileDescriptor, F_GETFD)
                 if (writeOpen >= 0) {
                     // Pipe is still open, send information to close it, once all output has been processed.
-                    self.stdout_pipe!.fileHandleForWriting.write(endOfTransmission.data(using: .utf8)!)
+                    self.stdout_pipe!.fileHandleForWriting.write(self.endOfTransmission.data(using: .utf8)!)
                 } else {
                     // Pipe has been closed, ready to run new command:
                     DispatchQueue.main.async {
@@ -224,14 +283,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             var command = cmd
             command.removeFirst("height:".count)
             height = Int(command) ?? 80
+        } else if (cmd.hasPrefix("controlOff")) {
+            controlOn = false
+            let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
+            editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
         } else if (cmd.hasPrefix("input:")) {
             var command = cmd
             command.removeFirst("input:".count)
             guard let data = command.data(using: .utf8) else { return }
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
-            guard stdin_pipe != nil else { return }
-            stdin_pipe!.fileHandleForWriting.write(data)
+            if (command == endOfTransmission) {
+                // Stop standard input for the command:
+                self.stdin_pipe!.fileHandleForWriting.closeFile()
+            } else if (command == interrupt) {
+                ios_kill()
+            } else {
+                guard stdin_pipe != nil else { return }
+                stdin_pipe!.fileHandleForWriting.write(data)
+            }
         } else if (cmd.hasPrefix("listDirectory:")) {
             var directory = cmd
             directory.removeFirst("listDirectory:".count)
@@ -257,7 +327,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 }
                 // We need to re-escapce spaces for string comparison to work in JS:
                 javascriptCommand += "]; lastDirectory = \"" + directory.replacingOccurrences(of: " ", with: "\\ ") + "\"; updateFileMenu(); "
-                print(javascriptCommand)
+                // print(javascriptCommand)
                 DispatchQueue.main.async {
                     self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
                         if error != nil {
@@ -315,7 +385,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             } else {
                 webContentView?.inputAssistantItem.leadingBarButtonGroups = [UIBarButtonItemGroup(barButtonItems:
-                    [tabButton
+                    [tabButton, controlButton, escapeButton
                 ], representativeItem: nil)]
                 webContentView?.inputAssistantItem.trailingBarButtonGroups = [UIBarButtonItemGroup(barButtonItems:
                     [upButton, downButton,
@@ -376,7 +446,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             // Actual values may vary depending on device, but 60 seems a good threshold.
             externalKeyboardPresent = keyboardFrame!.size.height < 60
             webContentView?.inputAssistantItem.leadingBarButtonGroups = [UIBarButtonItemGroup(barButtonItems:
-                [tabButton
+                [tabButton, controlButton, escapeButton
             ], representativeItem: nil)]
             webContentView?.inputAssistantItem.trailingBarButtonGroups = [UIBarButtonItemGroup(barButtonItems:
                 [upButton, downButton,

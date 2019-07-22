@@ -10343,6 +10343,7 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
   this.screen_.addEventListener('touchend', this.onTouch_.bind(this));
   this.screen_.addEventListener('touchcancel', this.onTouch_.bind(this));
   this.screen_.addEventListener('copy', this.onCopy_.bind(this));
+  this.screen_.addEventListener('cut', this.onCopy_.bind(this));
   this.screen_.addEventListener('paste', this.onPaste_.bind(this));
   this.screen_.addEventListener('drop', this.onDragAndDrop_.bind(this));
 
@@ -11435,7 +11436,8 @@ hterm.ScrollPort.prototype.onScroll_ = function(e) {
  * Clients may call event.preventDefault() if they want to keep the scrollport
  * from also handling the events.
  */
-hterm.ScrollPort.prototype.onScrollWheel = function(e) {};
+hterm.ScrollPort.prototype.onScrollWheel = function(e) {
+};
 
 /**
  * Handler for scroll-wheel events.
@@ -11519,7 +11521,8 @@ hterm.ScrollPort.prototype.scrollWheelDelta = function(e) {
  * Clients may call event.preventDefault() if they want to keep the scrollport
  * from also handling the events.
  */
-hterm.ScrollPort.prototype.onTouch = function(e) {};
+hterm.ScrollPort.prototype.onTouch = function(e) {
+};
 
 /**
  * Handler for touch events.
@@ -11564,6 +11567,15 @@ hterm.ScrollPort.prototype.onTouch_ = function(e) {
 
     case 'touchcancel':
     case 'touchend':
+      if (Object.values(this.lastTouch_).length == 1) {
+      	  // single touch
+        touch = scrubTouch(e.changedTouches[0]);
+        if ((this.lastTouch_[touch.id].y == touch.y) && (this.lastTouch_[touch.id].x == touch.x)) {
+        	var xcursor = (touch.x / this.characterSize.width);
+        	var ycursor = (touch.y / this.characterSize.height);
+			window.term_.moveCursorPosition(Math.floor(ycursor), Math.floor(xcursor));
+		} 
+	  }
       // Throw away existing touches that we're finished with.
       for (i = 0; i < e.changedTouches.length; ++i)
         delete this.lastTouch_[e.changedTouches[i].identifier];
@@ -11598,7 +11610,8 @@ hterm.ScrollPort.prototype.onTouch_ = function(e) {
   }
 
   // To disable gestures or anything else interfering with our scrolling.
-  e.preventDefault();
+  // iOS: disable this one.
+  // e.preventDefault();
 };
 
 /**
@@ -11629,6 +11642,7 @@ hterm.ScrollPort.prototype.onCopy = function(e) { };
  * of the "select bags" with the missing text.
  */
 hterm.ScrollPort.prototype.onCopy_ = function(e) {
+	
   this.onCopy(e);
 
   if (e.defaultPrevented)
@@ -11820,6 +11834,7 @@ hterm.Terminal = function(opt_profileId) {
   this.scrollPort_.subscribe('paste', this.onPaste_.bind(this));
   this.scrollPort_.subscribe('focus', this.onScrollportFocus_.bind(this));
   this.scrollPort_.onCopy = this.onCopy_.bind(this);
+  this.scrollPort_.onCut  = this.onCopy_.bind(this);
 
   // The div that contains this terminal.
   this.div_ = null;
@@ -11913,7 +11928,7 @@ hterm.Terminal = function(opt_profileId) {
   this.io = new hterm.Terminal.IO(this);
 
   // True if mouse-click-drag should scroll the terminal.
-  this.enableMouseDragScroll = false; // iOS was true;
+  this.enableMouseDragScroll = true; 
 
   this.copyOnSelect = null;
   this.mouseRightClickPaste = null;
@@ -11953,6 +11968,9 @@ hterm.Terminal.cursorShape = {
  * this method is called.
  */
 hterm.Terminal.prototype.onTerminalReady = function() { };
+
+/* Placeholder so I can overwrite it later */
+hterm.Terminal.prototype.moveCursorPosition = function(x, y) { };
 
 /**
  * Default tab with of 8 to match xterm.
@@ -15071,7 +15089,10 @@ hterm.Terminal.prototype.displayImage = function(options, onLoad, onError) {
  * @return {string|null}
  */
 hterm.Terminal.prototype.getSelectionText = function() {
-  var selection = this.scrollPort_.selection;
+  var selection = this.
+
+
+  		scrollPort_.selection;
   selection.sync();
 
   if (selection.isCollapsed)
@@ -15228,6 +15249,7 @@ hterm.Terminal.prototype.onKeyboardActivity_ = function(e) {
  * @param {Event} e The mouse event to handle.
  */
 hterm.Terminal.prototype.onMouse_ = function(e) {
+	
   if (e.processedByTerminalHandler_) {
     // We register our event handlers on the document, as well as the cursor
     // and the scroll blocker.  Mouse events that occur on the cursor or
@@ -15409,7 +15431,8 @@ hterm.Terminal.prototype.onMouse_ = function(e) {
  *
  * @param {Event} e The mouse event to handle.
  */
-hterm.Terminal.prototype.onMouse = function(e) { };
+hterm.Terminal.prototype.onMouse = function(e) {
+};
 
 /**
  * React when focus changes.

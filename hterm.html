@@ -34,7 +34,7 @@ body {
 	</head>
 
 	<body>
-		<div id='terminal' contenteditable='true'></div>
+		<div id='terminal' contenteditable='false'></div>
 		<script>
 			function initContent(io) {
 				const ver = lib.resource.getData('libdot/changelog/version');
@@ -59,6 +59,8 @@ body {
 				autocompleteOn = false;
 				autocompleteList = [];
 				autocompleteIndex = 0;
+				fileList = '';
+				lastDirectory = '';
 			}
 
             // prints a string and move the rest of the command around, even if it is over multiple lines
@@ -157,6 +159,7 @@ body {
 					beforePredicate = beforePredicate.slice(0, beforePredicate.length - 1)
 				}
 				autocompleteIndex = 0; 
+				autocompleteList = [];
 				var matchToCommands = false;
 				if (beforePredicate.length == 0) {
 					matchToCommands = true; // beginning of line, must be a command
@@ -235,253 +238,303 @@ body {
             function setupHterm() {
 				const term = new hterm.Terminal();
 				// Default monospaced fonts installed: Menlo and Courier. 
+				term.prefs_.set('cursor-shape', 'BLOCK'); 
 				term.prefs_.set('font-family', 'Menlo');
 				term.prefs_.set('font-size', 15);
 				term.prefs_.set('cursor-blink', true); 
 				term.setInsertMode(true);
 				term.setReverseWraparound(true);
 				term.setWraparound(true);
+				//
+				term.oncut = function(e) { 
+					window.webkit.messageHandlers.aShell.postMessage('onCut_ event');
+					// this.onCopy_(e);
+					var text = this.getSelectionText();
+					if (text != null)
+						this.copyStringToClipboard(text);
+
+					setTimeout(this.copySelectionToClipboard.bind(this), 0);
+					e.preventDefault();
+				};
 				// 
 				term.onTerminalReady = function() {
 					const io = this.io.push();
 					io.onVTKeystroke = (string) => {
-						/* if (window.commandRunning != '') {
-						// interactive commands: send everything to the command
-						// forward all keyboard input to the command:
-		             		io.print(string);
-							} else */ { 
-								if (io.currentCommand === '') { 
-									// new line, reset things:
-									// where was the cursor when we started typing this command? 
-									window.promptEnd = term.screen_.cursorPosition.column;
-									// required because some commands can take several lines, especially on a phone.
-									window.promptLine = term.screen_.cursorPosition.row;
-									window.promptScroll = term.scrollPort_.getTopRowIndex();
-									currentCommandCursorPosition = 0; 
-								}
-								var cursorPosition = term.screen_.cursorPosition.column - window.promptEnd;  // remove prompt length
-								switch (string) {
-									case '\r':
+						if (window.controlOn) {
+							// produce string = control + character 
+							var charcode = string.toUpperCase().charCodeAt(0);
+							string = String.fromCharCode(charcode - 64);
+							window.controlOn = false;
+							window.webkit.messageHandlers.aShell.postMessage('controlOff');							
+						}
+						if ((window.commandRunning != '') && (string.charCodeAt(0) < 9)) {
+							// Send control messages back to command:
+							// first, flush existing input:
+							if (io.currencCommand != '') {
+								window.webkit.messageHandlers.aShell.postMessage('input:' + io.currentCommand);
+								io.currentCommand = '';
+							}
+							window.webkit.messageHandlers.aShell.postMessage('input:' + string);
+						} else { 
+							if (io.currentCommand === '') { 
+								// new line, reset things:
+								// where was the cursor when we started typing this command? 
+								window.promptEnd = term.screen_.cursorPosition.column;
+								// required because some commands can take several lines, especially on a phone.
+								window.promptLine = term.screen_.cursorPosition.row;
+								window.promptScroll = term.scrollPort_.getTopRowIndex();
+								currentCommandCursorPosition = 0; 
+							}
+							var cursorPosition = term.screen_.cursorPosition.column - window.promptEnd;  // remove prompt length
+							switch (string) {
+								case '\r':
+									if (autocompleteOn) {
+										// Autocomplete menu being displayed + press return: select what's visible and remove
+										pickCurrentValue();
+										break;
+									}
+									// Before executing command, move to end of line if not already there:
+									// Compute how many lines should we move downward:
+									var lineCursor = Math.floor((currentCommandCursorPosition + window.promptEnd)/ term.screenSize.width);
+									var lineEndCommand = Math.floor((io.currentCommand.length + window.promptEnd)/ term.screenSize.width);
+									for (var i = 0; i < lineEndCommand - lineCursor; i++) {
+										io.println('');
+									}
+									io.println('');
+									if (window.commandRunning != '') {
+										// The command takes care of the prompt. Just send the input data:
+										window.webkit.messageHandlers.aShell.postMessage('input:' + io.currentCommand + '\n');
+										// remove temporarily stored command -- if any
+										if (window.maxCommandInsideCommandIndex < window.commandInsideCommandArray.length) {
+											window.commandInsideCommandArray.pop();
+										}
+										// only store non-empty commands:
+										// store commands sent:
+										if (io.currentCommand.length > 0) {
+											if (io.currentCommand != window.commandInsideCommandArray[window.maxCommandInsideCommandIndex - 1]) {
+												// only add command to history if it is different from the last one:
+												window.maxCommandInsideCommandIndex = window.commandInsideCommandArray.push(io.currentCommand); 
+											}
+										} 
+										while (window.maxCommandInsideCommandIndex >= 100) {
+											// We have stored more than 100 commands
+											window.commandInsideCommandArray.shift(); // remove first element
+											window.maxCommandInsideCommandIndex = window.commandInsideCommandArray.length;
+										} 
+										window.commandInsideCommandIndex = window.maxCommandInsideCommandIndex; 
+									} else {
+										if (io.currentCommand.length > 0) {
+											// Now is the time where we send the command to iOS: 
+											window.webkit.messageHandlers.aShell.postMessage('shell:' + io.currentCommand);
+											// and reinitialize:
+											window.commandRunning = io.currentCommand;
+											// remove temporarily stored command -- if any
+											if (window.maxCommandIndex < window.commandArray.length) {
+												window.commandArray.pop();
+											}
+											if (io.currentCommand != window.commandArray[window.maxCommandIndex - 1]) {
+												// only add command to history if it is different from the last one:
+												window.maxCommandIndex = window.commandArray.push(window.commandRunning); 
+												while (window.maxCommandIndex >= 100) {
+													// We have stored more than 100 commands
+													window.commandArray.shift(); // remove first element
+													window.maxCommandIndex = window.commandArray.length;
+												} 
+												window.commandIndex = window.maxCommandIndex; 
+											} 
+											// clear history inside command:
+											window.commandInsideCommandArray = [];
+											window.maxCommandInsideCommandIndex = 0;
+										} else {
+											io.print(window.prompt); 
+										}
+									}
+									io.currentCommand = '';
+									break;
+								case String.fromCharCode(127): // delete from iOS keyboard
+									if (currentCommandCursorPosition > 0) { 
+										var lineCursor = Math.floor((currentCommandCursorPosition + window.promptEnd)/ term.screenSize.width);
+										var lineEndCommand = Math.floor((io.currentCommand.length + window.promptEnd)/ term.screenSize.width);
+										if ((io.currentCommand.length < term.screenSize.width) || (lineCursor ==  lineEndCommand)) {
+											// simple version, we are on the last line (or there is only one line):
+											io.print('\b'); // move cursor back one char
+											io.print('\x1b[1P'); // delete 1 character before cursor
+										} else {
+											// More complicated version, we are several lines above. 
+											// clear entire buffer, then reprint
+											io.print('\b'); // move cursor back one char
+											io.print('\x1b[0J'); // delete display after cursor
+											// print remainder of command line
+											io.print(io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length))
+											// move cursor back to where it was (don't use term.screen_.cursorPosition):
+											var wcwidth = io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length).length;
+											for (var i = 0; i < wcwidth; i++) {
+												io.print('\b'); 
+											}
+										}
+										// remove character from command at current position:
+										io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition - 1) + 
+											io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length); 
+
+										// if popup menu being displayed, remove it: (or recompute it?)
+										currentCommandCursorPosition -= 1;
+									}
+									disableAutocompleteMenu();
+									break;
+								case String.fromCharCode(27):  // Escape. Make popup menu disappear
+									disableAutocompleteMenu();
+									break;
+								case String.fromCharCode(27) + "[A":  // Up arrow
+									if (window.commandRunning != '') {
+										if (window.commandInsideCommandIndex > 0) {
+											if (window.commandInsideCommandIndex === window.maxCommandInsideCommandIndex) {
+												// Store current command: 
+												window.commandInsideCommandArray[window.commandInsideCommandIndex] = io.currentCommand;
+											}
+											io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor back to initial position
+											io.print('\x1b[0J'); // delete display after cursor
+											window.commandInsideCommandIndex -= 1;
+											io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
+											io.print(io.currentCommand);
+											currentCommandCursorPosition = io.currentCommand.length;
+										}
+									} else {
+										// popup menu being displayed, change it:
 										if (autocompleteOn) {
-											// Autocomplete menu being displayed + press return: select what's visible and remove
-											pickCurrentValue();
+											if (autocompleteIndex > 0) {
+												autocompleteIndex -= 1; 
+												printAutocompleteString(autocompleteList[autocompleteIndex]);
+											}													
 											break;
 										}
-										// Before executing command, move to end of line if not already there:
-										// Compute how many lines should we move downward:
-										var lineCursor = Math.floor((currentCommandCursorPosition + window.promptEnd)/ term.screenSize.width);
-										var lineEndCommand = Math.floor((io.currentCommand.length + window.promptEnd)/ term.screenSize.width);
-										for (var i = 0; i < lineEndCommand - lineCursor; i++) {
-											io.println('');
+										if (window.commandIndex > 0) {
+											if (window.commandIndex === window.maxCommandIndex) {
+												// Store current command: 
+												window.commandArray[window.commandIndex] = io.currentCommand;
+											}
+											var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
+											io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
+											io.print('\x1b[0J'); // delete display after cursor
+											window.commandIndex -= 1;
+											io.currentCommand = window.commandArray[window.commandIndex]; 
+											io.print(io.currentCommand);
+											currentCommandCursorPosition = io.currentCommand.length;
+										} 
+									}
+									break;
+								case String.fromCharCode(27) + "[B":  // Down arrow
+									if (window.commandRunning != '') {
+										if (window.commandInsideCommandIndex < window.maxCommandInsideCommandIndex) {
+											io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
+											io.print('\x1b[0J'); // delete display after cursor
+											window.commandInsideCommandIndex += 1;
+											io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
+											io.print(io.currentCommand);
+											currentCommandCursorPosition = io.currentCommand.length;
 										}
-										io.println('');
-										if (window.commandRunning != '') {
-											// The command takes care of the prompt. Just send the input data:
-											window.webkit.messageHandlers.aShell.postMessage('input:' + io.currentCommand + '\n');
-											// remove temporarily stored command -- if any
-											if (window.maxCommandInsideCommandIndex < window.commandInsideCommandArray.length) {
-												window.commandInsideCommandArray.pop();
-											}
-											// only store non-empty commands:
-											// store commands sent:
-											if (io.currentCommand.length > 0) {
-												if (io.currentCommand != window.commandInsideCommandArray[window.maxCommandInsideCommandIndex - 1]) {
-													// only add command to history if it is different from the last one:
-													window.maxCommandInsideCommandIndex = window.commandInsideCommandArray.push(io.currentCommand); 
-												}
-											} 
-											while (window.maxCommandInsideCommandIndex >= 100) {
-												// We have stored more than 100 commands
-												window.commandInsideCommandArray.shift(); // remove first element
-												window.maxCommandInsideCommandIndex = window.commandInsideCommandArray.length;
-											} 
-											window.commandInsideCommandIndex = window.maxCommandInsideCommandIndex; 
-										} else {
-											if (io.currentCommand.length > 0) {
-												// Now is the time where we send the command to iOS: 
-												window.webkit.messageHandlers.aShell.postMessage('shell:' + io.currentCommand);
-												// and reinitialize:
-												window.commandRunning = io.currentCommand;
-												// remove temporarily stored command -- if any
-												if (window.maxCommandIndex < window.commandArray.length) {
-													window.commandArray.pop();
-												}
-												if (io.currentCommand != window.commandArray[window.maxCommandIndex - 1]) {
-													// only add command to history if it is different from the last one:
-													window.maxCommandIndex = window.commandArray.push(window.commandRunning); 
-													while (window.maxCommandIndex >= 100) {
-														// We have stored more than 100 commands
-														window.commandArray.shift(); // remove first element
-														window.maxCommandIndex = window.commandArray.length;
-													} 
-													window.commandIndex = window.maxCommandIndex; 
-												} 
-												// clear history inside command:
-												window.commandInsideCommandArray = [];
-												window.maxCommandInsideCommandIndex = 0;
-											} else {
-												io.print(window.prompt); 
-											}
-										}
-										io.currentCommand = '';
-										break;
-									case String.fromCharCode(127): // delete from iOS keyboard
-										if (currentCommandCursorPosition > 0) { 
-											var lineCursor = Math.floor((currentCommandCursorPosition + window.promptEnd)/ term.screenSize.width);
-											var lineEndCommand = Math.floor((io.currentCommand.length + window.promptEnd)/ term.screenSize.width);
-											if ((io.currentCommand.length < term.screenSize.width) || (lineCursor ==  lineEndCommand)) {
-												// simple version, we are on the last line (or there is only one line):
-												io.print('\b'); // move cursor back one char
-												io.print('\x1b[1P'); // delete 1 character before cursor
-											} else {
-												// More complicated version, we are several lines above. 
-												// clear entire buffer, then reprint
-												io.print('\b'); // move cursor back one char
-												io.print('\x1b[0J'); // delete display after cursor
-												// print remainder of command line
-												io.print(io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length))
-												// move cursor back to where it was (don't use term.screen_.cursorPosition):
-												var wcwidth = io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length).length;
-												for (var i = 0; i < wcwidth; i++) {
-													io.print('\b'); 
-												}
-											}
-											// remove character from command at current position:
-											io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition - 1) + 
-												io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length); 
-												
-											// if popup menu being displayed, remove it: (or recompute it?)
-											currentCommandCursorPosition -= 1;
-											disableAutocompleteMenu();
-										}
-										break;
-									case String.fromCharCode(27):  // Escape. Make popup menu disappear
-										disableAutocompleteMenu();
-										break;
-									case String.fromCharCode(27) + "[A":  // Up arrow
-										if (window.commandRunning != '') {
-											if (window.commandInsideCommandIndex > 0) {
-												if (window.commandInsideCommandIndex === window.maxCommandInsideCommandIndex) {
-													// Store current command: 
-													window.commandInsideCommandArray[window.commandInsideCommandIndex] = io.currentCommand;
-												}
-												io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor back to initial position
-												io.print('\x1b[0J'); // delete display after cursor
-												window.commandInsideCommandIndex -= 1;
-												io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
-												io.print(io.currentCommand);
-												currentCommandCursorPosition = io.currentCommand.length;
-											}
-										} else {
-											// popup menu being displayed, change it:
-											if (autocompleteOn) {
-												if (autocompleteIndex > 0) {
-													autocompleteIndex -= 1; 
-													printAutocompleteString(autocompleteList[autocompleteIndex]);
-												}													
-												break;
-											}
-											if (window.commandIndex > 0) {
-												if (window.commandIndex === window.maxCommandIndex) {
-													// Store current command: 
-													window.commandArray[window.commandIndex] = io.currentCommand;
-												}
-												var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
-												io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
-												io.print('\x1b[0J'); // delete display after cursor
-												window.commandIndex -= 1;
-												io.currentCommand = window.commandArray[window.commandIndex]; 
-												io.print(io.currentCommand);
-												currentCommandCursorPosition = io.currentCommand.length;
-											} 
-										}
-										break;
-									case String.fromCharCode(27) + "[B":  // Down arrow
-										if (window.commandRunning != '') {
-											if (window.commandInsideCommandIndex < window.maxCommandInsideCommandIndex) {
-												io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
-												io.print('\x1b[0J'); // delete display after cursor
-												window.commandInsideCommandIndex += 1;
-												io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
-												io.print(io.currentCommand);
-												currentCommandCursorPosition = io.currentCommand.length;
-											}
-										} else {
-											// popup menu being displayed, change it:
-											if (autocompleteOn) {
-												if (autocompleteIndex < autocompleteList.length - 1) {
-													autocompleteIndex += 1; 
-													printAutocompleteString(autocompleteList[autocompleteIndex]);
-												}													
-												break;
-											}
-											if (window.commandIndex < window.maxCommandIndex) {
-												var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
-												io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
-												io.print('\x1b[0J'); // delete display after cursor
-												window.commandIndex += 1;
-												io.currentCommand = window.commandArray[window.commandIndex]; 
-												io.print(io.currentCommand);
-												currentCommandCursorPosition = io.currentCommand.length;
-											}
-										}
-										break;
-									case String.fromCharCode(27) + "[D":  // Left arrow
-										disableAutocompleteMenu();
-										if (currentCommandCursorPosition > 0) { // prompt.length
-											io.print('\b'); // move cursor back one char
-											currentCommandCursorPosition -= 1;
-										}
-										break;
-									case String.fromCharCode(27) + "[C":  // Right arrow
-										// recompute complete menu? For now, disable it.
-										disableAutocompleteMenu();
-										if (currentCommandCursorPosition < io.currentCommand.length) {
-											if (term.screen_.cursorPosition.column < term.screenSize.width - 1) {
-												io.print('\x1b[1C'); // move cursor forward one char
-											} else {
-												io.print('\x1b[' + (term.screen_.cursorPosition.row + 2) + ';' + 0 + 'H'); // move cursor to start of next line
-
-											}
-											currentCommandCursorPosition += 1;
-										}
-										break; 
-									case String.fromCharCode(9):  // Tab, so autocomplete
-										if (window.commandRunning == '') {
-											if (autocompleteOn) {
-												// hit tab when menu already visible = select current
-												pickCurrentValue();
-											} else {
-												// Work on autocomplete list / current command
-												updateAutocompleteMenu(io, currentCommandCursorPosition); 
-											}
-										} else {
-											// no autocomplete inside running commands. Just print 4 spaces.
-											// (spaces because tab confuse hterm)
-											io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + "    " + 
-												io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
-											printString("    ");
-										}
-										break;
-									default:
-										// For debugging:
-										// var charcode = string.charCodeAt(0);
-										// window.webkit.messageHandlers.aShell.postMessage('' + charcode + " = " + string);
-										// insert character at cursor position
-										printString(string);  // print before we update io.currentCommand
-										io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + string + 
-											io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
-										var lineCursor = Math.floor((currentCommandCursorPosition + window.promptEnd)/ term.screenSize.width);
-										var lineEndCommand = Math.floor((io.currentCommand.length + window.promptEnd)/ term.screenSize.width);
-										currentCommandCursorPosition += string.length;
+									} else {
+										// popup menu being displayed, change it:
 										if (autocompleteOn) {
+											if (autocompleteIndex < autocompleteList.length - 1) {
+												autocompleteIndex += 1; 
+												printAutocompleteString(autocompleteList[autocompleteIndex]);
+											}													
+											break;
+										}
+										if (window.commandIndex < window.maxCommandIndex) {
+											var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
+											io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
+											io.print('\x1b[0J'); // delete display after cursor
+											window.commandIndex += 1;
+											io.currentCommand = window.commandArray[window.commandIndex]; 
+											io.print(io.currentCommand);
+											currentCommandCursorPosition = io.currentCommand.length;
+										}
+									}
+									break;
+								case String.fromCharCode(27) + "[D":  // Left arrow
+									disableAutocompleteMenu();
+									if (currentCommandCursorPosition > 0) { // prompt.length
+										io.print('\b'); // move cursor back one char
+										currentCommandCursorPosition -= 1;
+									}
+									window.webkit.messageHandlers.aShell.postMessage('left= ' + term.screen_.cursorPosition.column + ' ' + term.screen_.cursorPosition.row);
+									break;
+								case String.fromCharCode(27) + "[C":  // Right arrow
+									// recompute complete menu? For now, disable it.
+									disableAutocompleteMenu();
+									if (currentCommandCursorPosition < io.currentCommand.length) {
+										if (term.screen_.cursorPosition.column < term.screenSize.width - 1) {
+											io.print('\x1b[1C'); // move cursor forward one char
+										} else {
+											io.print('\x1b[' + (term.screen_.cursorPosition.row + 2) + ';' + 0 + 'H'); // move cursor to start of next line
+										}
+										currentCommandCursorPosition += 1;
+									}
+									break; 
+								case String.fromCharCode(9):  // Tab, so autocomplete
+									if (window.commandRunning == '') {
+										if (autocompleteOn) {
+											// hit tab when menu already visible = select current
+											pickCurrentValue();
+										} else {
+											// Work on autocomplete list / current command
 											updateAutocompleteMenu(io, currentCommandCursorPosition); 
 										}
-										break;
-								}
+									} else {
+										// no autocomplete inside running commands. Just print 4 spaces.
+										// (spaces because tab confuse hterm)
+										io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + "    " + 
+											io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
+										printString("    ");
+									}
+									break;
+								default:
+									// For debugging:
+									// var charcode = string.charCodeAt(0);
+									// window.webkit.messageHandlers.aShell.postMessage('' + charcode + " = " + string);
+									// insert character at cursor position
+									printString(string);  // print before we update io.currentCommand
+									io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + string + 
+										io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
+									var lineCursor = Math.floor((currentCommandCursorPosition + window.promptEnd)/ term.screenSize.width);
+									var lineEndCommand = Math.floor((io.currentCommand.length + window.promptEnd)/ term.screenSize.width);
+									currentCommandCursorPosition += string.length;
+									if (autocompleteOn) {
+										updateAutocompleteMenu(io, currentCommandCursorPosition); 
+									}
+									break;
 							}
+						}
 					};
-					io.sendString = io.print;
+					term.moveCursorPosition = function(y, x) {
+						// TODO: different treatment for interactive commands (vim)
+						var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
+						var topRowCommand = window.promptLine + scrolledLines;
+						// Don't move cursor outside of current line
+						if (y < topRowCommand) { 
+							return; 
+						}
+						// this.screen_.setCursorPosition(y, x);  // does not update blinking cursor position
+						if (x < window.promptEnd) {
+							x = window.promptEnd;
+						} 
+						var deltay = term.screen_.cursorPosition.row - y;
+						var deltax = term.screen_.cursorPosition.column - x;
+						var deltaCursor = deltax + deltay * term.screenSize.width;
+						if (currentCommandCursorPosition - deltaCursor > io.currentCommand.length) {
+							var overclick = currentCommandCursorPosition - deltaCursor - io.currentCommand.length;
+							deltaCursor += overclick;
+							// At the end of the line, so move there.
+							var fullLength = io.currentCommand.length + window.promptEnd; 
+							var y = Math.floor((fullLength / this.screenSize.width)) ;
+							var x = fullLength - this.screenSize.width * y;
+							y += topRowCommand
+						}
+						currentCommandCursorPosition -= deltaCursor;
+						io.print('\x1b[' + (y + 1) + ';' + (x + 1) + 'H'); // move cursor to new position 
+					};
+					io.sendString = io.onVTKeystroke; // was io.print
 					initContent(io);
 					io.print("> "); // first prompt
 					this.setCursorVisible(true);
@@ -492,7 +545,7 @@ body {
 					// this.keyboard.bindings.addBinding('Ctrl-R', 'PASS');
 				};
 				term.decorate(document.querySelector('#terminal'));
-				
+
 				term.installKeyboard();
 				// Useful for console debugging.
 				window.term_ = term;
@@ -509,10 +562,10 @@ body {
 				window.promptScroll = 0; // scroll line on which the scrollPort was when the prompt started
 			}
 
-            window.onload = function() {
-				lib.init(setupHterm);
-				window.term_.focus(); 
-			};
+window.onload = function() {
+	lib.init(setupHterm);
+	window.term_.focus(); 
+};
 		</script>
 
 	</body>
