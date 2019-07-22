@@ -264,7 +264,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 } else {
                     // Pipe has been closed, ready to run new command:
                     DispatchQueue.main.async {
-                        self.webView?.evaluateJavaScript("window.term_.io.print(window.prompt); window.commandRunning = ''; ") { (result, error) in
+                        self.webView?.evaluateJavaScript("window.printPrompt(); window.commandRunning = ''; ") { (result, error) in
                             if error != nil {
                                 print(error)
                             }
@@ -565,7 +565,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             if (string.contains(endOfTransmission)) {
                 // Finished processing the output, can get back to prompt:
                 DispatchQueue.main.async {
-                    self.webView?.evaluateJavaScript("window.term_.io.print(window.prompt); window.commandRunning = ''; ") { (result, error) in
+                    self.webView?.evaluateJavaScript("window.printPrompt(); window.commandRunning = ''; ") { (result, error) in
                         if error != nil {
                             print(error)
                         }

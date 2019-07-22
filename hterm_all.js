@@ -11642,6 +11642,7 @@ hterm.ScrollPort.prototype.onCopy = function(e) { };
  * of the "select bags" with the missing text.
  */
 hterm.ScrollPort.prototype.onCopy_ = function(e) {
+	window.webkit.messageHandlers.aShell.postMessage('hterm.ScrollPort.prototype.onCopy:' + e.type);
 	
   this.onCopy(e);
 
@@ -15481,7 +15482,14 @@ hterm.Terminal.prototype.onPaste_ = function(e) {
  *
  * @param {Event} e The DOM copy event.
  */
+hterm.Terminal.prototype.onCut = function(e) { };
+
+
 hterm.Terminal.prototype.onCopy_ = function(e) {
+	window.webkit.messageHandlers.aShell.postMessage('hterm.Terminal.prototype.onCopy:' + e.type);
+	if (e.type == 'cut') {
+		this.onCut(e);
+	}
   if (!this.useDefaultWindowCopy) {
     e.preventDefault();
     setTimeout(this.copySelectionToClipboard.bind(this), 0);

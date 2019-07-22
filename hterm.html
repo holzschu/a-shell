@@ -63,6 +63,19 @@ body {
 				lastDirectory = '';
 			}
 
+            function printPrompt() {
+				// prints the prompt and initializes all variables related to prompt position
+				window.term_.io.print(window.prompt); 
+				// TODO: this is still inaccurate because the terminal is not finished scrolling when we compute.
+				// Must be moved to another function.
+				window.promptEnd = window.term_.screen_.cursorPosition.column;
+				// required because some commands can take several lines, especially on a phone.
+				window.promptLine = window.term_.screen_.cursorPosition.row;
+				window.promptScroll = window.term_.scrollPort_.getTopRowIndex();
+				window.webkit.messageHandlers.aShell.postMessage('printPrompt, window.promptScroll = ' + window.promptScroll);
+				currentCommandCursorPosition = 0; 
+			}
+
             // prints a string and move the rest of the command around, even if it is over multiple lines
             function printString(string) {
 				var currentCommand = window.term_.io.currentCommand;
@@ -246,15 +259,46 @@ body {
 				term.setReverseWraparound(true);
 				term.setWraparound(true);
 				//
-				term.oncut = function(e) { 
-					window.webkit.messageHandlers.aShell.postMessage('onCut_ event');
-					// this.onCopy_(e);
-					var text = this.getSelectionText();
-					if (text != null)
-						this.copyStringToClipboard(text);
-
-					setTimeout(this.copySelectionToClipboard.bind(this), 0);
+				term.onCut = function(e) { 
 					e.preventDefault();
+					var text = this.getSelectionText();
+					// The text has already been copied into the clipboard. 
+					// We also need to remove it from the command line -- if it is in.
+					var startRow = this.scrollPort_.selection.startRow.rowIndex;
+					if (startRow >= window.promptScroll + window.promptLine ) {
+						// startOffset = position of selection from start of startRow (not necessarily start of command)
+						var startOffset = this.scrollPort_.selection.startOffset;
+						// endOffset = position of selection from start of endRow (not used)
+						var endOffset = this.scrollPort_.selection.endOffset;
+						var startPosition = ((startRow - window.promptScroll - window.promptLine) * this.screenSize.width) + startOffset;
+						var xcursor = startOffset;
+						var cutText = this.io.currentCommand.slice(startPosition, startPosition + text.length); 
+						if (cutText == text) {
+							this.io.currentCommand =  this.io.currentCommand.slice(0, startPosition) + this.io.currentCommand.slice(startPosition + text.length, this.io.currentCommand.length); 
+							xcursor += window.promptEnd;
+						} else {
+							// startOffset can be off by promptLength. 
+							startPosition -= window.promptEnd; 
+							var cutText = this.io.currentCommand.slice(startPosition, startPosition + text.length); 
+							if (cutText == text) {
+								this.io.currentCommand =  this.io.currentCommand.slice(0, startPosition) + this.io.currentCommand.slice(startPosition + text.length, this.io.currentCommand.length); 
+							} else {
+								window.webkit.messageHandlers.aShell.postMessage("Cannot find text = " + text + " in " + this.io.currentCommand); 
+								return; 
+							}
+						}
+						// Move cursor to startLine, startOffset
+						// We redraw the command because iOS removes extra spaces around the text.
+						// var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
+						// io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
+						currentCommandCursorPosition = startPosition
+						var ycursor = startRow - this.scrollPort_.getTopRowIndex();
+						this.io.print('\x1b[' + (ycursor + 1) + ';' + (xcursor + 1) + 'H'); // move cursor to new position 
+						this.io.print('\x1b[0J'); // delete display after cursor
+						var endOfCommand = this.io.currentCommand.slice(startPosition, this.io.currentCommand.length); 
+						this.io.print(endOfCommand); 
+						this.io.print('\x1b[' + (ycursor + 1) + ';' + (xcursor + 1) + 'H'); // move cursor back to new position 
+					}
 				};
 				// 
 				term.onTerminalReady = function() {
@@ -277,12 +321,13 @@ body {
 							window.webkit.messageHandlers.aShell.postMessage('input:' + string);
 						} else { 
 							if (io.currentCommand === '') { 
-								// new line, reset things:
+								// new line, reset things: (required for commands inside commands, otherwise it's already set in printPrompt)
 								// where was the cursor when we started typing this command? 
 								window.promptEnd = term.screen_.cursorPosition.column;
 								// required because some commands can take several lines, especially on a phone.
 								window.promptLine = term.screen_.cursorPosition.row;
 								window.promptScroll = term.scrollPort_.getTopRowIndex();
+			                    window.webkit.messageHandlers.aShell.postMessage('io.currentCommand, window.promptScroll = ' + window.promptScroll);
 								currentCommandCursorPosition = 0; 
 							}
 							var cursorPosition = term.screen_.cursorPosition.column - window.promptEnd;  // remove prompt length
@@ -346,7 +391,7 @@ body {
 											window.commandInsideCommandArray = [];
 											window.maxCommandInsideCommandIndex = 0;
 										} else {
-											io.print(window.prompt); 
+											printPrompt();
 										}
 									}
 									io.currentCommand = '';
@@ -385,6 +430,7 @@ body {
 									disableAutocompleteMenu();
 									break;
 								case String.fromCharCode(27) + "[A":  // Up arrow
+									window.webkit.messageHandlers.aShell.postMessage('up arrow: ' + window.commandIndex + ' ' +  window.maxCommandIndex);
 									if (window.commandRunning != '') {
 										if (window.commandInsideCommandIndex > 0) {
 											if (window.commandInsideCommandIndex === window.maxCommandInsideCommandIndex) {
@@ -423,6 +469,7 @@ body {
 									}
 									break;
 								case String.fromCharCode(27) + "[B":  // Down arrow
+									window.webkit.messageHandlers.aShell.postMessage('down arrow: ' + window.commandIndex + ' ' +  window.maxCommandIndex);
 									if (window.commandRunning != '') {
 										if (window.commandInsideCommandIndex < window.maxCommandInsideCommandIndex) {
 											io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
@@ -509,8 +556,12 @@ body {
 					};
 					term.moveCursorPosition = function(y, x) {
 						// TODO: different treatment for interactive commands (vim)
-						var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
+						var scrolledLines = window.promptScroll - this.scrollPort_.getTopRowIndex();
 						var topRowCommand = window.promptLine + scrolledLines;
+						window.webkit.messageHandlers.aShell.postMessage('requesting = ' + x + " " + y);
+						window.webkit.messageHandlers.aShell.postMessage('topRowCommand = ' + topRowCommand + " scrolledLines " + scrolledLines);
+						window.webkit.messageHandlers.aShell.postMessage('window.promptScroll = ' + window.promptScroll + " this.scrollPort_.getTopRowIndex " + this.scrollPort_.getTopRowIndex());
+						
 						// Don't move cursor outside of current line
 						if (y < topRowCommand) { 
 							return; 
@@ -519,9 +570,9 @@ body {
 						if (x < window.promptEnd) {
 							x = window.promptEnd;
 						} 
-						var deltay = term.screen_.cursorPosition.row - y;
-						var deltax = term.screen_.cursorPosition.column - x;
-						var deltaCursor = deltax + deltay * term.screenSize.width;
+						var deltay = this.screen_.cursorPosition.row - y;
+						var deltax = this.screen_.cursorPosition.column - x;
+						var deltaCursor = deltax + deltay * this.screenSize.width;
 						if (currentCommandCursorPosition - deltaCursor > io.currentCommand.length) {
 							var overclick = currentCommandCursorPosition - deltaCursor - io.currentCommand.length;
 							deltaCursor += overclick;
@@ -532,6 +583,7 @@ body {
 							y += topRowCommand
 						}
 						currentCommandCursorPosition -= deltaCursor;
+						window.webkit.messageHandlers.aShell.postMessage('move cursor to = ' + x + " " + y);
 						io.print('\x1b[' + (y + 1) + ';' + (x + 1) + 'H'); // move cursor to new position 
 					};
 					io.sendString = io.onVTKeystroke; // was io.print
