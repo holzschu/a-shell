@@ -7,16 +7,18 @@
 //
 
 import SwiftUI
-import Combine
 import WebKit
+import Combine
 
 final class KeyboardResponder: BindableObject {
-    let didChange = PassthroughSubject<CGFloat, Never>()
+    var willChange = PassthroughSubject<CGFloat, Never>()
+    
+    typealias PublisherType = PassthroughSubject<CGFloat, Never>
     
     private var _center: NotificationCenter
     private(set) var currentHeight: CGFloat = 0 {
         didSet {
-            didChange.send(currentHeight)
+            willChange.send(currentHeight)
         }
     }
 
@@ -80,11 +82,14 @@ struct Webview : UIViewRepresentable {
                 print(result)
             }
         }
-        uiView.load(URLRequest(url: URL(fileURLWithPath: htermFilePath!)))
+        uiView.loadFileURL(URL(fileURLWithPath: htermFilePath!), allowingReadAccessTo: URL(fileURLWithPath: htermFilePath!))
     }
 }
 
-struct ContentView : View {
+
+
+
+struct ContentView: View {
     @State var keyboard = KeyboardResponder()
     
     let webview = Webview()
@@ -95,9 +100,8 @@ struct ContentView : View {
     }
 }
 
-
 #if DEBUG
-struct ContentView_Previews : PreviewProvider {
+struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
     }

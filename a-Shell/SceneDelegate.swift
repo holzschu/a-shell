@@ -300,6 +300,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 ios_kill()
             } else {
                 guard stdin_pipe != nil else { return }
+                // TODO: don't send data if pipe already closed (^D followed by another key)
                 stdin_pipe!.fileHandleForWriting.write(data)
             }
         } else if (cmd.hasPrefix("listDirectory:")) {
