@@ -1,6 +1,6 @@
 # Privacy policy for a-Shell
 
-**q-Shell** is a terminal emulator. It runs entirely locally, on your iOS device. It does not need a network connection. 
+**a-Shell** is a terminal emulator. It runs entirely locally, on your iOS device. It does not need a network connection. 
 	
 
 **a-Shell** does not collect any data, period. 
