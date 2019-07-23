@@ -205,6 +205,20 @@
 		<string>1@ABCFGHLOPRSTUWabcdefghiklmnopqrstuvwx</string>
 		<string>file</string>
 	</array>
+	<key>lua</key>
+	<array>
+		<string>lua_ios.framework/lua_ios</string>
+		<string>lua_main</string>
+		<string>e:il:vE</string>
+		<string>file</string>
+	</array>
+	<key>luac</key>
+	<array>
+		<string>lua_ios.framework/lua_ios</string>
+		<string>luac_main</string>
+		<string>lpsvo:</string>
+		<string>file</string>
+	</array>
 	<key>md5</key>
 	<array>
 		<string>text.framework/text</string>

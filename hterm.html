@@ -255,12 +255,14 @@ body {
 				term.prefs_.set('font-family', 'Menlo');
 				term.prefs_.set('font-size', 15);
 				term.prefs_.set('cursor-blink', true); 
+				term.prefs_.set('enable-clipboard-notice', false); 
+				term.prefs_.set('use-default-window-copy', true); 
 				term.setInsertMode(true);
 				term.setReverseWraparound(true);
 				term.setWraparound(true);
 				//
 				term.onCut = function(e) { 
-					e.preventDefault();
+					// e.preventDefault();
 					var text = this.getSelectionText();
 					// The text has already been copied into the clipboard. 
 					// We also need to remove it from the command line -- if it is in.
@@ -277,18 +279,20 @@ body {
 							this.io.currentCommand =  this.io.currentCommand.slice(0, startPosition) + this.io.currentCommand.slice(startPosition + text.length, this.io.currentCommand.length); 
 							xcursor += window.promptEnd;
 						} else {
-							// startOffset can be off by promptLength. 
+							// startOffset can sometimes be off by promptLength. 
 							startPosition -= window.promptEnd; 
 							var cutText = this.io.currentCommand.slice(startPosition, startPosition + text.length); 
 							if (cutText == text) {
 								this.io.currentCommand =  this.io.currentCommand.slice(0, startPosition) + this.io.currentCommand.slice(startPosition + text.length, this.io.currentCommand.length); 
 							} else {
 								window.webkit.messageHandlers.aShell.postMessage("Cannot find text = " + text + " in " + this.io.currentCommand); 
+								// Do not cut if we don't agree on what to cut
+								e.preventDefault();
 								return; 
 							}
 						}
 						// Move cursor to startLine, startOffset
-						// We redraw the command because iOS removes extra spaces around the text.
+						// We redraw the command ourselves because iOS removes extra spaces around the text.
 						// var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
 						// io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
 						currentCommandCursorPosition = startPosition
@@ -298,7 +302,10 @@ body {
 						var endOfCommand = this.io.currentCommand.slice(startPosition, this.io.currentCommand.length); 
 						this.io.print(endOfCommand); 
 						this.io.print('\x1b[' + (ycursor + 1) + ';' + (xcursor + 1) + 'H'); // move cursor back to new position 
+						return;
 					}
+					// Do not cut if we are outside the command line:
+					e.preventDefault();
 				};
 				// 
 				term.onTerminalReady = function() {

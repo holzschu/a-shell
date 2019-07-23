@@ -4630,6 +4630,7 @@ hterm.getClientHeight = function(dom) {
  * @param {string} str The string data to copy out.
  */
 hterm.copySelectionToClipboard = function(document, str) {
+	  window.webkit.messageHandlers.aShell.postMessage('hterm.copySelectionToClipboard, incoming: ' + str);
   // Request permission if need be.
   const requestPermission = () => {
     // Use the Permissions API if available.
@@ -4701,11 +4702,15 @@ hterm.copySelectionToClipboard = function(document, str) {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1178676
     try {
       selection.selectAllChildren(copySource);
-    } catch (ex) {}
+    } catch (ex) {
+	  window.webkit.messageHandlers.aShell.postMessage('exception raised');
+    }
 
     try {
+	  window.webkit.messageHandlers.aShell.postMessage('arrived at document.execCommand: ' + str + ' ' + selection);
       document.execCommand('copy');
     } catch (firefoxException) {
+	  window.webkit.messageHandlers.aShell.postMessage('exception raised - firefoxEx');
       // Ignore this. FF throws an exception if there was an error, even
       // though the spec says just return false.
     }
@@ -11522,6 +11527,7 @@ hterm.ScrollPort.prototype.scrollWheelDelta = function(e) {
  * from also handling the events.
  */
 hterm.ScrollPort.prototype.onTouch = function(e) {
+//	e.preventDefault();
 };
 
 /**
@@ -15155,8 +15161,10 @@ hterm.Terminal.prototype.getSelectionText = function() {
  */
 hterm.Terminal.prototype.copySelectionToClipboard = function() {
   var text = this.getSelectionText();
-  if (text != null)
+  if (text != null) {
+	  window.webkit.messageHandlers.aShell.postMessage('Terminal.prototype.copySelectionToClipboard, going to copyStringToClipboard: ' + text);
     this.copyStringToClipboard(text);
+  }
 };
 
 hterm.Terminal.prototype.overlaySize = function() {
@@ -15488,10 +15496,13 @@ hterm.Terminal.prototype.onCut = function(e) { };
 hterm.Terminal.prototype.onCopy_ = function(e) {
 	window.webkit.messageHandlers.aShell.postMessage('hterm.Terminal.prototype.onCopy:' + e.type);
 	if (e.type == 'cut') {
+		document.execCommand('cut'); 
 		this.onCut(e);
+		return;
 	}
   if (!this.useDefaultWindowCopy) {
     e.preventDefault();
+	window.webkit.messageHandlers.aShell.postMessage('calling copySelectionToClipboard');
     setTimeout(this.copySelectionToClipboard.bind(this), 0);
   }
 };
