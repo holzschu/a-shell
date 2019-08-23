@@ -19,16 +19,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         initializeEnvironment()
         setenv("LC_CTYPE", "UTF-8", 1);
         setenv("LC_ALL", "UTF-8", 1);
+        setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
+        let documentsUrl = try! FileManager().url(for: .documentDirectory,
+                                                  in: .userDomainMask,
+                                                  appropriateFor: nil,
+                                                  create: true)
+        setenv("VIMHOME", documentsUrl.path, 1); // user vim files
+
         setlocale(LC_CTYPE, "UTF-8");
         setlocale(LC_ALL, "UTF-8");
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
         let currentiCloudToken = FileManager().ubiquityIdentityToken
         // print("Available fonts: \(UIFont.familyNames)");
-        let documentsUrl = try! FileManager().url(for: .documentDirectory,
-                                                  in: .userDomainMask,
-                                                  appropriateFor: nil,
-                                                  create: true)
         let homeUrl = documentsUrl.deletingLastPathComponent()
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
         return true

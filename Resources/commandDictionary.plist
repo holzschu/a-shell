@@ -485,6 +485,13 @@
 		<string></string>
 		<string>no</string>
 	</array>
+	<key>vim</key>
+	<array>
+		<string>vim.framework/vim</string>
+		<string>main</string>
+		<string></string>
+		<string>yes</string>
+	</array>
 	<key>wc</key>
 	<array>
 		<string>text.framework/text</string>

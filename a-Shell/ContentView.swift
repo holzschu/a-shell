@@ -8,47 +8,6 @@
 
 import SwiftUI
 import WebKit
-import Combine
-
-final class KeyboardResponder: BindableObject {
-    var willChange = PassthroughSubject<CGFloat, Never>()
-    
-    typealias PublisherType = PassthroughSubject<CGFloat, Never>
-    
-    private var _center: NotificationCenter
-    private(set) var currentHeight: CGFloat = 0 {
-        didSet {
-            willChange.send(currentHeight)
-        }
-    }
-
-    init(center: NotificationCenter = .default) {
-        _center = center
-        _center.addObserver(self, selector: #selector(keyBoardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
-        _center.addObserver(self, selector: #selector(keyBoardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-    }
-    
-    deinit {
-        _center.removeObserver(self)
-    }
-    
-    @objc func keyBoardWillShow(notification: Notification) {
-        print("keyboard will show")
-        if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
-            currentHeight = keyboardSize.height
-            if (!UIDevice.current.model.hasPrefix("iPad")) {
-                // currentHeight -= toolbarHeight
-            }
-            // NSLog("keyboard size = \(keyboardSize)")
-        }
-    }
-    
-    @objc func keyBoardWillHide(notification: Notification) {
-        print("keyboard will hide")
-        currentHeight = 0
-    }
-}
-
 
 struct Webview : UIViewRepresentable {
     
@@ -60,6 +19,7 @@ struct Webview : UIViewRepresentable {
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
         config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
         config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
+        config.selectionGranularity = .character; // Could be .dynamic
         webView = WKWebView(frame: .zero, configuration: config)
         webView.keyboardDisplayRequiresUserAction = false
     }
@@ -72,6 +32,8 @@ struct Webview : UIViewRepresentable {
         if (uiView.url != nil) { return } // Already loaded the page
         let htermFilePath = Bundle.main.path(forResource: "hterm", ofType: "html")
         let traitCollection = uiView.traitCollection
+        uiView.tintColor = UIColor.placeholderText.resolvedColor(with: traitCollection)
+        uiView.backgroundColor = UIColor.systemBackground.resolvedColor(with: traitCollection)
         var command = "window.foregroundColor = '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'; window.backgroundColor = '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'; "
         uiView.evaluateJavaScript(command) { (result, error) in
             if error != nil {
@@ -90,20 +52,39 @@ struct Webview : UIViewRepresentable {
 
 
 struct ContentView: View {
-    @State var keyboard = KeyboardResponder()
+    @State private var keyboardHeight: CGFloat = 0
+
+    private let showPublisher = NotificationCenter.Publisher.init(
+        center: .default,
+        name: UIResponder.keyboardWillShowNotification
+    ).map { (notification) -> CGFloat in
+        if let rect = notification.userInfo?["UIKeyboardFrameEndUserInfoKey"] as? CGRect {
+            return rect.size.height
+        } else {
+            return 0
+        }
+    }
+
+    private let hidePublisher = NotificationCenter.Publisher.init(
+        center: .default,
+        name: UIResponder.keyboardWillHideNotification
+    ).map {_ -> CGFloat in 0}
     
     let webview = Webview()
     
     var body: some View {
-        webview.padding(.bottom, keyboard.currentHeight)
         // resize depending on keyboard
+        webview.padding(.bottom, keyboardHeight).onReceive(showPublisher.merge(with: hidePublisher)) { (height) in
+            self.keyboardHeight = height
+        }
     }
 }
 
-#if DEBUG
+/* #if DEBUG
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
     }
 }
 #endif
+*/

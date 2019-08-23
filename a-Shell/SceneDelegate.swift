@@ -12,32 +12,13 @@ import WebKit
 import ios_system
 
 var messageHandlerAdded = false
-var externalKeyboardPresent: Bool?
-let toolbarHeight: CGFloat = 35
+var externalKeyboardPresent: Bool? // still needed?
 
-// Need: dictionary connecting userContentController with output streams.
-
-
-var screenWidth: CGFloat {
-    if screenOrientation.isPortrait {
-        return UIScreen.main.bounds.size.width
-    } else {
-        return UIScreen.main.bounds.size.height
-    }
-}
-var screenHeight: CGFloat {
-    if screenOrientation.isPortrait {
-        return UIScreen.main.bounds.size.height
-    } else {
-        return UIScreen.main.bounds.size.width
-    }
-}
-var screenOrientation: UIInterfaceOrientation {
-    return UIApplication.shared.statusBarOrientation
-}
+// Need: dictionary connecting userContentController with output streams (?)
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler {
     var window: UIWindow?
+    var windowScene: UIWindowScene?
     var webView: WKWebView?
     var contentView: ContentView?
     var width = 80
@@ -56,6 +37,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     let escape = "\u{001B}"
 
 
+    var screenWidth: CGFloat {
+        if windowScene!.interfaceOrientation.isPortrait {
+            return UIScreen.main.bounds.size.width
+        } else {
+            return UIScreen.main.bounds.size.height
+        }
+    }
+    var screenHeight: CGFloat {
+        if windowScene!.interfaceOrientation.isPortrait {
+            return UIScreen.main.bounds.size.height
+        } else {
+            return UIScreen.main.bounds.size.width
+        }
+    }
+    
     var fontSize: CGFloat {
         let deviceModel = UIDevice.current.model
         if (deviceModel.hasPrefix("iPad")) {
@@ -68,6 +64,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             // print("Screen width = \(screenWidth), fontSize = \(minFontSize)")
             if (minFontSize > 15) { return 15.0 }
             else { return minFontSize }
+        }
+    }
+    
+    var toolbarHeight: CGFloat {
+        let deviceModel = UIDevice.current.model
+        if (deviceModel.hasPrefix("iPad")) {
+            return 50
+        } else {
+            return 35
         }
     }
     
@@ -84,9 +89,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
 
     @objc private func controlAction(_ sender: UIBarButtonItem) {
         controlOn = !controlOn;
+        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
         if (controlOn) {
-            let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
-            // let configuration = UIImage.SymbolConfiguration(scale: .large)
             editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration)
             webView?.evaluateJavaScript("window.controlOn = true;") { (result, error) in
                 if error != nil {
@@ -97,7 +101,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 }
             }
         } else {
-            let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
             editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
             webView?.evaluateJavaScript("window.controlOn = false;") { (result, error) in
                 if error != nil {
@@ -176,8 +179,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
 
     var controlButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
-        // Was control
-        let controlButton = UIBarButtonItem(image: UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(controlAction(_:)))
+        // Image used to be control
+        let imageControl = (controlOn == true) ? UIImage(systemName: "chevron.up.square.fill")! : UIImage(systemName: "chevron.up.square")!
+        let controlButton = UIBarButtonItem(image: imageControl.withConfiguration(configuration), style: .plain, target: self, action: #selector(controlAction(_:)))
         return controlButton
     }
     
@@ -220,11 +224,42 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         return toolbar
     }()
     
+    
+    
+    func printPrompt() {
+        DispatchQueue.main.async {
+            self.webView?.evaluateJavaScript("window.printPrompt(); window.updatePromptPosition(); window.commandRunning = ''; ") { (result, error) in
+                if error != nil {
+                    print(error)
+                }
+                if (result != nil) {
+                    print(result)
+                }
+            }
+        }
+    }
+    
+    // Even if Caps-Lock is activated, send lower case letters.
+    @objc func insertKey(_ sender: UIKeyCommand) {
+        guard (sender.input != nil) else { return }
+        // This function only gets called if we are in a notebook, in edit_mode:
+        // Only remap the keys if we are in a notebook, editing cell:
+        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + sender.input! + "\");") { (result, error) in
+            if error != nil {
+                print(error)
+            }
+            if (result != nil) {
+                print(result)
+            }
+        }
+    }
+
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         let cmd:String = message.body as! String
         if (cmd.hasPrefix("shell:")) {
             // Set COLUMNS to term width:
             setenv("COLUMNS", "\(width)".toCString(), 1);
+            setenv("LINES", "\(height)".toCString(), 1);
             var command = cmd
             command.removeFirst("shell:".count)
             // set up streams for feedback:
@@ -263,16 +298,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                     self.stdout_pipe!.fileHandleForWriting.write(self.endOfTransmission.data(using: .utf8)!)
                 } else {
                     // Pipe has been closed, ready to run new command:
-                    DispatchQueue.main.async {
-                        self.webView?.evaluateJavaScript("window.printPrompt(); window.commandRunning = ''; ") { (result, error) in
-                            if error != nil {
-                                print(error)
-                            }
-                            if (result != nil) {
-                                print(result)
-                            }
-                        }
-                    }
+                    self.printPrompt();
                 }
             }
         } else if (cmd.hasPrefix("width:")) {
@@ -369,6 +395,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnecting:SceneSession` instead).
         // Use a UIHostingController as window root view controller
         if let windowScene = scene as? UIWindowScene {
+            self.windowScene = windowScene
             let window = UIWindow(windowScene: windowScene)
             contentView = ContentView()
             window.rootViewController = UIHostingController(rootView: contentView)
@@ -381,18 +408,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             // add a contentController that is specific to each webview
             webView?.configuration.userContentController = WKUserContentController()
             webView?.configuration.userContentController.add(self, name: "aShell") 
-            if (!UIDevice.current.model.hasPrefix("iPad")) {
-                // toolbar for iPhones and iPod touch
-                webView?.addInputAccessoryView(toolbar: self.editorToolbar)
-            } else {
-                webContentView?.inputAssistantItem.leadingBarButtonGroups = [UIBarButtonItemGroup(barButtonItems:
-                    [tabButton, controlButton, escapeButton
-                ], representativeItem: nil)]
-                webContentView?.inputAssistantItem.trailingBarButtonGroups = [UIBarButtonItemGroup(barButtonItems:
-                    [upButton, downButton,
-                     leftButton, rightButton,
-                ], representativeItem: nil)]
-            }
+            // toolbar for everyone because I can't change the aspect of inputAssistantItem buttons
+            webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             // Add a callback to change the buttons every time the user changes the input method:
             NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidChange), name: UITextInputMode.currentInputModeDidChangeNotification, object: nil)
             // And another to be called each time the keyboard is resized (including when an external KB is connected):
@@ -424,35 +441,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         let keyboardFrame = (info?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
         guard (keyboardFrame != nil) else { return }
         // resize webview
-        
-        if (!UIDevice.current.model.hasPrefix("iPad")) {
-            // iPhones and iPod touch
-            // iPhones or iPads: there is a toolbar at the bottom:
-            if (keyboardFrame!.size.height <= toolbarHeight) {
-                // Only the toolbar is left, hide it:
-                self.editorToolbar.isHidden = true
-                self.editorToolbar.isUserInteractionEnabled = false
-            } else {
-                self.editorToolbar.isHidden = false
-                self.editorToolbar.isUserInteractionEnabled = true
-            }
-            return
+
+        // Is there a toolbar at the bottom?
+        if (keyboardFrame!.size.height <= toolbarHeight) {
+            // Only the toolbar is left, hide it:
+            self.editorToolbar.isHidden = true
+            self.editorToolbar.isUserInteractionEnabled = false
+        } else {
+            self.editorToolbar.isHidden = false
+            self.editorToolbar.isUserInteractionEnabled = true
         }
         
         // iPads:
         // Is there an external keyboard connected?
-        if (info != nil) {
+        if (UIDevice.current.model.hasPrefix("iPad")) {
+            if (info != nil) {
             // "keyboardFrameEnd" is a CGRect corresponding to the size of the keyboard plus the button bar.
             // It's 55 when there is an external keyboard connected, 300+ without.
             // Actual values may vary depending on device, but 60 seems a good threshold.
-            externalKeyboardPresent = keyboardFrame!.size.height < 60
-            webContentView?.inputAssistantItem.leadingBarButtonGroups = [UIBarButtonItemGroup(barButtonItems:
-                [tabButton, controlButton, escapeButton
-            ], representativeItem: nil)]
-            webContentView?.inputAssistantItem.trailingBarButtonGroups = [UIBarButtonItemGroup(barButtonItems:
-                [upButton, downButton,
-                 leftButton, rightButton,
-            ], representativeItem: nil)]
+                // externalKeyboardPresent = keyboardFrame!.size.height < 60
+            }
         }
     }
 
@@ -521,8 +529,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
 
     private func outputToWebView(string: String) {
         guard (webView != nil) else { return }
-        // Some file names have "\r" in them. It crashes ls. Might be an issue later with interactive commands.
-        var parsedString = string.replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "?")
+        // Sanitize the output string to it can be sent to javascript:
+        var parsedString = string.replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
+        // NSLog("\(parsedString)")
+        // This may cause several \r in a row
+        let command = "window.term_.io.print(\"" + parsedString + "\");"
+        DispatchQueue.main.async {
+            self.webView!.evaluateJavaScript(command) { (result, error) in
+                if error != nil {
+                    NSLog("Error in print; offending line = \(parsedString)")
+                    print(error)
+                }
+                if (result != nil) {
+                    print(result)
+                }
+            }
+        }
+        return
+        // I know
         while (parsedString.count > 0) {
             guard let firstReturn = parsedString.firstIndex(of: "\n") else {
                 let command = "window.term_.io.print(\"" + parsedString + "\");"
@@ -565,16 +589,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             outputToWebView(string: string)
             if (string.contains(endOfTransmission)) {
                 // Finished processing the output, can get back to prompt:
-                DispatchQueue.main.async {
-                    self.webView?.evaluateJavaScript("window.printPrompt(); window.commandRunning = ''; ") { (result, error) in
-                        if error != nil {
-                            print(error)
-                        }
-                        if (result != nil) {
-                            print(result)
-                        }
-                    }
-                }
+                printPrompt();
             }
         } else {
             NSLog("Couldn't convert data in stdout")

@@ -669,6 +669,7 @@ lib.colors.crackRGB = function(color) {
     }
   }
 
+  window.webkit.messageHandlers.aShell.postMessage('Couldn\'t crack: ' + color);
   console.error('Couldn\'t crack: ' + color);
   return null;
 };
@@ -2002,6 +2003,7 @@ lib.MessageManager.prototype.processI18nAttribute = function(node) {
   try {
     i18n = JSON.parse(i18n);
   } catch (ex) {
+	window.webkit.messageHandlers.aShell.postMessage('Can\'t parse ' + node.tagName + '#' + node.id + ': ' + i18n);
     console.error('Can\'t parse ' + node.tagName + '#' + node.id + ': ' + i18n);
     throw ex;
   }
@@ -3079,6 +3081,7 @@ lib.Storage.Chrome.prototype.setItem = function(key, value, opt_callback) {
         setTimeout(() => this.setItem(key, value, onComplete), 1000);
         return;
       } else {
+		window.webkit.messageHandlers.aShell.postMessage(`Unknown runtime error: ${err}`);
         console.error(`Unknown runtime error: ${err}`);
       }
     }
@@ -4630,7 +4633,6 @@ hterm.getClientHeight = function(dom) {
  * @param {string} str The string data to copy out.
  */
 hterm.copySelectionToClipboard = function(document, str) {
-	  window.webkit.messageHandlers.aShell.postMessage('hterm.copySelectionToClipboard, incoming: ' + str);
   // Request permission if need be.
   const requestPermission = () => {
     // Use the Permissions API if available.
@@ -4707,7 +4709,6 @@ hterm.copySelectionToClipboard = function(document, str) {
     }
 
     try {
-	  window.webkit.messageHandlers.aShell.postMessage('arrived at document.execCommand: ' + str + ' ' + selection);
       document.execCommand('copy');
     } catch (firefoxException) {
 	  window.webkit.messageHandlers.aShell.postMessage('exception raised - firefoxEx');
@@ -5655,6 +5656,7 @@ hterm.Frame.prototype.onClose = function() {};
  * Send a message to the iframe.
  */
 hterm.Frame.prototype.postMessage = function(name, argv) {
+	window.webkit.messageHandlers.aShell.postMessage('JS message: ' + name + ' argv= ' + argv); 
   if (!this.messageChannel_)
     throw new Error('Message channel is not set up.');
 
@@ -6020,6 +6022,7 @@ hterm.Keyboard.prototype.onTextInput_ = function(e) {
   // Just pass the generated buffer straight down.  No need for us to split it
   // up or otherwise parse it ahead of times.
   this.terminal.onVTKeystroke(e.data);
+  e.preventDefault(); // iOS: prevent WkWebView from inserting CJK characters a second time
 };
 
 /**
@@ -6098,6 +6101,7 @@ hterm.Keyboard.prototype.onKeyUp_ = function(e) {
  * Handle onKeyDown events.
  */
 hterm.Keyboard.prototype.onKeyDown_ = function(e) {
+	
   if (e.keyCode == 18)
     this.altKeyPressed = this.altKeyPressed | (1 << (e.location - 1));
 
@@ -9193,6 +9197,7 @@ hterm.Screen.prototype.commitLineOverflow = function() {
  * @param {integer} column The zero based column.
  */
 hterm.Screen.prototype.setCursorPosition = function(row, column) {
+  	
   if (!this.rowsArray.length) {
     console.warn('Attempt to set cursor position on empty screen.');
     return;
@@ -9225,6 +9230,8 @@ hterm.Screen.prototype.setCursorPosition = function(row, column) {
   }
 
   var currentColumn = 0;
+	if (this.cursorRowNode_ != null) {
+	}
 
   if (rowNode == this.cursorRowNode_) {
     if (column >= this.cursorPosition.column - this.cursorOffset_) {
@@ -9236,6 +9243,8 @@ hterm.Screen.prototype.setCursorPosition = function(row, column) {
   }
 
   this.cursorPosition.move(row, column);
+	if (this.cursorRowNode_ != null) {
+	}
 
   while (node) {
     var offset = column - currentColumn;
@@ -9249,6 +9258,7 @@ hterm.Screen.prototype.setCursorPosition = function(row, column) {
     currentColumn += width;
     node = node.nextSibling;
   }
+  	
 };
 
 /**
@@ -9353,6 +9363,7 @@ hterm.Screen.prototype.maybeClipCurrentRow = function() {
  * using hterm.Screen..commitLineOverflow().
  */
 hterm.Screen.prototype.insertString = function(str, wcwidth=undefined) {
+  	
   var cursorNode = this.cursorNode_;
   var cursorNodeText = cursorNode.textContent;
 
@@ -11648,7 +11659,6 @@ hterm.ScrollPort.prototype.onCopy = function(e) { };
  * of the "select bags" with the missing text.
  */
 hterm.ScrollPort.prototype.onCopy_ = function(e) {
-	window.webkit.messageHandlers.aShell.postMessage('hterm.ScrollPort.prototype.onCopy:' + e.type);
 	
   this.onCopy(e);
 
@@ -13624,6 +13634,7 @@ hterm.Terminal.prototype.renumberRows_ = function(start, end, opt_screen) {
  * @param{string} str The string to print.
  */
 hterm.Terminal.prototype.print = function(str) {
+  	
   this.scheduleSyncCursorPosition_();
 
   // Basic accessibility output for the screen reader.
@@ -13651,6 +13662,7 @@ hterm.Terminal.prototype.print = function(str) {
       didOverflow = true;
       count = this.screenSize.width - this.screen_.cursorPosition.column;
     }
+      
 
     if (didOverflow && !this.options_.wraparound) {
       // If the string overflowed the line but wraparound is off, then the
@@ -13663,7 +13675,9 @@ hterm.Terminal.prototype.print = function(str) {
       substr = lib.wc.substr(str, startOffset, count);
     }
 
+	  
     var tokens = hterm.TextAttributes.splitWidecharString(substr);
+
     for (var i = 0; i < tokens.length; i++) {
       this.screen_.textAttributes.wcNode = tokens[i].wcNode;
       this.screen_.textAttributes.asciiNode = tokens[i].asciiNode;
@@ -15162,7 +15176,6 @@ hterm.Terminal.prototype.getSelectionText = function() {
 hterm.Terminal.prototype.copySelectionToClipboard = function() {
   var text = this.getSelectionText();
   if (text != null) {
-	  window.webkit.messageHandlers.aShell.postMessage('Terminal.prototype.copySelectionToClipboard, going to copyStringToClipboard: ' + text);
     this.copyStringToClipboard(text);
   }
 };
@@ -15494,7 +15507,7 @@ hterm.Terminal.prototype.onCut = function(e) { };
 
 
 hterm.Terminal.prototype.onCopy_ = function(e) {
-	window.webkit.messageHandlers.aShell.postMessage('hterm.Terminal.prototype.onCopy:' + e.type);
+	// iOS change: handle cut events ourselves
 	if (e.type == 'cut') {
 		document.execCommand('cut'); 
 		this.onCut(e);
@@ -15502,7 +15515,6 @@ hterm.Terminal.prototype.onCopy_ = function(e) {
 	}
   if (!this.useDefaultWindowCopy) {
     e.preventDefault();
-	window.webkit.messageHandlers.aShell.postMessage('calling copySelectionToClipboard');
     setTimeout(this.copySelectionToClipboard.bind(this), 0);
   }
 };
@@ -15845,6 +15857,7 @@ hterm.Terminal.IO.prototype.writeUTF16 = function(string) {
   // If another process has the foreground IO, buffer new data sent to this IO
   // (since it's in the background).  When we're made the foreground IO again,
   // we'll flush everything.
+
   if (this.terminal_.io != this) {
     this.buffered_ += string;
     return;
@@ -16147,9 +16160,11 @@ hterm.TextAttributes.prototype.createContainer = function(opt_textContent) {
  *     this attributes instance.
  */
 hterm.TextAttributes.prototype.matchesContainer = function(obj) {
-  if (typeof obj == 'string' || obj.nodeType == Node.TEXT_NODE)
-    return this.isDefault();
 
+  if (typeof obj == 'string' || obj.nodeType == Node.TEXT_NODE) {
+    return this.isDefault();
+  }
+	
   var style = obj.style;
 
   // We don't want to put multiple characters in a wcNode or a tile.
@@ -16941,6 +16956,7 @@ hterm.VT.prototype.onTerminalMouse_ = function(e) {
  * The buffer will be decoded according to the 'receive-encoding' preference.
  */
 hterm.VT.prototype.interpret = function(buf) {
+
   this.parseState_.resetBuf(buf);
 
   while (!this.parseState_.isComplete()) {
@@ -17010,6 +17026,7 @@ hterm.VT.prototype.parseUnknown_ = function(parseState) {
   function print(str) {
     if (!self.codingSystemUtf8_ && self[self.GL].GL)
       str = self[self.GL].GL(str);
+
 
     self.terminal.print(str);
   }

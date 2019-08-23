@@ -54,6 +54,8 @@ extension WKWebView {
             superWebView = superWebView?.superview
         }
         let customInputAccessory = objc_getAssociatedObject(superWebView, &ToolbarHandle)
+        superWebView?.inputAssistantItem.leadingBarButtonGroups = []
+        superWebView?.inputAssistantItem.trailingBarButtonGroups = []
         return customInputAccessory as? UIView
     }
     
@@ -70,6 +72,18 @@ extension WKWebView {
         }
     }
     
+    private var webContentView: UIView? {
+        for subview in (self.scrollView.subviews) {
+            if subview.classForCoder.description() == "WKContentView" {
+                return subview
+            }
+            // adding the toolbar has changed the name of the view:
+            if subview.classForCoder.description() == "WKApplicationStateTrackingView_CustomInputAccessoryView" {
+                return subview
+            }
+        }
+        return nil
+    }
     
     func setKeyboardRequiresUserInteraction( _ value: Bool) {
         guard let WKContentView: AnyClass = NSClassFromString("WKContentView") else {
@@ -89,4 +103,5 @@ extension WKWebView {
             method_setImplementation(method, imp)
         }
     }
+    
 }
