@@ -304,11 +304,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         } else if (cmd.hasPrefix("width:")) {
             var command = cmd
             command.removeFirst("width:".count)
-            width = Int(command) ?? 80
+            let newWidth = Int(command) ?? 80
+            if (newWidth != width) {
+                width = newWidth
+                setenv("COLUMNS", "\(width)".toCString(), 1)
+                kill(getpid(), SIGWINCH)
+            }
         } else if (cmd.hasPrefix("height:")) {
             var command = cmd
             command.removeFirst("height:".count)
-            height = Int(command) ?? 80
+            let newHeight = Int(command) ?? 80
+            if (newHeight != height) {
+                height = newHeight
+                setenv("LINES", "\(height)".toCString(), 1)
+                kill(getpid(), SIGWINCH)
+            }
         } else if (cmd.hasPrefix("controlOff")) {
             controlOn = false
             let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)

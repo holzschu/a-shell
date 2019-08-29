@@ -41,7 +41,7 @@ textarea,
 	</head>
 
 	<body>
-		<div id='terminal' contenteditable='true'></div>
+		<div id='terminal' contenteditable='false'></div>
 		<script>
 			function initContent(io) {
 				const ver = lib.resource.getData('libdot/changelog/version');
@@ -69,6 +69,11 @@ textarea,
 				fileList = '';
 				lastDirectory = '';
 			}
+            
+            function isLetter(c) {
+            	// TODO: extension for CJK characters (hard)
+				return (c.toLowerCase() != c.toUpperCase());
+			}
 
             function printPrompt() {
 				// prints the prompt and initializes all variables related to prompt position
@@ -87,24 +92,20 @@ textarea,
             // we use lib.wc.strWidth instead of length because of multiple-width characters (CJK, mostly).
             // TODO: get correct character width for emojis.
             function printString(string) {
-				window.webkit.messageHandlers.aShell.postMessage('printString entered: ' + string);
 				var l = lib.wc.strWidth(string);
 				var currentCommand = window.term_.io.currentCommand;
 				// clear the rest of the line, then reprint. 
 				window.term_.io.print('\x1b[0J'); // delete display after cursor
 				window.term_.io.print(string); 
-				window.webkit.messageHandlers.aShell.postMessage('after _window.term_.io.print(string): ' + window.term_.screen_.cursorRowNode_.innerHTML);
 				
 				// print remainder of command line
 				window.term_.io.print(currentCommand.slice(currentCommandCursorPosition, currentCommand.length))
-				window.webkit.messageHandlers.aShell.postMessage('after print remainder of command line: ' + window.term_.screen_.cursorRowNode_.innerHTML);
 				// move cursor back to where it was (don't use term.screen_.cursorPosition):
 				var endOfCommand = currentCommand.slice(currentCommandCursorPosition, currentCommand.length);
 				var endOfCommandWidth = lib.wc.strWidth(endOfCommand);
 				for (var i = 0; i < endOfCommandWidth; i++) {
 					window.term_.io.print('\b'); 
 				}
-				window.webkit.messageHandlers.aShell.postMessage('after moving cursor: ' + window.term_.screen_.cursorRowNode_.innerHTML);
 			}
 
             // prints a string for autocomplete and move the rest of the command around, even if it is over multiple lines.
@@ -269,11 +270,11 @@ textarea,
 				term.prefs_.set('copy-on-select', false);
 				term.prefs_.set('audible-bell-sound', '');
 				term.prefs_.set('receive-encoding', 'utf-8'); 
+				term.prefs_.set('meta-sends-escape', 'false'); 
 				term.setReverseWraparound(true);
 				term.setWraparound(true);
 				//
 				term.onCut = function(e) { 
-					// e.preventDefault();
 					var text = this.getSelectionText();
 					// The text has already been copied into the clipboard. 
 					// We also need to remove it from the command line -- if it is in.
@@ -322,17 +323,18 @@ textarea,
 				term.onTerminalReady = function() {
 					const io = this.io.push();
 					io.onVTKeystroke = (string) => {
-						window.webkit.messageHandlers.aShell.postMessage('onVTKeystroke entered: ' + string);
+						window.webkit.messageHandlers.aShell.postMessage('received key input:' + string);
 						if (window.controlOn) {
 							// produce string = control + character 
 							var charcode = string.toUpperCase().charCodeAt(0);
 							string = String.fromCharCode(charcode - 64);
 							window.controlOn = false;
-							window.webkit.messageHandlers.aShell.postMessage('controlOff');							
+							window.webkit.messageHandlers.aShell.postMessage('controlOff');
 						}
 						if (window.commandRunning.startsWith("vim")) {
 							// specific treatment for editors: forward all keyboard input to the editor
 							// TODO: do the same for other editors (when there are some)
+							// window.webkit.messageHandlers.aShell.postMessage('sending: ' + string); // for debugging
 							window.webkit.messageHandlers.aShell.postMessage('input:' + string);
 						} else if ((window.commandRunning != '') && (string.charCodeAt(0) < 9)) {
 							// Send control messages back to command:
@@ -528,15 +530,49 @@ textarea,
 										var currentChar = io.currentCommand[currentCommandCursorPosition];
 										var currentCharWidth = lib.wc.strWidth(currentChar);
 										if (term.screen_.cursorPosition.column < term.screenSize.width - currentCharWidth) {
-											// for (var i = 0; i < currentCharWidth; i++) {
 												io.print('\x1b[' + currentCharWidth + 'C'); // move cursor forward n chars
-											// }
 										} else {
 											io.print('\x1b[' + (term.screen_.cursorPosition.row + 2) + ';' + 0 + 'H'); // move cursor to start of next line
 										}
 										currentCommandCursorPosition += 1;
 									}
 									break; 
+								case String.fromCharCode(27) + "[1;3D":  // Alt-left arrow
+									window.webkit.messageHandlers.aShell.postMessage('received alt-left arrow');
+									disableAutocompleteMenu();
+									if (currentCommandCursorPosition > 0) { // prompt.length
+										while (currentCommandCursorPosition > 0) {
+											currentCommandCursorPosition -= 1;
+											var currentChar = io.currentCommand[currentCommandCursorPosition];
+											var currentCharWidth = lib.wc.strWidth(currentChar);
+											for (var i = 0; i < currentCharWidth; i++) {
+												io.print('\b'); // move cursor back n chars, across lines
+											}
+											if  (!isLetter(currentChar)) {
+												break;
+											}
+										}
+									}
+									break;
+								case String.fromCharCode(27) + "[1;3C":  // Alt-right arrow
+									window.webkit.messageHandlers.aShell.postMessage('received alt-right arrow');
+									disableAutocompleteMenu();
+									if (currentCommandCursorPosition < io.currentCommand.length) { // prompt.length
+										while (currentCommandCursorPosition < io.currentCommand.length) {
+											currentCommandCursorPosition += 1;
+											var currentChar = io.currentCommand[currentCommandCursorPosition];
+											var currentCharWidth = lib.wc.strWidth(currentChar);
+											if (term.screen_.cursorPosition.column < term.screenSize.width - currentCharWidth) {
+												io.print('\x1b[' + currentCharWidth + 'C'); // move cursor forward n chars
+											} else {
+												io.print('\x1b[' + (term.screen_.cursorPosition.row + 2) + ';' + 0 + 'H'); // move cursor to start of next line
+											}
+											if  (!isLetter(currentChar)) {
+												break;
+											}
+										}
+									}
+									break;
 								case String.fromCharCode(9):  // Tab, so autocomplete
 									if (window.commandRunning == '') {
 										if (autocompleteOn) {
@@ -554,7 +590,59 @@ textarea,
 										printString("    ");
 									}
 									break;
+								case String.fromCharCode(1):  // Ctrl-A: beginnging of line
+									disableAutocompleteMenu();
+									if (currentCommandCursorPosition > 0) { // prompt.length
+										var scrolledLines = window.promptScroll - this.scrollPort_.getTopRowIndex();
+										var topRowCommand = window.promptLine + scrolledLines;
+										this.io.print('\x1b[' + (topRowCommand + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to new position 
+										currentCommandCursorPosition = 0; 
+									}
+									break;
+								case String.fromCharCode(3):  // Ctrl-C: cancel current command
+									disableAutocompleteMenu();
+									// Before *not*-executing command, move to end of line if not already there:
+									// Compute how many lines should we move downward:
+									var beginCommand = io.currentCommand.slice(0, currentCommandCursorPosition); 
+									var lineCursor = Math.floor((lib.wc.strWidth(beginCommand) + window.promptEnd)/ term.screenSize.width);
+									var lineEndCommand = Math.floor((lib.wc.strWidth(io.currentCommand) + window.promptEnd)/ term.screenSize.width);
+									for (var i = 0; i < lineEndCommand - lineCursor; i++) {
+										io.println('');
+									}
+									io.println('');
+									printPrompt();
+									updatePromptPosition(); 
+									io.currentCommand = '';
+									currentCommandCursorPosition = 0;
+									if (window.commandRunning != '') {
+										window.commandInsideCommandIndex = window.maxCommandInsideCommandIndex; 
+									} else { 									
+										window.commandIndex = window.maxCommandIndex
+									}
+									break;
+								case String.fromCharCode(5):  // Ctrl-E: end of line
+									disableAutocompleteMenu();
+									if (currentCommandCursorPosition < io.currentCommand.length) {
+										var scrolledLines = window.promptScroll - this.scrollPort_.getTopRowIndex();
+										var topRowCommand = window.promptLine + scrolledLines;
+										var fullLength = lib.wc.strWidth(io.currentCommand) + window.promptEnd; 
+										var y = Math.floor((fullLength / this.screenSize.width)) ;
+										var x = fullLength - this.screenSize.width * y;
+										y += topRowCommand
+										
+										this.io.print('\x1b[' + (y + 1) + ';' + (x + 1) + 'H'); // move cursor to new position 
+										currentCommandCursorPosition = io.currentCommand.length; 
+									}
+									break;
+								case String.fromCharCode(11):  // Ctrl-K: kill until end of line
+									disableAutocompleteMenu();
+									if (currentCommandCursorPosition < io.currentCommand.length) { 
+										io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition)
+										window.term_.io.print('\x1b[0J'); // delete display after cursor
+									}
+									break;
 								default:
+									// TODO: deactivate anything that is < 32
 									// For debugging:
 									// var charcode = string.charCodeAt(0);
 									// window.webkit.messageHandlers.aShell.postMessage('' + charcode + " = " + string);

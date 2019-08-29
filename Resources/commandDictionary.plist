@@ -303,6 +303,13 @@
 		<string>LP</string>
 		<string>no</string>
 	</array>
+	<key>python3</key>
+	<array>
+		<string>python3_ios.framework/python3_ios</string>
+		<string>python_main</string>
+		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
+		<string>file</string>
+	</array>
 	<key>readlink</key>
 	<array>
 		<string>files.framework/files</string>
