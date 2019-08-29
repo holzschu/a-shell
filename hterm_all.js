@@ -6033,6 +6033,7 @@ hterm.Keyboard.prototype.onTextInput_ = function(e) {
 hterm.Keyboard.prototype.onKeyPress_ = function(e) {
   // FF doesn't set keyCode reliably in keypress events.  Stick to the which
   // field here until we can move to keydown entirely.
+
   const key = String.fromCharCode(e.which).toLowerCase();
   if ((e.ctrlKey || e.metaKey) && (key == 'c' || key == 'v')) {
     // On FF the key press (not key down) event gets fired for copy/paste.
@@ -6090,6 +6091,7 @@ hterm.Keyboard.prototype.onFocusOut_ = function(e) {
 };
 
 hterm.Keyboard.prototype.onKeyUp_ = function(e) {
+	
   if (e.keyCode == 18)
     this.altKeyPressed = this.altKeyPressed & ~(1 << (e.location - 1));
 
@@ -6108,11 +6110,13 @@ hterm.Keyboard.prototype.onKeyDown_ = function(e) {
   if (e.keyCode == 27)
     this.preventChromeAppNonCtrlShiftDefault_(e);
 
+
   var keyDef = this.keyMap.keyDefs[e.keyCode];
   if (!keyDef) {
     // If this key hasn't been explicitly registered, fall back to the unknown
     // key mapping (keyCode == 0), and then automatically register it to avoid
     // any further warnings here.
+    window.webkit.messageHandlers.aShell.postMessage('No definition for key ' + e.key + '(keyCode: ' + e.keyCode + ')'); 
     console.warn(`No definition for key ${e.key} (keyCode ${e.keyCode})`);
     keyDef = this.keyMap.keyDefs[0];
     this.keyMap.addKeyDef(e.keyCode, keyDef);
