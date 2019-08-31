@@ -323,7 +323,7 @@ textarea,
 				term.onTerminalReady = function() {
 					const io = this.io.push();
 					io.onVTKeystroke = (string) => {
-						window.webkit.messageHandlers.aShell.postMessage('received key input:' + string);
+						// window.webkit.messageHandlers.aShell.postMessage('received key input:' + string);
 						if (window.controlOn) {
 							// produce string = control + character 
 							var charcode = string.toUpperCase().charCodeAt(0);
@@ -336,7 +336,7 @@ textarea,
 							// TODO: do the same for other editors (when there are some)
 							// window.webkit.messageHandlers.aShell.postMessage('sending: ' + string); // for debugging
 							window.webkit.messageHandlers.aShell.postMessage('input:' + string);
-						} else if ((window.commandRunning != '') && (string.charCodeAt(0) < 9)) {
+						} else if ((window.commandRunning != '') && ((string.charCodeAt(0) == 3) || (string.charCodeAt(0) == 4))) {
 							// Send control messages back to command:
 							// first, flush existing input:
 							if (io.currencCommand != '') {
@@ -445,6 +445,7 @@ textarea,
 									disableAutocompleteMenu();
 									break;
 								case String.fromCharCode(27) + "[A":  // Up arrow
+								case String.fromCharCode(27) + "[1;3A":  // Alt-Up arrow
 									if (window.commandRunning != '') {
 										if (window.commandInsideCommandIndex > 0) {
 											if (window.commandInsideCommandIndex === window.maxCommandInsideCommandIndex) {
@@ -453,7 +454,14 @@ textarea,
 											}
 											io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor back to initial position
 											io.print('\x1b[0J'); // delete display after cursor
-											window.commandInsideCommandIndex -= 1;
+											if (string == String.fromCharCode(27) + "[A") { 
+												window.commandInsideCommandIndex -= 1;
+											} else {
+												window.commandInsideCommandIndex -= 5;
+												if (window.commandInsideCommandIndex < 0) {
+													window.commandInsideCommandIndex = 0;
+												}
+											}
 											io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
 											io.print(io.currentCommand);
 											currentCommandCursorPosition = io.currentCommand.length;
@@ -475,7 +483,14 @@ textarea,
 											var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
 											io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
 											io.print('\x1b[0J'); // delete display after cursor
-											window.commandIndex -= 1;
+											if (string == String.fromCharCode(27) + "[A") { 
+												window.commandIndex -= 1;
+											} else {
+												window.commandIndex -= 5;
+												if (window.commandIndex < 0) {
+													window.commandIndex = 0;
+												}
+											}
 											io.currentCommand = window.commandArray[window.commandIndex]; 
 											io.print(io.currentCommand);
 											currentCommandCursorPosition = io.currentCommand.length;
@@ -483,11 +498,19 @@ textarea,
 									}
 									break;
 								case String.fromCharCode(27) + "[B":  // Down arrow
+								case String.fromCharCode(27) + "[1;3B":  // Alt-Down arrow
 									if (window.commandRunning != '') {
 										if (window.commandInsideCommandIndex < window.maxCommandInsideCommandIndex) {
 											io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
 											io.print('\x1b[0J'); // delete display after cursor
-											window.commandInsideCommandIndex += 1;
+											if (string == String.fromCharCode(27) + "[B") { 
+												window.commandInsideCommandIndex += 1;
+											} else {
+												window.commandInsideCommandIndex += 5;
+												if (window.commandInsideCommandIndex >= window.maxCommandInsideCommandIndex) {
+													window.commandInsideCommandIndex = window.maxCommandInsideCommandIndex;
+												}
+											}
 											io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
 											io.print(io.currentCommand);
 											currentCommandCursorPosition = io.currentCommand.length;
@@ -505,7 +528,14 @@ textarea,
 											var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
 											io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
 											io.print('\x1b[0J'); // delete display after cursor
-											window.commandIndex += 1;
+											if (string == String.fromCharCode(27) + "[B") { 
+												window.commandIndex += 1;
+											} else {
+												window.commandIndex += 5;
+												if (window.commandIndex >= window.maxCommandIndex) {
+													window.commandIndex = window.maxCommandIndex;
+												}
+											}
 											io.currentCommand = window.commandArray[window.commandIndex]; 
 											io.print(io.currentCommand);
 											currentCommandCursorPosition = io.currentCommand.length;
@@ -588,6 +618,7 @@ textarea,
 										io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + "    " + 
 											io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
 										printString("    ");
+										currentCommandCursorPosition += 4;
 									}
 									break;
 								case String.fromCharCode(1):  // Ctrl-A: beginnging of line

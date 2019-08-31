@@ -76,13 +76,15 @@ extension WKWebView {
 
     @objc func insertC(_ sender: UIKeyCommand) {
         guard (sender.input != nil) else { return }
-        // This function only gets called if we are in a notebook, in edit_mode:
-        // Only remap the keys if we are in a notebook, editing cell:
         var string = sender.input!
-        // There must be a better way to check if control has been pressed:
-        if ((sender.modifierFlags.rawValue & UIKeyModifierFlags.alternate.rawValue) == UIKeyModifierFlags.alternate.rawValue) {
+        // For reasons, the C key produces different chains. We override.
+        // TODO: check this is still needed with the latest beta.
+        if (sender.modifierFlags.contains(.alternate)) {
             string = "ç"
-        } else if ((sender.modifierFlags.rawValue & UIKeyModifierFlags.control.rawValue) == UIKeyModifierFlags.control.rawValue) {
+            if (sender.modifierFlags.contains(.shift)) {
+                string = "Ç"
+            }
+        } else if (sender.modifierFlags.contains(.control)) {
             string = "\u{003}"
         }
         let commandString = "window.term_.io.onVTKeystroke(\'\(string)');"

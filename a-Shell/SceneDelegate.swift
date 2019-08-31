@@ -239,6 +239,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         }
     }
     
+    func printHistory() {
+        DispatchQueue.main.async {
+            self.webView?.evaluateJavaScript("window.commandArray.forEach(item => window.term_.io.println(item));") { (result, error) in
+                if error != nil {
+                    print(error)
+                }
+                if (result != nil) {
+                    print(result)
+                }
+            }
+        }
+    }
     // Even if Caps-Lock is activated, send lower case letters.
     @objc func insertKey(_ sender: UIKeyCommand) {
         guard (sender.input != nil) else { return }
@@ -287,6 +299,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 thread_stderr = nil
                 // Make sure we're running the right session
                 ios_switchSession(self.persistentIdentifier?.toCString())
+                ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
                 ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                 // Execute command (remove spaces at the beginning and end):
                 ios_system(command.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -328,6 +341,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             command.removeFirst("input:".count)
             guard let data = command.data(using: .utf8) else { return }
             ios_switchSession(self.persistentIdentifier?.toCString())
+            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
             if (command == endOfTransmission) {
                 // Stop standard input for the command:
@@ -414,6 +428,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             window.makeKeyAndVisible()
             self.persistentIdentifier = session.persistentIdentifier
             ios_switchSession(self.persistentIdentifier?.toCString())
+            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             webView = contentView?.webview.webView
             // add a contentController that is specific to each webview
             webView?.configuration.userContentController = WKUserContentController()

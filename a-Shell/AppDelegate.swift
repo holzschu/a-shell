@@ -170,6 +170,36 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         initializeEnvironment()
+        replaceCommand("history", "history", true)
+        replaceCommand("amstex", "tex", true)
+        replaceCommand("bibtex", "tex", true)
+        replaceCommand("cslatex", "tex", true)
+        replaceCommand("csplain", "tex", true)
+        replaceCommand("dvilualatex", "tex", true)
+        replaceCommand("dviluatex", "tex", true)
+        replaceCommand("eplain", "tex", true)
+        replaceCommand("etex", "tex", true)
+        replaceCommand("jadetex", "tex", true)
+        replaceCommand("latex", "tex", true)
+        replaceCommand("lualatex", "tex", true)
+        replaceCommand("luatex", "tex", true)
+        replaceCommand("mex", "tex", true)
+        replaceCommand("mllatex", "tex", true)
+        replaceCommand("mltex", "tex", true)
+        replaceCommand("pdfcslatex", "tex", true)
+        replaceCommand("pdfcsplain", "tex", true)
+        replaceCommand("pdfetex", "tex", true)
+        replaceCommand("pdfjadetex", "tex", true)
+        replaceCommand("pdflatex", "tex", true)
+        replaceCommand("pdfmex", "tex", true)
+        replaceCommand("pdftex", "tex", true)
+        replaceCommand("pdfxmltex", "tex", true)
+        replaceCommand("tex", "tex", true)
+        replaceCommand("texlua", "tex", true)
+        replaceCommand("texluac", "tex", true)
+        replaceCommand("texsis", "tex", true)
+        replaceCommand("utf8mex", "tex", true)
+        replaceCommand("xmltex", "tex", true)
         numPythonInterpreters = 1;
         setenv("LC_CTYPE", "UTF-8", 1);
         setenv("LC_ALL", "UTF-8", 1);
@@ -298,21 +328,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 self.TeXRequested = false
             } else {
                 NSLog("TeX resource succesfully downloaded")
-                let archiveFileLocation = TeXBundleResource.bundle.path(forResource: "TeX.tar.gz", ofType: nil)
+                let archiveFileLocation = TeXBundleResource.bundle.path(forResource: "texlive", ofType: .directory)
                 NSLog("downloaded file: \(archiveFileLocation)")
                 if ((archiveFileLocation) != nil) {
-                    // unpack in place
-                    let command = "tar --strip-components 1 --keep-newer-files -C " + libraryURL.path + " -xzf " + archiveFileLocation!
-                    // let command = "cp " + archiveFileLocation! + " " + libraryURL.path
-                    NSLog("Starting command: \(command)")
-                    let pid:pid_t = ios_fork()
-                    ios_system(command)
-                    ios_waitpid(pid) // wait until the command is terminated
-                    // TODO: change command
+                    // set TEXMF
                     // Send notification if enabled
                     var message = "TeX is now activated."
                     let notificationCenter = UNUserNotificationCenter.current()
-                    /* notificationCenter.getNotificationSettings { (settings) in
+                    notificationCenter.getNotificationSettings { (settings) in
                         if (settings.authorizationStatus == .authorized) {
                             let TeXsuccess = UNMutableNotificationContent()
                             if settings.alertSetting == .enabled {
@@ -330,11 +353,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                 }
                             })
                         }
-                    } */
-                    // self.downloadingTeX = false
-                    // UserDefaults.standard.set(true, forKey: "TeXEnabled")
-                    // self.TeXRequested = true
-                    // self.TeXEnabled = true
+                    }
+                    self.downloadingTeX = false
+                    UserDefaults.standard.set(true, forKey: "TeXEnabled")
+                    self.TeXRequested = true
+                    self.TeXEnabled = true
+                    addCommandList("texCommandsDictionary.plist")
                 }
             }
             TeXBundleResource.endAccessingResources()
