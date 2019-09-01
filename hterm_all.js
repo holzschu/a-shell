@@ -11554,6 +11554,8 @@ hterm.ScrollPort.prototype.onTouch_ = function(e) {
   if (e.defaultPrevented)
     return;
 
+	e.preventDefault();	 // iOS: prevent WKWebView from scrolling too.
+	
   // Extract the fields from the Touch event that we need.  If we saved the
   // event directly, it has references to other objects (like x-row) that
   // might stick around for a long time.  This way we only have small objects
