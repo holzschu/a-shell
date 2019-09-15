@@ -10,9 +10,21 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
-			<string>Enable TeX (2.2 GB)</string>
+			<string>Enable TeX (1.8 GB)</string>
 			<key>Key</key>
-			<string>TeX_requested</string>
+			<string>TeXEnabled</string>
+			<key>DefaultValue</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>Enable LuaTeX (+0.5 GB)</string>
+			<key>TrueValue</key>
+			<string></string>
+			<key>Key</key>
+			<string>TeXOpenType</string>
 			<key>DefaultValue</key>
 			<false/>
 		</dict>
