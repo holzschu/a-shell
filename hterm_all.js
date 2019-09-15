@@ -11554,7 +11554,6 @@ hterm.ScrollPort.prototype.onTouch_ = function(e) {
   if (e.defaultPrevented)
     return;
 
-	e.preventDefault();	 // iOS: prevent WKWebView from scrolling too.
 	
   // Extract the fields from the Touch event that we need.  If we saved the
   // event directly, it has references to other objects (like x-row) that
@@ -11605,6 +11604,7 @@ hterm.ScrollPort.prototype.onTouch_ = function(e) {
       break;
 
     case 'touchmove':
+	  e.preventDefault();	 // iOS: prevent WKWebView from scrolling too.
       // Walk all of the touches in this one event and merge all of their
       // changes into one delta.  This lets multiple fingers scroll faster.
       var delta = 0;
@@ -11633,7 +11633,7 @@ hterm.ScrollPort.prototype.onTouch_ = function(e) {
   }
 
   // To disable gestures or anything else interfering with our scrolling.
-  // iOS: disable this one.
+  // iOS: disable this one so touch events can select text
   // e.preventDefault();
 };
 
@@ -15116,10 +15116,7 @@ hterm.Terminal.prototype.displayImage = function(options, onLoad, onError) {
  * @return {string|null}
  */
 hterm.Terminal.prototype.getSelectionText = function() {
-  var selection = this.
-
-
-  		scrollPort_.selection;
+  var selection = this.scrollPort_.selection;
   selection.sync();
 
   if (selection.isCollapsed)
@@ -15378,6 +15375,7 @@ hterm.Terminal.prototype.onMouse_ = function(e) {
           (this.mouseRightClickPaste && e.button == 2 /* right button */)) {
         if (!this.paste())
           console.warn('Could not paste manually due to web restrictions');
+	      window.webkit.messageHandlers.aShell.postMessage('Could not paste manually due to web restrictions'); 
       }
     }
 
@@ -16213,6 +16211,7 @@ hterm.TextAttributes.prototype.setDefaults = function(foreground, background) {
  *
  */
 hterm.TextAttributes.prototype.syncColors = function() {
+
   function getBrightIndex(i) {
     if (i < 8) {
       // If the color is from the lower half of the ANSI 16, add 8.
