@@ -22,9 +22,21 @@ extension URL {
         }
     }
     
+    public var isSymbolicLink: Bool {
+        let keys = Set<URLResourceKey>([URLResourceKey.isSymbolicLinkKey])
+        let value = try? self.resourceValues(forKeys: keys)
+        switch value?.isSymbolicLink {
+        case .some(true):
+            return true
+            
+        default:
+            return false
+        }
+    }
+    
     public var contentModificationDate: Date {
         let keys = Set<URLResourceKey>([URLResourceKey.contentModificationDateKey])
-        var value = try? self.resourceValues(forKeys: keys)
+        let value = try? self.resourceValues(forKeys: keys)
         return value?.contentModificationDate ?? Date(timeIntervalSince1970: 0)
     }
     
