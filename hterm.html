@@ -1,47 +1,47 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>hterm test page</title>
+		<title>a-Shell, terminal</title>
 		<meta charset='utf-8'/>
-		<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1, user-scalable=no">
+		<meta name="viewport" content="viewport-fit=cover, width=device-width,  height=device-height, initial-scale=1, user-scalable=no">
 		<!-- 
 	  <script src='../dist/js/hterm_deps.js'></script>
 	  <script src='../dist/js/hterm_resources.js'></script>
 	  --> 
 	  <!-- Dist version.-->
 	  <script src='hterm_all.js'></script>
-	   <style>
-html {
-	height: 100%;
-}
-body {
-	position: absolute;
-	height: 100%;
-	width: 100%;
-	overflow: hidden;
-	margin: 0px;
-	padding: 0px;
-	caret-color: transparent;
-}
-#terminal {
-	display: block;
-	position: relative;
-	height: 100%;
-	width: 100%;
-	margin: 0px;
-	padding: 0px;
-	caret-color: transparent;
-}
-input,
-textarea,
-[contenteditable] {
-  caret-color: transparent;
-}
+	  <style>
+         html {
+         	height: 100%;
+         }
+         body {
+         	position: absolute;
+         	height: 100%;
+         	width: 100%;
+         	overflow: hidden;
+         	margin: 0px;
+         	padding: 0px;
+         	caret-color: transparent;
+         }
+         #terminal {
+         	display: block;
+         	position: relative;
+         	height: 100%;
+         	width: 100%;
+         	margin: 0px;
+         	padding: 0px;
+         	caret-color: transparent;
+         }
+         input,
+         textarea,
+         [contenteditable] {
+         	caret-color: transparent;
+         }
 	   </style>
 	</head>
 
 	<body>
-		<div id='terminal' contenteditable='false'></div>
+		<div id='terminal' contenteditable='true'></div>
 		<script>
 			function initContent(io) {
 				const ver = lib.resource.getData('libdot/changelog/version');
@@ -271,6 +271,8 @@ textarea,
 				term.prefs_.set('audible-bell-sound', '');
 				term.prefs_.set('receive-encoding', 'utf-8'); 
 				term.prefs_.set('meta-sends-escape', 'false'); 
+				term.prefs_.set('meta-sends-escape', 'false'); 
+				
 				term.setReverseWraparound(true);
 				term.setWraparound(true);
 				//
@@ -651,6 +653,26 @@ textarea,
 										window.commandIndex = window.maxCommandIndex
 									}
 									break;
+								case String.fromCharCode(4):  // Ctrl-D: deleter character after cursor TODO: test
+									disableAutocompleteMenu();
+									if (currentCommandCursorPosition < io.currentCommand.length) {
+										var currentChar = io.currentCommand[currentCommandCursorPosition];
+										var currentCharWidth = lib.wc.strWidth(currentChar);
+										io.print('\x1b[0J'); // delete display after cursor
+										// print remainder of command line
+										var endOfCommand = io.currentCommand.slice(currentCommandCursorPosition + 1, io.currentCommand.length);
+										io.print(endOfCommand)
+										// move cursor back to where it was (don't use term.screen_.cursorPosition):
+										var wcwidth = lib.wc.strWidth(endOfCommand);
+										for (var i = 0; i < wcwidth; i++) {
+											io.print('\b'); 
+										}
+										// remove character from command at current position:
+										io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + 
+											io.currentCommand.slice(currentCommandCursorPosition + 1, io.currentCommand.length); 
+									}
+									break;
+									
 								case String.fromCharCode(5):  // Ctrl-E: end of line
 									disableAutocompleteMenu();
 									if (currentCommandCursorPosition < io.currentCommand.length) {
@@ -747,6 +769,7 @@ textarea,
 					this.keyboard.characterEncoding = 'raw';
 					// this.keyboard.bindings.addBinding('F11', 'PASS');
 					// this.keyboard.bindings.addBinding('Ctrl-R', 'PASS');
+					
 				};
 				term.decorate(document.querySelector('#terminal'));
 				term.installKeyboard();
