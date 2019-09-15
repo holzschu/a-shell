@@ -294,7 +294,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             // Call the following functions when data is written to stdout/stderr.
             stdout_pipe!.fileHandleForReading.readabilityHandler = self.onStdout
             commandQueue.async {
-                thread_stdin = nil
+                // testing for luatex:
+                thread_stdin  = nil
                 thread_stdout = nil
                 thread_stderr = nil
                 // Make sure we're running the right session
@@ -302,6 +303,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
                 ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                 // Execute command (remove spaces at the beginning and end):
+                // reset the LC_CTYPE (some commands (luatex) can change it):
+                setenv("LC_CTYPE", "UTF-8", 1);
+                setlocale(LC_CTYPE, "UTF-8");
+                // Setting these breaks lualatex -- not setting them might break something else.
+                // setenv("LC_ALL", "UTF-8", 1);
+                // setlocale(LC_ALL, "UTF-8");
                 ios_system(command.trimmingCharacters(in: .whitespacesAndNewlines))
                 // Send info to the stdout handler that the command has finished:
                 let writeOpen = fcntl(self.stdout_pipe!.fileHandleForWriting.fileDescriptor, F_GETFD)
@@ -351,6 +358,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             } else {
                 guard stdin_pipe != nil else { return }
                 // TODO: don't send data if pipe already closed (^D followed by another key)
+                // (store a variable that says the pipe has been closed)
                 stdin_pipe!.fileHandleForWriting.write(data)
             }
         } else if (cmd.hasPrefix("listDirectory:")) {
@@ -496,17 +504,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         // This occurs shortly after the scene enters the background, or when its session is discarded.
         // Release any resources associated with this scene that can be re-created the next time the scene connects.
         // The scene may re-connect later, as its session was not neccessarily discarded (see `application:didDiscardSceneSessions` instead).
-        NSLog("sceneDidDisconnect: \(scene).")
+        NSLog("sceneDidDisconnect: \(self.persistentIdentifier).")
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
-        NSLog("sceneDidBecomeActive: \(scene).")
+        NSLog("sceneDidBecomeActive: \(self.persistentIdentifier).")
         // Window.term_ does not always exist when sceneDidBecomeActive is called. We *also* set window.foregroundColor, and then use that when we create term.
         let traitCollection = webView!.traitCollection
         var command = "window.term_.setForegroundColor('" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.setBackgroundColor('" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'); "
-        self.webView!.evaluateJavaScript(command) { (result, error) in
+        webView!.evaluateJavaScript(command) { (result, error) in
             if error != nil {
                 NSLog("Error in sceneDidBecomeActive, line = \(command)")
                 print(error)
@@ -516,7 +524,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             }
         }
         command = "window.term_.prefs_.set('foreground-color', '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.prefs_.set('background-color', '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'); "
-        self.webView!.evaluateJavaScript(command) { (result, error) in
+        webView!.evaluateJavaScript(command) { (result, error) in
             if error != nil {
                 NSLog("Error in sceneDidBecomeActive, line = \(command)")
                 print(error)
@@ -525,18 +533,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 print(result)
             }
         }
+        webView!.allowDisplayingKeyboardWithoutUserAction()
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
         // Called when the scene will move from an active state to an inactive state.
         // This may occur due to temporary interruptions (ex. an incoming phone call).
-        NSLog("sceneWillResignActive: \(scene).")
+        NSLog("sceneWillResignActive: \(self.persistentIdentifier).")
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
-        NSLog("sceneWillEnterForeground: \(scene).")
+        NSLog("sceneWillEnterForeground: \(self.persistentIdentifier).")
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
@@ -546,7 +555,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         
         // TODO: save command history
         // TODO: + currently running command? (if it is an editor, say)
-        NSLog("sceneDidEnterBackground: \(scene).")
+        NSLog("sceneDidEnterBackground: \(self.persistentIdentifier).")
     }
 
     // Called when the stdout file handle is written to
@@ -555,7 +564,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     private func outputToWebView(string: String) {
         guard (webView != nil) else { return }
         // Sanitize the output string to it can be sent to javascript:
-        var parsedString = string.replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
+        var parsedString = string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
         // NSLog("\(parsedString)")
         // This may cause several \r in a row
         let command = "window.term_.io.print(\"" + parsedString + "\");"
@@ -617,7 +626,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 printPrompt();
             }
         } else {
-            NSLog("Couldn't convert data in stdout")
+            NSLog("Couldn't convert data in stdout: \(data)")
         }
     }
     

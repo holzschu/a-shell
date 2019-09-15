@@ -11,16 +11,22 @@ import ios_system
 import UserNotifications
 import Compression
 
+var downloadingTeX = false
+var downloadingTeXError = ""
+var percentTeXDownloadComplete = 0.0
+var downloadingOpentype = false
+var downloadingOpentypeError = ""
+var percentOpentypeDownloadComplete = 0.0
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var TeXEnabled = false;
-    var TeXRequested = false;
-    var downloadingTeX = false;
+    var OpentypeEnabled = false;
     // to update Python distribution at each version update
     var versionUpToDate = true
     var libraryFilesUpToDate = true
-    private let moveFilesQueue = DispatchQueue(label: "moveFiles", qos: .utility) // low priority
-    
+    let moveFilesQueue = DispatchQueue(label: "moveFiles", qos: .utility) // low priority
+
     func linkedFileExists(directory: URL, fileName: String) -> Bool {
         // Check whether the file linked by fileName in directory actually exists
         // (if fileName does not exist, we also return false)
@@ -171,46 +177,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         initializeEnvironment()
         replaceCommand("history", "history", true)
-        replaceCommand("amstex", "tex", true)
-        replaceCommand("bibtex", "tex", true)
-        replaceCommand("cslatex", "tex", true)
-        replaceCommand("csplain", "tex", true)
-        replaceCommand("dvilualatex", "tex", true)
-        replaceCommand("dviluatex", "tex", true)
-        replaceCommand("eplain", "tex", true)
-        replaceCommand("etex", "tex", true)
-        replaceCommand("jadetex", "tex", true)
-        replaceCommand("latex", "tex", true)
-        replaceCommand("lualatex", "tex", true)
-        replaceCommand("luatex", "tex", true)
-        replaceCommand("mex", "tex", true)
-        replaceCommand("mllatex", "tex", true)
-        replaceCommand("mltex", "tex", true)
-        replaceCommand("pdfcslatex", "tex", true)
-        replaceCommand("pdfcsplain", "tex", true)
-        replaceCommand("pdfetex", "tex", true)
-        replaceCommand("pdfjadetex", "tex", true)
-        replaceCommand("pdflatex", "tex", true)
-        replaceCommand("pdfmex", "tex", true)
-        replaceCommand("pdftex", "tex", true)
-        replaceCommand("pdfxmltex", "tex", true)
-        replaceCommand("tex", "tex", true)
-        replaceCommand("texlua", "tex", true)
-        replaceCommand("texluac", "tex", true)
-        replaceCommand("texsis", "tex", true)
-        replaceCommand("utf8mex", "tex", true)
-        replaceCommand("xmltex", "tex", true)
+        activateFakeTeXCommands()
+        if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
+            downloadTeX();
+        }
+        if (UserDefaults.standard.bool(forKey: "TeXOpenType")) {
+            downloadOpentype();
+        }
         numPythonInterpreters = 1;
-        setenv("LC_CTYPE", "UTF-8", 1);
-        setenv("LC_ALL", "UTF-8", 1);
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
         setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
         let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                   in: .userDomainMask,
                                                   appropriateFor: nil,
                                                   create: true)
-        setlocale(LC_CTYPE, "UTF-8");
-        setlocale(LC_ALL, "UTF-8");
         // Link Python files from $APPDIR/Library to $HOME/Library/
         if (needToUpdatePythonFiles()) {
             // start copying python files from App bundle to $HOME/Library
@@ -223,10 +203,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // We check whether the user has iCloud ability here, and that the container exists
         let currentiCloudToken = FileManager().ubiquityIdentityToken
         // print("Available fonts: \(UIFont.familyNames)");
-        let homeUrl = documentsUrl.deletingLastPathComponent()
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
+        UserDefaults.standard.register(defaults: ["TeXOpenType" : false])
         let center = UNUserNotificationCenter.current()
         // Request permission to display alerts and play sounds.
         center.requestAuthorization(options: [.alert, .sound])
@@ -235,10 +215,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         // Detect changes in user settings (preferences):
         NotificationCenter.default.addObserver(self, selector: #selector(self.settingsChanged), name: UserDefaults.didChangeNotification, object: nil)
-        TeXRequested = UserDefaults.standard.bool(forKey: "TeX_requested")
-        if (TeXRequested && !TeXEnabled) {
-            downloadTeX();
-        }
         return true
     }
 
@@ -246,124 +222,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 
-    func disableTeX() {
-        let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                in: .userDomainMask,
-                                                appropriateFor: nil,
-                                                create: true)
-        let TeXDirectory = libraryURL.path + "/texlive"
-        let command = "rm -rf " + TeXDirectory
-        let pid:pid_t = ios_fork()
-        ios_system(command)
-        ios_waitpid(pid) // wait until the command is terminated
-        let message = "TeX has been disabled, the associated files have been removed."
-        // Send notification if enabled
-        let notificationCenter = UNUserNotificationCenter.current()
-        notificationCenter.getNotificationSettings { (settings) in
-            if (settings.authorizationStatus == .authorized) {
-                let TeXdisabled = UNMutableNotificationContent()
-                if settings.alertSetting == .enabled {
-                    TeXdisabled.title = NSString.localizedUserNotificationString(forKey: "TeX disabled", arguments: nil)
-                    TeXdisabled.body = NSString.localizedUserNotificationString(forKey: message, arguments: nil)
-                }
-                let TeXNotification = UNNotificationRequest(identifier: "TeXDisabled",
-                                                                      content: TeXdisabled,
-                                                                      trigger: UNTimeIntervalNotificationTrigger(timeInterval: (0), repeats: false))
-                notificationCenter.add(TeXNotification, withCompletionHandler: { (error) in
-                    if let error = error {
-                        var message = "Error in setting up the alert: "
-                        message.append(error.localizedDescription)
-                        NSLog(message)
-                    }
-                })
-            }
-        }
-        self.downloadingTeX = false
-        UserDefaults.standard.set(false, forKey: "TeXEnabled")
-        self.TeXRequested = false
-        TeXEnabled = false
-    }
-
     
-    func downloadTeX() {
-        if (downloadingTeX) {
-            return; // only run this function once
-        }
-        downloadingTeX = true;
-        // download the extension:
-        let TeXBundleResource = NSBundleResourceRequest(tags: ["TeX"])
-        let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                in: .userDomainMask,
-                                                appropriateFor: nil,
-                                                create: true)
-        NSLog("Begin downloading TeX resources")
-        TeXBundleResource.beginAccessingResources(completionHandler: { (error) in
-            if let error = error {
-                var message = "Error in downloading TeX files: "
-                message.append(error.localizedDescription)
-                NSLog(message)
-                // Send notification if enabled
-                let notificationCenter = UNUserNotificationCenter.current()
-                notificationCenter.getNotificationSettings { (settings) in
-                    if (settings.authorizationStatus == .authorized) {
-                        let TeXerror = UNMutableNotificationContent()
-                        if settings.alertSetting == .enabled {
-                            TeXerror.title = NSString.localizedUserNotificationString(forKey: "Error enabling TeX", arguments: nil)
-                            TeXerror.body = NSString.localizedUserNotificationString(forKey: message, arguments: nil)
-                        }
-                        let TeXNotification = UNNotificationRequest(identifier: "TeXError",
-                                                                              content: TeXerror,
-                                                                              trigger: UNTimeIntervalNotificationTrigger(timeInterval: (0), repeats: false))
-                        notificationCenter.add(TeXNotification, withCompletionHandler: { (error) in
-                            if let error = error {
-                                var message = "Error in setting up the alert: "
-                                message.append(error.localizedDescription)
-                                NSLog(message)
-                            }
-                        })
-                    }
-                }
-                self.downloadingTeX = false
-                UserDefaults.standard.set(false, forKey: "TeXEnabled")
-                self.TeXRequested = false
-            } else {
-                NSLog("TeX resource succesfully downloaded")
-                let archiveFileLocation = TeXBundleResource.bundle.path(forResource: "texlive", ofType: .directory)
-                NSLog("downloaded file: \(archiveFileLocation)")
-                if ((archiveFileLocation) != nil) {
-                    // set TEXMF
-                    // Send notification if enabled
-                    var message = "TeX is now activated."
-                    let notificationCenter = UNUserNotificationCenter.current()
-                    notificationCenter.getNotificationSettings { (settings) in
-                        if (settings.authorizationStatus == .authorized) {
-                            let TeXsuccess = UNMutableNotificationContent()
-                            if settings.alertSetting == .enabled {
-                                TeXsuccess.title = NSString.localizedUserNotificationString(forKey: "Error enabling TeX", arguments: nil)
-                                TeXsuccess.body = NSString.localizedUserNotificationString(forKey: message, arguments: nil)
-                            }
-                            let TeXNotification = UNNotificationRequest(identifier: "TeXSuccess",
-                                                                                  content: TeXsuccess,
-                                                                                  trigger: UNTimeIntervalNotificationTrigger(timeInterval: (0), repeats: false))
-                            notificationCenter.add(TeXNotification, withCompletionHandler: { (error) in
-                                if let error = error {
-                                    var message = "Error in setting up the alert: "
-                                    message.append(error.localizedDescription)
-                                    NSLog(message)
-                                }
-                            })
-                        }
-                    }
-                    self.downloadingTeX = false
-                    UserDefaults.standard.set(true, forKey: "TeXEnabled")
-                    self.TeXRequested = true
-                    self.TeXEnabled = true
-                    addCommandList("texCommandsDictionary.plist")
-                }
-            }
-            TeXBundleResource.endAccessingResources()
-        })
-    }
     
     // MARK: UISceneSession Lifecycle
 
@@ -393,6 +252,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             } else {
                 // it was enabled before, it was disabled: we remove it
                 disableTeX()
+            }
+        }
+        let userSettingsOpentype = UserDefaults.standard.bool(forKey: "TeXOpenType")
+        if (userSettingsOpentype != OpentypeEnabled) {
+            if (userSettingsOpentype) {
+                // it was not enabled before, it is requested: we download it
+                downloadOpentype()
+            } else {
+                // it was enabled before, it was disabled: we remove it
+                disableOpentype()
             }
         }
     }
