@@ -21,7 +21,7 @@ struct Webview : UIViewRepresentable {
         config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
         config.selectionGranularity = .character; // Could be .dynamic
         webView = WKWebView(frame: .zero, configuration: config)
-        webView.keyboardDisplayRequiresUserAction = false
+        webView.allowDisplayingKeyboardWithoutUserAction()
     }
     
     func makeUIView(context: Context) -> WKWebView  {
@@ -32,9 +32,10 @@ struct Webview : UIViewRepresentable {
         if (uiView.url != nil) { return } // Already loaded the page
         let htermFilePath = Bundle.main.path(forResource: "hterm", ofType: "html")
         let traitCollection = uiView.traitCollection
+        uiView.isOpaque = false
         uiView.tintColor = UIColor.placeholderText.resolvedColor(with: traitCollection)
         uiView.backgroundColor = UIColor.systemBackground.resolvedColor(with: traitCollection)
-        var command = "window.foregroundColor = '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'; window.backgroundColor = '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'; "
+        let command = "window.foregroundColor = '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'; window.backgroundColor = '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'; "
         uiView.evaluateJavaScript(command) { (result, error) in
             if error != nil {
                 NSLog("Error in updateUIView, line = \(command)")
@@ -74,7 +75,9 @@ struct ContentView: View {
     
     var body: some View {
         // resize depending on keyboard
-        webview.padding(.bottom, keyboardHeight).onReceive(showPublisher.merge(with: hidePublisher)) { (height) in
+        webview.padding(.bottom, keyboardHeight)
+            .offset(CGSize(width: 0, height: 0))
+            .onReceive(showPublisher.merge(with: hidePublisher)) { (height) in
             self.keyboardHeight = height
         }
     }
