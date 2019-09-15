@@ -2,69 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>llvm-dis</key>
-	<array>
-		<string>dis.framework/dis</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>opt</key>
-	<array>
-		<string>opt.framework/opt</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>llvm-link</key>
-	<array>
-		<string>link.framework/link</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>nm</key>
-	<array>
-		<string>nm.framework/nm</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>lli</key>
-	<array>
-		<string>lli.framework/lli</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>clang</key>
-	<array>
-		<string>clang.framework/clang</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>clang++</key>
-	<array>
-		<string>clang.framework/clang</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>ctags</key>
-	<array>
-		<string>libctags.dylib</string>
-		<string>ctags_main</string>
-		<string>aBeFGnNoRvVx:b:d:D:f:h:I:L:</string>
-		<string>file</string>
-	</array>
-	<key>readtags</key>
-	<array>
-		<string>libctags.dylib</string>
-		<string>readtags_main</string>
-		<string>aBeFGnNoRvVx:b:d:D:f:h:I:L:</string>
-		<string>file</string>
-	</array>
 	<key>amstex</key>
 	<array>
 		<string>pdftex.framework/pdftex</string>
@@ -79,27 +16,6 @@
 		<string></string>
 		<string>file</string>
 	</array>
-	<key>chgrp</key>
-	<array>
-		<string>files.framework/files</string>
-		<string>chown_main</string>
-		<string>HLPRfhv</string>
-		<string>file</string>
-	</array>
-	<key>chmod</key>
-	<array>
-		<string>files.framework/files</string>
-		<string>chmod_main</string>
-		<string>ACEHILNPRVXafghinorstuvwx</string>
-		<string>file</string>
-	</array>
-	<key>chown</key>
-	<array>
-		<string>files.framework/files</string>
-		<string>chown_main</string>
-		<string>HLPRfhv</string>
-		<string>file</string>
-	</array>
 	<key>cslatex</key>
 	<array>
 		<string>pdftex.framework/pdftex</string>
@@ -111,27 +27,6 @@
 	<array>
 		<string>pdftex.framework/pdftex</string>
 		<string>dllpdftexmain</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>df</key>
-	<array>
-		<string>files.framework/files</string>
-		<string>df_main</string>
-		<string>abgHhiklmnPtT:</string>
-		<string>file</string>
-	</array>
-	<key>dvilualatex</key>
-	<array>
-		<string>luatex.framework/luatex</string>
-		<string>dllluatexmain</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>dviluatex</key>
-	<array>
-		<string>luatex.framework/luatex</string>
-		<string>dllluatexmain</string>
 		<string></string>
 		<string>file</string>
 	</array>
@@ -149,13 +44,6 @@
 		<string></string>
 		<string>file</string>
 	</array>
-	<key>id</key>
-	<array>
-		<string>shell.framework/shell</string>
-		<string>id_main</string>
-		<string>AFPGMagnpru</string>
-		<string>no</string>
-	</array>
 	<key>jadetex</key>
 	<array>
 		<string>pdftex.framework/pdftex</string>
@@ -167,20 +55,6 @@
 	<array>
 		<string>pdftex.framework/pdftex</string>
 		<string>dllpdftexmain</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>lualatex</key>
-	<array>
-		<string>luatex.framework/luatex</string>
-		<string>dllluatexmain</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>luatex</key>
-	<array>
-		<string>luatex.framework/luatex</string>
-		<string>dllluatexmain</string>
 		<string></string>
 		<string>file</string>
 	</array>
@@ -261,17 +135,10 @@
 		<string></string>
 		<string>file</string>
 	</array>
-	<key>texlua</key>
+	<key>tex</key>
 	<array>
-		<string>luatex.framework/luatex</string>
-		<string>dllluatexmain</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>texluac</key>
-	<array>
-		<string>luatex.framework/luatex</string>
-		<string>dllluatexmain</string>
+		<string>pdftex.framework/pdftex</string>
+		<string>dllpdftexmain</string>
 		<string></string>
 		<string>file</string>
 	</array>
@@ -288,13 +155,6 @@
 		<string>dllpdftexmain</string>
 		<string></string>
 		<string>file</string>
-	</array>
-	<key>w</key>
-	<array>
-		<string>shell.framework/shell</string>
-		<string>w_main</string>
-		<string>dhiflM:N:nsuw</string>
-		<string>no</string>
 	</array>
 	<key>xmltex</key>
 	<array>
