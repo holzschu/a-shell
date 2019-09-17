@@ -35,7 +35,8 @@ struct Webview : UIViewRepresentable {
         uiView.isOpaque = false
         uiView.tintColor = UIColor.placeholderText.resolvedColor(with: traitCollection)
         uiView.backgroundColor = UIColor.systemBackground.resolvedColor(with: traitCollection)
-        let command = "window.foregroundColor = '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'; window.backgroundColor = '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'; "
+        // uiView.accessibilityIgnoresInvertColors
+        let command = "window.foregroundColor = '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'; window.backgroundColor = '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'; window.cursorColor = '" + UIColor.link.resolvedColor(with: traitCollection).toHexString() + "';"
         uiView.evaluateJavaScript(command) { (result, error) in
             if error != nil {
                 NSLog("Error in updateUIView, line = \(command)")

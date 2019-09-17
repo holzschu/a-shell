@@ -292,10 +292,10 @@ extension AppDelegate {
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
-        NSLog("Begin downloading Opentype fonts ")
+        NSLog("Begin downloading LuaTeX ")
         opentypeResource.beginAccessingResources(completionHandler: { (error) in
             if let error = error {
-                var message = "Error in downloading Opentype fonts: "
+                var message = "Error in downloading LuaTeX: "
                 message.append(error.localizedDescription)
                 NSLog(message)
                 downloadingOpentype = false
@@ -304,7 +304,7 @@ extension AppDelegate {
                 self.OpentypeEnabled = false
                 return
             } else {
-                NSLog("Opentype fonts succesfully downloaded")
+                NSLog("LuaTeX fonts succesfully downloaded")
                 // link the two directories in place:
                 if let archiveFileLocation = opentypeResource.bundle.path(forResource: "texlive_2019_texmf-dist_fonts_otf_ttf", ofType: nil) {
                     // Is the host directory available? If not create it.
@@ -366,7 +366,7 @@ extension AppDelegate {
     }
 
     func disableOpentype() {
-        NSLog("Deactivating Opentype fonts")
+        NSLog("Deactivating LuaTeX")
         // First, deactivate the commands:
         downloadingOpentype = false
         OpentypeEnabled = false

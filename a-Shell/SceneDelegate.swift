@@ -21,6 +21,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     var windowScene: UIWindowScene?
     var webView: WKWebView?
     var contentView: ContentView?
+    var history: [String] = []
     var width = 80
     var height = 80
     var stdin_pipe: Pipe? = nil
@@ -28,7 +29,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     var persistentIdentifier: String? = nil
     var stdin_file: UnsafeMutablePointer<FILE>? = nil
     var stdout_file: UnsafeMutablePointer<FILE>? = nil
-    private let commandQueue = DispatchQueue(label: "executeCommand", qos: .utility) // low priority
+    private let commandQueue = DispatchQueue(label: "executeCommand", qos: .utility) // low priority, for executing commands
     // Buttons and toolbars:
     var controlOn = false;
     // control codes:
@@ -240,7 +241,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     }
     
     func printHistory() {
-        DispatchQueue.main.async {
+        for command in history {
+            fputs(command + "\n", thread_stdout)
+        }
+        /* DispatchQueue.main.async {
             self.webView?.evaluateJavaScript("window.commandArray.forEach(item => window.term_.io.println(item));") { (result, error) in
                 if error != nil {
                     print(error)
@@ -249,7 +253,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                     print(result)
                 }
             }
-        }
+        } */
     }
     // Even if Caps-Lock is activated, send lower case letters.
     @objc func insertKey(_ sender: UIKeyCommand) {
@@ -293,6 +297,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             guard stdout_file != nil else { return }
             // Call the following functions when data is written to stdout/stderr.
             stdout_pipe!.fileHandleForReading.readabilityHandler = self.onStdout
+            // save command in history. This duplicates the history array in hterm.html.
+            if (history.last != command) {
+                // only store command if different from last command
+                history.append(command)
+            }
+            while (history.count > 100) {
+                // only keep the last 100 commands
+                history.removeFirst()
+            }
             commandQueue.async {
                 // testing for luatex:
                 thread_stdin  = nil
@@ -513,7 +526,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         NSLog("sceneDidBecomeActive: \(self.persistentIdentifier).")
         // Window.term_ does not always exist when sceneDidBecomeActive is called. We *also* set window.foregroundColor, and then use that when we create term.
         let traitCollection = webView!.traitCollection
-        var command = "window.term_.setForegroundColor('" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.setBackgroundColor('" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'); "
+        var command = "window.term_.setForegroundColor('" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.setBackgroundColor('" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.setCursorColor('" + UIColor.link.resolvedColor(with: traitCollection).toHexString() + "');"
         webView!.evaluateJavaScript(command) { (result, error) in
             if error != nil {
                 NSLog("Error in sceneDidBecomeActive, line = \(command)")
@@ -553,8 +566,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
         
-        // TODO: save command history
+        // TODO: save command history, current working directory, hterm screen.
         // TODO: + currently running command? (if it is an editor, say)
+        // self.userActivity.
         NSLog("sceneDidEnterBackground: \(self.persistentIdentifier).")
     }
 
