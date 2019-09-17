@@ -21,7 +21,6 @@
          	overflow: hidden;
          	margin: 0px;
          	padding: 0px;
-         	caret-color: transparent;
          }
          #terminal {
          	display: block;
@@ -30,18 +29,12 @@
          	width: 100%;
          	margin: 0px;
          	padding: 0px;
-         	caret-color: transparent;
-         }
-         input,
-         textarea,
-         [contenteditable] {
-         	caret-color: transparent;
          }
 	   </style>
 	</head>
 
 	<body>
-		<div id='terminal' contenteditable='true'></div>
+		<div id='terminal' contenteditable='true' spellcheck='false' autocomplete='off' autocorrect='off' autocapitaliz='none'></div>
 		<script>
 			function initContent(io) {
 				const ver = lib.resource.getData('libdot/changelog/version');
@@ -270,7 +263,6 @@
 				term.prefs_.set('copy-on-select', false);
 				term.prefs_.set('audible-bell-sound', '');
 				term.prefs_.set('receive-encoding', 'utf-8'); 
-				term.prefs_.set('meta-sends-escape', 'false'); 
 				term.prefs_.set('meta-sends-escape', 'false'); 
 				
 				term.setReverseWraparound(true);
@@ -766,6 +758,7 @@
 					this.setCursorVisible(true);
 					this.setForegroundColor(window.foregroundColor);
 					this.setBackgroundColor(window.backgroundColor);
+					this.setCursorColor(window.cursorColor);
 					this.keyboard.characterEncoding = 'raw';
 					// this.keyboard.bindings.addBinding('F11', 'PASS');
 					// this.keyboard.bindings.addBinding('Ctrl-R', 'PASS');

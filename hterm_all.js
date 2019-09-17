@@ -10343,7 +10343,7 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
   this.screen_.setAttribute('aria-readonly', 'true');
   this.screen_.setAttribute('tabindex', '-1');
   this.screen_.style.cssText = (
-      'caret-color: transparent;' +
+      'caret-color: var(--hterm-cursor-color);' + // iOS 13b3. highlight-color. Was "transparent"
       'display: block;' +
       'font-family: monospace;' +
       'font-size: 15px;' +
@@ -15521,6 +15521,11 @@ hterm.Terminal.prototype.onCopy_ = function(e) {
     e.preventDefault();
     setTimeout(this.copySelectionToClipboard.bind(this), 0);
   }
+  	// iOS: clear selection after copy
+	if (this.clearSelectionAfterCopy) {
+		var selection = this.getDocument().getSelection();
+        setTimeout(selection.collapseToEnd.bind(selection), 50);
+	}
 };
 
 /**
