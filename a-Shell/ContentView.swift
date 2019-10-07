@@ -21,7 +21,6 @@ struct Webview : UIViewRepresentable {
         config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
         config.selectionGranularity = .character; // Could be .dynamic
         webView = WKWebView(frame: .zero, configuration: config)
-        webView.allowDisplayingKeyboardWithoutUserAction()
     }
     
     func makeUIView(context: Context) -> WKWebView  {
@@ -47,6 +46,7 @@ struct Webview : UIViewRepresentable {
             }
         }
         uiView.loadFileURL(URL(fileURLWithPath: htermFilePath!), allowingReadAccessTo: URL(fileURLWithPath: htermFilePath!))
+        uiView.allowDisplayingKeyboardWithoutUserAction()
     }
 }
 

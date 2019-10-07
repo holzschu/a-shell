@@ -18,6 +18,7 @@ var downloadingOpentype = false
 var downloadingOpentypeError = ""
 var percentOpentypeDownloadComplete = 0.0
 
+@objcMembers
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var TeXEnabled = false;
@@ -177,6 +178,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         initializeEnvironment()
         replaceCommand("history", "history", true)
+        replaceCommand("help", "help", true)
+        replaceCommand("clear", "clear", true)
+        replaceCommand("credits", "credits", true)
+        replaceCommand("pickFolder", "pickFolder", true)
+        // replaceCommand("wasm", "wasm", true)
         activateFakeTeXCommands()
         if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
             downloadTeX();
@@ -184,8 +190,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (UserDefaults.standard.bool(forKey: "TeXOpenType")) {
             downloadOpentype();
         }
-        numPythonInterpreters = 1;
+        numPythonInterpreters = 2; // so pip can work (it runs python setup.py)
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
+        setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
         setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
         let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                   in: .userDomainMask,
@@ -202,7 +209,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
         let currentiCloudToken = FileManager().ubiquityIdentityToken
-        // print("Available fonts: \(UIFont.familyNames)");
+        print("Available fonts: \(UIFont.familyNames)");
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
@@ -244,25 +251,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // UserDefaults.didChangeNotification is called every time the window becomes active
         // We only act if things have really changed.
         let userSettingsTeX = UserDefaults.standard.bool(forKey: "TeXEnabled")
-        if (userSettingsTeX != TeXEnabled) {
-            // something changed with TeX settings
-            if (userSettingsTeX) {
+        // something changed with TeX settings
+        if (userSettingsTeX) {
+            if (userSettingsTeX != TeXEnabled) {
                 // it was not enabled before, it is requested: we download it
                 downloadTeX()
-            } else {
-                // it was enabled before, it was disabled: we remove it
-                disableTeX()
             }
+        } else {
+            // it is disabled: make sure it has been removed:
+            disableTeX()
         }
         let userSettingsOpentype = UserDefaults.standard.bool(forKey: "TeXOpenType")
-        if (userSettingsOpentype != OpentypeEnabled) {
-            if (userSettingsOpentype) {
+        if (userSettingsOpentype) {
+            if (userSettingsOpentype != OpentypeEnabled) {
                 // it was not enabled before, it is requested: we download it
                 downloadOpentype()
-            } else {
-                // it was enabled before, it was disabled: we remove it
-                disableOpentype()
             }
+        } else {
+            // it was enabled before, it was disabled: we remove it
+            disableOpentype()
         }
     }
 }

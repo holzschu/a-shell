@@ -5,6 +5,15 @@
 ## Build generated
 build/
 DerivedData/
+## project files:
+Frameworks/
+Frameworks_simulator/
+Frameworks_iPhone/
+hterm/
+ODR/
+libapps/
+Library/
+runtime/
 
 ## Various settings
 *.pbxuser

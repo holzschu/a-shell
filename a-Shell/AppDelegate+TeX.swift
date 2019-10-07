@@ -9,8 +9,13 @@ import Foundation
 import UserNotifications
 import ios_system
 
+private let texmf_distResource = NSBundleResourceRequest(tags: ["texmf-dist"])
+private let texmf_dist_fontsResource = NSBundleResourceRequest(tags: ["texmf-dist-fonts"])
+private let texmf_dist_fonts_type1Resource = NSBundleResourceRequest(tags: ["texmf-dist-fonts-type1"])
+private let opentypeResource = NSBundleResourceRequest(tags: ["opentype"])
+
 extension AppDelegate {
-    
+
     func activateFakeTeXCommands() {
         if (!TeXEnabled) {
             replaceCommand("amstex", "tex", true)
@@ -47,33 +52,25 @@ extension AppDelegate {
         }
     }
     
+    
+    override func observeValue(forKeyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        let texmf_dist_fonts_type1Size = 216544.0
+        let texmf_dist_fontsSize = 335332.0
+        let texmf_distSize = 313392.0
+        percentTeXDownloadComplete = 100.0 * (texmf_dist_fontsSize * texmf_dist_fontsResource.progress.fractionCompleted +
+            texmf_dist_fonts_type1Size * texmf_dist_fonts_type1Resource.progress.fractionCompleted +
+            texmf_distSize * texmf_distResource.progress.fractionCompleted)
+            / (texmf_dist_fontsSize + texmf_dist_fonts_type1Size + texmf_distSize)
 
-    func TeXnotification(title: String, message: String) {
-        // Only activates if we are in the background. Probably OK since we don't want to intrude.
-        let notificationCenter = UNUserNotificationCenter.current()
-        notificationCenter.getNotificationSettings { (settings) in
-            if (settings.authorizationStatus == .authorized) {
-                let TeXsuccess = UNMutableNotificationContent()
-                if settings.alertSetting == .enabled {
-                    TeXsuccess.title = NSString.localizedUserNotificationString(forKey: title, arguments: nil)
-                    TeXsuccess.body = NSString.localizedUserNotificationString(forKey: message, arguments: nil)
-                }
-                let TeXNotification = UNNotificationRequest(identifier: "TeXSuccess",
-                                                                      content: TeXsuccess,
-                                                                      trigger: UNTimeIntervalNotificationTrigger(timeInterval: (1), repeats: false))
-                notificationCenter.add(TeXNotification, withCompletionHandler: { (error) in
-                    if let error = error {
-                        var message = "Error in setting up the alert: "
-                        message.append(error.localizedDescription)
-                        NSLog(message)
-                    }
-                })
-                NSLog("Added the notification: \(message)")
-            } else {
-                NSLog("Alerts not authorized")
-            }
+        if (percentTeXDownloadComplete >= 100.0) {
+            NSLog("All resources have been downloaded: \(texmf_dist_fontsResource.progress.fractionCompleted)")
+            downloadingTeX = false
+            self.TeXEnabled = true
+            addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         }
     }
+    
+
     
     func downloadTeX() {
         if (downloadingTeX) {
@@ -83,70 +80,68 @@ extension AppDelegate {
         downloadingTeXError = ""
         percentTeXDownloadComplete = 0.0
         // download the extensions: texlive, texmf-dist and texmf-dist-fonts
-        let texliveResource = NSBundleResourceRequest(tags: ["texlive"])
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
         NSLog("Begin downloading texlive resources")
-        texliveResource.beginAccessingResources(completionHandler: { (error) in
-            if let error = error {
-                var message = "Error in downloading texlive files: "
-                message.append(error.localizedDescription)
-                NSLog(message)
-                downloadingTeX = false
-                downloadingTeXError = message
-                UserDefaults.standard.set(false, forKey: "TeXEnabled")
-                self.TeXEnabled = false
-                return
-            } else {
-                NSLog("texlive resource succesfully downloaded")
-                // Copy the entire directory:
-                if let archiveFileLocation = texliveResource.bundle.path(forResource: "texlive", ofType: nil) {
-                    let archiveURL = URL(fileURLWithPath: archiveFileLocation)
-                    NSLog("downloaded texlive location: \(archiveFileLocation)")
-                    // make sure ~/Library/texlive exists:
-                    let localURL = libraryURL.appendingPathComponent("texlive") // $HOME/Library/texlive
-                    do {
-                        if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
-                            try FileManager().removeItem(at: localURL)
-                        }
-                        if (!FileManager().fileExists(atPath: localURL.path)) {
-                            try! FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
-                        }
-                        if let enumerator = FileManager().enumerator(atPath: archiveFileLocation) {
-                            for file in enumerator {
-                                let localFileURL = localURL.appendingPathComponent(file as! String)
-                                var localFileExists = FileManager().fileExists(atPath: localFileURL.path)
-                                if (localFileExists && !localFileURL.isDirectory) {
-                                    try FileManager().removeItem(at: localFileURL)
-                                    localFileExists = FileManager().fileExists(atPath: localFileURL.path)
-                                }
-                                let distantFileURL = archiveURL.appendingPathComponent(file as! String)
-                                if (distantFileURL.isDirectory) {
-                                    if (!localFileExists) {
-                                        try FileManager().createDirectory(at: localFileURL, withIntermediateDirectories: true)
-                                    }
-                                } else {
-                                    try FileManager().copyItem(at: distantFileURL, to: localFileURL)
-                                }
-                                
-                            }
-                        }
-                        NSLog("done copying texlive at $HOME/Library")
+        
+        NSLog("Copying texlive into $LIBRARY")
+        // Copy every file in the entire directory (because it can be written on, replaced, etc)
+        // make sure ~/Library/texlive exists:
+        // For some reason, using an on-demand resource here does not allow a full depth traversal
+        // (many files missing). So texlive is always included with the app.
+        let localURL = libraryURL.appendingPathComponent("texlive") // $HOME/Library/texlive
+        do {
+            if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
+                try FileManager().removeItem(at: localURL)
+            }
+            if (!FileManager().fileExists(atPath: localURL.path)) {
+                try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
+            }
+        } catch {
+            NSLog("Error in creating texlive directory: \(error)")
+            downloadingTeX = false
+            UserDefaults.standard.set(false, forKey: "TeXEnabled")
+            downloadingTeXError = error.localizedDescription
+            self.TeXEnabled = false
+            return
+        }
+        for directory in TeXDirectories {
+            do {
+                let localDirectory = libraryURL.appendingPathComponent(directory as! String)
+                if (FileManager().fileExists(atPath: localDirectory.path) && !localDirectory.isDirectory) {
+                    try FileManager().removeItem(at: localDirectory)
+                }
+                // Create directory first:
+                if (!FileManager().fileExists(atPath: localDirectory.path)) {
+                    try FileManager().createDirectory(atPath: localDirectory.path, withIntermediateDirectories: true)
+                }
+            } catch {
+                NSLog("Error in creating directory: \(error)")
+                continue
+            }
+        }
+        for file in TeXFiles {
+            if let distantFileURL = Bundle.main.path(forResource: file, ofType: nil) {
+                do {
+                    let localFileURL = libraryURL.appendingPathComponent(file as! String)
+                    var localFileExists = FileManager().fileExists(atPath: localFileURL.path)
+                    if (localFileExists && !localFileURL.isDirectory) {
+                        try FileManager().removeItem(at: localFileURL)
+                        localFileExists = FileManager().fileExists(atPath: localFileURL.path)
                     }
-                    catch {
-                        NSLog("Error in copying texlive directory: \(error)")
-                        downloadingTeX = false
-                        UserDefaults.standard.set(false, forKey: "TeXEnabled")
-                        downloadingTeXError = error.localizedDescription
-                        self.TeXEnabled = false
-                        return
-                    }
+                    // Create directory first:
+                    try FileManager().copyItem(at: URL(fileURLWithPath: distantFileURL), to: localFileURL)
+                } catch {
+                    NSLog("Error in copying texlive file: \(error)")
+                    continue
                 }
             }
-        })
-        let texmf_distResource = NSBundleResourceRequest(tags: ["texmf-dist"])
+        }
+        NSLog("done copying texlive at $HOME/Library")
+        // Once texlive is downloaded, we start texmf_dist:
+        texmf_distResource.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
         NSLog("Begin downloading texmf-dist resources")
         texmf_distResource.beginAccessingResources(completionHandler: { (error) in
             if let error = error {
@@ -182,63 +177,84 @@ extension AppDelegate {
                 }
                 NSLog("Done linking texmf-dist resource")
             }
-        })
-        let texmf_dist_fontsResource = NSBundleResourceRequest(tags: ["texmf-dist-fonts"])
-        NSLog("Begin downloading texmf-dist-fonts resources")
-        texmf_dist_fontsResource.beginAccessingResources(completionHandler: { (error) in
-            if let error = error {
-                var message = "Error in downloading texmf-dist-fonts files: "
-                message.append(error.localizedDescription)
-                NSLog(message) // Also show alert
-                downloadingTeX = false
-                downloadingTeXError = message
-                UserDefaults.standard.set(false, forKey: "TeXEnabled")
-                self.TeXEnabled = false
-                return
-            } else {
-                NSLog("texmf-dist-fonts resource succesfully downloaded")
-                // link the sub-directories in the right place:
-                if let archiveFileLocation = texmf_dist_fontsResource.bundle.path(forResource: "texlive_2019_texmf-dist_fonts", ofType: nil) {
-                    // Is the host directory available? If not create it.
-                    let archiveURL = URL(fileURLWithPath: archiveFileLocation)
-                    let localURL = libraryURL.appendingPathComponent("texlive/2019/texmf-dist/fonts") // $HOME/Library/texlive/2019/texmf-dist/fonts
-                    if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
-                        try! FileManager().removeItem(at: localURL)
-                    }
-                    if (!FileManager().fileExists(atPath: localURL.path)) {
-                        try! FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
-                    }
-                    let contents = try! FileManager().contentsOfDirectory(atPath: archiveURL.path)
-                    for directory in contents {
-                        let localFileURL = localURL.appendingPathComponent(directory)
-                        if (FileManager().fileExists(atPath: localFileURL.path) && !localFileURL.isDirectory) {
-                            try! FileManager().removeItem(at: localFileURL)
+            // Once texmf_distResource is completed, we start texmf_dist_fonts:
+            texmf_dist_fontsResource.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
+            NSLog("Begin downloading texmf-dist-fonts resources")
+            texmf_dist_fontsResource.beginAccessingResources(completionHandler: { (error) in
+                if let error = error {
+                    var message = "Error in downloading texmf-dist-fonts files: "
+                    message.append(error.localizedDescription)
+                    NSLog(message) // Also show alert
+                    downloadingTeX = false
+                    downloadingTeXError = message
+                    UserDefaults.standard.set(false, forKey: "TeXEnabled")
+                    self.TeXEnabled = false
+                    return
+                } else {
+                    NSLog("texmf-dist-fonts resource succesfully downloaded")
+                    // link the sub-directories in the right place:
+                    if let archiveFileLocation = texmf_dist_fontsResource.bundle.path(forResource: "texlive_2019_texmf-dist_fonts", ofType: nil) {
+                        // Is the host directory available? If not create it.
+                        let archiveURL = URL(fileURLWithPath: archiveFileLocation)
+                        let localURL = libraryURL.appendingPathComponent("texlive/2019/texmf-dist/fonts") // $HOME/Library/texlive/2019/texmf-dist/fonts
+                        if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
+                            try! FileManager().removeItem(at: localURL)
                         }
-                        let distantFileURL = archiveURL.appendingPathComponent(directory)
-                        try! FileManager().createSymbolicLink(at: localFileURL, withDestinationURL: distantFileURL)
+                        if (!FileManager().fileExists(atPath: localURL.path)) {
+                            try! FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
+                        }
+                        let contents = try! FileManager().contentsOfDirectory(atPath: archiveURL.path)
+                        for directory in contents {
+                            let localFileURL = localURL.appendingPathComponent(directory)
+                            if (FileManager().fileExists(atPath: localFileURL.path) && !localFileURL.isDirectory) {
+                                try! FileManager().removeItem(at: localFileURL)
+                            }
+                            let distantFileURL = archiveURL.appendingPathComponent(directory)
+                            try! FileManager().createSymbolicLink(at: localFileURL, withDestinationURL: distantFileURL)
+                        }
                     }
+                    NSLog("Done linking texmf-dist-fonts resource")
                 }
-                NSLog("Done linking texmf-dist-fonts resource")
-            }
+                // Once texmf_dist_fonts is loaded, we start texmf_dist_fonts_type1:
+                texmf_dist_fonts_type1Resource.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
+                NSLog("Begin downloading texmf-dist-fonts-type1 resources")
+                texmf_dist_fonts_type1Resource.beginAccessingResources(completionHandler: { (error) in
+                    if let error = error {
+                        var message = "Error in downloading texmf-dist-fonts-type1 files: "
+                        message.append(error.localizedDescription)
+                        NSLog(message) // Also show alert
+                        downloadingTeX = false
+                        downloadingTeXError = message
+                        UserDefaults.standard.set(false, forKey: "TeXEnabled")
+                        self.TeXEnabled = false
+                        return
+                    } else {
+                        NSLog("texmf-dist-fonts-type1 resource succesfully downloaded")
+                        // link the sub-directory in the right place:
+                        if let archiveFileLocation = texmf_dist_fonts_type1Resource.bundle.path(forResource: "texlive_2019_texmf-dist_fonts_type1", ofType: nil) {
+                            // Is the host directory available? If not create it.
+                            let archiveURL = URL(fileURLWithPath: archiveFileLocation)
+                            let localURL = libraryURL.appendingPathComponent("texlive/2019/texmf-dist/fonts") // $HOME/Library/texlive/2019/texmf-dist/fonts
+                            if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
+                                try! FileManager().removeItem(at: localURL)
+                            }
+                            if (!FileManager().fileExists(atPath: localURL.path)) {
+                                try! FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
+                            }
+                            let localFileURL = localURL.appendingPathComponent("type1")
+                            if (FileManager().fileExists(atPath: localFileURL.path)) {
+                                try! FileManager().removeItem(at: localFileURL)
+                            }
+                            try! FileManager().createSymbolicLink(at: localFileURL, withDestinationURL: archiveURL)
+                        }
+                        NSLog("Done linking texmf-dist-fonts-type1 resource")
+                    }
+                })
+                texmf_dist_fonts_type1Resource.progress.addObserver(self, forKeyPath: "fractionCompleted", options: .new, context: nil)
+            })
+            texmf_dist_fontsResource.progress.addObserver(self, forKeyPath: "fractionCompleted", options: .new, context: nil)
         })
-        moveFilesQueue.async{
-            // Now, we wait until the three resources are done.
-            // In a queue, so as not to block the rest of the program.
-            while ((texliveResource.progress.fractionCompleted < 1.0) ||
-                (texmf_distResource.progress.fractionCompleted < 1.0) ||
-                (texmf_dist_fontsResource.progress.fractionCompleted < 1.0)) {
-                    let texmf_dist_fontsSize = 1335624.0
-                    let texmf_distSize = 524268.0
-                    let texliveSize = 84704.0 
-                    percentTeXDownloadComplete = 100.0 * (texmf_dist_fontsSize * texmf_dist_fontsResource.progress.fractionCompleted +
-                        texmf_distSize * texmf_distResource.progress.fractionCompleted + texliveSize * texliveResource.progress.fractionCompleted) / (texmf_dist_fontsSize + texmf_distSize + texliveSize)
-            }
-            NSLog("All resources have been downloaded: \(texmf_dist_fontsResource.progress.fractionCompleted)")
-            downloadingTeX = false
-            self.TeXEnabled = true
-            addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
-            self.TeXnotification(title: "TeX succesfully activated", message: "TeX is now activated")
-        }
+        texmf_distResource.progress.addObserver(self, forKeyPath: "fractionCompleted", options: .new, context: nil)
     }
 
     func disableTeX() {
@@ -247,13 +263,10 @@ extension AppDelegate {
         downloadingTeX = false
         TeXEnabled = false
         activateFakeTeXCommands()
-        // De-activate the resources:
-        let texliveResource = NSBundleResourceRequest(tags: ["texlive"])
-        texliveResource.endAccessingResources()
-        let texmf_distResource = NSBundleResourceRequest(tags: ["texmf-dist"])
+        // De-activate the resources -- if they are already there:
         texmf_distResource.endAccessingResources()
-        let texmf_dist_fontsResource = NSBundleResourceRequest(tags: ["texmf-dist-fonts"])
         texmf_dist_fontsResource.endAccessingResources()
+        texmf_dist_fonts_type1Resource.endAccessingResources()
         // Finally, remove everything:
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                 in: .userDomainMask,
@@ -287,11 +300,12 @@ extension AppDelegate {
         downloadingOpentypeError = ""
         percentOpentypeDownloadComplete = 0.0
         // download the extensions: texlive, texmf-dist and texmf-dist-fonts
-        let opentypeResource = NSBundleResourceRequest(tags: ["opentype"])
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
+        // First, wait until TeX is done:
+        opentypeResource.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
         NSLog("Begin downloading LuaTeX ")
         opentypeResource.beginAccessingResources(completionHandler: { (error) in
             if let error = error {
@@ -361,7 +375,6 @@ extension AppDelegate {
             downloadingOpentype = false
             self.OpentypeEnabled = true
             addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
-            self.TeXnotification(title: "LuaTeX succesfully activated", message: "LuaTeX is now activated")
             }
     }
 
@@ -372,7 +385,6 @@ extension AppDelegate {
         OpentypeEnabled = false
         activateFakeTeXCommands()
         // De-activate the resource:
-        let opentypeResource = NSBundleResourceRequest(tags: ["opentype"])
         opentypeResource.endAccessingResources()
         // Finally, remove everything:
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
@@ -382,7 +394,7 @@ extension AppDelegate {
         let localURL = libraryURL.appendingPathComponent("texlive/2019/texmf-dist/fonts")
         let enumerator = ["opentype", "truetype"]
         for file in enumerator {
-            let localFileURL = localURL.appendingPathComponent(file as! String)
+            let localFileURL = localURL.appendingPathComponent(file)
             if (FileManager().fileExists(atPath: localFileURL.path)) {
                 try! FileManager().removeItem(at: localFileURL)
             }

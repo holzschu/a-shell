@@ -4633,6 +4633,8 @@ hterm.getClientHeight = function(dom) {
  * @param {string} str The string data to copy out.
  */
 hterm.copySelectionToClipboard = function(document, str) {
+	window.webkit.messageHandlers.aShell.postMessage('hterm.copySelectionToClipboard: '  + str); 
+
   // Request permission if need be.
   const requestPermission = () => {
     // Use the Permissions API if available.
@@ -4670,6 +4672,7 @@ hterm.copySelectionToClipboard = function(document, str) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       // If this fails (perhaps due to focus changing windows), fallback to the
       // legacy copy method.
+	  window.webkit.messageHandlers.aShell.postMessage('writing to clipboard: ' + str);
       return navigator.clipboard.writeText(str)
         .catch(execCommand);
     } else {
@@ -10172,13 +10175,19 @@ hterm.ScrollPort.Selection.prototype.sync = function() {
   // so that screen reader navigation isn't cleared.
   const accessibilityEnabled = this.scrollPort_.accessibilityReader_ &&
       this.scrollPort_.accessibilityReader_.accessibilityEnabled;
-  if (this.isCollapsed && !accessibilityEnabled) {
-    return;
-  }
 
   var anchorRow = selection.anchorNode;
   while (anchorRow && anchorRow.nodeName != 'X-ROW') {
     anchorRow = anchorRow.parentNode;
+  }
+
+	if (anchorRow && (selection.type == 'Caret') && (selection.anchorOffset > 0)) {
+		term_.moveCursorPosition(anchorRow.rowIndex - this.scrollPort_.getTopRowIndex(), selection.anchorOffset);
+	}
+
+  	// iOS: selectionchange is also called to move cursor, so we moved this test until after anchorRow is computed. 
+  if (this.isCollapsed && !accessibilityEnabled) {
+    return;
   }
 
   if (!anchorRow) {
@@ -10413,7 +10422,8 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
   // element, which will get focussed on page load.
   this.allowScrollButtonsToDisplay_ = false;
   setTimeout(() => { this.allowScrollButtonsToDisplay_ = true; }, 500);
-  this.document_.addEventListener('selectionchange', () => {
+  this.document_.addEventListener('selectionchange', (e) => {
+      
     this.selection.sync();
 
     if (!this.allowScrollButtonsToDisplay_)
@@ -14878,6 +14888,8 @@ hterm.Terminal.prototype.paste = function() {
  * @param {string} str The string to copy.
  */
 hterm.Terminal.prototype.copyStringToClipboard = function(str) {
+	window.webkit.messageHandlers.aShell.postMessage('copyStringToClipboard: '  + str); 
+	
   if (this.prefs_.get('enable-clipboard-notice'))
     setTimeout(this.showOverlay.bind(this, hterm.notifyCopyMessage, 500), 200);
 
@@ -15513,18 +15525,19 @@ hterm.Terminal.prototype.onCut = function(e) { };
 hterm.Terminal.prototype.onCopy_ = function(e) {
 	// iOS change: handle cut events ourselves
 	if (e.type == 'cut') {
-		document.execCommand('cut'); 
-		this.onCut(e);
+		if (this.onCut(e)) {
+			return;
+		}
 		return;
 	}
-  if (!this.useDefaultWindowCopy) {
-    e.preventDefault();
-    setTimeout(this.copySelectionToClipboard.bind(this), 0);
-  }
-  	// iOS: clear selection after copy
+	if (!this.useDefaultWindowCopy) {
+		e.preventDefault();
+		setTimeout(this.copySelectionToClipboard.bind(this), 0);
+	}
+	// iOS: clear selection after copy
 	if (this.clearSelectionAfterCopy) {
 		var selection = this.getDocument().getSelection();
-        setTimeout(selection.collapseToEnd.bind(selection), 50);
+		setTimeout(selection.collapseToEnd.bind(selection), 50);
 	}
 };
 

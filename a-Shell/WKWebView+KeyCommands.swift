@@ -60,14 +60,31 @@ extension WKWebView {
             
         }
     }
+    
+    @objc private func clearScreen(_ sender: UIBarButtonItem) {
+        // clear entire display: ^[[2J
+        // position cursor on top line: ^[[1;1H
+        // print current command again.
+        let javascriptCommand = "window.term_.io.print('" + escape + "[2J'); window.term_.io.print('" + escape + "[1;1H'); " +
+        " window.printPrompt(); window.term_.io.print(window.term_.io.currentCommand); var endOfCommand = window.term_.io.currentCommand.slice(window.currentCommandCursorPosition, window.term_.io.currentCommand.length); var wcwidth = lib.wc.strWidth(endOfCommand); for (var i = 0; i < wcwidth; i++) { io.print('\\b'); }"
+        evaluateJavaScript(javascriptCommand) { (result, error) in
+            if error != nil {
+                print(error)
+            }
+            if (result != nil) {
+                print(result)
+            }
+        }
+    }
 
 
     override open var keyCommands: [UIKeyCommand]? {
-        var basicKeyCommands = [
+        let basicKeyCommands = [
             UIKeyCommand(input: UIKeyCommand.inputUpArrow, modifierFlags: [], action: #selector(upAction)),
             UIKeyCommand(input: UIKeyCommand.inputDownArrow, modifierFlags: [], action: #selector(downAction)),
             UIKeyCommand(input: UIKeyCommand.inputLeftArrow, modifierFlags: [], action: #selector(leftAction)),
             UIKeyCommand(input: UIKeyCommand.inputRightArrow, modifierFlags: [], action: #selector(rightAction)),
+            UIKeyCommand(input: "k", modifierFlags:.command, action: #selector(clearScreen)), 
             UIKeyCommand(input: "c", modifierFlags:.alternate, action: #selector(insertC)), // This is weird. Need long term solution.
             UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC)), // This is weird. Need long term solution.
         ]

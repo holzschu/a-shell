@@ -10,13 +10,14 @@ import UIKit
 import SwiftUI
 import WebKit
 import ios_system
+import MobileCoreServices
 
 var messageHandlerAdded = false
 var externalKeyboardPresent: Bool? // still needed?
 
 // Need: dictionary connecting userContentController with output streams (?)
 
-class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler {
+class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate {
     var window: UIWindow?
     var windowScene: UIWindowScene?
     var webView: WKWebView?
@@ -36,7 +37,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
     let interrupt = "\u{0003}"  // control-C, used to kill the process
     let endOfTransmission = "\u{0004}"  // control-D, used to signal end of transmission
     let escape = "\u{001B}"
-
+    
+    // Create a document picker for directories.
+    private let documentPicker =
+        UIDocumentPickerViewController(documentTypes: [kUTTypeFolder as String],
+                                       in: .open)
 
     var screenWidth: CGFloat {
         if windowScene!.interfaceOrientation.isPortrait {
@@ -225,8 +230,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         return toolbar
     }()
     
-    
-    
     func printPrompt() {
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript("window.printPrompt(); window.updatePromptPosition(); window.commandRunning = ''; ") { (result, error) in
@@ -244,8 +247,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
         for command in history {
             fputs(command + "\n", thread_stdout)
         }
-        /* DispatchQueue.main.async {
-            self.webView?.evaluateJavaScript("window.commandArray.forEach(item => window.term_.io.println(item));") { (result, error) in
+    }
+
+    func printText(string: String) {
+        fputs(string, thread_stdout)
+    }
+        
+    func clearScreen() {
+        DispatchQueue.main.async {
+            // clear entire display: ^[[2J
+            // position cursor on top line: ^[[1;1H 
+            self.webView?.evaluateJavaScript("window.term_.io.print('" + self.escape + "[2J'); window.term_.io.print('" + self.escape + "[1;1H'); ") { (result, error) in
                 if error != nil {
                     print(error)
                 }
@@ -253,8 +265,72 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                     print(result)
                 }
             }
-        } */
+        }
     }
+    
+    func executeWebAssembly(arguments: [String]?) {
+        guard (arguments != nil) else { return }
+        guard (arguments!.count == 2) else { return }
+        let command = arguments![1]
+        // TODO: pass full list of arguments (minus the first, "wasm") to the command.
+        // So far: "JavaScript execution returned a result of an unsupported type"
+        let javascript = "fetch('" + command + "').then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance.exports.main());"
+        DispatchQueue.main.async {
+            self.webView?.evaluateJavaScript(javascript) { (result, error) in
+                if error != nil {
+                    print(error)
+                }
+                if (result != nil) {
+                    print(result)
+                }
+            }
+        }
+    }
+    
+    func pickFolder() {
+        // https://developer.apple.com/documentation/uikit/view_controllers/providing_access_to_directories
+        documentPicker.allowsMultipleSelection = true
+        documentPicker.delegate = self
+
+        let rootVC = self.window?.rootViewController
+        // Set the initial directory.
+        // documentPicker.directoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        // Present the document picker.
+        DispatchQueue.main.async {
+            rootVC?.present(self.documentPicker, animated: true, completion: nil)
+        }
+    }
+    
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        // Present the Document View Controller for the first document that was picked.
+        // If you support picking multiple items, make sure you handle them all.
+        let newDirectory = urls[0]
+        NSLog("changing directory to: \(newDirectory.path.replacingOccurrences(of: " ", with: "\\ "))")
+        let success = newDirectory.startAccessingSecurityScopedResource()
+        let isReadable = FileManager().isReadableFile(atPath: newDirectory.path)
+        guard success && isReadable else {
+            showAlert("Error", message: "Could not access folder.")
+            return
+        }
+        // If it's on iCloud, download the directory content
+        if newDirectory.path.hasPrefix("/private/var/mobile/Library/Mobile Documents/") {
+            NSLog("Downloading iCloud folder: \(newDirectory.path.replacingOccurrences(of: " ", with: "\\ "))")
+            do {
+                try FileManager().startDownloadingUbiquitousItem(at: newDirectory)
+            }
+            catch {
+                showAlert("Could not download directory from iCloud")
+                print(error)
+                return
+            }
+        }
+        // Call cd_main but not ios_system("cd dir") to avoid closing streams.
+        let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "cd".toCString()!), UnsafeMutablePointer(mutating: newDirectory.path.toCString()!)]
+        let p_argv: UnsafeMutablePointer = UnsafeMutablePointer(mutating: argv)
+        cd_main(2, p_argv);
+    }
+
+
     // Even if Caps-Lock is activated, send lower case letters.
     @objc func insertKey(_ sender: UIKeyCommand) {
         guard (sender.input != nil) else { return }
@@ -288,6 +364,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             // TODO: Having stdin_file == nil requires more than just return. Think about it.
             guard stdin_file != nil else {
                 NSLog("Can't open stdin_file: \(String(cString: strerror(errno)))")
+                self.printPrompt();
                 return
             }
             // Get file for stdout/stderr that can be written to
@@ -334,6 +411,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                     self.printPrompt();
                 }
             }
+            /* let testWasm = """
+                if(typeof WebAssembly !== 'undefined') {
+                    window.webkit.messageHandlers.aShell.postMessage("Hello, Wasm.");
+                } else {
+                    window.webkit.messageHandlers.aShell.postMessage("Sorry, no wasm for you.");
+                }
+            """
+            webView?.evaluateJavaScript(testWasm) { (result, error) in
+                if error != nil {
+                    print(error)
+                }
+                if (result != nil) {
+                    print(result)
+                }
+            } */
         } else if (cmd.hasPrefix("width:")) {
             var command = cmd
             command.removeFirst("width:".count)
@@ -365,7 +457,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
             if (command == endOfTransmission) {
                 // Stop standard input for the command:
-                self.stdin_pipe!.fileHandleForWriting.closeFile()
+                guard stdin_pipe != nil else { return }
+                stdin_pipe!.fileHandleForWriting.closeFile()
+                stdin_pipe = nil
             } else if (command == interrupt) {
                 ios_kill()
             } else {
@@ -374,6 +468,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 // (store a variable that says the pipe has been closed)
                 stdin_pipe!.fileHandleForWriting.write(data)
             }
+        } else if (cmd.hasPrefix("inputInteractive:")) {
+            // Interactive commands: just send the input to them. Allows Vim to map control-D to down half a page.
+            var command = cmd
+            command.removeFirst("inputInteractive:".count)
+            guard let data = command.data(using: .utf8) else { return }
+            ios_switchSession(self.persistentIdentifier?.toCString())
+            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
+            guard stdin_pipe != nil else { return }
+            // TODO: don't send data if pipe already closed (^D followed by another key)
+            // (store a variable that says the pipe has been closed)
+            stdin_pipe!.fileHandleForWriting.write(data)
+            // TODO: check control-C, control-D in IPython and Vim
         } else if (cmd.hasPrefix("listDirectory:")) {
             var directory = cmd
             directory.removeFirst("listDirectory:".count)
@@ -414,6 +521,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             } catch {
                 NSLog("Error getting files from directory: \(directory): \(error.localizedDescription)")
             }
+        } else if (cmd.hasPrefix("copy:")) {
+            // copy text to clipboard. Required since simpler methods don't work with what we want to do with cut in JS.
+            var string = cmd
+            string.removeFirst("copy:".count)
+            let pasteBoard = UIPasteboard.general
+            pasteBoard.string = string
         } else {
             // Usually debugging information
             NSLog("JavaScript message: \(message.body)")
@@ -461,8 +574,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             // And another to be called each time the keyboard is resized (including when an external KB is connected):
             NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidChange), name: UIResponder.keyboardDidChangeFrameNotification, object: nil)
             // initialize command list for autocomplete:
-            // TODO: also scan PATH for executable files. Difficult
             guard var commandsArray = commandsAsArray() as! [String]? else { return }
+            // Also scan PATH for executable files:
+            let executablePath = String(cString: getenv("PATH"))
+            NSLog("\(executablePath)")
+            for directory in executablePath.components(separatedBy: ":") {
+                do {
+                    // We don't check for exec status, because files inside $APPDIR have no x bit set.
+                    for file in try FileManager().contentsOfDirectory(atPath: directory) {
+                        commandsArray.append(URL(fileURLWithPath: file).lastPathComponent)
+                    }
+                } catch {
+                    // The directory is unreadable, move to next one
+                    continue
+                }
+            }
             commandsArray.sort() // make sure it's in alphabetical order
             var javascriptCommand = "var commandList = ["
             for command in commandsArray {
@@ -545,6 +671,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
             if (result != nil) {
                 print(result)
             }
+        }
+        // Are we in light mode or dark mode?
+        var H_fg: CGFloat = 0
+        var S_fg: CGFloat = 0
+        var B_fg: CGFloat = 0
+        var A_fg: CGFloat = 0
+        UIColor.placeholderText.resolvedColor(with: traitCollection).getHue(&H_fg, saturation: &S_fg, brightness: &B_fg, alpha: &A_fg)
+        var H_bg: CGFloat = 0
+        var S_bg: CGFloat = 0
+        var B_bg: CGFloat = 0
+        var A_bg: CGFloat = 0
+        UIColor.systemBackground.resolvedColor(with: traitCollection).getHue(&H_bg, saturation: &S_bg, brightness: &B_bg, alpha: &A_bg)
+        if (B_fg > B_bg) {
+            // Dark mode
+            setenv("COLORFGBG", "15:0", 1)
+        } else {
+            // Light mode
+            setenv("COLORFGBG", "0:15", 1)
         }
         webView!.allowDisplayingKeyboardWithoutUserAction()
     }
@@ -639,10 +783,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, WKScriptMessageHandler 
                 // Finished processing the output, can get back to prompt:
                 printPrompt();
             }
+        } else if let string = String(data: data, encoding: String.Encoding.ascii) {
+            NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII: \(data)")
+            outputToWebView(string: string)
+            if (string.contains(endOfTransmission)) {
+                // Finished processing the output, can get back to prompt:
+                printPrompt();
+            }
         } else {
             NSLog("Couldn't convert data in stdout: \(data)")
         }
     }
-    
 }
 
