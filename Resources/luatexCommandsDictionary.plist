@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>dvilualatex</key>
+	<array>
+		<string>luatex.framework/luatex</string>
+		<string>dllluatexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>dviluatex</key>
+	<array>
+		<string>luatex.framework/luatex</string>
+		<string>dllluatexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>lualatex</key>
+	<array>
+		<string>luatex.framework/luatex</string>
+		<string>dllluatexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>luatex</key>
+	<array>
+		<string>luatex.framework/luatex</string>
+		<string>dllluatexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>texlua</key>
+	<array>
+		<string>luatex.framework/luatex</string>
+		<string>dllluatexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>texluac</key>
+	<array>
+		<string>luatex.framework/luatex</string>
+		<string>dllluatexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+</dict>
+</plist>

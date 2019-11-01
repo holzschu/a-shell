@@ -1,0 +1,37 @@
+#!/usr/bin/env texlua
+
+--
+-- This is file `a5toa4.tlu',
+-- generated with the docstrip utility.
+--
+-- The original source files were:
+--
+-- pfarrei.dtx  (with options: `a5toa4,lua')
+-- 
+-- Copyright (c) 2013 Markus Kohm
+--                    komascript at gmx info
+-- 
+-- This file was generated from file(s) of the work `pfarrei'.
+-- ------------------------------------------------------------------
+-- 
+-- It may be distributed under the conditions of the
+-- LaTeX Project Public License in the version distributed together
+-- with the work `pfarrei'.  You may however distribute the work
+-- `pfarrei' without all such generated files.  See also
+-- <http://www.latex-project.org/lppl.txt> for additional
+-- information.
+-- 
+-- This work has the LPPL maintenance status `maintained'.
+-- 
+-- The Current Maintainer of this work is Markus Kohm.
+-- 
+-- The list of files belonging to the work `pfarrei' is given in
+-- the file `pfarrei.dtx'.
+-- 
+-- $Id: pfarrei.dtx 36 2013-10-16 18:54:26Z mjk $
+
+kpse.set_program_name(arg[-1], 'a5toa4')
+require('pfarrei.pfarrei')
+-- 
+--
+-- End of file `a5toa4.tlu'.
