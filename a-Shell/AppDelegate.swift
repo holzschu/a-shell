@@ -51,6 +51,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     
+    func clearOldDirectories() {
+        // packages installed in previous versions. Must remove before anything else or they mess things up.
+        let oldPythonDirectories = ["Library/lib/python3.7/multiprocessing",
+                                    ]
+        let documentsUrl = try! FileManager().url(for: .documentDirectory,
+                                                  in: .userDomainMask,
+                                                  appropriateFor: nil,
+                                                  create: true)
+        let homeUrl = documentsUrl.deletingLastPathComponent()
+        for directoryName in oldPythonDirectories {
+            let homeDirectory = homeUrl.appendingPathComponent(directoryName)
+            if (FileManager().fileExists(atPath: homeDirectory.path)) {
+                try! FileManager().removeItem(at: homeDirectory)
+            }
+        }
+    }
+
+    
+    
     func needToUpdatePythonFiles() -> Bool {
         // do it with UserDefaults, not storing in files
         UserDefaults.standard.register(defaults: ["versionInstalled" : "0.0"])
@@ -134,7 +153,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             moveFilesQueue.async{
                 let homeFile = homeUrl.appendingPathComponent(fileName)
                 let homeDirectory = homeFile.deletingLastPathComponent()
-                try! FileManager().createDirectory(atPath: homeDirectory.path, withIntermediateDirectories: true)
                 do {
                     let firstFileAttribute = try FileManager().attributesOfItem(atPath: homeFile.path)
                     if (firstFileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
@@ -176,12 +194,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        NSLog("Application didFinishLaunchingWithOptions \(launchOptions)")
         initializeEnvironment()
+        clearOldDirectories()
         replaceCommand("history", "history", true)
         replaceCommand("help", "help", true)
         replaceCommand("clear", "clear", true)
         replaceCommand("credits", "credits", true)
         replaceCommand("pickFolder", "pickFolder", true)
+        // Add these as commands so they appear on the command list, even though we treat them internally:
+        replaceCommand("newWindow", "clear", true)
+        replaceCommand("exit", "clear", true)
         // replaceCommand("wasm", "wasm", true)
         activateFakeTeXCommands()
         if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
@@ -209,7 +232,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
         let currentiCloudToken = FileManager().ubiquityIdentityToken
-        print("Available fonts: \(UIFont.familyNames)");
+        // print("Available fonts: \(UIFont.familyNames)");
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
@@ -234,6 +257,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: UISceneSession Lifecycle
 
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        
         // Called when a new scene session is being created.
         // Use this method to select a configuration to create the new scene with.
         NSLog("application configurationForConnecting connectingSceneSession \(connectingSceneSession)")
@@ -244,8 +268,53 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the user discards a scene session.
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
+        // Delete Vim sessions here using sceneSessions.first.persistentIdentifier
+        let documentsUrl = try! FileManager().url(for: .documentDirectory,
+                                                  in: .userDomainMask,
+                                                  appropriateFor: nil,
+                                                  create: true)
+        for session in sceneSessions {
+            let persistentIdentifier = session.persistentIdentifier
+            var sessionFileUrl = documentsUrl.appendingPathComponent(".vim/sessions/" + persistentIdentifier + ".vim")
+            if (FileManager().fileExists(atPath: sessionFileUrl.path)) {
+                do {
+                    try FileManager().removeItem(at: sessionFileUrl)
+                }
+                catch {
+                    NSLog("Unable to remove file: \(sessionFileUrl.path)")
+                }
+            }
+            sessionFileUrl = documentsUrl.appendingPathComponent(".vim/sessions/" + persistentIdentifier + ".vim.lock")
+            if (FileManager().fileExists(atPath: sessionFileUrl.path)) {
+                do {
+                    try FileManager().removeItem(at: sessionFileUrl)
+                }
+                catch {
+                    NSLog("Unable to remove file: \(sessionFileUrl.path)")
+                }
+            }
+            sessionFileUrl = documentsUrl.appendingPathComponent(".vim/sessions/" + persistentIdentifier + ".vim.lock.tmp")
+            if (FileManager().fileExists(atPath: sessionFileUrl.path)) {
+                do {
+                    try FileManager().removeItem(at: sessionFileUrl)
+                }
+                catch {
+                    NSLog("Unable to remove file: \(sessionFileUrl.path)")
+                }
+            }
+        }
         NSLog("application didDiscardSceneSessions sceneSessions \(sceneSessions)")
     }
+    
+    func application(_ application: UIApplication,
+                     didReceiveRemoteNotification userInfo: [AnyHashable:Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        
+        NSLog("Called didReceiveRemoteNotification with userInfo = \(userInfo)")
+        // let session = findSession(for: userInfo)
+        // application.requestSceneSessionRefresh(session)
+    }
+    
 
     @objc func settingsChanged() {
         // UserDefaults.didChangeNotification is called every time the window becomes active
@@ -272,5 +341,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             disableOpentype()
         }
     }
+        
 }
 

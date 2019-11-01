@@ -71,16 +71,18 @@ a-Shell is a terminal emulator for iOS, with many Unix commands: ls, pwd, tar, m
 
 a-Shell can do most of the things you can do in a terminal, locally on your iPhone or iPad. You can redirect command output to a file with ">" and you can pipe commands with "|".
 
-Edit files with vim and ed.
-Transfer files with curl, tar, scp and sftp.
-Process files with python3, lua, pdflatex, lualatex.
-For network queries: nslookup, ping, host, whois, ifconfig.
-
-For a full list of commands, type help -l
-
+- Edit files with vim and ed.
+- Transfer files with curl, tar, scp and sftp.
+- Process files with python3, lua, pdflatex, lualatex.
+- For network queries: nslookup, ping, host, whois, ifconfig.
 """
+            
             if (argc == 1) {
                 delegate.printText(string: helpText)
+                if (!UserDefaults.standard.bool(forKey: "TeXEnabled")) {
+                    delegate.printText(string: "\nTo install TeX, just type any tex command and follow the instructions (same with luatex).\n")
+                }
+                delegate.printText(string: "\nFor a full list of commands, type help -l\n")
             } else {
                 guard let argV = argv?[1] else {
                     delegate.printText(string: helpText)
@@ -91,7 +93,6 @@ For a full list of commands, type help -l
                     guard var commandsArray = commandsAsArray() as! [String]? else { return 0 }
                     // Also scan PATH for executable files:
                     let executablePath = String(cString: getenv("PATH"))
-                    NSLog("\(executablePath)")
                     for directory in executablePath.components(separatedBy: ":") {
                         do {
                             // We don't check for exec status, because files inside $APPDIR have no x bit set.
@@ -148,8 +149,9 @@ LuaTeX: The LuaTeX team, http://www.luatex.org
 openSSL and libSSH2: port by Felix Schulze, https://github.com/x2on/libssh2-for-iOS
 Python3: Python Software Foundation, https://www.python.org/about/
 tar: https://libarchive.org
-TeX: Donald Knuth and TUG, https://tug.org
+TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2019.
 Vim: Bram Moolenaar and the Vim community, https://www.vim.org
+Vim-session: Peter Odding, http://peterodding.com/code/vim/session
 
 """
                 delegate.printText(string: creditText)
@@ -209,9 +211,9 @@ public func luatex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     }
     fputs(command, thread_stderr)
     if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
-        fputs(" requires the LuaTeX extension on top of the TeX distribution\nDo you want to download and install them? (0.5 GB) (y/N)", thread_stderr)
+        fputs(" requires the LuaTeX extension on top of the TeX distribution\nDo you want to download and install them? (0.3 GB) (y/N)", thread_stderr)
     } else {
-        fputs(" requires the TeX distribution, which is not currently installed, along with the LuaTeX extension.\nDo you want to download and install them? (2.3 GB) (y/N)", thread_stderr)
+        fputs(" requires the TeX distribution, which is not currently installed, along with the LuaTeX extension.\nDo you want to download and install them? (2 GB) (y/N)", thread_stderr)
     }
     fflush(thread_stderr)
     var byte: Int8 = 0

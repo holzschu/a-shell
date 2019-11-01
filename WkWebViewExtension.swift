@@ -59,6 +59,10 @@ extension WKWebView {
         return customInputAccessory as? UIView
     }
     
+    override open var inputAccessoryView: UIView? {
+        // remove/replace the default accessory view
+        return nil
+    }
 
     // Second extension, keyboardDisplayRequiresUserAction
     // solution from https://stackoverflow.com/questions/32449870/programmatically-focus-on-a-form-in-a-webview-wkwebview/48623286#48623286

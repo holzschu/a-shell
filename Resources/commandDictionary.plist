@@ -119,7 +119,7 @@
 		<string>text.framework/text</string>
 		<string>ed_main</string>
 		<string>p:sx</string>
-		<string>file</string>
+		<string></string>
 	</array>
 	<key>egrep</key>
 	<array>
@@ -394,6 +394,13 @@
 		<string>q</string>
 		<string>file</string>
 	</array>
+	<key>sh</key>
+	<array>
+		<string>SELF</string>
+		<string>sh_main</string>
+		<string>c:h:</string>
+		<string>file</string>
+	</array>
 	<key>ssh</key>
 	<array>
 		<string>ssh_cmd.framework/ssh_cmd</string>
@@ -518,7 +525,7 @@
 		<string>vim.framework/vim</string>
 		<string>main</string>
 		<string></string>
-		<string>yes</string>
+		<string></string>
 	</array>
 	<key>wc</key>
 	<array>

@@ -2,7 +2,7 @@
 
 <p align="center">
 <img src="https://img.shields.io/badge/Platform-iOS%2013.0+-lightgrey.svg" alt="Platform: iOS">
-<a href="http://twitter.com/nholzschuch"><img src="https://img.shields.io/badge/Twitter-@nholzschuch-blue.svg?style=flat" alt="Twitter"/></a>
+<a href="https://twitter.com/a_Shell_iOS"><img src="https://img.shields.io/badge/Twitter-@a_Shell_iOS-blue.svg?style=flat" alt="Twitter"/></a>
 </p>
 
 
@@ -10,5 +10,5 @@ The goal in this project is to provide a simple Unix-like terminal on iOS. It us
 
 The project relies on iOS 13 to create and manage multiple windows. Each window has its own context, command history and current directory. 
 
-
+a-Shell is now <a href="https://holzschu.github.io/a-Shell_iOS/">available on the AppStore</a>.
 

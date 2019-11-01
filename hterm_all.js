@@ -10176,6 +10176,12 @@ hterm.ScrollPort.Selection.prototype.sync = function() {
   const accessibilityEnabled = this.scrollPort_.accessibilityReader_ &&
       this.scrollPort_.accessibilityReader_.accessibilityEnabled;
 
+  // iOS: moved this test back to its place as it breaks input with accented characters
+  // TODO: check that move cursor still works in all cases
+  if (this.isCollapsed && !accessibilityEnabled) {
+    return;
+  }
+
   var anchorRow = selection.anchorNode;
   while (anchorRow && anchorRow.nodeName != 'X-ROW') {
     anchorRow = anchorRow.parentNode;
@@ -10184,11 +10190,6 @@ hterm.ScrollPort.Selection.prototype.sync = function() {
 	if (anchorRow && (selection.type == 'Caret') && (selection.anchorOffset > 0)) {
 		term_.moveCursorPosition(anchorRow.rowIndex - this.scrollPort_.getTopRowIndex(), selection.anchorOffset);
 	}
-
-  	// iOS: selectionchange is also called to move cursor, so we moved this test until after anchorRow is computed. 
-  if (this.isCollapsed && !accessibilityEnabled) {
-    return;
-  }
 
   if (!anchorRow) {
     // Don't set a selection if it's not a row node that's selected.
@@ -10280,6 +10281,7 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
                                               this.onResize_.bind(this));
 
   var doc = this.document_ = this.iframe_.contentDocument;
+ 
   doc.body.style.cssText = (
       'margin: 0px;' +
       'padding: 0px;' +
@@ -15886,6 +15888,9 @@ hterm.Terminal.IO.prototype.writeUTF16 = function(string) {
   }
 
   this.terminal_.interpret(string);
+  	// iOS: keep a copy of everything that has been sent to the screen, 
+  	// to restore terminal status later (and resize?):
+  	window.printedContent += string
 };
 
 /**

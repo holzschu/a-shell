@@ -15,16 +15,17 @@
          	height: 100%;
          }
          body {
-         	position: absolute;
+         	position: fixed;
          	height: 100%;
          	width: 100%;
          	overflow: hidden;
+         	top: 0px;
          	margin: 0px;
          	padding: 0px;
          }
          #terminal {
          	display: block;
-         	position: relative;
+         	position: fixed;
          	height: 100%;
          	width: 100%;
          	margin: 0px;
@@ -33,8 +34,9 @@
 	   </style>
 	</head>
 
-	<body autocapitalize='none' contenteditable='true' spellcheck='false' autocomplete='off' autocorrect='off' autofocus='true'>
-		<div id='terminal' autofocus='true' autocapitalize='none' contenteditable='true' spellcheck='false' autocomplete='off' autocorrect='off' ></div>
+	<!-- TODO: check if we can remove everything. contenteditable='false' has stopped the keyboard from adding autocomplete -->
+	<body autocapitalize='none' contenteditable='false' spellcheck='false' autocomplete='off' autocorrect='off'>
+		<div id='terminal' autofocus='true' autocapitalize='none' contenteditable='false' spellcheck='false' autocomplete='off' autocorrect='off' ></div>
 		<script>
 			function initContent(io) {
 				const ver = lib.resource.getData('libdot/changelog/version');
@@ -89,10 +91,10 @@
 				var currentCommand = window.term_.io.currentCommand;
 				// clear the rest of the line, then reprint. 
 				window.term_.io.print('\x1b[0J'); // delete display after cursor
-				window.term_.io.print(string); 
+				window.term_.io.print(string);  
 				
 				// print remainder of command line
-				window.term_.io.print(currentCommand.slice(currentCommandCursorPosition, currentCommand.length))
+				window.term_.io.print(currentCommand.slice(currentCommandCursorPosition, currentCommand.length));
 				// move cursor back to where it was (don't use term.screen_.cursorPosition):
 				var endOfCommand = currentCommand.slice(currentCommandCursorPosition, currentCommand.length);
 				var endOfCommandWidth = lib.wc.strWidth(endOfCommand);
@@ -257,7 +259,7 @@
 				// Default monospaced fonts installed: Menlo and Courier. 
 				term.prefs_.set('cursor-shape', 'BLOCK'); 
 				term.prefs_.set('font-family', 'Menlo');
-				term.prefs_.set('font-size', 15);
+				term.prefs_.set('font-size', 13); // 13 necessary for 5.5 inches phones
 				term.prefs_.set('cursor-blink', true); 
 				term.prefs_.set('enable-clipboard-notice', false); 
 				term.prefs_.set('use-default-window-copy', true); 
@@ -328,11 +330,6 @@
 				term.onTerminalReady = function() {
 					const io = this.io.push();
 					io.onVTKeystroke = (string) => {
-						// window.webkit.messageHandlers.aShell.postMessage('received key input:' + string);
-						if (window.firstKey) {
-							string = string.toLowerCase();
-							window.firstKey = false;
-						}
 						if (window.controlOn) {
 							// produce string = control + character 
 							var charcode = string.toUpperCase().charCodeAt(0);
@@ -741,22 +738,22 @@
 									}
 									break;
 								default:
-									// TODO: deactivate anything that is < 32
+									// Remove all escape characters if we reach this point:
+									var newString = string.replace(String.fromCharCode(27), '');
 									// For debugging:
-									// var charcode = string.charCodeAt(0);
-									// window.webkit.messageHandlers.aShell.postMessage('' + charcode + " = " + string);
+								    // 		for (var i = 0; i < newString.length; i++) {
+									// 		var charcode = newString.charCodeAt(i);
+									//		window.webkit.messageHandlers.aShell.postMessage("char " + i + " = " + charcode + " = " + newString[i]);
+								    // }
 									// insert character at cursor position
-									// TODO: sometimes onCut works, sometimes it doesn't
-									// A lot of guys call onselectionchange. Maybe too many. 
-									// Can I know who's calling? Probably not.
 									if (this.document_.getSelection().type == 'Range') {
 										term.onCut(null); // remove the selection without copying it
 									}
 									this.document_.getSelection().empty(); 
-									printString(string);  // print before we update io.currentCommand
-									io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + string + 
+									printString(newString);  // print before we update io.currentCommand
+									io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + newString + 
 										io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
-									currentCommandCursorPosition += string.length;
+									currentCommandCursorPosition += newString.length;
 									if (autocompleteOn) {
 										updateAutocompleteMenu(io, currentCommandCursorPosition); 
 									}
@@ -815,7 +812,12 @@
 					};
 					io.sendString = io.onVTKeystroke; // was io.print
 					initContent(io);
-					printPrompt(); // first prompt
+					if ((window.printedContent === undefined) || (window.printedContent == "")) {
+						printPrompt(); // first prompt
+					} else {
+						window.webkit.messageHandlers.aShell.postMessage('Restored terminal content from previous session');
+						window.term_.io.print(window.printedContent);
+					}
 					updatePromptPosition(); 
 					this.setCursorVisible(true);
 					this.setForegroundColor(window.foregroundColor);
@@ -830,20 +832,28 @@
 				term.installKeyboard();
                 // Useful for console debugging.
 				window.term_ = term;
-				window.commandRunning = '';
-				window.commandArray = new Array();
+				if (window.commandRunning === undefined) {
+					window.commandRunning = '';
+				}
+				if (window.commandArray === undefined) {
+					window.commandArray = new Array();
+					window.commandIndex = 0;
+					window.maxCommandIndex = 0;
+				}
+				if (window.printedContent === undefined) {
+					window.printedContent = '';
+				}
 				window.commandInsideCommandArray = new Array();
-				window.commandIndex = 0;
-				window.maxCommandIndex = 0;
 				window.commandInsideCommandIndex = 0;
 				window.maxCommandInsideCommandIndex = 0;
 				window.prompt = "$ "; // prompt for commands, configurable
 				window.promptEnd = 2; // prompt for commands, configurable
 				window.promptLine = 0; // term line on which the prompt started
 				window.promptScroll = 0; // scroll line on which the scrollPort was when the prompt started
-				// A bit sad, but iOS keeps ignoring autocapitalize, so we de-autocapitalize:
-				window.firstKey = true;
-				window.term_.focus();
+				if ((window.commandToExecute != undefined) && (window.commandToExecute != "")) {
+					window.webkit.messageHandlers.aShell.postMessage('shell:' + window.commandToExecute);
+					window.commandRunning = window.commandToExecute;
+				}
 			}
 
 window.onload = function() {

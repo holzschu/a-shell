@@ -8,6 +8,38 @@
 	<array>
 		<dict>
 			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Open files in Vim:</string>
+			<key>Key</key>
+			<string>VimOpenFile</string>
+			<key>DefaultValue</key>
+			<string>window</string>
+			<key>Titles</key>
+			<array>
+				<string>New window</string>
+				<string>New tab</string>
+				<string>New buffer</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>window</string>
+				<string>tab</string>
+				<string>buffer</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>Caps-Lock = Escape</string>
+			<key>Key</key>
+			<string>escape_preference</string>
+			<key>DefaultValue</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
 			<string>Enable TeX (844 MB)</string>

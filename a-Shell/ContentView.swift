@@ -46,7 +46,6 @@ struct Webview : UIViewRepresentable {
             }
         }
         uiView.loadFileURL(URL(fileURLWithPath: htermFilePath!), allowingReadAccessTo: URL(fileURLWithPath: htermFilePath!))
-        uiView.allowDisplayingKeyboardWithoutUserAction()
     }
 }
 
@@ -56,31 +55,45 @@ struct Webview : UIViewRepresentable {
 struct ContentView: View {
     @State private var keyboardHeight: CGFloat = 0
 
-    private let showPublisher = NotificationCenter.Publisher.init(
-        center: .default,
-        name: UIResponder.keyboardWillShowNotification
-    ).map { (notification) -> CGFloat in
-        if let rect = notification.userInfo?["UIKeyboardFrameEndUserInfoKey"] as? CGRect {
-            return rect.size.height
-        } else {
-            return 0
-        }
+    // Adapt window size to keyboard height, see:
+    // https://stackoverflow.com/questions/56491881/move-textfield-up-when-thekeyboard-has-appeared-by-using-swiftui-ios
+    // A publisher that combines all of the relevant keyboard changing notifications and maps them into a `CGFloat` representing the new height of the
+    // keyboard rect.
+    private let keyboardChangePublisher = NotificationCenter.Publisher(center: .default,
+                                                                       name: UIResponder.keyboardWillShowNotification)
+        .merge(with: NotificationCenter.Publisher(center: .default,
+                                                  name: UIResponder.keyboardWillChangeFrameNotification))
+        .merge(with: NotificationCenter.Publisher(center: .default,
+                                                  name: UIResponder.keyboardWillHideNotification)
+            // But we don't want to pass the keyboard rect from keyboardWillHide, so strip the userInfo out before
+            // passing the notification on.
+            .map { Notification(name: $0.name, object: $0.object, userInfo: nil) })
+        // Now map the merged notification stream into a height value.
+        .map { (note) -> CGFloat in
+            let height = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).size.height
+            // NSLog("Received \(note.name.rawValue) with height \(height)")
+            // This is really annoying. Based on values from simulator.
+            // Need to redo everything?
+            if (height == 336) { return 306 } // Bug in iPhone 11 & 11 Pro Max, keyboard overestimated
+            if (height == 89) { return 35 } // Bug in iPhone 11 with external keyboard, keyboard overestimated
+            if (height == 326) { return 306 } // Bug in iPhone 11 Pro, keyboard is overestimated.
+            if (height == 400) { return 380 } // Bug in iPad Pro 12.9 inch 3rd Gen
+            if (height == 398) { return 380 } // Bug in iPad Pro 12.9 inch 3rd Gen
+            if (height == 493) { return 476 } // Bug in iPad Pro 12.9 inch 3rd Gen
+            if (height == 50) { return 40 } // Bug in iPad Pro 12.9 inch 3rd Gen with external keyboard
+            // We have no way to make the difference between "no keyboard on screen" and "external kb connected"
+            // (some BT keyboards do not register as such)
+            if (height == 0) { return 40 } // At least the size of the toolbar -- if no keyboard present
+            return height
     }
-
-    private let hidePublisher = NotificationCenter.Publisher.init(
-        center: .default,
-        name: UIResponder.keyboardWillHideNotification
-    ).map {_ -> CGFloat in 0}
     
     let webview = Webview()
     
     var body: some View {
-        // resize depending on keyboard
-        webview.padding(.bottom, keyboardHeight)
-            .offset(CGSize(width: 0, height: 0))
-            .onReceive(showPublisher.merge(with: hidePublisher)) { (height) in
-            self.keyboardHeight = height
-        }
+        // resize depending on keyboard. Specify size (.frame) instead of padding.
+        webview.onReceive(keyboardChangePublisher) { self.keyboardHeight = $0 }
+            .padding(.top, 0) // Important, to set the size of the view
+            .padding(.bottom, keyboardHeight)
     }
 }
 
