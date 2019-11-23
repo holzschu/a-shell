@@ -195,6 +195,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         NSLog("Application didFinishLaunchingWithOptions \(launchOptions)")
+        // Store variables in User Defaults:
+        UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
+        UserDefaults.standard.register(defaults: ["TeXOpenType" : false])
+        UserDefaults.standard.register(defaults: ["zshmarks" : true])
+        UserDefaults.standard.register(defaults: ["bashmarks" : false])
+        UserDefaults.standard.register(defaults: ["escape_preference" : false])
         initializeEnvironment()
         clearOldDirectories()
         replaceCommand("history", "history", true)
@@ -234,9 +240,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let currentiCloudToken = FileManager().ubiquityIdentityToken
         // print("Available fonts: \(UIFont.familyNames)");
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
-        // Store variables in User Defaults:
-        UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
-        UserDefaults.standard.register(defaults: ["TeXOpenType" : false])
         let center = UNUserNotificationCenter.current()
         // Request permission to display alerts and play sounds.
         center.requestAuthorization(options: [.alert, .sound])
@@ -340,7 +343,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             // it was enabled before, it was disabled: we remove it
             disableOpentype()
         }
+        // bookmarks management, copied from zshmarks: https://github.com/jocelynmallon/zshmarks
+        let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
+        if (zshmarks) {
+            replaceCommand("showmarks", "showmarks", true) //
+            replaceCommand("jump", "jump", true) // go to bookmark
+            replaceCommand("bookmark", "bookmark", true) // add bookmark for current directory
+            replaceCommand("deletemark", "deletemark", true) // delete bookmark (might be dangerous)
+            replaceCommand("renamemark", "renamemark", true) // rename bookmark
+        }
+        let bashmarks = UserDefaults.standard.bool(forKey: "bashmarks")
+        if (bashmarks) {
+            replaceCommand("l", "showmarks", true) //
+            replaceCommand("p", "showmarks", true) //
+            replaceCommand("g", "jump", true) // go to bookmark
+            replaceCommand("s", "bookmark", true) // add bookmark for current directory
+            replaceCommand("d", "deletemark", true) // delete bookmark (might be dangerous)
+            replaceCommand("r", "renamemark", true) // rename bookmark
+        }
     }
-        
 }
 

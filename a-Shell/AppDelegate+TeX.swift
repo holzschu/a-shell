@@ -342,40 +342,43 @@ extension AppDelegate {
                 }
             }
         })
-        moveFilesQueue.async{
-            // In a queue, so as not to block the rest of the program.
-            // Copy the files from $APPDIR/luatexfiles to $HOME/Library/texlive/2019/texmf-dist/luatexfiles
-            let archiveURL = URL(fileURLWithPath: Bundle.main.path(forResource: "luatexfiles", ofType: nil)!)
-            NSLog("Archive = \(archiveURL.path)")
-            let localURL = libraryURL.appendingPathComponent("texlive/2019/texmf-dist/luatexfiles/")
-            if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
-                try! FileManager().removeItem(at: localURL)
-            }
-            if (!FileManager().fileExists(atPath: localURL.path)) {
-                try! FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
-            }
-            let contents = try! FileManager().contentsOfDirectory(atPath: archiveURL.path)
-            for file in contents {
-                let localFileURL = localURL.appendingPathComponent(file)
-                do {
-                    if (localFileURL.isSymbolicLink && !FileManager().fileExists(atPath: localFileURL.path)) {
-                        try FileManager().removeItem(at: localFileURL)
-                    }
-                    let distantFileURL = archiveURL.appendingPathComponent(file)
-                    try FileManager().createSymbolicLink(at: localFileURL, withDestinationURL: distantFileURL)
-                } catch {
-                    NSLog("Error copying \(localFileURL.path): \(error)")
+        // If there was an error in downloading, we can end up here, but with settings set to false:
+        if (UserDefaults.standard.bool(forKey: "TeXOpenType")) {
+            moveFilesQueue.async{
+                // In a queue, so as not to block the rest of the program.
+                // Copy the files from $APPDIR/luatexfiles to $HOME/Library/texlive/2019/texmf-dist/luatexfiles
+                let archiveURL = URL(fileURLWithPath: Bundle.main.path(forResource: "luatexfiles", ofType: nil)!)
+                NSLog("Archive = \(archiveURL.path)")
+                let localURL = libraryURL.appendingPathComponent("texlive/2019/texmf-dist/luatexfiles/")
+                if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
+                    try! FileManager().removeItem(at: localURL)
                 }
-            }
-            // Now, we wait until the resource is downloaded.
-            while (opentypeResource.progress.fractionCompleted < 1.0) {
+                if (!FileManager().fileExists(atPath: localURL.path)) {
+                    try! FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
+                }
+                let contents = try! FileManager().contentsOfDirectory(atPath: archiveURL.path)
+                for file in contents {
+                    let localFileURL = localURL.appendingPathComponent(file)
+                    do {
+                        if (localFileURL.isSymbolicLink && !FileManager().fileExists(atPath: localFileURL.path)) {
+                            try FileManager().removeItem(at: localFileURL)
+                        }
+                        let distantFileURL = archiveURL.appendingPathComponent(file)
+                        try FileManager().createSymbolicLink(at: localFileURL, withDestinationURL: distantFileURL)
+                    } catch {
+                        NSLog("Error copying \(localFileURL.path): \(error)")
+                    }
+                }
+                // Now, we wait until the resource is downloaded.
+                while (opentypeResource.progress.fractionCompleted < 1.0) {
                     percentOpentypeDownloadComplete = opentypeResource.progress.fractionCompleted
+                }
+                NSLog("Opentype fonts have been downloaded.")
+                downloadingOpentype = false
+                self.OpentypeEnabled = true
+                addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
             }
-            NSLog("Opentype fonts have been downloaded.")
-            downloadingOpentype = false
-            self.OpentypeEnabled = true
-            addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
-            }
+        }
     }
 
     func disableOpentype() {

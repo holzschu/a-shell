@@ -91,6 +91,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         }
     }
     
+    var isVimRunning: Bool {
+      return (currentCommand.hasPrefix("vim ")) || (currentCommand == "vim") || (currentCommand.hasPrefix("jump "))
+    }
+
+    
     @objc private func tabAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + "\u{0009}" + "\");") { (result, error) in
             if error != nil {
@@ -327,7 +332,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         // Present the Document View Controller for the first document that was picked.
         // If you support picking multiple items, make sure you handle them all.
         let newDirectory = urls[0]
-        NSLog("changing directory to: \(newDirectory.path.replacingOccurrences(of: " ", with: "\\ "))")
+        // NSLog("changing directory to: \(newDirectory.path.replacingOccurrences(of: " ", with: "\\ "))")
+        let isReadableWithoutSecurity = FileManager().isReadableFile(atPath: newDirectory.path)
         let isSecuredURL = newDirectory.startAccessingSecurityScopedResource()
         let isReadable = FileManager().isReadableFile(atPath: newDirectory.path)
         guard isSecuredURL && isReadable else {
@@ -342,21 +348,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
             NSLog("Couldn't download \(newDirectory), stopAccessingSecurityScopedResource")
             return
         }
-        /* if newDirectory.path.hasPrefix("/private/var/mobile/Library/Mobile Documents/") {
-            NSLog("Downloading iCloud folder: \(newDirectory.path.replacingOccurrences(of: " ", with: "\\ "))")
-            do {
-                try FileManager().startDownloadingUbiquitousItem(at: newDirectory)
-            }
-            catch {
-                showAlert("Could not download directory from iCloud")
-                print(error)
-                return
-            }
-        } */
-        // Call cd_main but not ios_system("cd dir") to avoid closing streams.
-        let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "cd".toCString()!), UnsafeMutablePointer(mutating: newDirectory.path.toCString()!)]
-        let p_argv: UnsafeMutablePointer = UnsafeMutablePointer(mutating: argv)
-        cd_main(2, p_argv);
+        // Store two things at the App level:
+        // - the bookmark for the URL
+        // - a nickname for the bookmark (last component of the URL)
+        // The user can edit the nickname later.
+        // the bookmark is only stored once, the nickname is stored each time:
+        if (!isReadableWithoutSecurity) {
+            storeBookmark(fileURL: newDirectory)
+        }
+        storeName(fileURL: newDirectory, name: newDirectory.lastPathComponent)
+        // Call cd_main instead of ios_system("cd dir") to avoid closing streams.
+        changeDirectory(path: newDirectory.path) // call cd_main and checks secured bookmarked URLs
         if (newDirectory.path != currentDirectory) {
             previousDirectory = currentDirectory
             currentDirectory = newDirectory.path
@@ -380,8 +382,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
     }
     
     func executeCommand(command: String) {
+        NSLog("executeCommand: \(command)")
         // Make sure we're on the right session:
-        NSLog("command= \(command)")
         ios_switchSession(self.persistentIdentifier?.toCString())
         ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
         // We can't call exit through ios_system because it creates a new session
@@ -448,8 +450,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
             self.currentCommand = command
             ios_system(self.currentCommand)
             // Send info to the stdout handler that the command has finished:
+            // let readOpen = fcntl(self.stdout_pipe!.fileHandleForReading.fileDescriptor, F_GETFD)
             let writeOpen = fcntl(self.stdout_pipe!.fileHandleForWriting.fileDescriptor, F_GETFD)
-            let readOpen = fcntl(self.stdout_pipe!.fileHandleForReading.fileDescriptor, F_GETFD)
             if (writeOpen >= 0) {
                 // Pipe is still open, send information to close it, once all output has been processed.
                 self.stdout_pipe!.fileHandleForWriting.write(self.endOfTransmission.data(using: .utf8)!)
@@ -609,31 +611,50 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         return nil
     }
     
-    func downloadRemoteFile(fileURL: URL) -> Bool {
-        if (FileManager().fileExists(atPath: fileURL.path)) {
-            return true
-        }
-        // NSLog("Try downloading file from iCloud: \(fileURL)")
+    func storeBookmark(fileURL: URL) {
+        // Store the bookmark for this object:
         do {
-            // this will work with iCloud, but not Dropbox or Microsoft OneDrive, who have a specific API.
-            // TODO: find out how to authorize a-Shell for Dropbox, OneDrive, GoogleDrive.
-            try FileManager().startDownloadingUbiquitousItem(at: fileURL)
-            let startingTime = Date()
-            // try downloading the file for 5s, then give up:
-            while (!FileManager().fileExists(atPath: fileURL.path) && (Date().timeIntervalSince(startingTime) < 5)) { }
-            // TODO: add an alert, ask if user wants to continue
-            // NSLog("Done downloading, new status: \(FileManager().fileExists(atPath: fileURL.path))")
-            if (FileManager().fileExists(atPath: fileURL.path)) {
-                return true
-            }
+            let fileBookmark = try fileURL.bookmarkData(options: [],
+                                                        includingResourceValuesForKeys: nil,
+                                                        relativeTo: nil)
+            let storedBookmarksDictionary = UserDefaults.standard.dictionary(forKey: "fileBookmarks") ?? [:]
+            var mutableBookmarkDictionary : [String:Any] = storedBookmarksDictionary
+            mutableBookmarkDictionary.updateValue(fileBookmark, forKey: fileURL.path)
+            UserDefaults.standard.set(mutableBookmarkDictionary, forKey: "fileBookmarks")
         }
         catch {
-            NSLog("Could not download file from iCloud")
-            print(error)
+            NSLog("Could not bookmark this file: \(fileURL)")
         }
-        return false
     }
-
+    
+    func storeName(fileURL: URL, name: String) {
+        let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+        // Does "name" alrady exist? If so create a unique name:
+        var newName = name
+        var counter = 0
+        var existingURLPath = storedNamesDictionary[newName]
+        while (existingURLPath != nil) {
+            var existingPath = existingURLPath as! String
+            // the name already exists
+            NSLog("Name \(newName) already exists.")
+            if (fileURL.sameFileLocation(path: existingPath)) {
+                if (thread_stderr != nil) {
+                    fputs("Already bookmarked as \(newName).\n", thread_stderr)
+                }
+                return // it's already there, don't store
+            }
+            counter += 1;
+            newName = name + "_" + "\(counter)"
+            existingURLPath = storedNamesDictionary[newName]
+        }
+        var mutableNamesDictionary : [String:Any] = storedNamesDictionary
+        mutableNamesDictionary.updateValue(fileURL.path, forKey: newName)
+        UserDefaults.standard.set(mutableNamesDictionary, forKey: "bookmarkNames")
+        if (thread_stderr != nil) {
+            fputs("Bookmarked as \(newName).\n", thread_stderr)
+        }
+    }
+    
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
@@ -682,17 +703,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
                     NSLog("Error in creating command list, line = \(javascriptCommand)")
-                    print(error)
+                    // print(error)
                 }
                 if (result != nil) {
-                    print(result)
+                    // print(result)
                 }
             }
             // Was this window created with a purpose?
             // Case 1: url to open is inside urlContexts
-            NSLog("connectionOptions.urlContexts: \(connectionOptions.urlContexts.first)")
+            // NSLog("connectionOptions.urlContexts: \(connectionOptions.urlContexts.first)")
             if let urlContext = connectionOptions.urlContexts.first {
                 let fileURL = urlContext.url
+                let isReadableWithoutSecurity = FileManager().isReadableFile(atPath: fileURL.path)
                 let isSecuredURL = fileURL.startAccessingSecurityScopedResource()
                 let isReadable = FileManager().isReadableFile(atPath: fileURL.path)
                 guard isSecuredURL && isReadable else {
@@ -707,12 +729,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
                     NSLog("Couldn't download \(fileURL), stopAccessingSecurityScopedResource")
                     return
                 }
+                if (!isReadableWithoutSecurity) {
+                    storeBookmark(fileURL: fileURL)
+                }
+                storeName(fileURL: fileURL, name: fileURL.lastPathComponent)
                 if (fileURL.isDirectory) {
                     // it's a directory.
                     thread_stderr = stderr
-                    let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "cd".toCString()!), UnsafeMutablePointer(mutating: fileURL.path.toCString()!)]
-                    let p_argv: UnsafeMutablePointer = UnsafeMutablePointer(mutating: argv)
-                    cd_main(2, p_argv);
+                    changeDirectory(path: fileURL.path) // call cd_main and checks secured bookmarked URLs
                     closeAfterCommandTerminates = false
                 } else {
                     // It's a file
@@ -731,20 +755,19 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
                 }
             }
             // Case 2: url to open is inside userActivity
-            NSLog("connectionOptions.userActivities.first: \(connectionOptions.userActivities.first)")
-            NSLog("stateRestorationActivity: \(session.stateRestorationActivity)")
+            // NSLog("connectionOptions.userActivities.first: \(connectionOptions.userActivities.first)")
+            // NSLog("stateRestorationActivity: \(session.stateRestorationActivity)")
             for userActivity in connectionOptions.userActivities {
-            // if let userActivity = connectionOptions.userActivities.first ?? session.stateRestorationActivity {
-                NSLog("Found userActivity: \(userActivity)")
-                NSLog("Type: \(userActivity.activityType)")
-                NSLog("URL: \(userActivity.userInfo!["url"])")
-                NSLog("UserInfo: \(userActivity.userInfo!)")
+                // NSLog("Found userActivity: \(userActivity)")
+                // NSLog("Type: \(userActivity.activityType)")
+                // NSLog("URL: \(userActivity.userInfo!["url"])")
+                // NSLog("UserInfo: \(userActivity.userInfo!)")
                 if (userActivity.activityType == "AsheKube.app.a-Shell.EditDocument") {
                     if let fileURL: NSURL = userActivity.userInfo!["url"] as? NSURL {
-                        NSLog("willConnectTo: \(fileURL.path!.replacingOccurrences(of: "%20", with: " "))")
+                        // NSLog("willConnectTo: \(fileURL.path!.replacingOccurrences(of: "%20", with: " "))")
                         executeCommand(command: "vim " + (fileURL.path!.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ ")))
                     } else {
-                        NSLog("Empty URL -- using backup")
+                        // NSLog("Empty URL -- using backup")
                         executeCommand(command: "vim " + ((inputFileURLBackup?.path.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ "))!))
                         inputFileURLBackup = nil
                     }
@@ -760,9 +783,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
                     closeAfterCommandTerminates = true
                 } else if (userActivity.activityType == "AsheKube.app.a-Shell.OpenDirectory") {
                     if let fileURL: NSURL = userActivity.userInfo!["url"] as? NSURL {
-                        // TODO: replace this with a call to cd_main
-                        NSLog("Scene:willConnectTo: Calling cd to \(fileURL.path)")
-                        executeCommand(command: "cd " + fileURL.path!.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ "))
+                        //  ???
+                        // .removingPercentEncoding ??
+                        changeDirectory(path: fileURL.path!) // call cd_main and checks secured bookmarked URLs
                         closeAfterCommandTerminates = false
                     }
                 }
@@ -776,7 +799,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         for urlContext in openURLContexts {
             let fileURL = urlContext.url
             if (!fileURL.isFileURL) { continue }
-            NSLog("openURLContexts: \(fileURL.path)")
+            // NSLog("openURLContexts: \(fileURL.path)")
+            let isReadableWithoutSecurity = FileManager().isReadableFile(atPath: fileURL.path)
             let isSecuredURL = fileURL.startAccessingSecurityScopedResource()
             let isReadable = FileManager().isReadableFile(atPath: fileURL.path)
             guard isSecuredURL && isReadable else {
@@ -791,6 +815,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
                 NSLog("Couldn't download \(fileURL), stopAccessingSecurityScopedResource")
                 return
             }
+            if (!isReadableWithoutSecurity) {
+                storeBookmark(fileURL: fileURL)
+            }
+            storeName(fileURL: fileURL, name: fileURL.lastPathComponent)
             if (fileURL.isDirectory) {
                 // it's a directory.
                 // TODO: customize the command (cd, other?)
@@ -799,15 +827,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
                 UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
             } else {
                 // TODO: customize the command (vim, microemacs, python, clang, TeX?)
-                NSLog("Storing URL: \(fileURL.path)")
+                //  NSLog("Storing URL: \(fileURL.path)")
                 let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.EditDocument")
                 activity.userInfo!["url"] = fileURL
                 inputFileURLBackup = fileURL // userActivity sometimes forgets the URL for iCloud files
                 // Open a new tab in Vim:
                 let userSettingsVim = UserDefaults.standard.string(forKey: "VimOpenFile")
-                let isVimRunning = (currentCommand.hasPrefix("vim ")) || (currentCommand == "vim")
                 if (isVimRunning && (userSettingsVim != "window")) {
-                    NSLog("Vim is already running: \(currentCommand) settings = \(userSettingsVim)")
+                    // NSLog("Vim is already running: \(currentCommand) settings = \(userSettingsVim)")
                     var command = escape
                     if (userSettingsVim == "tab") {
                         command += ":tabnew "
@@ -850,7 +877,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
                 exitCommand = "\nquit"
             } else if ((currentCommand == "nslookup") || currentCommand.hasPrefix("nslookup ")) {
                 exitCommand = "\nexit"
-            } else if ((currentCommand == "vim") || currentCommand.hasPrefix("vim ")) {
+            } else if (isVimRunning) {
                 exitCommand = escape + "\n:xa" // save all and quit
             } else if ((currentCommand == "ssh") || currentCommand.hasPrefix("ssh ")) {
                 exitCommand = "\nexit"
@@ -965,9 +992,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
                         // NSLog("set previousDirectory to \(previousDirectory)")
                         // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
                         thread_stderr = stderr
-                        let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "cd".toCString()!), UnsafeMutablePointer(mutating: previousDirectory.toCString()!)]
-                        let p_argv: UnsafeMutablePointer = UnsafeMutablePointer(mutating: argv)
-                        cd_main(2, p_argv);
+                        changeDirectory(path: previousDirectory) // call cd_main and checks secured bookmarked URLs
                     }
                 }
                 let currentDirectoryData = userInfo["cwd"]
@@ -977,9 +1002,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
                         // NSLog("set currentDirectory to \(currentDirectory)")
                         // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
                         thread_stderr = stderr
-                        let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "cd".toCString()!), UnsafeMutablePointer(mutating: currentDirectory.toCString()!)]
-                        let p_argv: UnsafeMutablePointer = UnsafeMutablePointer(mutating: argv)
-                        cd_main(2, p_argv);
+                        changeDirectory(path: currentDirectory) // call cd_main and checks secured bookmarked URLs
                     }
                 }
                 let terminalData = userInfo["terminal"]
@@ -997,6 +1020,26 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
                 let currentCommandData = userInfo["currentCommand"]
                 if (currentCommandData != nil) {
                     let storedCommand = currentCommandData as! String
+                    NSLog("Restarting session with \(storedCommand)")
+                    // Safety check: is the vim session file still there?
+                    // I could have been removed by the system, or by the user.
+                    if (storedCommand.hasPrefix("vim -S ")) {
+                        var sessionFile = storedCommand
+                        sessionFile.removeFirst("vim -S ".count)
+                        if (sessionFile.hasPrefix("~")) {
+                            sessionFile.removeFirst("~".count)
+                            let documentsUrl = try! FileManager().url(for: .documentDirectory,
+                                                                      in: .userDomainMask,
+                                                                      appropriateFor: nil,
+                                                                      create: true)
+                            let homeUrl = documentsUrl.deletingLastPathComponent()
+                            sessionFile = homeUrl.path + sessionFile
+                        }
+                        if (!FileManager().fileExists(atPath: sessionFile)) {
+                            NSLog("Could not find session file at \(sessionFile)")
+                            return
+                        }
+                    }
                     // NSLog("Restoring command: \(storedCommand)")
                     let restoreCommand = "window.commandToExecute = '" + storedCommand.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "';"
                     // NSLog("Calling command: \(restoreCommand)")
@@ -1017,9 +1060,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
-        // TODO: save command history, current working directory, hterm screen.
-        // TODO: + currently running command? (if it is an editor, say)
-        // self.userActivity.
         NSLog("sceneDidEnterBackground: \(self.persistentIdentifier).")
         scene.session.stateRestorationActivity = NSUserActivity(activityType: "AsheKube.app.a-Shell.TermSession")
         if (currentDirectory == "") {
@@ -1034,7 +1074,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         webView!.evaluateJavaScript("window.printedContent",
                                     completionHandler: { (printedContent: Any?, error: Error?) in
                                         if error != nil {
-                                            NSLog("Error in capturing terminal content.")
+                                            // NSLog("Error in capturing terminal content.")
                                             print(error)
                                         }
                                         if (printedContent != nil) {
@@ -1050,7 +1090,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
             // time to send an exit code to the command
             var saveCommand = ""
             // Recognize both the raw command and the command with arguments:
-            if ((currentCommand == "vim") || currentCommand.hasPrefix("vim ")) {
+            if (isVimRunning) {
                 // This might still fail in some cases. What is the minimal set of commands guaranteed to save all?
                 // interrupt should work better than escape in theory but not in practice
                 // also, how to remove the swp files? (except by quitting)
@@ -1088,27 +1128,26 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         DispatchQueue.main.async {
             self.webView!.evaluateJavaScript(command) { (result, error) in
                 if error != nil {
-                    NSLog("Error in print; offending line = \(parsedString)")
-                    print(error)
+                    // NSLog("Error in print; offending line = \(parsedString)")
+                    // print(error)
                 }
                 if (result != nil) {
-                    print(result)
+                    // print(result)
                 }
             }
         }
         return
-        // I know
         while (parsedString.count > 0) {
             guard let firstReturn = parsedString.firstIndex(of: "\n") else {
                 let command = "window.term_.io.print(\"" + parsedString + "\");"
                 DispatchQueue.main.async {
                     self.webView!.evaluateJavaScript(command) { (result, error) in
                         if error != nil {
-                            NSLog("Error in print; offending line = \(parsedString)")
-                            print(error)
+                            // NSLog("Error in print; offending line = \(parsedString)")
+                            // print(error)
                         }
                         if (result != nil) {
-                            print(result)
+                            // print(result)
                         }
                     }
                 }
@@ -1119,11 +1158,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
             DispatchQueue.main.async {
                 self.webView!.evaluateJavaScript(command) { (result, error) in
                     if error != nil {
-                        NSLog("Error in println; offending line = \(firstLine)")
-                        print(error)
+                        // NSLog("Error in println; offending line = \(firstLine)")
+                        // print(error)
                     }
                     if (result != nil) {
-                        print(result)
+                        // print(result)
                     }
                 }
             }

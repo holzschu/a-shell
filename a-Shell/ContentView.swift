@@ -38,11 +38,11 @@ struct Webview : UIViewRepresentable {
         let command = "window.foregroundColor = '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'; window.backgroundColor = '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'; window.cursorColor = '" + UIColor.link.resolvedColor(with: traitCollection).toHexString() + "';"
         uiView.evaluateJavaScript(command) { (result, error) in
             if error != nil {
-                NSLog("Error in updateUIView, line = \(command)")
-                print(error)
+                // NSLog("Error in updateUIView, line = \(command)")
+                // print(error)
             }
             if (result != nil) {
-                print(result)
+                // sprint(result)
             }
         }
         uiView.loadFileURL(URL(fileURLWithPath: htermFilePath!), allowingReadAccessTo: URL(fileURLWithPath: htermFilePath!))
