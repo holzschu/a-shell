@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2019 May 06
+" Last Change:	2019 Oct 19
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -425,6 +425,9 @@ au BufNewFile,BufRead *.csp,*.fdr		setf csp
 au BufNewFile,BufRead *.pld			setf cupl
 au BufNewFile,BufRead *.si			setf cuplsim
 
+" Dart
+au BufRead,BufNewfile *.dart,*.drt		setf dart
+
 " Debian Control
 au BufNewFile,BufRead */debian/control		setf debcontrol
 au BufNewFile,BufRead control
@@ -701,14 +704,14 @@ au BufNewFile,BufRead *.vc,*.ev,*.sum,*.errsum	setf hercules
 " HEX (Intel)
 au BufNewFile,BufRead *.hex,*.h32		setf hex
 
+" Hollywood
+au BufRead,BufNewFile *.hws			setf hollywood
+
 " Tilde (must be before HTML)
 au BufNewFile,BufRead *.t.html			setf tilde
 
 " HTML (.shtml and .stm for server side)
 au BufNewFile,BufRead *.html,*.htm,*.shtml,*.stm  call dist#ft#FThtml()
-
-" Vue.js Single File Component
-au BufNewFile,BufRead *.vue			setf vuejs
 
 " HTML with Ruby - eRuby
 au BufNewFile,BufRead *.erb,*.rhtml		setf eruby
@@ -798,7 +801,10 @@ au BufNewFile,BufRead *.java,*.jav		setf java
 au BufNewFile,BufRead *.jj,*.jjt		setf javacc
 
 " JavaScript, ECMAScript
-au BufNewFile,BufRead *.js,*.javascript,*.es,*.jsx,*.mjs   setf javascript
+au BufNewFile,BufRead *.js,*.javascript,*.es,*.mjs   setf javascript
+
+" JavaScript with React
+au BufNewFile,BufRead *.jsx			setf javascriptreact
 
 " Java Server Pages
 au BufNewFile,BufRead *.jsp			setf jsp
@@ -975,6 +981,9 @@ au BufNewFile,BufRead hg-editor-*.txt		setf hgcommit
 
 " Mercurial config (looks like generic config file)
 au BufNewFile,BufRead *.hgrc,*hgrc		setf cfg
+
+" Meson Build system config
+au BufNewFile,BufRead meson.build,meson_options.txt setf meson
 
 " Messages (logs mostly)
 au BufNewFile,BufRead */log/{auth,cron,daemon,debug,kern,lpr,mail,messages,news/news,syslog,user}{,.log,.err,.info,.warn,.crit,.notice}{,.[0-9]*,-[0-9]*} setf messages
@@ -1709,6 +1718,9 @@ au BufNewFile,BufReadPost *.twig		setf twig
 " Typescript
 au BufNewFile,BufReadPost *.ts			setf typescript
 
+" TypeScript with React
+au BufNewFile,BufRead *.tsx			setf typescriptreact
+
 " Motif UIT/UIL files
 au BufNewFile,BufRead *.uit,*.uil		setf uil
 
@@ -1779,11 +1791,14 @@ au BufNewFile,BufRead *.wrl			setf vrml
 " Vroom (vim testing and executable documentation)
 au BufNewFile,BufRead *.vroom			setf vroom
 
-" Webmacro
-au BufNewFile,BufRead *.wm			setf webmacro
+" Vue.js Single File Component
+au BufNewFile,BufRead *.vue			setf vue
 
 " WebAssembly
 au BufNewFile,BufRead *.wast,*.wat		setf wast
+
+" Webmacro
+au BufNewFile,BufRead *.wm			setf webmacro
 
 " Wget config
 au BufNewFile,BufRead .wgetrc,wgetrc		setf wget

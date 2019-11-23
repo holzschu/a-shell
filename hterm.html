@@ -339,7 +339,10 @@
 						}
 						// Fully interactive commands: forward all keyboard input, let them deal with command history.
 					    // TODO: have a list of such interactive commands (array?) 
-						if (window.commandRunning.startsWith("vim") || window.commandRunning.startsWith("ipython")) {
+						// jump can start vim 
+						if (window.commandRunning.startsWith("vim") || 
+							window.commandRunning.startsWith("ipython") || 
+							window.commandRunning.startsWith("jump")) {
 							// specific treatment for interactive commands: forward all keyboard input to them
 							// window.webkit.messageHandlers.aShell.postMessage('sending: ' + string); // for debugging
 							window.webkit.messageHandlers.aShell.postMessage('inputInteractive:' + string);
@@ -853,6 +856,7 @@
 				if ((window.commandToExecute != undefined) && (window.commandToExecute != "")) {
 					window.webkit.messageHandlers.aShell.postMessage('shell:' + window.commandToExecute);
 					window.commandRunning = window.commandToExecute;
+					window.commandToExecute = ""; 
 				}
 			}
 

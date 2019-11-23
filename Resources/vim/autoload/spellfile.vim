@@ -199,6 +199,7 @@ endfunc
 function! spellfile#WritableSpellDir()
   if has("unix")
     " For Unix always use the $HOME/.vim directory
+    " iOS: use $HOME/Documents/
     return $HOME . "/Documents/.vim/spell"
   endif
   for dir in split(&rtp, ',')

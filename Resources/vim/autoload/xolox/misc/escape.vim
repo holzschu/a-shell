@@ -40,7 +40,6 @@ function! xolox#misc#escape#shell(string) " {{{1
   " Microsoft Windows).
   "
   " [shellslash]: http://vimdoc.sourceforge.net/htmldoc/options.html#'shellslash'
-  " iOS, test:
   if xolox#misc#os#is_win()
     try
       let ssl_save = &shellslash

@@ -41,21 +41,28 @@ extension URL {
     }
     
     // compare 2 URLs and return true if they correspond to the same
-    // page, excluding parameters and queries. This avoids infinite
-    // loops with redirections.
-    // Maybe we need to include parameters, but queries are excluded.
-    // We had an infinite loop with http://localhost:8888/nbextensions/
-    // loading http://localhost:8888/nbextensions/?nbextension=zenmode/main
-    func sameLocation(url: URL?) -> Bool {
-        if (url == nil) { return false }
-        if (self.host != url!.host) { return false }
-        if (self.port != url!.port) { return false }
-        if (self.path != url!.path) { return false }
-        return true
+    // file path, taking into account the possibility that iOS sometimes
+    // adds "/private" in front of file URLs.
+    func sameFileLocation(path: String?) -> Bool {
+        if (path == nil) { return false }
+        if (!self.isFileURL) { return false }
+        // same path? OK
+        if (self.path == path) { return true }
+        // Do they both begin with "/private/"?
+        if (self.path.hasPrefix("/private/") && path!.hasPrefix("/private/")) { return false }
+        // Do they both begin with "/var/"?
+        if (self.path.hasPrefix("/var/") && path!.hasPrefix("/var/")) { return false }
+        // One begins with /var, the other with /private
+        if (self.path.hasPrefix("/private/")) {
+            var shorterPath = self.path
+            shorterPath.removeFirst("/private".count)
+            if (shorterPath == path) { return true }
+        } else {
+            var shorterPath = path!
+            shorterPath.removeFirst("/private".count)
+            if (self.path == shorterPath) { return true }
+        }
+        return false
     }
-    
-
-    
-    
 }
 

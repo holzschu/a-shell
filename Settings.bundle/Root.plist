@@ -42,6 +42,26 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
+			<string>zshmarks-style bookmarks (jump, bookmark...)</string>
+			<key>Key</key>
+			<string>zshmarks</string>
+			<key>DefaultValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>bashmarks-style bookmarks (l, s, g...)</string>
+			<key>Key</key>
+			<string>bashmarks</string>
+			<key>DefaultValue</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
 			<string>Enable TeX (844 MB)</string>
 			<key>Key</key>
 			<string>TeXEnabled</string>

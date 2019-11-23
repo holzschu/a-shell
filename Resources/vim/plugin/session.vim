@@ -96,6 +96,7 @@ if !exists('g:session_directory')
   if xolox#misc#os#is_win()
     let g:session_directory = '~\vimfiles\sessions'
   else
+    " iOS: ~/.vim does not exist
     let g:session_directory = '~/Documents/.vim/sessions'
   endif
 endif

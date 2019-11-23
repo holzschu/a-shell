@@ -3138,6 +3138,7 @@ fun! s:NetrwMethod(choice)
 "      call Decho("s:netrw_ftp_cmd<".s:netrw_ftp_cmd.">",'~'.expand("<slnum>"))
      endif
      let b:netrw_method= 2
+     " iOS: replace $HOME with $HOME/Documents
     elseif s:FileReadable(expand("$HOME/Documents/.netrc")) && !g:netrw_ignorenetrc
 "     call Decho("using <".expand("$HOME/.netrc")."> (readable)",'~'.expand("<slnum>"))
      let b:netrw_method= 2
@@ -3179,6 +3180,7 @@ fun! s:NetrwMethod(choice)
     let g:netrw_machine = substitute(a:choice,mf,'\1',"")
     let b:netrw_fname   = substitute(a:choice,mf,'\2',"")
 
+     " iOS: replace $HOME with $HOME/Documents
    elseif s:FileReadable(expand("$HOME/Documents/.netrc"))
     let b:netrw_method  = 2
     let g:netrw_machine = substitute(a:choice,mf,'\1',"")

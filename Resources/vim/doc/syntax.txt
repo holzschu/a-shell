@@ -1,4 +1,4 @@
-*syntax.txt*	For Vim version 8.1.  Last change: 2019 Jul 15
+*syntax.txt*	For Vim version 8.1.  Last change: 2019 Oct 04
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -60,8 +60,8 @@ If the VIM environment variable is not set, Vim will try to find
 the path in another way (see |$VIMRUNTIME|).  Usually this works just
 fine.  If it doesn't, try setting the VIM environment variable to the
 directory where the Vim stuff is located.  For example, if your syntax files
-are in the "/usr/vim/vim50/syntax" directory, set $VIMRUNTIME to
-"/usr/vim/vim50".  You must do this in the shell, before starting Vim.
+are in the "/usr/vim/vim81/syntax" directory, set $VIMRUNTIME to
+"/usr/vim/vim81".  You must do this in the shell, before starting Vim.
 This command also sources the |menu.vim| script when the GUI is running or
 will start soon.  See |'go-M'| about avoiding that.
 
@@ -1158,6 +1158,26 @@ startup vimrc: >
    :let filetype_w = "cweb"
 
 
+DART						*dart.vim* *ft-dart-syntax*
+
+Dart is an object-oriented, typed, class defined, garbage collected language
+used for developing mobile, desktop, web, and back-end applications.  Dart uses
+a C-like syntax derived from C, Java, and JavaScript, with features adopted
+from Smalltalk, Python, Ruby, and others.
+
+More information about the language and its development environment at the
+official Dart language website at https://dart.dev
+
+dart.vim syntax detects and highlights Dart statements, reserved words,
+type declarations, storage classes, conditionals, loops, interpolated values,
+and comments.  There is no support idioms from Flutter or any other Dart
+framework.
+
+Changes, fixes?  Submit an issue or pull request via:
+
+https://github.com/pr3d4t0r/dart-vim-syntax/
+
+
 DESKTOP					   *desktop.vim* *ft-desktop-syntax*
 
 Primary goal of this syntax file is to highlight .desktop and .directory files
@@ -1746,7 +1766,7 @@ There are several html preprocessor languages out there.  html.vim has been
 written such that it should be trivial to include it.  To do so add the
 following two lines to the syntax coloring file for that language
 (the example comes from the asp.vim file):
-
+>
     runtime! syntax/html.vim
     syn cluster htmlPreproc add=asp
 
@@ -1921,6 +1941,16 @@ to a larger number: >
 This will make the syntax synchronization start 50 lines before the first
 displayed line.  The default value is 10.  The disadvantage of using a larger
 number is that redrawing can become slow.
+
+
+JSON						*json.vim* *ft-json-syntax*
+
+The json syntax file provides syntax highlighting with conceal support by
+default. To disable concealment: >
+	let g:vim_json_conceal = 0
+
+To disable syntax highlighting of errors: >
+	let g:vim_json_warnings = 0
 
 
 LACE						*lace.vim* *ft-lace-syntax*
@@ -5041,8 +5071,15 @@ IncSearch	'incsearch' highlighting; also used for the text replaced with
 							*hl-LineNr*
 LineNr		Line number for ":number" and ":#" commands, and when 'number'
 		or 'relativenumber' option is set.
+							*hl-LineNrAbove*
+LineNrAbove	Line number for when the 'relativenumber'
+		option is set, above the cursor line.
+							*hl-LineNrBelow*
+LineNrBelow	Line number for when the 'relativenumber'
+		option is set, below the cursor line.
 							*hl-CursorLineNr*
-CursorLineNr	Like LineNr when 'cursorline' or 'relativenumber' is set for
+CursorLineNr	Like LineNr when 'cursorline' is set and 'cursorlineopt' is
+		set to "number" or "both", or 'relativenumber' is set, for
 		the cursor line.
 							*hl-MatchParen*
 MatchParen	The character under the cursor or just before it, if it

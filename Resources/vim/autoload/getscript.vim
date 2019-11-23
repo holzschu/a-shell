@@ -105,8 +105,9 @@ if g:GetLatestVimScripts_allowautoinstall
 
  if exists("g:GetLatestVimScripts_autoinstalldir") && isdirectory(g:GetLatestVimScripts_autoinstalldir)
   let s:autoinstall= g:GetLatestVimScripts_autoinstalldir"
- elseif exists('$HOME') && isdirectory(expand("$HOME")."/".s:dotvim)
-  let s:autoinstall= $HOME."/".s:dotvim
+  " iOS: replace HOME with HOME/Documents
+ elseif exists('$HOME') && isdirectory(expand("$HOME")."/Documents/".s:dotvim)
+  let s:autoinstall= $HOME."/Documents/".s:dotvim
  endif
 " call Decho("s:autoinstall<".s:autoinstall.">")
 "else "Decho
