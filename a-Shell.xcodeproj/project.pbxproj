@@ -56,6 +56,13 @@
 		22604C69233ABA1200E642EE /* texlive_2019_texmf-dist_fonts_otf_ttf in Resources */ = {isa = PBXBuildFile; fileRef = 22601304232190BE00AEB059 /* texlive_2019_texmf-dist_fonts_otf_ttf */; settings = {ASSET_TAGS = (opentype, ); }; };
 		22604C6A233ABA2200E642EE /* luatexfiles in Resources */ = {isa = PBXBuildFile; fileRef = 2242B07623229BA4002A20FC /* luatexfiles */; };
 		226AD81E23436B7A00E5D672 /* UIViewController+showAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226AD81D23436B7A00E5D672 /* UIViewController+showAlert.swift */; };
+		22720ABC23898D7F005BEB9E /* clang.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720ABB23898D65005BEB9E /* clang.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22720ABD23898D7F005BEB9E /* dis.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB723898D64005BEB9E /* dis.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22720ABE23898D7F005BEB9E /* libLLVM.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB823898D64005BEB9E /* libLLVM.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22720ABF23898D7F005BEB9E /* link.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB923898D64005BEB9E /* link.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22720AC023898D7F005BEB9E /* lli.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720ABA23898D65005BEB9E /* lli.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22720AC123898D7F005BEB9E /* nm.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB523898D64005BEB9E /* nm.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22720AC223898D7F005BEB9E /* opt.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB623898D64005BEB9E /* opt.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2291286722D9DAC40004A5EA /* UIColor+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291286622D9DAC40004A5EA /* UIColor+hexString.swift */; };
 		22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
@@ -194,6 +201,13 @@
 				225177FB23170B2B0084B9C1 /* python3_ios-matplotlib.ttconv.framework in Embed Frameworks */,
 				22B1B82E22CB9ECD00F7C452 /* ssh_cmd.framework in Embed Frameworks */,
 				22B1B81D22CB9E7F00F7C452 /* ios_system.framework in Embed Frameworks */,
+				22720ABC23898D7F005BEB9E /* clang.framework in Embed Frameworks */,
+				22720ABD23898D7F005BEB9E /* dis.framework in Embed Frameworks */,
+				22720ABE23898D7F005BEB9E /* libLLVM.framework in Embed Frameworks */,
+				22720ABF23898D7F005BEB9E /* link.framework in Embed Frameworks */,
+				22720AC023898D7F005BEB9E /* lli.framework in Embed Frameworks */,
+				22720AC123898D7F005BEB9E /* nm.framework in Embed Frameworks */,
+				22720AC223898D7F005BEB9E /* opt.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -254,6 +268,13 @@
 		22601304232190BE00AEB059 /* texlive_2019_texmf-dist_fonts_otf_ttf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_otf_ttf"; path = "ODR/texlive_2019_texmf-dist_fonts_otf_ttf"; sourceTree = "<group>"; };
 		22601306232195A100AEB059 /* luatexCommandsDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = luatexCommandsDictionary.plist; path = Resources/luatexCommandsDictionary.plist; sourceTree = "<group>"; };
 		226AD81D23436B7A00E5D672 /* UIViewController+showAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+showAlert.swift"; sourceTree = "<group>"; };
+		22720AB523898D64005BEB9E /* nm.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = nm.framework; path = Frameworks/nm.framework; sourceTree = "<group>"; };
+		22720AB623898D64005BEB9E /* opt.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opt.framework; path = Frameworks/opt.framework; sourceTree = "<group>"; };
+		22720AB723898D64005BEB9E /* dis.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = dis.framework; path = Frameworks/dis.framework; sourceTree = "<group>"; };
+		22720AB823898D64005BEB9E /* libLLVM.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libLLVM.framework; path = Frameworks/libLLVM.framework; sourceTree = "<group>"; };
+		22720AB923898D64005BEB9E /* link.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = link.framework; path = Frameworks/link.framework; sourceTree = "<group>"; };
+		22720ABA23898D65005BEB9E /* lli.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = lli.framework; path = Frameworks/lli.framework; sourceTree = "<group>"; };
+		22720ABB23898D65005BEB9E /* clang.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = clang.framework; path = Frameworks/clang.framework; sourceTree = "<group>"; };
 		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIColor+hexString.swift"; path = "Util/UIColor+hexString.swift"; sourceTree = SOURCE_ROOT; };
 		22984EEA22C93DBC00069497 /* a-Shell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "a-Shell.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		22984EED22C93DBC00069497 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -368,6 +389,43 @@
 			name = "Python3 frameworks";
 			sourceTree = "<group>";
 		};
+		22720AB223898AAE005BEB9E /* LLVM */ = {
+			isa = PBXGroup;
+			children = (
+				22720ABB23898D65005BEB9E /* clang.framework */,
+				22720AB723898D64005BEB9E /* dis.framework */,
+				22720AB823898D64005BEB9E /* libLLVM.framework */,
+				22720AB923898D64005BEB9E /* link.framework */,
+				22720ABA23898D65005BEB9E /* lli.framework */,
+				22720AB523898D64005BEB9E /* nm.framework */,
+				22720AB623898D64005BEB9E /* opt.framework */,
+			);
+			name = LLVM;
+			sourceTree = "<group>";
+		};
+		22720AB323898AB5005BEB9E /* Python */ = {
+			isa = PBXGroup;
+			children = (
+				22BF6235231519B600FEA585 /* freetype.framework */,
+				22BF6236231519B700FEA585 /* harfbuzz.framework */,
+				22BF6234231519B600FEA585 /* openblas.framework */,
+				22BF62312315195E00FEA585 /* python3_ios.framework */,
+			);
+			name = Python;
+			sourceTree = "<group>";
+		};
+		22720AB423898AE5005BEB9E /* TeX */ = {
+			isa = PBXGroup;
+			children = (
+				226012F4231D293000AEB059 /* bibtex.framework */,
+				226012F2231D292C00AEB059 /* kpathsea.framework */,
+				226012F1231D292A00AEB059 /* luatex.framework */,
+				226012F3231D292E00AEB059 /* pdftex.framework */,
+				226012F0231D292900AEB059 /* texlua53.framework */,
+			);
+			name = TeX;
+			sourceTree = "<group>";
+		};
 		22984EE122C93DBC00069497 = {
 			isa = PBXGroup;
 			children = (
@@ -452,17 +510,11 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22720AB423898AE5005BEB9E /* TeX */,
+				22720AB323898AB5005BEB9E /* Python */,
+				22720AB223898AAE005BEB9E /* LLVM */,
 				22A0FB00233F5A06009A4DE3 /* PythonA frameworks */,
-				226012F4231D293000AEB059 /* bibtex.framework */,
-				226012F2231D292C00AEB059 /* kpathsea.framework */,
-				226012F1231D292A00AEB059 /* luatex.framework */,
-				226012F3231D292E00AEB059 /* pdftex.framework */,
-				226012F0231D292900AEB059 /* texlua53.framework */,
 				225177C923170AA10084B9C1 /* Python3 frameworks */,
-				22BF6235231519B600FEA585 /* freetype.framework */,
-				22BF6236231519B700FEA585 /* harfbuzz.framework */,
-				22BF6234231519B600FEA585 /* openblas.framework */,
-				22BF62312315195E00FEA585 /* python3_ios.framework */,
 				220207F22301984900BAE299 /* vim.framework */,
 				224A3EDF22E70B4F00BC2DD9 /* libssh2.framework */,
 				224A3EE022E70B4F00BC2DD9 /* lua_ios.framework */,
@@ -758,7 +810,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 43;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_PREVIEWS = YES;
@@ -791,7 +843,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 43;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_PREVIEWS = YES;
