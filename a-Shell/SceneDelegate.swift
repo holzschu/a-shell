@@ -300,14 +300,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         guard (arguments!.count == 2) else { return }
         let command = arguments![1]
         // TODO: pass full list of arguments (minus the first, "wasm") to the command.
+         // let javascript = "fetch('" + command + "').then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance.exports.main());"
+        // WebAssembly.instantiateStreaming is not yet in WkWebView (Dec 2019)
+        // so we use WebAssembly.instantiate, which fails with "error of an unsupported type"
+        // Try with polyfill? It seems to work with http://swiftwasm.org
+        let javascript = "executeWebAssembly(\"\(command)'\");"
         // So far: "JavaScript execution returned a result of an unsupported type"
-        let javascript = "fetch('" + command + "').then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance.exports.main());"
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript(javascript) { (result, error) in
                 if error != nil {
+                    print("Wasm error = ")
                     print(error)
                 }
                 if (result != nil) {
+                    print("Wasm result = ")
                     print(result)
                 }
             }
@@ -468,21 +474,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
             var command = cmd
             command.removeFirst("shell:".count)
             executeCommand(command: command.trimmingCharacters(in: .whitespacesAndNewlines))
-            /* let testWasm = """
-                if(typeof WebAssembly !== 'undefined') {
-                    window.webkit.messageHandlers.aShell.postMessage("Hello, Wasm.");
-                } else {
-                    window.webkit.messageHandlers.aShell.postMessage("Sorry, no wasm for you.");
-                }
-            """
-            webView?.evaluateJavaScript(testWasm) { (result, error) in
-                if error != nil {
-                    print(error)
-                }
-                if (result != nil) {
-                    print(result)
-                }
-            } */
         } else if (cmd.hasPrefix("width:")) {
             var command = cmd
             command.removeFirst("width:".count)

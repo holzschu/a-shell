@@ -154,6 +154,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 let homeFile = homeUrl.appendingPathComponent(fileName)
                 let homeDirectory = homeFile.deletingLastPathComponent()
                 do {
+                    try FileManager().createDirectory(atPath: homeDirectory.path, withIntermediateDirectories: true)
+                }
+                catch {
+                    NSLog("Can't create directory: \(homeDirectory.path): \(error)")
+                }
+                do {
                     let firstFileAttribute = try FileManager().attributesOfItem(atPath: homeFile.path)
                     if (firstFileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
                         // It's a symbolic link, does the destination exist?
@@ -211,7 +217,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Add these as commands so they appear on the command list, even though we treat them internally:
         replaceCommand("newWindow", "clear", true)
         replaceCommand("exit", "clear", true)
-        // replaceCommand("wasm", "wasm", true)
+        replaceCommand("wasm", "wasm", true)
         activateFakeTeXCommands()
         if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
             downloadTeX();
@@ -223,6 +229,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
         setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
         setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
+        setenv("SYSROOT", Bundle.main.resourcePath!, 1) // sysroot for clang compiler
+        setenv("CCC_OVERRIDE_OPTIONS", "#^-S ^-emit-llvm ^-miphoneos-version-min=11 ^-D_FORTIFY_SOURCE=0", 1) // silently add "-S -emit-llvm" at the beginning of arguments
         let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                   in: .userDomainMask,
                                                   appropriateFor: nil,

@@ -604,5 +604,26 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>task</key>
+	<array>
+		<string>task.framework/task</string>
+		<string>main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>lex</key>
+	<array>
+		<string>lex.framework/lex</string>
+		<string>main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>calc</key>
+	<array>
+		<string>calc.framework/calc</string>
+		<string>main</string>
+		<string></string>
+		<string>no</string>
+	</array>
 </dict>
 </plist>
