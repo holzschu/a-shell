@@ -51,24 +51,52 @@
 
  
             // These appear to load a wasm program 
-            // but no way to be sure. Keep it for now.
-            var importObject = {
-              imports: {
-                imported_func: function(arg) {
-				  window.webkit.messageHandlers.aShell.postMessage('wasm output= ' + arg);
-                  window.term_.io.print(arg);
-                }
-              }
-            };
+
+            function loadWebAssembly(filename, imports) {
+				return fetch(filename)
+					.then(response => response.arrayBuffer())
+					.then(buffer => WebAssembly.compile(buffer))
+					.then(module => {
+						imports = imports || {};
+						imports.env = imports.env || {};
+						if (!imports.env.__linear_memory) {
+							// Setup our Memory import, initializing it
+							// to use 256 pages of memory.
+							imports.env.__linear_memory = new WebAssembly.Memory({ initial: 256 });
+						}
+						if (!imports.env.__indirect_function_table) {
+							// Setup our Table with an inital size of 0,
+							// 'anyfunc' is currently the option here
+							imports.env.__indirect_function_table = new WebAssembly.Table({ initial: 0, element: 'anyfunc' });
+						}
+						var consoleDiv = document.getElementById('console');
+						imports.env.out = function consoleLogString(offset, length) {
+							// Convert the bytes stored in our memory buffer
+							// at position offset.
+							var bytes = new Uint8Array(imports.env.__linear_memory.buffer, offset, length);
+							// Convert our byte array to a utf8 string
+							var string = new TextDecoder('utf8').decode(bytes);
+							// Append the string to the DOM
+							var content = document.createTextNode(string);
+							consoleDiv.appendChild(content);
+						}
+						// Create a WebAssembly instance with our compiled
+						// module and pass in our import object
+						return new WebAssembly.Instance(module, imports);
+					});
+			}
 
             function executeWebAssembly(command) {
-				fetch(command).then(response => 
-					response.arrayBuffer()
-				).then(bytes => 
-						WebAssembly.instantiate(bytes, importObject)
-				).then(result => 
-					result.instance.exports.main()
-				);
+				if (!('WebAssembly' in window)) {
+					window.webkit.messageHandlers.aShell.postMessage('WebAssembly not supported');
+					return;
+				}
+				loadWebAssembly(command).then(instance => {
+					// Grab our exports and call our main function
+					var exports = instance.exports;
+					var main = exports.main;
+					main();
+				});
 			}
 
 
