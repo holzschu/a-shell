@@ -1,0 +1,77 @@
+###############################################################################
+# International Holiday Data provided by Holidata.net
+# http://holidata.net/it-IT/2015.json
+# http://holidata.net/it-IT/2016.json
+#
+# Copyright 2006 - 2016, Paul Beckingham, Federico Hernandez.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+# https://www.opensource.org/licenses/mit-license.php
+#
+###############################################################################
+
+holiday.it-IT1.name=Capodanno
+holiday.it-IT1.date=20150101
+holiday.it-IT2.name=Epifania
+holiday.it-IT2.date=20150106
+holiday.it-IT3.name=Carnevale
+holiday.it-IT3.date=20150217
+holiday.it-IT4.name=Pasqua
+holiday.it-IT4.date=20150405
+holiday.it-IT5.name=Festa della liberazione
+holiday.it-IT5.date=20150425
+holiday.it-IT6.name=Festa del lavoro
+holiday.it-IT6.date=20150501
+holiday.it-IT7.name=Festa della repubblica
+holiday.it-IT7.date=20150602
+holiday.it-IT8.name=Assunzione (ferragosto)
+holiday.it-IT8.date=20150815
+holiday.it-IT9.name=Ognissanti
+holiday.it-IT9.date=20151101
+holiday.it-IT10.name=Immacolata concezione
+holiday.it-IT10.date=20151208
+holiday.it-IT11.name=Natale
+holiday.it-IT11.date=20151225
+holiday.it-IT12.name=S.to Stefano
+holiday.it-IT12.date=20151226
+holiday.it-IT13.name=Capodanno
+holiday.it-IT13.date=20160101
+holiday.it-IT14.name=Epifania
+holiday.it-IT14.date=20160106
+holiday.it-IT15.name=Carnevale
+holiday.it-IT15.date=20160209
+holiday.it-IT16.name=Pasqua
+holiday.it-IT16.date=20160327
+holiday.it-IT17.name=Festa della liberazione
+holiday.it-IT17.date=20160425
+holiday.it-IT18.name=Festa del lavoro
+holiday.it-IT18.date=20160501
+holiday.it-IT19.name=Festa della repubblica
+holiday.it-IT19.date=20160602
+holiday.it-IT20.name=Assunzione (ferragosto)
+holiday.it-IT20.date=20160815
+holiday.it-IT21.name=Ognissanti
+holiday.it-IT21.date=20161101
+holiday.it-IT22.name=Immacolata concezione
+holiday.it-IT22.date=20161208
+holiday.it-IT23.name=Natale
+holiday.it-IT23.date=20161225
+holiday.it-IT24.name=S.to Stefano
+holiday.it-IT24.date=20161226

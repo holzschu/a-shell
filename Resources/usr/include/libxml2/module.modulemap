@@ -1,0 +1,243 @@
+module libxml2 [system] [extern_c] {
+    // Add "-Xcc -I$(SDKROOT)/usr/include/libxml2" to OTHER_SWIFT_FLAGS in Xcode project.
+
+    module HTMLparser {
+        header "libxml/HTMLparser.h"
+        header "libxml/SAX.h"
+        header "libxml/SAX2.h"
+        header "libxml/globals.h"
+        header "libxml/parser.h"
+        header "libxml/threads.h"
+        header "libxml/tree.h"
+        header "libxml/xlink.h"
+        header "libxml/xmlmemory.h"
+        export *
+    }
+
+    module HTMLtree {
+        header "libxml/HTMLtree.h"
+        export *
+    }
+
+    module SAX {
+        export HTMLparser
+        export *
+    }
+
+    module SAX2 {
+        export HTMLparser
+        export *
+    }
+
+    module c14n {
+        header "libxml/c14n.h"
+        export *
+    }
+
+    module catalog {
+        header "libxml/catalog.h"
+        export *
+    }
+
+    module chvalid {
+        header "libxml/chvalid.h"
+        export *
+    }
+
+    module debugXML {
+        header "libxml/debugXML.h"
+        export *
+    }
+
+    module dict {
+        header "libxml/dict.h"
+        export *
+    }
+
+    module encoding {
+        header "libxml/encoding.h"
+        export *
+    }
+
+    module entities {
+        header "libxml/entities.h"
+        export *
+    }
+
+    module globals {
+        export HTMLparser
+        export *
+    }
+
+    module hash {
+        header "libxml/hash.h"
+        export *
+    }
+
+    module list {
+        header "libxml/list.h"
+        export *
+    }
+
+    module nanoftp {
+        header "libxml/nanoftp.h"
+        export *
+    }
+
+    module nanohttp {
+        header "libxml/nanohttp.h"
+        export *
+    }
+
+    module parser {
+        export HTMLparser
+        export *
+    }
+
+    module parserInternals {
+        header "libxml/parserInternals.h"
+        export *
+    }
+
+    module pattern {
+        header "libxml/pattern.h"
+        export *
+    }
+
+    module relaxng {
+        header "libxml/relaxng.h"
+        export *
+    }
+
+    module schemasInternals {
+        header "libxml/schemasInternals.h"
+        export *
+    }
+
+    module schematron {
+        header "libxml/schematron.h"
+        export *
+    }
+
+    module threads {
+        export HTMLparser
+        export *
+    }
+
+    module tree {
+        export HTMLparser
+        export *
+    }
+
+    module uri {
+        header "libxml/uri.h"
+        export *
+    }
+
+    module valid {
+        header "libxml/valid.h"
+        export *
+    }
+
+    module xinclude {
+        header "libxml/xinclude.h"
+        export *
+    }
+
+    module xlink {
+        export HTMLparser
+        export *
+    }
+
+    module xmlIO {
+        header "libxml/xmlIO.h"
+        export *
+    }
+
+    module xmlautomata {
+        header "libxml/xmlautomata.h"
+        export *
+    }
+
+    module xmlerror {
+        header "libxml/xmlerror.h"
+        export *
+    }
+
+    module xmlexports {
+        header "libxml/xmlexports.h"
+        export *
+    }
+
+    module xmlmemory {
+        export HTMLparser
+        export *
+    }
+
+    module xmlmodule {
+        header "libxml/xmlmodule.h"
+        export *
+    }
+
+    module xmlreader {
+        header "libxml/xmlreader.h"
+        export *
+    }
+
+    module xmlregexp {
+        header "libxml/xmlregexp.h"
+        export *
+    }
+
+    module xmlsave {
+        header "libxml/xmlsave.h"
+        export *
+    }
+
+    module xmlschemas {
+        header "libxml/xmlschemas.h"
+        export *
+    }
+
+    module xmlschemastypes {
+        header "libxml/xmlschemastypes.h"
+        export *
+    }
+
+    module xmlstring {
+        header "libxml/xmlstring.h"
+        export *
+    }
+
+    module xmlunicode {
+        header "libxml/xmlunicode.h"
+        export *
+    }
+
+    module xmlversion {
+        header "libxml/xmlversion.h"
+        export *
+    }
+
+    module xmlwriter {
+        header "libxml/xmlwriter.h"
+        export *
+    }
+
+    module xpath {
+        header "libxml/xpath.h"
+        export *
+    }
+
+    module xpathInternals {
+        header "libxml/xpathInternals.h"
+        export *
+    }
+
+    module xpointer {
+        header "libxml/xpointer.h"
+        export *
+    }
+
+    exclude header "libxml/DOCBparser.h" // Deprecated.
+}

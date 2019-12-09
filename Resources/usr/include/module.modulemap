@@ -1,0 +1,1787 @@
+module AppleTextureEncoder [system] [extern_c] {
+ header "AppleTextureEncoder.h"
+ link "ate"
+ export *
+}
+
+module Compression [system] [extern_c] {
+ header "compression.h"
+ export *
+ link "compression"
+}
+
+module Darwin [system] [extern_c] [no_undeclared_includes] {
+ // Headers that are repeatedly included, and therefore should not be
+ // assigned to any given module.
+ exclude header "_structs.h"
+ exclude header "sys/_structs.h"
+
+ module cdefs {
+  header "sys/cdefs.h"
+  header "sys/_symbol_aliasing.h"
+  header "sys/_posix_availability.h"
+  export *
+ }
+
+ // C standard library
+ module C {
+  textual header "assert.h"
+
+  module complex {
+   header "complex.h"
+   export *
+  }
+
+  module copyfile {
+   header "copyfile.h"
+   export *
+  }
+
+  module ctype {
+   header "ctype.h"
+   export *
+  }
+
+  module _ctype {
+   header "_ctype.h"
+   export *
+  }
+
+  module err {
+   header "err.h"
+   export *
+  }
+
+  module errno {
+   header "errno.h"
+   header "sys/errno.h"
+   export *
+  }
+
+  module fenv {
+   header "fenv.h"
+   export *
+  }
+
+  module float {
+   header "float.h" // note: supplied by compiler
+   export *
+  }
+
+  module stdint {
+   header "stdint.h" // note: supplied by compiler
+   export *
+  }
+
+  module inttypes {
+   header "inttypes.h"
+   export *
+  }
+
+  module iso646 {
+   header "iso646.h" // note: potentially supplied by compiler
+   export *
+  }
+
+  module limits {
+   header "limits.h" // note: supplied/augmented by compiler
+   export Darwin.POSIX.sys.types
+   export *
+  }
+
+  module locale {
+   header "locale.h"
+   export *
+  }
+
+  module math {
+   header "math.h"
+   export *
+  }
+
+  module readpassphrase {
+   header "readpassphrase.h"
+   export *
+  }
+
+  module setjmp {
+   header "setjmp.h"
+   export *
+  }
+
+  module signal {
+   header "signal.h"
+   export *
+  }
+
+  module stdarg {
+   header "stdarg.h" // note: supplied by the compiler
+   export *
+  }
+
+  module stdatomic {
+   header "stdatomic.h" // note: supplied by the compiler
+   export *
+  }
+
+  module stdbool {
+   header "stdbool.h" // note: supplied by the compiler
+   export *
+  }
+
+  module stddef {
+   header "stddef.h" // note: supplied by the compiler
+   export *
+  }
+
+  module stdio {
+   header "stdio.h"
+   export *
+  }
+
+  module _stdio {
+   header "_stdio.h"
+   export *
+  }
+
+  module stdlib {
+   header "stdlib.h"
+   export *
+   export stddef
+   export Darwin.malloc._malloc
+  }
+
+  module string {
+   header "string.h"
+   export *
+   export Darwin.POSIX.strings
+  }
+
+  explicit module tgmath {
+   header "tgmath.h" // note: supplied by the compiler
+   export *
+  }
+
+  module time {
+   header "time.h"
+   export *
+  }
+
+  module ucontext {
+   exclude header "ucontext.h"
+  }
+
+  module util {
+   header "util.h"
+   export *
+  }
+
+  module wchar {
+   header "wchar.h"
+   export *
+  }
+
+  module wctype {
+   header "wctype.h"
+   export *
+  }
+
+  module xlocale {
+   header "xlocale.h"
+   export *
+
+   module _xlocale {
+    header "_xlocale.h"
+    export *
+   }
+
+   umbrella "xlocale"
+   module * { export * }
+  }
+
+  module xattr_flags {
+   header "xattr_flags.h"
+   export *
+  }
+
+  module ctermid {
+   header "_ctermid.h"
+   export *
+  }
+ }
+
+ // POSIX
+ module POSIX {
+  module basic {
+   header "sys/_endian.h"
+   export *
+  }
+
+  module aio {
+   header "aio.h"
+   header "sys/aio.h"
+   export *
+  }
+
+  module arpa {
+   module inet {
+    header "arpa/inet.h"
+    export *
+   }
+   export *
+  }
+
+  module cpio {
+   header "cpio.h"
+   export *
+  }
+
+  module dirent {
+   header "dirent.h"
+
+
+
+   header "sys/dirent.h"
+   export *
+  }
+
+  module dlfcn {
+   header "dlfcn.h"
+   export *
+  }
+
+  module fcntl {
+   header "fcntl.h"
+   header "sys/fcntl.h"
+   export *
+  }
+
+  module fmtmsg {
+   header "fmtmsg.h"
+   export *
+  }
+
+  module fnmatch {
+   header "fnmatch.h"
+   export *
+  }
+
+  module ftw {
+   header "ftw.h"
+   export *
+  }
+
+  module glob {
+   header "glob.h"
+   export *
+  }
+
+  module grp {
+   header "grp.h"
+   export *
+  }
+
+  module iconv {
+   header "iconv.h"
+   export *
+  }
+
+  module ifaddrs {
+   header "ifaddrs.h"
+   export *
+  }
+
+  module ioctl {
+   header "sys/ioctl.h"
+   export *
+  }
+
+  module langinfo {
+   header "langinfo.h"
+   export *
+  }
+
+  module libgen {
+   header "libgen.h"
+   export *
+  }
+
+  module monetary {
+   header "monetary.h"
+   export *
+  }
+
+  module ndbm {
+   header "ndbm.h"
+   export *
+  }
+
+  module netdb {
+   header "netdb.h"
+   export *
+  }
+
+  module net {
+   module dl {
+    header "net/if_dl.h"
+    export *
+   }
+
+   module if {
+    header "net/if.h"
+    export *
+   }
+
+   module types {
+    header "net/if_types.h"
+    export *
+   }
+  }
+
+  module netinet {
+   module in {
+    header "netinet/in.h"
+    export *
+
+    exclude header "netinet6/in6.h"
+   }
+
+   module tcp {
+    header "netinet/tcp.h"
+    export *
+   }
+  }
+
+  module nl_types {
+   header "nl_types.h"
+   export *
+  }
+
+  module poll {
+   header "poll.h"
+   header "sys/poll.h"
+   export *
+  }
+
+  module pthread {
+   module pthread {
+    header "pthread.h"
+    export *
+   }
+   module impl {
+    header "pthread_impl.h"
+    export *
+   }
+
+   module qos {
+    header "pthread/qos.h"
+    export *
+   }
+
+   module spis {
+    header "pthread_spis.h"
+    export *
+   }
+
+   module spawn {
+    header "pthread/spawn.h"
+    export *
+   }
+  }
+
+  module pwd {
+   header "pwd.h"
+   export *
+  }
+
+  module regex {
+   header "regex.h"
+   export *
+  }
+
+  module _regex {
+   header "_regex.h"
+   export *
+  }
+
+  module sched {
+   header "sched.h"
+   export *
+  }
+
+  module search {
+   header "search.h"
+   export *
+  }
+
+  module semaphore {
+   header "semaphore.h"
+
+
+
+   export *
+  }
+
+  module spawn {
+   header "spawn.h"
+   header "sys/spawn.h"
+   export *
+  }
+
+  module strings {
+   header "strings.h"
+   export *
+  }
+
+  module _types {
+   umbrella "_types"
+
+   module * {
+    export *
+   }
+
+   export *
+  }
+
+  module sys {
+   export *
+
+   module ipc {
+    header "sys/ipc.h"
+    export *
+   }
+
+   module mman {
+    header "sys/mman.h"
+    export *
+   }
+
+   module msg {
+    header "sys/msg.h"
+    export *
+   }
+
+   module resource {
+    header "sys/resource.h"
+    export *
+   }
+
+   module select_proto {
+    export Darwin.POSIX.sys.select
+   }
+
+   module select {
+    header "sys/select.h"
+    textual header "sys/_select.h"
+    export *
+   }
+
+   module sem {
+    header "sys/sem.h"
+    export *
+   }
+
+   module shm {
+    header "sys/shm.h"
+
+
+
+    export *
+   }
+
+   module socket {
+    header "sys/socket.h"
+    export *
+   }
+
+   module stat {
+    header "sys/stat.h"
+    export *
+   }
+
+   module statvfs {
+    header "sys/statvfs.h"
+    export *
+   }
+
+   module time {
+    header "sys/time.h"
+    textual header "sys/_select.h"
+    export *
+   }
+
+   module times {
+    header "sys/times.h"
+    export *
+   }
+
+   module types {
+    header "sys/types.h"
+    header "sys/_types.h"
+
+    umbrella "sys/_types"
+
+    module * {
+     export *
+    }
+
+    export *
+
+
+
+
+   }
+
+   module uio {
+    header "sys/uio.h"
+    export *
+   }
+
+   module un {
+    header "sys/un.h"
+    export *
+   }
+
+   module utsname {
+    header "sys/utsname.h"
+    export *
+   }
+
+   module wait {
+    header "sys/wait.h"
+    export *
+   }
+
+   module xattr {
+    header "sys/xattr.h"
+    export *
+    export Darwin.C.xattr_flags
+   }
+  }
+
+  module syslog {
+   header "syslog.h"
+   header "sys/syslog.h"
+   export *
+  }
+
+  module tar {
+   header "tar.h"
+   export *
+  }
+
+  module termios {
+   header "termios.h"
+   header "sys/termios.h"
+   export *
+  }
+
+  module ulimit {
+   header "ulimit.h"
+   export *
+  }
+
+  module unistd {
+   header "unistd.h"
+   header "sys/unistd.h"
+   export *
+  }
+
+  module utime {
+   header "utime.h"
+   export *
+  }
+
+  module utmpx {
+   header "utmpx.h"
+   export *
+  }
+
+  module wordexp {
+   header "wordexp.h"
+   export *
+  }
+
+  // Re-exported C headers.
+  module complex {
+   export cstd.complex
+  }
+
+  module ctype {
+   export cstd.ctype
+  }
+
+  module errno {
+   export cstd.errno
+  }
+
+  module fenv {
+   export cstd.fenv
+  }
+
+  module inttypes {
+   export cstd.inttypes
+  }
+
+  module iso646 {
+   export cstd.iso646
+  }
+
+  module limits {
+   export cstd.limits
+  }
+
+  module locale {
+   export cstd.locale
+  }
+
+  module math {
+   export cstd.math
+  }
+
+  module setjmp {
+   export cstd.setjmp
+  }
+
+  module signal {
+   export cstd.signal
+  }
+
+  module stdbool {
+   export cstd.stdbool
+  }
+
+  module stddef {
+   export cstd.stddef
+  }
+
+  module stdint {
+   export cstd.stdint
+  }
+
+  module stdio {
+   export cstd.stdio
+  }
+
+  module stdlib {
+   export cstd.stdlib
+  }
+
+  module string {
+   export cstd.string
+  }
+
+  module time {
+   export cstd.time
+  }
+
+  module wchar {
+   export cstd.wchar
+  }
+
+  module wctype {
+   export cstd.wctype
+  }
+ }
+
+ module Availability {
+  header "Availability.h"
+  header "os/availability.h"
+  header "AvailabilityMacros.h"
+  header "AvailabilityInternal.h"
+  export *
+ }
+
+ module ConditionalMacros {
+  header "ConditionalMacros.h"
+  export *
+ }
+
+ module getopt {
+  header "getopt.h"
+  export *
+ }
+
+ module TargetConditionals {
+  header "TargetConditionals.h"
+  export *
+ }
+
+ module AssertMacros {
+  header "AssertMacros.h"
+  export *
+ }
+
+ module MacTypes {
+  header "MacTypes.h"
+  export *
+ }
+
+ module Mach {
+  header "mach/mach.h"
+  export *
+
+  module boolean {
+   header "mach/boolean.h"
+   export *
+  }
+
+  module bootstrap {
+   header "mach/bootstrap.h"
+   export *
+  }
+
+  module clock {
+   header "mach/clock.h"
+   export *
+  }
+
+  module clock_priv {
+   header "mach/clock_priv.h"
+   export *
+  }
+
+  module clock_reply {
+   header "mach/clock_reply.h"
+   export *
+  }
+
+  module clock_types {
+   header "mach/clock_types.h"
+   export *
+  }
+
+  module error {
+   header "mach/error.h"
+   export *
+  }
+
+  module exc {
+   header "mach/exc.h"
+   export *
+  }
+
+  module exception {
+   header "mach/exception.h"
+   export *
+  }
+
+  module exception_types {
+   header "mach/exception_types.h"
+   export *
+  }
+
+  module host_info {
+   header "mach/host_info.h"
+   export *
+  }
+
+  module host_notify {
+   header "mach/host_notify.h"
+   export *
+  }
+
+  module host_priv {
+   header "mach/host_priv.h"
+   export *
+  }
+
+  module host_reboot {
+   header "mach/host_reboot.h"
+   export *
+  }
+
+  module host_security {
+   header "mach/host_security.h"
+   export *
+  }
+
+  module host_special_ports {
+   header "mach/host_special_ports.h"
+   export *
+  }
+
+  module kern_return {
+   header "mach/kern_return.h"
+   export *
+  }
+
+  module kmod {
+   header "mach/kmod.h"
+   export *
+  }
+
+  module lock_set {
+   header "mach/lock_set.h"
+   export *
+  }
+
+  module mach_error {
+   header "mach/mach_error.h"
+   export *
+  }
+
+  module mach_host {
+   header "mach/mach_host.h"
+   export *
+  }
+
+  module mach_init {
+   header "mach/mach_init.h"
+   export *
+  }
+
+  module mach_interface {
+   header "mach/mach_interface.h"
+   export *
+  }
+
+  module mach_param {
+   header "mach/mach_param.h"
+   export *
+  }
+
+  module mach_port {
+   header "mach/mach_port.h"
+   export *
+  }
+
+  module mach_syscalls {
+   header "mach/mach_syscalls.h"
+   export *
+  }
+
+  module mach_time {
+   header "mach/mach_time.h"
+   export *
+  }
+
+  module mach_traps {
+   header "mach/mach_traps.h"
+   export *
+  }
+
+  module mach_types {
+   header "mach/mach_types.h"
+   export *
+  }
+  module memory_object_types {
+   header "mach/memory_object_types.h"
+   export *
+  }
+
+  module message {
+   header "mach/message.h"
+   export *
+  }
+
+  module mig {
+   header "mach/mig.h"
+   export *
+  }
+
+  module mig_errors {
+   header "mach/mig_errors.h"
+   export *
+  }
+
+  module ndr {
+   header "mach/ndr.h"
+   export *
+  }
+
+  module notify {
+   header "mach/notify.h"
+   export *
+  }
+
+  module policy {
+   header "mach/policy.h"
+   export *
+  }
+
+  module port {
+   header "mach/port.h"
+   export *
+  }
+
+  module port_obj {
+   header "mach/port_obj.h"
+   export *
+  }
+
+  module processor {
+   header "mach/processor.h"
+   export *
+  }
+
+  module processor_info {
+   header "mach/processor_info.h"
+   export *
+  }
+
+  module processor_set {
+   header "mach/processor_set.h"
+   export *
+  }
+
+  module rpc {
+   header "mach/rpc.h"
+   export *
+  }
+  module semaphore {
+   header "mach/semaphore.h"
+   export *
+  }
+  module std_types {
+   header "mach/std_types.h"
+   export *
+  }
+
+  module sync {
+   header "mach/sync.h"
+   export *
+  }
+
+  module sync_policy {
+   header "mach/sync_policy.h"
+   export *
+  }
+
+  module task {
+   header "mach/task.h"
+   export *
+  }
+
+  module task_info {
+   header "mach/task_info.h"
+   export *
+  }
+
+  module task_policy {
+   header "mach/task_policy.h"
+   export *
+  }
+
+  module task_special_ports {
+   header "mach/task_special_ports.h"
+   export *
+  }
+
+  module thread_act {
+   header "mach/thread_act.h"
+   export *
+  }
+
+  module thread_info {
+   header "mach/thread_info.h"
+   export *
+  }
+
+  module thread_policy {
+   header "mach/thread_policy.h"
+   export *
+  }
+
+  module thread_special_ports {
+   header "mach/thread_special_ports.h"
+   export *
+  }
+
+  module thread_status {
+   header "mach/thread_status.h"
+   export *
+  }
+
+  module thread_switch {
+   header "mach/thread_switch.h"
+   export *
+  }
+
+  module time_value {
+   header "mach/time_value.h"
+   export *
+  }
+
+  module vm_attributes {
+   header "mach/vm_attributes.h"
+   export *
+  }
+
+  module vm_behavior {
+   header "mach/vm_behavior.h"
+   export *
+  }
+
+  module vm_inherit {
+   header "mach/vm_inherit.h"
+   export *
+  }
+
+  module vm_map {
+   header "mach/vm_map.h"
+   export *
+  }
+
+  module vm_param {
+   header "mach/vm_param.h"
+   export *
+  }
+
+  module vm_prot {
+   header "mach/vm_prot.h"
+   export *
+  }
+
+  module vm_purgable {
+   header "mach/vm_purgable.h"
+   export *
+  }
+
+  module vm_region {
+   header "mach/vm_region.h"
+   export *
+  }
+
+  module vm_statistics {
+   header "mach/vm_statistics.h"
+   export *
+  }
+
+  module vm_sync {
+   header "mach/vm_sync.h"
+   export *
+  }
+
+  module vm_task {
+   header "mach/vm_task.h"
+   export *
+  }
+
+  module vm_types {
+   header "mach/vm_types.h"
+   export *
+  }
+
+
+
+
+
+  module machine {
+   header "mach/machine.h"
+   export *
+
+   module _structs {
+    header "mach/machine/_structs.h"
+    export *
+   }
+
+   module boolean {
+    header "mach/machine/boolean.h"
+    export *
+   }
+
+   module exception {
+    header "mach/machine/exception.h"
+    export *
+   }
+
+   module kern_return {
+    header "mach/machine/kern_return.h"
+    export *
+   }
+
+   module processor_info {
+    header "mach/machine/processor_info.h"
+    export *
+   }
+
+   module rpc {
+    header "mach/machine/rpc.h"
+    export *
+   }
+   module thread_state {
+    header "mach/machine/thread_state.h"
+    export *
+   }
+
+   module thread_status {
+    header "mach/machine/thread_status.h"
+    export *
+   }
+
+   module vm_param {
+    header "mach/machine/vm_param.h"
+    export *
+   }
+
+   module vm_types {
+    header "mach/machine/vm_types.h"
+    export *
+   }
+  }
+
+  module debug {
+   umbrella "mach_debug"
+   module * { export * }
+   export *
+  }
+ }
+
+ module device {
+
+
+
+
+  exclude header "device/device_types.h"
+ }
+
+ module libkern {
+  export *
+
+  module OSAtomic {
+   header "libkern/OSAtomic.h"
+   header "libkern/OSAtomicDeprecated.h"
+   header "libkern/OSSpinLockDeprecated.h"
+   header "libkern/OSAtomicQueue.h"
+   export *
+  }
+
+  module OSByteOrder {
+   header "libkern/OSByteOrder.h"
+   header "libkern/_OSByteOrder.h"
+   export *
+
+
+   header "libkern/arm/OSByteOrder.h"
+
+
+
+  }
+ }
+
+ module os {
+  module base {
+   header "os/base.h"
+   export *
+  }
+  module lock {
+   header "os/lock.h"
+   export *
+  }
+ }
+
+ module malloc {
+  header "malloc/malloc.h"
+
+
+
+  export *
+
+  // <malloc/malloc.h> doesn't actually provide the declaration of
+  // malloc(); you still have to include <stdlib.h> to get it. The real
+  // declaration of malloc() is now in <malloc/_malloc.h>. We preserve
+  // the behavior of the C headers by making this an explicit submodule.
+  explicit module _malloc {
+   header "malloc/_malloc.h"
+   export *
+  }
+ }
+
+ module machine {
+  umbrella "machine"
+  export *
+  module * { export * }
+ }
+
+ module secure {
+  module _common {
+   header "secure/_common.h"
+   export *
+  }
+
+  module _string {
+   export Darwin.C.string
+  }
+
+  module _strings {
+   export Darwin.C.strings
+  }
+
+  module _stdio {
+   export Darwin.C.stdio
+  }
+
+  exclude header "secure/_string.h"
+  exclude header "secure/_stdio.h"
+  exclude header "secure/_strings.h"
+  export *
+ }
+
+ module _locale {
+  header "_locale.h"
+  export *
+ }
+
+ module _types {
+  header "_types.h"
+  export *
+ }
+
+ module __wctype {
+  header "__wctype.h"
+  export *
+ }
+
+ module _wctype {
+  header "_wctype.h"
+  export *
+ }
+
+ module alloca {
+  header "alloca.h"
+  export *
+ }
+
+ module block {
+  requires blocks
+  header "Block.h"
+  export *
+ }
+
+ module bsm {
+
+
+
+
+
+  exclude header "bsm/libbsm.h"
+  exclude header "bsm/audit_filter.h"
+  exclude header "bsm/audit_session.h"
+  export *
+
+  module audit {
+   header "bsm/audit.h"
+   export *
+  }
+
+  module audit_uevents {
+   header "bsm/audit_uevents.h"
+   export *
+  }
+
+ }
+ module net {
+
+
+
+
+
+
+
+  module if_var {
+   header "net/if_var.h"
+   export *
+  }
+
+
+
+
+
+
+
+ }
+
+ module runetype {
+  header "runetype.h"
+  export *
+ }
+
+ module sys {
+  module _pthread {
+   umbrella "sys/_pthread"
+
+   module * {
+    export *
+   }
+
+   export *
+  }
+
+  module qos {
+   header "sys/qos.h"
+   export *
+  }
+  module acl {
+   header "sys/acl.h"
+   export *
+  }
+
+  module appleapiopts {
+   header "sys/appleapiopts.h"
+   export *
+  }
+
+  module attr {
+   header "sys/attr.h"
+   export *
+  }
+  module clonefile {
+   header "sys/clonefile.h"
+   export *
+  }
+  module event {
+   header "sys/event.h"
+   export *
+  }
+
+  module file {
+   header "sys/file.h"
+   export *
+  }
+  module filio {
+   header "sys/filio.h"
+   export *
+  }
+  module ioccom {
+   header "sys/ioccom.h"
+   export *
+  }
+
+  module kauth {
+   header "sys/kauth.h"
+   export *
+  }
+
+  module kdebug {
+   header "sys/kdebug_signpost.h"
+   export *
+  }
+
+  module lctx {
+   header "sys/lctx.h"
+   export *
+  }
+
+  module lock {
+   header "sys/lock.h"
+   export *
+  }
+  module mount {
+   header "sys/mount.h"
+   export *
+  }
+  module param {
+   header "sys/param.h"
+   export *
+  }
+
+  module paths {
+   header "sys/paths.h"
+   export *
+  }
+  module proc {
+   header "sys/proc.h"
+   export *
+  }
+  module queue {
+   header "sys/queue.h"
+   export *
+  }
+
+  module quota {
+   header "sys/quota.h"
+   export *
+  }
+
+  module rbtree {
+   header "sys/rbtree.h"
+   export *
+  }
+  module semaphore {
+   header "sys/semaphore.h"
+   export *
+  }
+
+  module signal {
+   header "sys/signal.h"
+   export *
+  }
+  module sockio {
+   header "sys/sockio.h"
+   export *
+  }
+
+  module syscall {
+   header "sys/syscall.h"
+   export *
+  }
+
+  module sysctl {
+   header "sys/sysctl.h"
+   export *
+  }
+
+  module syslimits {
+   header "sys/syslimits.h"
+   export *
+  }
+  module timeb {
+   header "sys/timeb.h"
+   export *
+  }
+  module ttycom {
+   header "sys/ttycom.h"
+   export *
+  }
+
+  module ttydefaults {
+   header "sys/ttydefaults.h"
+   export *
+  }
+
+  module ucontext {
+   header "sys/ucontext.h"
+   export *
+  }
+
+  module ucred {
+   header "sys/ucred.h"
+   export *
+  }
+  module vm {
+   header "sys/vm.h"
+   export *
+  }
+ }
+
+ module uuid {
+  header "uuid/uuid.h"
+  export *
+ }
+
+ module architecture {
+  header "architecture/byte_order.h"
+  export *
+ }
+ module sysexits {
+  header "sysexits.h"
+  export *
+ }
+}
+
+module asl [system] [extern_c] {
+ header "asl.h"
+ export *
+}
+
+module dnssd [system] [extern_c] {
+ header "dns_sd.h"
+ export *
+}
+
+module launch {
+ header "launch.h"
+ export *
+}
+
+module os [system] [extern_c] {
+ module base {
+  export Darwin.os.base
+ }
+ module lock {
+  export Darwin.os.lock
+ }
+ module object {
+  export os_object
+ }
+ module trace_base {
+  header "os/trace_base.h"
+  export *
+ }
+ explicit module activity {
+  header "os/activity.h"
+  export *
+ }
+ explicit module log {
+  header "os/log.h"
+  export *
+ }
+ explicit module signpost {
+  header "os/signpost.h"
+  export *
+ }
+ exclude header "os/trace.h"
+}
+
+module os_object [system] [extern_c] {
+ header "os/object.h"
+ export *
+}
+
+module libkern [system] [extern_c] {
+ module OSCacheControl {
+  header "libkern/OSCacheControl.h"
+  export *
+ }
+}
+module kcdata [system] [extern_c] {
+    header "kern/kcdata.h"
+    export *
+}
+
+module xml2 [system] [extern_c] {
+    module HTMLparser {
+        header "libxml/HTMLparser.h"
+        export *
+    }
+
+    module HTMLtree {
+        header "libxml/HTMLtree.h"
+        export *
+    }
+
+    module SAX {
+        header "libxml/SAX.h"
+        export *
+    }
+
+    module SAX2 {
+        header "libxml/SAX2.h"
+        export *
+    }
+
+    module c14n {
+        header "libxml/c14n.h"
+        export *
+    }
+
+    module catalog {
+        header "libxml/catalog.h"
+        export *
+    }
+
+    module chvalid {
+        header "libxml/chvalid.h"
+        export *
+    }
+
+    module debugXML {
+        header "libxml/debugXML.h"
+        export *
+    }
+
+    module dict {
+        header "libxml/dict.h"
+        export *
+    }
+
+    module encoding {
+        header "libxml/encoding.h"
+        export *
+    }
+
+    module entities {
+        header "libxml/entities.h"
+        export *
+    }
+
+    module globals {
+        header "libxml/globals.h"
+        export *
+    }
+
+    module hash {
+        header "libxml/hash.h"
+        export *
+    }
+
+    module list {
+        header "libxml/list.h"
+        export *
+    }
+
+    module nanoftp {
+        header "libxml/nanoftp.h"
+        export *
+    }
+
+    module nanohttp {
+        header "libxml/nanohttp.h"
+        export *
+    }
+
+    module parser {
+        header "libxml/parser.h"
+        export *
+    }
+
+    module parserInternals {
+        header "libxml/parserInternals.h"
+        export *
+    }
+
+    module pattern {
+        header "libxml/pattern.h"
+        export *
+    }
+
+    module relaxng {
+        header "libxml/relaxng.h"
+        export *
+    }
+
+    module schemasInternals {
+        header "libxml/schemasInternals.h"
+        export *
+    }
+
+    module schematron {
+        header "libxml/schematron.h"
+        export *
+    }
+
+    module threads {
+        header "libxml/threads.h"
+        export *
+    }
+
+    module tree {
+        header "libxml/tree.h"
+        export *
+    }
+
+    module uri {
+        header "libxml/uri.h"
+        export *
+    }
+
+    module valid {
+        header "libxml/valid.h"
+        export *
+    }
+
+    module xinclude {
+        header "libxml/xinclude.h"
+        export *
+    }
+
+    module xlink {
+        header "libxml/xlink.h"
+        export *
+    }
+
+    module xmlIO {
+        header "libxml/xmlIO.h"
+        export *
+    }
+
+    module xmlautomata {
+        header "libxml/xmlautomata.h"
+        export *
+    }
+
+    module xmlerror {
+        header "libxml/xmlerror.h"
+        export *
+    }
+
+    module xmlexports {
+        header "libxml/xmlexports.h"
+        export *
+    }
+
+    module xmlmemory {
+        header "libxml/xmlmemory.h"
+        export *
+    }
+
+    module xmlmodule {
+        header "libxml/xmlmodule.h"
+        export *
+    }
+
+    module xmlreader {
+        header "libxml/xmlreader.h"
+        export *
+    }
+
+    module xmlregexp {
+        header "libxml/xmlregexp.h"
+        export *
+    }
+
+    module xmlsave {
+        header "libxml/xmlsave.h"
+        export *
+    }
+
+    module xmlschemas {
+        header "libxml/xmlschemas.h"
+        export *
+    }
+
+    module xmlschemastypes {
+        header "libxml/xmlschemastypes.h"
+        export *
+    }
+
+    module xmlstring {
+        header "libxml/xmlstring.h"
+        export *
+    }
+
+    module xmlunicode {
+        header "libxml/xmlunicode.h"
+        export *
+    }
+
+    module xmlversion {
+        header "libxml/xmlversion.h"
+        export *
+    }
+
+    module xmlwriter {
+        header "libxml/xmlwriter.h"
+        export *
+    }
+
+    module xpath {
+        header "libxml/xpath.h"
+        export *
+    }
+
+    module xpathInternals {
+        header "libxml/xpathInternals.h"
+        export *
+    }
+
+    module xpointer {
+        header "libxml/xpointer.h"
+        export *
+    }
+
+    exclude header "libxml2/libxml/DOCBparser.h" // deprecated
+}
+
+module zlib [system] [extern_c] {
+ header "zlib.h"
+ export *
+ link "z"
+}
+
+module SQLite3 [system] [extern_c] {
+ header "sqlite3.h"
+ link "sqlite3"
+ explicit module Ext {
+  header "sqlite3ext.h"
+  export *
+ }
+ export *
+}
+
+module xcselect [system] [extern_c] {
+ header "xcselect.h"
+ export *
+ link "xcselect"
+}

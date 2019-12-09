@@ -1,0 +1,105 @@
+###############################################################################
+# International Holiday Data provided by Holidata.net
+# http://holidata.net/de-DE/2015.json
+# http://holidata.net/de-DE/2016.json
+#
+# Copyright 2006 - 2016, Paul Beckingham, Federico Hernandez.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+# https://www.opensource.org/licenses/mit-license.php
+#
+###############################################################################
+
+holiday.de-DE1.name=Neujahr
+holiday.de-DE1.date=20150101
+holiday.de-DE2.name=Heilige drei Könige
+holiday.de-DE2.date=20150106
+holiday.de-DE3.name=Karfreitag
+holiday.de-DE3.date=20150403
+holiday.de-DE4.name=Ostern
+holiday.de-DE4.date=20150405
+holiday.de-DE5.name=Ostermontag
+holiday.de-DE5.date=20150406
+holiday.de-DE6.name=Erster Maifeiertag
+holiday.de-DE6.date=20150501
+holiday.de-DE7.name=Christi Himmelfahrt
+holiday.de-DE7.date=20150514
+holiday.de-DE8.name=Pfingstsonntag
+holiday.de-DE8.date=20150524
+holiday.de-DE9.name=Pfingstmontag
+holiday.de-DE9.date=20150525
+holiday.de-DE10.name=Fronleichnam
+holiday.de-DE10.date=20150604
+holiday.de-DE11.name=Mariä Himmelfahrt
+holiday.de-DE11.date=20150815
+holiday.de-DE12.name=Tag der Deutschen Einheit
+holiday.de-DE12.date=20151003
+holiday.de-DE13.name=Reformationstag
+holiday.de-DE13.date=20151031
+holiday.de-DE14.name=Allerheiligen
+holiday.de-DE14.date=20151101
+holiday.de-DE15.name=Buß- und Bettag
+holiday.de-DE15.date=20151118
+holiday.de-DE16.name=Heilig Abend
+holiday.de-DE16.date=20151224
+holiday.de-DE17.name=Weihnachtstag
+holiday.de-DE17.date=20151225
+holiday.de-DE18.name=Zweiter Weihnachtstag
+holiday.de-DE18.date=20151226
+holiday.de-DE19.name=Silvester
+holiday.de-DE19.date=20151231
+holiday.de-DE20.name=Neujahr
+holiday.de-DE20.date=20160101
+holiday.de-DE21.name=Heilige drei Könige
+holiday.de-DE21.date=20160106
+holiday.de-DE22.name=Karfreitag
+holiday.de-DE22.date=20160325
+holiday.de-DE23.name=Ostern
+holiday.de-DE23.date=20160327
+holiday.de-DE24.name=Ostermontag
+holiday.de-DE24.date=20160328
+holiday.de-DE25.name=Erster Maifeiertag
+holiday.de-DE25.date=20160501
+holiday.de-DE26.name=Christi Himmelfahrt
+holiday.de-DE26.date=20160505
+holiday.de-DE27.name=Pfingstsonntag
+holiday.de-DE27.date=20160515
+holiday.de-DE28.name=Pfingstmontag
+holiday.de-DE28.date=20160516
+holiday.de-DE29.name=Fronleichnam
+holiday.de-DE29.date=20160526
+holiday.de-DE30.name=Mariä Himmelfahrt
+holiday.de-DE30.date=20160815
+holiday.de-DE31.name=Tag der Deutschen Einheit
+holiday.de-DE31.date=20161003
+holiday.de-DE32.name=Reformationstag
+holiday.de-DE32.date=20161031
+holiday.de-DE33.name=Allerheiligen
+holiday.de-DE33.date=20161101
+holiday.de-DE34.name=Buß- und Bettag
+holiday.de-DE34.date=20161116
+holiday.de-DE35.name=Heilig Abend
+holiday.de-DE35.date=20161224
+holiday.de-DE36.name=Weihnachtstag
+holiday.de-DE36.date=20161225
+holiday.de-DE37.name=Zweiter Weihnachtstag
+holiday.de-DE37.date=20161226
+holiday.de-DE38.name=Silvester
+holiday.de-DE38.date=20161231

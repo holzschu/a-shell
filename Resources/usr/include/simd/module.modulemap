@@ -1,0 +1,6 @@
+module simd [system] {
+ umbrella header "simd.h"
+
+ export *
+ module * { export * }
+}

@@ -1,0 +1,77 @@
+###############################################################################
+# International Holiday Data provided by Holidata.net
+# http://holidata.net/en-CA/2015.json
+# http://holidata.net/en-CA/2016.json
+#
+# Copyright 2006 - 2016, Paul Beckingham, Federico Hernandez.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+# https://www.opensource.org/licenses/mit-license.php
+#
+###############################################################################
+
+holiday.en-CA1.name=New Year's Day
+holiday.en-CA1.date=20150101
+holiday.en-CA2.name=Family Day
+holiday.en-CA2.date=20150209
+holiday.en-CA3.name=Good Friday
+holiday.en-CA3.date=20150403
+holiday.en-CA4.name=Easter Monday
+holiday.en-CA4.date=20150406
+holiday.en-CA5.name=Victoria Day
+holiday.en-CA5.date=20150518
+holiday.en-CA6.name=Canada Day
+holiday.en-CA6.date=20150701
+holiday.en-CA7.name=First Monday of August
+holiday.en-CA7.date=20150803
+holiday.en-CA8.name=Labour Day
+holiday.en-CA8.date=20150907
+holiday.en-CA9.name=Thanksgiving Day
+holiday.en-CA9.date=20151012
+holiday.en-CA10.name=Remembrance Day
+holiday.en-CA10.date=20151111
+holiday.en-CA11.name=Christmas Day
+holiday.en-CA11.date=20151225
+holiday.en-CA12.name=Boxing Day
+holiday.en-CA12.date=20151226
+holiday.en-CA13.name=New Year's Day
+holiday.en-CA13.date=20160101
+holiday.en-CA14.name=Family Day
+holiday.en-CA14.date=20160208
+holiday.en-CA15.name=Good Friday
+holiday.en-CA15.date=20160325
+holiday.en-CA16.name=Easter Monday
+holiday.en-CA16.date=20160328
+holiday.en-CA17.name=Victoria Day
+holiday.en-CA17.date=20160523
+holiday.en-CA18.name=Canada Day
+holiday.en-CA18.date=20160701
+holiday.en-CA19.name=First Monday of August
+holiday.en-CA19.date=20160801
+holiday.en-CA20.name=Labour Day
+holiday.en-CA20.date=20160905
+holiday.en-CA21.name=Thanksgiving Day
+holiday.en-CA21.date=20161010
+holiday.en-CA22.name=Remembrance Day
+holiday.en-CA22.date=20161111
+holiday.en-CA23.name=Christmas Day
+holiday.en-CA23.date=20161225
+holiday.en-CA24.name=Boxing Day
+holiday.en-CA24.date=20161226

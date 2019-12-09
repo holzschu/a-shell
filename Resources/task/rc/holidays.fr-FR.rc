@@ -1,0 +1,73 @@
+###############################################################################
+# International Holiday Data provided by Holidata.net
+# http://holidata.net/fr-FR/2015.json
+# http://holidata.net/fr-FR/2016.json
+#
+# Copyright 2006 - 2016, Paul Beckingham, Federico Hernandez.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+# https://www.opensource.org/licenses/mit-license.php
+#
+###############################################################################
+
+holiday.fr-FR1.name=Jour de l'an
+holiday.fr-FR1.date=20150101
+holiday.fr-FR2.name=Lundi de Pâques
+holiday.fr-FR2.date=20150406
+holiday.fr-FR3.name=Fête du premier mai
+holiday.fr-FR3.date=20150501
+holiday.fr-FR4.name=Armistice 1945
+holiday.fr-FR4.date=20150508
+holiday.fr-FR5.name=Ascencion
+holiday.fr-FR5.date=20150514
+holiday.fr-FR6.name=Pentecôte
+holiday.fr-FR6.date=20150524
+holiday.fr-FR7.name=Fête nationale
+holiday.fr-FR7.date=20150714
+holiday.fr-FR8.name=Assomption
+holiday.fr-FR8.date=20150815
+holiday.fr-FR9.name=Toussaint
+holiday.fr-FR9.date=20151101
+holiday.fr-FR10.name=Armistice 1918
+holiday.fr-FR10.date=20151111
+holiday.fr-FR11.name=Noël
+holiday.fr-FR11.date=20151225
+holiday.fr-FR12.name=Jour de l'an
+holiday.fr-FR12.date=20160101
+holiday.fr-FR13.name=Lundi de Pâques
+holiday.fr-FR13.date=20160328
+holiday.fr-FR14.name=Fête du premier mai
+holiday.fr-FR14.date=20160501
+holiday.fr-FR15.name=Armistice 1945
+holiday.fr-FR15.date=20160508
+holiday.fr-FR16.name=Ascencion
+holiday.fr-FR16.date=20160505
+holiday.fr-FR17.name=Pentecôte
+holiday.fr-FR17.date=20160515
+holiday.fr-FR18.name=Fête nationale
+holiday.fr-FR18.date=20160714
+holiday.fr-FR19.name=Assomption
+holiday.fr-FR19.date=20160815
+holiday.fr-FR20.name=Toussaint
+holiday.fr-FR20.date=20161101
+holiday.fr-FR21.name=Armistice 1918
+holiday.fr-FR21.date=20161111
+holiday.fr-FR22.name=Noël
+holiday.fr-FR22.date=20161225
