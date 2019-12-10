@@ -50,13 +50,15 @@
 			}
 
  
-            // These appear to load a wasm program 
-
+            // These should load a wasm program: http://andrewsweeney.net/post/llvm-to-wasm/
             function loadWebAssembly(filename, imports) {
+				window.webkit.messageHandlers.aShell.postMessage('Entering  loadWebAssembly: ' + filename);
 				return fetch(filename)
-					.then(response => response.arrayBuffer())
+					.then(response => response.arrayBuffer()) // We never reach this point
 					.then(buffer => WebAssembly.compile(buffer))
 					.then(module => {
+						// NOT reached. WkWebView for WebAssembly?
+						window.webkit.messageHandlers.aShell.postMessage('WebAssembly has compiled the module');
 						imports = imports || {};
 						imports.env = imports.env || {};
 						if (!imports.env.__linear_memory) {
@@ -70,6 +72,8 @@
 							imports.env.__indirect_function_table = new WebAssembly.Table({ initial: 0, element: 'anyfunc' });
 						}
 						var consoleDiv = document.getElementById('console');
+						// NOT reached. 
+						window.webkit.messageHandlers.aShell.postMessage('Made it this far in loadWebAssembly');
 						imports.env.out = function consoleLogString(offset, length) {
 							// Convert the bytes stored in our memory buffer
 							// at position offset.
@@ -82,6 +86,7 @@
 						}
 						// Create a WebAssembly instance with our compiled
 						// module and pass in our import object
+						// Instance is not supported in WkWebView, right?
 						return new WebAssembly.Instance(module, imports);
 					});
 			}
@@ -91,14 +96,15 @@
 					window.webkit.messageHandlers.aShell.postMessage('WebAssembly not supported');
 					return;
 				}
+				window.webkit.messageHandlers.aShell.postMessage('WebAssembly appears to be supported: ' + command);
 				loadWebAssembly(command).then(instance => {
 					// Grab our exports and call our main function
 					var exports = instance.exports;
+					window.webkit.messageHandlers.aShell.postMessage('exports: ' + exports);
 					var main = exports.main;
 					main();
-				});
+				}); 
 			}
-
 
             var lastDirectory = '';
             var fileList = [];
