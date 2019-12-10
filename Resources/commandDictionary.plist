@@ -58,13 +58,6 @@
 		<string>cHLPRXafinprv</string>
 		<string>file</string>
 	</array>
-	<key>ctags</key>
-	<array>
-		<string>ctags.framework/ctags</string>
-		<string>ctags_main</string>
-		<string>abdBDefoFGhILnNRuVwx?</string>
-		<string>file</string>
-	</array>
 	<key>curl</key>
 	<array>
 		<string>curl_ios.framework/curl_ios</string>
@@ -586,6 +579,13 @@
 	<key>lli</key>
 	<array>
 		<string>lli.framework/lli</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>llc</key>
+	<array>
+		<string>llc.framework/llc</string>
 		<string>main</string>
 		<string></string>
 		<string>file</string>
