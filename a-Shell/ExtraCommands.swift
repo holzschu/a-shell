@@ -32,11 +32,13 @@ public func clear(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<I
     let opaquePointer = OpaquePointer(ios_getContext())
     guard let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) else { return 0 }
     let currentSessionIdentifier = String(cString: stringPointer)
-    for scene in UIApplication.shared.connectedScenes {
-        if (scene.session.persistentIdentifier == currentSessionIdentifier) {
-            let delegate: SceneDelegate = scene.delegate as! SceneDelegate
-            delegate.clearScreen()
-            return 0
+    DispatchQueue.main.async {
+        for scene in UIApplication.shared.connectedScenes {
+            if (scene.session.persistentIdentifier == currentSessionIdentifier) {
+                let delegate: SceneDelegate = scene.delegate as! SceneDelegate
+                delegate.clearScreen()
+                return
+            }
         }
     }
     return 0
