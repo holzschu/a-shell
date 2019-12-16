@@ -590,6 +590,48 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>lld</key>
+	<array>
+		<string>lld.framework/lld</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>ld</key>
+	<array>
+		<string>lld.framework/lld</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>wasm-ld</key>
+	<array>
+		<string>lld.framework/lld</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>lld-link</key>
+	<array>
+		<string>lld.framework/lld</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>ld.lld</key>
+	<array>
+		<string>lld.framework/lld</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>ld64.lld</key>
+	<array>
+		<string>lld.framework/lld</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>clang</key>
 	<array>
 		<string>clang.framework/clang</string>

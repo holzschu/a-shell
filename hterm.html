@@ -140,7 +140,7 @@
 				}
 				var arrayBuffer = base64DecToArr(bufferString); 
 				try {
-					var module = new WebAssembly.Module(arrayBuffer);
+					const module = new WebAssembly.Module(arrayBuffer);
 					// window.webkit.messageHandlers.aShell.postMessage('WebAssembly has compiled the module: ' + module);
 					imports = {};
 					imports.env = imports.env || {};
