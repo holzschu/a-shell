@@ -307,19 +307,26 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         // WebAssembly.instantiateStreaming is not yet in WkWebView (Dec 2019)
         // so we use WebAssembly.instantiate, which fails with "error of an unsupported type"
         // Try with polyfill? It seems to work with http://swiftwasm.org
-        let javascript = "executeWebAssembly(\"\(command)'\");"
-        // So far: "JavaScript execution returned a result of an unsupported type"
-        DispatchQueue.main.async {
-            self.webView?.evaluateJavaScript(javascript) { (result, error) in
-                if error != nil {
-                    print("Wasm error = ")
-                    print(error)
-                }
-                if (result != nil) {
-                    print("Wasm result = ")
-                    print(result)
+        let fileName = FileManager().currentDirectoryPath + "/" + command
+        do {
+            let buffer = NSData(contentsOf: URL(fileURLWithPath: fileName))
+            let base64string = buffer?.base64EncodedString()
+            let javascript = "executeWebAssembly(\"\(base64string!)\")"
+            DispatchQueue.main.async {
+                self.webView?.evaluateJavaScript(javascript) { (result, error) in
+                    if error != nil {
+                        print("Wasm error = ")
+                        print(error)
+                    }
+                    if (result != nil) {
+                        print("Wasm result = ")
+                        print(result)
+                    }
                 }
             }
+        }
+        catch {
+        NSLog("Could not load file \(fileName)")
         }
     }
     

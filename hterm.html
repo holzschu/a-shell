@@ -50,8 +50,9 @@
 			}
 
  
+            // Functions to deal with WebAssembly:
             // These should load a wasm program: http://andrewsweeney.net/post/llvm-to-wasm/
-            function loadWebAssembly(filename, imports) {
+            async function loadWebAssembly(filename, imports) {
 				window.webkit.messageHandlers.aShell.postMessage('Entering  loadWebAssembly: ' + filename);
 				return fetch(filename)
 					.then(response => response.arrayBuffer()) // We never reach this point
@@ -91,19 +92,88 @@
 					});
 			}
 
-            function executeWebAssembly(command) {
+
+            /* Array of bytes to base64 string decoding */
+            
+            function b64ToUint6 (nChr) {
+            
+              return nChr > 64 && nChr < 91 ?
+                  nChr - 65
+                : nChr > 96 && nChr < 123 ?
+                  nChr - 71
+                : nChr > 47 && nChr < 58 ?
+                  nChr + 4
+                : nChr === 43 ?
+                  62
+                : nChr === 47 ?
+                  63
+                :
+                  0;
+            
+            }
+            
+            function base64DecToArr (sBase64, nBlockSize) {
+            
+              var
+                sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ""), nInLen = sB64Enc.length,
+                nOutLen = nBlockSize ? Math.ceil((nInLen * 3 + 1 >>> 2) / nBlockSize) * nBlockSize : nInLen * 3 + 1 >>> 2, aBytes = new Uint8Array(nOutLen);
+            
+              for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++) {
+                nMod4 = nInIdx & 3;
+                nUint24 |= b64ToUint6(sB64Enc.charCodeAt(nInIdx)) << 18 - 6 * nMod4;
+                if (nMod4 === 3 || nInLen - nInIdx === 1) {
+                  for (nMod3 = 0; nMod3 < 3 && nOutIdx < nOutLen; nMod3++, nOutIdx++) {
+                    aBytes[nOutIdx] = nUint24 >>> (16 >>> nMod3 & 24) & 255;
+                  }
+                  nUint24 = 0;
+                }
+              }
+            
+              return aBytes;
+            }
+
+            function executeWebAssembly(bufferString) {
+            	// Input: base64 encoded binary wasm file
 				if (!('WebAssembly' in window)) {
 					window.webkit.messageHandlers.aShell.postMessage('WebAssembly not supported');
 					return;
 				}
-				window.webkit.messageHandlers.aShell.postMessage('WebAssembly appears to be supported: ' + command);
-				loadWebAssembly(command).then(instance => {
+				var arrayBuffer = base64DecToArr(bufferString); 
+				try {
+					var module = new WebAssembly.Module(arrayBuffer);
+					// window.webkit.messageHandlers.aShell.postMessage('WebAssembly has compiled the module: ' + module);
+					imports = {};
+					imports.env = imports.env || {};
+					if (!imports.env.__linear_memory) {
+						// Setup our Memory import, initializing it
+						// to use 256 pages of memory.
+						imports.env.__linear_memory = new WebAssembly.Memory({ initial: 256 });
+					}
+					if (!imports.env.__indirect_function_table) {
+						// Setup our Table with an inital size of 0,
+						// 'anyfunc' is currently the option here
+						imports.env.__indirect_function_table = new WebAssembly.Table({ initial: 0, element: 'anyfunc' });
+					}
+				    imports.env.out = function consoleLogString(offset, length) {
+				    	// Convert the bytes stored in our memory buffer
+				    	// at position offset.
+				    	var bytes = new Uint8Array(imports.env.__linear_memory.buffer, offset, length);
+				    	// Convert our byte array to a utf8 string
+				    	var string = new TextDecoder('utf8').decode(bytes);
+				    	// Append the string to the DOM
+				    	window.term_.io.println(string); 
+				    }
+					const instance = new WebAssembly.Instance(module, imports);
 					// Grab our exports and call our main function
 					var exports = instance.exports;
 					window.webkit.messageHandlers.aShell.postMessage('exports: ' + exports);
 					var main = exports.main;
 					main();
-				}); 
+				}
+				catch (error) {
+					window.webkit.messageHandlers.aShell.postMessage('WebAssembly error: ' + error);
+					window.term_.io.println('wasm: ' + error);
+				}
 			}
 
             var lastDirectory = '';
