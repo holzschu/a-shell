@@ -303,30 +303,21 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         guard (arguments!.count == 2) else { return }
         let command = arguments![1]
         // TODO: pass full list of arguments (minus the first, "wasm") to the command.
-         // let javascript = "fetch('" + command + "').then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance.exports.main());"
         // WebAssembly.instantiateStreaming is not yet in WkWebView (Dec 2019)
-        // so we use WebAssembly.instantiate, which fails with "error of an unsupported type"
-        // Try with polyfill? It seems to work with http://swiftwasm.org
+        // TODO: try with polyfill? It seems to work with http://swiftwasm.org
         let fileName = FileManager().currentDirectoryPath + "/" + command
-        do {
-            let buffer = NSData(contentsOf: URL(fileURLWithPath: fileName))
-            let base64string = buffer?.base64EncodedString()
-            let javascript = "executeWebAssembly(\"\(base64string!)\")"
-            DispatchQueue.main.async {
-                self.webView?.evaluateJavaScript(javascript) { (result, error) in
-                    if error != nil {
-                        print("Wasm error = ")
-                        print(error)
-                    }
-                    if (result != nil) {
-                        print("Wasm result = ")
-                        print(result)
-                    }
+        let buffer = NSData(contentsOf: URL(fileURLWithPath: fileName))
+        let base64string = buffer?.base64EncodedString()
+        let javascript = "executeWebAssembly(\"\(base64string!)\")"
+        DispatchQueue.main.async {
+            self.webView?.evaluateJavaScript(javascript) { (result, error) in
+                if error != nil {
+                    print(error)
+                }
+                if (result != nil) {
+                    print(result)
                 }
             }
-        }
-        catch {
-        NSLog("Could not load file \(fileName)")
         }
     }
     

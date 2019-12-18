@@ -52,47 +52,6 @@
  
             // Functions to deal with WebAssembly:
             // These should load a wasm program: http://andrewsweeney.net/post/llvm-to-wasm/
-            async function loadWebAssembly(filename, imports) {
-				window.webkit.messageHandlers.aShell.postMessage('Entering  loadWebAssembly: ' + filename);
-				return fetch(filename)
-					.then(response => response.arrayBuffer()) // We never reach this point
-					.then(buffer => WebAssembly.compile(buffer))
-					.then(module => {
-						// NOT reached. WkWebView for WebAssembly?
-						window.webkit.messageHandlers.aShell.postMessage('WebAssembly has compiled the module');
-						imports = imports || {};
-						imports.env = imports.env || {};
-						if (!imports.env.__linear_memory) {
-							// Setup our Memory import, initializing it
-							// to use 256 pages of memory.
-							imports.env.__linear_memory = new WebAssembly.Memory({ initial: 256 });
-						}
-						if (!imports.env.__indirect_function_table) {
-							// Setup our Table with an inital size of 0,
-							// 'anyfunc' is currently the option here
-							imports.env.__indirect_function_table = new WebAssembly.Table({ initial: 0, element: 'anyfunc' });
-						}
-						var consoleDiv = document.getElementById('console');
-						// NOT reached. 
-						window.webkit.messageHandlers.aShell.postMessage('Made it this far in loadWebAssembly');
-						imports.env.out = function consoleLogString(offset, length) {
-							// Convert the bytes stored in our memory buffer
-							// at position offset.
-							var bytes = new Uint8Array(imports.env.__linear_memory.buffer, offset, length);
-							// Convert our byte array to a utf8 string
-							var string = new TextDecoder('utf8').decode(bytes);
-							// Append the string to the DOM
-							var content = document.createTextNode(string);
-							consoleDiv.appendChild(content);
-						}
-						// Create a WebAssembly instance with our compiled
-						// module and pass in our import object
-						// Instance is not supported in WkWebView, right?
-						return new WebAssembly.Instance(module, imports);
-					});
-			}
-
-
             /* Array of bytes to base64 string decoding */
             
             function b64ToUint6 (nChr) {
@@ -113,7 +72,6 @@
             }
             
             function base64DecToArr (sBase64, nBlockSize) {
-            
               var
                 sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ""), nInLen = sB64Enc.length,
                 nOutLen = nBlockSize ? Math.ceil((nInLen * 3 + 1 >>> 2) / nBlockSize) * nBlockSize : nInLen * 3 + 1 >>> 2, aBytes = new Uint8Array(nOutLen);
@@ -128,7 +86,6 @@
                   nUint24 = 0;
                 }
               }
-            
               return aBytes;
             }
 
@@ -141,34 +98,23 @@
 				var arrayBuffer = base64DecToArr(bufferString); 
 				try {
 					const module = new WebAssembly.Module(arrayBuffer);
-					// window.webkit.messageHandlers.aShell.postMessage('WebAssembly has compiled the module: ' + module);
-					imports = {};
-					imports.env = imports.env || {};
-					if (!imports.env.__linear_memory) {
-						// Setup our Memory import, initializing it
-						// to use 256 pages of memory.
-						imports.env.__linear_memory = new WebAssembly.Memory({ initial: 256 });
+					var imports = {
+						env: {
+							'memoryBase': 0,
+							'tableBase': 0,
+							'memory': new WebAssembly.Memory({initial: 256}),
+							'table': new WebAssembly.Table({initial: 256, element: 'anyfunc'}),
+							abort: alert,
+						}
 					}
-					if (!imports.env.__indirect_function_table) {
-						// Setup our Table with an inital size of 0,
-						// 'anyfunc' is currently the option here
-						imports.env.__indirect_function_table = new WebAssembly.Table({ initial: 0, element: 'anyfunc' });
-					}
-				    imports.env.out = function consoleLogString(offset, length) {
-				    	// Convert the bytes stored in our memory buffer
-				    	// at position offset.
-				    	var bytes = new Uint8Array(imports.env.__linear_memory.buffer, offset, length);
-				    	// Convert our byte array to a utf8 string
-				    	var string = new TextDecoder('utf8').decode(bytes);
-				    	// Append the string to the DOM
-				    	window.term_.io.println(string); 
-				    }
-					const instance = new WebAssembly.Instance(module, imports);
+					var instance = new WebAssembly.Instance(module, imports);
+					// wasm-ld -allow-undefined -o result.wasm files.o
 					// Grab our exports and call our main function
-					var exports = instance.exports;
-					window.webkit.messageHandlers.aShell.postMessage('exports: ' + exports);
-					var main = exports.main;
-					main();
+					if (instance.exports._start != undefined) {
+						return instance.exports._start(); 
+					} else {
+						return;
+					}
 				}
 				catch (error) {
 					window.webkit.messageHandlers.aShell.postMessage('WebAssembly error: ' + error);
