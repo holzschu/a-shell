@@ -58,6 +58,22 @@ public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
     return 0
 }
 
+@_cdecl("jsc")
+public func jsc(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let args = convertCArguments(argc: argc, argv: argv)
+    let opaquePointer = OpaquePointer(ios_getContext())
+    guard let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) else { return 0 }
+    let currentSessionIdentifier = String(cString: stringPointer)
+    for scene in UIApplication.shared.connectedScenes {
+        if (scene.session.persistentIdentifier == currentSessionIdentifier) {
+            let delegate: SceneDelegate = scene.delegate as! SceneDelegate
+            delegate.executeJavascript(arguments: args)
+            return 0
+        }
+    }
+    return 0
+}
+
 @_cdecl("help")
 public func help(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let opaquePointer = OpaquePointer(ios_getContext())
@@ -77,7 +93,7 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 
 - Edit files with vim and ed.
 - Transfer files with curl, tar, scp and sftp.
-- Process files with python3, lua, pdflatex, lualatex.
+- Process files with python3, lua, jsc, clang, pdflatex, lualatex.
 - For network queries: nslookup, ping, host, whois, ifconfig...
 """
             

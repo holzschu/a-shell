@@ -218,6 +218,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("newWindow", "clear", true)
         replaceCommand("exit", "clear", true)
         replaceCommand("wasm", "wasm", true)
+        replaceCommand("jsc", "jsc", true)  // use our own jsc instead of ios_system jsc
         activateFakeTeXCommands()
         if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
             downloadTeX();

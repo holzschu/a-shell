@@ -20,7 +20,7 @@ var inputFileURLBackup: URL?
 
 // Need: dictionary connecting userContentController with output streams (?)
 
-class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate {
+class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate {
     var window: UIWindow?
     var windowScene: UIWindowScene?
     var webView: WKWebView?
@@ -33,6 +33,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
     var persistentIdentifier: String? = nil
     var stdin_file: UnsafeMutablePointer<FILE>? = nil
     var stdout_file: UnsafeMutablePointer<FILE>? = nil
+    var thread_stdout_copy: UnsafeMutablePointer<FILE>? = nil // copy of thread_stdout, used when inside a sub-thread
+    var thread_stderr_copy: UnsafeMutablePointer<FILE>? = nil // copy of thread_stderr, used when inside a sub-thread
     var keyboardTimer: Timer!
     private let commandQueue = DispatchQueue(label: "executeCommand", qos: .utility) // low priority, for executing commands
     // Buttons and toolbars:
@@ -270,7 +272,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         fputs(string, thread_stdout)
     }
         
-    
+    func printError(string: String) {
+        fputs(string, thread_stderr)
+    }
+
     func closeWindow() {
         // Only close if all running functions are terminated:
         NSLog("Closing window: \(currentCommand)")
@@ -321,6 +326,81 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         }
     }
     
+    func printJscUsage() {
+        fputs("Usage: jsc file.js\n", thread_stdout)
+    }
+
+    func executeJavascript(arguments: [String]?) {
+        guard (arguments != nil) else {
+            printJscUsage()
+            return
+        }
+        guard (arguments!.count == 2) else {
+            printJscUsage()
+            return
+        }
+        let command = arguments![1]
+        let fileName = FileManager().currentDirectoryPath + "/" + command
+        thread_stdout_copy = thread_stdout
+        thread_stderr_copy = thread_stderr
+        var executionDone = false
+        do {
+            var javascript = try String(contentsOf: URL(fileURLWithPath: fileName), encoding: String.Encoding.utf8)
+            javascript = "{" + javascript + "}"
+            DispatchQueue.main.async {
+                self.webView?.evaluateJavaScript(javascript) { (result, error) in
+                    if error != nil {
+                        // Extract information about *where* the error is, etc.
+                        let userInfo = (error! as NSError).userInfo
+                        fputs("jsc: Error ", self.thread_stderr_copy)
+                        // WKJavaScriptExceptionSourceURL is hterm.html, of course.
+                        fputs("in file " + command + " ", self.thread_stderr_copy)
+                        if let line = userInfo["WKJavaScriptExceptionLineNumber"] as? Int32 {
+                            fputs("at line \(line)", self.thread_stderr_copy)
+                        }
+                        if let column = userInfo["WKJavaScriptExceptionColumnNumber"] as? Int32 {
+                            fputs(", column \(column): ", self.thread_stderr_copy)
+                        } else {
+                            fputs(": ", self.thread_stderr_copy)
+                        }
+                        if let message = userInfo["WKJavaScriptExceptionMessage"] as? String {
+                            fputs(message + "\n", self.thread_stderr_copy)
+                        }
+                        fflush(self.thread_stderr_copy)
+                    }
+                    if (result != nil) {
+                        if let string = result! as? String {
+                            fputs(string, self.thread_stdout_copy)
+                            fputs("\n", self.thread_stdout_copy)
+                        }  else if let number = result! as? Int32 {
+                            fputs("\(number)", self.thread_stdout_copy)
+                            fputs("\n", self.thread_stdout_copy)
+                        } else if let number = result! as? Float {
+                            fputs("\(number)", self.thread_stdout_copy)
+                            fputs("\n", self.thread_stdout_copy)
+                        } else {
+                            fputs("\(result)", self.thread_stdout_copy)
+                            fputs("\n", self.thread_stdout_copy)
+                        }
+                        fflush(self.thread_stdout_copy)
+                        fflush(self.thread_stderr_copy)
+                    }
+                    executionDone = true
+                }
+            }
+        }
+        catch {
+         fputs("Error executing JavaScript  file: " + command + ": \(error) \n", thread_stderr)
+          executionDone = true
+        }
+        while (!executionDone) {
+            fflush(thread_stdout)
+            fflush(thread_stderr)
+        }
+        thread_stdout_copy = nil
+        thread_stderr_copy = nil
+    }
+
     func pickFolder() {
         // https://developer.apple.com/documentation/uikit/view_controllers/providing_access_to_directories
         documentPicker.allowsMultipleSelection = true
@@ -390,19 +470,29 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
     
     func executeCommand(command: String) {
         NSLog("executeCommand: \(command)")
-        // Make sure we're on the right session:
-        ios_switchSession(self.persistentIdentifier?.toCString())
-        ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
         // We can't call exit through ios_system because it creates a new session
         // Also, we want to call it as soon as possible in case something went wrong
         if (command == "exit") {
             closeWindow()
             return
         }
-        // Set COLUMNS to term width:
-        setenv("COLUMNS", "\(width)".toCString(), 1);
-        setenv("LINES", "\(height)".toCString(), 1);
-        ios_setWindowSize(Int32(width), Int32(height))
+        // save command in history. This duplicates the history array in hterm.html.
+        if (history.last != command) {
+            // only store command if different from last command
+            history.append(command)
+        }
+        while (history.count > 100) {
+            // only keep the last 100 commands
+            history.removeFirst()
+        }
+        // Can't create/close windows through ios_system, because it creates/closes a new session.
+        if (command == "newWindow") {
+            let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.OpenDirectory")
+            activity.userInfo!["url"] = URL(fileURLWithPath: FileManager().currentDirectoryPath)
+            UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
+            printPrompt() // Needed to that the window is ready for a new command
+            return
+        }
         // set up streams for feedback:
         // Create new pipes for our own stdout/stderr
         // Get file for stdin that can be read from
@@ -423,25 +513,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         guard stdout_file != nil else { return }
         // Call the following functions when data is written to stdout/stderr.
         stdout_pipe!.fileHandleForReading.readabilityHandler = self.onStdout
-        // save command in history. This duplicates the history array in hterm.html.
-        if (history.last != command) {
-            // only store command if different from last command
-            history.append(command)
-        }
-        while (history.count > 100) {
-            // only keep the last 100 commands
-            history.removeFirst()
-        }
-        // Can't create/close windows through ios_system, because it creates/closes a new session.
-        if (command == "newWindow") {
-            let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.OpenDirectory")
-            activity.userInfo!["url"] = URL(fileURLWithPath: FileManager().currentDirectoryPath)
-            UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
-            printPrompt() // Needed to that the window is ready for a new command
-            return
-        }
         // "normal" commands can go through ios_system
         commandQueue.async {
+            // Make sure we're on the right session:
+            ios_switchSession(self.persistentIdentifier?.toCString())
+            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            // Set COLUMNS to term width:
+            setenv("COLUMNS", "\(self.width)".toCString(), 1);
+            setenv("LINES", "\(self.height)".toCString(), 1);
+            ios_setWindowSize(Int32(self.width), Int32(self.height))
             thread_stdin  = nil
             thread_stdout = nil
             thread_stderr = nil
@@ -495,6 +575,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
                 height = newHeight
                 ios_switchSession(self.persistentIdentifier?.toCString())
                 ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+                NSLog("Calling ios_setWindowSize: \(width) x \(height)")
                 ios_setWindowSize(Int32(width), Int32(height))
                 setenv("LINES", "\(height)".toCString(), 1)
                 ios_signal(SIGWINCH);
@@ -583,6 +664,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
             string.removeFirst("copy:".count)
             let pasteBoard = UIPasteboard.general
             pasteBoard.string = string
+        } else if (cmd.hasPrefix("print:")) {
+            // print result of JS file:
+            var string = cmd
+            string.removeFirst("print:".count)
+            if (thread_stdout_copy != nil) {
+                fputs(string, self.thread_stdout_copy)
+            }
+        } else if (cmd.hasPrefix("print_error:")) {
+            // print result of JS file:
+            var string = cmd
+            string.removeFirst("print_error:".count)
+            if (thread_stderr_copy != nil) {
+                fputs(string, self.thread_stderr_copy)
+            }
         } else {
             // Usually debugging information
             // NSLog("JavaScript message: \(message.body)")
@@ -667,7 +762,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
             webView = contentView?.webview.webView
             // add a contentController that is specific to each webview
             webView?.configuration.userContentController = WKUserContentController()
-            webView?.configuration.userContentController.add(self, name: "aShell") 
+            webView?.configuration.userContentController.add(self, name: "aShell")
             // toolbar for everyone because I can't change the aspect of inputAssistantItem buttons
             webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             // initialize command list for autocomplete:
@@ -1233,4 +1328,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKScriptMessageHan
         }
     }
 }
+
+
 
