@@ -12,7 +12,9 @@
 		2208ACC322CDED49003985D6 /* network_ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2208ACC022CDED3A003985D6 /* network_ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC422D2026E003985D6 /* UIDevice+Name.swift */; };
 		2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
+		22372B722448E85D0033FE07 /* usr in Resources */ = {isa = PBXBuildFile; fileRef = 22372B712448E85C0033FE07 /* usr */; };
 		2242B075232293E7002A20FC /* bin in Resources */ = {isa = PBXBuildFile; fileRef = 2242B074232293E5002A20FC /* bin */; };
+		22484B062434F11F00D6BDDA /* node_modules in Resources */ = {isa = PBXBuildFile; fileRef = 22484B052434F11E00D6BDDA /* node_modules */; };
 		224A3EE322E70B6400BC2DD9 /* libssh2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224A3EDF22E70B4F00BC2DD9 /* libssh2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A3EE522E70B6400BC2DD9 /* openssl.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224A3EE222E70B4F00BC2DD9 /* openssl.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		225177C6231662240084B9C1 /* Library in Resources */ = {isa = PBXBuildFile; fileRef = 225177C5231662240084B9C1 /* Library */; };
@@ -55,6 +57,7 @@
 		22604C68233ABA0F00E642EE /* texlive_2019_texmf-dist_fonts_type1 in Resources */ = {isa = PBXBuildFile; fileRef = 22108D6A2338BE9D003D7556 /* texlive_2019_texmf-dist_fonts_type1 */; settings = {ASSET_TAGS = ("texmf-dist-fonts-type1", ); }; };
 		22604C69233ABA1200E642EE /* texlive_2019_texmf-dist_fonts_otf_ttf in Resources */ = {isa = PBXBuildFile; fileRef = 22601304232190BE00AEB059 /* texlive_2019_texmf-dist_fonts_otf_ttf */; settings = {ASSET_TAGS = (opentype, ); }; };
 		22604C6A233ABA2200E642EE /* luatexfiles in Resources */ = {isa = PBXBuildFile; fileRef = 2242B07623229BA4002A20FC /* luatexfiles */; };
+		2260858E244CE11100B88587 /* ar.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2260858D244CE11000B88587 /* ar.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		226AD81E23436B7A00E5D672 /* UIViewController+showAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226AD81D23436B7A00E5D672 /* UIViewController+showAlert.swift */; };
 		22720ABC23898D7F005BEB9E /* clang.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720ABB23898D65005BEB9E /* clang.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22720ABD23898D7F005BEB9E /* dis.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB723898D64005BEB9E /* dis.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -103,7 +106,6 @@
 		22A0FB30233F5AB6009A4DE3 /* pythonA-PIL._imagingmorph.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A0FB19233F5A31009A4DE3 /* pythonA-PIL._imagingmorph.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22A0FB31233F5AB6009A4DE3 /* pythonA-PIL._imagingtk.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A0FB01233F5A2E009A4DE3 /* pythonA-PIL._imagingtk.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22A0FB32233F5AB6009A4DE3 /* pythonA.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A0FB03233F5A2E009A4DE3 /* pythonA.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22A7AFB9238B2CB000C51E06 /* usr in Resources */ = {isa = PBXBuildFile; fileRef = 22A7AFB8238B2CAE00C51E06 /* usr */; };
 		22B1B81922CB9E4900F7C452 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 22B1B81722CB9E4900F7C452 /* commandDictionary.plist */; };
 		22B1B81C22CB9E7F00F7C452 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81122CB9C6B00F7C452 /* ios_system.framework */; };
 		22B1B81D22CB9E7F00F7C452 /* ios_system.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81122CB9C6B00F7C452 /* ios_system.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -127,6 +129,7 @@
 		22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
 		22DBA250233BB0700095C559 /* listTeXFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DBA24F233BB0700095C559 /* listTeXFiles.swift */; };
+		22E1B53A243DF64000EA8FBD /* require.js in Resources */ = {isa = PBXBuildFile; fileRef = 22E1B539243DF63E00EA8FBD /* require.js */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -136,6 +139,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				2260858E244CE11100B88587 /* ar.framework in Embed Frameworks */,
 				228B14F423A826E700FE5B43 /* lld.framework in Embed Frameworks */,
 				227722F3239EE4260020037E /* llc.framework in Embed Frameworks */,
 				227722EF239D23450020037E /* task.framework in Embed Frameworks */,
@@ -228,13 +232,16 @@
 
 /* Begin PBXFileReference section */
 		220207F22301984900BAE299 /* vim.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vim.framework; path = Frameworks/vim.framework; sourceTree = "<group>"; };
+		2207FAA6244B21B400C28F86 /* a-Shell-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "a-Shell-Bridging-Header.h"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC022CDED3A003985D6 /* network_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = network_ios.framework; path = Frameworks/network_ios.framework; sourceTree = "<group>"; };
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC822D24703003985D6 /* WkWebViewExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WkWebViewExtension.swift; sourceTree = SOURCE_ROOT; };
 		22108D6A2338BE9D003D7556 /* texlive_2019_texmf-dist_fonts_type1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_type1"; path = "ODR/texlive_2019_texmf-dist_fonts_type1"; sourceTree = "<group>"; };
+		22372B712448E85C0033FE07 /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources/usr; sourceTree = "<group>"; };
 		2242B074232293E5002A20FC /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bin; path = Resources/bin; sourceTree = "<group>"; };
 		2242B07623229BA4002A20FC /* luatexfiles */ = {isa = PBXFileReference; lastKnownFileType = folder; name = luatexfiles; path = ODR/luatexfiles; sourceTree = "<group>"; };
+		22484B052434F11E00D6BDDA /* node_modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node_modules; path = Resources/node_modules; sourceTree = "<group>"; };
 		224A3EDE22E70B2700BC2DD9 /* bc_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = bc_ios.framework; path = Frameworks/bc_ios.framework; sourceTree = "<group>"; };
 		224A3EDF22E70B4F00BC2DD9 /* libssh2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libssh2.framework; path = Frameworks/libssh2.framework; sourceTree = "<group>"; };
 		224A3EE022E70B4F00BC2DD9 /* lua_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = lua_ios.framework; path = Frameworks/lua_ios.framework; sourceTree = "<group>"; };
@@ -279,6 +286,7 @@
 		226013022320403D00AEB059 /* AppDelegate+TeX.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+TeX.swift"; sourceTree = "<group>"; };
 		22601304232190BE00AEB059 /* texlive_2019_texmf-dist_fonts_otf_ttf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_otf_ttf"; path = "ODR/texlive_2019_texmf-dist_fonts_otf_ttf"; sourceTree = "<group>"; };
 		22601306232195A100AEB059 /* luatexCommandsDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = luatexCommandsDictionary.plist; path = Resources/luatexCommandsDictionary.plist; sourceTree = "<group>"; };
+		2260858D244CE11000B88587 /* ar.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ar.framework; path = Frameworks/ar.framework; sourceTree = "<group>"; };
 		226AD81D23436B7A00E5D672 /* UIViewController+showAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+showAlert.swift"; sourceTree = "<group>"; };
 		22720AB523898D64005BEB9E /* nm.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = nm.framework; path = Frameworks/nm.framework; sourceTree = "<group>"; };
 		22720AB623898D64005BEB9E /* opt.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opt.framework; path = Frameworks/opt.framework; sourceTree = "<group>"; };
@@ -351,6 +359,7 @@
 		22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "URL+isDirectory.swift"; path = "Util/URL+isDirectory.swift"; sourceTree = SOURCE_ROOT; };
 		22D23117231940B2005B0C12 /* ExtraCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraCommands.swift; sourceTree = "<group>"; };
 		22DBA24F233BB0700095C559 /* listTeXFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = listTeXFiles.swift; sourceTree = "<group>"; };
+		22E1B539243DF63E00EA8FBD /* require.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = require.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -448,11 +457,13 @@
 		22984EE122C93DBC00069497 = {
 			isa = PBXGroup;
 			children = (
+				22372B712448E85C0033FE07 /* usr */,
 				22BF6242231589DB00FEA585 /* Settings.bundle */,
 				22B1B81A22CB9E5500F7C452 /* Resources */,
 				22984EEC22C93DBC00069497 /* a-Shell */,
 				22984EEB22C93DBC00069497 /* Products */,
 				22B1B80D22CB9A5A00F7C452 /* Frameworks */,
+				2207FAA6244B21B400C28F86 /* a-Shell-Bridging-Header.h */,
 			);
 			sourceTree = "<group>";
 		};
@@ -529,6 +540,7 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2260858D244CE11000B88587 /* ar.framework */,
 				228B14F323A826E600FE5B43 /* lld.framework */,
 				227722F2239EE4240020037E /* llc.framework */,
 				227722EE239D23430020037E /* calc.framework */,
@@ -561,6 +573,8 @@
 		22B1B81A22CB9E5500F7C452 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				22E1B539243DF63E00EA8FBD /* require.js */,
+				22484B052434F11E00D6BDDA /* node_modules */,
 				227722EA239D1F9F0020037E /* task */,
 				22A7AFB8238B2CAE00C51E06 /* usr */,
 				225177C5231662240084B9C1 /* Library */,
@@ -622,7 +636,7 @@
 				TargetAttributes = {
 					22984EE922C93DBC00069497 = {
 						CreatedOnToolsVersion = 11.0;
-						LastSwiftMigration = 1100;
+						LastSwiftMigration = 1140;
 					};
 				};
 			};
@@ -649,6 +663,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22372B722448E85D0033FE07 /* usr in Resources */,
+				22E1B53A243DF64000EA8FBD /* require.js in Resources */,
+				22484B062434F11F00D6BDDA /* node_modules in Resources */,
 				227722EB239D1FA00020037E /* task in Resources */,
 				22BF6243231589EC00FEA585 /* Settings.bundle in Resources */,
 				229BAF4222E8A73A00C2269B /* hterm.html in Resources */,
@@ -662,7 +679,6 @@
 				22984EF422C93DBF00069497 /* Assets.xcassets in Resources */,
 				22BD476923044D33007248EC /* vim in Resources */,
 				2242B075232293E7002A20FC /* bin in Resources */,
-				22A7AFB9238B2CB000C51E06 /* usr in Resources */,
 				225177C6231662240084B9C1 /* Library in Resources */,
 				22604C6A233ABA2200E642EE /* luatexfiles in Resources */,
 				22604C65233AB9E800E642EE /* texlive in Resources */,
@@ -838,7 +854,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 52;
+				CURRENT_PROJECT_VERSION = 64;
+				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_PREVIEWS = YES;
@@ -856,13 +873,16 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.3.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_INSTALLED_PRODUCT = NO;
+				STRIP_STYLE = debugging;
+				SWIFT_OBJC_BRIDGING_HEADER = "a-Shell-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -876,7 +896,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 52;
+				CURRENT_PROJECT_VERSION = 64;
+				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_PREVIEWS = YES;
@@ -894,13 +915,16 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.3.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_INSTALLED_PRODUCT = NO;
+				STRIP_STYLE = debugging;
+				SWIFT_OBJC_BRIDGING_HEADER = "a-Shell-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
