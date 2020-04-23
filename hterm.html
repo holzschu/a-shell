@@ -10,6 +10,7 @@
 	  --> 
 	  <!-- Dist version.-->
 	  <script src='hterm_all.js'></script>
+	  <script src="require.js"></script>
 	  <style>
          html {
          	height: 100%;
@@ -38,6 +39,14 @@
 	<body autocapitalize='none' contenteditable='false' spellcheck='false' autocomplete='off' autocorrect='off'>
 		<div id='terminal' autofocus='true' autocapitalize='none' contenteditable='false' spellcheck='false' autocomplete='off' autocorrect='off' ></div>
 		<script>
+			// make the "require" function available to all
+			Tarp.require({expose: true});
+            // Have a global variable:
+            window.global = window;
+            // and a Buffer variable
+			var Buffer = require('buffer').Buffer;
+			var process = require('process');
+
 			function initContent(io) {
 				const ver = lib.resource.getData('libdot/changelog/version');
 				const date = lib.resource.getData('libdot/changelog/date');
@@ -49,11 +58,14 @@
 				return colorArray[0] * 0.2126 + colorArray[1] * 0.7152 + colorArray[2] *  0.0722;
 			}
 
- 
             // Functions to deal with WebAssembly:
             // These should load a wasm program: http://andrewsweeney.net/post/llvm-to-wasm/
             /* Array of bytes to base64 string decoding */
-            
+            // Modules for @wasmer:
+            // const WASI = require('@wasmer/wasi/lib').WASI;
+            // const browserBindings = require('@wasmer/wasi/lib/bindings/browser').default;
+            // const WasmFs = require('@wasmer/wasmfs').WasmFs;
+
             function b64ToUint6 (nChr) {
             
               return nChr > 64 && nChr < 91 ?
@@ -89,39 +101,70 @@
               return aBytes;
             }
 
-            function executeWebAssembly(bufferString) {
+            function executeWebAssembly(bufferString, args, stdinBuffer) {
+				const WASI = require('@wasmer/wasi/lib').WASI;
+				const browserBindings = require('@wasmer/wasi/lib/bindings/browser').default;
+				const WasmFs = require('@wasmer/wasmfs').WasmFs;
+            	
             	// Input: base64 encoded binary wasm file
 				if (!('WebAssembly' in window)) {
 					window.webkit.messageHandlers.aShell.postMessage('WebAssembly not supported');
 					return;
 				}
 				var arrayBuffer = base64DecToArr(bufferString); 
+				var errorMessage = '';
+				const wasmFs = new WasmFs(); // new file system, one for each command
+
+				// send standard input to /dev/stdin:
+				if (stdinBuffer != "") {
+					var stdinString = base64DecToArr(stdinBuffer);
+					wasmFs.fs.writeFileSync('/dev/stdin', stdinString);
+				}
+				
+				// TODO: actual file access / creation ? (tough one -- unclear if possible)
+				// TODO: link with other libraries/frameworks? impossible, I guess.
 				try {
-					const module = new WebAssembly.Module(arrayBuffer);
-					var imports = {
-						env: {
-							'memoryBase': 0,
-							'tableBase': 0,
-							'memory': new WebAssembly.Memory({initial: 256}),
-							'table': new WebAssembly.Table({initial: 256, element: 'anyfunc'}),
-							abort: alert,
+					let wasi = new WASI({
+						// without '.':'.': fails with insufficient permission
+						// *with* '.':'.' : never returns from fopen
+						// preopens: {'.': '.'},
+						args: args,
+						env: {},
+						bindings: {
+							...browserBindings,
+							fs: wasmFs.fs
 						}
-					}
-					var instance = new WebAssembly.Instance(module, imports);
-					// wasm-ld -allow-undefined -o result.wasm files.o
-					// Grab our exports and call our main function
-					if (instance.exports._start != undefined) {
-						return instance.exports._start(); 
-					} else {
-						return;
-					}
+					})
+					const module = new WebAssembly.Module(arrayBuffer);
+					let instance = new WebAssembly.Instance(module, wasi.getImports(module));
+					wasi.start(instance);
 				}
 				catch (error) {
-					window.webkit.messageHandlers.aShell.postMessage('WebAssembly error: ' + error);
-					window.term_.io.println('wasm: ' + error);
+					// WASI returns an error even in some cases where things went well. 
+					// We find the type of the error, and return the appropriate error message
+					if (error.code === 'undefined') {
+						// A numeric error code (0, 1...) is not a real issue.
+						// TODO: send the return code back to Swift. 
+						errorMessage = '\nwasm: ' + error + '\n';
+					}
 				}
+				let result = wasmFs.fs.readFileSync("/dev/stdout", "utf8"); 
+				let result_error = wasmFs.fs.readFileSync("/dev/stderr", "utf8")
+				return [result, result_error + errorMessage];
 			}
 
+            // functions to deal with executeJavaScript: 
+            function print(printString) {
+				window.webkit.messageHandlers.aShell.postMessage('print:' + printString);
+			}
+            function println(printString) {
+				window.webkit.messageHandlers.aShell.postMessage('print:' + printString + '\n');
+			}
+            function print_error(printString) {
+				window.webkit.messageHandlers.aShell.postMessage('print_error:' + printString);
+			}
+
+            // standard functions (terminal, autocomplete, etc)
             var lastDirectory = '';
             var fileList = [];
             var currentCommandCursorPosition;
@@ -137,7 +180,7 @@
 				fileList = '';
 				lastDirectory = '';
 			}
-            
+
             function isLetter(c) {
             	// TODO: extension for CJK characters (hard)
 				return (c.toLowerCase() != c.toUpperCase());
@@ -145,7 +188,7 @@
 
             function printPrompt() {
 				// prints the prompt and initializes all variables related to prompt position
-				window.term_.io.print(window.prompt); 
+				window.term_.io.print(window.promptMessage); 
 			}
 
             function updatePromptPosition() {
@@ -413,8 +456,10 @@
 						// Fully interactive commands: forward all keyboard input, let them deal with command history.
 					    // TODO: have a list of such interactive commands (array?) 
 						// jump can start vim 
+						// ssh, once connected to the other machine, is interactive
 						if (window.commandRunning.startsWith("vim") || 
 							window.commandRunning.startsWith("ipython") || 
+							window.commandRunning.startsWith("ssh") || 
 							window.commandRunning.startsWith("jump")) {
 							// specific treatment for interactive commands: forward all keyboard input to them
 							// window.webkit.messageHandlers.aShell.postMessage('sending: ' + string); // for debugging
@@ -908,6 +953,7 @@
 				term.installKeyboard();
                 // Useful for console debugging.
 				window.term_ = term;
+				console.log = println
 				if (window.commandRunning === undefined) {
 					window.commandRunning = '';
 				}
@@ -922,7 +968,7 @@
 				window.commandInsideCommandArray = new Array();
 				window.commandInsideCommandIndex = 0;
 				window.maxCommandInsideCommandIndex = 0;
-				window.prompt = "$ "; // prompt for commands, configurable
+				window.promptMessage = "$ "; // prompt for commands, configurable
 				window.promptEnd = 2; // prompt for commands, configurable
 				window.promptLine = 0; // term line on which the prompt started
 				window.promptScroll = 0; // scroll line on which the scrollPort was when the prompt started
