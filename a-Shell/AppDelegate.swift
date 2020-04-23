@@ -68,21 +68,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
-    
-    
-    func needToUpdatePythonFiles() -> Bool {
-        // do it with UserDefaults, not storing in files
-        UserDefaults.standard.register(defaults: ["versionInstalled" : "0.0"])
-        let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String
-        let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as! String
+    func needToUpdateCFiles() -> Bool {
+        // Check that the C SDK files are present:
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
-        if (!linkedFileExists(directory: libraryURL, fileName: PythonFiles[0])) {
-            return true
-        }
-        // Python files are present. Which version?
+        NSLog("Library file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path))")
+        NSLog("Header file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path))")
+        return FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path)
+         && FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path)
+    }
+    
+    func versionNumberIncreased() -> Bool {
+        // do it with UserDefaults, not storing in files
+        UserDefaults.standard.register(defaults: ["versionInstalled" : "0.0"])
+        let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String
+        let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as! String
         let currentVersionNumbers = currentVersion.split(separator: ".")
         let majorCurrent = Int(currentVersionNumbers[0])!
         let minorCurrent = Int(currentVersionNumbers[1])!
@@ -97,7 +99,139 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             ((majorInstalled == majorCurrent) && (minorInstalled == minorCurrent) &&
                 (buildNumberInstalled < currentBuildInt))
     }
+    
+    func needToUpdatePythonFiles() -> Bool {
+        // Check that the python files are present:
+        let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                in: .userDomainMask,
+                                                appropriateFor: nil,
+                                                create: true)
+        return (!linkedFileExists(directory: libraryURL, fileName: PythonFiles[0]))
+    }
 
+    func createCSDK() {
+        // This operation copies the C SDK from $APPDIR to $HOME/Library and creates the *.a libraries
+        // (we can't ship with .a libraries because of the AppStore rules, but we can ship with *.o
+        // object files, provided they are in WASM format.
+        NSLog("Starting creating C SDK")
+        let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                in: .userDomainMask,
+                                                appropriateFor: nil,
+                                                create: true)
+        // usr/lib/wasm32-wasi
+        var localURL = libraryURL.appendingPathComponent("usr/lib/wasm32-wasi") // $HOME/Library/usr/lib/wasm32-wasi
+        do {
+            if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
+                try FileManager().removeItem(at: localURL)
+            }
+            if (!FileManager().fileExists(atPath: localURL.path)) {
+                try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
+            }
+        } catch {
+            NSLog("Error in creating C SDK directory \(localURL): \(error)")
+            return
+        }
+        // usr/lib/clang/10.0.0/lib/wasi/
+        localURL = libraryURL.appendingPathComponent("usr/lib/clang/10.0.0/lib/wasi/") // $HOME/Library/usr/lib/clang/10.0.0/lib/wasi/
+        do {
+            if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
+                try FileManager().removeItem(at: localURL)
+            }
+            if (!FileManager().fileExists(atPath: localURL.path)) {
+                try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
+            }
+        } catch {
+            NSLog("Error in creating C SDK directory \(localURL): \(error)")
+            return
+        }
+        let linkedCDirectories = ["usr/include",
+                                 "usr/share",
+                                 "usr/lib/wasm32-wasi/crt1.o",
+                                 "usr/lib/wasm32-wasi/libc.imports",
+                                 "usr/lib/clang/10.0.0/include",
+        ]
+        let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!)
+
+        for linkedObject in linkedCDirectories {
+            let bundleFile = bundleUrl.appendingPathComponent(linkedObject)
+            if (!FileManager().fileExists(atPath: bundleFile.path)) {
+                NSLog("createCSDK: requested file \(bundleFile.path) does not exist")
+                continue
+            }
+            // Symbolic links are both faster to create and use less disk space.
+            // We just have to make sure the destination exists
+            let homeFile = libraryURL.appendingPathComponent(linkedObject)
+            do {
+                let firstFileAttribute = try FileManager().attributesOfItem(atPath: homeFile.path)
+                if (firstFileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
+                    // It's a symbolic link, does the destination exist?
+                    let destination = try! FileManager().destinationOfSymbolicLink(atPath: homeFile.path)
+                    if (!FileManager().fileExists(atPath: destination)) {
+                        try! FileManager().removeItem(at: homeFile)
+                        try! FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
+                    }
+                } else {
+                    // Not a symbolic link, replace:
+                    try! FileManager().removeItem(at: homeFile)
+                    try! FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
+                }
+            }
+            catch {
+                do {
+                    try FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
+                }
+                catch {
+                    NSLog("Can't create file: \(homeFile.path): \(error)")
+                }
+            }
+        }
+        // Now create the empty libraries:
+        let emptyLibraries = [
+            "lib/wasm32-wasi/libcrypt.a",
+            "lib/wasm32-wasi/libdl.a",
+            "lib/wasm32-wasi/libm.a",
+            "lib/wasm32-wasi/libpthread.a",
+            "lib/wasm32-wasi/libresolv.a",
+            "lib/wasm32-wasi/librt.a",
+            "lib/wasm32-wasi/libutil.a",
+            "lib/wasm32-wasi/llibxnetibm.a"]
+        ios_switchSession("wasiSDKLibrariesCreation")
+        for library in emptyLibraries {
+            let libraryFileURL = libraryURL.appendingPathComponent("/usr/" + library)
+            if (!FileManager().fileExists(atPath: libraryFileURL.path)) {
+                let pid = ios_fork()
+                ios_system("ar crs " + libraryURL.path + "/usr/" + library)
+                ios_waitpid(pid)
+            }
+        }
+        // One of the libraries is in a different folder:
+        let libraryFileURL = libraryURL.appendingPathComponent("/usr/lib/clang/10.0.0/lib/wasi/libclang_rt.builtins-wasm32.a")
+        if (FileManager().fileExists(atPath: libraryFileURL.path)) {
+            try! FileManager().removeItem(at: libraryFileURL)
+        }
+        let rootDir = Bundle.main.resourcePath!
+        var pid = ios_fork()
+        ios_system("ar cq " + libraryFileURL.path + " " + rootDir + "/usr/src/libclang_rt.builtins-wasm32/*")
+        ios_waitpid(pid)
+        pid = ios_fork()
+        ios_system("ranlib " + libraryFileURL.path)
+        ios_waitpid(pid)
+        let libraries = ["libc", "libc++", "libc++abi", "libc-printscan-long-double", "libc-printscan-no-floating-point", "libwasi-emulated-mman"]
+        for library in libraries {
+            let libraryFileURL = libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/" + library + ".a")
+            if (FileManager().fileExists(atPath: libraryFileURL.path)) {
+                try! FileManager().removeItem(at: libraryFileURL)
+            }
+            var pid = ios_fork()
+            ios_system("ar cq " + libraryFileURL.path + " " + rootDir + "/usr/src/" + library + "/*")
+            ios_waitpid(pid)
+            pid = ios_fork()
+            ios_system("ranlib " + libraryFileURL.path)
+            ios_waitpid(pid)
+        }
+        NSLog("Finished creating C SDK") // Approx 2 seconds
+    }
+    
     func queueUpdatingPythonFiles() {
         // This operation (copy the files from the bundle directory to the $HOME/Library)
         // has two benefits:
@@ -230,17 +364,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
         setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
         setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
-        setenv("SYSROOT", Bundle.main.resourcePath!, 1) // sysroot for clang compiler
-        setenv("CCC_OVERRIDE_OPTIONS", "#^-S ^-emit-llvm ^-miphoneos-version-min=11 ^-D_FORTIFY_SOURCE=0", 1) // silently add "-S -emit-llvm" at the beginning of arguments
+        let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                in: .userDomainMask,
+                                                appropriateFor: nil,
+                                                create: true)
+        setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
+        setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1) // silently add "-S -emit-llvm" at the beginning of arguments
         let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                   in: .userDomainMask,
                                                   appropriateFor: nil,
                                                   create: true)
+        // Do we have the wasi C SDK in place?
+        versionUpToDate = !versionNumberIncreased()
+        if (!versionUpToDate || needToUpdateCFiles()) {
+            createCSDK()
+        }
         // Link Python files from $APPDIR/Library to $HOME/Library/
-        if (needToUpdatePythonFiles()) {
+        if (!versionUpToDate || needToUpdatePythonFiles()) {
             // start copying python files from App bundle to $HOME/Library
             // queue the copy operation so we can continue working.
-            versionUpToDate = false
             libraryFilesUpToDate = false
             queueUpdatingPythonFiles()
         }

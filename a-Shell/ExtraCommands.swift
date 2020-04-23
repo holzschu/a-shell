@@ -181,6 +181,8 @@ tar: https://libarchive.org
 TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2019.
 Vim: Bram Moolenaar and the Vim community, https://www.vim.org
 Vim-session: Peter Odding, http://peterodding.com/code/vim/session
+llvm/clang: the LLVM foundation
+webAssembly: wasmer.io and the wasi SDK https://github.com/WebAssembly/wasi-sdk
 
 zshmarks-style bookmarks inspired by zshmarks: https://github.com/jocelynmallon/zshmarks
 bashmarks-style bookmarks inspired by bashmarks: https://github.com/huyng/bashmarks
@@ -208,7 +210,7 @@ public func tex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int
         return 0
     }
     fputs(command, thread_stderr)
-    fputs(" requires the TeX distribution, which is not currently installed.\nDo you want to download and install it? (1.8 GB) (y/N)", thread_stderr)
+    fputs(" requires the TeX distribution, which is not currently installed.\nDo you want to download and install it? (0.8 GB) (y/N)", thread_stderr)
     fflush(thread_stderr)
     var byte: Int8 = 0
     let count = read(fileno(thread_stdin), &byte, 1)

@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-extension UIViewController {
+extension SceneDelegate {
     
     func showAlert(_ title: String, message: String? = nil, callbackBtnTitle: String? = nil, retryCallback: (() -> Void)? = nil, dismissCallback: (() -> Void)? = nil) {
         
@@ -45,12 +45,10 @@ extension UIViewController {
             
         }
         
-        //        alert.view.tintColor = .main
-        
-        self.present(alert, animated: true) { () -> Void in
-            
-            //            alert.view.tintColor = .foreground()
-            
+        let rootVC = self.window?.rootViewController
+        DispatchQueue.main.async {
+            rootVC?.present(alert, animated: true) { () -> Void in
+            }
         }
         
     }

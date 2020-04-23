@@ -305,24 +305,74 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     func executeWebAssembly(arguments: [String]?) {
         guard (arguments != nil) else { return }
-        guard (arguments!.count == 2) else { return }
+        guard (arguments!.count >= 2) else { return } // There must be at least one command
+        // copy arguments:
         let command = arguments![1]
-        // TODO: pass full list of arguments (minus the first, "wasm") to the command.
-        // WebAssembly.instantiateStreaming is not yet in WkWebView (Dec 2019)
-        // TODO: try with polyfill? It seems to work with http://swiftwasm.org
-        let fileName = FileManager().currentDirectoryPath + "/" + command
-        let buffer = NSData(contentsOf: URL(fileURLWithPath: fileName))
-        let base64string = buffer?.base64EncodedString()
-        let javascript = "executeWebAssembly(\"\(base64string!)\")"
+        var argumentString = "["
+        for c in 1...arguments!.count-1 {
+            argumentString = argumentString + " \"" + arguments![c] + "\","
+        }
+        argumentString = argumentString + "]"
+        // read the entire stdin if it is not a tty:
+        var stdin = ""
+        if (ios_isatty(STDIN_FILENO) == 0) {
+            // something is writing to stdin; let's take it.
+            let input = FileHandle(fileDescriptor: fileno(thread_stdin))
+            let inputData = input.availableData
+            let stdinData = NSData(data: inputData)
+            stdin = stdinData.base64EncodedString()
+        }
+        // async functions don't work in WKWebView (so, no fetch, no WebAssembly.instantiateStreaming)
+        // Instead, we load the file in swift and send the base64 version to JS
+        let fileName = command.hasPrefix("/") ? command : FileManager().currentDirectoryPath + "/" + command
+        guard let buffer = NSData(contentsOf: URL(fileURLWithPath: fileName)) else {
+            fputs("wasm: file \(command) not found\n", thread_stderr)
+            return
+        }
+        let base64string = buffer.base64EncodedString()
+        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", " + "\"" + stdin + "\")"
+        var executionDone = false
+        thread_stdout_copy = thread_stdout
+        thread_stderr_copy = thread_stderr
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript(javascript) { (result, error) in
                 if error != nil {
+                    let userInfo = (error! as NSError).userInfo
+                    fputs("wasm: Error ", self.thread_stderr_copy)
+                    // WKJavaScriptExceptionSourceURL is hterm.html, of course.
+                    if let file = userInfo["WKJavaScriptExceptionSourceURL"] as? String {
+                        fputs("in file " + file + " ", self.thread_stderr_copy)
+                    }
+                    if let line = userInfo["WKJavaScriptExceptionLineNumber"] as? Int32 {
+                        fputs("at line \(line)", self.thread_stderr_copy)
+                    }
+                    if let column = userInfo["WKJavaScriptExceptionColumnNumber"] as? Int32 {
+                        fputs(", column \(column): ", self.thread_stderr_copy)
+                    } else {
+                        fputs(": ", self.thread_stderr_copy)
+                    }
+                    if let message = userInfo["WKJavaScriptExceptionMessage"] as? String {
+                        fputs(message + "\n", self.thread_stderr_copy)
+                    }
+                    fflush(self.thread_stderr_copy)
                     print(error)
                 }
                 if (result != nil) {
-                    print(result)
+                    // executeWebAssembly sends back stdout and stderr as two Strings:
+                    if let array = result! as? NSMutableArray {
+                        fputs(array[0] as! String, self.thread_stdout_copy);
+                        fputs(array[1] as! String, self.thread_stderr_copy);
+                    } else if let string = result! as? String {
+                        fputs(string, self.thread_stdout_copy);
+                    }
                 }
+                executionDone = true
             }
+        }
+        // force synchronization:
+        while (!executionDone) {
+            fflush(thread_stdout)
+            fflush(thread_stderr)
         }
     }
     
@@ -346,6 +396,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         var executionDone = false
         do {
             var javascript = try String(contentsOf: URL(fileURLWithPath: fileName), encoding: String.Encoding.utf8)
+            // Code included in {} so variables don't leak. Some variables seem to leak. TODO: investigate
             javascript = "{" + javascript + "}"
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(javascript) { (result, error) in
@@ -763,6 +814,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // add a contentController that is specific to each webview
             webView?.configuration.userContentController = WKUserContentController()
             webView?.configuration.userContentController.add(self, name: "aShell")
+            webView?.navigationDelegate = self
+            webView?.uiDelegate = self;
             // toolbar for everyone because I can't change the aspect of inputAssistantItem buttons
             webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             // initialize command list for autocomplete:
@@ -1330,4 +1383,92 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
 }
 
 
+extension SceneDelegate: WKUIDelegate {
+    
+    // Javascript alert dialog boxes:
+    func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo,
+                 completionHandler: @escaping () -> Void) {
+        
+        let arguments = message.components(separatedBy: "\n")
+        if (arguments.count == 0) { return }
+        let title = arguments[0]
+        var messageMinusTitle = message
+        messageMinusTitle.removeFirst(title.count)
+                
+        let alertController = UIAlertController(title: title, message: messageMinusTitle, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) in
+            completionHandler()
+        }))
+        
+        if let presenter = alertController.popoverPresentationController {
+            presenter.sourceView = self.view
+        }
+        
+        let rootVC = self.window?.rootViewController
+        rootVC?.present(alertController, animated: true, completion: nil)
+    }
+    
+    
+    func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo,
+                 completionHandler: @escaping (Bool) -> Void) {
+        
+        let arguments = message.components(separatedBy: "\n")
+        let title = arguments[0]
+        var messageMinusTitle = message
+        messageMinusTitle.removeFirst(title.count)
 
+        let alertController = UIAlertController(title: arguments[0], message: messageMinusTitle, preferredStyle: .alert)
+        
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action) in
+            completionHandler(false)
+        }))
+        
+        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) in
+            completionHandler(true)
+        }))
+        
+        if let presenter = alertController.popoverPresentationController {
+            presenter.sourceView = self.view
+        }
+        
+        let rootVC = self.window?.rootViewController
+        rootVC?.present(alertController, animated: true, completion: nil)
+    }
+    
+    func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo,
+                 completionHandler: @escaping (String?) -> Void) {
+        let arguments = prompt.components(separatedBy: "\n")
+        let title = arguments[0]
+        var messageMinusTitle = prompt
+        messageMinusTitle.removeFirst(title.count)
+
+        let alertController = UIAlertController(title: arguments[0], message: messageMinusTitle, preferredStyle: .alert)
+        
+        alertController.addTextField { (textField) in
+            textField.text = defaultText
+        }
+
+        alertController.addAction(UIAlertAction(title: "Dismiss", style: .default, handler: { (action) in
+            completionHandler(nil)
+        }))
+        
+        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) in
+            if let text = alertController.textFields?.first?.text {
+                completionHandler(text)
+            } else {
+                completionHandler(defaultText)
+            }
+        }))
+        
+        if let presenter = alertController.popoverPresentationController {
+            presenter.sourceView = self.view
+        }
+        
+        let rootVC = self.window?.rootViewController
+        rootVC?.present(alertController, animated: true, completion: { () -> Void in
+            // TODO: insert here some magical line that will restore focus to the window
+            // makeFirstResponder and makeKeyboardActive don't work
+        })
+    }
+
+}

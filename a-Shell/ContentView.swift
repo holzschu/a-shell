@@ -12,11 +12,6 @@ import WebKit
 struct Webview : UIViewRepresentable {
 
     let webView: WKWebView
-    // Compiles but doesn't show.
-    var JavaScriptAlertMessage: String
-    var JavaScriptAlertTitle: String
-    @State var showingJavaScriptConfirmAlert: Bool = false
-    let contentController = ContentController(nil)
 
     init() {
         let config = WKWebViewConfiguration()
@@ -25,128 +20,8 @@ struct Webview : UIViewRepresentable {
         config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
         config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
         config.selectionGranularity = .character; // Could be .dynamic
-        let wkcontentController = WKUserContentController()
-        wkcontentController.add(contentController, name: "aShell")
-        config.userContentController = wkcontentController
         webView = WKWebView(frame: .zero, configuration: config)
-        JavaScriptAlertMessage = ""
-        JavaScriptAlertTitle = ""
-        // self._showingJavaScriptConfirmAlert = false
     }
-    
-    class ContentController: NSObject, WKScriptMessageHandler {
-    var parent: WKWebView?
-    init(_ parent: WKWebView?) {
-        self.parent = parent
-    }
-
-    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage)  {
-        if message.name == "test"{
-            print(message.body)
-            parent?.evaluateJavaScript("document.getElementsByClassName('mat-toolbar-single-row')[0].style.backgroundColor = 'red'", completionHandler: nil)
-
-        }
-    }
-    
-    
-    class Coordinator: NSObject, WKUIDelegate {
-
-        var parent: Webview
-
-        init(_ parent: Webview) {
-            self.parent = parent
-        }
-
-        // Delegate methods go here
-        
-        // Javascript alert dialog boxes:
-        func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo,
-                     completionHandler: @escaping () -> Void) {
-            
-            let arguments = message.components(separatedBy: "\n")
-            NSLog("arguments = \(arguments)")
-            if (arguments.count == 0) { return }
-            let title = arguments[0]
-            var messageMinusTitle = message
-            messageMinusTitle.removeFirst(title.count)
-            
-            parent.JavaScriptAlertMessage = messageMinusTitle
-            parent.JavaScriptAlertTitle = title
-            parent.showingJavaScriptConfirmAlert = true
-            // Does not crash, but does not show the alert either. Progress.
-            // while (parent.showingJavaScriptConfirmAlert) { } // wait until the alert is dismissed
-            completionHandler()
-        }
-        
-        
-        func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo,
-                     completionHandler: @escaping (Bool) -> Void) {
-            
-            let arguments = message.components(separatedBy: "\n")
-            /*
-            let alertController = UIAlertController(title: arguments[0], message: arguments[1], preferredStyle: .alert)
-            
-            alertController.addAction(UIAlertAction(title: arguments[2], style: .cancel, handler: { (action) in
-                completionHandler(false)
-            }))
-            
-            if (arguments[3].hasPrefix("btn-danger")) {
-                var newLabel = arguments[3]
-                newLabel.removeFirst("btn-danger".count)
-                alertController.addAction(UIAlertAction(title: newLabel, style: .destructive, handler: { (action) in
-                    completionHandler(true)
-                }))
-            } else {
-                alertController.addAction(UIAlertAction(title: arguments[3], style: .default, handler: { (action) in
-                    completionHandler(true)
-                }))
-            }
-            
-            if let presenter = alertController.popoverPresentationController {
-                presenter.sourceView = self.view
-            }
-            
-            self.present(alertController, animated: true, completion: nil) */
-        }
-        
-        
-        func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo,
-                     completionHandler: @escaping (String?) -> Void) {
-            
-            let arguments = prompt.components(separatedBy: "\n")
-            /*
-            let alertController = UIAlertController(title: arguments[0], message: arguments[1], preferredStyle: .alert)
-            
-            alertController.addTextField { (textField) in
-                textField.text = defaultText
-            }
-
-            alertController.addAction(UIAlertAction(title: arguments[2], style: .default, handler: { (action) in
-                completionHandler(nil)
-            }))
-            
-            alertController.addAction(UIAlertAction(title: arguments[3], style: .default, handler: { (action) in
-                if let text = alertController.textFields?.first?.text {
-                    completionHandler(text)
-                } else {
-                    completionHandler(defaultText)
-                }
-            }))
-            
-            if let presenter = alertController.popoverPresentationController {
-                presenter.sourceView = self.view
-            }
-            
-            self.present(alertController, animated: true, completion: nil)
-             */
-        }
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    
     
     func makeUIView(context: Context) -> WKWebView  {
         return webView
@@ -159,8 +34,6 @@ struct Webview : UIViewRepresentable {
         uiView.isOpaque = false
         uiView.tintColor = UIColor.placeholderText.resolvedColor(with: traitCollection)
         uiView.backgroundColor = UIColor.systemBackground.resolvedColor(with: traitCollection)
-        uiView.uiDelegate = context.coordinator
-        // uiView.accessibilityIgnoresInvertColors
         let command = "window.foregroundColor = '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'; window.backgroundColor = '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'; window.cursorColor = '" + UIColor.link.resolvedColor(with: traitCollection).toHexString() + "';"
         uiView.evaluateJavaScript(command) { (result, error) in
             if error != nil {
@@ -178,9 +51,6 @@ struct Webview : UIViewRepresentable {
 
 struct ContentView: View {
     @State private var keyboardHeight: CGFloat = 0
-    @State var showAlert = false
-
-    // @State(initialValue: false) var showingJavaScriptConfirmAlert: Bool
 
     // Adapt window size to keyboard height, see:
     // https://stackoverflow.com/questions/56491881/move-textfield-up-when-thekeyboard-has-appeared-by-using-swiftui-ios
@@ -221,14 +91,8 @@ struct ContentView: View {
         webview.onReceive(keyboardChangePublisher) { self.keyboardHeight = $0 }
             .padding(.top, 0) // Important, to set the size of the view
             .padding(.bottom, keyboardHeight)
-            .alert(isPresented: webview.$showingJavaScriptConfirmAlert) {
-                Alert(title: Text(webview.JavaScriptAlertTitle),
-                      message: Text(webview.JavaScriptAlertMessage))
-        }
     }
 }
-
-
 
 
 /* #if DEBUG
