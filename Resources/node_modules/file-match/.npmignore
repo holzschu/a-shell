@@ -1,0 +1,4 @@
+node_modules/
+test.js
+test/var/
+npm-debug.log

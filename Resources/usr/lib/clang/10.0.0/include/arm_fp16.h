@@ -251,52 +251,46 @@ typedef __fp16 float16_t;
   __ret = (uint64_t) __builtin_neon_vcvtah_u64_f16(__s0); \
   __ret; \
 })
-__ai float16_t vcvth_f16_u32(uint32_t __p0) {
-  float16_t __ret;
-  __ret = (float16_t) __builtin_neon_vcvth_f16_u32(__p0);
-  return __ret;
-}
-__ai float16_t vcvth_f16_u64(uint64_t __p0) {
-  float16_t __ret;
-  __ret = (float16_t) __builtin_neon_vcvth_f16_u64(__p0);
-  return __ret;
-}
-__ai float16_t vcvth_f16_u16(uint16_t __p0) {
-  float16_t __ret;
-  __ret = (float16_t) __builtin_neon_vcvth_f16_u16(__p0);
-  return __ret;
-}
-__ai float16_t vcvth_f16_s32(int32_t __p0) {
-  float16_t __ret;
-  __ret = (float16_t) __builtin_neon_vcvth_f16_s32(__p0);
-  return __ret;
-}
-__ai float16_t vcvth_f16_s64(int64_t __p0) {
-  float16_t __ret;
-  __ret = (float16_t) __builtin_neon_vcvth_f16_s64(__p0);
-  return __ret;
-}
-__ai float16_t vcvth_f16_s16(int16_t __p0) {
-  float16_t __ret;
-  __ret = (float16_t) __builtin_neon_vcvth_f16_s16(__p0);
-  return __ret;
-}
+#define vcvth_f16_u16(__p0) __extension__ ({ \
+  uint16_t __s0 = __p0; \
+  float16_t __ret; \
+  __ret = (float16_t) __builtin_neon_vcvth_f16_u16(__s0); \
+  __ret; \
+})
+#define vcvth_f16_s16(__p0) __extension__ ({ \
+  int16_t __s0 = __p0; \
+  float16_t __ret; \
+  __ret = (float16_t) __builtin_neon_vcvth_f16_s16(__s0); \
+  __ret; \
+})
+#define vcvth_f16_u32(__p0) __extension__ ({ \
+  uint32_t __s0 = __p0; \
+  float16_t __ret; \
+  __ret = (float16_t) __builtin_neon_vcvth_f16_u32(__s0); \
+  __ret; \
+})
+#define vcvth_f16_s32(__p0) __extension__ ({ \
+  int32_t __s0 = __p0; \
+  float16_t __ret; \
+  __ret = (float16_t) __builtin_neon_vcvth_f16_s32(__s0); \
+  __ret; \
+})
+#define vcvth_f16_u64(__p0) __extension__ ({ \
+  uint64_t __s0 = __p0; \
+  float16_t __ret; \
+  __ret = (float16_t) __builtin_neon_vcvth_f16_u64(__s0); \
+  __ret; \
+})
+#define vcvth_f16_s64(__p0) __extension__ ({ \
+  int64_t __s0 = __p0; \
+  float16_t __ret; \
+  __ret = (float16_t) __builtin_neon_vcvth_f16_s64(__s0); \
+  __ret; \
+})
 #define vcvth_n_f16_u32(__p0, __p1) __extension__ ({ \
   uint32_t __s0 = __p0; \
   float16_t __ret; \
   __ret = (float16_t) __builtin_neon_vcvth_n_f16_u32(__s0, __p1); \
-  __ret; \
-})
-#define vcvth_n_f16_u64(__p0, __p1) __extension__ ({ \
-  uint64_t __s0 = __p0; \
-  float16_t __ret; \
-  __ret = (float16_t) __builtin_neon_vcvth_n_f16_u64(__s0, __p1); \
-  __ret; \
-})
-#define vcvth_n_f16_u16(__p0, __p1) __extension__ ({ \
-  uint16_t __s0 = __p0; \
-  float16_t __ret; \
-  __ret = (float16_t) __builtin_neon_vcvth_n_f16_u16(__s0, __p1); \
   __ret; \
 })
 #define vcvth_n_f16_s32(__p0, __p1) __extension__ ({ \
@@ -305,10 +299,22 @@ __ai float16_t vcvth_f16_s16(int16_t __p0) {
   __ret = (float16_t) __builtin_neon_vcvth_n_f16_s32(__s0, __p1); \
   __ret; \
 })
+#define vcvth_n_f16_u64(__p0, __p1) __extension__ ({ \
+  uint64_t __s0 = __p0; \
+  float16_t __ret; \
+  __ret = (float16_t) __builtin_neon_vcvth_n_f16_u64(__s0, __p1); \
+  __ret; \
+})
 #define vcvth_n_f16_s64(__p0, __p1) __extension__ ({ \
   int64_t __s0 = __p0; \
   float16_t __ret; \
   __ret = (float16_t) __builtin_neon_vcvth_n_f16_s64(__s0, __p1); \
+  __ret; \
+})
+#define vcvth_n_f16_u16(__p0, __p1) __extension__ ({ \
+  uint16_t __s0 = __p0; \
+  float16_t __ret; \
+  __ret = (float16_t) __builtin_neon_vcvth_n_f16_u16(__s0, __p1); \
   __ret; \
 })
 #define vcvth_n_f16_s16(__p0, __p1) __extension__ ({ \

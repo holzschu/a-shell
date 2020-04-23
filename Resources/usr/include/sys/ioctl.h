@@ -1,110 +1,129 @@
-/*
- * Copyright (c) 2000 Apple Computer, Inc. All rights reserved.
- *
- * @APPLE_OSREFERENCE_LICENSE_HEADER_START@
- *
- * This file contains Original Code and/or Modifications of Original Code
- * as defined in and that are subject to the Apple Public Source License
- * Version 2.0 (the 'License'). You may not use this file except in
- * compliance with the License. The rights granted to you under the License
- * may not be used to create, or enable the creation or redistribution of,
- * unlawful or unlicensed copies of an Apple operating system, or to
- * circumvent, violate, or enable the circumvention or violation of, any
- * terms of an Apple operating system software license agreement.
- *
- * Please obtain a copy of the License at
- * http://www.opensource.apple.com/apsl/ and read it before using this file.
- *
- * The Original Code and all software distributed under the License are
- * distributed on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER
- * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
- * INCLUDING WITHOUT LIMITATION, ANY WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT.
- * Please see the License for the specific language governing rights and
- * limitations under the License.
- *
- * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
- */
-/* Copyright (c) 1995 NeXT Computer, Inc. All Rights Reserved */
-/*-
- * Copyright (c) 1982, 1986, 1990, 1993, 1994
- *	The Regents of the University of California.  All rights reserved.
- * (c) UNIX System Laboratories, Inc.
- * All or some portions of this file are derived from material licensed
- * to the University of California by American Telephone and Telegraph
- * Co. or Unix System Laboratories, Inc. and are reproduced herein with
- * the permission of UNIX System Laboratories, Inc.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *	@(#)ioctl.h	8.6 (Berkeley) 3/28/94
- */
+#ifndef	_SYS_IOCTL_H
+#define	_SYS_IOCTL_H
+#ifdef __wasilibc_unmodified_upstream /* Use alternate WASI libc headers */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#ifndef _SYS_IOCTL_H_
-#define _SYS_IOCTL_H_
+#include <bits/alltypes.h>
+#include <bits/ioctl.h>
 
-#include <sys/ttycom.h>
+#define N_TTY           0
+#define N_SLIP          1
+#define N_MOUSE         2
+#define N_PPP           3
+#define N_STRIP         4
+#define N_AX25          5
+#define N_X25           6
+#define N_6PACK         7
+#define N_MASC          8
+#define N_R3964         9
+#define N_PROFIBUS_FDL  10
+#define N_IRDA          11
+#define N_SMSBLOCK      12
+#define N_HDLC          13
+#define N_SYNC_PPP      14
+#define N_HCI           15
+#define N_GIGASET_M101  16
+#define N_SLCAN         17
+#define N_PPS           18
+#define N_V253          19
+#define N_CAIF          20
+#define N_GSM0710       21
+#define N_TI_WL         22
+#define N_TRACESINK     23
+#define N_TRACEROUTER   24
+#define N_NCI           25
+#define N_SPEAKUP       26
+#define N_NULL          27
 
-/*
- * Pun for SunOS prior to 3.2.  SunOS 3.2 and later support TIOCGWINSZ
- * and TIOCSWINSZ (yes, even 3.2-3.5, the fact that it wasn't documented
- * nonwithstanding).
- */
-struct ttysize {
-	unsigned short  ts_lines;
-	unsigned short  ts_cols;
-	unsigned short  ts_xxx;
-	unsigned short  ts_yyy;
+#define TIOCPKT_DATA       0
+#define TIOCPKT_FLUSHREAD  1
+#define TIOCPKT_FLUSHWRITE 2
+#define TIOCPKT_STOP       4
+#define TIOCPKT_START      8
+#define TIOCPKT_NOSTOP    16
+#define TIOCPKT_DOSTOP    32
+#define TIOCPKT_IOCTL     64
+
+#define TIOCSER_TEMT 1
+
+struct winsize {
+	unsigned short ws_row;
+	unsigned short ws_col;
+	unsigned short ws_xpixel;
+	unsigned short ws_ypixel;
 };
-#define TIOCGSIZE       TIOCGWINSZ
-#define TIOCSSIZE       TIOCSWINSZ
 
-#include <sys/ioccom.h>
+#define SIOCADDRT          0x890B
+#define SIOCDELRT          0x890C
+#define SIOCRTMSG          0x890D
 
-#include <sys/filio.h>
-#include <sys/sockio.h>
+#define SIOCGIFNAME        0x8910
+#define SIOCSIFLINK        0x8911
+#define SIOCGIFCONF        0x8912
+#define SIOCGIFFLAGS       0x8913
+#define SIOCSIFFLAGS       0x8914
+#define SIOCGIFADDR        0x8915
+#define SIOCSIFADDR        0x8916
+#define SIOCGIFDSTADDR     0x8917
+#define SIOCSIFDSTADDR     0x8918
+#define SIOCGIFBRDADDR     0x8919
+#define SIOCSIFBRDADDR     0x891a
+#define SIOCGIFNETMASK     0x891b
+#define SIOCSIFNETMASK     0x891c
+#define SIOCGIFMETRIC      0x891d
+#define SIOCSIFMETRIC      0x891e
+#define SIOCGIFMEM         0x891f
+#define SIOCSIFMEM         0x8920
+#define SIOCGIFMTU         0x8921
+#define SIOCSIFMTU         0x8922
+#define SIOCSIFNAME        0x8923
+#define SIOCSIFHWADDR      0x8924
+#define SIOCGIFENCAP       0x8925
+#define SIOCSIFENCAP       0x8926
+#define SIOCGIFHWADDR      0x8927
+#define SIOCGIFSLAVE       0x8929
+#define SIOCSIFSLAVE       0x8930
+#define SIOCADDMULTI       0x8931
+#define SIOCDELMULTI       0x8932
+#define SIOCGIFINDEX       0x8933
+#define SIOGIFINDEX        SIOCGIFINDEX
+#define SIOCSIFPFLAGS      0x8934
+#define SIOCGIFPFLAGS      0x8935
+#define SIOCDIFADDR        0x8936
+#define SIOCSIFHWBROADCAST 0x8937
+#define SIOCGIFCOUNT       0x8938
 
+#define SIOCGIFBR          0x8940
+#define SIOCSIFBR          0x8941
 
-#include <sys/cdefs.h>
+#define SIOCGIFTXQLEN      0x8942
+#define SIOCSIFTXQLEN      0x8943
 
-__BEGIN_DECLS
-int     ioctl(int, unsigned long, ...);
-__END_DECLS
-#endif /* !_SYS_IOCTL_H_ */
+#define SIOCDARP           0x8953
+#define SIOCGARP           0x8954
+#define SIOCSARP           0x8955
 
-/*
- * Keep outside _SYS_IOCTL_H_
- * Compatability with old terminal driver
- *
- * Source level -> #define USE_OLD_TTY
- * Kernel level -> always on
- */
-#if defined(USE_OLD_TTY) || defined(BSD_KERNEL_PRIVATE)
-#include <sys/ioctl_compat.h>
-#endif /* !_SYS_IOCTL_H_ */
+#define SIOCDRARP          0x8960
+#define SIOCGRARP          0x8961
+#define SIOCSRARP          0x8962
+
+#define SIOCGIFMAP         0x8970
+#define SIOCSIFMAP         0x8971
+
+#define SIOCADDDLCI        0x8980
+#define SIOCDELDLCI        0x8981
+
+#define SIOCDEVPRIVATE     0x89F0
+#define SIOCPROTOPRIVATE   0x89E0
+
+int ioctl (int, int, ...);
+
+#ifdef __cplusplus
+}
+#endif
+#else
+#include <__header_sys_ioctl.h>
+#endif
+#endif

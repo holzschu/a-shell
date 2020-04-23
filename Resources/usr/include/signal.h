@@ -1,129 +1,300 @@
-/*
- * Copyright (c) 2000 Apple Computer, Inc. All rights reserved.
- *
- * @APPLE_LICENSE_HEADER_START@
- * 
- * This file contains Original Code and/or Modifications of Original Code
- * as defined in and that are subject to the Apple Public Source License
- * Version 2.0 (the 'License'). You may not use this file except in
- * compliance with the License. Please obtain a copy of the License at
- * http://www.opensource.apple.com/apsl/ and read it before using this
- * file.
- * 
- * The Original Code and all software distributed under the License are
- * distributed on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER
- * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
- * INCLUDING WITHOUT LIMITATION, ANY WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT.
- * Please see the License for the specific language governing rights and
- * limitations under the License.
- * 
- * @APPLE_LICENSE_HEADER_END@
- */
-/*-
- * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *	@(#)signal.h	8.3 (Berkeley) 3/30/94
- */
+#ifndef _SIGNAL_H
+#define _SIGNAL_H
 
-#ifndef _USER_SIGNAL_H
-#define _USER_SIGNAL_H
-
-#include <sys/cdefs.h>
-#include <_types.h>
-#include <sys/signal.h>
-
-#include <sys/_pthread/_pthread_types.h>
-#include <sys/_pthread/_pthread_t.h>
-
-#if !defined(_ANSI_SOURCE) && (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
-extern __const char *__const sys_signame[NSIG];
-extern __const char *__const sys_siglist[NSIG];
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-__BEGIN_DECLS
-int	raise(int);
-__END_DECLS
+#include <features.h>
 
-#ifndef	_ANSI_SOURCE
-__BEGIN_DECLS
-void	(* _Nullable bsd_signal(int, void (* _Nullable)(int)))(int);
-int	kill(pid_t, int) __DARWIN_ALIAS(kill);
-int	killpg(pid_t, int) __DARWIN_ALIAS(killpg);
-int	pthread_kill(pthread_t, int);
-int	pthread_sigmask(int, const sigset_t *, sigset_t *) __DARWIN_ALIAS(pthread_sigmask);
-int	sigaction(int, const struct sigaction * __restrict,
-	    struct sigaction * __restrict);
-int	sigaddset(sigset_t *, int);
-int	sigaltstack(const stack_t * __restrict, stack_t * __restrict)  __DARWIN_ALIAS(sigaltstack) __WATCHOS_PROHIBITED __TVOS_PROHIBITED;
-int	sigdelset(sigset_t *, int);
-int	sigemptyset(sigset_t *);
-int	sigfillset(sigset_t *);
-int	sighold(int);
-int	sigignore(int);
-int	siginterrupt(int, int);
-int	sigismember(const sigset_t *, int);
-int	sigpause(int) __DARWIN_ALIAS_C(sigpause);
-int	sigpending(sigset_t *);
-int	sigprocmask(int, const sigset_t * __restrict, sigset_t * __restrict);
-int	sigrelse(int);
-void    (* _Nullable sigset(int, void (* _Nullable)(int)))(int);
-int	sigsuspend(const sigset_t *) __DARWIN_ALIAS_C(sigsuspend);
-int	sigwait(const sigset_t * __restrict, int * __restrict) __DARWIN_ALIAS_C(sigwait);
-#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-void	psignal(unsigned int, const char *);
-int	sigblock(int);
-int	sigsetmask(int);
-int	sigvec(int, struct sigvec *, struct sigvec *);
-#endif	/* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
-__END_DECLS
+#if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
+ || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
+ || defined(_BSD_SOURCE)
 
-/* List definitions after function declarations, or Reiser cpp gets upset. */
-#if defined(__i386__) || defined(__x86_64__)
-/* The left shift operator on intel is modulo 32 */
-__header_always_inline int
-__sigbits(int __signo)
-{
-    return __signo > __DARWIN_NSIG ? 0 : (1 << (__signo - 1));
+#ifdef __wasilibc_unmodified_upstream /* WASI has no ucontext support */
+#ifdef _GNU_SOURCE
+#define __ucontext ucontext
+#endif
+#endif
+
+#define __NEED_size_t
+#define __NEED_pid_t
+#define __NEED_uid_t
+#define __NEED_struct_timespec
+#define __NEED_pthread_t
+#define __NEED_pthread_attr_t
+#define __NEED_time_t
+#define __NEED_clock_t
+#define __NEED_sigset_t
+
+#include <bits/alltypes.h>
+
+#define SIG_BLOCK     0
+#define SIG_UNBLOCK   1
+#define SIG_SETMASK   2
+
+#define SI_ASYNCNL (-60)
+#define SI_TKILL (-6)
+#define SI_SIGIO (-5)
+#define SI_ASYNCIO (-4)
+#define SI_MESGQ (-3)
+#define SI_TIMER (-2)
+#define SI_QUEUE (-1)
+#define SI_USER 0
+#define SI_KERNEL 128
+
+typedef struct sigaltstack stack_t;
+
+#endif
+
+#include <bits/signal.h>
+
+#if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
+ || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
+ || defined(_BSD_SOURCE)
+
+#define SIG_HOLD ((void (*)(int)) 2)
+
+#define FPE_INTDIV 1
+#define FPE_INTOVF 2
+#define FPE_FLTDIV 3
+#define FPE_FLTOVF 4
+#define FPE_FLTUND 5
+#define FPE_FLTRES 6
+#define FPE_FLTINV 7
+#define FPE_FLTSUB 8
+
+#define ILL_ILLOPC 1
+#define ILL_ILLOPN 2
+#define ILL_ILLADR 3
+#define ILL_ILLTRP 4
+#define ILL_PRVOPC 5
+#define ILL_PRVREG 6
+#define ILL_COPROC 7
+#define ILL_BADSTK 8
+
+#define SEGV_MAPERR 1
+#define SEGV_ACCERR 2
+#define SEGV_BNDERR 3
+#define SEGV_PKUERR 4
+
+#define BUS_ADRALN 1
+#define BUS_ADRERR 2
+#define BUS_OBJERR 3
+#define BUS_MCEERR_AR 4
+#define BUS_MCEERR_AO 5
+
+#define CLD_EXITED 1
+#define CLD_KILLED 2
+#define CLD_DUMPED 3
+#define CLD_TRAPPED 4
+#define CLD_STOPPED 5
+#define CLD_CONTINUED 6
+
+union sigval {
+	int sival_int;
+	void *sival_ptr;
+};
+
+typedef struct {
+#ifdef __SI_SWAP_ERRNO_CODE
+	int si_signo, si_code, si_errno;
+#else
+	int si_signo, si_errno, si_code;
+#endif
+	union {
+		char __pad[128 - 2*sizeof(int) - sizeof(long)];
+		struct {
+			union {
+				struct {
+					pid_t si_pid;
+					uid_t si_uid;
+				} __piduid;
+				struct {
+					int si_timerid;
+					int si_overrun;
+				} __timer;
+			} __first;
+			union {
+				union sigval si_value;
+				struct {
+					int si_status;
+					clock_t si_utime, si_stime;
+				} __sigchld;
+			} __second;
+		} __si_common;
+		struct {
+			void *si_addr;
+			short si_addr_lsb;
+			union {
+				struct {
+					void *si_lower;
+					void *si_upper;
+				} __addr_bnd;
+				unsigned si_pkey;
+			} __first;
+		} __sigfault;
+		struct {
+			long si_band;
+			int si_fd;
+		} __sigpoll;
+		struct {
+			void *si_call_addr;
+			int si_syscall;
+			unsigned si_arch;
+		} __sigsys;
+	} __si_fields;
+} siginfo_t;
+#define si_pid     __si_fields.__si_common.__first.__piduid.si_pid
+#define si_uid     __si_fields.__si_common.__first.__piduid.si_uid
+#define si_status  __si_fields.__si_common.__second.__sigchld.si_status
+#define si_utime   __si_fields.__si_common.__second.__sigchld.si_utime
+#define si_stime   __si_fields.__si_common.__second.__sigchld.si_stime
+#define si_value   __si_fields.__si_common.__second.si_value
+#define si_addr    __si_fields.__sigfault.si_addr
+#define si_addr_lsb __si_fields.__sigfault.si_addr_lsb
+#define si_lower   __si_fields.__sigfault.__first.__addr_bnd.si_lower
+#define si_upper   __si_fields.__sigfault.__first.__addr_bnd.si_upper
+#define si_pkey    __si_fields.__sigfault.__first.si_pkey
+#define si_band    __si_fields.__sigpoll.si_band
+#define si_fd      __si_fields.__sigpoll.si_fd
+#define si_timerid __si_fields.__si_common.__first.__timer.si_timerid
+#define si_overrun __si_fields.__si_common.__first.__timer.si_overrun
+#define si_ptr     si_value.sival_ptr
+#define si_int     si_value.sival_int
+#define si_call_addr __si_fields.__sigsys.si_call_addr
+#define si_syscall __si_fields.__sigsys.si_syscall
+#define si_arch    __si_fields.__sigsys.si_arch
+
+struct sigaction {
+	union {
+		void (*sa_handler)(int);
+		void (*sa_sigaction)(int, siginfo_t *, void *);
+	} __sa_handler;
+	sigset_t sa_mask;
+	int sa_flags;
+	void (*sa_restorer)(void);
+};
+#define sa_handler   __sa_handler.sa_handler
+#define sa_sigaction __sa_handler.sa_sigaction
+
+struct sigevent {
+	union sigval sigev_value;
+	int sigev_signo;
+	int sigev_notify;
+	void (*sigev_notify_function)(union sigval);
+	pthread_attr_t *sigev_notify_attributes;
+	char __pad[56-3*sizeof(long)];
+};
+
+#define SIGEV_SIGNAL 0
+#define SIGEV_NONE 1
+#define SIGEV_THREAD 2
+
+#ifdef __wasilibc_unmodified_upstream /* WASI has no realtime signals */
+int __libc_current_sigrtmin(void);
+int __libc_current_sigrtmax(void);
+
+#define SIGRTMIN  (__libc_current_sigrtmin())
+#define SIGRTMAX  (__libc_current_sigrtmax())
+#endif
+
+#ifdef __wasilibc_unmodified_upstream /* WASI has no signals */
+int kill(pid_t, int);
+
+int sigemptyset(sigset_t *);
+int sigfillset(sigset_t *);
+int sigaddset(sigset_t *, int);
+int sigdelset(sigset_t *, int);
+int sigismember(const sigset_t *, int);
+
+int sigprocmask(int, const sigset_t *__restrict, sigset_t *__restrict);
+int sigsuspend(const sigset_t *);
+int sigaction(int, const struct sigaction *__restrict, struct sigaction *__restrict);
+int sigpending(sigset_t *);
+int sigwait(const sigset_t *__restrict, int *__restrict);
+int sigwaitinfo(const sigset_t *__restrict, siginfo_t *__restrict);
+int sigtimedwait(const sigset_t *__restrict, siginfo_t *__restrict, const struct timespec *__restrict);
+int sigqueue(pid_t, int, union sigval);
+#endif
+
+int pthread_sigmask(int, const sigset_t *__restrict, sigset_t *__restrict);
+int pthread_kill(pthread_t, int);
+
+#ifdef __wasilibc_unmodified_upstream /* WASI has no signals */
+void psiginfo(const siginfo_t *, const char *);
+void psignal(int, const char *);
+#endif
+
+#endif
+
+#ifdef __wasilibc_unmodified_upstream /* WASI has no signals */
+#if defined(_XOPEN_SOURCE) || defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
+int killpg(pid_t, int);
+int sigaltstack(const stack_t *__restrict, stack_t *__restrict);
+int sighold(int);
+int sigignore(int);
+int siginterrupt(int, int);
+int sigpause(int);
+int sigrelse(int);
+void (*sigset(int, void (*)(int)))(int);
+#define TRAP_BRKPT 1
+#define TRAP_TRACE 2
+#define TRAP_BRANCH 3
+#define TRAP_HWBKPT 4
+#define TRAP_UNK 5
+#define POLL_IN 1
+#define POLL_OUT 2
+#define POLL_MSG 3
+#define POLL_ERR 4
+#define POLL_PRI 5
+#define POLL_HUP 6
+#define SS_ONSTACK    1
+#define SS_DISABLE    2
+#define SS_AUTODISARM (1U << 31)
+#define SS_FLAG_BITS SS_AUTODISARM
+#endif
+#endif
+
+#ifdef __wasilibc_unmodified_upstream /* WASI has no signals */
+#if defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
+#define NSIG _NSIG
+typedef void (*sig_t)(int);
+#endif
+
+#ifdef _GNU_SOURCE
+typedef void (*sighandler_t)(int);
+void (*bsd_signal(int, void (*)(int)))(int);
+int sigisemptyset(const sigset_t *);
+int sigorset (sigset_t *, const sigset_t *, const sigset_t *);
+int sigandset(sigset_t *, const sigset_t *, const sigset_t *);
+
+#define SA_NOMASK SA_NODEFER
+#define SA_ONESHOT SA_RESETHAND
+#endif
+
+#define SIG_ERR  ((void (*)(int))-1)
+#define SIG_DFL  ((void (*)(int)) 0)
+#define SIG_IGN  ((void (*)(int)) 1)
+#endif
+
+typedef int sig_atomic_t;
+
+#ifdef __wasilibc_unmodified_upstream /* WASI has no signals */
+void (*signal(int, void (*)(int)))(int);
+#endif
+int raise(int);
+
+#if _REDIR_TIME64
+#if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
+ || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
+ || defined(_BSD_SOURCE)
+__REDIR(sigtimedwait, __sigtimedwait_time64);
+#endif
+#endif
+
+#ifdef __cplusplus
 }
-#else /* !__i386__ && !__x86_64__ */
-#define __sigbits(signo)	(1 << ((signo) - 1))
-#endif /* __i386__ || __x86_64__ */
+#endif
 
-#define	sigaddset(set, signo)	(*(set) |= __sigbits(signo), 0)
-#define	sigdelset(set, signo)	(*(set) &= ~__sigbits(signo), 0)
-#define	sigismember(set, signo)	((*(set) & __sigbits(signo)) != 0)
-#define	sigemptyset(set)	(*(set) = 0, 0)
-#define	sigfillset(set)		(*(set) = ~(sigset_t)0, 0)
-#endif	/* !_ANSI_SOURCE */
-
-#endif	/* !_USER_SIGNAL_H */
+#endif

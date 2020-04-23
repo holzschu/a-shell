@@ -1,31 +1,39 @@
-/*
- * Copyright (c) 2000 Apple Computer, Inc. All rights reserved.
- *
- * @APPLE_LICENSE_HEADER_START@
- * 
- * This file contains Original Code and/or Modifications of Original Code
- * as defined in and that are subject to the Apple Public Source License
- * Version 2.0 (the 'License'). You may not use this file except in
- * compliance with the License. Please obtain a copy of the License at
- * http://www.opensource.apple.com/apsl/ and read it before using this
- * file.
- * 
- * The Original Code and all software distributed under the License are
- * distributed on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER
- * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
- * INCLUDING WITHOUT LIMITATION, ANY WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT.
- * Please see the License for the specific language governing rights and
- * limitations under the License.
- * 
- * @APPLE_LICENSE_HEADER_END@
- */
-#ifndef _BSD_SEMAPHORE_H
-#define _BSD_SEMAPHORE_H
+#ifndef _SEMAPHORE_H
+#define _SEMAPHORE_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include <sys/types.h>
-#include <sys/fcntl.h>
+#include <features.h>
 
-#include <sys/semaphore.h>
+#define __NEED_time_t
+#define __NEED_struct_timespec
+#include <bits/alltypes.h>
 
-#endif /* _BSD_SEMAPHORE_H */
+#include <fcntl.h>
+
+#define SEM_FAILED ((sem_t *)0)
+
+typedef struct {
+	volatile int __val[4*sizeof(long)/sizeof(int)];
+} sem_t;
+
+int    sem_close(sem_t *);
+int    sem_destroy(sem_t *);
+int    sem_getvalue(sem_t *__restrict, int *__restrict);
+int    sem_init(sem_t *, int, unsigned);
+sem_t *sem_open(const char *, int, ...);
+int    sem_post(sem_t *);
+int    sem_timedwait(sem_t *__restrict, const struct timespec *__restrict);
+int    sem_trywait(sem_t *);
+int    sem_unlink(const char *);
+int    sem_wait(sem_t *);
+
+#if _REDIR_TIME64
+__REDIR(sem_timedwait, __sem_timedwait_time64);
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+#endif

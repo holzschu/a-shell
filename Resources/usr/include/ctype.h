@@ -1,75 +1,75 @@
-/*
- * Copyright (c) 2000, 2005, 2008 Apple Inc. All rights reserved.
- *
- * @APPLE_LICENSE_HEADER_START@
- * 
- * This file contains Original Code and/or Modifications of Original Code
- * as defined in and that are subject to the Apple Public Source License
- * Version 2.0 (the 'License'). You may not use this file except in
- * compliance with the License. Please obtain a copy of the License at
- * http://www.opensource.apple.com/apsl/ and read it before using this
- * file.
- * 
- * The Original Code and all software distributed under the License are
- * distributed on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER
- * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
- * INCLUDING WITHOUT LIMITATION, ANY WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT.
- * Please see the License for the specific language governing rights and
- * limitations under the License.
- * 
- * @APPLE_LICENSE_HEADER_END@
- */
-/*
- * Copyright (c) 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
- * (c) UNIX System Laboratories, Inc.
- * All or some portions of this file are derived from material licensed
- * to the University of California by American Telephone and Telegraph
- * Co. or Unix System Laboratories, Inc. and are reproduced herein with
- * the permission of UNIX System Laboratories, Inc.
- *
- * This code is derived from software contributed to Berkeley by
- * Paul Borman at Krystal Technologies.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *	@(#)ctype.h	8.4 (Berkeley) 1/21/94
- */
+#ifndef	_CTYPE_H
+#define	_CTYPE_H
 
-#ifndef	_CTYPE_H_
-#define _CTYPE_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include <_ctype.h>
+#include <features.h>
 
-#ifdef _USE_EXTENDED_LOCALES_
-#include <xlocale/_ctype.h>
-#endif /* _USE_EXTENDED_LOCALES_ */
+int   isalnum(int);
+int   isalpha(int);
+int   isblank(int);
+int   iscntrl(int);
+int   isdigit(int);
+int   isgraph(int);
+int   islower(int);
+int   isprint(int);
+int   ispunct(int);
+int   isspace(int);
+int   isupper(int);
+int   isxdigit(int);
+int   tolower(int);
+int   toupper(int);
 
-#endif /* !_CTYPE_H_ */
+#ifndef __cplusplus
+static __inline int __isspace(int _c)
+{
+	return _c == ' ' || (unsigned)_c-'\t' < 5;
+}
+
+#define isalpha(a) (0 ? isalpha(a) : (((unsigned)(a)|32)-'a') < 26)
+#define isdigit(a) (0 ? isdigit(a) : ((unsigned)(a)-'0') < 10)
+#define islower(a) (0 ? islower(a) : ((unsigned)(a)-'a') < 26)
+#define isupper(a) (0 ? isupper(a) : ((unsigned)(a)-'A') < 26)
+#define isprint(a) (0 ? isprint(a) : ((unsigned)(a)-0x20) < 0x5f)
+#define isgraph(a) (0 ? isgraph(a) : ((unsigned)(a)-0x21) < 0x5e)
+#define isspace(a) __isspace(a)
+#endif
+
+
+#if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
+ || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
+ || defined(_BSD_SOURCE)
+
+#define __NEED_locale_t
+#include <bits/alltypes.h>
+
+int   isalnum_l(int, locale_t);
+int   isalpha_l(int, locale_t);
+int   isblank_l(int, locale_t);
+int   iscntrl_l(int, locale_t);
+int   isdigit_l(int, locale_t);
+int   isgraph_l(int, locale_t);
+int   islower_l(int, locale_t);
+int   isprint_l(int, locale_t);
+int   ispunct_l(int, locale_t);
+int   isspace_l(int, locale_t);
+int   isupper_l(int, locale_t);
+int   isxdigit_l(int, locale_t);
+int   tolower_l(int, locale_t);
+int   toupper_l(int, locale_t);
+
+int   isascii(int);
+int   toascii(int);
+#define _tolower(a) ((a)|0x20)
+#define _toupper(a) ((a)&0x5f)
+#define isascii(a) (0 ? isascii(a) : (unsigned)(a) < 128)
+
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

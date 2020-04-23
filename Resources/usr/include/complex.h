@@ -1,167 +1,135 @@
-/*
- * Copyright (c) 2002-2013 Apple Inc. All rights reserved.
- *
- * @APPLE_LICENSE_HEADER_START@
- * 
- * The contents of this file constitute Original Code as defined in and
- * are subject to the Apple Public Source License Version 1.1 (the
- * "License").  You may not use this file except in compliance with the
- * License.  Please obtain a copy of the License at
- * http://www.apple.com/publicsource and read it before using this file.
- * 
- * This Original Code and all software distributed under the License are
- * distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, EITHER
- * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
- * INCLUDING WITHOUT LIMITATION, ANY WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT.  Please see the
- * License for the specific language governing rights and limitations
- * under the License.
- * 
- * @APPLE_LICENSE_HEADER_END@
- */
+#ifndef _COMPLEX_H
+#define _COMPLEX_H
 
-/******************************************************************************
- *                                                                            *
- *     File:  complex.h                                                       *
- *                                                                            *
- *     Contains: prototypes and macros germane to C99 complex math.           *
- *                                                                            *
- ******************************************************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#ifndef __COMPLEX_H__
-#define __COMPLEX_H__
-
-#include <sys/cdefs.h>
-
-#undef complex
 #define complex _Complex
-#undef _Complex_I
-/*  Constant expression of type const float _Complex                          */
-#define _Complex_I (__extension__ 1.0iF)
-#undef I
+#ifdef __GNUC__
+#define _Complex_I (__extension__ (0.0f+1.0fi))
+#else
+#define _Complex_I (0.0f+1.0fi)
+#endif
 #define I _Complex_I
 
-#if (__STDC_VERSION__ > 199901L || __DARWIN_C_LEVEL >= __DARWIN_C_FULL) \
-    && defined __clang__
+double complex cacos(double complex);
+float complex cacosf(float complex);
+long double complex cacosl(long double complex);
 
-/*  Complex initializer macros.  These are a C11 feature, but are also provided
-    as an extension in C99 so long as strict POSIX conformance is not
-    requested.  They are available only when building with the llvm-clang
-    compiler, as there is no way to support them with the gcc-4.2 frontend.
-    These may be used for static initialization of complex values, like so:
- 
-        static const float complex someVariable = CMPLXF(1.0, INFINITY);
- 
-    they may, of course, be used outside of static contexts as well.          */
+double complex casin(double complex);
+float complex casinf(float complex);
+long double complex casinl(long double complex);
 
-#define  CMPLX(__real,__imag) \
-    _Pragma("clang diagnostic push") \
-    _Pragma("clang diagnostic ignored \"-Wcomplex-component-init\"") \
-    (double _Complex){(__real),(__imag)} \
-    _Pragma("clang diagnostic pop")
+double complex catan(double complex);
+float complex catanf(float complex);
+long double complex catanl(long double complex);
 
-#define CMPLXF(__real,__imag) \
-    _Pragma("clang diagnostic push") \
-    _Pragma("clang diagnostic ignored \"-Wcomplex-component-init\"") \
-    (float _Complex){(__real),(__imag)} \
-    _Pragma("clang diagnostic pop")
+double complex ccos(double complex);
+float complex ccosf(float complex);
+long double complex ccosl(long double complex);
 
-#define CMPLXL(__real,__imag) \
-    _Pragma("clang diagnostic push") \
-    _Pragma("clang diagnostic ignored \"-Wcomplex-component-init\"") \
-    (long double _Complex){(__real),(__imag)} \
-    _Pragma("clang diagnostic pop")
+double complex csin(double complex);
+float complex csinf(float complex);
+long double complex csinl(long double complex);
 
-#endif /* End C11 features.                                                   */
+double complex ctan(double complex);
+float complex ctanf(float complex);
+long double complex ctanl(long double complex);
 
-__BEGIN_DECLS
-extern float complex cacosf(float complex);
-extern double complex cacos(double complex);
-extern long double complex cacosl(long double complex);
+double complex cacosh(double complex);
+float complex cacoshf(float complex);
+long double complex cacoshl(long double complex);
 
-extern float complex casinf(float complex);
-extern double complex casin(double complex);
-extern long double complex casinl(long double complex);
+double complex casinh(double complex);
+float complex casinhf(float complex);
+long double complex casinhl(long double complex);
 
-extern float complex catanf(float complex);
-extern double complex catan(double complex);
-extern long double complex catanl(long double complex);
+double complex catanh(double complex);
+float complex catanhf(float complex);
+long double complex catanhl(long double complex);
 
-extern float complex ccosf(float complex);
-extern double complex ccos(double complex);
-extern long double complex ccosl(long double complex);
+double complex ccosh(double complex);
+float complex ccoshf(float complex);
+long double complex ccoshl(long double complex);
 
-extern float complex csinf(float complex);
-extern double complex csin(double complex);
-extern long double complex csinl(long double complex);
+double complex csinh(double complex);
+float complex csinhf(float complex);
+long double complex csinhl(long double complex);
 
-extern float complex ctanf(float complex);
-extern double complex ctan(double complex);
-extern long double complex ctanl(long double complex);
+double complex ctanh(double complex);
+float complex ctanhf(float complex);
+long double complex ctanhl(long double complex);
 
-extern float complex cacoshf(float complex);
-extern double complex cacosh(double complex);
-extern long double complex cacoshl(long double complex);
+double complex cexp(double complex);
+float complex cexpf(float complex);
+long double complex cexpl(long double complex);
 
-extern float complex casinhf(float complex);
-extern double complex casinh(double complex);
-extern long double complex casinhl(long double complex);
+double complex clog(double complex);
+float complex clogf(float complex);
+long double complex clogl(long double complex);
 
-extern float complex catanhf(float complex);
-extern double complex catanh(double complex);
-extern long double complex catanhl(long double complex);
+double cabs(double complex);
+float cabsf(float complex);
+long double cabsl(long double complex);
 
-extern float complex ccoshf(float complex);
-extern double complex ccosh(double complex);
-extern long double complex ccoshl(long double complex);
+double complex cpow(double complex, double complex);
+float complex cpowf(float complex, float complex);
+long double complex cpowl(long double complex, long double complex);
 
-extern float complex csinhf(float complex);
-extern double complex csinh(double complex);
-extern long double complex csinhl(long double complex);
+double complex csqrt(double complex);
+float complex csqrtf(float complex);
+long double complex csqrtl(long double complex);
 
-extern float complex ctanhf(float complex);
-extern double complex ctanh(double complex);
-extern long double complex ctanhl(long double complex);
+double carg(double complex);
+float cargf(float complex);
+long double cargl(long double complex);
 
-extern float complex cexpf(float complex);
-extern double complex cexp(double complex);
-extern long double complex cexpl(long double complex);
+double cimag(double complex);
+float cimagf(float complex);
+long double cimagl(long double complex);
 
-extern float complex clogf(float complex);
-extern double complex clog(double complex);
-extern long double complex clogl(long double complex);
+double complex conj(double complex);
+float complex conjf(float complex);
+long double complex conjl(long double complex);
 
-extern float cabsf(float complex);
-extern double cabs(double complex);
-extern long double cabsl(long double complex);
+double complex cproj(double complex);
+float complex cprojf(float complex);
+long double complex cprojl(long double complex);
 
-extern float complex cpowf(float complex, float complex);
-extern double complex cpow(double complex, double complex);
-extern long double complex cpowl(long double complex, long double complex);
+double creal(double complex);
+float crealf(float complex);
+long double creall(long double complex);
 
-extern float complex csqrtf(float complex);
-extern double complex csqrt(double complex);
-extern long double complex csqrtl(long double complex);
+#ifdef __wasilibc_unmodified_upstream /* Use the compiler's real/imag operators rather than union type punning */
+#ifndef __cplusplus
+#define __CIMAG(x, t) \
+	(+(union { _Complex t __z; t __xy[2]; }){(_Complex t)(x)}.__xy[1])
 
-extern float cargf(float complex);
-extern double carg(double complex);
-extern long double cargl(long double complex);
+#define creal(x) ((double)(x))
+#define crealf(x) ((float)(x))
+#define creall(x) ((long double)(x))
 
-extern float cimagf(float complex);
-extern double cimag(double complex);
-extern long double cimagl(long double complex);
+#define cimag(x) __CIMAG(x, double)
+#define cimagf(x) __CIMAG(x, float)
+#define cimagl(x) __CIMAG(x, long double)
+#endif
+#endif
 
-extern float complex conjf(float complex);
-extern double complex conj(double complex);
-extern long double complex conjl(long double complex);
+#if __STDC_VERSION__ >= 201112L
+#if defined(_Imaginary_I)
+#define __CMPLX(x, y, t) ((t)(x) + _Imaginary_I*(t)(y))
+#elif defined(__clang__)
+#define __CMPLX(x, y, t) (+(_Complex t){ (t)(x), (t)(y) })
+#else
+#define __CMPLX(x, y, t) (__builtin_complex((t)(x), (t)(y)))
+#endif
+#define CMPLX(x, y) __CMPLX(x, y, double)
+#define CMPLXF(x, y) __CMPLX(x, y, float)
+#define CMPLXL(x, y) __CMPLX(x, y, long double)
+#endif
 
-extern float complex cprojf(float complex);
-extern double complex cproj(double complex);
-extern long double complex cprojl(long double complex);
-
-extern float crealf(float complex);
-extern double creal(double complex);
-extern long double creall(long double complex);
-__END_DECLS
-
-#endif /* __COMPLEX_H__ */
+#ifdef __cplusplus
+}
+#endif
+#endif

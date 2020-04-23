@@ -1,10 +1,9 @@
 // -*- C++ -*-
 //===-------------------------- codecvt -----------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -86,7 +85,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf8(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<wchar_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -121,7 +120,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf8(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<char16_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -156,7 +155,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf8(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<char32_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -186,11 +185,11 @@ class _LIBCPP_TEMPLATE_VIS codecvt_utf8
     : public __codecvt_utf8<_Elem>
 {
 public:
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit codecvt_utf8(size_t __refs = 0)
         : __codecvt_utf8<_Elem>(__refs, _Maxcode, _Mode) {}
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     ~codecvt_utf8() {}
 };
 
@@ -209,7 +208,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf16(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<wchar_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -244,7 +243,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf16(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<wchar_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -279,7 +278,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf16(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<char16_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -314,7 +313,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf16(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<char16_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -349,7 +348,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf16(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<char32_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -384,7 +383,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf16(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<char32_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -414,11 +413,11 @@ class _LIBCPP_TEMPLATE_VIS codecvt_utf16
     : public __codecvt_utf16<_Elem, _Mode & little_endian>
 {
 public:
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit codecvt_utf16(size_t __refs = 0)
         : __codecvt_utf16<_Elem, _Mode & little_endian>(__refs, _Maxcode, _Mode) {}
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     ~codecvt_utf16() {}
 };
 
@@ -437,7 +436,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf8_utf16(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<wchar_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -472,7 +471,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf8_utf16(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<char32_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -507,7 +506,7 @@ public:
     typedef char      extern_type;
     typedef mbstate_t state_type;
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit __codecvt_utf8_utf16(size_t __refs, unsigned long _Maxcode,
                             codecvt_mode _Mode)
         : codecvt<char16_t, char, mbstate_t>(__refs), _Maxcode_(_Maxcode),
@@ -537,11 +536,11 @@ class _LIBCPP_TEMPLATE_VIS codecvt_utf8_utf16
     : public __codecvt_utf8_utf16<_Elem>
 {
 public:
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     explicit codecvt_utf8_utf16(size_t __refs = 0)
         : __codecvt_utf8_utf16<_Elem>(__refs, _Maxcode, _Mode) {}
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_INLINE_VISIBILITY
     ~codecvt_utf8_utf16() {}
 };
 

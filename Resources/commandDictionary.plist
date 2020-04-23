@@ -184,6 +184,13 @@
 		<string>abdlmruv</string>
 		<string>no</string>
 	</array>
+	<key>jsc</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>jsc</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>link</key>
 	<array>
 		<string>files.framework/files</string>
@@ -600,6 +607,20 @@
 	<key>ld</key>
 	<array>
 		<string>lld.framework/lld</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>ar</key>
+	<array>
+		<string>ar.framework/ar</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>ranlib</key>
+	<array>
+		<string>ar.framework/ar</string>
 		<string>main</string>
 		<string></string>
 		<string>file</string>

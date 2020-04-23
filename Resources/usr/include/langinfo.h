@@ -1,120 +1,98 @@
-/*-
- * Copyright (c) 2001 Alexey Zelkin <phantom@FreeBSD.org>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- * $FreeBSD: /repoman/r/ncvs/src/include/langinfo.h,v 1.6 2002/09/18 05:54:25 mike Exp $
- */
+#ifndef _LANGINFO_H
+#define _LANGINFO_H
 
-#ifndef _LANGINFO_H_
-#define	_LANGINFO_H_
-
-#include <_types.h>
-#include <_types/_nl_item.h>
-
-#define	CODESET		0	/* codeset name */
-#define	D_T_FMT		1	/* string for formatting date and time */
-#define	D_FMT		2	/* date format string */
-#define	T_FMT		3	/* time format string */
-#define	T_FMT_AMPM	4	/* a.m. or p.m. time formatting string */
-#define	AM_STR		5	/* Ante Meridian affix */
-#define	PM_STR		6	/* Post Meridian affix */
-
-/* week day names */
-#define	DAY_1		7
-#define	DAY_2		8
-#define	DAY_3		9
-#define	DAY_4		10
-#define	DAY_5		11
-#define	DAY_6		12
-#define	DAY_7		13
-
-/* abbreviated week day names */
-#define	ABDAY_1		14
-#define	ABDAY_2		15
-#define	ABDAY_3		16
-#define	ABDAY_4		17
-#define	ABDAY_5		18
-#define	ABDAY_6		19
-#define	ABDAY_7		20
-
-/* month names */
-#define	MON_1		21
-#define	MON_2		22
-#define	MON_3		23
-#define	MON_4		24
-#define	MON_5		25
-#define	MON_6		26
-#define	MON_7		27
-#define	MON_8		28
-#define	MON_9		29
-#define	MON_10		30
-#define	MON_11		31
-#define	MON_12		32
-
-/* abbreviated month names */
-#define	ABMON_1		33
-#define	ABMON_2		34
-#define	ABMON_3		35
-#define	ABMON_4		36
-#define	ABMON_5		37
-#define	ABMON_6		38
-#define	ABMON_7		39
-#define	ABMON_8		40
-#define	ABMON_9		41
-#define	ABMON_10	42
-#define	ABMON_11	43
-#define	ABMON_12	44
-
-#define	ERA		45	/* era description segments */
-#define	ERA_D_FMT	46	/* era date format string */
-#define	ERA_D_T_FMT	47	/* era date and time format string */
-#define	ERA_T_FMT	48	/* era time format string */
-#define	ALT_DIGITS	49	/* alternative symbols for digits */
-
-#define	RADIXCHAR	50	/* radix char */
-#define	THOUSEP		51	/* separator for thousands */
-
-#define	YESEXPR		52	/* affirmative response expression */
-#define	NOEXPR		53	/* negative response expression */
-
-#if (__DARWIN_C_LEVEL > __DARWIN_C_ANSI && __DARWIN_C_LEVEL < 200112L) || __DARWIN_C_LEVEL == __DARWIN_C_FULL
-#define	YESSTR		54	/* affirmative response for yes/no queries */
-#define	NOSTR		55	/* negative response for yes/no queries */
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#define	CRNCYSTR	56	/* currency symbol */
+#include <features.h>
+#include <nl_types.h>
 
-#if !defined(_ANSI_SOURCE) && (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
-#define	D_MD_ORDER	57	/* month/day order (local extension) */
+#define __NEED_locale_t
+
+#include <bits/alltypes.h>
+
+#define ABDAY_1 0x20000
+#define ABDAY_2 0x20001
+#define ABDAY_3 0x20002
+#define ABDAY_4 0x20003
+#define ABDAY_5 0x20004
+#define ABDAY_6 0x20005
+#define ABDAY_7 0x20006
+
+#define DAY_1 0x20007
+#define DAY_2 0x20008
+#define DAY_3 0x20009
+#define DAY_4 0x2000A
+#define DAY_5 0x2000B
+#define DAY_6 0x2000C
+#define DAY_7 0x2000D
+
+#define ABMON_1 0x2000E
+#define ABMON_2 0x2000F
+#define ABMON_3 0x20010
+#define ABMON_4 0x20011
+#define ABMON_5 0x20012
+#define ABMON_6 0x20013
+#define ABMON_7 0x20014
+#define ABMON_8 0x20015
+#define ABMON_9 0x20016
+#define ABMON_10 0x20017
+#define ABMON_11 0x20018
+#define ABMON_12 0x20019
+
+#define MON_1 0x2001A
+#define MON_2 0x2001B
+#define MON_3 0x2001C
+#define MON_4 0x2001D
+#define MON_5 0x2001E
+#define MON_6 0x2001F
+#define MON_7 0x20020
+#define MON_8 0x20021
+#define MON_9 0x20022
+#define MON_10 0x20023
+#define MON_11 0x20024
+#define MON_12 0x20025
+
+#define AM_STR 0x20026
+#define PM_STR 0x20027
+
+#define D_T_FMT 0x20028
+#define D_FMT 0x20029
+#define T_FMT 0x2002A
+#define T_FMT_AMPM 0x2002B
+
+#define ERA 0x2002C
+#define ERA_D_FMT 0x2002E
+#define ALT_DIGITS 0x2002F
+#define ERA_D_T_FMT 0x20030
+#define ERA_T_FMT 0x20031
+
+#define CODESET 14
+
+#define CRNCYSTR 0x4000F
+
+#define RADIXCHAR 0x10000
+#define THOUSEP 0x10001
+#define YESEXPR 0x50000
+#define NOEXPR 0x50001
+
+#define _NL_LOCALE_NAME(cat) (((cat)<<16) | 0xffff)
+
+#if defined(_GNU_SOURCE)
+#define NL_LOCALE_NAME(cat) _NL_LOCALE_NAME(cat)
 #endif
 
-__BEGIN_DECLS
-char	*nl_langinfo(nl_item);
-__END_DECLS
+#if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+#define YESSTR 0x50002
+#define NOSTR 0x50003
+#endif
 
-#ifdef _USE_EXTENDED_LOCALES_
-#include <xlocale/_langinfo.h>
-#endif /* _USE_EXTENDED_LOCALES_ */
+char *nl_langinfo(nl_item);
+char *nl_langinfo_l(nl_item, locale_t);
 
-#endif /* !_LANGINFO_H_ */
+#ifdef __cplusplus
+}
+#endif
+
+#endif
