@@ -51,8 +51,7 @@ public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
     for scene in UIApplication.shared.connectedScenes {
         if (scene.session.persistentIdentifier == currentSessionIdentifier) {
             let delegate: SceneDelegate = scene.delegate as! SceneDelegate
-            delegate.executeWebAssembly(arguments: args)
-            return 0
+            return delegate.executeWebAssembly(arguments: args)
         }
     }
     return 0

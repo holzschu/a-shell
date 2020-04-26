@@ -303,16 +303,34 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
-    func executeWebAssembly(arguments: [String]?) {
-        guard (arguments != nil) else { return }
-        guard (arguments!.count >= 2) else { return } // There must be at least one command
+    func executeWebAssembly(arguments: [String]?) -> Int32 {
+        guard (arguments != nil) else { return -1 }
+        guard (arguments!.count >= 2) else { return -1 } // There must be at least one command
         // copy arguments:
         let command = arguments![1]
         var argumentString = "["
+        var fileNamesString = "["
+        var fileContentsString = "["
         for c in 1...arguments!.count-1 {
-            argumentString = argumentString + " \"" + arguments![c] + "\","
+            if let argument = arguments?[c] {
+                let sanitizedArgument = argument.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+                // TODO: check this
+                // replace quotes and backslashes in arguments:
+                argumentString = argumentString + " \"" +  sanitizedArgument + "\","
+                if (c > 1) {
+                    if FileManager().fileExists(atPath: argument) {
+                        if let buffer = NSData(contentsOf: URL(fileURLWithPath: argument)) {
+                            fileNamesString = fileNamesString + "\"" + sanitizedArgument + "\","
+                            fileContentsString = fileContentsString + "\"" + buffer.base64EncodedString() + "\","
+                        }
+                    }
+                }
+            }
         }
         argumentString = argumentString + "]"
+        fileNamesString = fileNamesString + "]"
+        print(fileNamesString)
+        fileContentsString = fileContentsString + "]"
         // read the entire stdin if it is not a tty:
         var stdin = ""
         if (ios_isatty(STDIN_FILENO) == 0) {
@@ -324,14 +342,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         // async functions don't work in WKWebView (so, no fetch, no WebAssembly.instantiateStreaming)
         // Instead, we load the file in swift and send the base64 version to JS
-        let fileName = command.hasPrefix("/") ? command : FileManager().currentDirectoryPath + "/" + command
+        let currentDirectory = FileManager().currentDirectoryPath
+        let fileName = command.hasPrefix("/") ? command : currentDirectory + "/" + command
         guard let buffer = NSData(contentsOf: URL(fileURLWithPath: fileName)) else {
             fputs("wasm: file \(command) not found\n", thread_stderr)
-            return
+            return -1
         }
         let base64string = buffer.base64EncodedString()
+        // TODO: here, add fileNamesString and fileContentsString
         let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", " + "\"" + stdin + "\")"
         var executionDone = false
+        var errorCode:Int32 = 0
         thread_stdout_copy = thread_stdout
         thread_stderr_copy = thread_stderr
         DispatchQueue.main.async {
@@ -355,13 +376,60 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         fputs(message + "\n", self.thread_stderr_copy)
                     }
                     fflush(self.thread_stderr_copy)
-                    print(error)
+                    // print(error)
                 }
                 if (result != nil) {
                     // executeWebAssembly sends back stdout and stderr as two Strings:
                     if let array = result! as? NSMutableArray {
-                        fputs(array[0] as! String, self.thread_stdout_copy);
-                        fputs(array[1] as! String, self.thread_stderr_copy);
+                        if let std_out = array[0] as? String {
+                            fputs(std_out, self.thread_stdout_copy);
+                        }
+                        if let std_err = array[1] as? String {
+                            fputs(std_err, self.thread_stderr_copy);
+                        }
+                        if let code = array[2] as? Int32 {
+                            errorCode = code
+                        }
+                        if let volume = array[3] as? NSDictionary {
+                            for file in volume {
+                                guard var name = file.key as? String else {
+                                    continue
+                                }
+                                if (name == "/dev/stdin") { continue }
+                                if (name == "/dev/stdout") { continue }
+                                if (name == "/dev/stderr") { continue }
+                                // Do not save temporary files:
+                                if (name.hasPrefix("/tmp/")) { continue }
+                                if (name.hasPrefix("tmp/")) { continue }
+                                let localFileData = volume[name]
+                                if (name.hasPrefix("/")) {
+                                    name = currentDirectory + name
+                                }
+                                do {
+                                    let fileUrl = URL(fileURLWithPath: name)
+                                    if let localDict = localFileData as? NSDictionary {
+                                        let maxCount = localDict.count
+                                        var data = Data.init()
+                                        for character in 0...maxCount-1 {
+                                            if let value = localDict["\(character)"] as? UInt8{
+                                                data.append(contentsOf: [value])
+                                            }
+                                        }
+                                        if (!FileManager().fileExists(atPath: name)) {
+                                            // Create the file:
+                                            try "".write(to: fileUrl, atomically: true, encoding: .utf8)
+                                        }
+                                        if let file = FileHandle(forWritingAtPath: name) {
+                                            file.write(data)
+                                            file.closeFile()
+                                        }
+                                    }
+                                }
+                                catch {
+                                    fputs("\(command): could not write to file \(name): \(error)", self.thread_stderr_copy)
+                                }
+                            }
+                        }
                     } else if let string = result! as? String {
                         fputs(string, self.thread_stdout_copy);
                     }
@@ -374,6 +442,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             fflush(thread_stdout)
             fflush(thread_stderr)
         }
+        return errorCode
     }
     
     func printJscUsage() {
@@ -1437,6 +1506,12 @@ extension SceneDelegate: WKUIDelegate {
     
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo,
                  completionHandler: @escaping (String?) -> Void) {
+        // communication with libc:
+        if (prompt.hasPrefix("libc:")) {
+            completionHandler("text")
+            return
+        }
+        
         let arguments = prompt.components(separatedBy: "\n")
         let title = arguments[0]
         var messageMinusTitle = prompt
@@ -1455,8 +1530,10 @@ extension SceneDelegate: WKUIDelegate {
         alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) in
             if let text = alertController.textFields?.first?.text {
                 completionHandler(text)
+                return
             } else {
                 completionHandler(defaultText)
+                return
             }
         }))
         
