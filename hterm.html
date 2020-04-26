@@ -62,9 +62,9 @@
             // These should load a wasm program: http://andrewsweeney.net/post/llvm-to-wasm/
             /* Array of bytes to base64 string decoding */
             // Modules for @wasmer:
-            // const WASI = require('@wasmer/wasi/lib').WASI;
-            // const browserBindings = require('@wasmer/wasi/lib/bindings/browser').default;
-            // const WasmFs = require('@wasmer/wasmfs').WasmFs;
+            const WASI = require('@wasmer/wasi/lib').WASI;
+            const browserBindings = require('@wasmer/wasi/lib/bindings/browser').default;
+            const WasmFs = require('@wasmer/wasmfs').WasmFs;
 
             function b64ToUint6 (nChr) {
             
@@ -102,17 +102,18 @@
             }
 
             function executeWebAssembly(bufferString, args, stdinBuffer) {
-				const WASI = require('@wasmer/wasi/lib').WASI;
-				const browserBindings = require('@wasmer/wasi/lib/bindings/browser').default;
-				const WasmFs = require('@wasmer/wasmfs').WasmFs;
-            	
             	// Input: base64 encoded binary wasm file
 				if (!('WebAssembly' in window)) {
 					window.webkit.messageHandlers.aShell.postMessage('WebAssembly not supported');
 					return;
 				}
+				// import here so console.log works. Move upward lated
+				const lowerI64Imports = require("@wasmer/wasm-transformer").lowerI64Imports
+
 				var arrayBuffer = base64DecToArr(bufferString); 
+				const loweredWasmBytes = lowerI64Imports(arrayBuffer);
 				var errorMessage = '';
+				var errorCode = 0; 
 				const wasmFs = new WasmFs(); // new file system, one for each command
 
 				// send standard input to /dev/stdin:
@@ -120,14 +121,11 @@
 					var stdinString = base64DecToArr(stdinBuffer);
 					wasmFs.fs.writeFileSync('/dev/stdin', stdinString);
 				}
-				
-				// TODO: actual file access / creation ? (tough one -- unclear if possible)
 				// TODO: link with other libraries/frameworks? impossible, I guess.
+			    // TODO: keyboard input (directly from onkeypress)
 				try {
 					let wasi = new WASI({
-						// without '.':'.': fails with insufficient permission
-						// *with* '.':'.' : never returns from fopen
-						// preopens: {'.': '.'},
+						preopens: {'.': '.'},
 						args: args,
 						env: {},
 						bindings: {
@@ -135,7 +133,7 @@
 							fs: wasmFs.fs
 						}
 					})
-					const module = new WebAssembly.Module(arrayBuffer);
+					const module = new WebAssembly.Module(loweredWasmBytes); // arrayBuffer
 					let instance = new WebAssembly.Instance(module, wasi.getImports(module));
 					wasi.start(instance);
 				}
@@ -143,14 +141,19 @@
 					// WASI returns an error even in some cases where things went well. 
 					// We find the type of the error, and return the appropriate error message
 					if (error.code === 'undefined') {
-						// A numeric error code (0, 1...) is not a real issue.
-						// TODO: send the return code back to Swift. 
+						errorCode = 1; 
 						errorMessage = '\nwasm: ' + error + '\n';
+					} else if (error.code != null) { 
+						// Numerical error code. Send the return code back to Swift.
+						errorCode = error.code;
+					} else {
+						errorCode = 1; 
 					}
 				}
 				let result = wasmFs.fs.readFileSync("/dev/stdout", "utf8"); 
 				let result_error = wasmFs.fs.readFileSync("/dev/stderr", "utf8")
-				return [result, result_error + errorMessage];
+				let volumeData = wasmFs.toJSON() // Sends the entire volume data back
+				return [result, result_error + errorMessage, errorCode, volumeData];
 			}
 
             // functions to deal with executeJavaScript: 
@@ -456,10 +459,10 @@
 						// Fully interactive commands: forward all keyboard input, let them deal with command history.
 					    // TODO: have a list of such interactive commands (array?) 
 						// jump can start vim 
-						// ssh, once connected to the other machine, is interactive
+						// ssh, once connected to the other machine, is interactive (but not ssh-keygen)
 						if (window.commandRunning.startsWith("vim") || 
 							window.commandRunning.startsWith("ipython") || 
-							window.commandRunning.startsWith("ssh") || 
+							(window.commandRunning.startsWith("ssh") && (!window.commandRunning.startsWith("ssh-keygen"))) || 
 							window.commandRunning.startsWith("jump")) {
 							// specific treatment for interactive commands: forward all keyboard input to them
 							// window.webkit.messageHandlers.aShell.postMessage('sending: ' + string); // for debugging
