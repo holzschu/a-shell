@@ -33,8 +33,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var persistentIdentifier: String? = nil
     var stdin_file: UnsafeMutablePointer<FILE>? = nil
     var stdout_file: UnsafeMutablePointer<FILE>? = nil
-    var thread_stdout_copy: UnsafeMutablePointer<FILE>? = nil // copy of thread_stdout, used when inside a sub-thread
-    var thread_stderr_copy: UnsafeMutablePointer<FILE>? = nil // copy of thread_stderr, used when inside a sub-thread
+    // copies of thread_std*, used when inside a sub-thread, for example executing webAssembly
+    var thread_stdin_copy: UnsafeMutablePointer<FILE>? = nil
+    var thread_stdout_copy: UnsafeMutablePointer<FILE>? = nil
+    var thread_stderr_copy: UnsafeMutablePointer<FILE>? = nil
     var keyboardTimer: Timer!
     private let commandQueue = DispatchQueue(label: "executeCommand", qos: .utility) // low priority, for executing commands
     // Buttons and toolbars:
@@ -350,9 +352,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         let base64string = buffer.base64EncodedString()
         // TODO: here, add fileNamesString and fileContentsString
-        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", " + "\"" + stdin + "\")"
+        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + stdin + "\", \"" + currentDirectory + "\")"
         var executionDone = false
         var errorCode:Int32 = 0
+        thread_stdin_copy = thread_stdin
         thread_stdout_copy = thread_stdout
         thread_stderr_copy = thread_stderr
         DispatchQueue.main.async {
@@ -382,10 +385,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // executeWebAssembly sends back stdout and stderr as two Strings:
                     if let array = result! as? NSMutableArray {
                         if let std_out = array[0] as? String {
-                            fputs(std_out, self.thread_stdout_copy);
+                           // fputs(std_out, self.thread_stdout_copy);
                         }
                         if let std_err = array[1] as? String {
-                            fputs(std_err, self.thread_stderr_copy);
+                           // fputs(std_err, self.thread_stderr_copy);
                         }
                         if let code = array[2] as? Int32 {
                             errorCode = code
@@ -405,7 +408,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                 if (name.hasPrefix("/")) {
                                     name = currentDirectory + name
                                 }
-                                do {
+                                /* do {
                                     let fileUrl = URL(fileURLWithPath: name)
                                     if let localDict = localFileData as? NSDictionary {
                                         let maxCount = localDict.count
@@ -427,7 +430,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                 }
                                 catch {
                                     fputs("\(command): could not write to file \(name): \(error)", self.thread_stderr_copy)
-                                }
+                                } */
                             }
                         }
                     } else if let string = result! as? String {
@@ -1504,16 +1507,84 @@ extension SceneDelegate: WKUIDelegate {
         rootVC?.present(alertController, animated: true, completion: nil)
     }
     
+    func fileDescriptor(input: String) -> Int32? {
+        guard let fd = Int32(input) else {
+            return nil
+        }
+        if (fd == 0) {
+            return fileno(self.thread_stdin_copy)
+        }
+        if (fd == 1) {
+            return fileno(self.thread_stdout_copy)
+        }
+        if (fd == 2) {
+            return fileno(self.thread_stderr_copy)
+        }
+        return fd
+    }
+    
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo,
                  completionHandler: @escaping (String?) -> Void) {
         // communication with libc:
-        if (prompt.hasPrefix("libc:")) {
-            completionHandler("text")
-            return
-        }
         
         let arguments = prompt.components(separatedBy: "\n")
         let title = arguments[0]
+        if (title == "libc") {
+            if (arguments[1] == "open") {
+                if (!FileManager().fileExists(atPath: arguments[2])) {
+                    // The file doesn't exist. First, we create it:
+                    let fileUrl = URL(fileURLWithPath: arguments[2])
+                    do {
+                        try "".write(to: fileUrl, atomically: true, encoding: .utf8)
+                    }
+                    catch {
+                        fputs("could not write to file \(arguments[2]): \(error)", self.thread_stderr_copy)
+                    }
+                }
+                let returnValue = open(arguments[2], Int32(arguments[3]) ?? 577)
+                if (returnValue == -1 ) {
+                    fputs("Could not open file \(arguments[2]): \(strerror(errno))", self.thread_stderr_copy)
+                }
+                completionHandler("\(returnValue)")
+                return
+            } else if (arguments[1] == "write") {
+                var returnValue = 0;
+                if let fd = fileDescriptor(input: arguments[2]) {
+                    // arguments[3] == "84,104,105,115,32,116,101,120,116,32,103,111,101,115,32,116,111,32,115,116,100,111,117,116,10"
+                    // arguments[4] == nb bytes
+                    let values = arguments[3].components(separatedBy:",")
+                    var data = Data.init()
+                    if let numValues = Int(arguments[4]) {
+                        if (numValues > 0) {
+                            for c in 0...numValues-1 {
+                                if let value = UInt8(values[c]) {
+                                    data.append(contentsOf: [value])
+                                }
+                            }
+                            // let returnValue = write(fd, data, numValues)
+                            let file = FileHandle(fileDescriptor: fd)
+                            file.write(data)
+                            returnValue = numValues
+                        }
+                    }
+                }
+                completionHandler("\(returnValue)")
+                return
+            } else if (arguments[1] == "stat") {
+                if let fd = fileDescriptor(input: arguments[2]) {
+                    let buf = stat.init()
+                    var pbuf = UnsafeMutablePointer<stat>.allocate(capacity: 1)
+                    pbuf.initialize(to: buf)
+                    let returnValue = fstat(fd, pbuf)
+                    if (returnValue == 0) { completionHandler("\(pbuf.pointee)") }
+                    else { completionHandler("\(strerror(errno))")}
+                    return
+                }
+                
+            }
+            completionHandler("defaulttext")
+            return
+        }
         var messageMinusTitle = prompt
         messageMinusTitle.removeFirst(title.count)
 
