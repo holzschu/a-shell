@@ -1003,28 +1003,21 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
 
-            let didBecomeKey = NotificationCenter.default
+            NotificationCenter.default
                 .publisher(for: UIWindow.didBecomeKeyNotification, object: window)
-            let didResignKey = NotificationCenter.default
-                .publisher(for: UIWindow.didResignKeyNotification, object: window)
-            Publishers.Merge(didBecomeKey, didResignKey)
                 .handleEvents(receiveOutput: { notification in
                     NSLog("\(notification.name.rawValue): \(session.persistentIdentifier).")
                 })
-                .sink { _ in
-                    // TODO: When two windows open side-by-side on launching the app,
-                    // the left window's didResignKeyNotification event is earlier than loading window.term_,
-                    // so it cannot focus out the cursor.
-                    let command = "window.term_.onFocusChange_(\(window.isKeyWindow));"
-                    self.webView?.evaluateJavaScript(command) { result, error in
-                        if let error = error {
-                            print(error)
-                        }
-                        if let result = result {
-                            print(result)
-                        }
-                    }
-                }
+                .sink { _ in self.webView?.focus() }
+                .store(in: &cancellables)
+            NotificationCenter.default
+                .publisher(for: UIWindow.didResignKeyNotification, object: window)
+                .merge(with: NotificationCenter.default
+                    .publisher(for: UIResponder.keyboardWillHideNotification))
+                .handleEvents(receiveOutput: { notification in
+                    NSLog("\(notification.name.rawValue): \(session.persistentIdentifier).")
+                })
+                .sink { _ in self.webView?.blur() }
                 .store(in: &cancellables)
         }
     }

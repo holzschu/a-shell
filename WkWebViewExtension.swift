@@ -99,5 +99,29 @@ extension WKWebView {
             method_setImplementation(method, override);
         }
     }
-    
+
+    func focus() {
+        let command = "window.term_.onFocusChange_(true)"
+        self.evaluateJavaScript(command) { result, error in
+            if let error = error {
+                print(error)
+            }
+            if let result = result {
+                print(result)
+            }
+        }
+    }
+
+    func blur() {
+        let command = "window.term_.onFocusChange_(false)"
+        self.evaluateJavaScript(command) { result, error in
+            if let error = error {
+                print(error)
+            }
+            if let result = result {
+                print(result)
+            }
+        }
+    }
+
 }
