@@ -376,9 +376,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                   create: true)
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
+#if !targetEnvironment(simulator)
         if (!versionUpToDate || needToUpdateCFiles()) {
             createCSDK()
         }
+#endif
         // Link Python files from $APPDIR/Library to $HOME/Library/
         if (!versionUpToDate || needToUpdatePythonFiles()) {
             // start copying python files from App bundle to $HOME/Library

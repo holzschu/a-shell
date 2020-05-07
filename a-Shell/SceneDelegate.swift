@@ -106,10 +106,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     @objc private func tabAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + "\u{0009}" + "\");") { (result, error) in
             if error != nil {
-                print(error)
+                // print(error)
             }
             if (result != nil) {
-                print(result)
+                // print(result)
             }
         }
     }
@@ -121,20 +121,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration)
             webView?.evaluateJavaScript("window.controlOn = true;") { (result, error) in
                 if error != nil {
-                    print(error)
+                    // print(error)
                 }
                 if (result != nil) {
-                    print(result)
+                    // print(result)
                 }
             }
         } else {
             editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
             webView?.evaluateJavaScript("window.controlOn = false;") { (result, error) in
                 if error != nil {
-                    print(error)
+                    // print(error)
                 }
                 if (result != nil) {
-                    print(result)
+                    // print(result)
                 }
             }
         }
@@ -143,10 +143,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     @objc private func escapeAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "\");") { (result, error) in
             if error != nil {
-                print(error)
+                // print(error)
             }
             if (result != nil) {
-                print(result)
+                // print(result)
             }
         }
     }
@@ -154,10 +154,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     @objc private func upAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[A\");") { (result, error) in
             if error != nil {
-                print(error)
+                // print(error)
             }
             if (result != nil) {
-                print(result)
+                // print(result)
             }
         }
     }
@@ -165,10 +165,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     @objc private func downAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[B\");") { (result, error) in
             if error != nil {
-                print(error)
+                // print(error)
             }
             if (result != nil) {
-                print(result)
+                // print(result)
             }
             
         }
@@ -177,10 +177,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     @objc private func leftAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[D\");") { (result, error) in
             if error != nil {
-                print(error)
+                // print(error)
             }
             if (result != nil) {
-                print(result)
+                // print(result)
             }
             
         }
@@ -189,10 +189,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     @objc private func rightAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[C\");") { (result, error) in
             if error != nil {
-                print(error)
+                // print(error)
             }
             if (result != nil) {
-                print(result)
+                // print(result)
             }
             
         }
@@ -255,10 +255,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript("window.printPrompt(); window.updatePromptPosition(); window.commandRunning = ''; ") { (result, error) in
                 if error != nil {
-                    print(error)
+                    // print(error)
                 }
                 if (result != nil) {
-                    print(result)
+                    // print(result)
                 }
             }
         }
@@ -296,10 +296,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // position cursor on top line: ^[[1;1H 
             self.webView?.evaluateJavaScript("window.term_.io.print('" + self.escape + "[2J'); window.term_.io.print('" + self.escape + "[1;1H'); ") { (result, error) in
                 if error != nil {
-                    print(error)
+                    // print(error)
                 }
                 if (result != nil) {
-                    print(result)
+                    // print(result)
                 }
             }
         }
@@ -311,37 +311,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // copy arguments:
         let command = arguments![1]
         var argumentString = "["
-        var fileNamesString = "["
-        var fileContentsString = "["
         for c in 1...arguments!.count-1 {
             if let argument = arguments?[c] {
-                let sanitizedArgument = argument.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
-                // TODO: check this
                 // replace quotes and backslashes in arguments:
+                let sanitizedArgument = argument.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
                 argumentString = argumentString + " \"" +  sanitizedArgument + "\","
-                if (c > 1) {
-                    if FileManager().fileExists(atPath: argument) {
-                        if let buffer = NSData(contentsOf: URL(fileURLWithPath: argument)) {
-                            fileNamesString = fileNamesString + "\"" + sanitizedArgument + "\","
-                            fileContentsString = fileContentsString + "\"" + buffer.base64EncodedString() + "\","
-                        }
-                    }
-                }
             }
         }
         argumentString = argumentString + "]"
-        fileNamesString = fileNamesString + "]"
-        print(fileNamesString)
-        fileContentsString = fileContentsString + "]"
-        // read the entire stdin if it is not a tty:
-        var stdin = ""
-        if (ios_isatty(STDIN_FILENO) == 0) {
-            // something is writing to stdin; let's take it.
-            let input = FileHandle(fileDescriptor: fileno(thread_stdin))
-            let inputData = input.availableData
-            let stdinData = NSData(data: inputData)
-            stdin = stdinData.base64EncodedString()
-        }
         // async functions don't work in WKWebView (so, no fetch, no WebAssembly.instantiateStreaming)
         // Instead, we load the file in swift and send the base64 version to JS
         let currentDirectory = FileManager().currentDirectoryPath
@@ -352,13 +329,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         let base64string = buffer.base64EncodedString()
         // TODO: here, add fileNamesString and fileContentsString
-        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + stdin + "\", \"" + currentDirectory + "\")"
+        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + currentDirectory + "\", \(ios_isatty(STDIN_FILENO)))"
         var executionDone = false
         var errorCode:Int32 = 0
         thread_stdin_copy = thread_stdin
         thread_stdout_copy = thread_stdout
         thread_stderr_copy = thread_stderr
-        DispatchQueue.main.async {
+        DispatchQueue.main.sync {
             self.webView?.evaluateJavaScript(javascript) { (result, error) in
                 if error != nil {
                     let userInfo = (error! as NSError).userInfo
@@ -384,54 +361,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if (result != nil) {
                     // executeWebAssembly sends back stdout and stderr as two Strings:
                     if let array = result! as? NSMutableArray {
-                        if let std_out = array[0] as? String {
-                           // fputs(std_out, self.thread_stdout_copy);
-                        }
-                        if let std_err = array[1] as? String {
-                           // fputs(std_err, self.thread_stderr_copy);
-                        }
-                        if let code = array[2] as? Int32 {
+                        if let code = array[0] as? Int32 {
+                            // return value from program
                             errorCode = code
                         }
-                        if let volume = array[3] as? NSDictionary {
-                            for file in volume {
-                                guard var name = file.key as? String else {
-                                    continue
-                                }
-                                if (name == "/dev/stdin") { continue }
-                                if (name == "/dev/stdout") { continue }
-                                if (name == "/dev/stderr") { continue }
-                                // Do not save temporary files:
-                                if (name.hasPrefix("/tmp/")) { continue }
-                                if (name.hasPrefix("tmp/")) { continue }
-                                let localFileData = volume[name]
-                                if (name.hasPrefix("/")) {
-                                    name = currentDirectory + name
-                                }
-                                /* do {
-                                    let fileUrl = URL(fileURLWithPath: name)
-                                    if let localDict = localFileData as? NSDictionary {
-                                        let maxCount = localDict.count
-                                        var data = Data.init()
-                                        for character in 0...maxCount-1 {
-                                            if let value = localDict["\(character)"] as? UInt8{
-                                                data.append(contentsOf: [value])
-                                            }
-                                        }
-                                        if (!FileManager().fileExists(atPath: name)) {
-                                            // Create the file:
-                                            try "".write(to: fileUrl, atomically: true, encoding: .utf8)
-                                        }
-                                        if let file = FileHandle(forWritingAtPath: name) {
-                                            file.write(data)
-                                            file.closeFile()
-                                        }
-                                    }
-                                }
-                                catch {
-                                    fputs("\(command): could not write to file \(name): \(error)", self.thread_stderr_copy)
-                                } */
-                            }
+                        if let errorMessage = array[1] as? String {
+                            // webAssembly compile error:
+                           fputs(errorMessage, self.thread_stderr_copy);
                         }
                     } else if let string = result! as? String {
                         fputs(string, self.thread_stdout_copy);
@@ -442,8 +378,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         // force synchronization:
         while (!executionDone) {
-            fflush(thread_stdout)
-            fflush(thread_stderr)
+            if (thread_stdout != nil) { fflush(thread_stdout) }
+            if (thread_stderr != nil) { fflush(thread_stderr) }
         }
         return errorCode
     }
@@ -517,8 +453,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
           executionDone = true
         }
         while (!executionDone) {
-            fflush(thread_stdout)
-            fflush(thread_stderr)
+            if (thread_stdout != nil) { fflush(thread_stdout) }
+            if (thread_stderr != nil) { fflush(thread_stderr) }
         }
         thread_stdout_copy = nil
         thread_stderr_copy = nil
@@ -583,16 +519,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Only remap the keys if we are in a notebook, editing cell:
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + sender.input! + "\");") { (result, error) in
             if error != nil {
-                print(error)
+                // print(error)
             }
             if (result != nil) {
-                print(result)
+                // print(result)
             }
         }
     }
     
     func executeCommand(command: String) {
-        NSLog("executeCommand: \(command)")
+        // NSLog("executeCommand: \(command)")
         // We can't call exit through ios_system because it creates a new session
         // Also, we want to call it as soon as possible in case something went wrong
         if (command == "exit") {
@@ -770,10 +706,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 DispatchQueue.main.async {
                     self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
                         if error != nil {
-                            print(error)
+                            // print(error)
                         }
                         if (result != nil) {
-                            print(result)
+                            // print(result)
                         }
                     }
                 }
@@ -889,7 +825,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             webView?.navigationDelegate = self
             webView?.uiDelegate = self;
             // toolbar for everyone because I can't change the aspect of inputAssistantItem buttons
+            #if !targetEnvironment(simulator)
             webView?.addInputAccessoryView(toolbar: self.editorToolbar)
+            #endif
             // initialize command list for autocomplete:
             guard var commandsArray = commandsAsArray() as! [String]? else { return }
             // Also scan PATH for executable files:
@@ -957,10 +895,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     let openFileCommand = "window.commandRunning = 'vim';"
                     self.webView?.evaluateJavaScript(openFileCommand) { (result, error) in
                         if error != nil {
-                            print(error)
+                            // print(error)
                         }
                         if (result != nil) {
-                            print(result)
+                            // print(result)
                         }
                     }
                     closeAfterCommandTerminates = true
@@ -986,10 +924,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     let openFileCommand = "window.commandRunning = 'vim';"
                     self.webView?.evaluateJavaScript(openFileCommand) { (result, error) in
                         if error != nil {
-                            print(error)
+                            // print(error)
                         }
                         if (result != nil) {
-                            print(result)
+                            // print(result)
                         }
                     }
                     closeAfterCommandTerminates = true
@@ -1142,19 +1080,19 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         var command = "window.term_.setForegroundColor('" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.setBackgroundColor('" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.setCursorColor('" + UIColor.link.resolvedColor(with: traitCollection).toHexString() + "');"
         webView!.evaluateJavaScript(command) { (result, error) in
             if error != nil {
-                print(error)
+                // print(error)
             }
             if (result != nil) {
-                print(result)
+                // print(result)
             }
         }
         command = "window.term_.prefs_.set('foreground-color', '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'); window.term_.prefs_.set('background-color', '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'); "
         webView!.evaluateJavaScript(command) { (result, error) in
             if error != nil {
-                print(error)
+                // print(error)
             }
             if (result != nil) {
-                print(result)
+                // print(result)
             }
         }
         // Are we in light mode or dark mode?
@@ -1175,7 +1113,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Light mode
             setenv("COLORFGBG", "0;15", 1)
         }
+        #if !targetEnvironment(simulator)
         webView!.allowDisplayingKeyboardWithoutUserAction()
+        #endif
         ios_signal(SIGWINCH); // is this still required?
     }
 
@@ -1207,10 +1147,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                         if error != nil {
                             NSLog("Error in recreating history, line = \(javascriptCommand)")
-                            print(error)
+                            // print(error)
                         }
                         if (result != nil) {
-                            print(result)
+                            // print(result)
                         }
                     }
                 }
@@ -1274,10 +1214,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // NSLog("Calling command: \(restoreCommand)")
                     self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
                         if error != nil {
-                            print(error)
+                            // print(error)
                         }
                         if (result != nil) {
-                            print(result)
+                            // print(result)
                         }
                     }
                 }
@@ -1304,7 +1244,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                     completionHandler: { (printedContent: Any?, error: Error?) in
                                         if error != nil {
                                             // NSLog("Error in capturing terminal content.")
-                                            print(error)
+                                            // print(error)
                                         }
                                         if (printedContent != nil) {
                                             scene.session.stateRestorationActivity?.userInfo!["terminal"] = printedContent
@@ -1364,38 +1304,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // print(result)
                 }
             }
-        }
-        return
-        while (parsedString.count > 0) {
-            guard let firstReturn = parsedString.firstIndex(of: "\n") else {
-                let command = "window.term_.io.print(\"" + parsedString + "\");"
-                DispatchQueue.main.async {
-                    self.webView!.evaluateJavaScript(command) { (result, error) in
-                        if error != nil {
-                            // NSLog("Error in print; offending line = \(parsedString)")
-                            // print(error)
-                        }
-                        if (result != nil) {
-                            // print(result)
-                        }
-                    }
-                }
-                return
-            }
-            let firstLine = parsedString[..<firstReturn]
-            let command = "window.term_.io.println(\"" + firstLine + "\");"
-            DispatchQueue.main.async {
-                self.webView!.evaluateJavaScript(command) { (result, error) in
-                    if error != nil {
-                        // NSLog("Error in println; offending line = \(firstLine)")
-                        // print(error)
-                    }
-                    if (result != nil) {
-                        // print(result)
-                    }
-                }
-            }
-            parsedString.removeFirst(firstLine.count + 1)
         }
     }
     
@@ -1521,34 +1429,55 @@ extension SceneDelegate: WKUIDelegate {
         // communication with libc:
         
         let arguments = prompt.components(separatedBy: "\n")
+        // NSLog("prompt: \(prompt)")
         let title = arguments[0]
         if (title == "libc") {
             if (arguments[1] == "open") {
-                if (!FileManager().fileExists(atPath: arguments[2])) {
-                    // The file doesn't exist. First, we create it:
+                let rights = Int32(arguments[3]) ?? 577;
+                if (!FileManager().fileExists(atPath: arguments[2]) && (rights > 0)) {
+                    // The file doesn't exist *and* we will want to write into it. First, we create it:
                     let fileUrl = URL(fileURLWithPath: arguments[2])
                     do {
                         try "".write(to: fileUrl, atomically: true, encoding: .utf8)
                     }
                     catch {
-                        fputs("could not write to file \(arguments[2]): \(error)", self.thread_stderr_copy)
+                        // We will raise an error with open later.
                     }
                 }
-                let returnValue = open(arguments[2], Int32(arguments[3]) ?? 577)
-                if (returnValue == -1 ) {
-                    fputs("Could not open file \(arguments[2]): \(strerror(errno))", self.thread_stderr_copy)
+                let returnValue = open(arguments[2], rights)
+                if (returnValue == -1) {
+                    completionHandler("\(-errno)")
+                    errno = 0
+                } else {
+                    completionHandler("\(returnValue)")
                 }
-                completionHandler("\(returnValue)")
+                return
+            } else if (arguments[1] == "close") {
+                var returnValue:Int32 = -1
+                if let fd = fileDescriptor(input: arguments[2]) {
+                    returnValue = close(fd)
+                    if (returnValue == -1) {
+                        completionHandler("\(-errno)")
+                        errno = 0
+                    } else {
+                        completionHandler("\(returnValue)")
+                    }
+                    return
+                }
+                completionHandler("\(-EBADF)") // invalid file descriptor
                 return
             } else if (arguments[1] == "write") {
-                var returnValue = 0;
+                var returnValue = Int(-EBADF); // Number of bytes written
                 if let fd = fileDescriptor(input: arguments[2]) {
                     // arguments[3] == "84,104,105,115,32,116,101,120,116,32,103,111,101,115,32,116,111,32,115,116,100,111,117,116,10"
                     // arguments[4] == nb bytes
+                    // arguments[5] == offset
+                    returnValue = 0; // valid file descriptor, maybe nothing to write
                     let values = arguments[3].components(separatedBy:",")
                     var data = Data.init()
                     if let numValues = Int(arguments[4]) {
                         if (numValues > 0) {
+                            let offset = UInt64(arguments[5]) ?? 0
                             for c in 0...numValues-1 {
                                 if let value = UInt8(values[c]) {
                                     data.append(contentsOf: [value])
@@ -1556,6 +1485,16 @@ extension SceneDelegate: WKUIDelegate {
                             }
                             // let returnValue = write(fd, data, numValues)
                             let file = FileHandle(fileDescriptor: fd)
+                            if (offset > 0) {
+                                do {
+                                  try file.seek(toOffset: offset)
+                                }
+                                catch {
+                                    let errorCode = (error as NSError).code
+                                    completionHandler("\(-errorCode)")
+                                    return
+                                }
+                            }
                             file.write(data)
                             returnValue = numValues
                         }
@@ -1563,19 +1502,272 @@ extension SceneDelegate: WKUIDelegate {
                 }
                 completionHandler("\(returnValue)")
                 return
-            } else if (arguments[1] == "stat") {
+            } else if (arguments[1] == "read") {
+                var data = Data.init()
+                if let fd = fileDescriptor(input: arguments[2]) {
+                    // arguments[3] = length
+                    // arguments[4] = offset
+                    // let values = arguments[3].components(separatedBy:",")
+                    if let numValues = Int(arguments[3]) {
+                        let offset = UInt64(arguments[4]) ?? 0
+                        let file = FileHandle(fileDescriptor: fd)
+                        if (offset > 0) {
+                            do {
+                                try file.seek(toOffset: offset)
+                            }
+                            catch {
+                                let errorCode = (error as NSError).code
+                                completionHandler("\(-errorCode)")
+                            }
+                        }
+                        data = file.readData(ofLength: numValues)
+                    }
+                    completionHandler("\(data.base64EncodedString())")
+                } else {
+                    completionHandler("\(-EBADF)") // Invalid file descriptor
+                }
+                return
+            } else if (arguments[1] == "fstat") {
                 if let fd = fileDescriptor(input: arguments[2]) {
                     let buf = stat.init()
                     var pbuf = UnsafeMutablePointer<stat>.allocate(capacity: 1)
                     pbuf.initialize(to: buf)
                     let returnValue = fstat(fd, pbuf)
-                    if (returnValue == 0) { completionHandler("\(pbuf.pointee)") }
-                    else { completionHandler("\(strerror(errno))")}
+                    if (returnValue == 0) {
+                        completionHandler("\(pbuf.pointee)")
+                    } else {
+                        completionHandler("\(-errno)")
+                        errno = 0
+                    }
                     return
                 }
-                
+                completionHandler("\(-EBADF)") // Invalid file descriptor
+                return
+            } else if (arguments[1] == "stat") {
+                let buf = stat.init()
+                var pbuf = UnsafeMutablePointer<stat>.allocate(capacity: 1)
+                pbuf.initialize(to: buf)
+                let returnValue = stat(arguments[2], pbuf)
+                if (returnValue == 0) {
+                    completionHandler("\(pbuf.pointee)")
+                } else {
+                    completionHandler("\(-errno)")
+                    errno = 0
+                }
+                return
+            } else if (arguments[1] == "readdir") {
+                do {
+                    // Much more compact code than using readdir.
+                    let items = try FileManager().contentsOfDirectory(atPath: arguments[2])
+                    var returnString = ""
+                    for item in items {
+                        returnString = returnString + item + "\n"
+                    }
+                    completionHandler(returnString)
+                }
+                catch {
+                    let errorCode = (error as NSError).code
+                    completionHandler("\(-errorCode)")
+                }
+                return
+            } else if (arguments[1] == "mkdir") {
+                do {
+                    try FileManager().createDirectory(atPath: arguments[2], withIntermediateDirectories: true)
+                    completionHandler("0")
+                }
+                catch {
+                    let errorCode = (error as NSError).code
+                    completionHandler("\(-errorCode)")
+                }
+                return
+            } else if (arguments[1] == "rmdir") {
+                do {
+                    try FileManager().removeItem(atPath: arguments[2])
+                    completionHandler("0")
+                }
+                catch {
+                    let errorCode = (error as NSError).code
+                    completionHandler("\(-errorCode)")
+                }
+                return
+            } else if (arguments[1] == "rename") {
+                do {
+                    try FileManager().moveItem(atPath:arguments[2], toPath: arguments[3])
+                    completionHandler("0")
+                }
+                catch {
+                    let errorCode = (error as NSError).code
+                    completionHandler("\(-errorCode)")
+                }
+                return
+            }  else if (arguments[1] == "link") {
+                do {
+                    try FileManager().linkItem(atPath:arguments[2], toPath: arguments[3])
+                    completionHandler("0")
+                }
+                catch {
+                    let errorCode = (error as NSError).code
+                    completionHandler("\(-errorCode)")
+                }
+                return
+            } else if (arguments[1] == "symlink") {
+                do {
+                    try FileManager().createSymbolicLink(atPath:arguments[3], withDestinationPath: arguments[2])
+                    completionHandler("0")
+                }
+                catch {
+                    let errorCode = (error as NSError).code
+                    completionHandler("\(-errorCode)")
+                }
+                return
+            } else if (arguments[1] == "readlink") {
+                do {
+                    let destination = try FileManager().destinationOfSymbolicLink(atPath:arguments[2])
+                    completionHandler(destination)
+                }
+                catch {
+                    // to remove ambiguity, add '\n' at the beginning
+                    // this might fail if a link points to
+                    let errorCode = (error as NSError).code
+                    completionHandler("\n\(-errorCode)")
+                }
+                return
+            } else if (arguments[1] == "unlink") {
+                let returnVal = unlink(arguments[2])
+                if (returnVal != 0) {
+                    completionHandler("\(-errno)")
+                    errno = 0
+                } else {
+                    completionHandler("\(returnVal)")
+                }
+                return
+            } else if (arguments[1] == "fsync") {
+                if let fd = fileDescriptor(input: arguments[2]) {
+                    let returnVal = fsync(fd)
+                    if (returnVal != 0) {
+                        completionHandler("\(-errno)")
+                        errno = 0
+                    } else {
+                        completionHandler("\(returnVal)")
+                    }
+                    return
+                }
+                completionHandler("\(-EBADF)") // invalid file descriptor
+                return
+            } else if (arguments[1] == "ftruncate") {
+                if let fd = fileDescriptor(input: arguments[2]) {
+                    if let length = Int64(arguments[3]) {
+                        let returnVal = ftruncate(fd, length)
+                        if (returnVal != 0) {
+                            completionHandler("\(-errno)")
+                            errno = 0
+                        } else {
+                            completionHandler("\(returnVal)")
+                        }
+                        return
+                    }
+                    completionHandler("\(-EINVAL)") // invalid length
+                    return
+                }
+                completionHandler("\(-EBADF)") // invalid file descriptor
+                return
+                //
+                // Additions to WASI for easier interaction with the iOS underlying part
+                //
+            } else if (arguments[1] == "getenv") {
+                let result = ios_getenv(arguments[2])
+                if (result != nil) {
+                    completionHandler(String(cString: result!))
+                } else {
+                    completionHandler("0")
+                }
+                return
+            } else if (arguments[1] == "setenv") {
+                let force = Int32(arguments[4])
+                let result = setenv(arguments[2], arguments[3], force!)
+                if (result != 0) {
+                    completionHandler("\(-errno)")
+                    errno = 0
+                } else {
+                    completionHandler("\(result)")
+                }
+                return
+                // Untested / seldom used WASI functions:
+                // utimes and futimes are only defined if __wasilibc_unmodified_upstream is true.
+                // So, not tested, but written anyway
+            } else if (arguments[1] == "unetenv") {
+                let result = unsetenv(arguments[2])
+                if (result != 0) {
+                    completionHandler("\(-errno)")
+                    errno = 0
+                } else {
+                    completionHandler("\(result)")
+                }
+                return
+            } else if (arguments[1] == "utimes") {
+                let path = arguments[2]
+                if let atime_millisec = Int32(arguments[3]) {
+                    let atime_sec = Int(atime_millisec / 1000)
+                    let atime_usec = Int32((atime_millisec - Int32(1000 * atime_sec)) * 1000)
+                    let atime: timeval = timeval(tv_sec: atime_sec, tv_usec: atime_usec)
+                    if let mtime_millisec = Int32(arguments[4]) {
+                        let mtime_sec = Int(mtime_millisec / 1000)
+                        let mtime_usec = Int32((mtime_millisec - Int32(1000 * mtime_sec)) * 1000)
+                        let mtime: timeval = timeval(tv_sec: mtime_sec, tv_usec: mtime_usec)
+                        var time = UnsafeMutablePointer<timeval>.allocate(capacity: 2)
+                        time[0] = atime
+                        time[1] = mtime
+                        let returnVal = utimes(path, time)
+                        if (returnVal != 0) {
+                            completionHandler("\(-errno)")
+                            errno = 0
+                        } else {
+                            completionHandler("\(returnVal)")
+                        }
+                    } else {
+                        completionHandler("\(-EFAULT)") // time points out of process allocated space
+                        return
+                    }
+                } else {
+                    completionHandler("\(-EFAULT)") // time points out of process allocated space
+                    return
+                }
+            } else if (arguments[1] == "futimes") {
+                // utimes and futimes are only defined if __wasilibc_unmodified_upstream is true.
+                // So, not tested, but written anyway
+                if let fd = fileDescriptor(input: arguments[2]) {
+                    if let atime_millisec = Int32(arguments[3]) {
+                        let atime_sec = Int(atime_millisec / 1000)
+                        let atime_usec = Int32((atime_millisec - Int32(1000 * atime_sec)) * 1000)
+                        let atime: timeval = timeval(tv_sec: atime_sec, tv_usec: atime_usec)
+                        if let mtime_millisec = Int32(arguments[4]) {
+                            let mtime_sec = Int(mtime_millisec / 1000)
+                            let mtime_usec = Int32((mtime_millisec - Int32(1000 * mtime_sec)) * 1000)
+                            let mtime: timeval = timeval(tv_sec: mtime_sec, tv_usec: mtime_usec)
+                            var time = UnsafeMutablePointer<timeval>.allocate(capacity: 2)
+                            time[0] = atime
+                            time[1] = mtime
+                            let returnVal = futimes(fd, time)
+                            if (returnVal != 0) {
+                                completionHandler("\(-errno)")
+                                errno = 0
+                            } else {
+                                completionHandler("\(returnVal)")
+                            }
+                        } else {
+                            completionHandler("\(-EFAULT)") // time points out of process allocated space
+                            return
+                        }
+                    } else {
+                        completionHandler("\(-EFAULT)") // time points out of process allocated space
+                        return
+                    }
+                }
+                completionHandler("\(-EBADF)") // invalid file descriptor
+                return
             }
-            completionHandler("defaulttext")
+            // Not one of our commands:
+            completionHandler("-1")
             return
         }
         var messageMinusTitle = prompt
