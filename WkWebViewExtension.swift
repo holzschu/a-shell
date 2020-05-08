@@ -104,10 +104,10 @@ extension WKWebView {
         let command = "window.term_.onFocusChange_(true)"
         self.evaluateJavaScript(command) { result, error in
             if let error = error {
-                print(error)
+                // print(error)
             }
             if let result = result {
-                print(result)
+                // print(result)
             }
         }
     }
@@ -116,10 +116,10 @@ extension WKWebView {
         let command = "window.term_.onFocusChange_(false)"
         self.evaluateJavaScript(command) { result, error in
             if let error = error {
-                print(error)
+                // print(error)
             }
             if let result = result {
-                print(result)
+                // print(result)
             }
         }
     }
