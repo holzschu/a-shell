@@ -65,6 +65,7 @@
             const WASI = require('@wasmer/wasi/lib').WASI;
             const browserBindings = require('@wasmer/wasi/lib/bindings/browser').default;
             const WasmFs = require('@wasmer/wasmfs').WasmFs;
+			const lowerI64Imports = require("@wasmer/wasm-transformer").lowerI64Imports
 
             function b64ToUint6 (nChr) {
             
@@ -101,40 +102,40 @@
               return aBytes;
             }
 
-            function executeWebAssembly(bufferString, args, stdinBuffer) {
+            // bufferString: program in base64 format
+            // args: arguments (argv[argc])
+            // stdinBuffer: standard input
+            // cwd: current working directory
+            function executeWebAssembly(bufferString, args, cwd, tty) {
             	// Input: base64 encoded binary wasm file
 				if (!('WebAssembly' in window)) {
 					window.webkit.messageHandlers.aShell.postMessage('WebAssembly not supported');
 					return;
 				}
-				// import here so console.log works. Move upward lated
-				const lowerI64Imports = require("@wasmer/wasm-transformer").lowerI64Imports
 
 				var arrayBuffer = base64DecToArr(bufferString); 
 				const loweredWasmBytes = lowerI64Imports(arrayBuffer);
 				var errorMessage = '';
 				var errorCode = 0; 
-				const wasmFs = new WasmFs(); // new file system, one for each command
-
-				// send standard input to /dev/stdin:
-				if (stdinBuffer != "") {
-					var stdinString = base64DecToArr(stdinBuffer);
-					wasmFs.fs.writeFileSync('/dev/stdin', stdinString);
-				}
 				// TODO: link with other libraries/frameworks? impossible, I guess.
 			    // TODO: keyboard input (directly from onkeypress)
 				try {
+					const wasmFs = new WasmFs(); // local file system. Used less often.
 					let wasi = new WASI({
-						preopens: {'.': '.'},
+						preopens: {'.': cwd, '/': '/'},
 						args: args,
 						env: {},
 						bindings: {
 							...browserBindings,
-							fs: wasmFs.fs
+							fs: wasmFs.fs,
 						}
 					})
-					const module = new WebAssembly.Module(loweredWasmBytes); // arrayBuffer
-					let instance = new WebAssembly.Instance(module, wasi.getImports(module));
+					wasi.args = args
+					if (tty != 1) {
+						wasi.bindings.isTTY = (fd) => false;
+					}
+					const module = new WebAssembly.Module(loweredWasmBytes); 
+					const instance = new WebAssembly.Instance(module, wasi.getImports(module));
 					wasi.start(instance);
 				}
 				catch (error) {
@@ -150,10 +151,7 @@
 						errorCode = 1; 
 					}
 				}
-				let result = wasmFs.fs.readFileSync("/dev/stdout", "utf8"); 
-				let result_error = wasmFs.fs.readFileSync("/dev/stderr", "utf8")
-				let volumeData = wasmFs.toJSON() // Sends the entire volume data back
-				return [result, result_error + errorMessage, errorCode, volumeData];
+				return [errorCode, errorMessage];
 			}
 
             // functions to deal with executeJavaScript: 
