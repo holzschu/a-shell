@@ -20,6 +20,8 @@ __trunctfsf2
 __unordtf2
 __wasi_args_get
 __wasi_args_sizes_get
+__wasi_ashell_getenv
+__wasi_ashell_setenv
 __wasi_clock_res_get
 __wasi_clock_time_get
 __wasi_environ_get

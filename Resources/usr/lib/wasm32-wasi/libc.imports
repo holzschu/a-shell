@@ -1,5 +1,12 @@
 __wasi_args_get
 __wasi_args_sizes_get
+__wasi_ashell_chdir
+__wasi_ashell_fchdir
+__wasi_ashell_getcwd
+__wasi_ashell_getenv
+__wasi_ashell_setenv
+__wasi_ashell_system
+__wasi_ashell_unsetenv
 __wasi_clock_res_get
 __wasi_clock_time_get
 __wasi_environ_get

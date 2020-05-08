@@ -118,11 +118,12 @@ int ftruncate(int, off_t);
 int access(const char *, int);
 int faccessat(int, const char *, int, int);
 
-#ifdef __wasilibc_unmodified_upstream /* WASI has no cwd */
+// a-Shell has cwd.
+// #ifdef __wasilibc_unmodified_upstream /* WASI has no cwd */
 int chdir(const char *);
 int fchdir(int);
 char *getcwd(char *, size_t);
-#endif
+// #endif
 
 #ifdef __wasilibc_unmodified_upstream /* WASI has no signals */
 unsigned alarm(unsigned);
