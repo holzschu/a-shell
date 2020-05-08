@@ -364,6 +364,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
         setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
         setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
+        setenv("MAGIC", Bundle.main.resourcePath! +  "/usr/share/magic.mgc", 1); // magic file for file command
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,

@@ -37,8 +37,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var thread_stdin_copy: UnsafeMutablePointer<FILE>? = nil
     var thread_stdout_copy: UnsafeMutablePointer<FILE>? = nil
     var thread_stderr_copy: UnsafeMutablePointer<FILE>? = nil
-    var keyboardTimer: Timer!
+    // var keyboardTimer: Timer!
     private let commandQueue = DispatchQueue(label: "executeCommand", qos: .utility) // low priority, for executing commands
+    private var javascriptRunning = false // We can't execute JS while we are already executing JS.
     // Buttons and toolbars:
     var controlOn = false;
     // control codes:
@@ -330,7 +331,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let base64string = buffer.base64EncodedString()
         // TODO: here, add fileNamesString and fileContentsString
         let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + currentDirectory + "\", \(ios_isatty(STDIN_FILENO)))"
-        var executionDone = false
+        if (javascriptRunning) {
+            fputs("We can't execute webAssembly while we are already executing webAssembly.", thread_stderr)
+            return -1
+        }
+        javascriptRunning = true
         var errorCode:Int32 = 0
         thread_stdin_copy = thread_stdin
         thread_stdout_copy = thread_stdout
@@ -373,11 +378,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         fputs(string, self.thread_stdout_copy);
                     }
                 }
-                executionDone = true
+                self.javascriptRunning = false
             }
         }
         // force synchronization:
-        while (!executionDone) {
+        while (javascriptRunning) {
             if (thread_stdout != nil) { fflush(thread_stdout) }
             if (thread_stderr != nil) { fflush(thread_stderr) }
         }
@@ -401,7 +406,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let fileName = FileManager().currentDirectoryPath + "/" + command
         thread_stdout_copy = thread_stdout
         thread_stderr_copy = thread_stderr
-        var executionDone = false
+        if (javascriptRunning) {
+            fputs("We can't execute JavaScript from a script already running JavaScript.", thread_stderr)
+            return
+        }
+        javascriptRunning = true
         do {
             var javascript = try String(contentsOf: URL(fileURLWithPath: fileName), encoding: String.Encoding.utf8)
             // Code included in {} so variables don't leak. Some variables seem to leak. TODO: investigate
@@ -438,21 +447,21 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             fputs("\(number)", self.thread_stdout_copy)
                             fputs("\n", self.thread_stdout_copy)
                         } else {
-                            fputs("\(result)", self.thread_stdout_copy)
+                            fputs("\(result!)", self.thread_stdout_copy)
                             fputs("\n", self.thread_stdout_copy)
                         }
                         fflush(self.thread_stdout_copy)
                         fflush(self.thread_stderr_copy)
                     }
-                    executionDone = true
+                    self.javascriptRunning = false
                 }
             }
         }
         catch {
          fputs("Error executing JavaScript  file: " + command + ": \(error) \n", thread_stderr)
-          executionDone = true
+          javascriptRunning = false
         }
-        while (!executionDone) {
+        while (javascriptRunning) {
             if (thread_stdout != nil) { fflush(thread_stdout) }
             if (thread_stderr != nil) { fflush(thread_stderr) }
         }
@@ -1432,6 +1441,9 @@ extension SceneDelegate: WKUIDelegate {
         // NSLog("prompt: \(prompt)")
         let title = arguments[0]
         if (title == "libc") {
+            // Make sure we are on the right iOS session. This resets the current working directory.
+            ios_switchSession(self.persistentIdentifier?.toCString())
+            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             if (arguments[1] == "open") {
                 let rights = Int32(arguments[3]) ?? 577;
                 if (!FileManager().fileExists(atPath: arguments[2]) && (rights > 0)) {
@@ -1672,8 +1684,39 @@ extension SceneDelegate: WKUIDelegate {
                 completionHandler("\(-EBADF)") // invalid file descriptor
                 return
                 //
-                // Additions to WASI for easier interaction with the iOS underlying part
+                // Additions to WASI for easier interaction with the iOS underlying part: getenv, setenv, unsetenv
+                // getcwd, chdir, fchdir, system.
                 //
+            } else if (arguments[1] == "getcwd") {
+                let result = FileManager().currentDirectoryPath
+                completionHandler(result)
+                return
+            } else if (arguments[1] == "chdir") {
+                let result = changeDirectory(path: arguments[2]) // call cd_main and updates the ios current session
+                completionHandler("\(result)") // true or false
+                return
+            } else if (arguments[1] == "fchdir") {
+                if let fd = Int32(arguments[2]) {
+                    let result = fchdir(fd)
+                    if (result != 0) {
+                        completionHandler("\(-errno)")
+                        errno = 0
+                    } else {
+                        completionHandler("\(result)")
+                    }
+                } else {
+                    completionHandler("-\(EBADF)") // bad file descriptor
+                }
+                return
+            } else if (arguments[1] == "system") {
+                thread_stdin = self.thread_stdin_copy
+                thread_stdout = self.thread_stdout_copy
+                thread_stderr = self.thread_stderr_copy
+                let pid = ios_fork()
+                let result = ios_system(arguments[2])
+                ios_waitpid(pid)
+                completionHandler("\(result)")
+                return
             } else if (arguments[1] == "getenv") {
                 let result = ios_getenv(arguments[2])
                 if (result != nil) {
@@ -1692,10 +1735,7 @@ extension SceneDelegate: WKUIDelegate {
                     completionHandler("\(result)")
                 }
                 return
-                // Untested / seldom used WASI functions:
-                // utimes and futimes are only defined if __wasilibc_unmodified_upstream is true.
-                // So, not tested, but written anyway
-            } else if (arguments[1] == "unetenv") {
+            } else if (arguments[1] == "unsetenv") {
                 let result = unsetenv(arguments[2])
                 if (result != 0) {
                     completionHandler("\(-errno)")
@@ -1704,6 +1744,9 @@ extension SceneDelegate: WKUIDelegate {
                     completionHandler("\(result)")
                 }
                 return
+                // Untested / seldom used WASI functions:
+                // utimes and futimes are only defined if __wasilibc_unmodified_upstream is true.
+                // So, not tested, but written anyway
             } else if (arguments[1] == "utimes") {
                 let path = arguments[2]
                 if let atime_millisec = Int32(arguments[3]) {
