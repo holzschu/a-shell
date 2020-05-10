@@ -182,9 +182,13 @@ Vim: Bram Moolenaar and the Vim community, https://www.vim.org
 Vim-session: Peter Odding, http://peterodding.com/code/vim/session
 llvm/clang: the LLVM foundation
 webAssembly: wasmer.io and the wasi SDK https://github.com/WebAssembly/wasi-sdk
+file: https://github.com/file/file/
+tree: http://mama.indstate.edu/users/ice/tree/
+ctags: https://github.com/universal-ctags/ctags/
 
 zshmarks-style bookmarks inspired by zshmarks: https://github.com/jocelynmallon/zshmarks
 bashmarks-style bookmarks inspired by bashmarks: https://github.com/huyng/bashmarks
+
 """
                 delegate.printText(string: creditText)
             return 0
