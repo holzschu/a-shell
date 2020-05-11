@@ -1,0 +1,18 @@
+{
+  "name": "@wasmer/wasm-transformer",
+  "collaborators": [
+    "Aaron Turner <aaron@aaronthedev.com>"
+  ],
+  "version": "0.0.1",
+  "files": [
+    "wasm_transformer_bg.wasm",
+    "wasm_transformer.js",
+    "wasm_transformer_bg.js",
+    "wasm_transformer.d.ts"
+  ],
+  "main": "wasm_transformer.js",
+  "types": "wasm_transformer.d.ts",
+  "publishConfig": {
+    "access": "public"
+  }
+}
