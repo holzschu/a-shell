@@ -94,6 +94,8 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 - Transfer files with curl, tar, scp and sftp.
 - Process files with python3, lua, jsc, clang, pdflatex, lualatex.
 - For network queries: nslookup, ping, host, whois, ifconfig...
+
+You can download more commands at: https://github.com/holzschu/a-Shell-commands/
 """
             
             if (argc == 1) {
@@ -166,7 +168,7 @@ public func credits(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
         if (scene.session.persistentIdentifier == currentSessionIdentifier) {
             let delegate: SceneDelegate = scene.delegate as! SceneDelegate
             let creditText = """
-a-Shell owes to many open-source contributors. The current code contains contributions from: Yury Korolev, Ian McDowell, Louis d'Hauwe, Anders Borum, Adrian Labbé and suggestions for improvements from many others.
+a-Shell owes to many open-source contributors. The current code contains contributions from: Yury Korolev, Ian McDowell, Louis d'Hauwe, Anders Borum, Adrian Labbé, Kenta Kubo and suggestions for improvements from many others.
 
 Most terminal commands are from the BSD distribution, mainly through the Apple OpenSource program.
 

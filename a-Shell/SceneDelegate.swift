@@ -1467,7 +1467,12 @@ extension SceneDelegate: WKUIDelegate {
             } else if (arguments[1] == "close") {
                 var returnValue:Int32 = -1
                 if let fd = fileDescriptor(input: arguments[2]) {
-                    returnValue = close(fd)
+                    if (fd == fileno(self.thread_stdin_copy)) || (fd == fileno(self.thread_stdout_copy)) || (fd == fileno(self.thread_stderr_copy)) {
+                        // don't close stdin/stdout/stderr
+                        returnValue = 0
+                    } else {
+                        returnValue = close(fd)
+                    }
                     if (returnValue == -1) {
                         completionHandler("\(-errno)")
                         errno = 0
@@ -1523,14 +1528,12 @@ extension SceneDelegate: WKUIDelegate {
                     if let numValues = Int(arguments[3]) {
                         let offset = UInt64(arguments[4]) ?? 0
                         let file = FileHandle(fileDescriptor: fd)
-                        if (offset > 0) {
-                            do {
-                                try file.seek(toOffset: offset)
-                            }
-                            catch {
-                                let errorCode = (error as NSError).code
-                                completionHandler("\(-errorCode)")
-                            }
+                        do {
+                            try file.seek(toOffset: offset)
+                        }
+                        catch {
+                            let errorCode = (error as NSError).code
+                            completionHandler("\(-errorCode)")
                         }
                         data = file.readData(ofLength: numValues)
                     }
@@ -1744,9 +1747,6 @@ extension SceneDelegate: WKUIDelegate {
                     completionHandler("\(result)")
                 }
                 return
-                // Untested / seldom used WASI functions:
-                // utimes and futimes are only defined if __wasilibc_unmodified_upstream is true.
-                // So, not tested, but written anyway
             } else if (arguments[1] == "utimes") {
                 let path = arguments[2]
                 if let atime_millisec = Int32(arguments[3]) {
@@ -1767,6 +1767,7 @@ extension SceneDelegate: WKUIDelegate {
                         } else {
                             completionHandler("\(returnVal)")
                         }
+                        return
                     } else {
                         completionHandler("\(-EFAULT)") // time points out of process allocated space
                         return
@@ -1776,17 +1777,23 @@ extension SceneDelegate: WKUIDelegate {
                     return
                 }
             } else if (arguments[1] == "futimes") {
-                // utimes and futimes are only defined if __wasilibc_unmodified_upstream is true.
-                // So, not tested, but written anyway
                 if let fd = fileDescriptor(input: arguments[2]) {
-                    if let atime_millisec = Int32(arguments[3]) {
-                        let atime_sec = Int(atime_millisec / 1000)
-                        let atime_usec = Int32((atime_millisec - Int32(1000 * atime_sec)) * 1000)
-                        let atime: timeval = timeval(tv_sec: atime_sec, tv_usec: atime_usec)
-                        if let mtime_millisec = Int32(arguments[4]) {
-                            let mtime_sec = Int(mtime_millisec / 1000)
-                            let mtime_usec = Int32((mtime_millisec - Int32(1000 * mtime_sec)) * 1000)
-                            let mtime: timeval = timeval(tv_sec: mtime_sec, tv_usec: mtime_usec)
+                    if let atime_sec = Int(arguments[3]) {
+                        var atime_usec = Int32(arguments[4])
+                        if (atime_usec == nil) {
+                            atime_usec = 0
+                        } else {
+                            atime_usec = atime_usec! / 1000
+                        }
+                        let atime: timeval = timeval(tv_sec: atime_sec, tv_usec: atime_usec!)
+                        if let mtime_sec = Int(arguments[5]) {
+                            var mtime_usec = Int32(arguments[6])
+                            if (mtime_usec == nil) {
+                                mtime_usec = 0
+                            } else {
+                                mtime_usec = mtime_usec! / 1000
+                            }
+                            let mtime: timeval = timeval(tv_sec: mtime_sec, tv_usec: mtime_usec!)
                             var time = UnsafeMutablePointer<timeval>.allocate(capacity: 2)
                             time[0] = atime
                             time[1] = mtime
@@ -1797,6 +1804,7 @@ extension SceneDelegate: WKUIDelegate {
                             } else {
                                 completionHandler("\(returnVal)")
                             }
+                            return
                         } else {
                             completionHandler("\(-EFAULT)") // time points out of process allocated space
                             return
