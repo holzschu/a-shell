@@ -44,6 +44,13 @@
 		<string>o:</string>
 		<string>file</string>
 	</array>
+	<key>chmod</key>
+	<array>
+		<string>files.framework/files</string>
+		<string>chmod_main</string>
+		<string>ACEHILNPRVXafghinorstuvwx</string>
+		<string>file</string>
+	</array>
 	<key>compress</key>
 	<array>
 		<string>files.framework/files</string>
