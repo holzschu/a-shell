@@ -10,6 +10,7 @@ import UIKit
 import ios_system
 import UserNotifications
 import Compression
+import Intents // for shortcuts
 
 var downloadingTeX = false
 var downloadingTeXError = ""
@@ -74,8 +75,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
-        NSLog("Library file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path))")
-        NSLog("Header file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path))")
+        // NSLog("Library file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path))")
+        // NSLog("Header file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path))")
         return FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path)
          && FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path)
     }
@@ -348,11 +349,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("clear", "clear", true)
         replaceCommand("credits", "credits", true)
         replaceCommand("pickFolder", "pickFolder", true)
+        replaceCommand("config", "config", true)
+        replaceCommand("keepDirectoryAfterShortcut", "keepDirectoryAfterShortcut", true)
+        replaceCommand("wasm", "wasm", true)
+        replaceCommand("jsc", "jsc", true)  // use our own jsc instead of ios_system jsc
         // Add these as commands so they appear on the command list, even though we treat them internally:
         replaceCommand("newWindow", "clear", true)
         replaceCommand("exit", "clear", true)
-        replaceCommand("wasm", "wasm", true)
-        replaceCommand("jsc", "jsc", true)  // use our own jsc instead of ios_system jsc
         activateFakeTeXCommands()
         if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
             downloadTeX();
@@ -365,6 +368,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
         setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
         setenv("MAGIC", Bundle.main.resourcePath! +  "/usr/share/magic.mgc", 1); // magic file for file command
+        setenv("SHORTCUTS", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
+        setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
@@ -402,6 +407,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         // Detect changes in user settings (preferences):
         NotificationCenter.default.addObserver(self, selector: #selector(self.settingsChanged), name: UserDefaults.didChangeNotification, object: nil)
+        // Also notification if user changes accessibility settings:
+        NotificationCenter.default.addObserver(self, selector: #selector(self.voiceOverChanged), name:  UIAccessibility.voiceOverStatusDidChangeNotification, object: nil)
         return true
     }
 
@@ -417,6 +424,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Called when a new scene session is being created.
         // Use this method to select a configuration to create the new scene with.
+        // Also the function called when a shortcut starts the App.
         NSLog("application configurationForConnecting connectingSceneSession \(connectingSceneSession)")
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
@@ -471,7 +479,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // let session = findSession(for: userInfo)
         // application.requestSceneSessionRefresh(session)
     }
-    
+
+    @objc func voiceOverChanged() {
+        // Send the value to all the SceneDelegate connected to this application
+        for scene in UIApplication.shared.connectedScenes {
+            if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                delegate.activateVoiceOver(value: UIAccessibility.isVoiceOverRunning)
+            }
+        }
+    }
 
     @objc func settingsChanged() {
         // UserDefaults.didChangeNotification is called every time the window becomes active
@@ -516,5 +532,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("r", "renamemark", true) // rename bookmark
         }
     }
-}
+    
+    // MARK: Shortcuts / Intents handling
+    // Apparently never called because the system call Scene(_ continue:)
+    func application(_ application: UIApplication, continue userActivity: NSUserActivity,
+                     restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
+        NSLog("AppDelegate, continue, userActivity.activityType = \(userActivity.activityType)")
+        if userActivity.activityType == "AsheKube.app.a-Shell.ExecuteCommand",
+            let intent = userActivity.interaction?.intent as? ExecuteCommandIntent {
+            NSLog("We received the shortcut! \(intent)")
+        }
+        return true
+    }
+    
+    func application(_ application: UIApplication, handle intent: INIntent, completionHandler: @escaping (INIntentResponse) -> Void) {
+          
+        let response: INIntentResponse
 
+        if let commandIntent = intent as? ExecuteCommandIntent {
+            NSLog("Received an intent at the application level: \(commandIntent)")
+            response = INStartWorkoutIntentResponse(code: .success, userActivity: nil)
+        }
+        else {
+            response = INStartWorkoutIntentResponse(code: .failure, userActivity: nil)
+        }
+        completionHandler(response)
+    }
+    
+}

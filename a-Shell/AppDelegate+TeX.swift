@@ -109,7 +109,7 @@ extension AppDelegate {
         }
         for directory in TeXDirectories {
             do {
-                let localDirectory = libraryURL.appendingPathComponent(directory as! String)
+                let localDirectory = libraryURL.appendingPathComponent(directory)
                 if (FileManager().fileExists(atPath: localDirectory.path) && !localDirectory.isDirectory) {
                     try FileManager().removeItem(at: localDirectory)
                 }
@@ -172,7 +172,12 @@ extension AppDelegate {
                             try! FileManager().removeItem(at: localFileURL)
                         }
                         let distantFileURL = archiveURL.appendingPathComponent(directory)
-                        try! FileManager().createSymbolicLink(at: localFileURL, withDestinationURL: distantFileURL)
+                        do {
+                            try FileManager().createSymbolicLink(at: localFileURL, withDestinationURL: distantFileURL)
+                        }
+                        catch {
+                            NSLog("Error in copying texlive file: \(error)")
+                        }
                     }
                 }
                 NSLog("Done linking texmf-dist resource")

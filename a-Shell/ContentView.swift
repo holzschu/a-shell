@@ -18,7 +18,8 @@ struct Webview : UIViewRepresentable {
         config.preferences.javaScriptEnabled = true
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
         config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
-        config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
+        // Does not change anything either way (??? !!!)
+        // config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
         config.selectionGranularity = .character; // Could be .dynamic
         webView = WKWebView(frame: .zero, configuration: config)
     }
@@ -30,20 +31,7 @@ struct Webview : UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {
         if (uiView.url != nil) { return } // Already loaded the page
         let htermFilePath = Bundle.main.path(forResource: "hterm", ofType: "html")
-        let traitCollection = uiView.traitCollection
         uiView.isOpaque = false
-        uiView.tintColor = UIColor.placeholderText.resolvedColor(with: traitCollection)
-        uiView.backgroundColor = UIColor.systemBackground.resolvedColor(with: traitCollection)
-        let command = "window.foregroundColor = '" + UIColor.placeholderText.resolvedColor(with: traitCollection).toHexString() + "'; window.backgroundColor = '" + UIColor.systemBackground.resolvedColor(with: traitCollection).toHexString() + "'; window.cursorColor = '" + UIColor.link.resolvedColor(with: traitCollection).toHexString() + "';"
-        uiView.evaluateJavaScript(command) { (result, error) in
-            if error != nil {
-                // NSLog("Error in updateUIView, line = \(command)")
-                // print(error)
-            }
-            if (result != nil) {
-                // sprint(result)
-            }
-        }
         uiView.loadFileURL(URL(fileURLWithPath: htermFilePath!), allowingReadAccessTo: URL(fileURLWithPath: htermFilePath!))
     }
 }
@@ -68,6 +56,7 @@ struct ContentView: View {
         // Now map the merged notification stream into a height value.
         .map { (note) -> CGFloat in
             let height = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).size.height
+            let userInfo = note.userInfo
             // NSLog("Received \(note.name.rawValue) with height \(height)")
             // This is really annoying. Based on values from simulator.
             // Need to redo everything?

@@ -107,6 +107,7 @@ extension WKWebView {
 
 
     override open var keyCommands: [UIKeyCommand]? {
+        var language = textInputMode?.primaryLanguage ?? "en-US"
         var basicKeyCommands = [
             UIKeyCommand(input: UIKeyCommand.inputUpArrow, modifierFlags: [], action: #selector(upAction)),
             UIKeyCommand(input: UIKeyCommand.inputDownArrow, modifierFlags: [], action: #selector(downAction)),
@@ -116,11 +117,47 @@ extension WKWebView {
             UIKeyCommand(input: "k", modifierFlags:.command, action: #selector(clearScreen), discoverabilityTitle: "Clear screen"),
             UIKeyCommand(input: "n", modifierFlags:.command, action: #selector(newWindow), discoverabilityTitle: "New window"),
             UIKeyCommand(input: "w", modifierFlags:.command, action: #selector(closeWindow), discoverabilityTitle: "Close window"),
-            // Still required with external keyboards as of October 25, 2019.
-            UIKeyCommand(input: "c", modifierFlags:.alternate, action: #selector(insertC)), // This is weird. Need long term solution.
-            UIKeyCommand(input: "c", modifierFlags:[.alternate, .shift], action: #selector(insertC)), // This is weird. Need long term solution.
-            UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC)), // This is weird. Need long term solution.
+            // Still required with external keyboards as of May 26, 2020: control-C maps to control-C
+            UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC)),
         ]
+        if (language.hasPrefix("en")) {
+            // iOS English keyboard does not have "ç" and "Ç" mapped to alt-c
+            basicKeyCommands.append(UIKeyCommand(input: "c", modifierFlags:.alternate, action: #selector(insertC)))
+            basicKeyCommands.append(UIKeyCommand(input: "c", modifierFlags:[.alternate, .shift], action: #selector(insertC)))
+        }
+        if (language.hasPrefix("cs")) {
+            // Likewise, Czech keyboard is missing some shortcuts. This is the entire top row, alt-[0-9] and shift-alt-[0-9].
+            // basicKeyCommands.append(UIKeyCommand(input: "+", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "ě", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "š", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "č", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "ř", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "ž", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "ý", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "á", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "í", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "é", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "+", modifierFlags:[.alternate, .shift], action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "ě", modifierFlags:[.alternate, .shift], action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "š", modifierFlags:[.alternate, .shift], action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "č", modifierFlags:[.alternate, .shift], action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "ř", modifierFlags:[.alternate, .shift], action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "ž", modifierFlags:[.alternate, .shift], action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "ý", modifierFlags:[.alternate, .shift], action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "á", modifierFlags:[.alternate, .shift], action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "í", modifierFlags:[.alternate, .shift], action: #selector(insertCzechKB)))
+            basicKeyCommands.append(UIKeyCommand(input: "é", modifierFlags:[.alternate, .shift], action: #selector(insertCzechKB)))
+        }
+        if (language.hasPrefix("nb")) {
+            // Norwegian keyboard support. Left-alt key is not working.
+            basicKeyCommands.append(UIKeyCommand(input: "ě", modifierFlags:.alternate, action: #selector(insertCzechKB)))
+            let keyboardCharacters = "<1234567890+´qwetyuiopå¨asdfghjkløæzxcvbnm,.-"
+            for character in keyboardCharacters {
+                basicKeyCommands.append(UIKeyCommand(input: "\(character)", modifierFlags:.alternate, action: #selector(insertNorwegianKB)))
+                basicKeyCommands.append(UIKeyCommand(input: "\(character)", modifierFlags:[.alternate, .shift], action: #selector(insertNorwegianKB)))
+            }
+        }
+
         /* Caps Lock remapped to escape: */
         if (UserDefaults.standard.bool(forKey: "escape_preference")) {
             // If we remapped caps-lock to escape, we need to disable caps-lock, at least with certain keyboards.
@@ -139,11 +176,129 @@ extension WKWebView {
         return basicKeyCommands
     }
 
+    @objc func insertCzechKB(_ sender: UIKeyCommand) {
+        guard (sender.input != nil) else { return }
+        var string = sender.input!
+        if (sender.modifierFlags.contains(.alternate) && sender.modifierFlags.contains(.shift)) {
+            // NSLog("alt-shift-number: \(string)")
+            // alt-shift-number
+            switch (string) {
+            case "+":
+                string = "¬"
+                break
+            case "ě":
+                string = "•"
+                break
+            case "š":
+                string = "≠"
+                break
+            case "č":
+                string = "£"
+                break
+            case "ř":
+                string = "◊"
+                break
+            case "ž":
+                string = "†"
+                break
+            case "ý":
+                string = "¶"
+                break
+            case "á":
+                string = "÷"
+                break
+            case "í":
+                string = "«"
+                break
+            case "é":
+                string = "»"
+                break
+            default:
+                break
+            }
+        } else if (sender.modifierFlags.contains(.alternate)) {
+            // NSLog("alt-number: \(string)")
+            // alt-number
+            switch (string) {
+            case "ě":
+                string = "@"
+                break
+            case "š":
+                string = "#"
+                break
+            case "č":
+                string = "$"
+                break
+            case "ř":
+                string = "~"
+                break
+            case "ž":
+                string = "^"
+                break
+            case "ý":
+                string = "&"
+                break
+            case "á":
+                string = "*"
+                break
+            case "í":
+                string = "{"
+                break
+            case "é":
+                string = "}"
+                break
+            default:
+                break
+            }
+        }
+        // NSLog("sending: \(string)")
+        let commandString = "window.term_.io.onVTKeystroke(\'\(string)');"
+        evaluateJavaScript(commandString) { (result, error) in
+            if error != nil {
+                // print(error)
+                // print(result)
+            }
+        }
+    }
+
+    @objc func insertNorwegianKB(_ sender: UIKeyCommand) {
+        let keyboardCharacters = Array("<1234567890+´qwetyuiopå¨asdfghjkløæzxcvbnm,.-")
+        let altKeyboard = Array("≤©™£€∞§|[]≈±`•Ωé†µüıœπ˙~ß∂ƒ¸˛√ªﬁöä÷≈ç‹›‘’‚…–")
+        let shiftAltKeyboard = Array("≥¡®¥¢‰¶\\{}≠¿ °˝É‡˜ÜˆŒ∏˚^◊∑∆∫¯˘¬ºﬂÖÄ⁄ Ç«»“”„·—")
+        guard (sender.input != nil) else { return }
+        var string = sender.input!
+        let character = Array(string)[0]
+        if (keyboardCharacters.contains(character)) {
+            if let index = keyboardCharacters.firstIndex(of: character) {
+                // NSLog("index = \(index)")
+                if (sender.modifierFlags.contains(.alternate) && sender.modifierFlags.contains(.shift)) {
+                    // NSLog("alt-shift-key: \(string)")
+                    string = String(shiftAltKeyboard[index])
+                } else if (sender.modifierFlags.contains(.alternate)) {
+                    // NSLog("alt-key: \(string)")
+                    string = String(altKeyboard[index])
+                }
+            }
+        }
+        if (string != " ") {
+            if (string == "\\") { string = "\\\\" }
+            // NSLog("sending: \(string)")
+            let commandString = "window.term_.io.onVTKeystroke(\'\(string)');"
+            evaluateJavaScript(commandString) { (result, error) in
+                if error != nil {
+                    // print(error)
+                    // print(result)
+                }
+            }
+        }
+    }
+
+    
     @objc func insertC(_ sender: UIKeyCommand) {
         guard (sender.input != nil) else { return }
         var string = sender.input!
         // For reasons, the C key produces different chains. We override.
-        // TODO: check this is still needed with each new iOS. Still true as of 13.2.
+        // TODO: check this is still needed with each new iOS. Still true as of 13.5.
         if (sender.modifierFlags.contains(.alternate)) {
             string = "ç"
             if (sender.modifierFlags.contains(.shift)) {
@@ -155,8 +310,8 @@ extension WKWebView {
         let commandString = "window.term_.io.onVTKeystroke(\'\(string)');"
         evaluateJavaScript(commandString) { (result, error) in
             if error != nil {
-                print(error)
-                print(result)
+               // print(error)
+               // print(result)
             }
         }
     }
