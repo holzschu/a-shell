@@ -86,3 +86,87 @@ extension UIColor {
         }
     }
 }
+
+
+
+func colorFromName(name: String) -> UIColor? {
+    // First, try with names:
+    switch (name) {
+    case "systemBlue":
+        return .systemBlue
+    case "systemGreen":
+        return .systemGreen
+    case "systemIndigo":
+        return .systemIndigo
+    case "systemOrange":
+        return .systemOrange
+    case "systemPink":
+        return .systemPink
+    case "systemPurple":
+        return .systemPurple
+    case "systemRed":
+        return .systemRed
+    case "systemTeal":
+        return .systemTeal
+    case "systemYellow":
+        return .systemYellow
+    case "systemGray":
+        return .systemGray
+    case "systemGray2":
+        return .systemGray2
+    case "systemGray3":
+        return .systemGray3
+    case "systemGray4":
+        return .systemGray4
+    case "systemGray5":
+        return .systemGray5
+    case "systemGray6":
+        return .systemGray6
+    case "black":
+        return .black
+    case "blue":
+        return .blue
+    case "brown":
+        return .brown
+    case "cyan":
+        return .cyan
+    case "darkGray":
+        return .darkGray
+    case "gray":
+        return .gray
+    case "green":
+        return .green
+    case "lightGray":
+        return .lightGray
+    case "magenta":
+        return .magenta
+    case "orange":
+        return .orange
+    case "purple":
+        return .purple
+    case "red":
+        return .red
+    case "white":
+        return .white
+    case "yellow":
+        return .yellow
+    default:
+        if let color = UIColor(named: name) {
+            return color
+        }
+    }
+    // If we've made it so far, it is not one of the named color. Is it a valid hexstring?
+    if (name.count == 6) || (name.count == 7 && name.hasPrefix("#")) {
+        var string = name
+        if (string.hasPrefix("#")) {
+            string.removeFirst(1)
+        }
+        let allowedCharacterSet = CharacterSet(charactersIn: "0123456789ABCDEFabcdef")
+        let characterSet = CharacterSet(charactersIn: string)
+        if allowedCharacterSet.isSuperset(of: characterSet) {
+            return UIColor(hexString: name)
+        }
+    }
+    return nil
+}
+
