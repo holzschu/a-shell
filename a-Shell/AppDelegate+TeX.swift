@@ -125,8 +125,12 @@ extension AppDelegate {
         for file in TeXFiles {
             if let distantFileURL = Bundle.main.path(forResource: file, ofType: nil) {
                 do {
-                    let localFileURL = libraryURL.appendingPathComponent(file as! String)
+                    let localFileURL = libraryURL.appendingPathComponent(file)
                     var localFileExists = FileManager().fileExists(atPath: localFileURL.path)
+                    if (localFileExists && file == "texlive/texmf-local/ls-R") {
+                        // personalized texmf-local/ls-R, don't touch:
+                        continue
+                    }
                     if (localFileExists && !localFileURL.isDirectory) {
                         try FileManager().removeItem(at: localFileURL)
                         localFileExists = FileManager().fileExists(atPath: localFileURL.path)

@@ -355,7 +355,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return -1
         }
         let base64string = buffer.base64EncodedString()
-        // TODO: here, add fileNamesString and fileContentsString
         let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + currentDirectory + "\", \(ios_isatty(STDIN_FILENO)))"
         if (javascriptRunning) {
             fputs("We can't execute webAssembly while we are already executing webAssembly.", thread_stderr)
@@ -366,7 +365,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         thread_stdin_copy = thread_stdin
         thread_stdout_copy = thread_stdout
         thread_stderr_copy = thread_stderr
-        DispatchQueue.main.sync {
+        DispatchQueue.main.async {
             self.webView?.evaluateJavaScript(javascript) { (result, error) in
                 if error != nil {
                     let userInfo = (error! as NSError).userInfo
@@ -409,8 +408,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         // force synchronization:
         while (javascriptRunning) {
-            if (thread_stdout != nil) { fflush(thread_stdout) }
-            if (thread_stderr != nil) { fflush(thread_stderr) }
+            if (thread_stdout != nil && stdout_active) { fflush(thread_stdout) }
+            if (thread_stderr != nil && stdout_active) { fflush(thread_stderr) }
         }
         return errorCode
     }
@@ -488,8 +487,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
           javascriptRunning = false
         }
         while (javascriptRunning) {
-            if (thread_stdout != nil) { fflush(thread_stdout) }
-            if (thread_stderr != nil) { fflush(thread_stderr) }
+            if (thread_stdout != nil && stdout_active) { fflush(thread_stdout) }
+            if (thread_stderr != nil && stdout_active) { fflush(thread_stderr) }
         }
         thread_stdout_copy = nil
         thread_stderr_copy = nil
@@ -1037,7 +1036,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Interactive commands: just send the input to them. Allows Vim to map control-D to down half a page.
             var command = cmd
             command.removeFirst("inputInteractive:".count)
-            NSLog("Interactive input: " + command)
             guard let data = command.data(using: .utf8) else { return }
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
@@ -2161,8 +2159,11 @@ extension SceneDelegate: WKUIDelegate {
                             try file.seek(toOffset: offset)
                         }
                         catch {
-                            let errorCode = (error as NSError).code
-                            completionHandler("\(-errorCode)")
+                            if (offset != 0) {
+                                let errorCode = (error as NSError).code
+                                completionHandler("\(-errorCode)")
+                                return
+                            }
                         }
                         data = file.readData(ofLength: numValues)
                     }
@@ -2478,11 +2479,12 @@ extension SceneDelegate: WKUIDelegate {
         }
         
         let rootVC = self.window?.rootViewController
-        rootVC?.resignFirstResponder()
+        // rootVC?.resignFirstResponder()
         rootVC?.present(alertController, animated: true, completion: { () -> Void in
             // TODO: insert here some magical line that will restore focus to the window
             // makeFirstResponder and makeKeyboardActive don't work
         })
+        // webView.allowDisplayingKeyboardWithoutUserAction()
     }
 
 }

@@ -28,7 +28,7 @@
          	display: block;
          	position: fixed;
          	height: 100%;
-         	width: 100%;
+         	width: 100%; 
          	margin: 0px;
          	padding: 0px;
          }
@@ -117,6 +117,7 @@
 				const loweredWasmBytes = lowerI64Imports(arrayBuffer);
 				var errorMessage = '';
 				var errorCode = 0; 
+				window.standardInput = '';
 				// TODO: link with other libraries/frameworks? impossible, I guess.
 			    // TODO: keyboard input (directly from onkeypress)
 				try {
@@ -190,6 +191,10 @@
             function printPrompt() {
 				// prints the prompt and initializes all variables related to prompt position
 				window.term_.io.print(window.promptMessage); 
+				// cut window.printedContent if it gets too large:
+				if (window.printedContent.length > 30000) {
+					window.printedContent = window.printedContent.substring(5000);
+				}
 			}
 
             function updatePromptPosition() {
@@ -205,6 +210,7 @@
             // TODO: get correct character width for emojis.
             function printString(string) {
 				var l = lib.wc.strWidth(string);
+				
 				var currentCommand = window.term_.io.currentCommand;
 				// clear the rest of the line, then reprint. 
 				window.term_.io.print('\x1b[0J'); // delete display after cursor
@@ -329,6 +335,7 @@
 					}
 					// Need to get list of files from directory. 
 					if (directory == lastDirectory) {
+			            // First, remove 
 						for (var i = 0, len = fileList.length; i < len; i++) {
 							if (fileList[i].startsWith(file)) {
 								var value = fileList[i].replace(file, "")
@@ -342,7 +349,6 @@
 						window.webkit.messageHandlers.aShell.postMessage('listDirectory:' + directory);
 					}
 				}
-
 				// substring of io.currentCommand, ending at currentCommandCursorPosition, going back until first space or "/"
 				// list to use for autocomplete = commandList if at beginning of line (modulo spaces) or after | (module spaces)
 				// list of files inside directory otherwise. e.g. "../Library/Preferences/" (going back until next space)
@@ -350,14 +356,43 @@
 				if (numFound > 1) {
 					// If list is not empty:
 					// Find largest starting substring:
+					var commonSubstring = ''
+					for (var l = 1; l < autocompleteList[0].length; l++) {
+						substring =  autocompleteList[0].substr(0, l)
+						var contained = true
+						for (var i = 0, len = autocompleteList.length; i < len; i++) {
+							if (!autocompleteList[i].startsWith(substring)) {
+								contained = false;
+								break;
+							}
+						}
+						if (contained) { 
+							commonSubstring = substring;
+						} else {
+							break;
+						}
+					}
+					if (commonSubstring.length > 0) {
+						printString(commonSubstring);
+						io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + commonSubstring + 
+							io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
+						currentCommandCursorPosition += commonSubstring.length;
+						for (var i = 0, len = autocompleteList.length; i < len; i++) {
+							var value = autocompleteList[i].replace(commonSubstring, "")
+							autocompleteList[i] = value; 
+						}
+					}
 					//
 					autocompleteOn = true;
-					while ((autocompleteList[autocompleteIndex][0] == ".") && (autocompleteIndex < autocompleteList.length - 1)) {
-						autocompleteIndex += 1;
-					} 
-					if (autocompleteIndex == autocompleteList.length - 1) {
-						// directory with only ".*" files
-						autocompleteIndex = 0;
+					// Don't display files starting with "." first (they're in the list, but we don't start with them)
+					if (file.length == 0) {
+						while ((autocompleteList[autocompleteIndex][0] == ".") && (autocompleteIndex < autocompleteList.length - 1)) {
+							autocompleteIndex += 1;
+						} 
+						if (autocompleteIndex == autocompleteList.length - 1) {
+							// directory with only ".*" files
+							autocompleteIndex = 0;
+						}
 					}
 					printAutocompleteString(autocompleteList[autocompleteIndex]);
 				} else {
@@ -375,8 +410,11 @@
 				const term = new hterm.Terminal();
 				// Default monospaced fonts installed: Menlo and Courier. 
 				term.prefs_.set('cursor-shape', 'BLOCK'); 
-				term.prefs_.set('font-family', 'Menlo');
-				term.prefs_.set('font-size', 13); // 13 necessary for 5.5 inches phones
+				term.prefs_.set('font-family', window.fontFamily);
+				term.prefs_.set('font-size', window.fontSize); 
+				term.prefs_.set('foreground-color', window.foregroundColor);
+				term.prefs_.set('background-color', window.backgroundColor);
+				term.prefs_.set('cursor-color', window.cursorColor);
 				term.prefs_.set('cursor-blink', true); 
 				term.prefs_.set('enable-clipboard-notice', false); 
 				term.prefs_.set('use-default-window-copy', true); 
@@ -390,7 +428,13 @@
 				term.setWraparound(true);
 				//
 				term.onCut = function(e) { 
-					var text = this.getSelectionText();
+					var text = this.getSelectionText();  
+			        // compose events tend to create a selection node with range, which breaks insertion:
+					if (text == null) { 
+						// TODO: force the HTML cursor to go back to the actual cursor position (HOW?)
+						this.document_.getSelection().collapse(this.scrollPort_.getScreenNode());
+						return;
+					}
 					// We also need to remove it from the command line -- if it is in.
 					var startRow = this.scrollPort_.selection.startRow.rowIndex;
 					var endRow = this.scrollPort_.selection.endRow.rowIndex;
@@ -457,8 +501,10 @@
 						// Fully interactive commands: forward all keyboard input, let them deal with command history.
 					    // TODO: have a list of such interactive commands (array?) 
 						// jump can start vim 
+						if (window.commandRunning.startsWith("wasm")) {
+							window.standardInput += string;
+						} else if (window.commandRunning.startsWith("vim") || 
 						// ssh, once connected to the other machine, is interactive (but not ssh-keygen)
-						if (window.commandRunning.startsWith("vim") || 
 							window.commandRunning.startsWith("ipython") || 
 							(window.commandRunning.startsWith("ssh") && (!window.commandRunning.startsWith("ssh-keygen"))) || 
 							window.commandRunning.startsWith("jump")) {
@@ -859,15 +905,17 @@
 										io.print('\b'); 
 									}
 									break;
+			                    case String.fromCharCode(32): // Space: end auto-complete
+			                        disableAutocompleteMenu(); 
 								default:
 									// Remove all escape characters if we reach this point:
 									var newString = string.replace(String.fromCharCode(27), '');
 									// For debugging:
-								    // 		for (var i = 0; i < newString.length; i++) {
-									// 		var charcode = newString.charCodeAt(i);
-									//		window.webkit.messageHandlers.aShell.postMessage("char " + i + " = " + charcode + " = " + newString[i]);
-								    // }
-									// insert character at cursor position
+									// for (var i = 0; i < newString.length; i++) {
+									// 	var charcode = newString.charCodeAt(i);
+									// 	window.webkit.messageHandlers.aShell.postMessage("char " + i + " = " + charcode + " = " + newString[i]);
+									// }
+									// insert character at cursor position:
 									if (this.document_.getSelection().type == 'Range') {
 										term.onCut(null); // remove the selection without copying it
 									}
@@ -942,6 +990,8 @@
 					}
 					updatePromptPosition(); 
 					this.setCursorVisible(true);
+					this.setFontSize(window.fontSize); 
+					this.setFontFamily(window.fontFamily); 
 					this.setForegroundColor(window.foregroundColor);
 					this.setBackgroundColor(window.backgroundColor);
 					this.setCursorColor(window.cursorColor);
@@ -973,6 +1023,9 @@
 				window.promptEnd = 2; // prompt for commands, configurable
 				window.promptLine = 0; // term line on which the prompt started
 				window.promptScroll = 0; // scroll line on which the scrollPort was when the prompt started
+				if (window.voiceOver != undefined) {
+					window.term_.setAccessibilityEnabled(window.voiceOver);
+				}
 				if ((window.commandToExecute != undefined) && (window.commandToExecute != "")) {
 					window.webkit.messageHandlers.aShell.postMessage('shell:' + window.commandToExecute);
 					window.commandRunning = window.commandToExecute;

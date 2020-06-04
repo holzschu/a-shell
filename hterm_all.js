@@ -4993,6 +4993,7 @@ hterm.AccessibilityReader = function(div) {
                               width: 0; height: 0;
                               overflow: hidden;
                               left: 0; top: 0;`;
+                          //     left: -1000px; top: -1000px;`;
   div.appendChild(liveRegion);
 
   // Whether command output should be rendered for Assistive Technology.
@@ -5002,7 +5003,7 @@ hterm.AccessibilityReader = function(div) {
   // This live element is used for command output.
   this.liveElement_ = this.document_.createElement('p');
   this.liveElement_.setAttribute('aria-live', 'polite');
-  this.liveElement_.setAttribute('aria-label', '');
+  // this.liveElement_.setAttribute('aria-label', '');
   liveRegion.appendChild(this.liveElement_);
 
   // This live element is used for speaking out the current screen when
@@ -5010,7 +5011,7 @@ hterm.AccessibilityReader = function(div) {
   // announcements.
   this.assertiveLiveElement_ = this.document_.createElement('p');
   this.assertiveLiveElement_.setAttribute('aria-live', 'assertive');
-  this.assertiveLiveElement_.setAttribute('aria-label', '');
+  // this.assertiveLiveElement_.setAttribute('aria-label', '');
   liveRegion.appendChild(this.assertiveLiveElement_);
 
   // A queue of updates to announce.
@@ -5229,12 +5230,15 @@ hterm.AccessibilityReader.prototype.assertiveAnnounce = function(str) {
   // So we slightly change the string to ensure that the attribute change gets
   // registered.
   str = str.trim();
-  if (str == this.assertiveLiveElement_.getAttribute('aria-label')) {
+  // if (str == this.assertiveLiveElement_.getAttribute('aria-label')) {
+  if (str == this.assertiveLiveElement_.innerText) {
     str = '\n' + str;
   }
 
   this.clear();
-  this.assertiveLiveElement_.setAttribute('aria-label', str);
+  // this.assertiveLiveElement_.setAttribute('aria-label', str);
+  // window.webkit.messageHandlers.aShell.postMessage('assert:' + str);
+  this.assertiveLiveElement_.innerText = str;
 };
 
 /**
@@ -5377,11 +5381,14 @@ hterm.AccessibilityReader.prototype.addToLiveRegion_ = function() {
   // registered and the screen reader won't know that the string has changed.
   // So we slightly change the string to ensure that the attribute change gets
   // registered.
-  if (str == this.liveElement_.getAttribute('aria-label')) {
+  // if (str == this.liveElement_.getAttribute('aria-label')) {
+  if (str == this.liveElement_.innerText) {
     str = '\n' + str;
   }
 
-  this.liveElement_.setAttribute('aria-label', str);
+  // this.liveElement_.setAttribute('aria-label', str);
+  // window.webkit.messageHandlers.aShell.postMessage('live:' + str);
+  this.liveElement_.innerText = str;
   this.queue_ = [];
 };
 // SOURCE FILE: hterm/js/hterm_contextmenu.js
@@ -6113,7 +6120,6 @@ hterm.Keyboard.prototype.onKeyDown_ = function(e) {
   if (e.keyCode == 27)
     this.preventChromeAppNonCtrlShiftDefault_(e);
 
-
   var keyDef = this.keyMap.keyDefs[e.keyCode];
   if (!keyDef) {
     // If this key hasn't been explicitly registered, fall back to the unknown
@@ -6161,6 +6167,12 @@ hterm.Keyboard.prototype.onKeyDown_ = function(e) {
   // In the key-map, we surround the keyCap for non-printables in "[...]"
   var isPrintable = !(/^\[\w+\]$/.test(keyDef.keyCap));
 
+	// iOS: both alt keys act as keyboard modifiers: 
+  if (isPrintable && (this.terminal.keyboard.altKeyPressed > 0)) {
+  	  control = false;
+  	  alt = false;
+  }
+  	/* Old version: 
   switch (this.altGrMode) {
     case 'ctrl-alt':
     if (isPrintable && control && alt) {
@@ -6184,7 +6196,7 @@ hterm.Keyboard.prototype.onKeyDown_ = function(e) {
       alt = false;
     }
     break;
-  }
+  } */
 
   var action;
 
@@ -10400,23 +10412,23 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
   // Note: we use a <div> rather than a <button> because we don't want it to be
   // focusable. If it's focusable this interferes with the contenteditable
   // focus.
-  this.scrollUpButton_ = this.document_.createElement('div');
-  this.scrollUpButton_.id = 'hterm:a11y:page-up';
-  this.scrollUpButton_.innerText = hterm.msg('BUTTON_PAGE_UP', [], 'Page up');
-  this.scrollUpButton_.setAttribute('role', 'button');
-  this.scrollUpButton_.style.cssText = scrollButtonStyle;
-  this.scrollUpButton_.style.top = -scrollButtonTotalHeight + 'px';
-  this.scrollUpButton_.addEventListener('click', this.scrollPageUp.bind(this));
+  // iOS: scrollUp and scrollDown buttons deactivated because: 1) they don't work and 2) they interfere with VoiceOver
+  // this.scrollUpButton_ = this.document_.createElement('div');
+  // this.scrollUpButton_.id = 'hterm:a11y:page-up';
+  // this.scrollUpButton_.innerText = hterm.msg('BUTTON_PAGE_UP', [], 'Page up');
+  // this.scrollUpButton_.setAttribute('role', 'button');
+  // this.scrollUpButton_.style.cssText = scrollButtonStyle;
+  // this.scrollUpButton_.style.top = -scrollButtonTotalHeight + 'px';
+  // this.scrollUpButton_.addEventListener('click', this.scrollPageUp.bind(this));
 
-  this.scrollDownButton_ = this.document_.createElement('div');
-  this.scrollDownButton_.id = 'hterm:a11y:page-down';
-  this.scrollDownButton_.innerText =
-      hterm.msg('BUTTON_PAGE_DOWN', [], 'Page down');
-  this.scrollDownButton_.setAttribute('role', 'button');
-  this.scrollDownButton_.style.cssText = scrollButtonStyle;
-  this.scrollDownButton_.style.bottom = -scrollButtonTotalHeight + 'px';
-  this.scrollDownButton_.addEventListener(
-      'click', this.scrollPageDown.bind(this));
+  // this.scrollDownButton_ = this.document_.createElement('div');
+  // this.scrollDownButton_.id = 'hterm:a11y:page-down';
+  // this.scrollDownButton_.innerText =
+  //     hterm.msg('BUTTON_PAGE_DOWN', [], 'Page down');
+  // this.scrollDownButton_.setAttribute('role', 'button');
+  // this.scrollDownButton_.style.cssText = scrollButtonStyle;
+  // this.scrollDownButton_.style.bottom = -scrollButtonTotalHeight + 'px';
+  // this.scrollDownButton_.addEventListener('click', this.scrollPageDown.bind(this));
 
   // We only allow the scroll buttons to display after a delay, otherwise the
   // page up button can flash onto the screen during the intial change in focus.
@@ -10435,19 +10447,19 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
         this.accessibilityReader_.accessibilityEnabled;
 
     const selectedElement = this.document_.getSelection().anchorNode;
-    if (accessibilityEnabled && selectedElement == this.scrollUpButton_) {
-      this.scrollUpButton_.style.top = '0px';
-    } else {
-      this.scrollUpButton_.style.top = -scrollButtonTotalHeight + 'px';
-    }
-    if (accessibilityEnabled && selectedElement == this.scrollDownButton_) {
-      this.scrollDownButton_.style.bottom = '0px';
-    } else {
-      this.scrollDownButton_.style.bottom = -scrollButtonTotalHeight + 'px';
-    }
+    // if (accessibilityEnabled && selectedElement == this.scrollUpButton_) {
+    //   this.scrollUpButton_.style.top = '0px';
+    // } else {
+    //   this.scrollUpButton_.style.top = -scrollButtonTotalHeight + 'px';
+    // }
+    // if (accessibilityEnabled && selectedElement == this.scrollDownButton_) {
+    //   this.scrollDownButton_.style.bottom = '0px';
+    // } else {
+    //   this.scrollDownButton_.style.bottom = -scrollButtonTotalHeight + 'px';
+    // }
   });
 
-  this.screen_.appendChild(this.scrollUpButton_);
+  // this.screen_.appendChild(this.scrollUpButton_);
 
   // This is the main container for the fixed rows.
   this.rowNodes_ = doc.createElement('div');
@@ -10460,7 +10472,7 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
       '-moz-user-select: text;');
   this.screen_.appendChild(this.rowNodes_);
 
-  this.screen_.appendChild(this.scrollDownButton_);
+  // this.screen_.appendChild(this.scrollDownButton_);
 
   // Two nodes to hold offscreen text during the copy event.
   this.topSelectBag_ = doc.createElement('x-select-bag');
@@ -10634,8 +10646,8 @@ hterm.ScrollPort.prototype.getForegroundColor = function() {
 
 hterm.ScrollPort.prototype.setForegroundColor = function(color) {
   this.screen_.style.color = color;
-  this.scrollUpButton_.style.backgroundColor = color;
-  this.scrollDownButton_.style.backgroundColor = color;
+  // this.scrollUpButton_.style.backgroundColor = color;
+  // this.scrollDownButton_.style.backgroundColor = color;
 };
 
 hterm.ScrollPort.prototype.getBackgroundColor = function() {
@@ -10644,8 +10656,8 @@ hterm.ScrollPort.prototype.getBackgroundColor = function() {
 
 hterm.ScrollPort.prototype.setBackgroundColor = function(color) {
   this.screen_.style.backgroundColor = color;
-  this.scrollUpButton_.style.color = color;
-  this.scrollDownButton_.style.color = color;
+  // this.scrollUpButton_.style.color = color;
+  // this.scrollDownButton_.style.color = color;
 };
 
 hterm.ScrollPort.prototype.setBackgroundImage = function(image) {
@@ -10863,8 +10875,8 @@ hterm.ScrollPort.prototype.syncCharacterSize = function() {
  * dimensions of the 'x-screen'.
  */
 hterm.ScrollPort.prototype.resize = function() {
-  this.currentScrollbarWidthPx = hterm.getClientWidth(this.screen_) -
-    this.screen_.clientWidth;
+  this.currentScrollbarWidthPx = 0; 
+  	// hterm.getClientWidth(this.screen_) - this.screen_.clientWidth;
 
   this.syncScrollHeight();
   this.syncRowNodesDimensions_();
@@ -10983,8 +10995,8 @@ hterm.ScrollPort.prototype.updateScrollButtonState_ = function() {
     button.setAttribute('aria-disabled', disabled ? 'true' : 'false');
     button.style.opacity = disabled ? 0.5 : 1;
   };
-  setButton(this.scrollUpButton_, this.getTopRowIndex() == 0);
-  setButton(this.scrollDownButton_, this.isScrolledEnd);
+  // setButton(this.scrollUpButton_, this.getTopRowIndex() == 0);
+  // setButton(this.scrollDownButton_, this.isScrolledEnd);
 };
 
 /**
@@ -11561,6 +11573,7 @@ hterm.ScrollPort.prototype.onTouch = function(e) {
  * Handler for touch events.
  */
 hterm.ScrollPort.prototype.onTouch_ = function(e) {
+	
   this.onTouch(e);
 
   if (e.defaultPrevented)
@@ -12451,6 +12464,8 @@ hterm.Terminal.prototype.setCursorColor = function(color) {
     color = this.prefs_.get('cursor-color');
 
   this.setCssVar('cursor-color', color);
+  this.setCssVar('caret-color', color); // iOS 13 addition
+  this.scrollPort_.screen_.style.setProperty('caret-color', color); // iOS 13 addition
 };
 
 /**
@@ -12638,6 +12653,15 @@ hterm.Terminal.prototype.setFontSize = function(px) {
   this.setCssVar('charsize-height',
                  this.scrollPort_.characterSize.height + 'px');
 };
+
+// iOS addition. Make sure the text displayed is resized.
+hterm.Terminal.prototype.setFontFamily = function(n) {
+  this.scrollPort_.setFontFamily(n);
+  this.setCssVar('charsize-width', this.scrollPort_.characterSize.width + 'px');
+  this.setCssVar('charsize-height',
+                 this.scrollPort_.characterSize.height + 'px');
+};
+
 
 /**
  * Get the current font size.
@@ -12862,7 +12886,8 @@ hterm.Terminal.prototype.setWidth = function(columnCount) {
 
   this.div_.style.width = Math.ceil(
       this.scrollPort_.characterSize.width *
-      columnCount + this.scrollPort_.currentScrollbarWidthPx) + 'px';
+      columnCount + this.scrollPort_.currentScrollbarWidthPx) - 2 + 'px';
+
   this.realizeSize_(columnCount, this.screenSize.height);
   this.scheduleSyncCursorPosition_();
 };
@@ -12936,6 +12961,20 @@ hterm.Terminal.prototype.realizeWidth_ = function(columnCount) {
   }
 
   this.screen_.setColumnCount(this.screenSize.width);
+  	// rewrite everything after each resize:
+	if (window.term_ != undefined) {
+		let content = window.printedContent; 
+		// Vim screws up the resize. BTW, resize while Vim? works.
+		window.term_.wipeContents(); 
+		window.printedContent = '';  
+		if (content.includes(";Thanks for flying Vim")) {
+			// remove everything before "Thanks for flying Vim":
+			content = content.substring(content.lastIndexOf(";Thanks for flying Vim"))
+			// and then everything until next prompt:
+			content = content.substring(content.indexOf("$ "))
+		}
+		this.io.print(content);
+  }
 };
 
 /**
@@ -13652,7 +13691,6 @@ hterm.Terminal.prototype.renumberRows_ = function(start, end, opt_screen) {
  * @param{string} str The string to print.
  */
 hterm.Terminal.prototype.print = function(str) {
-  	
   this.scheduleSyncCursorPosition_();
 
   // Basic accessibility output for the screen reader.
@@ -13998,6 +14036,7 @@ hterm.Terminal.prototype.clearHome = function(opt_screen) {
   var bottom = screen.getHeight();
 
   this.accessibilityReader_.clear();
+  window.printedContent = ''; 
 
   if (bottom == 0) {
     // Empty screen, nothing to do.
@@ -15572,6 +15611,10 @@ hterm.Terminal.prototype.onResize_ = function() {
   // We do this even if the size didn't change, just to be sure everything is
   // in sync.
   this.realizeSize_(columnCount, rowCount);
+  // iOS addition: set left margin to 50% of remainder of pixels (instead of all on the right)
+  let margin = (this.scrollPort_.getScreenWidth() - columnCount * this.scrollPort_.characterSize.width) / 2;
+  this.div_.style.marginLeft = Math.round(margin)+'px';
+
   this.showZoomWarning_(this.scrollPort_.characterSize.zoomFactor != 1);
 
   if (isNewSize)
@@ -15889,7 +15932,7 @@ hterm.Terminal.IO.prototype.writeUTF16 = function(string) {
 
   this.terminal_.interpret(string);
   	// iOS: keep a copy of everything that has been sent to the screen, 
-  	// to restore terminal status later (and resize?):
+  	// to restore terminal status later and resize.
   	window.printedContent += string
 };
 
