@@ -7,27 +7,22 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
          <BreakpointContent
-            uuid = "8D13EF09-2E1A-4846-9A5D-24EB1F6A0CE5"
-            shouldBeEnabled = "No"
+            uuid = "81EBDFE6-96E5-46B6-B8B8-90DC76CC5E07"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            symbolName = "ios_isatty"
+            symbolName = "tgetent"
             moduleName = "">
             <Locations>
                <Location
-                  uuid = "8D13EF09-2E1A-4846-9A5D-24EB1F6A0CE5 - a2dfa769d4f9069"
-                  shouldBeEnabled = "No"
+                  uuid = "81EBDFE6-96E5-46B6-B8B8-90DC76CC5E07 - 8c4d225c4c9def57"
+                  shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "ios_isatty"
-                  moduleName = "ios_system"
+                  symbolName = "tgetent"
+                  moduleName = "libncurses.5.4.dylib"
                   usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/holzschu/src/Xcode_iPad/ios_system/ios_system.m"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "896"
-                  endingLineNumber = "896"
-                  offsetFromSymbolStart = "11">
+                  offsetFromSymbolStart = "0">
                </Location>
             </Locations>
          </BreakpointContent>
@@ -35,27 +30,114 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
          <BreakpointContent
-            uuid = "0A99470B-16F0-4620-A409-9BE96CA01425"
-            shouldBeEnabled = "No"
+            uuid = "B96B3E8E-A760-412D-95DE-D00DA0001BFF"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            symbolName = "webViewPrint"
+            symbolName = "tgetflag"
             moduleName = "">
             <Locations>
                <Location
-                  uuid = "0A99470B-16F0-4620-A409-9BE96CA01425 - f7a586d9794f4bc9"
-                  shouldBeEnabled = "No"
+                  uuid = "B96B3E8E-A760-412D-95DE-D00DA0001BFF - 9b9258d98c4b1403"
+                  shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "webViewPrint"
-                  moduleName = "ios_system"
+                  symbolName = "tgetflag"
+                  moduleName = "libncurses.5.4.dylib"
                   usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/holzschu/src/Xcode_iPad/ios_system/ios_system.m"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "79"
-                  endingLineNumber = "79"
-                  offsetFromSymbolStart = "32">
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "94FFADE4-FA7C-41EA-BB45-94A911567250"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "tgetstr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "94FFADE4-FA7C-41EA-BB45-94A911567250 - 8c4d225c55b2b441"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "tgetstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "5C70A90D-7E40-4EB6-9975-882652F90837"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "tgoto"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "5C70A90D-7E40-4EB6-9975-882652F90837 - c62a73c73a65cf27"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "tgoto"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "B2F962B7-E618-47F4-8F90-9EBF7DC5E260"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "tputs"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "B2F962B7-E618-47F4-8F90-9EBF7DC5E260 - c62a73c668a3b6b0"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "tputs"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "7A3D8E6C-0C04-4AB3-9E09-96E37FF728D0"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "malloc_error_break"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "7A3D8E6C-0C04-4AB3-9E09-96E37FF728D0 - 9d096611641b4e7c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "malloc_error_break"
+                  moduleName = "libsystem_malloc.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
                </Location>
             </Locations>
          </BreakpointContent>

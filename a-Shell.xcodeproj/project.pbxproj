@@ -81,6 +81,8 @@
 		22984EFA22C93DBF00069497 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF822C93DBF00069497 /* LaunchScreen.storyboard */; };
 		229BAF4222E8A73A00C2269B /* hterm.html in Resources */ = {isa = PBXBuildFile; fileRef = 224D10BA22CB247900A234EE /* hterm.html */; };
 		229BAF4322E8A73A00C2269B /* hterm_all.js in Resources */ = {isa = PBXBuildFile; fileRef = 22984F0122C9F78800069497 /* hterm_all.js */; };
+		229F51152473BBCA0053AC03 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229F51142473BBC90053AC03 /* commandDictionary.plist */; };
+		229F5117247436BE0053AC03 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229F5116247436BD0053AC03 /* commandDictionary.plist */; };
 		22A0FB1A233F5AB6009A4DE3 /* pythonA-cryptography.hazmat.bindings._constant_time.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A0FB10233F5A30009A4DE3 /* pythonA-cryptography.hazmat.bindings._constant_time.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22A0FB1B233F5AB6009A4DE3 /* pythonA-cryptography.hazmat.bindings._openssl.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A0FB0C233F5A2F009A4DE3 /* pythonA-cryptography.hazmat.bindings._openssl.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22A0FB1C233F5AB6009A4DE3 /* pythonA-cryptography.hazmat.bindings._padding.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A0FB0A233F5A2F009A4DE3 /* pythonA-cryptography.hazmat.bindings._padding.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -106,7 +108,17 @@
 		22A0FB30233F5AB6009A4DE3 /* pythonA-PIL._imagingmorph.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A0FB19233F5A31009A4DE3 /* pythonA-PIL._imagingmorph.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22A0FB31233F5AB6009A4DE3 /* pythonA-PIL._imagingtk.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A0FB01233F5A2E009A4DE3 /* pythonA-PIL._imagingtk.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22A0FB32233F5AB6009A4DE3 /* pythonA.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A0FB03233F5A2E009A4DE3 /* pythonA.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22B1B81922CB9E4900F7C452 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 22B1B81722CB9E4900F7C452 /* commandDictionary.plist */; };
+		22AD8713246B3ACB00F415DE /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 22AD8712246B3ACA00F415DE /* Intents.intentdefinition */; };
+		22AD871B246EBFFB00F415DE /* IntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AD871A246EBFFB00F415DE /* IntentHandler.swift */; };
+		22AD8723246EBFFC00F415DE /* IntentsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22AD8722246EBFFB00F415DE /* IntentsUI.framework */; };
+		22AD8726246EBFFD00F415DE /* IntentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AD8725246EBFFD00F415DE /* IntentViewController.swift */; };
+		22AD8729246EBFFD00F415DE /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22AD8727246EBFFD00F415DE /* MainInterface.storyboard */; };
+		22AD872D246EBFFD00F415DE /* a-Shell-IntentsUI.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22AD8721246EBFFB00F415DE /* a-Shell-IntentsUI.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		22AD8730246EBFFD00F415DE /* a-Shell-Intents.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22AD8718246EBFFA00F415DE /* a-Shell-Intents.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		22AD8738246EC19D00F415DE /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 22AD8712246B3ACA00F415DE /* Intents.intentdefinition */; };
+		22AD8739246EC19D00F415DE /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 22AD8712246B3ACA00F415DE /* Intents.intentdefinition */; };
+		22AD873A246EC8A400F415DE /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81122CB9C6B00F7C452 /* ios_system.framework */; };
+		22AD8741246F1CD700F415DE /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
 		22B1B81C22CB9E7F00F7C452 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81122CB9C6B00F7C452 /* ios_system.framework */; };
 		22B1B81D22CB9E7F00F7C452 /* ios_system.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81122CB9C6B00F7C452 /* ios_system.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B1B82222CB9EBC00F7C452 /* awk.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81E22CB9EBB00F7C452 /* awk.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -132,7 +144,46 @@
 		22E1B53A243DF64000EA8FBD /* require.js in Resources */ = {isa = PBXBuildFile; fileRef = 22E1B539243DF63E00EA8FBD /* require.js */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		22AD872B246EBFFD00F415DE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 22AD8720246EBFFB00F415DE;
+			remoteInfo = "a-Shell-IntentsUI";
+		};
+		22AD872E246EBFFD00F415DE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 22AD8717246EBFFA00F415DE;
+			remoteInfo = "a-Shell-Intents";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
+		22AD8731246EBFFD00F415DE /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				22AD872D246EBFFD00F415DE /* a-Shell-IntentsUI.appex in Embed App Extensions */,
+				22AD8730246EBFFD00F415DE /* a-Shell-Intents.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22AD873C246EC8A400F415DE /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22B1B81522CB9D6500F7C452 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -310,6 +361,8 @@
 		22984EF922C93DBF00069497 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		22984EFB22C93DBF00069497 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		22984F0122C9F78800069497 /* hterm_all.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = hterm_all.js; sourceTree = "<group>"; };
+		229F51142473BBC90053AC03 /* commandDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = commandDictionary.plist; path = Resources/commandDictionary.plist; sourceTree = "<group>"; };
+		229F5116247436BD0053AC03 /* commandDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = commandDictionary.plist; path = Resources/commandDictionary.plist; sourceTree = "<group>"; };
 		22A0FB01233F5A2E009A4DE3 /* pythonA-PIL._imagingtk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "pythonA-PIL._imagingtk.framework"; path = "Frameworks/pythonA-PIL._imagingtk.framework"; sourceTree = "<group>"; };
 		22A0FB02233F5A2E009A4DE3 /* pythonA-PIL._imagingmath.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "pythonA-PIL._imagingmath.framework"; path = "Frameworks/pythonA-PIL._imagingmath.framework"; sourceTree = "<group>"; };
 		22A0FB03233F5A2E009A4DE3 /* pythonA.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = pythonA.framework; path = Frameworks/pythonA.framework; sourceTree = "<group>"; };
@@ -336,9 +389,19 @@
 		22A0FB18233F5A31009A4DE3 /* pythonA-numpy.fft.fftpack_lite.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "pythonA-numpy.fft.fftpack_lite.framework"; path = "Frameworks/pythonA-numpy.fft.fftpack_lite.framework"; sourceTree = "<group>"; };
 		22A0FB19233F5A31009A4DE3 /* pythonA-PIL._imagingmorph.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "pythonA-PIL._imagingmorph.framework"; path = "Frameworks/pythonA-PIL._imagingmorph.framework"; sourceTree = "<group>"; };
 		22A7AFB8238B2CAE00C51E06 /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources/usr; sourceTree = "<group>"; };
+		22AD8712246B3ACA00F415DE /* Intents.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = Intents.intentdefinition; sourceTree = "<group>"; };
+		22AD8718246EBFFA00F415DE /* a-Shell-Intents.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "a-Shell-Intents.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		22AD871A246EBFFB00F415DE /* IntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentHandler.swift; sourceTree = "<group>"; };
+		22AD871C246EBFFB00F415DE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		22AD8721246EBFFB00F415DE /* a-Shell-IntentsUI.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "a-Shell-IntentsUI.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		22AD8722246EBFFB00F415DE /* IntentsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IntentsUI.framework; path = System/Library/Frameworks/IntentsUI.framework; sourceTree = SDKROOT; };
+		22AD8725246EBFFD00F415DE /* IntentViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentViewController.swift; sourceTree = "<group>"; };
+		22AD8728246EBFFD00F415DE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
+		22AD872A246EBFFD00F415DE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		22AD873F246EDD2E00F415DE /* a-Shell-Intents.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell-Intents.entitlements"; sourceTree = "<group>"; };
+		22AD8740246EDD4C00F415DE /* a-Shell-IntentsUI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell-IntentsUI.entitlements"; sourceTree = "<group>"; };
 		22B1B81122CB9C6B00F7C452 /* ios_system.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ios_system.framework; path = Frameworks/ios_system.framework; sourceTree = "<group>"; };
 		22B1B81622CB9E4800F7C452 /* extraCommandsDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = extraCommandsDictionary.plist; path = Resources/extraCommandsDictionary.plist; sourceTree = "<group>"; };
-		22B1B81722CB9E4900F7C452 /* commandDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = commandDictionary.plist; path = Resources/commandDictionary.plist; sourceTree = "<group>"; };
 		22B1B81E22CB9EBB00F7C452 /* awk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = awk.framework; path = Frameworks/awk.framework; sourceTree = "<group>"; };
 		22B1B81F22CB9EBB00F7C452 /* files.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = files.framework; path = Frameworks/files.framework; sourceTree = "<group>"; };
 		22B1B82022CB9EBC00F7C452 /* curl_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = curl_ios.framework; path = Frameworks/curl_ios.framework; sourceTree = "<group>"; };
@@ -367,6 +430,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				22B1B81C22CB9E7F00F7C452 /* ios_system.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22AD8715246EBFFA00F415DE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22AD873A246EC8A400F415DE /* ios_system.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22AD871E246EBFFB00F415DE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22AD8723246EBFFC00F415DE /* IntentsUI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -456,9 +535,13 @@
 		22984EE122C93DBC00069497 = {
 			isa = PBXGroup;
 			children = (
+				229F5116247436BD0053AC03 /* commandDictionary.plist */,
+				22AD8712246B3ACA00F415DE /* Intents.intentdefinition */,
 				22BF6242231589DB00FEA585 /* Settings.bundle */,
 				22B1B81A22CB9E5500F7C452 /* Resources */,
 				22984EEC22C93DBC00069497 /* a-Shell */,
+				22AD8719246EBFFA00F415DE /* a-Shell-Intents */,
+				22AD8724246EBFFC00F415DE /* a-Shell-IntentsUI */,
 				22984EEB22C93DBC00069497 /* Products */,
 				22B1B80D22CB9A5A00F7C452 /* Frameworks */,
 			);
@@ -468,6 +551,8 @@
 			isa = PBXGroup;
 			children = (
 				22984EEA22C93DBC00069497 /* a-Shell.app */,
+				22AD8718246EBFFA00F415DE /* a-Shell-Intents.appex */,
+				22AD8721246EBFFB00F415DE /* a-Shell-IntentsUI.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -534,6 +619,27 @@
 			name = "PythonA frameworks";
 			sourceTree = "<group>";
 		};
+		22AD8719246EBFFA00F415DE /* a-Shell-Intents */ = {
+			isa = PBXGroup;
+			children = (
+				22AD873F246EDD2E00F415DE /* a-Shell-Intents.entitlements */,
+				22AD871A246EBFFB00F415DE /* IntentHandler.swift */,
+				22AD871C246EBFFB00F415DE /* Info.plist */,
+			);
+			path = "a-Shell-Intents";
+			sourceTree = "<group>";
+		};
+		22AD8724246EBFFC00F415DE /* a-Shell-IntentsUI */ = {
+			isa = PBXGroup;
+			children = (
+				22AD8740246EDD4C00F415DE /* a-Shell-IntentsUI.entitlements */,
+				22AD8725246EBFFD00F415DE /* IntentViewController.swift */,
+				22AD8727246EBFFD00F415DE /* MainInterface.storyboard */,
+				22AD872A246EBFFD00F415DE /* Info.plist */,
+			);
+			path = "a-Shell-IntentsUI";
+			sourceTree = "<group>";
+		};
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -563,6 +669,7 @@
 				22B1B82022CB9EBC00F7C452 /* curl_ios.framework */,
 				22B1B81F22CB9EBB00F7C452 /* files.framework */,
 				22B1B81122CB9C6B00F7C452 /* ios_system.framework */,
+				22AD8722246EBFFB00F415DE /* IntentsUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -587,7 +694,7 @@
 				22BD476823044D17007248EC /* vim */,
 				224D10BA22CB247900A234EE /* hterm.html */,
 				22984F0122C9F78800069497 /* hterm_all.js */,
-				22B1B81722CB9E4900F7C452 /* commandDictionary.plist */,
+				229F51142473BBC90053AC03 /* commandDictionary.plist */,
 				22B1B81622CB9E4800F7C452 /* extraCommandsDictionary.plist */,
 				226012EE231D238B00AEB059 /* texCommandsDictionary.plist */,
 				22601306232195A100AEB059 /* luatexCommandsDictionary.plist */,
@@ -606,15 +713,53 @@
 				22984EE722C93DBC00069497 /* Frameworks */,
 				22984EE822C93DBC00069497 /* Resources */,
 				22B1B81522CB9D6500F7C452 /* Embed Frameworks */,
+				22AD8731246EBFFD00F415DE /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				22AD872C246EBFFD00F415DE /* PBXTargetDependency */,
+				22AD872F246EBFFD00F415DE /* PBXTargetDependency */,
 			);
 			name = "a-Shell";
 			productName = "a-Shell";
 			productReference = 22984EEA22C93DBC00069497 /* a-Shell.app */;
 			productType = "com.apple.product-type.application";
+		};
+		22AD8717246EBFFA00F415DE /* a-Shell-Intents */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 22AD8737246EBFFD00F415DE /* Build configuration list for PBXNativeTarget "a-Shell-Intents" */;
+			buildPhases = (
+				22AD8714246EBFFA00F415DE /* Sources */,
+				22AD8715246EBFFA00F415DE /* Frameworks */,
+				22AD8716246EBFFA00F415DE /* Resources */,
+				22AD873C246EC8A400F415DE /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "a-Shell-Intents";
+			productName = "a-Shell-Intents";
+			productReference = 22AD8718246EBFFA00F415DE /* a-Shell-Intents.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		22AD8720246EBFFB00F415DE /* a-Shell-IntentsUI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 22AD8736246EBFFD00F415DE /* Build configuration list for PBXNativeTarget "a-Shell-IntentsUI" */;
+			buildPhases = (
+				22AD871D246EBFFB00F415DE /* Sources */,
+				22AD871E246EBFFB00F415DE /* Frameworks */,
+				22AD871F246EBFFB00F415DE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "a-Shell-IntentsUI";
+			productName = "a-Shell-IntentsUI";
+			productReference = 22AD8721246EBFFB00F415DE /* a-Shell-IntentsUI.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -628,13 +773,19 @@
 					"texmf-dist-fonts",
 					"texmf-dist-fonts-type1",
 				);
-				LastSwiftUpdateCheck = 1100;
+				LastSwiftUpdateCheck = 1140;
 				LastUpgradeCheck = 1100;
 				ORGANIZATIONNAME = AsheKube;
 				TargetAttributes = {
 					22984EE922C93DBC00069497 = {
 						CreatedOnToolsVersion = 11.0;
 						LastSwiftMigration = 1140;
+					};
+					22AD8717246EBFFA00F415DE = {
+						CreatedOnToolsVersion = 11.4.1;
+					};
+					22AD8720246EBFFB00F415DE = {
+						CreatedOnToolsVersion = 11.4.1;
 					};
 				};
 			};
@@ -652,6 +803,8 @@
 			projectRoot = "";
 			targets = (
 				22984EE922C93DBC00069497 /* a-Shell */,
+				22AD8717246EBFFA00F415DE /* a-Shell-Intents */,
+				22AD8720246EBFFB00F415DE /* a-Shell-IntentsUI */,
 			);
 		};
 /* End PBXProject section */
@@ -661,6 +814,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				229F51152473BBCA0053AC03 /* commandDictionary.plist in Resources */,
 				22372B722448E85D0033FE07 /* usr in Resources */,
 				22E1B53A243DF64000EA8FBD /* require.js in Resources */,
 				22484B062434F11F00D6BDDA /* node_modules in Resources */,
@@ -669,7 +823,6 @@
 				229BAF4222E8A73A00C2269B /* hterm.html in Resources */,
 				229BAF4322E8A73A00C2269B /* hterm_all.js in Resources */,
 				22BF623E23157F2400FEA585 /* cacert.pem in Resources */,
-				22B1B81922CB9E4900F7C452 /* commandDictionary.plist in Resources */,
 				226012EF231D239500AEB059 /* texCommandsDictionary.plist in Resources */,
 				22601307232195AD00AEB059 /* luatexCommandsDictionary.plist in Resources */,
 				22984EFA22C93DBF00069497 /* LaunchScreen.storyboard in Resources */,
@@ -687,6 +840,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		22AD8716246EBFFA00F415DE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				229F5117247436BE0053AC03 /* commandDictionary.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22AD871F246EBFFB00F415DE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22AD8729246EBFFD00F415DE /* MainInterface.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -697,6 +866,7 @@
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
 				22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */,
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
+				22AD8713246B3ACB00F415DE /* Intents.intentdefinition in Sources */,
 				2291286722D9DAC40004A5EA /* UIColor+hexString.swift in Sources */,
 				226AD81E23436B7A00E5D672 /* UIViewController+showAlert.swift in Sources */,
 				225177C8231663430084B9C1 /* ListPythonFiles.swift in Sources */,
@@ -711,7 +881,39 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		22AD8714246EBFFA00F415DE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22AD8741246F1CD700F415DE /* String+C.swift in Sources */,
+				22AD8738246EC19D00F415DE /* Intents.intentdefinition in Sources */,
+				22AD871B246EBFFB00F415DE /* IntentHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22AD871D246EBFFB00F415DE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22AD8739246EC19D00F415DE /* Intents.intentdefinition in Sources */,
+				22AD8726246EBFFD00F415DE /* IntentViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		22AD872C246EBFFD00F415DE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 22AD8720246EBFFB00F415DE /* a-Shell-IntentsUI */;
+			targetProxy = 22AD872B246EBFFD00F415DE /* PBXContainerItemProxy */;
+		};
+		22AD872F246EBFFD00F415DE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 22AD8717246EBFFA00F415DE /* a-Shell-Intents */;
+			targetProxy = 22AD872E246EBFFD00F415DE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		22984EF822C93DBF00069497 /* LaunchScreen.storyboard */ = {
@@ -720,6 +922,14 @@
 				22984EF922C93DBF00069497 /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		22AD8727246EBFFD00F415DE /* MainInterface.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				22AD8728246EBFFD00F415DE /* Base */,
+			);
+			name = MainInterface.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -848,11 +1058,12 @@
 		22984EFF22C93DBF00069497 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 65;
+				CURRENT_PROJECT_VERSION = 94;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -871,7 +1082,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.0;
+				MARKETING_VERSION = 1.4.3;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -890,11 +1101,12 @@
 		22984F0022C93DBF00069497 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 65;
+				CURRENT_PROJECT_VERSION = 94;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -913,7 +1125,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.0;
+				MARKETING_VERSION = 1.4.3;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -923,6 +1135,106 @@
 				STRIP_INSTALLED_PRODUCT = NO;
 				STRIP_STYLE = debugging;
 				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		22AD8732246EBFFD00F415DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 94;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
+				INFOPLIST_FILE = "a-Shell-Intents/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.4.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-Intents";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		22AD8733246EBFFD00F415DE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 94;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
+				INFOPLIST_FILE = "a-Shell-Intents/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.4.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-Intents";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		22AD8734246EBFFD00F415DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 94;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.4.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-IntentsUI";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		22AD8735246EBFFD00F415DE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 94;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.4.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-IntentsUI";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -945,6 +1257,24 @@
 			buildConfigurations = (
 				22984EFF22C93DBF00069497 /* Debug */,
 				22984F0022C93DBF00069497 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		22AD8736246EBFFD00F415DE /* Build configuration list for PBXNativeTarget "a-Shell-IntentsUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				22AD8734246EBFFD00F415DE /* Debug */,
+				22AD8735246EBFFD00F415DE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		22AD8737246EBFFD00F415DE /* Build configuration list for PBXNativeTarget "a-Shell-Intents" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				22AD8732246EBFFD00F415DE /* Debug */,
+				22AD8733246EBFFD00F415DE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
