@@ -31,9 +31,11 @@ Most configuration files (Python packages, TeX files, Clang SDK...) are in `~/Li
 
 a-Shell uses iOS 13 ability to access directories in other Apps sandbox. Type `pickFolder` to access a directory inside another App. Once you have selected a directory, you can do pretty much anything you want here, so be careful. 
 
-All the directories you access are bookmarked, so you can return to them later without `pickFolder`. You can also bookmark the current directory with `bookmark`. `showmarks` will list all the existing bookmarks, `jump mark` will change directory to this specific bookmark, `renamemark` will let you change the name of a specific bookmark and `deletemark` will delete a bookmark. 
+All the directories you access with `pickFolder` are bookmarked, so you can return to them later without `pickFolder`. You can also bookmark the current directory with `bookmark`. `showmarks` will list all the existing bookmarks, `jump mark` will change the current directory to this specific bookmark, `renamemark` will let you change the name of a specific bookmark and `deletemark` will delete a bookmark. 
 
 A user-configurable option in Settings lets you use the commands `s`, `g`, `l`, `r` and `d` instead or as well. 
+
+If you are lost, `cd` will always bring you back to `~/Documents/`. `cd -` will change to the previous directory. 
 
 ## Shortcuts
 
@@ -43,7 +45,7 @@ a-Shell is compatible with Apple Shortcuts, giving users full control of the She
 
 Shortcuts can be executed either "In Extension" or "In App". "In Extension" means the shortcut runs in a lightweight version of the App, without no graphical user interface. It is good for light commands that do not require configuration files or system libraries (mkdir, nslookup, whois, touch, cat, echo...). "In App" opens the main application to execute the shortcut. It has access to all the commands, but will take longer. Once a shortcut has opened the App, you can return to the Shortcuts app by calling the command `open shortcuts://`. The default behaviour is to try to run the commands "in Extension" as much as possible, based on the content of the commands. You can force a specific shortcut to run "in App" or "in Extension", with the warning that it won't always work. 
 
-Both kind of shortcuts run by default in the same directory, `$SHORTCUTS`. Of course, since you can run the commands `cd` and `jump` in a shortcut, you can pretty much go anywhere.
+Both kind of shortcuts run by default in the same specific directory, `$SHORTCUTS`. Of course, since you can run the commands `cd` and `jump` in a shortcut, you can pretty much go anywhere.
 
 ## Programming / add more commands:
 
@@ -55,7 +57,7 @@ You can also cross-compile programs on your main computer using our specific [WA
 
 Precompiled WebAssembly commands specific for a-Shell are available here: https://github.com/holzschu/a-Shell-commands These include `zip`, `unzip`, `xz`, `ffmpeg`... You install them on your iPad by downloading them and placing them in the `$PATH`. 
 
-We have the limitations of WebAssembly: no sockets, no forks, no interactive user input (piping user input with `command | wasm program.wasm` works fine). 
+We have the limitations of WebAssembly: no sockets, no forks, no interactive user input (piping input from other commands with `command | wasm program.wasm` works fine). 
 
 For Python, you can install more packages with `pip install packagename`, but only if they are pure Python. The C compiler is not yet able to produce dynamic libraries that could be used by Python. 
 
