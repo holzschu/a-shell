@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -12,6 +12,10 @@
 		2208ACC322CDED49003985D6 /* network_ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2208ACC022CDED3A003985D6 /* network_ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC422D2026E003985D6 /* UIDevice+Name.swift */; };
 		2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
+		2209216524B3CCEB00D3327B /* ios_system in Frameworks */ = {isa = PBXBuildFile; productRef = 2209216424B3CCEB00D3327B /* ios_system */; };
+		2209216824B3D27600D3327B /* openssl in Frameworks */ = {isa = PBXBuildFile; productRef = 2209216724B3D27600D3327B /* openssl */; };
+		2236522F249A315F00221868 /* mandoc.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2236522E249A315E00221868 /* mandoc.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22365231249A39AC00221868 /* man in Resources */ = {isa = PBXBuildFile; fileRef = 22365230249A39AA00221868 /* man */; };
 		22372B722448E85D0033FE07 /* usr in Resources */ = {isa = PBXBuildFile; fileRef = 22372B712448E85C0033FE07 /* usr */; };
 		2242B075232293E7002A20FC /* bin in Resources */ = {isa = PBXBuildFile; fileRef = 2242B074232293E5002A20FC /* bin */; };
 		22484B062434F11F00D6BDDA /* node_modules in Resources */ = {isa = PBXBuildFile; fileRef = 22484B052434F11E00D6BDDA /* node_modules */; };
@@ -66,6 +70,7 @@
 		22720AC023898D7F005BEB9E /* lli.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720ABA23898D65005BEB9E /* lli.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22720AC123898D7F005BEB9E /* nm.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB523898D64005BEB9E /* nm.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22720AC223898D7F005BEB9E /* opt.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB623898D64005BEB9E /* opt.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22734B8A24B379D7002DDFCF /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81122CB9C6B00F7C452 /* ios_system.framework */; };
 		227722EB239D1FA00020037E /* task in Resources */ = {isa = PBXBuildFile; fileRef = 227722EA239D1F9F0020037E /* task */; };
 		227722EF239D23450020037E /* task.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227722EC239D23410020037E /* task.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227722F0239D23450020037E /* lex.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227722ED239D23420020037E /* lex.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -119,7 +124,6 @@
 		22AD8739246EC19D00F415DE /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 22AD8712246B3ACA00F415DE /* Intents.intentdefinition */; };
 		22AD873A246EC8A400F415DE /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81122CB9C6B00F7C452 /* ios_system.framework */; };
 		22AD8741246F1CD700F415DE /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
-		22B1B81C22CB9E7F00F7C452 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81122CB9C6B00F7C452 /* ios_system.framework */; };
 		22B1B81D22CB9E7F00F7C452 /* ios_system.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81122CB9C6B00F7C452 /* ios_system.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B1B82222CB9EBC00F7C452 /* awk.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81E22CB9EBB00F7C452 /* awk.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B1B82422CB9EBC00F7C452 /* files.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B1B81F22CB9EBB00F7C452 /* files.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -275,6 +279,7 @@
 				22720AC023898D7F005BEB9E /* lli.framework in Embed Frameworks */,
 				22720AC123898D7F005BEB9E /* nm.framework in Embed Frameworks */,
 				22720AC223898D7F005BEB9E /* opt.framework in Embed Frameworks */,
+				2236522F249A315F00221868 /* mandoc.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -288,6 +293,8 @@
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC822D24703003985D6 /* WkWebViewExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WkWebViewExtension.swift; sourceTree = SOURCE_ROOT; };
 		22108D6A2338BE9D003D7556 /* texlive_2019_texmf-dist_fonts_type1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_type1"; path = "ODR/texlive_2019_texmf-dist_fonts_type1"; sourceTree = "<group>"; };
+		2236522E249A315E00221868 /* mandoc.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mandoc.framework; path = Frameworks/mandoc.framework; sourceTree = "<group>"; };
+		22365230249A39AA00221868 /* man */ = {isa = PBXFileReference; lastKnownFileType = folder; path = man; sourceTree = "<group>"; };
 		22372B712448E85C0033FE07 /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources/usr; sourceTree = "<group>"; };
 		2242B074232293E5002A20FC /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bin; path = Resources/bin; sourceTree = "<group>"; };
 		2242B07623229BA4002A20FC /* luatexfiles */ = {isa = PBXFileReference; lastKnownFileType = folder; name = luatexfiles; path = ODR/luatexfiles; sourceTree = "<group>"; };
@@ -429,7 +436,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22B1B81C22CB9E7F00F7C452 /* ios_system.framework in Frameworks */,
+				2209216824B3D27600D3327B /* openssl in Frameworks */,
+				22734B8A24B379D7002DDFCF /* ios_system.framework in Frameworks */,
+				2209216524B3CCEB00D3327B /* ios_system in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -643,6 +652,7 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2236522E249A315E00221868 /* mandoc.framework */,
 				2260858D244CE11000B88587 /* ar.framework */,
 				228B14F323A826E600FE5B43 /* lld.framework */,
 				227722F2239EE4240020037E /* llc.framework */,
@@ -677,6 +687,7 @@
 		22B1B81A22CB9E5500F7C452 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				22365230249A39AA00221868 /* man */,
 				22372B712448E85C0033FE07 /* usr */,
 				22E1B539243DF63E00EA8FBD /* require.js */,
 				22484B052434F11E00D6BDDA /* node_modules */,
@@ -722,6 +733,10 @@
 				22AD872F246EBFFD00F415DE /* PBXTargetDependency */,
 			);
 			name = "a-Shell";
+			packageProductDependencies = (
+				2209216424B3CCEB00D3327B /* ios_system */,
+				2209216724B3D27600D3327B /* openssl */,
+			);
 			productName = "a-Shell";
 			productReference = 22984EEA22C93DBC00069497 /* a-Shell.app */;
 			productType = "com.apple.product-type.application";
@@ -798,6 +813,10 @@
 				Base,
 			);
 			mainGroup = 22984EE122C93DBC00069497;
+			packageReferences = (
+				2209216324B3CCEB00D3327B /* XCRemoteSwiftPackageReference "ios_system" */,
+				2209216624B3D27600D3327B /* XCRemoteSwiftPackageReference "libssh2-for-iOS" */,
+			);
 			productRefGroup = 22984EEB22C93DBC00069497 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -814,6 +833,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22365231249A39AC00221868 /* man in Resources */,
 				229F51152473BBCA0053AC03 /* commandDictionary.plist in Resources */,
 				22372B722448E85D0033FE07 /* usr in Resources */,
 				22E1B53A243DF64000EA8FBD /* require.js in Resources */,
@@ -1063,7 +1083,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 94;
+				CURRENT_PROJECT_VERSION = 102;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -1082,7 +1102,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.3;
+				MARKETING_VERSION = 1.5.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -1106,7 +1126,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 94;
+				CURRENT_PROJECT_VERSION = 102;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -1125,7 +1145,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.3;
+				MARKETING_VERSION = 1.5.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -1146,7 +1166,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 94;
+				CURRENT_PROJECT_VERSION = 102;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1158,7 +1178,7 @@
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.3;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1173,7 +1193,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 94;
+				CURRENT_PROJECT_VERSION = 102;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1185,7 +1205,7 @@
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.3;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1200,7 +1220,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 94;
+				CURRENT_PROJECT_VERSION = 102;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
@@ -1208,7 +1228,7 @@
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.3;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1223,7 +1243,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 94;
+				CURRENT_PROJECT_VERSION = 102;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
@@ -1231,7 +1251,7 @@
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.3;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1280,6 +1300,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2209216324B3CCEB00D3327B /* XCRemoteSwiftPackageReference "ios_system" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/holzschu/ios_system.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+		2209216624B3D27600D3327B /* XCRemoteSwiftPackageReference "libssh2-for-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/holzschu/libssh2-for-iOS.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2209216424B3CCEB00D3327B /* ios_system */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2209216324B3CCEB00D3327B /* XCRemoteSwiftPackageReference "ios_system" */;
+			productName = ios_system;
+		};
+		2209216724B3D27600D3327B /* openssl */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2209216624B3D27600D3327B /* XCRemoteSwiftPackageReference "libssh2-for-iOS" */;
+			productName = openssl;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 22984EE222C93DBC00069497 /* Project object */;
 }
