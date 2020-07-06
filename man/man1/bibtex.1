@@ -1,0 +1,100 @@
+.TH BIBTEX8 "1" "March 2019" "bibtex8 3.71" "User Commands"
+.SH NAME
+bibtex8 \- 8-bit Big BibTeX
+.SH SYNOPSIS
+.B bibtex8
+[\fIoptions\fR] \fIaux-file\fR
+.SH DESCRIPTION
+.PP
+.B BibTeX8
+is an 8-bit implementation of BibTeX written in C.
+It has been enhanced by adding the following features:
+.PP
+- "big" (32-bit) and customisable capacity
+.PP
+- flexible support for non-English languages using 8-bit character sets
+.PP
+.B BibTeX8
+accepts 8-bit characters in its input files, and writes 8-bit
+characters to its output files.  The character set is defined by an
+external configuration file --- the Codepage and Sort order ("CS") file.
+By default, it reads a specific CS file "88591lat.csf", which defines
+ISO 8859-1 character set and its alphabetical sorting order including
+accented characters.
+.SH OPTIONS
+.TP
+\fB\-?\fR  \fB\-\-help\fR
+display some brief help text.
+.TP
+\fB\-7\fR  \fB\-\-traditional\fR
+operate in the original 7\-bit mode, no CS file used.
+Only 7\-bit ASCII characters are supported, and they are
+sorted by ASCII code value.
+.TP
+\fB\-8\fR  \fB\-\-8bit\fR
+force 8\-bit mode, no CS file used.
+All 8\-bit characters (code > 127) are treated as letters,
+and they are sorted by their code value.
+.TP
+\fB\-c\fR  \fB\-\-csfile\fR FILE
+read FILE as the BibTeX character set
+and sort definition file.
+Note that options \fB\-7\fR, \fB\-8\fR and \fB\-c\fR are exclusive.
+.TP
+\fB\-d\fR  \fB\-\-debug\fR TYPE
+report debugging information.  TYPE is one
+or more of all, csf, io, mem, misc, search.
+.TP
+\fB\-s\fR  \fB\-\-statistics\fR
+report internal statistics.
+.TP
+\fB\-t\fR  \fB\-\-trace\fR
+report execution tracing.
+.TP
+\fB\-v\fR  \fB\-\-version\fR
+report BibTeX version.
+.TP
+\fB\-B\fR  \fB\-\-big\fR
+set large BibTeX capacity.
+.TP
+\fB\-H\fR  \fB\-\-huge\fR
+set huge BibTeX capacity.
+.TP
+\fB\-W\fR  \fB\-\-wolfgang\fR
+set really huge BibTeX capacity for Wolfgang.
+.TP
+\fB\-M\fR  \fB\-\-min_crossrefs\fR ##
+set min_crossrefs to ##.
+.TP
+\fB\-\-mcites\fR ##
+allow ## \ecites in the .aux files (deprecated).
+.TP
+\fB\-\-mentints\fR ##
+allow ## integer entries in the .bib databases (deprecated).
+.TP
+\fB\-\-mentstrs\fR ##
+allow ## string entries in the .bib databases (deprecated).
+.TP
+\fB\-\-mfields\fR ##
+allow ## fields in the .bib databases (deprecated).
+.TP
+\fB\-\-mpool\fR ##
+set the string pool to ## bytes (deprecated).
+.TP
+\fB\-\-mstrings\fR ##
+allow ## unique strings.
+.TP
+\fB\-\-mwizfuns\fR ##
+allow ## wizard functions (deprecated).
+.SH SEE ALSO
+More detailed description of
+.B BibTeX8
+is available at $TEXMFDIST/doc/bibtex8/00readme.txt.
+The syntax of Codepage and Sort order (CS) File can be found at
+$TEXMFDIST/doc/bibtex8/csfile.txt.
+.SH AUTHORS
+.B BibTeX8
+was written by Niel Kempson <kempson@snowyowl.co.uk> and
+Alejandro Aguilar-Sierra <asierra@servidor.unam.mx>.
+This manpage was written for TeX Live, based on the work
+by Norbert Preining for Debian/GNU Linux.
