@@ -110,23 +110,26 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
             completion(GetFileIntentResponse(code: .failureRequiringAppLaunch, userActivity: nil))
             return
         }
-        if let fileName = intent.fileName {
-            FileManager().changeCurrentDirectoryPath(groupUrl.path)
-            if FileManager().fileExists(atPath: fileName) {
-                let fileURL = URL(fileURLWithPath: fileName)
-                let intentResponse = GetFileIntentResponse(code: .success, userActivity: nil)
-                intentResponse.file = INFile(fileURL: fileURL, filename: fileName, typeIdentifier: nil)
-                completion(intentResponse)
-            } else {
-                let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
-                intentResponse.message = "File \(fileName) not found error"
-                completion(intentResponse)
+        if let fileNames = intent.fileName {
+            // Sometimes, we get multiple lines (or a single line that ends with "\n")
+            if let fileName = fileNames.components(separatedBy: "\n").first {
+                FileManager().changeCurrentDirectoryPath(groupUrl.path)
+                if FileManager().fileExists(atPath: fileName) {
+                    let fileURL = URL(fileURLWithPath: fileName)
+                    let intentResponse = GetFileIntentResponse(code: .success, userActivity: nil)
+                    intentResponse.file = INFile(fileURL: fileURL, filename: fileName, typeIdentifier: nil)
+                    completion(intentResponse)
+                } else {
+                    let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
+                    intentResponse.message = "File \(fileName) not found error"
+                    completion(intentResponse)
+                }
+                return
             }
-        } else {
-            let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
-            intentResponse.message = "No filename provided."
-            completion(intentResponse)
         }
+        let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
+        intentResponse.message = "No filename provided."
+        completion(intentResponse)
     }
     
     func resolveOpenWindow(for intent: ExecuteCommandIntent, with completion: @escaping (EnumResolutionResult) -> Void) {
