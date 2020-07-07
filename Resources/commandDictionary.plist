@@ -37,7 +37,7 @@
 		<string>HLPRfhv</string>
 		<string>file</string>
 	</array>
-	<key>chksum</key>
+	<key>cksum</key>
 	<array>
 		<string>files.framework/files</string>
 		<string>chksum_main</string>
@@ -691,6 +691,62 @@
 	<key>calc</key>
 	<array>
 		<string>calc.framework/calc</string>
+		<string>main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>less</key>
+	<array>
+		<string>files.framework/files</string>
+		<string>less_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>more</key>
+	<array>
+		<string>files.framework/files</string>
+		<string>less_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>lessecho</key>
+	<array>
+		<string>files.framework/files</string>
+		<string>lessecho_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>mandoc</key>
+	<array>
+		<string>mandoc.framework/mandoc</string>
+		<string>main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>mandocdb</key>
+	<array>
+		<string>mandoc.framework/mandoc</string>
+		<string>main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>man</key>
+	<array>
+		<string>mandoc.framework/mandoc</string>
+		<string>main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>apropos</key>
+	<array>
+		<string>mandoc.framework/mandoc</string>
+		<string>main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>whatis</key>
+	<array>
+		<string>mandoc.framework/mandoc</string>
 		<string>main</string>
 		<string></string>
 		<string>no</string>
