@@ -323,21 +323,31 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             return 0
         case "-s", "--size":
             argumentsSet = true
-            if let s = Float(args[i+1]) {
-                terminalFontSize = s
-                skipNextArgument = 1
-            } else {
-                if args[i+1] == "default" {
-                    if let storedSize = UserDefaults.standard.object(forKey: "fontSize") as? Float {
-                        terminalFontSize = storedSize
+            if (i + 1 < args.count) {
+                if !args[i+1].hasPrefix("-") {
+                    if let s = Float(args[i+1]) {
+                        terminalFontSize = s
+                        skipNextArgument = 1
                     } else {
-                        terminalFontSize = factoryFontSize
+                        if args[i+1] == "default" {
+                            if let storedSize = UserDefaults.standard.object(forKey: "fontSize") as? Float {
+                                terminalFontSize = storedSize
+                            } else {
+                                terminalFontSize = factoryFontSize
+                            }
+                        } else if args[i+1] == "factory" {
+                            terminalFontSize = factoryFontSize
+                        } else {
+                            fputs("Could not read argument for size: \(args[i+1])\n", thread_stderr)
+                        }
                     }
-                } else if args[i+1] == "factory" {
-                    terminalFontSize = factoryFontSize
                 } else {
-                    fputs("Could not read argument for size: \(args[i+1])\n", thread_stderr)
+                    fputs("Size not defined.\n", thread_stderr)
+                    continue
                 }
+            } else {
+                fputs("No parameter for size.\n", thread_stderr)
+                return 0
             }
             continue
         case "-n", "--name":
@@ -892,14 +902,18 @@ public func changeDirectory(path: String) -> Bool {
                 bookmarkedURL = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
             }
             catch {
-                fputs("Could not resolve secure bookmark for \(newPath)", old_thread_stderr)
+                if (old_thread_stderr != nil) {
+                    fputs("Could not resolve secure bookmark for \(newPath)", old_thread_stderr)
+                }
                 continue // maybe there is another bookmark that will work?
             }
             if (!stale) {
                 let isSecuredURL = bookmarkedURL.startAccessingSecurityScopedResource()
                 let isReadable = FileManager().isReadableFile(atPath: path)
                 guard isSecuredURL && isReadable else {
-                    fputs("Could not access \(path)\n", old_thread_stderr)
+                    if (old_thread_stderr != nil) {
+                        fputs("Could not access \(path)\n", old_thread_stderr)
+                    }
                     continue // maybe there is another bookmark that will work?
                     // return true
                 }
@@ -908,7 +922,9 @@ public func changeDirectory(path: String) -> Bool {
                     if (isSecuredURL) {
                         bookmarkedURL.stopAccessingSecurityScopedResource()
                     }
-                    fputs("Could not download \(path)", old_thread_stderr)
+                    if (old_thread_stderr != nil) {
+                        fputs("Could not download \(path)", old_thread_stderr)
+                    }
                     continue // maybe there is another bookmark that will work?
                     // return fileURL.isDirectory
                 }

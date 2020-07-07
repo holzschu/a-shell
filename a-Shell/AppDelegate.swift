@@ -300,13 +300,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                         // It's a symbolic link, does the destination exist?
                         let destination = try! FileManager().destinationOfSymbolicLink(atPath: homeFile.path)
                         if (!FileManager().fileExists(atPath: destination)) {
-                            try! FileManager().removeItem(at: homeFile)
-                            try! FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
+                            try FileManager().removeItem(at: homeFile)
+                            try FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
                         }
                     } else {
                         // Not a symbolic link, replace:
-                        try! FileManager().removeItem(at: homeFile)
-                        try! FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
+                        try FileManager().removeItem(at: homeFile)
+                        try FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
                     }
                 }
                 catch {
@@ -343,6 +343,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
         initializeEnvironment()
+        // joinMainThread = false
         clearOldDirectories()
         replaceCommand("history", "history", true)
         replaceCommand("help", "help", true)
@@ -376,6 +377,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 create: true)
         setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
         setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1) // silently add "-S -emit-llvm" at the beginning of arguments
+        setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
+        setenv("PAGER", "less", 1)
         let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                   in: .userDomainMask,
                                                   appropriateFor: nil,

@@ -166,6 +166,18 @@
 				window.webkit.messageHandlers.aShell.postMessage('print_error:' + printString);
 			}
 
+			function isInteractive(commandString) {
+				// If the command is interactive or contains interactive commands, set the flag,
+				// forward all keyboard input, let them deal with command history.
+				// TODO: have a list of such interactive commands (array?) 
+				// jump can start vim 
+				// ssh, once connected to the other machine, is interactive (but not ssh-keygen)
+				let interactiveRegexp = /^vim|^ipython|^less|^more|^ssh|^jump|\|&? *less|\|&? *more|^man/;
+				// It's easier to match a regexp, then take the negation than to test a regexp that does not contain a pattern:
+				let notInteractiveRegexp = /^ssh-keygen/
+				return interactiveRegexp.test(commandString) && !notInteractiveRegexp.test(commandString);
+			}
+
             // standard functions (terminal, autocomplete, etc)
             var lastDirectory = '';
             var fileList = [];
@@ -190,11 +202,16 @@
 
             function printPrompt() {
 				// prints the prompt and initializes all variables related to prompt position
+				window.term_.io.print('\x1b[0m\x1b[39;49m');  // default font, default color
 				window.term_.io.print(window.promptMessage); 
 				// cut window.printedContent if it gets too large:
 				if (window.printedContent.length > 30000) {
 					window.printedContent = window.printedContent.substring(5000);
 				}
+				window.term_.io.currentCommand = '';
+				window.commandRunning = '';
+				window.interactiveCommandRunning = false;
+				currentCommandCursorPosition = 0;
 			}
 
             function updatePromptPosition() {
@@ -498,18 +515,14 @@
 							window.controlOn = false;
 							window.webkit.messageHandlers.aShell.postMessage('controlOff');
 						}
-						// Fully interactive commands: forward all keyboard input, let them deal with command history.
-					    // TODO: have a list of such interactive commands (array?) 
-						// jump can start vim 
+						// always post keyboard input to TTY:
+						window.webkit.messageHandlers.aShell.postMessage('inputTTY:' + string);
 						if (window.commandRunning.startsWith("wasm")) {
 							window.standardInput += string;
-						} else if (window.commandRunning.startsWith("vim") || 
-						// ssh, once connected to the other machine, is interactive (but not ssh-keygen)
-							window.commandRunning.startsWith("ipython") || 
-							(window.commandRunning.startsWith("ssh") && (!window.commandRunning.startsWith("ssh-keygen"))) || 
-							window.commandRunning.startsWith("jump")) {
+						} else if (window.interactiveCommandRunning) {
 							// specific treatment for interactive commands: forward all keyboard input to them
 							// window.webkit.messageHandlers.aShell.postMessage('sending: ' + string); // for debugging
+							// post keyboard input to stdin
 							window.webkit.messageHandlers.aShell.postMessage('inputInteractive:' + string);
 						} else if ((window.commandRunning != '') && ((string.charCodeAt(0) == 3) || (string.charCodeAt(0) == 4))) {
 							// Send control messages back to command:
@@ -568,6 +581,7 @@
 											window.webkit.messageHandlers.aShell.postMessage('shell:' + io.currentCommand);
 											// and reinitialize:
 											window.commandRunning = io.currentCommand;
+											window.interactiveCommandRunning = isInteractive(window.commandRunning);
 											// remove temporarily stored command -- if any
 											if (window.maxCommandIndex < window.commandArray.length) {
 												window.commandArray.pop();
@@ -1008,6 +1022,7 @@
 				if (window.commandRunning === undefined) {
 					window.commandRunning = '';
 				}
+				window.interactiveCommandRunning = isInteractive(window.commandRunning);
 				if (window.commandArray === undefined) {
 					window.commandArray = new Array();
 					window.commandIndex = 0;

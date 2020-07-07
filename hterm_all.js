@@ -8017,6 +8017,7 @@ hterm.Parser.identifiers.actions = {
    * Clear the active screen and move the cursor to (0,0).
    */
   clearScreen: function(terminal) {
+	window.webkit.messageHandlers.aShell.postMessage('clearScreen');
     terminal.clearHome();
     return hterm.Keyboard.KeyActions.CANCEL;
   },
@@ -17039,7 +17040,8 @@ hterm.VT.prototype.interpret = function(buf) {
 
     if (this.parseState_.func == func && this.parseState_.pos == pos &&
         this.parseState_.buf == buf) {
-      throw 'Parser did not alter the state!';
+		window.webkit.messageHandlers.aShell.postMessage('Parser did not alter the state!');
+		throw 'Parser did not alter the state!';
     }
   }
 };
@@ -17052,6 +17054,7 @@ hterm.VT.prototype.interpret = function(buf) {
 hterm.VT.prototype.setEncoding = function(encoding) {
   switch (encoding) {
     default:
+		window.webkit.messageHandlers.aShell.postMessage('Invalid value for "terminal-encoding": ' + encoding);
       console.warn('Invalid value for "terminal-encoding": ' + encoding);
       // Fall through.
     case 'iso-2022':
