@@ -1258,9 +1258,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             webView?.uiDelegate = self;
             webView?.isAccessibilityElement = false
             // toolbar for everyone because I can't change the aspect of inputAssistantItem buttons
-            #if !targetEnvironment(simulator)
             webView?.addInputAccessoryView(toolbar: self.editorToolbar)
-            #endif
             // Restore colors and settings from preference (if set):
             if let size = UserDefaults.standard.value(forKey: "fontSize") as? Float {
                 terminalFontSize = size
@@ -1699,9 +1697,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         setEnvironmentFGBG(foregroundColor: foregroundColor, backgroundColor: backgroundColor)
-        #if !targetEnvironment(simulator)
-          webView!.allowDisplayingKeyboardWithoutUserAction()
-        #endif
+        webView!.allowDisplayingKeyboardWithoutUserAction()
         activateVoiceOver(value: UIAccessibility.isVoiceOverRunning)
         ios_signal(SIGWINCH); // is this still required?
     }
