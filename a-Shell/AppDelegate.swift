@@ -343,7 +343,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
         initializeEnvironment()
-        // joinMainThread = false
+        joinMainThread = false
         clearOldDirectories()
         replaceCommand("history", "history", true)
         replaceCommand("help", "help", true)
@@ -364,7 +364,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (UserDefaults.standard.bool(forKey: "TeXOpenType")) {
             downloadOpentype();
         }
-        numPythonInterpreters = 2; // so pip can work (it runs python setup.py)
+        numPythonInterpreters = 3; // so pip can work (it runs python setup.py, and in some cases an extra python interpreter)
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
         setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
         setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
@@ -376,7 +376,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 appropriateFor: nil,
                                                 create: true)
         setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
-        setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1) // silently add "-S -emit-llvm" at the beginning of arguments
+        setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments
         setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
         setenv("PAGER", "less", 1)
         let documentsUrl = try! FileManager().url(for: .documentDirectory,
@@ -385,18 +385,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                   create: true)
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
-#if !targetEnvironment(simulator)
         if (!versionUpToDate || needToUpdateCFiles()) {
             createCSDK()
         }
-#endif
         // Link Python files from $APPDIR/Library to $HOME/Library/
         if (!versionUpToDate || needToUpdatePythonFiles()) {
+            // TODO: remove files and directories (links to them, rather)
+            // + move remaining site-packages files (or leave in place ?)
+            // Must be done once for
+            // a-Shell version 1.6 / Python 3.9: no need to copy files
             // start copying python files from App bundle to $HOME/Library
             // queue the copy operation so we can continue working.
-            libraryFilesUpToDate = false
-            queueUpdatingPythonFiles()
+            // libraryFilesUpToDate = false
+            // queueUpdatingPythonFiles()
         }
+        // Main Python install: $APPDIR/Library/lib/python3.x
+        let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!).appendingPathComponent("Library")
+        setenv("PYTHONHOME", bundleUrl.path.toCString(), 1)
+        // Compiled files: ~/Library/__pycache__
+        setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path.toCString(), 1)
+        setenv("PYTHONUSERBASE", libraryURL.path.toCString(), 1)
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
         let currentiCloudToken = FileManager().ubiquityIdentityToken
@@ -418,7 +426,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
-
     
     
     // MARK: UISceneSession Lifecycle
@@ -539,7 +546,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: Shortcuts / Intents handling
     // Apparently never called because the system call Scene(_ continue:)
     func application(_ application: UIApplication, continue userActivity: NSUserActivity,
-                     restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
+                     restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
         NSLog("AppDelegate, continue, userActivity.activityType = \(userActivity.activityType)")
         if userActivity.activityType == "AsheKube.app.a-Shell.ExecuteCommand",
             let intent = userActivity.interaction?.intent as? ExecuteCommandIntent {

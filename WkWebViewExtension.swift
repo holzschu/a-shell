@@ -13,7 +13,6 @@ typealias OldClosureType =  @convention(c) (Any, Selector, UnsafeRawPointer, Boo
 typealias NewClosureType =  @convention(c) (Any, Selector, UnsafeRawPointer, Bool, Bool, Bool, Any?) -> Void
 
 extension WKWebView {
-    
     func addInputAccessoryView(toolbar: UIView?) {
         guard let toolbar = toolbar else { return }
         objc_setAssociatedObject(self, &ToolbarHandle, toolbar, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)

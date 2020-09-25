@@ -59,15 +59,15 @@
 		</dict>
 	</array>
 	<key>INIntentDefinitionModelVersion</key>
-	<string>1.1</string>
+	<string>1.2</string>
 	<key>INIntentDefinitionNamespace</key>
 	<string>iwbZ8l</string>
 	<key>INIntentDefinitionSystemVersion</key>
-	<string>19E287</string>
+	<string>19G73</string>
 	<key>INIntentDefinitionToolsBuildVersion</key>
-	<string>11E608c</string>
+	<string>12A8169g</string>
 	<key>INIntentDefinitionToolsVersion</key>
-	<string>11.5</string>
+	<string>12.0</string>
 	<key>INIntents</key>
 	<array>
 		<dict>
@@ -118,6 +118,8 @@
 			<key>INIntentParameters</key>
 			<array>
 				<dict>
+					<key>INIntentParameterConfigurable</key>
+					<true/>
 					<key>INIntentParameterDisplayName</key>
 					<string>Command(s)</string>
 					<key>INIntentParameterDisplayNameID</key>
@@ -133,6 +135,8 @@
 						<key>INIntentParameterMetadataDisableSmartDashes</key>
 						<true/>
 						<key>INIntentParameterMetadataDisableSmartQuotes</key>
+						<true/>
+						<key>INIntentParameterMetadataMultiline</key>
 						<true/>
 					</dict>
 					<key>INIntentParameterName</key>
@@ -160,6 +164,8 @@
 					<string>String</string>
 				</dict>
 				<dict>
+					<key>INIntentParameterConfigurable</key>
+					<true/>
 					<key>INIntentParameterCustomDisambiguation</key>
 					<true/>
 					<key>INIntentParameterDisplayName</key>
@@ -196,14 +202,6 @@
 							<string>0ltuRO</string>
 							<key>INIntentParameterPromptDialogType</key>
 							<string>DisambiguationIntroduction</string>
-						</dict>
-						<dict>
-							<key>INIntentParameterPromptDialogFormatString</key>
-							<string>Which one?</string>
-							<key>INIntentParameterPromptDialogFormatStringID</key>
-							<string>IaeWBa</string>
-							<key>INIntentParameterPromptDialogType</key>
-							<string>DisambiguationSelection</string>
 						</dict>
 						<dict>
 							<key>INIntentParameterPromptDialogCustom</key>
@@ -348,6 +346,8 @@
 			<key>INIntentParameters</key>
 			<array>
 				<dict>
+					<key>INIntentParameterConfigurable</key>
+					<true/>
 					<key>INIntentParameterDisplayName</key>
 					<string>File Name</string>
 					<key>INIntentParameterDisplayNameID</key>
@@ -515,6 +515,8 @@
 			<key>INIntentParameters</key>
 			<array>
 				<dict>
+					<key>INIntentParameterConfigurable</key>
+					<true/>
 					<key>INIntentParameterDisplayName</key>
 					<string>File</string>
 					<key>INIntentParameterDisplayNameID</key>
@@ -564,6 +566,8 @@
 					<string>File</string>
 				</dict>
 				<dict>
+					<key>INIntentParameterConfigurable</key>
+					<true/>
 					<key>INIntentParameterDisplayName</key>
 					<string>Overwrite</string>
 					<key>INIntentParameterDisplayNameID</key>

@@ -338,6 +338,13 @@
 		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
 		<string>no</string>
 	</array>
+	<key>pythonB</key>
+	<array>
+		<string>pythonB.framework/pythonB</string>
+		<string>Py_BytesMain</string>
+		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
+		<string>no</string>
+	</array>
 	<key>readlink</key>
 	<array>
 		<string>files.framework/files</string>

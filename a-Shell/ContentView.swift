@@ -21,6 +21,8 @@ struct Webview : UIViewRepresentable {
         // Does not change anything either way (??? !!!)
         // config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
         config.selectionGranularity = .character; // Could be .dynamic
+        // let preferences = WKWebpagePreferences()
+        // preferences.allowsContentJavaScript = true
         webView = WKWebView(frame: .zero, configuration: config)
     }
     
@@ -44,7 +46,7 @@ struct ContentView: View {
     // https://stackoverflow.com/questions/56491881/move-textfield-up-when-thekeyboard-has-appeared-by-using-swiftui-ios
     // A publisher that combines all of the relevant keyboard changing notifications and maps them into a `CGFloat` representing the new height of the
     // keyboard rect.
-    private let keyboardChangePublisher = NotificationCenter.Publisher(center: .default,
+     private let keyboardChangePublisher = NotificationCenter.Publisher(center: .default,
                                                                        name: UIResponder.keyboardWillShowNotification)
         .merge(with: NotificationCenter.Publisher(center: .default,
                                                   name: UIResponder.keyboardWillChangeFrameNotification))
@@ -76,19 +78,23 @@ struct ContentView: View {
     let webview = Webview()
     
     var body: some View {
-        // resize depending on keyboard. Specify size (.frame) instead of padding.
-        webview.onReceive(keyboardChangePublisher) { self.keyboardHeight = $0 }
-            .padding(.top, 0) // Important, to set the size of the view
-            .padding(.bottom, keyboardHeight)
+        if #available(iOS 14.0, *) {
+            // on iOS 14, it seems that the webview adapts to the size of the keyboard.
+            // Well, at least on the simulator.
+            webview.padding(.top, 0)
+        } else {
+            // resize depending on keyboard. Specify size (.frame) instead of padding.
+            webview.onReceive(keyboardChangePublisher) { self.keyboardHeight = $0 }
+                .padding(.top, 0) // Important, to set the size of the view
+                .padding(.bottom, keyboardHeight)
+        }
     }
 }
 
-
-/* #if DEBUG
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        Group {
+            ContentView()
+        }
     }
 }
-#endif
-*/

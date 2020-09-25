@@ -1677,23 +1677,35 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // sprint(result)
             }
         }
-        command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)'); "
-        webView!.evaluateJavaScript(command) { (result, error) in
-            if error != nil {
-                NSLog("Error in sceneDidBecomeActive, line = \(command)")
-                print(error)
-            }
-            if (result != nil) {
-                // print(result)
-            }
-        }
-        command = "window.term_.prefs_.set('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.set('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.set('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.set('font-size', '\(fontSize)'); window.term_.prefs_.set('font-family', '\(fontName)');"
+        
+        command = "window.term_ != undefined"
         webView!.evaluateJavaScript(command) { (result, error) in
             if error != nil {
                 print(error)
             }
-            if (result != nil) {
-                // print(result)
+            if let resultN = result as? Int {
+                if (resultN == 1) {
+                    // window.term_ exists, let's send commands:
+                    command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
+                    self.webView!.evaluateJavaScript(command) { (result, error) in
+                        if error != nil {
+                            NSLog("Error in sceneDidBecomeActive, line = \(command)")
+                            print(error)
+                        }
+                        if (result != nil) {
+                            // print(result)
+                        }
+                    }
+                    command = "window.term_.prefs_.set('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.set('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.set('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.set('font-size', '\(fontSize)'); window.term_.prefs_.set('font-family', '\(fontName)');"
+                    self.webView!.evaluateJavaScript(command) { (result, error) in
+                        if error != nil {
+                            print(error)
+                        }
+                        if (result != nil) {
+                            // print(result)
+                        }
+                    }
+                }
             }
         }
         setEnvironmentFGBG(foregroundColor: foregroundColor, backgroundColor: backgroundColor)
@@ -1808,11 +1820,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if let storedCommand = currentCommandData as? String {
             if (storedCommand.count > 0) {
                 NSLog("Restarting session with \(storedCommand)")
-                if (storedCommand.hasPrefix("ipython") || storedCommand.hasPrefix("man")) {
-                    return // Don't restart ipython or man pages (because it crashes).
+                if (storedCommand.hasPrefix("ipython") || storedCommand.hasPrefix("man") || storedCommand.hasPrefix("jupyter")) {
+                    return // Don't restart ipython, jupyter or man pages (because it crashes).
                 }
                 // Safety check: is the vim session file still there?
                 // I could have been removed by the system, or by the user.
+                // TODO: also check that files are still available / no
                 if (storedCommand.hasPrefix("vim -S ")) {
                     var sessionFile = storedCommand
                     sessionFile.removeFirst("vim -S ".count)
@@ -1933,7 +1946,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         guard (webView != nil) else { return }
         webView?.isAccessibilityElement = false
         let command = "window.voiceOver = \(value);"
-        NSLog(command)
+        // NSLog(command)
         DispatchQueue.main.async {
             self.webView!.evaluateJavaScript(command) { (result, error) in
                 if error != nil {
@@ -1945,8 +1958,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
         }
-        let command2 = "window.term_.setAccessibilityEnabled(window.voiceOver);"
-        NSLog(command2)
+        let command2 = "if (window.term_ != undefined) { window.term_.setAccessibilityEnabled(window.voiceOver); }"
+        // NSLog(command2)
         DispatchQueue.main.async {
             self.webView!.evaluateJavaScript(command2) { (result, error) in
                 if error != nil {
@@ -2500,4 +2513,15 @@ extension SceneDelegate: WKUIDelegate {
         // webView.allowDisplayingKeyboardWithoutUserAction()
     }
 
+    // iOS 14: allow javascript evaluation
+    func webView(_ webView: WKWebView,
+          decidePolicyFor navigationAction: WKNavigationAction,
+              preferences: WKWebpagePreferences,
+              decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void) {
+        if #available(iOS 14.0, *) {
+            preferences.allowsContentJavaScript = true // The default value is true, but let's make sure.
+        }
+        decisionHandler(.allow, preferences)
+    }
+    
 }
