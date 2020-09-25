@@ -1,6 +1,0 @@
-framework module files {
-  umbrella header "files.h"
-
-  export *
-  module * { export * }
-}

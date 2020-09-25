@@ -1,6 +1,0 @@
-framework module ssh_cmd {
-  umbrella header "ssh_cmd.h"
-
-  export *
-  module * { export * }
-}

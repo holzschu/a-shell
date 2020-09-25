@@ -1,6 +1,0 @@
-framework module tar {
-  umbrella header "tar.h"
-
-  export *
-  module * { export * }
-}

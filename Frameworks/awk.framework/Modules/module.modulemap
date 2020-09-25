@@ -1,6 +1,0 @@
-framework module awk {
-  umbrella header "awk.h"
-
-  export *
-  module * { export * }
-}
