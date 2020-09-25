@@ -1,3 +1,4 @@
 [submodule "cpython"]
 	path = cpython
 	url = https://github.com/holzschu/cpython.git
+	branch = 3.9
