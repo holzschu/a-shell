@@ -29,46 +29,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var libraryFilesUpToDate = true
     let moveFilesQueue = DispatchQueue(label: "moveFiles", qos: .utility) // low priority
 
-    func linkedFileExists(directory: URL, fileName: String) -> Bool {
-        // Check whether the file linked by fileName in directory actually exists
-        // (if fileName does not exist, we also return false)
-        // NSLog("Checking existence of \(fileName)")
-        if (!FileManager().fileExists(atPath: directory.appendingPathComponent("lib").path)) {
-            // NSLog("no to fileExists \(directory.appendingPathComponent("lib").path)")
-            return false
-        }
-        let fileLocation = directory.appendingPathComponent(fileName)
-        do {
-            let fileAttribute = try FileManager().attributesOfItem(atPath: fileLocation.path)
-            if (!(fileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue)) { return false }
-            // NSLog("It's a symbolic link")
-            let destination = try FileManager().destinationOfSymbolicLink(atPath: fileLocation.path)
-            // NSLog("Destination = \(destination) exists = \(FileManager().fileExists(atPath: destination))")
-            return FileManager().fileExists(atPath: destination)
-        }
-        catch {
-            NSLog("\(fileName) generated an error: \(error)")
-            return false
-        }
-    }
-    
-    func clearOldDirectories() {
-        // packages installed in previous versions. Must remove before anything else or they mess things up.
-        let oldPythonDirectories = ["Library/lib/python3.7/multiprocessing",
-                                    ]
-        let documentsUrl = try! FileManager().url(for: .documentDirectory,
-                                                  in: .userDomainMask,
-                                                  appropriateFor: nil,
-                                                  create: true)
-        let homeUrl = documentsUrl.deletingLastPathComponent()
-        for directoryName in oldPythonDirectories {
-            let homeDirectory = homeUrl.appendingPathComponent(directoryName)
-            if (FileManager().fileExists(atPath: homeDirectory.path)) {
-                try! FileManager().removeItem(at: homeDirectory)
-            }
-        }
-    }
-
     func needToUpdateCFiles() -> Bool {
         // Check that the C SDK files are present:
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
@@ -101,13 +61,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 (buildNumberInstalled < currentBuildInt))
     }
     
-    func needToUpdatePythonFiles() -> Bool {
-        // Check that the python files are present:
-        let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                in: .userDomainMask,
-                                                appropriateFor: nil,
-                                                create: true)
-        return (!linkedFileExists(directory: libraryURL, fileName: PythonFiles[0]))
+    func needToRemovePython37Files() -> Bool {
+            // Check that the old python files are present:
+            let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                    in: .userDomainMask,
+                                                    appropriateFor: nil,
+                                                    create: true)
+        let fileLocation = libraryURL.appendingPathComponent(PythonFiles[0])
+        // fileExists(atPath:) will answer false, because the linked file does not exist.
+        do {
+            let fileAttribute = try FileManager().attributesOfItem(atPath: fileLocation.path)
+            return true
+        }
+        catch {
+            // The file does not exist, we already cleaned up Python3.7
+            return false
+        }
     }
 
     func createCSDK() {
@@ -233,44 +202,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NSLog("Finished creating C SDK") // Approx 2 seconds
     }
     
-    func queueUpdatingPythonFiles() {
-        // This operation (copy the files from the bundle directory to the $HOME/Library)
-        // has two benefits:
-        // 1- all python files are in a user-writeable directory, so the user can install
-        // more modules as needed
-        // 2- we remove the .pyc files from the application archive, bringing its size
-        // under the 150 MB limit.
-        // Possible trouble: the user *can* screw up the directory. We should detect that,
-        // and offer (through user preference) the possibility to reset the install.
-        // Maybe: major version = erase everything (except site-packages?), minor version = just copy?
-        NSLog("Updating python files")
-        let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!).appendingPathComponent("Library")
-        // setting up PYTHONPATH (temporary) so Jupyter can start while we copy items:
-        let originalPythonpath = getenv("PYTHONPATH")
-        let mainPythonUrl = bundleUrl.appendingPathComponent("lib/python3.7")
-        var newPythonPath = mainPythonUrl.path
-        let pythonDirectories = ["lib/python3.7/site-packages",
-                                 "lib/python3.7/site-packages/cffi-1.11.5-py3.7-macosx-12.1-iPad6,7.egg",
-                                 "lib/python3.7/site-packages/cycler-0.10.0-py3.7.egg",
-                                 "lib/python3.7/site-packages/kiwisolver-1.0.1-py3.7-macosx-10.9-x86_64.egg",
-                                 "lib/python3.7/site-packages/matplotlib-3.0.3-py3.7-macosx-10.9-x86_64.egg",
-                                 "lib/python3.7/site-packages/numpy-1.16.0-py3.7-macosx-10.9-x86_64.egg",
-                                 "lib/python3.7/site-packages/pyparsing-2.3.1-py3.7.egg",
-                                 "lib/python3.7/site-packages/setuptools-40.8.0-py3.7.egg",
-                                 "lib/python3.7/site-packages/tornado-6.0.1-py3.7-macosx-12.1-iPad6,7.egg",
-                                 "lib/python3.7/site-packages/Pillow-6.0.0-py3.7-macosx-10.9-x86_64.egg",
-                                 "lib/python3.7/site-packages/cryptography-2.7-py3.7-macosx-10.9-x86_64.egg",
-        ]
-        
-        for otherPythonDirectory in pythonDirectories {
-            let secondaryPythonUrl = bundleUrl.appendingPathComponent(otherPythonDirectory)
-            newPythonPath = newPythonPath.appending(":").appending(secondaryPythonUrl.path)
-        }
-        if (originalPythonpath != nil) {
-            newPythonPath = newPythonPath.appending(":").appending(String(cString: originalPythonpath!))
-        }
-        setenv("PYTHONPATH", newPythonPath.toCString(), 1)
-        //
+    func removePython37Files() {
+        // This operation removes the copy of the Python 3.7 directory that was kept in $HOME/Library.
+        NSLog("Removing python 3.7 files")
         let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                   in: .userDomainMask,
                                                   appropriateFor: nil,
@@ -278,15 +212,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let homeUrl = documentsUrl.deletingLastPathComponent().appendingPathComponent("Library")
         let fileList = PythonFiles
         for fileName in fileList {
-            let bundleFile = bundleUrl.appendingPathComponent(fileName)
-            if (!FileManager().fileExists(atPath: bundleFile.path)) {
-                NSLog("queueUpdatingPythonFiles: requested file \(bundleFile.path) does not exist")
-                continue
+            let homeFile = homeUrl.appendingPathComponent(fileName)
+            do {
+                try FileManager().removeItem(at: homeFile)
             }
-            // Symbolic links are both faster to create and use less disk space.
-            // We just have to make sure the destination exists
-            moveFilesQueue.async{
-                let homeFile = homeUrl.appendingPathComponent(fileName)
+            catch {
+                NSLog("Can't remove file: \(homeFile.path): \(error)")
+            }
+        }
+        self.libraryFilesUpToDate = true
+
+            /*
                 let homeDirectory = homeFile.deletingLastPathComponent()
                 do {
                     try FileManager().createDirectory(atPath: homeDirectory.path, withIntermediateDirectories: true)
@@ -317,19 +253,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                         NSLog("Can't create file: \(homeFile.path): \(error)")
                     }
                 }
-            }
-        }
-        // Done, now update the installed version:
-        moveFilesQueue.async{
-            NSLog("Finished updating python files.")
-            if (originalPythonpath != nil) {
-                setenv("PYTHONPATH", originalPythonpath, 1)
-            } else {
-                let returnValue = unsetenv("PYTHONPATH")
-                if (returnValue == -1) { NSLog("Could not unsetenv PYTHONPATH") }
-            }
-            self.libraryFilesUpToDate = true
-        }
+            } */
     }
     
     
@@ -344,7 +268,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
         initializeEnvironment()
         joinMainThread = false
-        clearOldDirectories()
         replaceCommand("history", "history", true)
         replaceCommand("help", "help", true)
         replaceCommand("clear", "clear", true)
@@ -364,7 +287,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (UserDefaults.standard.bool(forKey: "TeXOpenType")) {
             downloadOpentype();
         }
-        numPythonInterpreters = 3; // so pip can work (it runs python setup.py, and in some cases an extra python interpreter)
+        numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
         setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
         setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
@@ -389,16 +312,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             createCSDK()
         }
         // Link Python files from $APPDIR/Library to $HOME/Library/
-        if (!versionUpToDate || needToUpdatePythonFiles()) {
-            // TODO: remove files and directories (links to them, rather)
-            // + move remaining site-packages files (or leave in place ?)
-            // Must be done once for
-            // a-Shell version 1.6 / Python 3.9: no need to copy files
-            // start copying python files from App bundle to $HOME/Library
-            // queue the copy operation so we can continue working.
-            // libraryFilesUpToDate = false
-            // queueUpdatingPythonFiles()
+        if (needToRemovePython37Files()) {
+            // Remove files and directories created with Python 3.7
+            removePython37Files()
+            // Move all remaining packages to $HOME/Library/lib/python3.9/site-packages/
+            var pid = ios_fork()
+            ios_system("mv " + libraryURL.path + "/lib/python3.7/site-packages/* " + libraryURL.path + "/lib/python3.9/site-packages/")
+            ios_waitpid(pid)
+            // Erase the directory
+            pid = ios_fork()
+            ios_system("rm -rf " + libraryURL.path + "/lib/python3.7/")
+            ios_waitpid(pid)
         }
+        if (!versionUpToDate) {
+            // The version number changed, so the App has been re-installed. Clean all pre-compiled Python files:
+            NSLog("Cleaning __pycache__")
+            let pid = ios_fork()
+            ios_system("rm -rf " + libraryURL.path + "/__pycache__/*")
+            ios_waitpid(pid)
+        }
+        // Now set the version number to the current version:
+        let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String
+        UserDefaults.standard.set(currentVersion, forKey: "versionInstalled")
+        let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as! String
+        UserDefaults.standard.set(currentBuild, forKey: "buildNumber")
+        self.versionUpToDate = true
         // Main Python install: $APPDIR/Library/lib/python3.x
         let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!).appendingPathComponent("Library")
         setenv("PYTHONHOME", bundleUrl.path.toCString(), 1)

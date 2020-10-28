@@ -609,7 +609,6 @@ public func keepDirectoryAfterShortcut(argc: Int32, argv: UnsafeMutablePointer<U
     return 0
 }
 
-
 // Q: Should I move this to ios_system? Implies also having storeBookmark() in ios_system.
 @_cdecl("showmarks")
 public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {

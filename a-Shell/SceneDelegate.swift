@@ -2046,22 +2046,38 @@ extension SceneDelegate: WKUIDelegate {
     
     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo,
                  completionHandler: @escaping (Bool) -> Void) {
-        
         let arguments = message.components(separatedBy: "\n")
         let title = arguments[0]
-        var messageMinusTitle = message
-        messageMinusTitle.removeFirst(title.count)
+        var message = ""
+        var cancel = "Cancel"
+        var confirm = "OK"
 
-        let alertController = UIAlertController(title: arguments[0], message: messageMinusTitle, preferredStyle: .alert)
+        if (arguments.count >= 1) {
+            message = arguments[1]
+        }
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         
-        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action) in
+        if (arguments.count >= 2) {
+            cancel = arguments[2]
+        }
+        alertController.addAction(UIAlertAction(title: cancel, style: .cancel, handler: { (action) in
             completionHandler(false)
         }))
         
-        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) in
-            completionHandler(true)
-        }))
-        
+        if (arguments.count >= 3) {
+            confirm = arguments[3]
+            if (confirm.hasPrefix("btn-danger")) {
+                confirm.removeFirst("btn-danger".count)
+                alertController.addAction(UIAlertAction(title: confirm, style: .destructive, handler: { (action) in
+                    completionHandler(true)
+            }))
+            } else {
+                alertController.addAction(UIAlertAction(title: confirm, style: .default, handler: { (action) in
+                    completionHandler(true)
+                }))
+            }
+        }
+                
         if let presenter = alertController.popoverPresentationController {
             presenter.sourceView = self.view
         }
@@ -2088,7 +2104,7 @@ extension SceneDelegate: WKUIDelegate {
     
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo,
                  completionHandler: @escaping (String?) -> Void) {
-        // communication with libc:
+        // communication with libc from webAssembly:
         
         let arguments = prompt.components(separatedBy: "\n")
         // NSLog("prompt: \(prompt)")
@@ -2477,26 +2493,35 @@ extension SceneDelegate: WKUIDelegate {
             completionHandler("-1")
             return
         }
-        var messageMinusTitle = prompt
-        messageMinusTitle.removeFirst(title.count)
-
-        let alertController = UIAlertController(title: arguments[0], message: messageMinusTitle, preferredStyle: .alert)
+        // End communication with webAssembly using libc
+        // Code copied from Carnets for better interaction with Jupyter
+        var message = ""
+        var cancel = "Dismiss"
+        var confirm = "OK"
+        if (arguments.count >= 1) {
+            message = arguments[1]
+        }
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         
         alertController.addTextField { (textField) in
             textField.text = defaultText
         }
 
-        alertController.addAction(UIAlertAction(title: "Dismiss", style: .default, handler: { (action) in
+        if (arguments.count >= 2) {
+            cancel = arguments[2]
+        }
+        alertController.addAction(UIAlertAction(title: cancel, style: .default, handler: { (action) in
             completionHandler(nil)
         }))
         
-        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) in
+        if (arguments.count >= 3) {
+            confirm = arguments[3]
+        }
+        alertController.addAction(UIAlertAction(title: confirm, style: .default, handler: { (action) in
             if let text = alertController.textFields?.first?.text {
                 completionHandler(text)
-                return
             } else {
                 completionHandler(defaultText)
-                return
             }
         }))
         
