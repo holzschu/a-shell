@@ -225,6 +225,21 @@
 		22834A61251DECA8005A2784 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22834A5D251DEC86005A2784 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22834A63251DECAE005A2784 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22834A5D251DEC86005A2784 /* ios_system.xcframework */; };
 		2291286722D9DAC40004A5EA /* UIColor+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291286622D9DAC40004A5EA /* UIColor+hexString.swift */; };
+		2294A9D0254C1A38008C1490 /* pythonA-kiwisolver.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9C9254C1A20008C1490 /* pythonA-kiwisolver.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9D7254C1A60008C1490 /* python3_ios-kiwisolver.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9C0254C1A05008C1490 /* python3_ios-kiwisolver.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9E5254C262D008C1490 /* python3_ios-PIL._imaging.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9E0254C2629008C1490 /* python3_ios-PIL._imaging.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9E6254C262D008C1490 /* python3_ios-PIL._imagingft.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9E3254C2629008C1490 /* python3_ios-PIL._imagingft.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9E7254C262D008C1490 /* python3_ios-PIL._imagingmath.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9E2254C2629008C1490 /* python3_ios-PIL._imagingmath.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9E8254C262D008C1490 /* python3_ios-PIL._imagingmorph.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9E4254C2629008C1490 /* python3_ios-PIL._imagingmorph.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9E9254C262D008C1490 /* python3_ios-PIL._imagingtk.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9E1254C2629008C1490 /* python3_ios-PIL._imagingtk.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9EB254C2638008C1490 /* pythonA-PIL._imaging.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9DC254C261B008C1490 /* pythonA-PIL._imaging.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9EC254C2638008C1490 /* pythonA-PIL._imagingft.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9DD254C261B008C1490 /* pythonA-PIL._imagingft.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9ED254C2638008C1490 /* pythonA-PIL._imagingmath.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9DE254C261B008C1490 /* pythonA-PIL._imagingmath.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9EE254C2638008C1490 /* pythonA-PIL._imagingmorph.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9DB254C261B008C1490 /* pythonA-PIL._imagingmorph.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9EF254C2638008C1490 /* pythonA-PIL._imagingtk.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9DF254C261B008C1490 /* pythonA-PIL._imagingtk.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9F2254C278B008C1490 /* freetype.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9BE254C19D0008C1490 /* freetype.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9F5254C2AB3008C1490 /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9F4254C2AA7008C1490 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294A9F8254C2C24008C1490 /* harfbuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9F7254C2C21008C1490 /* harfbuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
 		22984EF222C93DBC00069497 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EF122C93DBC00069497 /* ContentView.swift */; };
@@ -342,6 +357,14 @@
 				221722DD24C0283B00064652 /* nm.xcframework in Embed Frameworks */,
 				221722DE24C0283B00064652 /* opt.xcframework in Embed Frameworks */,
 				2211767224D1C5C8003F9434 /* vim.xcframework in Embed Frameworks */,
+				2294A9F2254C278B008C1490 /* freetype.xcframework in Embed Frameworks */,
+				2294A9F8254C2C24008C1490 /* harfbuzz.xcframework in Embed Frameworks */,
+				2294A9F5254C2AB3008C1490 /* libpng.xcframework in Embed Frameworks */,
+				2294A9EB254C2638008C1490 /* pythonA-PIL._imaging.xcframework in Embed Frameworks */,
+				2294A9EC254C2638008C1490 /* pythonA-PIL._imagingft.xcframework in Embed Frameworks */,
+				2294A9ED254C2638008C1490 /* pythonA-PIL._imagingmath.xcframework in Embed Frameworks */,
+				2294A9EE254C2638008C1490 /* pythonA-PIL._imagingmorph.xcframework in Embed Frameworks */,
+				2294A9EF254C2638008C1490 /* pythonA-PIL._imagingtk.xcframework in Embed Frameworks */,
 				22239BEF250293840069E539 /* pythonA-_asyncio.xcframework in Embed Frameworks */,
 				22239BF0250293840069E539 /* pythonA-_bisect.xcframework in Embed Frameworks */,
 				22239BF1250293840069E539 /* pythonA-_blake2.xcframework in Embed Frameworks */,
@@ -425,6 +448,7 @@
 				227B4E8F252CD4CB0052D056 /* pythonA-numpy.random._sfc64.xcframework in Embed Frameworks */,
 				227B4E90252CD4CB0052D056 /* pythonA-numpy.random.bit_generator.xcframework in Embed Frameworks */,
 				227B4E91252CD4CB0052D056 /* pythonA-numpy.random.mtrand.xcframework in Embed Frameworks */,
+				2294A9D0254C1A38008C1490 /* pythonA-kiwisolver.xcframework in Embed Frameworks */,
 				22239C31250293970069E539 /* python3_ios-_asyncio.xcframework in Embed Frameworks */,
 				22239C32250293970069E539 /* python3_ios-_bisect.xcframework in Embed Frameworks */,
 				22239C33250293970069E539 /* python3_ios-_blake2.xcframework in Embed Frameworks */,
@@ -508,6 +532,12 @@
 				227B4E72252CD4A00052D056 /* python3_ios-numpy.random._sfc64.xcframework in Embed Frameworks */,
 				227B4E73252CD4A00052D056 /* python3_ios-numpy.random.bit_generator.xcframework in Embed Frameworks */,
 				227B4E74252CD4A10052D056 /* python3_ios-numpy.random.mtrand.xcframework in Embed Frameworks */,
+				2294A9D7254C1A60008C1490 /* python3_ios-kiwisolver.xcframework in Embed Frameworks */,
+				2294A9E5254C262D008C1490 /* python3_ios-PIL._imaging.xcframework in Embed Frameworks */,
+				2294A9E6254C262D008C1490 /* python3_ios-PIL._imagingft.xcframework in Embed Frameworks */,
+				2294A9E7254C262D008C1490 /* python3_ios-PIL._imagingmath.xcframework in Embed Frameworks */,
+				2294A9E8254C262D008C1490 /* python3_ios-PIL._imagingmorph.xcframework in Embed Frameworks */,
+				2294A9E9254C262D008C1490 /* python3_ios-PIL._imagingtk.xcframework in Embed Frameworks */,
 				22834A61251DECA8005A2784 /* ios_system.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -734,6 +764,21 @@
 		227B4E83252CD4B60052D056 /* pythonA-numpy.core._multiarray_umath.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-numpy.core._multiarray_umath.xcframework"; path = "cpython/XcFrameworks/pythonA-numpy.core._multiarray_umath.xcframework"; sourceTree = "<group>"; };
 		22834A5D251DEC86005A2784 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = "../../../Library/Developer/Xcode/DerivedData/a-Shell-cqzslwtkcqgoxebelvqiwwgwwgej/SourcePackages/artifacts/ios_system/ios_system.xcframework"; sourceTree = "<group>"; };
 		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIColor+hexString.swift"; path = "Util/UIColor+hexString.swift"; sourceTree = SOURCE_ROOT; };
+		2294A9BE254C19D0008C1490 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = "cpython/Python-aux/freetype.xcframework"; sourceTree = "<group>"; };
+		2294A9C0254C1A05008C1490 /* python3_ios-kiwisolver.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-kiwisolver.xcframework"; path = "cpython/XcFrameworks/python3_ios-kiwisolver.xcframework"; sourceTree = "<group>"; };
+		2294A9C9254C1A20008C1490 /* pythonA-kiwisolver.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-kiwisolver.xcframework"; path = "cpython/XcFrameworks/pythonA-kiwisolver.xcframework"; sourceTree = "<group>"; };
+		2294A9DB254C261B008C1490 /* pythonA-PIL._imagingmorph.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-PIL._imagingmorph.xcframework"; path = "cpython/XcFrameworks/pythonA-PIL._imagingmorph.xcframework"; sourceTree = "<group>"; };
+		2294A9DC254C261B008C1490 /* pythonA-PIL._imaging.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-PIL._imaging.xcframework"; path = "cpython/XcFrameworks/pythonA-PIL._imaging.xcframework"; sourceTree = "<group>"; };
+		2294A9DD254C261B008C1490 /* pythonA-PIL._imagingft.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-PIL._imagingft.xcframework"; path = "cpython/XcFrameworks/pythonA-PIL._imagingft.xcframework"; sourceTree = "<group>"; };
+		2294A9DE254C261B008C1490 /* pythonA-PIL._imagingmath.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-PIL._imagingmath.xcframework"; path = "cpython/XcFrameworks/pythonA-PIL._imagingmath.xcframework"; sourceTree = "<group>"; };
+		2294A9DF254C261B008C1490 /* pythonA-PIL._imagingtk.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-PIL._imagingtk.xcframework"; path = "cpython/XcFrameworks/pythonA-PIL._imagingtk.xcframework"; sourceTree = "<group>"; };
+		2294A9E0254C2629008C1490 /* python3_ios-PIL._imaging.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-PIL._imaging.xcframework"; path = "cpython/XcFrameworks/python3_ios-PIL._imaging.xcframework"; sourceTree = "<group>"; };
+		2294A9E1254C2629008C1490 /* python3_ios-PIL._imagingtk.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-PIL._imagingtk.xcframework"; path = "cpython/XcFrameworks/python3_ios-PIL._imagingtk.xcframework"; sourceTree = "<group>"; };
+		2294A9E2254C2629008C1490 /* python3_ios-PIL._imagingmath.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-PIL._imagingmath.xcframework"; path = "cpython/XcFrameworks/python3_ios-PIL._imagingmath.xcframework"; sourceTree = "<group>"; };
+		2294A9E3254C2629008C1490 /* python3_ios-PIL._imagingft.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-PIL._imagingft.xcframework"; path = "cpython/XcFrameworks/python3_ios-PIL._imagingft.xcframework"; sourceTree = "<group>"; };
+		2294A9E4254C2629008C1490 /* python3_ios-PIL._imagingmorph.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-PIL._imagingmorph.xcframework"; path = "cpython/XcFrameworks/python3_ios-PIL._imagingmorph.xcframework"; sourceTree = "<group>"; };
+		2294A9F4254C2AA7008C1490 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = "cpython/Python-aux/libpng.xcframework"; sourceTree = "<group>"; };
+		2294A9F7254C2C21008C1490 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = "cpython/Python-aux/harfbuzz.xcframework"; sourceTree = "<group>"; };
 		22984EEA22C93DBC00069497 /* a-Shell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "a-Shell.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		22984EED22C93DBC00069497 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		22984EEF22C93DBC00069497 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -829,6 +874,12 @@
 		225177C923170AA10084B9C1 /* Python3 frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2294A9E0254C2629008C1490 /* python3_ios-PIL._imaging.xcframework */,
+				2294A9E3254C2629008C1490 /* python3_ios-PIL._imagingft.xcframework */,
+				2294A9E2254C2629008C1490 /* python3_ios-PIL._imagingmath.xcframework */,
+				2294A9E4254C2629008C1490 /* python3_ios-PIL._imagingmorph.xcframework */,
+				2294A9E1254C2629008C1490 /* python3_ios-PIL._imagingtk.xcframework */,
+				2294A9C0254C1A05008C1490 /* python3_ios-kiwisolver.xcframework */,
 				227B4E5C252CD4850052D056 /* python3_ios-numpy.core._multiarray_umath.xcframework */,
 				227B4E5D252CD4850052D056 /* python3_ios-numpy.core._operand_flag_tests.xcframework */,
 				227B4E63252CD4860052D056 /* python3_ios-numpy.fft._pocketfft_internal.xcframework */,
@@ -1012,6 +1063,12 @@
 		22A0FB00233F5A06009A4DE3 /* PythonA frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2294A9DC254C261B008C1490 /* pythonA-PIL._imaging.xcframework */,
+				2294A9DD254C261B008C1490 /* pythonA-PIL._imagingft.xcframework */,
+				2294A9DE254C261B008C1490 /* pythonA-PIL._imagingmath.xcframework */,
+				2294A9DB254C261B008C1490 /* pythonA-PIL._imagingmorph.xcframework */,
+				2294A9DF254C261B008C1490 /* pythonA-PIL._imagingtk.xcframework */,
+				2294A9C9254C1A20008C1490 /* pythonA-kiwisolver.xcframework */,
 				227B4E83252CD4B60052D056 /* pythonA-numpy.core._multiarray_umath.xcframework */,
 				227B4E7C252CD4B50052D056 /* pythonA-numpy.core._operand_flag_tests.xcframework */,
 				227B4E78252CD4B50052D056 /* pythonA-numpy.fft._pocketfft_internal.xcframework */,
@@ -1144,6 +1201,9 @@
 				222691D724B500EE001A0D2F /* text.xcframework */,
 				2226921724B62E27001A0D2F /* mandoc.xcframework */,
 				2226922324B6F56C001A0D2F /* vim.xcframework */,
+				2294A9BE254C19D0008C1490 /* freetype.xcframework */,
+				2294A9F7254C2C21008C1490 /* harfbuzz.xcframework */,
+				2294A9F4254C2AA7008C1490 /* libpng.xcframework */,
 				22AD8722246EBFFB00F415DE /* IntentsUI.framework */,
 			);
 			name = Frameworks;
@@ -1188,6 +1248,7 @@
 			buildConfigurationList = 22984EFE22C93DBF00069497 /* Build configuration list for PBXNativeTarget "a-Shell" */;
 			buildPhases = (
 				22984EE622C93DBC00069497 /* Sources */,
+				2294A9FB254C4F79008C1490 /* ShellScript */,
 				22984EE722C93DBC00069497 /* Frameworks */,
 				22984EE822C93DBC00069497 /* Resources */,
 				22B1B81522CB9D6500F7C452 /* Embed Frameworks */,
@@ -1350,6 +1411,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2294A9FB254C4F79008C1490 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Compile Python and all associated packages:\npushd cpython\nsh ./buildAllArchitectures.sh\nsh ./createFrameworks.sh\nsh ./createModuleFrameworks.sh\npopd \n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		22984EE622C93DBC00069497 /* Sources */ = {
