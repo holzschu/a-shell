@@ -240,6 +240,26 @@
 		2294A9F2254C278B008C1490 /* freetype.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9BE254C19D0008C1490 /* freetype.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2294A9F5254C2AB3008C1490 /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9F4254C2AA7008C1490 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2294A9F8254C2C24008C1490 /* harfbuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9F7254C2C21008C1490 /* harfbuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA14254DA363008C1490 /* python3_ios-matplotlib._c_internal_utils.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA13254DA357008C1490 /* python3_ios-matplotlib._c_internal_utils.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA15254DA363008C1490 /* python3_ios-matplotlib._contour.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA11254DA357008C1490 /* python3_ios-matplotlib._contour.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA16254DA363008C1490 /* python3_ios-matplotlib._image.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA0A254DA356008C1490 /* python3_ios-matplotlib._image.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA17254DA363008C1490 /* python3_ios-matplotlib._path.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA0B254DA356008C1490 /* python3_ios-matplotlib._path.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA18254DA363008C1490 /* python3_ios-matplotlib._qhull.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA0D254DA356008C1490 /* python3_ios-matplotlib._qhull.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA19254DA363008C1490 /* python3_ios-matplotlib._tri.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA0F254DA357008C1490 /* python3_ios-matplotlib._tri.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA1A254DA363008C1490 /* python3_ios-matplotlib._ttconv.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA12254DA357008C1490 /* python3_ios-matplotlib._ttconv.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA1B254DA363008C1490 /* python3_ios-matplotlib.backends._backend_agg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA0C254DA356008C1490 /* python3_ios-matplotlib.backends._backend_agg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA1C254DA363008C1490 /* python3_ios-matplotlib.backends._tkagg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA10254DA357008C1490 /* python3_ios-matplotlib.backends._tkagg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA1D254DA363008C1490 /* python3_ios-matplotlib.ft2font.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA0E254DA357008C1490 /* python3_ios-matplotlib.ft2font.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA29254DA389008C1490 /* pythonA-matplotlib._c_internal_utils.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA25254DA378008C1490 /* pythonA-matplotlib._c_internal_utils.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA2A254DA389008C1490 /* pythonA-matplotlib._contour.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA22254DA377008C1490 /* pythonA-matplotlib._contour.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA2B254DA389008C1490 /* pythonA-matplotlib._image.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA23254DA377008C1490 /* pythonA-matplotlib._image.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA2C254DA389008C1490 /* pythonA-matplotlib._path.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA20254DA377008C1490 /* pythonA-matplotlib._path.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA2D254DA389008C1490 /* pythonA-matplotlib._qhull.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA21254DA377008C1490 /* pythonA-matplotlib._qhull.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA2E254DA389008C1490 /* pythonA-matplotlib._tri.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA28254DA378008C1490 /* pythonA-matplotlib._tri.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA2F254DA389008C1490 /* pythonA-matplotlib._ttconv.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA1F254DA377008C1490 /* pythonA-matplotlib._ttconv.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA30254DA389008C1490 /* pythonA-matplotlib.backends._backend_agg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA24254DA378008C1490 /* pythonA-matplotlib.backends._backend_agg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA31254DA389008C1490 /* pythonA-matplotlib.backends._tkagg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA26254DA378008C1490 /* pythonA-matplotlib.backends._tkagg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2294AA32254DA389008C1490 /* pythonA-matplotlib.ft2font.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA27254DA378008C1490 /* pythonA-matplotlib.ft2font.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
 		22984EF222C93DBC00069497 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EF122C93DBC00069497 /* ContentView.swift */; };
@@ -449,6 +469,16 @@
 				227B4E90252CD4CB0052D056 /* pythonA-numpy.random.bit_generator.xcframework in Embed Frameworks */,
 				227B4E91252CD4CB0052D056 /* pythonA-numpy.random.mtrand.xcframework in Embed Frameworks */,
 				2294A9D0254C1A38008C1490 /* pythonA-kiwisolver.xcframework in Embed Frameworks */,
+				2294AA29254DA389008C1490 /* pythonA-matplotlib._c_internal_utils.xcframework in Embed Frameworks */,
+				2294AA2A254DA389008C1490 /* pythonA-matplotlib._contour.xcframework in Embed Frameworks */,
+				2294AA2B254DA389008C1490 /* pythonA-matplotlib._image.xcframework in Embed Frameworks */,
+				2294AA2C254DA389008C1490 /* pythonA-matplotlib._path.xcframework in Embed Frameworks */,
+				2294AA2D254DA389008C1490 /* pythonA-matplotlib._qhull.xcframework in Embed Frameworks */,
+				2294AA2E254DA389008C1490 /* pythonA-matplotlib._tri.xcframework in Embed Frameworks */,
+				2294AA2F254DA389008C1490 /* pythonA-matplotlib._ttconv.xcframework in Embed Frameworks */,
+				2294AA30254DA389008C1490 /* pythonA-matplotlib.backends._backend_agg.xcframework in Embed Frameworks */,
+				2294AA31254DA389008C1490 /* pythonA-matplotlib.backends._tkagg.xcframework in Embed Frameworks */,
+				2294AA32254DA389008C1490 /* pythonA-matplotlib.ft2font.xcframework in Embed Frameworks */,
 				22239C31250293970069E539 /* python3_ios-_asyncio.xcframework in Embed Frameworks */,
 				22239C32250293970069E539 /* python3_ios-_bisect.xcframework in Embed Frameworks */,
 				22239C33250293970069E539 /* python3_ios-_blake2.xcframework in Embed Frameworks */,
@@ -538,6 +568,16 @@
 				2294A9E7254C262D008C1490 /* python3_ios-PIL._imagingmath.xcframework in Embed Frameworks */,
 				2294A9E8254C262D008C1490 /* python3_ios-PIL._imagingmorph.xcframework in Embed Frameworks */,
 				2294A9E9254C262D008C1490 /* python3_ios-PIL._imagingtk.xcframework in Embed Frameworks */,
+				2294AA14254DA363008C1490 /* python3_ios-matplotlib._c_internal_utils.xcframework in Embed Frameworks */,
+				2294AA15254DA363008C1490 /* python3_ios-matplotlib._contour.xcframework in Embed Frameworks */,
+				2294AA16254DA363008C1490 /* python3_ios-matplotlib._image.xcframework in Embed Frameworks */,
+				2294AA17254DA363008C1490 /* python3_ios-matplotlib._path.xcframework in Embed Frameworks */,
+				2294AA18254DA363008C1490 /* python3_ios-matplotlib._qhull.xcframework in Embed Frameworks */,
+				2294AA19254DA363008C1490 /* python3_ios-matplotlib._tri.xcframework in Embed Frameworks */,
+				2294AA1A254DA363008C1490 /* python3_ios-matplotlib._ttconv.xcframework in Embed Frameworks */,
+				2294AA1B254DA363008C1490 /* python3_ios-matplotlib.backends._backend_agg.xcframework in Embed Frameworks */,
+				2294AA1C254DA363008C1490 /* python3_ios-matplotlib.backends._tkagg.xcframework in Embed Frameworks */,
+				2294AA1D254DA363008C1490 /* python3_ios-matplotlib.ft2font.xcframework in Embed Frameworks */,
 				22834A61251DECA8005A2784 /* ios_system.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -779,6 +819,26 @@
 		2294A9E4254C2629008C1490 /* python3_ios-PIL._imagingmorph.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-PIL._imagingmorph.xcframework"; path = "cpython/XcFrameworks/python3_ios-PIL._imagingmorph.xcframework"; sourceTree = "<group>"; };
 		2294A9F4254C2AA7008C1490 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = "cpython/Python-aux/libpng.xcframework"; sourceTree = "<group>"; };
 		2294A9F7254C2C21008C1490 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = "cpython/Python-aux/harfbuzz.xcframework"; sourceTree = "<group>"; };
+		2294AA0A254DA356008C1490 /* python3_ios-matplotlib._image.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-matplotlib._image.xcframework"; path = "cpython/XcFrameworks/python3_ios-matplotlib._image.xcframework"; sourceTree = "<group>"; };
+		2294AA0B254DA356008C1490 /* python3_ios-matplotlib._path.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-matplotlib._path.xcframework"; path = "cpython/XcFrameworks/python3_ios-matplotlib._path.xcframework"; sourceTree = "<group>"; };
+		2294AA0C254DA356008C1490 /* python3_ios-matplotlib.backends._backend_agg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-matplotlib.backends._backend_agg.xcframework"; path = "cpython/XcFrameworks/python3_ios-matplotlib.backends._backend_agg.xcframework"; sourceTree = "<group>"; };
+		2294AA0D254DA356008C1490 /* python3_ios-matplotlib._qhull.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-matplotlib._qhull.xcframework"; path = "cpython/XcFrameworks/python3_ios-matplotlib._qhull.xcframework"; sourceTree = "<group>"; };
+		2294AA0E254DA357008C1490 /* python3_ios-matplotlib.ft2font.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-matplotlib.ft2font.xcframework"; path = "cpython/XcFrameworks/python3_ios-matplotlib.ft2font.xcframework"; sourceTree = "<group>"; };
+		2294AA0F254DA357008C1490 /* python3_ios-matplotlib._tri.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-matplotlib._tri.xcframework"; path = "cpython/XcFrameworks/python3_ios-matplotlib._tri.xcframework"; sourceTree = "<group>"; };
+		2294AA10254DA357008C1490 /* python3_ios-matplotlib.backends._tkagg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-matplotlib.backends._tkagg.xcframework"; path = "cpython/XcFrameworks/python3_ios-matplotlib.backends._tkagg.xcframework"; sourceTree = "<group>"; };
+		2294AA11254DA357008C1490 /* python3_ios-matplotlib._contour.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-matplotlib._contour.xcframework"; path = "cpython/XcFrameworks/python3_ios-matplotlib._contour.xcframework"; sourceTree = "<group>"; };
+		2294AA12254DA357008C1490 /* python3_ios-matplotlib._ttconv.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-matplotlib._ttconv.xcframework"; path = "cpython/XcFrameworks/python3_ios-matplotlib._ttconv.xcframework"; sourceTree = "<group>"; };
+		2294AA13254DA357008C1490 /* python3_ios-matplotlib._c_internal_utils.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-matplotlib._c_internal_utils.xcframework"; path = "cpython/XcFrameworks/python3_ios-matplotlib._c_internal_utils.xcframework"; sourceTree = "<group>"; };
+		2294AA1F254DA377008C1490 /* pythonA-matplotlib._ttconv.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-matplotlib._ttconv.xcframework"; path = "cpython/XcFrameworks/pythonA-matplotlib._ttconv.xcframework"; sourceTree = "<group>"; };
+		2294AA20254DA377008C1490 /* pythonA-matplotlib._path.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-matplotlib._path.xcframework"; path = "cpython/XcFrameworks/pythonA-matplotlib._path.xcframework"; sourceTree = "<group>"; };
+		2294AA21254DA377008C1490 /* pythonA-matplotlib._qhull.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-matplotlib._qhull.xcframework"; path = "cpython/XcFrameworks/pythonA-matplotlib._qhull.xcframework"; sourceTree = "<group>"; };
+		2294AA22254DA377008C1490 /* pythonA-matplotlib._contour.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-matplotlib._contour.xcframework"; path = "cpython/XcFrameworks/pythonA-matplotlib._contour.xcframework"; sourceTree = "<group>"; };
+		2294AA23254DA377008C1490 /* pythonA-matplotlib._image.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-matplotlib._image.xcframework"; path = "cpython/XcFrameworks/pythonA-matplotlib._image.xcframework"; sourceTree = "<group>"; };
+		2294AA24254DA378008C1490 /* pythonA-matplotlib.backends._backend_agg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-matplotlib.backends._backend_agg.xcframework"; path = "cpython/XcFrameworks/pythonA-matplotlib.backends._backend_agg.xcframework"; sourceTree = "<group>"; };
+		2294AA25254DA378008C1490 /* pythonA-matplotlib._c_internal_utils.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-matplotlib._c_internal_utils.xcframework"; path = "cpython/XcFrameworks/pythonA-matplotlib._c_internal_utils.xcframework"; sourceTree = "<group>"; };
+		2294AA26254DA378008C1490 /* pythonA-matplotlib.backends._tkagg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-matplotlib.backends._tkagg.xcframework"; path = "cpython/XcFrameworks/pythonA-matplotlib.backends._tkagg.xcframework"; sourceTree = "<group>"; };
+		2294AA27254DA378008C1490 /* pythonA-matplotlib.ft2font.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-matplotlib.ft2font.xcframework"; path = "cpython/XcFrameworks/pythonA-matplotlib.ft2font.xcframework"; sourceTree = "<group>"; };
+		2294AA28254DA378008C1490 /* pythonA-matplotlib._tri.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-matplotlib._tri.xcframework"; path = "cpython/XcFrameworks/pythonA-matplotlib._tri.xcframework"; sourceTree = "<group>"; };
 		22984EEA22C93DBC00069497 /* a-Shell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "a-Shell.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		22984EED22C93DBC00069497 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		22984EEF22C93DBC00069497 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -874,6 +934,16 @@
 		225177C923170AA10084B9C1 /* Python3 frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2294AA13254DA357008C1490 /* python3_ios-matplotlib._c_internal_utils.xcframework */,
+				2294AA11254DA357008C1490 /* python3_ios-matplotlib._contour.xcframework */,
+				2294AA0A254DA356008C1490 /* python3_ios-matplotlib._image.xcframework */,
+				2294AA0B254DA356008C1490 /* python3_ios-matplotlib._path.xcframework */,
+				2294AA0D254DA356008C1490 /* python3_ios-matplotlib._qhull.xcframework */,
+				2294AA0F254DA357008C1490 /* python3_ios-matplotlib._tri.xcframework */,
+				2294AA12254DA357008C1490 /* python3_ios-matplotlib._ttconv.xcframework */,
+				2294AA0C254DA356008C1490 /* python3_ios-matplotlib.backends._backend_agg.xcframework */,
+				2294AA10254DA357008C1490 /* python3_ios-matplotlib.backends._tkagg.xcframework */,
+				2294AA0E254DA357008C1490 /* python3_ios-matplotlib.ft2font.xcframework */,
 				2294A9E0254C2629008C1490 /* python3_ios-PIL._imaging.xcframework */,
 				2294A9E3254C2629008C1490 /* python3_ios-PIL._imagingft.xcframework */,
 				2294A9E2254C2629008C1490 /* python3_ios-PIL._imagingmath.xcframework */,
@@ -1063,6 +1133,16 @@
 		22A0FB00233F5A06009A4DE3 /* PythonA frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2294AA25254DA378008C1490 /* pythonA-matplotlib._c_internal_utils.xcframework */,
+				2294AA22254DA377008C1490 /* pythonA-matplotlib._contour.xcframework */,
+				2294AA23254DA377008C1490 /* pythonA-matplotlib._image.xcframework */,
+				2294AA20254DA377008C1490 /* pythonA-matplotlib._path.xcframework */,
+				2294AA21254DA377008C1490 /* pythonA-matplotlib._qhull.xcframework */,
+				2294AA28254DA378008C1490 /* pythonA-matplotlib._tri.xcframework */,
+				2294AA1F254DA377008C1490 /* pythonA-matplotlib._ttconv.xcframework */,
+				2294AA24254DA378008C1490 /* pythonA-matplotlib.backends._backend_agg.xcframework */,
+				2294AA26254DA378008C1490 /* pythonA-matplotlib.backends._tkagg.xcframework */,
+				2294AA27254DA378008C1490 /* pythonA-matplotlib.ft2font.xcframework */,
 				2294A9DC254C261B008C1490 /* pythonA-PIL._imaging.xcframework */,
 				2294A9DD254C261B008C1490 /* pythonA-PIL._imagingft.xcframework */,
 				2294A9DE254C261B008C1490 /* pythonA-PIL._imagingmath.xcframework */,
@@ -1248,7 +1328,6 @@
 			buildConfigurationList = 22984EFE22C93DBF00069497 /* Build configuration list for PBXNativeTarget "a-Shell" */;
 			buildPhases = (
 				22984EE622C93DBC00069497 /* Sources */,
-				2294A9FB254C4F79008C1490 /* ShellScript */,
 				22984EE722C93DBC00069497 /* Frameworks */,
 				22984EE822C93DBC00069497 /* Resources */,
 				22B1B81522CB9D6500F7C452 /* Embed Frameworks */,
@@ -1412,27 +1491,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		2294A9FB254C4F79008C1490 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Compile Python and all associated packages:\npushd cpython\nsh ./buildAllArchitectures.sh\nsh ./createFrameworks.sh\nsh ./createModuleFrameworks.sh\npopd \n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		22984EE622C93DBC00069497 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -1563,7 +1621,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1621,7 +1679,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -1640,7 +1698,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 115;
+				CURRENT_PROJECT_VERSION = 116;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -1650,7 +1708,7 @@
 					"$(PROJECT_DIR)/Frameworks",
 				);
 				INFOPLIST_FILE = "a-Shell/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1660,7 +1718,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
+				MARKETING_VERSION = 1.6.0;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -1684,7 +1742,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 115;
+				CURRENT_PROJECT_VERSION = 116;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -1694,7 +1752,7 @@
 					"$(PROJECT_DIR)/Frameworks",
 				);
 				INFOPLIST_FILE = "a-Shell/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1704,7 +1762,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
+				MARKETING_VERSION = 1.6.0;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -1725,19 +1783,19 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 115;
+				CURRENT_PROJECT_VERSION = 116;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
 				);
 				INFOPLIST_FILE = "a-Shell-Intents/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
+				MARKETING_VERSION = 1.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1752,19 +1810,19 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 115;
+				CURRENT_PROJECT_VERSION = 116;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
 				);
 				INFOPLIST_FILE = "a-Shell-Intents/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
+				MARKETING_VERSION = 1.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1779,15 +1837,15 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 115;
+				CURRENT_PROJECT_VERSION = 116;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
+				MARKETING_VERSION = 1.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1802,15 +1860,15 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 115;
+				CURRENT_PROJECT_VERSION = 116;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
+				MARKETING_VERSION = 1.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
