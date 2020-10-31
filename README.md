@@ -5,7 +5,7 @@
 <a href="https://twitter.com/a_Shell_iOS"><img src="https://img.shields.io/badge/Twitter-@a__Shell__iOS-blue.svg?style=flat" alt="Twitter"/></a>
 </p>
 
-The goal in this project is to provide a simple Unix-like terminal on iOS. It uses [ios_system](https://github.com/holzschu/ios_system/) for command interpretation, and will ultimately include all commands from the [ios_system](https://github.com/holzschu/ios_system/) ecosystem (nslookup, whois, python3, lua, pdflatex, lualatex...) 
+The goal in this project is to provide a simple Unix-like terminal on iOS. It uses [ios_system](https://github.com/holzschu/ios_system/) for command interpretation, and includes all commands from the [ios_system](https://github.com/holzschu/ios_system/) ecosystem (nslookup, whois, python3, lua, pdflatex, lualatex...) 
 
 The project uses iPadOS 13 ability to create and manage multiple windows. Each window has its own context, appearance, command history and current directory. `newWindow` opens a new window, `exit` closes the current window. 
 
@@ -18,6 +18,20 @@ When opening a new window, a-Shell executes the file `.profile` if it exists. Yo
 ## AppStore
 
 a-Shell is now <a href="https://holzschu.github.io/a-Shell_iOS/">available on the AppStore</a>.
+
+## How to compile it?
+
+If you want to compile the project yourself, you will need the following steps: 
+* download the entire project and its sub-modules: `git submodule update --init --recursive`
+* change directory to `cpython`: `cd cpython`
+* build Python 3.9 and all the associated libraries / frameworks: `sh ./downloadAndCompile.sh` (this step takes more than 30 mn on a 2GHz i5 MBP, YMMV). 
+* get back to the main directory, open the Xcode project and click "Build", then "Run" as you like.
+
+I am looking for ways to make the process more automatic. Then again, unless you change things in Python, you won't need to re-run through steps 2 and 3. 
+
+a-Shell now runs on the devices and on the simulator, as you wish. 
+
+Because Python 3.9 uses functions that are only available on the iOS 14 SDK, I've set the mimimum iOS version to 14.0. If you need to run it on an iOS 13 device, you can edit this settings in Xcode, at your own risk.
 
 ## Home directory
 
