@@ -143,6 +143,7 @@
 		22239C70250293980069E539 /* python3_ios-unicodedata.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B7A250293580069E539 /* python3_ios-unicodedata.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22239C71250293980069E539 /* python3_ios-xxlimited.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B962502935A0069E539 /* python3_ios-xxlimited.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22239C72250293980069E539 /* python3_ios-zlib.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B87250293590069E539 /* python3_ios-zlib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2226100E256BB8A300140AE3 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5432558464300673D11 /* ios_system.xcframework */; };
 		22365231249A39AC00221868 /* man in Resources */ = {isa = PBXBuildFile; fileRef = 22365230249A39AA00221868 /* man */; };
 		22372B722448E85D0033FE07 /* usr in Resources */ = {isa = PBXBuildFile; fileRef = 22372B712448E85C0033FE07 /* usr */; };
 		223E61AB250A5CEA002BF41F /* python3_ios-_cffi_backend.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61A9250A5320002BF41F /* python3_ios-_cffi_backend.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -892,6 +893,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2226100E256BB8A300140AE3 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1398,9 +1400,9 @@
 				2226921924B658BA001A0D2F /* XCRemoteSwiftPackageReference "vim" */,
 				221722C824C017F300064652 /* XCRemoteSwiftPackageReference "llvm" */,
 				22A6B1CA24EC5587009CC924 /* XCRemoteSwiftPackageReference "bc" */,
-				221171FA2540DD1D00F81888 /* XCRemoteSwiftPackageReference "ios_system" */,
 				22677AC22550777B00489B27 /* XCRemoteSwiftPackageReference "lib-tex" */,
 				22677AC925508B4600489B27 /* XCRemoteSwiftPackageReference "taskwarrior" */,
+				22261017256D858000140AE3 /* XCRemoteSwiftPackageReference "ios_system" */,
 			);
 			productRefGroup = 22984EEB22C93DBC00069497 /* Products */;
 			projectDirPath = "";
@@ -1670,7 +1672,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -1690,7 +1692,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.1;
+				MARKETING_VERSION = 1.6.2;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -1714,7 +1716,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -1734,7 +1736,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.1;
+				MARKETING_VERSION = 1.6.2;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -1891,17 +1893,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		221171FA2540DD1D00F81888 /* XCRemoteSwiftPackageReference "ios_system" */ = {
+		221722C824C017F300064652 /* XCRemoteSwiftPackageReference "llvm" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/holzschu/ios_system.git";
+			repositoryURL = "https://github.com/holzschu/llvm.git";
 			requirement = {
 				branch = master;
 				kind = branch;
 			};
 		};
-		221722C824C017F300064652 /* XCRemoteSwiftPackageReference "llvm" */ = {
+		22261017256D858000140AE3 /* XCRemoteSwiftPackageReference "ios_system" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/holzschu/llvm.git";
+			repositoryURL = "https://github.com/holzschu/ios_system.git";
 			requirement = {
 				branch = master;
 				kind = branch;
