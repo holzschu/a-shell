@@ -221,39 +221,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         self.libraryFilesUpToDate = true
-
-            /*
-                let homeDirectory = homeFile.deletingLastPathComponent()
-                do {
-                    try FileManager().createDirectory(atPath: homeDirectory.path, withIntermediateDirectories: true)
-                }
-                catch {
-                    NSLog("Can't create directory: \(homeDirectory.path): \(error)")
-                }
-                do {
-                    let firstFileAttribute = try FileManager().attributesOfItem(atPath: homeFile.path)
-                    if (firstFileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
-                        // It's a symbolic link, does the destination exist?
-                        let destination = try! FileManager().destinationOfSymbolicLink(atPath: homeFile.path)
-                        if (!FileManager().fileExists(atPath: destination)) {
-                            try FileManager().removeItem(at: homeFile)
-                            try FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
-                        }
-                    } else {
-                        // Not a symbolic link, replace:
-                        try FileManager().removeItem(at: homeFile)
-                        try FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
-                    }
-                }
-                catch {
-                    do {
-                        try FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
-                    }
-                    catch {
-                        NSLog("Can't create file: \(homeFile.path): \(error)")
-                    }
-                }
-            } */
     }
     
     
@@ -280,6 +247,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Add these as commands so they appear on the command list, even though we treat them internally:
         replaceCommand("newWindow", "clear", true)
         replaceCommand("exit", "clear", true)
+        // for debugging TeX issues:
+        // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
+        // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
         activateFakeTeXCommands()
         if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
             downloadTeX();
@@ -290,7 +260,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
         setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
-        setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
+        setenv("é", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
         setenv("MAGIC", Bundle.main.resourcePath! +  "/usr/share/magic.mgc", 1); // magic file for file command
         setenv("SHORTCUTS", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
         setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
@@ -311,7 +281,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (!versionUpToDate || needToUpdateCFiles()) {
             createCSDK()
         }
-        // Link Python files from $APPDIR/Library to $HOME/Library/
         if (needToRemovePython37Files()) {
             // Remove files and directories created with Python 3.7
             removePython37Files()

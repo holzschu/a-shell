@@ -281,7 +281,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     func printPrompt() {
         DispatchQueue.main.async {
-            self.webView?.evaluateJavaScript("window.printPrompt(); window.updatePromptPosition(); window.commandRunning = ''; ") { (result, error) in
+            self.webView?.evaluateJavaScript("window.commandRunning = ''; window.printPrompt(); window.updatePromptPosition();") { (result, error) in
                 if error != nil {
                     // print(error)
                 }

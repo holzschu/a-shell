@@ -203,14 +203,19 @@
             function printPrompt() {
 				// prints the prompt and initializes all variables related to prompt position
 				window.term_.io.print('\x1b[0m\x1b[39;49m');  // default font, default color
-				window.term_.io.print(window.promptMessage); 
 				// cut window.printedContent if it gets too large:
 				if (window.printedContent.length > 30000) {
 					window.printedContent = window.printedContent.substring(5000);
 				}
+				if (window.commandRunning == '') {
+				    window.term_.io.print(window.promptMessage); 
+				    window.commandRunning = '';
+				    window.interactiveCommandRunning = false;
+				} else {
+					// let the running command print its own prompt:
+					window.webkit.messageHandlers.aShell.postMessage('input:' + '\n');
+				}
 				window.term_.io.currentCommand = '';
-				window.commandRunning = '';
-				window.interactiveCommandRunning = false;
 				currentCommandCursorPosition = 0;
 			}
 

@@ -233,7 +233,7 @@ public func luatex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
             fputs("Downloading the LuaTeX extension, this may take some time...", thread_stderr)
         } else {
-            fputs("Downloading the TeX distribution with LuaTeX extnesion, this may take some time...", thread_stderr)
+            fputs("Downloading the TeX distribution with LuaTeX extension, this may take some time...", thread_stderr)
             UserDefaults.standard.set(true, forKey: "TeXEnabled")
         }
         UserDefaults.standard.set(true, forKey: "TeXOpenType")

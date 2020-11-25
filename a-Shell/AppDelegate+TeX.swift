@@ -267,6 +267,7 @@ extension AppDelegate {
     }
 
     func disableTeX() {
+        // return ; // for debugging TeX
         NSLog("Deactivating TeX")
         // First, deactivate the commands:
         downloadingTeX = false
@@ -391,6 +392,7 @@ extension AppDelegate {
     }
 
     func disableOpentype() {
+        // return ; // for debugging TeX
         NSLog("Deactivating LuaTeX")
         // First, deactivate the commands:
         downloadingOpentype = false
