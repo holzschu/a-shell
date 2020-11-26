@@ -1,0 +1,88 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "bc_ios",
+        "repositoryURL": "https://github.com/holzschu/bc.git",
+        "state": {
+          "branch": "master",
+          "revision": "96c73e3ca3f635facfd5202e31e28fe16c97f102",
+          "version": null
+        }
+      },
+      {
+        "package": "ios_system",
+        "repositoryURL": "https://github.com/holzschu/ios_system.git",
+        "state": {
+          "branch": "master",
+          "revision": "d46917950b625264f590d312bdb3ca71ca032d71",
+          "version": null
+        }
+      },
+      {
+        "package": "texlive",
+        "repositoryURL": "https://github.com/holzschu/lib-tex.git",
+        "state": {
+          "branch": "master",
+          "revision": "b815a302235e78215c8706c98792471e197f8431",
+          "version": null
+        }
+      },
+      {
+        "package": "openssl",
+        "repositoryURL": "https://github.com/holzschu/libssh2-for-iOS.git",
+        "state": {
+          "branch": "master",
+          "revision": "c577cdc4596e7d48f4e2cbe0bb97bcebdc15a6b7",
+          "version": null
+        }
+      },
+      {
+        "package": "llvm",
+        "repositoryURL": "https://github.com/holzschu/llvm.git",
+        "state": {
+          "branch": "master",
+          "revision": "c70f694c3967a774ca70331e9fe8a474fe4bb54b",
+          "version": null
+        }
+      },
+      {
+        "package": "lua_ios",
+        "repositoryURL": "https://github.com/holzschu/lua_ios.git",
+        "state": {
+          "branch": "master",
+          "revision": "ffca90f3a2fbc712ced5db851e79f7a41fb38a6f",
+          "version": null
+        }
+      },
+      {
+        "package": "network_ios",
+        "repositoryURL": "https://github.com/holzschu/network_ios.git",
+        "state": {
+          "branch": "master",
+          "revision": "70ca050e69b4ca84eedd2fe9658529ec29a9630c",
+          "version": null
+        }
+      },
+      {
+        "package": "taskwarrior",
+        "repositoryURL": "https://github.com/holzschu/taskwarrior.git",
+        "state": {
+          "branch": "2.6.0",
+          "revision": "e2570b1def76a8d3d8c81c5b6359a501cd0d00cf",
+          "version": null
+        }
+      },
+      {
+        "package": "vim",
+        "repositoryURL": "https://github.com/holzschu/vim.git",
+        "state": {
+          "branch": "master",
+          "revision": "25274828e135da6e44bb40e863dda63f04c8e231",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}
