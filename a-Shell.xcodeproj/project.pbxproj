@@ -299,7 +299,6 @@
 		22DC1FAB257013B10068004E /* lli.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F7625700FD20068004E /* lli.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1FAC257013B10068004E /* nm.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F7225700FD10068004E /* nm.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1FAD257013B10068004E /* opt.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F7325700FD20068004E /* opt.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22DC1FAE257013B10068004E /* libLLVM.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F7825700FEC0068004E /* libLLVM.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1FB0257013BA0068004E /* calc.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F7C2570109A0068004E /* calc.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1FB1257013BA0068004E /* task.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F7D257010A90068004E /* task.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1FB2257013BA0068004E /* lex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F7E257010BC0068004E /* lex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -385,7 +384,6 @@
 				22DC1FAB257013B10068004E /* lli.xcframework in Embed Frameworks */,
 				22DC1FAC257013B10068004E /* nm.xcframework in Embed Frameworks */,
 				22DC1FAD257013B10068004E /* opt.xcframework in Embed Frameworks */,
-				22DC1FAE257013B10068004E /* libLLVM.xcframework in Embed Frameworks */,
 				22DC1FB0257013BA0068004E /* calc.xcframework in Embed Frameworks */,
 				22DC1FB1257013BA0068004E /* task.xcframework in Embed Frameworks */,
 				22DC1FB2257013BA0068004E /* lex.xcframework in Embed Frameworks */,
@@ -914,7 +912,6 @@
 		22DC1F7525700FD20068004E /* libLLVM.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libLLVM.xcframework; path = ../../../SourcePackages/artifacts/llvm/libLLVM.xcframework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22DC1F7625700FD20068004E /* lli.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lli.xcframework; path = ../../../SourcePackages/artifacts/llvm/lli.xcframework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22DC1F7725700FD20068004E /* llc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = llc.xcframework; path = ../../../SourcePackages/artifacts/llvm/llc.xcframework; sourceTree = BUILT_PRODUCTS_DIR; };
-		22DC1F7825700FEC0068004E /* libLLVM.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libLLVM.xcframework; path = ../../../SourcePackages/artifacts/llvm/libLLVM.xcframework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22DC1F7C2570109A0068004E /* calc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = calc.xcframework; path = ../../../SourcePackages/artifacts/taskwarrior/calc.xcframework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22DC1F7D257010A90068004E /* task.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = task.xcframework; path = ../../../SourcePackages/artifacts/taskwarrior/task.xcframework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22DC1F7E257010BC0068004E /* lex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lex.xcframework; path = ../../../SourcePackages/artifacts/taskwarrior/lex.xcframework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1356,7 +1353,8 @@
 				22DC1F6825700F7E0068004E /* texlua53.xcframework */,
 			);
 			name = texlive;
-			sourceTree = "<group>";
+			path = "../../../../../../../../src/Xcode_iPad/a-Shell";
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		22DC1F6325700F740068004E /* LLVM */ = {
 			isa = PBXGroup;
@@ -1371,10 +1369,10 @@
 				22DC1F7625700FD20068004E /* lli.xcframework */,
 				22DC1F7225700FD10068004E /* nm.xcframework */,
 				22DC1F7325700FD20068004E /* opt.xcframework */,
-				22DC1F7825700FEC0068004E /* libLLVM.xcframework */,
 			);
 			name = LLVM;
-			sourceTree = "<group>";
+			path = "../../../../../../../../src/Xcode_iPad/a-Shell";
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		22DC1F7B2570105A0068004E /* taskwarrior */ = {
 			isa = PBXGroup;
@@ -1384,7 +1382,8 @@
 				22DC1F7E257010BC0068004E /* lex.xcframework */,
 			);
 			name = taskwarrior;
-			sourceTree = "<group>";
+			path = "../../../../../../../../src/Xcode_iPad/a-Shell";
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		22DC1F81257011FD0068004E /* openssl */ = {
 			isa = PBXGroup;
@@ -1409,7 +1408,8 @@
 				22DC1F8F257012F50068004E /* text.xcframework */,
 			);
 			name = ios_system;
-			sourceTree = "<group>";
+			path = "../../../../../../../../src/Xcode_iPad/a-Shell";
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXGroup section */
 
