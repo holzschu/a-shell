@@ -143,7 +143,7 @@
 		22239C70250293980069E539 /* python3_ios-unicodedata.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B7A250293580069E539 /* python3_ios-unicodedata.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22239C71250293980069E539 /* python3_ios-xxlimited.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B962502935A0069E539 /* python3_ios-xxlimited.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22239C72250293980069E539 /* python3_ios-zlib.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B87250293590069E539 /* python3_ios-zlib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		2226100E256BB8A300140AE3 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5432558464300673D11 /* ios_system.xcframework */; };
+		2226100E256BB8A300140AE3 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		22365231249A39AC00221868 /* man in Resources */ = {isa = PBXBuildFile; fileRef = 22365230249A39AA00221868 /* man */; };
 		22372B722448E85D0033FE07 /* usr in Resources */ = {isa = PBXBuildFile; fileRef = 22372B712448E85C0033FE07 /* usr */; };
 		223E61AB250A5CEA002BF41F /* python3_ios-_cffi_backend.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61A9250A5320002BF41F /* python3_ios-_cffi_backend.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -258,6 +258,8 @@
 		22C9814F24CADA45006C103E /* python3_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22C9814E24CADA42006C103E /* python3_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
 		22DBA250233BB0700095C559 /* listTeXFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DBA24F233BB0700095C559 /* listTeXFiles.swift */; };
+		22DC1F2D256F90320068004E /* bc_ios in Frameworks */ = {isa = PBXBuildFile; productRef = 22DC1F2C256F90320068004E /* bc_ios */; };
+		22DC1F32256F90C40068004E /* ios_system in Frameworks */ = {isa = PBXBuildFile; productRef = 22DC1F31256F90C40068004E /* ios_system */; };
 		22E1B53A243DF64000EA8FBD /* require.js in Resources */ = {isa = PBXBuildFile; fileRef = 22E1B539243DF63E00EA8FBD /* require.js */; };
 		22F04B4824EFF9B900F9F30A /* pythonA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22C9815024CADA4E006C103E /* pythonA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8987FC81255851DB000B5196 /* openssl in Frameworks */ = {isa = PBXBuildFile; productRef = 8987FC80255851DB000B5196 /* openssl */; };
@@ -265,7 +267,6 @@
 		8987FC85255851DB000B5196 /* lua_ios in Frameworks */ = {isa = PBXBuildFile; productRef = 8987FC84255851DB000B5196 /* lua_ios */; };
 		8987FC87255851DB000B5196 /* vim in Frameworks */ = {isa = PBXBuildFile; productRef = 8987FC86255851DB000B5196 /* vim */; };
 		8987FC89255851DB000B5196 /* llvm in Frameworks */ = {isa = PBXBuildFile; productRef = 8987FC88255851DB000B5196 /* llvm */; };
-		8987FC8B255851DC000B5196 /* bc_ios in Frameworks */ = {isa = PBXBuildFile; productRef = 8987FC8A255851DC000B5196 /* bc_ios */; };
 		8987FC8D255851DC000B5196 /* ios_system in Frameworks */ = {isa = PBXBuildFile; productRef = 8987FC8C255851DC000B5196 /* ios_system */; };
 		8987FC8F255851DC000B5196 /* texlive in Frameworks */ = {isa = PBXBuildFile; productRef = 8987FC8E255851DC000B5196 /* texlive */; };
 		8987FC91255851DC000B5196 /* taskwarrior in Frameworks */ = {isa = PBXBuildFile; productRef = 8987FC90255851DC000B5196 /* taskwarrior */; };
@@ -800,7 +801,8 @@
 				8987FC81255851DB000B5196 /* openssl in Frameworks */,
 				8987FC91255851DC000B5196 /* taskwarrior in Frameworks */,
 				8987FC89255851DB000B5196 /* llvm in Frameworks */,
-				8987FC8B255851DC000B5196 /* bc_ios in Frameworks */,
+				22DC1F2D256F90320068004E /* bc_ios in Frameworks */,
+				22DC1F32256F90C40068004E /* ios_system in Frameworks */,
 				8987FC83255851DB000B5196 /* network_ios in Frameworks */,
 				8987FC87255851DB000B5196 /* vim in Frameworks */,
 			);
@@ -810,7 +812,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2226100E256BB8A300140AE3 /* ios_system.xcframework in Frameworks */,
+				2226100E256BB8A300140AE3 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1205,10 +1207,11 @@
 				8987FC84255851DB000B5196 /* lua_ios */,
 				8987FC86255851DB000B5196 /* vim */,
 				8987FC88255851DB000B5196 /* llvm */,
-				8987FC8A255851DC000B5196 /* bc_ios */,
 				8987FC8C255851DC000B5196 /* ios_system */,
 				8987FC8E255851DC000B5196 /* texlive */,
 				8987FC90255851DC000B5196 /* taskwarrior */,
+				22DC1F2C256F90320068004E /* bc_ios */,
+				22DC1F31256F90C40068004E /* ios_system */,
 			);
 			productName = "a-Shell";
 			productReference = 22984EEA22C93DBC00069497 /* a-Shell.app */;
@@ -1292,10 +1295,10 @@
 				2226920824B5BA2F001A0D2F /* XCRemoteSwiftPackageReference "lua_ios" */,
 				2226921924B658BA001A0D2F /* XCRemoteSwiftPackageReference "vim" */,
 				221722C824C017F300064652 /* XCRemoteSwiftPackageReference "llvm" */,
-				22A6B1CA24EC5587009CC924 /* XCRemoteSwiftPackageReference "bc" */,
 				22677AC22550777B00489B27 /* XCRemoteSwiftPackageReference "lib-tex" */,
 				22677AC925508B4600489B27 /* XCRemoteSwiftPackageReference "taskwarrior" */,
-				22261017256D858000140AE3 /* XCRemoteSwiftPackageReference "ios_system" */,
+				22DC1F2B256F90310068004E /* XCRemoteSwiftPackageReference "bc" */,
+				22DC1F30256F90C40068004E /* XCRemoteSwiftPackageReference "ios_system" */,
 			);
 			productRefGroup = 22984EEB22C93DBC00069497 /* Products */;
 			projectDirPath = "";
@@ -1794,14 +1797,6 @@
 				kind = branch;
 			};
 		};
-		22261017256D858000140AE3 /* XCRemoteSwiftPackageReference "ios_system" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/holzschu/ios_system.git";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
 		222691E524B50431001A0D2F /* XCRemoteSwiftPackageReference "libssh2-for-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/holzschu/libssh2-for-iOS.git";
@@ -1850,9 +1845,17 @@
 				kind = branch;
 			};
 		};
-		22A6B1CA24EC5587009CC924 /* XCRemoteSwiftPackageReference "bc" */ = {
+		22DC1F2B256F90310068004E /* XCRemoteSwiftPackageReference "bc" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/holzschu/bc.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+		22DC1F30256F90C40068004E /* XCRemoteSwiftPackageReference "ios_system" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/holzschu/ios_system.git";
 			requirement = {
 				branch = master;
 				kind = branch;
@@ -1861,6 +1864,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		22DC1F2C256F90320068004E /* bc_ios */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 22DC1F2B256F90310068004E /* XCRemoteSwiftPackageReference "bc" */;
+			productName = bc_ios;
+		};
+		22DC1F31256F90C40068004E /* ios_system */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 22DC1F30256F90C40068004E /* XCRemoteSwiftPackageReference "ios_system" */;
+			productName = ios_system;
+		};
 		8987FC80255851DB000B5196 /* openssl */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 222691E524B50431001A0D2F /* XCRemoteSwiftPackageReference "libssh2-for-iOS" */;
@@ -1886,14 +1899,8 @@
 			package = 221722C824C017F300064652 /* XCRemoteSwiftPackageReference "llvm" */;
 			productName = llvm;
 		};
-		8987FC8A255851DC000B5196 /* bc_ios */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 22A6B1CA24EC5587009CC924 /* XCRemoteSwiftPackageReference "bc" */;
-			productName = bc_ios;
-		};
 		8987FC8C255851DC000B5196 /* ios_system */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 221171FA2540DD1D00F81888 /* XCRemoteSwiftPackageReference "ios_system" */;
 			productName = ios_system;
 		};
 		8987FC8E255851DC000B5196 /* texlive */ = {
