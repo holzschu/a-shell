@@ -356,8 +356,29 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             fputs("wasm: file \(command) not found\n", thread_stderr)
             return -1
         }
+        let localEnvironment = environmentAsArray()
+        var environmentAsJSDictionary = "{"
+        if localEnvironment != nil {
+            for variable in localEnvironment! {
+                if let envVar = variable as? String {
+                    // Let's not carry environment variables with quotes:
+                    if (envVar.contains("\"")) {
+                        continue
+                    }
+                    let components = envVar.components(separatedBy:"=")
+                    if (components.count == 0) {
+                        continue
+                    }
+                    let name = components[0]
+                    var value = envVar
+                    value.removeFirst(name.count + 1)
+                    environmentAsJSDictionary += "\"" + name + "\"" + ":" + "\"" + value + "\",\n"
+                }
+            }
+        }
+        environmentAsJSDictionary += "}"
         let base64string = buffer.base64EncodedString()
-        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + currentDirectory + "\", \(ios_isatty(STDIN_FILENO)))"
+        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + currentDirectory + "\", \(ios_isatty(STDIN_FILENO)), " + environmentAsJSDictionary + ")"
         if (javascriptRunning) {
             fputs("We can't execute webAssembly while we are already executing webAssembly.", thread_stderr)
             return -1
@@ -1055,9 +1076,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             var command = cmd
             command.removeFirst("inputTTY:".count)
             guard let data = command.data(using: .utf8) else { return }
+            guard tty_file_input != nil else { return }
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
-            guard tty_file_input != nil else { return }
             tty_file_input?.write(data)
         } else if (cmd.hasPrefix("listDirectory:")) {
             var directory = cmd

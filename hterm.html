@@ -106,7 +106,7 @@
             // args: arguments (argv[argc])
             // stdinBuffer: standard input
             // cwd: current working directory
-            function executeWebAssembly(bufferString, args, cwd, tty) {
+            function executeWebAssembly(bufferString, args, cwd, tty, env) {
             	// Input: base64 encoded binary wasm file
 				if (!('WebAssembly' in window)) {
 					window.webkit.messageHandlers.aShell.postMessage('WebAssembly not supported');
@@ -125,7 +125,7 @@
 					let wasi = new WASI({
 						preopens: {'.': cwd, '/': '/'},
 						args: args,
-						env: {},
+						env: env,
 						bindings: {
 							...browserBindings,
 							fs: wasmFs.fs,
