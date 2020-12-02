@@ -29,16 +29,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var libraryFilesUpToDate = true
     let moveFilesQueue = DispatchQueue(label: "moveFiles", qos: .utility) // low priority
 
+    // Which version of the app are we running? a-Shell, a-Shell mini, a-Shell pro...?
+    var appVersion: String? {
+        // Bundle.main.infoDictionary?["CFBundleDisplayName"] = a-Shell
+        // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.a-Shell
+        // Bundle.main.infoDictionary?["CFBundleName"] = a-Shell
+        return Bundle.main.infoDictionary?["CFBundleName"] as? String
+    }
+    
     func needToUpdateCFiles() -> Bool {
         // Check that the C SDK files are present:
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
-        NSLog("Library file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path))")
-        NSLog("Header file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path))")
-        return FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path)
-         && FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path)
+        // NSLog("Library file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path))")
+        // NSLog("Header file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path))")
+        return !(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path)
+         && FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path))
     }
     
     func versionNumberIncreased() -> Bool {
@@ -228,8 +236,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         NSLog("Application didFinishLaunchingWithOptions \(launchOptions)")
         // Store variables in User Defaults:
-        UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
-        UserDefaults.standard.register(defaults: ["TeXOpenType" : false])
+        if (appVersion != "a-Shell-mini") {
+            UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
+            UserDefaults.standard.register(defaults: ["TeXOpenType" : false])
+        }
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
@@ -250,12 +260,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // for debugging TeX issues:
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
-        activateFakeTeXCommands()
-        if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
-            downloadTeX();
-        }
-        if (UserDefaults.standard.bool(forKey: "TeXOpenType")) {
-            downloadOpentype();
+        if (appVersion != "a-Shell-mini") {
+            activateFakeTeXCommands()
+            if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
+                downloadTeX();
+            }
+            if (UserDefaults.standard.bool(forKey: "TeXOpenType")) {
+                downloadOpentype();
+            }
         }
         numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
@@ -278,20 +290,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                   create: true)
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
-        if (!versionUpToDate || needToUpdateCFiles()) {
-            createCSDK()
-        }
-        if (needToRemovePython37Files()) {
-            // Remove files and directories created with Python 3.7
-            removePython37Files()
-            // Move all remaining packages to $HOME/Library/lib/python3.9/site-packages/
-            var pid = ios_fork()
-            ios_system("mv " + libraryURL.path + "/lib/python3.7/site-packages/* " + libraryURL.path + "/lib/python3.9/site-packages/")
-            ios_waitpid(pid)
-            // Erase the directory
-            pid = ios_fork()
-            ios_system("rm -rf " + libraryURL.path + "/lib/python3.7/")
-            ios_waitpid(pid)
+        if (appVersion != "a-Shell-mini") {
+            if (!versionUpToDate || needToUpdateCFiles()) {
+                createCSDK()
+            }
+            if (needToRemovePython37Files()) {
+                // Remove files and directories created with Python 3.7
+                removePython37Files()
+                // Move all remaining packages to $HOME/Library/lib/python3.9/site-packages/
+                var pid = ios_fork()
+                ios_system("mv " + libraryURL.path + "/lib/python3.7/site-packages/* " + libraryURL.path + "/lib/python3.9/site-packages/")
+                ios_waitpid(pid)
+                // Erase the directory
+                pid = ios_fork()
+                ios_system("rm -rf " + libraryURL.path + "/lib/python3.7/")
+                ios_waitpid(pid)
+            }
         }
         if (!versionUpToDate) {
             // The version number changed, so the App has been re-installed. Clean all pre-compiled Python files:
