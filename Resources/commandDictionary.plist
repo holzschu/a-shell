@@ -590,13 +590,6 @@
 		<string></string>
 		<string>file</string>
 	</array>
-	<key>nm</key>
-	<array>
-		<string>nm.framework/nm</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
 	<key>lli</key>
 	<array>
 		<string>lli.framework/lli</string>
