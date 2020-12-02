@@ -1740,10 +1740,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // This may occur due to temporary interruptions (ex. an incoming phone call).
         NSLog("sceneWillResignActive: \(self.persistentIdentifier).")
     }
-
-    func sceneWillEnterForegraund(_ scene: UIScene) {
-        NSLog("Entered the a-Shell:sceneWillEnterForeground")
-    }
     
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
@@ -1841,9 +1837,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if let storedCommand = currentCommandData as? String {
             if (storedCommand.count > 0) {
                 NSLog("Restarting session with \(storedCommand)")
-                if (storedCommand.hasPrefix("ipython") || storedCommand.hasPrefix("man") || storedCommand.hasPrefix("jupyter")) {
-                    return // Don't restart ipython, jupyter or man pages (because it crashes).
-                }
+                // We only restart vim commands. Other commands are just creating issues, unless we could save their status.
                 // Safety check: is the vim session file still there?
                 // I could have been removed by the system, or by the user.
                 // TODO: also check that files are still available / no
@@ -1864,6 +1858,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         return
                     }
                 }
+                /* We only restart vim commands. Everything else is creating problems.
+                   Basically, we can only restart commands if we can save their status.
                 NSLog("sceneWillEnterForeground, Restoring command: \(storedCommand)")
                 let restoreCommand = "window.commandToExecute = '" + storedCommand.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n") + "';"
                 NSLog("Calling command: \(restoreCommand)")
@@ -1875,6 +1871,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         // print(result)
                     }
                 }
+                */
             }
         }
     }
@@ -2073,19 +2070,19 @@ extension SceneDelegate: WKUIDelegate {
         var cancel = "Cancel"
         var confirm = "OK"
 
-        if (arguments.count >= 1) {
+        if (arguments.count > 1) {
             message = arguments[1]
         }
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         
-        if (arguments.count >= 2) {
+        if (arguments.count > 2) {
             cancel = arguments[2]
         }
         alertController.addAction(UIAlertAction(title: cancel, style: .cancel, handler: { (action) in
             completionHandler(false)
         }))
         
-        if (arguments.count >= 3) {
+        if (arguments.count > 3) {
             confirm = arguments[3]
             if (confirm.hasPrefix("btn-danger")) {
                 confirm.removeFirst("btn-danger".count)
@@ -2519,7 +2516,7 @@ extension SceneDelegate: WKUIDelegate {
         var message = ""
         var cancel = "Dismiss"
         var confirm = "OK"
-        if (arguments.count >= 1) {
+        if (arguments.count > 1) {
             message = arguments[1]
         }
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
@@ -2528,14 +2525,14 @@ extension SceneDelegate: WKUIDelegate {
             textField.text = defaultText
         }
 
-        if (arguments.count >= 2) {
+        if (arguments.count > 2) {
             cancel = arguments[2]
         }
         alertController.addAction(UIAlertAction(title: cancel, style: .default, handler: { (action) in
             completionHandler(nil)
         }))
         
-        if (arguments.count >= 3) {
+        if (arguments.count > 3) {
             confirm = arguments[3]
         }
         alertController.addAction(UIAlertAction(title: confirm, style: .default, handler: { (action) in
