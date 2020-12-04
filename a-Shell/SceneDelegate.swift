@@ -1779,6 +1779,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if (FileManager().fileExists(atPath: previousDirectory) && FileManager().isReadableFile(atPath: previousDirectory)) {
                     NSLog("set previousDirectory to \(previousDirectory)")
                     // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
+                    ios_switchSession(self.persistentIdentifier?.toCString())
                     changeDirectory(path: previousDirectory) // call cd_main and checks secured bookmarked URLs
                 }
             }
@@ -1789,6 +1790,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if (FileManager().fileExists(atPath: currentDirectory) && FileManager().isReadableFile(atPath: currentDirectory)) {
                     NSLog("set currentDirectory to \(currentDirectory)")
                     // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
+                    ios_switchSession(self.persistentIdentifier?.toCString())
                     changeDirectory(path: currentDirectory) // call cd_main and checks secured bookmarked URLs
                 }
             }
