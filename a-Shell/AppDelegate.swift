@@ -236,7 +236,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         NSLog("Application didFinishLaunchingWithOptions \(launchOptions)")
         // Store variables in User Defaults:
-        if (appVersion != "a-Shell-mini") {
+        if (appVersion != "a-Shell mini") {
             UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
             UserDefaults.standard.register(defaults: ["TeXOpenType" : false])
         }
@@ -260,7 +260,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // for debugging TeX issues:
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
-        if (appVersion != "a-Shell-mini") {
+        if (appVersion != "a-Shell mini") {
             activateFakeTeXCommands()
             if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
                 downloadTeX();
@@ -290,7 +290,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                   create: true)
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
-        if (appVersion != "a-Shell-mini") {
+        if (appVersion != "a-Shell mini") {
             if (!versionUpToDate || needToUpdateCFiles()) {
                 createCSDK()
             }
