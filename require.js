@@ -81,6 +81,7 @@
             // iOS returns 0 for succesful sync http queries
             if ((request.status == 0) || ((request.status > 99) && (request.status < 400))) {
               // console.log("Loaded: " + href); 
+     		  // window.webkit.messageHandlers.aShell.postMessage('JS loaded ' + href);                  	  
               cached.s = source = request.responseText;
               cached.t = request.getResponseHeader("Content-Type");
               	// iOS: ensure we get application/json set
