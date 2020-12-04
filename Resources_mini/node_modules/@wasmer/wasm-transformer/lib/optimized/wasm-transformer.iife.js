@@ -1,0 +1,200 @@
+var WasmTransformer = (function (exports) {
+    'use strict';
+
+    /*! *****************************************************************************
+    Copyright (c) Microsoft Corporation. All rights reserved.
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain a copy of the
+    License at http://www.apache.org/licenses/LICENSE-2.0
+
+    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+    MERCHANTABLITY OR NON-INFRINGEMENT.
+
+    See the Apache Version 2.0 License for specific language governing permissions
+    and limitations under the License.
+    ***************************************************************************** */
+
+    function __awaiter(thisArg, _arguments, P, generator) {
+        return new (P || (P = Promise))(function (resolve, reject) {
+            function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+            function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+            function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+            step((generator = generator.apply(thisArg, _arguments || [])).next());
+        });
+    }
+
+    function __generator(thisArg, body) {
+        var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+        return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+        function verb(n) { return function (v) { return step([n, v]); }; }
+        function step(op) {
+            if (f) throw new TypeError("Generator is already executing.");
+            while (_) try {
+                if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+                if (y = 0, t) op = [op[0] & 2, t.value];
+                switch (op[0]) {
+                    case 0: case 1: t = op; break;
+                    case 4: _.label++; return { value: op[1], done: false };
+                    case 5: _.label++; y = op[1]; op = [0]; continue;
+                    case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                    default:
+                        if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                        if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                        if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                        if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                        if (t[2]) _.ops.pop();
+                        _.trys.pop(); continue;
+                }
+                op = body.call(thisArg, _);
+            } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+            if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+        }
+    }
+
+    let wasm;
+
+    let cachegetInt32Memory = null;
+    function getInt32Memory() {
+        if (cachegetInt32Memory === null || cachegetInt32Memory.buffer !== wasm.memory.buffer) {
+            cachegetInt32Memory = new Int32Array(wasm.memory.buffer);
+        }
+        return cachegetInt32Memory;
+    }
+
+    let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+
+    let cachegetUint8Memory = null;
+    function getUint8Memory() {
+        if (cachegetUint8Memory === null || cachegetUint8Memory.buffer !== wasm.memory.buffer) {
+            cachegetUint8Memory = new Uint8Array(wasm.memory.buffer);
+        }
+        return cachegetUint8Memory;
+    }
+
+    function getStringFromWasm(ptr, len) {
+        return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
+    }
+    /**
+    * get the versioon of the package
+    * @returns {string}
+    */
+    function version() {
+        const retptr = 8;
+        const ret = wasm.version(retptr);
+        const memi32 = getInt32Memory();
+        const v0 = getStringFromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
+    }
+
+    let WASM_VECTOR_LEN = 0;
+
+    function passArray8ToWasm(arg) {
+        const ptr = wasm.__wbindgen_malloc(arg.length * 1);
+        getUint8Memory().set(arg, ptr / 1);
+        WASM_VECTOR_LEN = arg.length;
+        return ptr;
+    }
+
+    function getArrayU8FromWasm(ptr, len) {
+        return getUint8Memory().subarray(ptr / 1, ptr / 1 + len);
+    }
+    /**
+    * i64 lowering that can be done by the browser
+    * @param {Uint8Array} wasm_binary
+    * @returns {Uint8Array}
+    */
+    function lowerI64Imports(wasm_binary) {
+        const retptr = 8;
+        const ret = wasm.lowerI64Imports(retptr, passArray8ToWasm(wasm_binary), WASM_VECTOR_LEN);
+        const memi32 = getInt32Memory();
+        const v0 = getArrayU8FromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 1);
+        return v0;
+    }
+
+    function init(module) {
+        let result;
+        const imports = {};
+        imports.wbg = {};
+        imports.wbg.__wbindgen_throw = function(arg0, arg1) {
+            throw new Error(getStringFromWasm(arg0, arg1));
+        };
+
+        if ((typeof URL === 'function' && module instanceof URL) || typeof module === 'string' || (typeof Request === 'function' && module instanceof Request)) {
+
+            const response = fetch(module);
+            if (typeof WebAssembly.instantiateStreaming === 'function') {
+                result = WebAssembly.instantiateStreaming(response, imports)
+                .catch(e => {
+                    return response
+                    .then(r => {
+                        if (r.headers.get('Content-Type') != 'application/wasm') {
+                            console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
+                            return r.arrayBuffer();
+                        } else {
+                            throw e;
+                        }
+                    })
+                    .then(bytes => WebAssembly.instantiate(bytes, imports));
+                });
+            } else {
+                result = response
+                .then(r => r.arrayBuffer())
+                .then(bytes => WebAssembly.instantiate(bytes, imports));
+            }
+        } else {
+
+            result = WebAssembly.instantiate(module, imports)
+            .then(result => {
+                if (result instanceof WebAssembly.Instance) {
+                    return { instance: result, module };
+                } else {
+                    return result;
+                }
+            });
+        }
+        return result.then(({instance, module}) => {
+            wasm = instance.exports;
+            init.__wbindgen_wasm_module = module;
+
+            return wasm;
+        });
+    }
+
+    const e=async()=>(async e=>{try{const a=BigInt(0);return (await WebAssembly.instantiate(e)).instance.exports.b(a)===a}catch(e){return !1}})(new Uint8Array([0,97,115,109,1,0,0,0,1,6,1,96,1,126,1,126,3,2,1,0,7,5,1,1,98,0,0,10,6,1,4,0,32,0,11]));
+
+    var isBigIntSupported = false;
+    var wasmTransformerInit = function (passedWasmTransformerUrl) { return __awaiter(void 0, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, init(passedWasmTransformerUrl)];
+                case 1:
+                    _a.sent();
+                    return [4 /*yield*/, e()];
+                case 2:
+                    isBigIntSupported = _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    }); };
+    var lowerI64Imports$1 = function (wasmBinary) {
+        if (isBigIntSupported) {
+            return wasmBinary;
+        }
+        return lowerI64Imports(wasmBinary);
+    };
+    var version$1 = function () {
+        return version();
+    };
+
+    exports.default = wasmTransformerInit;
+    exports.lowerI64Imports = lowerI64Imports$1;
+    exports.version = version$1;
+    exports.wasmTransformerInit = wasmTransformerInit;
+
+    return exports;
+
+}({}));
