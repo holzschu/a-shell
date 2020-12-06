@@ -267,6 +267,9 @@ extension AppDelegate {
     }
 
     func disableTeX() {
+        if (appVersion == "a-Shell mini") {
+            return
+        }
         // return ; // for debugging TeX
         NSLog("Deactivating TeX")
         // First, deactivate the commands:
@@ -392,6 +395,9 @@ extension AppDelegate {
     }
 
     func disableOpentype() {
+        if (appVersion == "a-Shell mini") {
+            return
+        }
         // return ; // for debugging TeX
         NSLog("Deactivating LuaTeX")
         // First, deactivate the commands:

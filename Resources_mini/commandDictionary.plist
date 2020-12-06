@@ -338,13 +338,6 @@
 		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
 		<string>no</string>
 	</array>
-	<key>pythonB</key>
-	<array>
-		<string>pythonB.framework/pythonB</string>
-		<string>Py_BytesMain</string>
-		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
-		<string>no</string>
-	</array>
 	<key>readlink</key>
 	<array>
 		<string>files.framework/files</string>
@@ -644,6 +637,13 @@
 		<string>mandoc.framework/mandoc</string>
 		<string>main</string>
 		<string></string>
+		<string>no</string>
+	</array>
+	<key>wol</key>
+	<array>
+		<string>network_ios.framework/network_ios</string>
+		<string>_Z8wol_mainiPKPc</string>
+		<string>hqb:p:d:</string>
 		<string>no</string>
 	</array>
 </dict>

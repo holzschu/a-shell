@@ -423,27 +423,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @objc func settingsChanged() {
         // UserDefaults.didChangeNotification is called every time the window becomes active
         // We only act if things have really changed.
-        let userSettingsTeX = UserDefaults.standard.bool(forKey: "TeXEnabled")
-        // something changed with TeX settings
-        if (userSettingsTeX) {
-            if (userSettingsTeX != TeXEnabled) {
-                // it was not enabled before, it is requested: we download it
-                downloadTeX()
+        if (appVersion != "a-Shell mini") {
+            // Don't look at TeX settings if running a-Shell mini
+            let userSettingsTeX = UserDefaults.standard.bool(forKey: "TeXEnabled")
+            // something changed with TeX settings
+            if (userSettingsTeX) {
+                if (userSettingsTeX != TeXEnabled) {
+                    // it was not enabled before, it is requested: we download it
+                    downloadTeX()
+                }
+            } else {
+                // it is disabled: make sure it has been removed:
+                disableTeX()
             }
-        } else {
-            // it is disabled: make sure it has been removed:
-            disableTeX()
-        }
-        let userSettingsOpentype = UserDefaults.standard.bool(forKey: "TeXOpenType")
-        if (userSettingsOpentype) {
-            if (userSettingsOpentype != OpentypeEnabled) {
-                // it was not enabled before, it is requested: we download it
-                downloadOpentype()
+            let userSettingsOpentype = UserDefaults.standard.bool(forKey: "TeXOpenType")
+            if (userSettingsOpentype) {
+                if (userSettingsOpentype != OpentypeEnabled) {
+                    // it was not enabled before, it is requested: we download it
+                    downloadOpentype()
+                }
+            } else {
+                // it was enabled before, it was disabled: we remove it
+                disableOpentype()
             }
-        } else {
-            // it was enabled before, it was disabled: we remove it
-            disableOpentype()
-        }
+        }// a-Shell mini
         // bookmarks management, copied from zshmarks: https://github.com/jocelynmallon/zshmarks
         let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
         if (zshmarks) {
