@@ -174,7 +174,7 @@
 				// ssh, once connected to the other machine, is interactive (but not ssh-keygen)
 				let interactiveRegexp = /^vim|^ipython|^less|^more|^ssh|^jump|\|&? *less|\|&? *more|^man/;
 				// It's easier to match a regexp, then take the negation than to test a regexp that does not contain a pattern:
-				let notInteractiveRegexp = /^ssh-keygen/
+				let notInteractiveRegexp = /^ssh-keygen/;
 				return interactiveRegexp.test(commandString) && !notInteractiveRegexp.test(commandString);
 			}
 
@@ -522,9 +522,18 @@
 						}
 						// always post keyboard input to TTY:
 						window.webkit.messageHandlers.aShell.postMessage('inputTTY:' + string);
+						// If help() is running in iPython, then it stops being interactive.
+						var helpRunning = false;
+						if (window.commandRunning.startsWith("ipython")) {
+				            var lastNewline = window.printedContent.lastIndexOf("\n");
+				            var lastLine = window.printedContent.substr(lastNewline + 2); // skip \n\r
+							if (lastLine.startsWith("help>")) {
+								helpRunning = true;
+							}
+						}
 						if (window.commandRunning.startsWith("wasm")) {
 							window.standardInput += string;
-						} else if (window.interactiveCommandRunning) {
+						} else if (window.interactiveCommandRunning && !helpRunning) {
 							// specific treatment for interactive commands: forward all keyboard input to them
 							// window.webkit.messageHandlers.aShell.postMessage('sending: ' + string); // for debugging
 							// post keyboard input to stdin
