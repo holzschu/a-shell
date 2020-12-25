@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuremap [
+  <!ELEMENT configuremap (configure)+>
+  <!ATTLIST configuremap xmlns CDATA #FIXED ''>
+  <!ELEMENT configure EMPTY>
+  <!ATTLIST configure xmlns CDATA #FIXED '' name NMTOKEN #REQUIRED
+    value CDATA #REQUIRED>
+]>
+<!--
+  ImageMagick build configuration.
+-->
+<configuremap>
+  <configure name="CC" value="clang"/>
+  <configure name="CFLAGS" value="-F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator -F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator  -Wall -arch x86_64 -miphonesimulator-version-min=14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.2.sdk -I/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator/include -F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator  -fexceptions -D_FORTIFY_SOURCE=0 -pthread -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=8"/>
+  <configure name="CODER_PATH" value="/usr/local/lib/ImageMagick-7.0.10/modules-Q8/coders"/>
+  <configure name="CONFIGURE_PATH" value="/usr/local/etc/ImageMagick-7/"/>
+  <configure name="CONFIGURE" value="./configure  '--disable-shared' '--host' 'x86_64-apple-darwin' '--with-quantum-depth=8' '--disable-installed' '--without-modules' '--disable-hdri' '--with-lzma=no' '--with-fftw=no' '--with-pango=no' '--with-openexr=no' '--with-gslib=no' '--with-dps=no' '--with-png=yes' 'PNG_CFLAGS=-F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator' 'PNG_LIBS=-framework libpng' 'PSDelegateDefault=no' '--with-freetype' 'FREETYPE_LIBS=-framework freetype' 'FREETYPE_CFLAGS=-F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator' 'ac_cv_func_fork=no' 'ac_cv_func_fork_works=no' 'ac_cv_func_vfork=no' 'ac_cv_func_vfork_works=no' 'host_alias=x86_64-apple-darwin' 'CC=clang' 'CFLAGS=-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.2.sdk -I/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator/include -F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator ' 'LDFLAGS=-dynamiclib -arch x86_64 -miphonesimulator-version-min=14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.2.sdk -F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator -framework ios_system -L/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator/lib -lz' 'CPPFLAGS=-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.2.sdk -I/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator/include -F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator ' 'CXX=clang++' 'CXXFLAGS=-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.2.sdk -I/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator/include '"/>
+  <configure name="COPYRIGHT" value="Copyright (C) 1999-2020 ImageMagick Studio LLC"/>
+  <configure name="CPPFLAGS" value="-I/usr/local/include/ImageMagick-7"/>
+  <configure name="CXXFLAGS" value="-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.2.sdk -I/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator/include  -pthread"/>
+  <configure name="CXX" value="clang++"/>
+  <configure name="DEFS" value="-DHAVE_CONFIG_H"/>
+  <configure name="DELEGATES" value="bzlib freetype jng jpeg png tiff video"/>
+  <configure name="DISTCHECK_CONFIG_FLAGS" value="'CC=clang' 'CFLAGS=-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.2.sdk -I/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator/include -F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator ' 'CPPFLAGS=-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.2.sdk -I/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator/include -F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator ' 'CXX=clang++' 'LDFLAGS=-dynamiclib -arch x86_64 -miphonesimulator-version-min=14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.2.sdk -F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator -framework ios_system -L/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator/lib -lz'  --disable-deprecated  --disable-installed  --with-jemalloc=no  --with-umem=no  --with-autotrace=no  --with-dps=no  --with-fftw=no  --with-gslib=no  --with-fontpath=  --with-lzma=no  --with-openexr=no  --with-pango=no  --with-rsvg=no  --with-wmf=no  --with-perl=no "/>
+  <configure name="DOCUMENTATION_PATH" value="/usr/local/share/doc/ImageMagick-7"/>
+  <configure name="EXEC-PREFIX" value="/usr/local"/>
+  <configure name="EXECUTABLE_PATH" value="/usr/local/bin"/>
+  <configure name="FEATURES" value="DPC Cipher"/>
+  <configure name="FILTER_PATH" value="/usr/local/lib/ImageMagick-7.0.10/modules-Q8/filters"/>
+  <configure name="GIT_REVISION" value="18002:dc750282f:20201206" />
+  <configure name="HOST" value="x86_64-apple-darwin"/>
+  <configure name="INCLUDE_PATH" value="/usr/local/include/ImageMagick-7"/>
+  <configure name="LDFLAGS" value="-L/usr/local/lib -dynamiclib -arch x86_64 -miphonesimulator-version-min=14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.2.sdk -F/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator -framework ios_system -L/Users/holzschu/src/Xcode_iPad/ImageMagick/Frameworks_iphonesimulator/lib -lz"/>
+  <configure name="LIBRARY_PATH" value="/usr/local/lib/ImageMagick-7.0.10"/>
+  <configure name="LIBS" value="   -ltiff -framework freetype  -ljpeg    -framework libpng                 -lbz2              -lm    -lpthread  "/>
+  <configure name="LIB_VERSION_NUMBER" value="7,0,10,47"/>
+  <configure name="LIB_VERSION" value="0x70A"/>
+  <configure name="NAME" value="ImageMagick"/>
+  <configure name="PCFLAGS" value="-DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=8"/>
+  <configure name="PREFIX" value="/usr/local"/>
+  <configure name="QuantumDepth" value="8"/>
+  <configure name="RELEASE_DATE" value="2020-12-07"/>
+  <configure name="SHAREARCH_PATH" value="/usr/local/lib/ImageMagick-7.0.10/config-Q8"/>
+  <configure name="SHARE_PATH" value="/usr/local/share/ImageMagick-7"/>
+  <configure name="TARGET_CPU" value="x86_64"/>
+  <configure name="TARGET_OS" value="darwin"/>
+  <configure name="TARGET_VENDOR" value="apple"/>
+  <configure name="VERSION" value="7.0.10"/>
+  <configure name="WEBSITE" value="https://imagemagick.org"/>
+</configuremap>
