@@ -54,6 +54,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var closeAfterCommandTerminates = false
     var resetDirectoryAfterCommandTerminates = ""
     var currentCommand = ""
+    var pid: pid_t = 0
     private var selectedDirectory = ""
     private var selectedFont = ""
     // Store these for session restore:
@@ -637,10 +638,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 let localFontURL = URL(fileURLWithPath: terminalFontName!)
                 var localFontName = localFontURL.lastPathComponent
                 localFontName.removeLast(".ttf".count)
-                NSLog("Local Font Name: \(localFontName)")
+                // NSLog("Local Font Name: \(localFontName)")
                 DispatchQueue.main.async {
                     let fontNameCommand = "var newStyle = document.createElement('style'); newStyle.appendChild(document.createTextNode(\"@font-face { font-family: '\(localFontName)' ; src: url('\(localFontURL.path)') format('truetype'); }\")); document.head.appendChild(newStyle); window.term_.setFontFamily(\"\(localFontName)\");"
-                    NSLog(fontNameCommand)
+                    // NSLog(fontNameCommand)
                     self.webView?.evaluateJavaScript(fontNameCommand) { (result, error) in
                         if error != nil {
                             print(error)
@@ -857,7 +858,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Also reset directory:
             if (resetDirectoryAfterCommandTerminates != "") {
-                NSLog("Calling resetDirectoryAfterCommandTerminates in exit to \(resetDirectoryAfterCommandTerminates)")
+                // NSLog("Calling resetDirectoryAfterCommandTerminates in exit to \(resetDirectoryAfterCommandTerminates)")
                 changeDirectory(path: self.resetDirectoryAfterCommandTerminates)
                 changeDirectory(path: self.resetDirectoryAfterCommandTerminates)
                 self.resetDirectoryAfterCommandTerminates = ""
@@ -949,9 +950,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     continue
                 }
                 self.currentCommand = command
-                let pid = ios_fork()
+                self.pid = ios_fork()
                 ios_system(self.currentCommand)
-                ios_waitpid(pid)
+                ios_waitpid(self.pid)
                 NSLog("Done executing command: \(command)")
                 NSLog("Current directory: \(FileManager().currentDirectoryPath)")
             }
@@ -983,7 +984,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Did we set up a directory to restore at the end? (shortcuts do that)
             if (self.resetDirectoryAfterCommandTerminates != "") {
-                NSLog("Calling resetDirectoryAfterCommandTerminates to \(self.resetDirectoryAfterCommandTerminates)")
+                // NSLog("Calling resetDirectoryAfterCommandTerminates to \(self.resetDirectoryAfterCommandTerminates)")
                 if (!changeDirectory(path: self.resetDirectoryAfterCommandTerminates)) {
                     ios_switchSession(self.persistentIdentifier?.toCString())
                     ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
@@ -992,13 +993,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.resetDirectoryAfterCommandTerminates = ""
             }
             self.currentCommand = ""
+            self.pid = 0
             self.printPrompt();
         }
     }
     
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let cmd:String = message.body as? String else {
-            NSLog("Could not convert Javascript message: \(message.body)")
+            // NSLog("Could not convert Javascript message: \(message.body)")
             return
         }
         // Make sure we're acting on the right session here:
@@ -1022,7 +1024,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let newHeight = Int(command) ?? 80
             if (newHeight != height) {
                 height = newHeight
-                NSLog("Calling ios_setWindowSize: \(width) x \(height)")
+                // NSLog("Calling ios_setWindowSize: \(width) x \(height)")
                 ios_setWindowSize(Int32(width), Int32(height), self.persistentIdentifier?.toCString())
                 setenv("LINES", "\(height)".toCString(), 1)
                 ios_signal(SIGWINCH);
@@ -1032,10 +1034,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
             editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
         } else if (cmd.hasPrefix("input:")) {
+            ios_switchSession(self.persistentIdentifier?.toCString())
+            if (ios_activePager() != 0) { return }
             var command = cmd
             command.removeFirst("input:".count)
             guard let data = command.data(using: .utf8) else { return }
-            ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
             if (command == endOfTransmission) {
@@ -1049,7 +1052,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     try stdin_file_input?.close()
                 }
                 catch {
-                    NSLog("Could not close stdin input.")
+                    // NSLog("Could not close stdin input.")
                 }
                 stdin_file_input = nil
             } else if (command == interrupt) {
@@ -1058,20 +1061,25 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 guard stdin_file_input != nil else { return }
                 // TODO: don't send data if pipe already closed (^D followed by another key)
                 // (store a variable that says the pipe has been closed)
+                // NSLog("Writing (not interactive) \(command) to stdin")
                 stdin_file_input?.write(data)
             }
         } else if (cmd.hasPrefix("inputInteractive:")) {
+            ios_switchSession(self.persistentIdentifier?.toCString())
+            if (ios_activePager() != 0) { return }
             // Interactive commands: just send the input to them. Allows Vim to map control-D to down half a page.
             var command = cmd
             command.removeFirst("inputInteractive:".count)
             guard let data = command.data(using: .utf8) else { return }
-            ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
             guard stdin_file_input != nil else { return }
             // TODO: don't send data if pipe already closed (^D followed by another key)
             // (store a variable that says the pipe has been closed)
-            stdin_file_input?.write(data)
+            // NSLog("Writing (interactive) \(command) to stdin")
+            if (ios_activePager() == 0) {
+                stdin_file_input?.write(data)
+            }
         } else if (cmd.hasPrefix("inputTTY:")) {
             var command = cmd
             command.removeFirst("inputTTY:".count)
@@ -1079,7 +1087,19 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             guard tty_file_input != nil else { return }
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
-            tty_file_input?.write(data)
+            if (ios_activePager() != 0) {
+                // Remove the string that we just sent from the command input
+                // Sync issues: it could be executed before the string has been added to io.currentCommand
+                webView?.evaluateJavaScript("window.term_.io.currentCommand = window.term_.io.currentCommand.substr(\(command.count));") { (result, error) in
+                    if error != nil {
+                        // print(error)
+                    }
+                    if (result != nil) {
+                        // print(result)
+                    }
+                }
+                tty_file_input?.write(data)
+            }
         } else if (cmd.hasPrefix("listDirectory:")) {
             var directory = cmd
             directory.removeFirst("listDirectory:".count)
@@ -1641,6 +1661,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             } else {
                 NSLog("Un-recognized command: \(currentCommand)")
+                // send sigquit to the command:
+                if (self.pid != 0) {
+                    ios_killpid(self.pid, SIGQUIT)
+                }
             }
             // TODO: restart the command (with the same context) when the session is reconnected.
             currentCommand = ""
@@ -2026,13 +2050,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 stdout_active = false
             }
         } else if let string = String(data: data, encoding: String.Encoding.ascii) {
-            NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII: \(string)")
+            // NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII: \(string)")
             outputToWebView(string: string)
             if (string.contains(endOfTransmission)) {
                 stdout_active = false
             }
         } else {
-            NSLog("Couldn't convert data in stdout: \(data)")
+            // NSLog("Couldn't convert data in stdout: \(data)")
         }
     }
 }
@@ -2179,30 +2203,33 @@ extension SceneDelegate: WKUIDelegate {
                     // arguments[4] == nb bytes
                     // arguments[5] == offset
                     returnValue = 0; // valid file descriptor, maybe nothing to write
-                    let values = arguments[3].components(separatedBy:",")
-                    var data = Data.init()
-                    if let numValues = Int(arguments[4]) {
-                        if (numValues > 0) {
-                            let offset = UInt64(arguments[5]) ?? 0
-                            for c in 0...numValues-1 {
-                                if let value = UInt8(values[c]) {
-                                    data.append(contentsOf: [value])
+                    // Do we have something to write?
+                    if (arguments.count >= 6) && (arguments[3].count > 0) {
+                        let values = arguments[3].components(separatedBy:",")
+                        var data = Data.init()
+                        if let numValues = Int(arguments[4]) {
+                            if (numValues > 0) {
+                                let offset = UInt64(arguments[5]) ?? 0
+                                for c in 0...numValues-1 {
+                                    if let value = UInt8(values[c]) {
+                                        data.append(contentsOf: [value])
+                                    }
                                 }
+                                // let returnValue = write(fd, data, numValues)
+                                let file = FileHandle(fileDescriptor: fd)
+                                if (offset > 0) {
+                                    do {
+                                        try file.seek(toOffset: offset)
+                                    }
+                                    catch {
+                                        let errorCode = (error as NSError).code
+                                        completionHandler("\(-errorCode)")
+                                        return
+                                    }
+                                }
+                                file.write(data)
+                                returnValue = numValues
                             }
-                            // let returnValue = write(fd, data, numValues)
-                            let file = FileHandle(fileDescriptor: fd)
-                            if (offset > 0) {
-                                do {
-                                  try file.seek(toOffset: offset)
-                                }
-                                catch {
-                                    let errorCode = (error as NSError).code
-                                    completionHandler("\(-errorCode)")
-                                    return
-                                }
-                            }
-                            file.write(data)
-                            returnValue = numValues
                         }
                     }
                 }
@@ -2441,14 +2468,22 @@ extension SceneDelegate: WKUIDelegate {
                 return
             } else if (arguments[1] == "utimes") {
                 let path = arguments[2]
-                if let atime_millisec = Int32(arguments[3]) {
-                    let atime_sec = Int(atime_millisec / 1000)
-                    let atime_usec = Int32((atime_millisec - Int32(1000 * atime_sec)) * 1000)
-                    let atime: timeval = timeval(tv_sec: atime_sec, tv_usec: atime_usec)
-                    if let mtime_millisec = Int32(arguments[4]) {
-                        let mtime_sec = Int(mtime_millisec / 1000)
-                        let mtime_usec = Int32((mtime_millisec - Int32(1000 * mtime_sec)) * 1000)
-                        let mtime: timeval = timeval(tv_sec: mtime_sec, tv_usec: mtime_usec)
+                if let atime_sec = Int(arguments[3]) {
+                    var atime_usec = Int32(arguments[4])
+                    if (atime_usec == nil) {
+                        atime_usec = 0
+                    } else {
+                        atime_usec = atime_usec! / 1000
+                    }
+                    let atime: timeval = timeval(tv_sec: atime_sec, tv_usec: atime_usec!)
+                    if let mtime_sec = Int(arguments[5]) {
+                        var mtime_usec = Int32(arguments[6])
+                        if (mtime_usec == nil) {
+                            mtime_usec = 0
+                        } else {
+                            mtime_usec = mtime_usec! / 1000
+                        }
+                        let mtime: timeval = timeval(tv_sec: mtime_sec, tv_usec: mtime_usec!)
                         var time = UnsafeMutablePointer<timeval>.allocate(capacity: 2)
                         time[0] = atime
                         time[1] = mtime

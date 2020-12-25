@@ -143,13 +143,13 @@ You can download more commands at: https://github.com/holzschu/a-Shell-commands/
 public func credits(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     if let delegate = currentDelegate {
         let creditText = """
-a-Shell owes to many open-source contributors. The current code contains contributions from: Yury Korolev, Ian McDowell, Louis d'Hauwe, Anders Borum, Adrian Labbé, Kenta Kubo and suggestions for improvements from many others.
+a-Shell owes to many open-source contributors. The current code contains contributions from: Yury Korolev, Ian McDowell, Louis d'Hauwe, Anders Borum, Adrian Labbé, Kenta Kubo, Ian Willis and suggestions for improvements from many others.
 
 Most terminal commands are from the BSD distribution, mainly through the Apple OpenSource program.
 
 bc: Gavin Howard BSD port of bc, https://github.com/gavinhoward/bc
 curl: Daniel Stenberg and contributors, https://github.com/curl/curl
-Lua: lua.org, PUC-Rio, https://www.lua.org/l
+Lua: lua.org, PUC-Rio, https://www.lua.org/
 LuaTeX: The LuaTeX team, http://www.luatex.org
 openSSL and libSSH2: port by Felix Schulze, https://github.com/x2on/libssh2-for-iOS
 Python3: Python Software Foundation, https://www.python.org/about/
@@ -157,6 +157,7 @@ tar: https://libarchive.org
 TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2019.
 Vim: Bram Moolenaar and the Vim community, https://www.vim.org
 Vim-session: Peter Odding, http://peterodding.com/code/vim/session
+ImageMagick: ImageMagick Studio LLC, https://imagemagick.org
 llvm/clang: the LLVM foundation
 webAssembly: wasmer.io and the wasi SDK https://github.com/WebAssembly/wasi-sdk
 file: https://github.com/file/file/

@@ -284,6 +284,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments
         setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
         setenv("PAGER", "less", 1)
+        setenv("MAGICK_HOME", Bundle.main.resourcePath! +  "/ImageMagick-7", 1)
+        setenv("MAGICK_CONFIGURE_PATH", Bundle.main.resourcePath! +  "/ImageMagick-7/config", 1)
+        setenv("TZ", TimeZone.current.identifier, 1) // TimeZone information, since "systemsetup -gettimezone" won't work.
         let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                   in: .userDomainMask,
                                                   appropriateFor: nil,
@@ -346,6 +349,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+        // Is called for iPhone apps when the user swipes upward in the app switcher and the app was in the foreground.
+        // Is called for iPad apps when the user swipes upward if the app was in the foreground.
+        // TODO: delete current/frontmost session, and call exit(0) (hard exit)
+        // The current effect is already equivalent to exit(0).
+        NSLog("Application will terminate")
     }
     
     
