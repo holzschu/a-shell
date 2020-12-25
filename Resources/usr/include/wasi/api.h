@@ -2253,6 +2253,9 @@ __wasi_errno_t __wasi_path_filestat_get(
 /**
  * Adjust the timestamps of a file or directory.
  * Note: This is similar to `utimensat` in POSIX.
+ *
+ * a-Shell note: we keep seconds and nanoseconds because something is forcing back to 32 bits
+ * (even though __wasi_timestamp_t is 64 bits). see fd_filestat_set_times.
  */
 __wasi_errno_t __wasi_path_filestat_set_times(
     __wasi_fd_t fd,
@@ -2273,14 +2276,24 @@ __wasi_errno_t __wasi_path_filestat_set_times(
     size_t path_len,
 
     /**
-     * The desired values of the data access timestamp.
+     * The desired values of the data access timestamp (seconds).
      */
     __wasi_timestamp_t atim,
 
     /**
-     * The desired values of the data modification timestamp.
+     * desired values of the data access timestamp (nanoseconds).
+     */
+    __wasi_timestamp_t atim_ns,
+
+    /**
+     * The desired values of the data modification timestamp (seconds).
      */
     __wasi_timestamp_t mtim,
+
+    /**
+     * desired values of the data modification timestamp (nanoseconds).
+     */
+    __wasi_timestamp_t mtim_ns,
 
     /**
      * A bitmask indicating which timestamps to adjust.
