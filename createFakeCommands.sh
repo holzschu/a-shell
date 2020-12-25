@@ -81,7 +81,6 @@ touch Resources/bin/xargs
 touch Resources/bin/llvm-dis
 touch Resources/bin/opt
 touch Resources/bin/llvm-link
-touch Resources/bin/nm
 touch Resources/bin/lli
 touch Resources/bin/llc
 touch Resources/bin/lld
@@ -105,6 +104,17 @@ touch Resources/bin/mandocdb
 touch Resources/bin/man
 touch Resources/bin/apropos
 touch Resources/bin/whatis
+touch Resources/bin/wol
+touch Resources/bin/compare
+touch Resources/bin/composite
+touch Resources/bin/conjure
+touch Resources/bin/convert
+touch Resources/bin/identify
+touch Resources/bin/import
+touch Resources/bin/magick-script
+touch Resources/bin/mogrify
+touch Resources/bin/montage
+touch Resources/bin/stream
 touch Resources/bin/amstex
 touch Resources/bin/bibtex
 touch Resources/bin/cslatex
@@ -134,3 +144,4 @@ touch Resources/bin/lualatex
 touch Resources/bin/luatex
 touch Resources/bin/texlua
 touch Resources/bin/texluac
+
