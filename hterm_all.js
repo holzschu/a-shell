@@ -14570,8 +14570,10 @@ hterm.Terminal.prototype.setReverseWraparound = function(state) {
  * @param {boolean} state True to set alternate mode, false to unset.
  */
 hterm.Terminal.prototype.setAlternateMode = function(state) {
+  window.webkit.messageHandlers.aShell.postMessage('setAlternateMode: '  + state); 
   var cursor = this.saveCursor();
-  this.screen_ = state ? this.alternateScreen_ : this.primaryScreen_;
+  // a-Shell/iOS: we do not switch to alternateScreen_, but we force a redraw after:
+  // this.screen_ = state ? this.alternateScreen_ : this.primaryScreen_;
 
   if (this.screen_.rowsArray.length &&
       this.screen_.rowsArray[0].rowIndex != this.scrollbackRows_.length) {
@@ -14591,6 +14593,9 @@ hterm.Terminal.prototype.setAlternateMode = function(state) {
 
   this.restoreCursor(cursor);
   this.scrollPort_.resize();
+  // a-Shell addition (clear screen and reposition cursor):
+  this.io.onVTKeystroke(String.fromCharCode(12)); // Send ^L
+  // (it's better to send ^L, so the redraw happens *after* everything else has been done)
 };
 
 /**

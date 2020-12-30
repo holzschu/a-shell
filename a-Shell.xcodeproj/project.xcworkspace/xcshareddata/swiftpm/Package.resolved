@@ -11,11 +11,20 @@
         }
       },
       {
+        "package": "ImageMagick",
+        "repositoryURL": "https://github.com/holzschu/ImageMagick.git",
+        "state": {
+          "branch": "master",
+          "revision": "8a93ef53e0d91a9ea24aa743fa2f47b6492d5b16",
+          "version": null
+        }
+      },
+      {
         "package": "ios_system",
         "repositoryURL": "https://github.com/holzschu/ios_system.git",
         "state": {
           "branch": "master",
-          "revision": "d46917950b625264f590d312bdb3ca71ca032d71",
+          "revision": "8955eab3ace5cd42614ff1e1f0d4de133e62036f",
           "version": null
         }
       },
@@ -51,7 +60,7 @@
         "repositoryURL": "https://github.com/holzschu/lua_ios.git",
         "state": {
           "branch": "master",
-          "revision": "ffca90f3a2fbc712ced5db851e79f7a41fb38a6f",
+          "revision": "07c2fa4f653816998df8fddef45dcfc62b4e4dfb",
           "version": null
         }
       },
@@ -60,7 +69,7 @@
         "repositoryURL": "https://github.com/holzschu/network_ios.git",
         "state": {
           "branch": "master",
-          "revision": "70ca050e69b4ca84eedd2fe9658529ec29a9630c",
+          "revision": "7323059e065f4449fca9dc1fd5d52d0e0c5afadc",
           "version": null
         }
       },

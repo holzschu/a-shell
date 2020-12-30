@@ -267,7 +267,7 @@ extension AppDelegate {
     }
 
     func disableTeX() {
-        if (appVersion == "a-Shell mini") {
+        if (appVersion == "a-Shell-mini") {
             return
         }
         // return ; // for debugging TeX
@@ -395,7 +395,7 @@ extension AppDelegate {
     }
 
     func disableOpentype() {
-        if (appVersion == "a-Shell mini") {
+        if (appVersion == "a-Shell-mini") {
             return
         }
         // return ; // for debugging TeX

@@ -716,5 +716,12 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>sleep</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>sleep_main</string>
+		<string></string>
+		<string>none</string>
+	</array>
 </dict>
 </plist>

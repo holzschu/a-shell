@@ -29,7 +29,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var libraryFilesUpToDate = true
     let moveFilesQueue = DispatchQueue(label: "moveFiles", qos: .utility) // low priority
 
-    // Which version of the app are we running? a-Shell, a-Shell mini, a-Shell pro...?
+    // Which version of the app are we running? a-Shell, a-Shell-mini, a-Shell-pro...? (no spaces in name)
     var appVersion: String? {
         // Bundle.main.infoDictionary?["CFBundleDisplayName"] = a-Shell
         // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.a-Shell
@@ -236,7 +236,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         NSLog("Application didFinishLaunchingWithOptions \(launchOptions)")
         // Store variables in User Defaults:
-        if (appVersion != "a-Shell mini") {
+        if (appVersion != "a-Shell-mini") {
             UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
             UserDefaults.standard.register(defaults: ["TeXOpenType" : false])
         }
@@ -260,7 +260,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // for debugging TeX issues:
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
-        if (appVersion != "a-Shell mini") {
+        if (appVersion != "a-Shell-mini") {
             activateFakeTeXCommands()
             if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
                 downloadTeX();
@@ -293,7 +293,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                   create: true)
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
-        if (appVersion != "a-Shell mini") {
+        if (appVersion != "a-Shell-mini") {
             if (!versionUpToDate || needToUpdateCFiles()) {
                 createCSDK()
             }
@@ -431,7 +431,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @objc func settingsChanged() {
         // UserDefaults.didChangeNotification is called every time the window becomes active
         // We only act if things have really changed.
-        if (appVersion != "a-Shell mini") {
+        if (appVersion != "a-Shell-mini") {
             // Don't look at TeX settings if running a-Shell mini
             let userSettingsTeX = UserDefaults.standard.bool(forKey: "TeXEnabled")
             // something changed with TeX settings
