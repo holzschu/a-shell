@@ -109,8 +109,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NSLog("Error in creating C SDK directory \(localURL): \(error)")
             return
         }
-        // usr/lib/clang/10.0.0/lib/wasi/
-        localURL = libraryURL.appendingPathComponent("usr/lib/clang/10.0.0/lib/wasi/") // $HOME/Library/usr/lib/clang/10.0.0/lib/wasi/
+        // usr/lib/clang/12.0.0/lib/wasi/
+        localURL = libraryURL.appendingPathComponent("usr/lib/clang/12.0.0/lib/wasi/") // $HOME/Library/usr/lib/clang/12.0.0/lib/wasi/
         do {
             if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
                 try FileManager().removeItem(at: localURL)
@@ -126,7 +126,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                  "usr/share",
                                  "usr/lib/wasm32-wasi/crt1.o",
                                  "usr/lib/wasm32-wasi/libc.imports",
-                                 "usr/lib/clang/10.0.0/include",
+                                 "usr/lib/clang/12.0.0/include",
         ]
         let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!)
 
@@ -155,6 +155,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             }
             catch {
+                // The file does not exist, and maybe the directory doesn't either:
+                let localDirectory = homeFile.deletingLastPathComponent()
+                if (!FileManager().fileExists(atPath: localDirectory.path)) {
+                    try! FileManager().createDirectory(atPath: localDirectory.path, withIntermediateDirectories: true)
+                }
                 do {
                     try FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
                 }
@@ -183,7 +188,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         // One of the libraries is in a different folder:
-        let libraryFileURL = libraryURL.appendingPathComponent("/usr/lib/clang/10.0.0/lib/wasi/libclang_rt.builtins-wasm32.a")
+        let libraryFileURL = libraryURL.appendingPathComponent("/usr/lib/clang/12.0.0/lib/wasi/libclang_rt.builtins-wasm32.a")
         if (FileManager().fileExists(atPath: libraryFileURL.path)) {
             try! FileManager().removeItem(at: libraryFileURL)
         }
