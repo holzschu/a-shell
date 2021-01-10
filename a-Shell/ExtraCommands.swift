@@ -79,6 +79,7 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 - For network queries: nslookup, ping, host, whois, ifconfig...
 
 You can download more commands at: https://github.com/holzschu/a-Shell-commands/
+Follow us on Twitter (@a_Shell_iOS) and github (https://github.com/holzschu/a-shell/issues).
 """
         
         if (argc == 1) {
@@ -149,20 +150,22 @@ Most terminal commands are from the BSD distribution, mainly through the Apple O
 
 bc: Gavin Howard BSD port of bc, https://github.com/gavinhoward/bc
 curl: Daniel Stenberg and contributors, https://github.com/curl/curl
+ctags: https://github.com/universal-ctags/ctags/
+file: https://github.com/file/file/
+git: from Dulwich, https://www.dulwich.io
+ImageMagick: ImageMagick Studio LLC, https://imagemagick.org
 Lua: lua.org, PUC-Rio, https://www.lua.org/
 LuaTeX: The LuaTeX team, http://www.luatex.org
+llvm/clang: the LLVM foundation
+make: from almost-make, https://github.com/personalizedrefrigerator/AlmostMake
 openSSL and libSSH2: port by Felix Schulze, https://github.com/x2on/libssh2-for-iOS
 Python3: Python Software Foundation, https://www.python.org/about/
 tar: https://libarchive.org
+tree: http://mama.indstate.edu/users/ice/tree/
 TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2019.
 Vim: Bram Moolenaar and the Vim community, https://www.vim.org
 Vim-session: Peter Odding, http://peterodding.com/code/vim/session
-ImageMagick: ImageMagick Studio LLC, https://imagemagick.org
-llvm/clang: the LLVM foundation
 webAssembly: wasmer.io and the wasi SDK https://github.com/WebAssembly/wasi-sdk
-file: https://github.com/file/file/
-tree: http://mama.indstate.edu/users/ice/tree/
-ctags: https://github.com/universal-ctags/ctags/
 
 zshmarks-style bookmarks inspired by zshmarks: https://github.com/jocelynmallon/zshmarks
 bashmarks-style bookmarks inspired by bashmarks: https://github.com/huyng/bashmarks
