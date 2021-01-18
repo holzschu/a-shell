@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>alias</key>
+	<array>
+		<string>SELF</string>
+		<string>alias_main</string>
+		<string>h</string>
+		<string>no</string>
+	</array>
 	<key>awk</key>
 	<array>
 		<string>awk.framework/awk</string>
@@ -394,6 +401,13 @@
 		<string></string>
 		<string>no</string>
 	</array>
+	<key>export</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>export_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
 	<key>sftp</key>
 	<array>
 		<string>curl_ios.framework/curl_ios</string>
@@ -483,6 +497,13 @@
 		<string>text.framework/text</string>
 		<string>tr_main</string>
 		<string>Ccdsu</string>
+		<string>no</string>
+	</array>
+	<key>unalias</key>
+	<array>
+		<string>SELF</string>
+		<string>unalias_main</string>
+		<string>a</string>
 		<string>no</string>
 	</array>
 	<key>uname</key>

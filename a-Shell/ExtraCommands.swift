@@ -645,6 +645,7 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
                 }
                 catch {
                     NSLog("Could not resolve \(key)")
+                    stale = true
                 }
                 if (!stale) {
                     fputs(key + ": " + path + "\n", thread_stdout);
@@ -677,6 +678,7 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
                     }
                     catch {
                         NSLog("Could not resolve \(key)")
+                        stale = true
                     }
                     if (!stale) {
                         fputs(key + ": " + path + "\n", thread_stdout);
@@ -699,6 +701,61 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
         UserDefaults.standard.set(mutableNamesDictionary, forKey: "bookmarkNames")
     }
     return 0
+}
+
+public func checkBookmarks() {
+    // At startup, go through list of bookmarks, check that they are still valid, remove them
+    // and add "home", "shortcuts" and "group".
+    let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+    let storedBookmarksDictionary = UserDefaults.standard.dictionary(forKey: "fileBookmarks") ?? [:]
+    var mutableBookmarkDictionary : [String:Any] = storedBookmarksDictionary
+    var mutableNamesDictionary : [String:Any] = storedNamesDictionary
+    var mustUpdateDictionaries = false
+    for (key, urlPath) in storedNamesDictionary {
+        let path = (urlPath as! String)
+        let bookmark = storedBookmarksDictionary[path]
+        if (bookmark != nil) {
+            var stale = false
+            do {
+                let previousURL = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
+            }
+            catch {
+                NSLog("Could not resolve \(key)")
+                stale = true
+            }
+            if (stale) {
+                // remove the bookmark from both dictionaries:
+                mustUpdateDictionaries = true
+                mutableBookmarkDictionary.removeValue(forKey: path)
+                mutableNamesDictionary.removeValue(forKey: key)
+            }
+        }
+    }
+    let documentsUrl = try! FileManager().url(for: .documentDirectory,
+                                              in: .userDomainMask,
+                                              appropriateFor: nil,
+                                              create: true)
+    let homeUrl = documentsUrl.deletingLastPathComponent()
+    let storedHome = mutableNamesDictionary["home"] as? String
+    if (storedHome == nil) || (storedHome != homeUrl.path) {
+        mutableNamesDictionary["home"] = homeUrl.path
+        mustUpdateDictionaries = true
+    }
+    let storedShortcuts = mutableNamesDictionary["shortcuts"] as? String
+    let shortcutsPath = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path
+    if (storedShortcuts == nil) || (storedShortcuts != shortcutsPath) {
+        mutableNamesDictionary["shortcuts"] = shortcutsPath
+        mustUpdateDictionaries = true
+    }
+    let storedGroup = mutableNamesDictionary["group"] as? String
+    if (storedGroup == nil) || (storedGroup != shortcutsPath) {
+        mutableNamesDictionary["group"] = shortcutsPath
+        mustUpdateDictionaries = true
+    }
+    if (mustUpdateDictionaries) {
+        UserDefaults.standard.set(mutableBookmarkDictionary, forKey: "fileBookmarks")
+        UserDefaults.standard.set(mutableNamesDictionary, forKey: "bookmarkNames")
+    }
 }
 
 @_cdecl("renamemark")
@@ -906,7 +963,9 @@ public func changeDirectory(path: String) -> Bool {
             }
             catch {
                 if (old_thread_stderr != nil) {
-                    fputs("Could not resolve secure bookmark for \(newPath)", old_thread_stderr)
+                    NSLog("Error in resolving secure bookmark for \(newPath): \(error)")
+                    fputs("Could not resolve secure bookmark for \(newPath)\n", old_thread_stderr)
+                    listOfStaleBookmarks.append(newPath)
                 }
                 continue // maybe there is another bookmark that will work?
             }
@@ -926,7 +985,7 @@ public func changeDirectory(path: String) -> Bool {
                         bookmarkedURL.stopAccessingSecurityScopedResource()
                     }
                     if (old_thread_stderr != nil) {
-                        fputs("Could not download \(path)", old_thread_stderr)
+                        fputs("Could not download \(path)\n", old_thread_stderr)
                     }
                     continue // maybe there is another bookmark that will work?
                     // return fileURL.isDirectory
@@ -965,7 +1024,7 @@ public func changeDirectory(path: String) -> Bool {
 public func jump(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     // List the bookmark already stored:
     guard let commandNameC = argv?[0] else {
-        fputs("deletemark: Can't read command name\n", thread_stderr)
+        fputs("jump: Can't read command name\n", thread_stderr)
         return 0
     }
     let commandName = String(cString: commandNameC)
@@ -995,7 +1054,9 @@ public func jump(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
         // changeDirectory also goes through all the list of bookmarks.
         return 0 // it worked
     } else {
-        if (FileManager().fileExists(atPath: pathString)) {
+        var isDirectory: ObjCBool = false
+        let fileExists = FileManager().fileExists(atPath: pathString, isDirectory: &isDirectory)
+        if (fileExists && !isDirectory.boolValue) {
             // it's a file: edit it with default editor:
             let pid = ios_fork()
             // TODO: customize editor

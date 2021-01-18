@@ -250,6 +250,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
         initializeEnvironment()
         joinMainThread = false
+        ios_setBookmarkDictionaryName("bookmarkNames")
         replaceCommand("history", "history", true)
         replaceCommand("help", "help", true)
         replaceCommand("clear", "clear", true)
@@ -334,6 +335,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Compiled files: ~/Library/__pycache__
         setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path.toCString(), 1)
         setenv("PYTHONUSERBASE", libraryURL.path.toCString(), 1)
+        checkBookmarks() // activate all bookmarks in the app
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
         let currentiCloudToken = FileManager().ubiquityIdentityToken
