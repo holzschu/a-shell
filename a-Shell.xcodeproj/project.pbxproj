@@ -10,6 +10,8 @@
 		2208ACBF22CCE57E003985D6 /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
 		2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC422D2026E003985D6 /* UIDevice+Name.swift */; };
 		2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
+		2210321725B5D57200F3251F /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2210321625B5D56F00F3251F /* ios_system.xcframework */; };
+		2210321B25B5D57600F3251F /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2210321625B5D56F00F3251F /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22178EA5257A7A79008EB2B4 /* node_modules in Resources */ = {isa = PBXBuildFile; fileRef = 22178EA4257A7A77008EB2B4 /* node_modules */; };
 		22178EAE257AA717008EB2B4 /* Library in Resources */ = {isa = PBXBuildFile; fileRef = 22178EAD257AA715008EB2B4 /* Library */; };
 		22178EBC257AAE20008EB2B4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF322C93DBF00069497 /* Assets.xcassets */; };
@@ -167,11 +169,13 @@
 		22372B722448E85D0033FE07 /* usr in Resources */ = {isa = PBXBuildFile; fileRef = 22372B712448E85C0033FE07 /* usr */; };
 		223E61AB250A5CEA002BF41F /* python3_ios-_cffi_backend.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61A9250A5320002BF41F /* python3_ios-_cffi_backend.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223E61AC250A5CF1002BF41F /* pythonA-_cffi_backend.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61AA250A5338002BF41F /* pythonA-_cffi_backend.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		223E61AF250BF70F002BF41F /* python3_ios-_cffi_ext.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61AD250BF6EB002BF41F /* python3_ios-_cffi_ext.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		223E61B0250BF71A002BF41F /* pythonA-_cffi_ext.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61AE250BF6F7002BF41F /* pythonA-_cffi_ext.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223E61B3250F9DBE002BF41F /* python3_ios-argon2._ffi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61B2250F9954002BF41F /* python3_ios-argon2._ffi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223E61B4250F9DD4002BF41F /* pythonA-argon2._ffi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61B1250F9944002BF41F /* pythonA-argon2._ffi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2242B075232293E7002A20FC /* bin in Resources */ = {isa = PBXBuildFile; fileRef = 2242B074232293E5002A20FC /* bin */; };
+		22458B1B25B349F700EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22458B1925B349BF00EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22458B2025B34A1400EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22458B1F25B34A1100EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22458B2425B34A4900EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22458B1F25B34A1100EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22458B2825B34A5000EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22458B1925B349BF00EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22484B062434F11F00D6BDDA /* node_modules in Resources */ = {isa = PBXBuildFile; fileRef = 22484B052434F11E00D6BDDA /* node_modules */; };
 		225177C8231663430084B9C1 /* ListPythonFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 225177C7231663430084B9C1 /* ListPythonFiles.swift */; };
 		226012EF231D239500AEB059 /* texCommandsDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 226012EE231D238B00AEB059 /* texCommandsDictionary.plist */; };
@@ -486,12 +490,6 @@
 		22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		22C9814F24CADA45006C103E /* python3_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22C9814E24CADA42006C103E /* python3_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
-		22D8E2A3258290410063FD33 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22D8E2A22582902C0063FD33 /* ios_system.xcframework */; };
-		22D8E2A7258290450063FD33 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22D8E2A22582902C0063FD33 /* ios_system.xcframework */; };
-		22D8E2AB258290490063FD33 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22D8E2A22582902C0063FD33 /* ios_system.xcframework */; };
-		22D8E2AF2582904F0063FD33 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22D8E2A22582902C0063FD33 /* ios_system.xcframework */; };
-		22D8E2B32582905A0063FD33 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D8E2A22582902C0063FD33 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22D8E2B7258290680063FD33 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D8E2A22582902C0063FD33 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DBA250233BB0700095C559 /* listTeXFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DBA24F233BB0700095C559 /* listTeXFiles.swift */; };
 		22DC1F4B25700ECC0068004E /* python3_ios-cryptography.hazmat.bindings._openssl.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F4925700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._openssl.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F4C25700ECC0068004E /* python3_ios-cryptography.hazmat.bindings._padding.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F4A25700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._padding.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -595,7 +593,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				22D8E2B32582905A0063FD33 /* ios_system.xcframework in Embed Frameworks */,
+				22458B2425B34A4900EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */,
 				229D24A2257931E4004A78AC /* awk.xcframework in Embed Frameworks */,
 				229D24A3257931E4004A78AC /* curl_ios.xcframework in Embed Frameworks */,
 				229D24A4257931E4004A78AC /* files.xcframework in Embed Frameworks */,
@@ -781,6 +779,7 @@
 				229D259D257931E4004A78AC /* python3_ios-lxml.html.diff.xcframework in Embed Frameworks */,
 				229D259E257931E4004A78AC /* python3_ios-lxml.objectify.xcframework in Embed Frameworks */,
 				229D259F257931E4004A78AC /* python3_ios-lxml.sax.xcframework in Embed Frameworks */,
+				22458B2825B34A5000EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -813,9 +812,10 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				22D8E2B7258290680063FD33 /* ios_system.xcframework in Embed Frameworks */,
+				2210321B25B5D57600F3251F /* ios_system.xcframework in Embed Frameworks */,
 				22DC1F942570139D0068004E /* awk.xcframework in Embed Frameworks */,
 				22DC1F952570139D0068004E /* curl_ios.xcframework in Embed Frameworks */,
+				22458B2025B34A1400EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */,
 				22DC1F962570139D0068004E /* files.xcframework in Embed Frameworks */,
 				22DC1F992570139D0068004E /* shell.xcframework in Embed Frameworks */,
 				22DC1F9A2570139D0068004E /* ssh_cmd.xcframework in Embed Frameworks */,
@@ -920,8 +920,6 @@
 				22239C2E250293850069E539 /* pythonA-unicodedata.xcframework in Embed Frameworks */,
 				22239C2F250293850069E539 /* pythonA-xxlimited.xcframework in Embed Frameworks */,
 				22239C30250293850069E539 /* pythonA-zlib.xcframework in Embed Frameworks */,
-				223E61AC250A5CF1002BF41F /* pythonA-_cffi_backend.xcframework in Embed Frameworks */,
-				223E61B0250BF71A002BF41F /* pythonA-_cffi_ext.xcframework in Embed Frameworks */,
 				223E61B4250F9DD4002BF41F /* pythonA-argon2._ffi.xcframework in Embed Frameworks */,
 				227B4E84252CD4CB0052D056 /* pythonA-numpy.core._multiarray_umath.xcframework in Embed Frameworks */,
 				227B4E85252CD4CB0052D056 /* pythonA-numpy.core._operand_flag_tests.xcframework in Embed Frameworks */,
@@ -1025,7 +1023,6 @@
 				22239C71250293980069E539 /* python3_ios-xxlimited.xcframework in Embed Frameworks */,
 				22239C72250293980069E539 /* python3_ios-zlib.xcframework in Embed Frameworks */,
 				223E61AB250A5CEA002BF41F /* python3_ios-_cffi_backend.xcframework in Embed Frameworks */,
-				223E61AF250BF70F002BF41F /* python3_ios-_cffi_ext.xcframework in Embed Frameworks */,
 				223E61B3250F9DBE002BF41F /* python3_ios-argon2._ffi.xcframework in Embed Frameworks */,
 				227B4E67252CD4A00052D056 /* python3_ios-numpy.core._multiarray_umath.xcframework in Embed Frameworks */,
 				227B4E68252CD4A00052D056 /* python3_ios-numpy.core._operand_flag_tests.xcframework in Embed Frameworks */,
@@ -1067,6 +1064,8 @@
 				22DC1F5125700ECC0068004E /* python3_ios-lxml.html.diff.xcframework in Embed Frameworks */,
 				22DC1F5225700ECC0068004E /* python3_ios-lxml.objectify.xcframework in Embed Frameworks */,
 				22DC1F5325700ECC0068004E /* python3_ios-lxml.sax.xcframework in Embed Frameworks */,
+				223E61AC250A5CF1002BF41F /* pythonA-_cffi_backend.xcframework in Embed Frameworks */,
+				22458B1B25B349F700EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1077,6 +1076,7 @@
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC822D24703003985D6 /* WkWebViewExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WkWebViewExtension.swift; sourceTree = SOURCE_ROOT; };
+		2210321625B5D56F00F3251F /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = ../../../SourcePackages/artifacts/ios_system/ios_system.xcframework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22108D6A2338BE9D003D7556 /* texlive_2019_texmf-dist_fonts_type1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_type1"; path = "ODR/texlive_2019_texmf-dist_fonts_type1"; sourceTree = "<group>"; };
 		22178EA4257A7A77008EB2B4 /* node_modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node_modules; path = Resources_mini/node_modules; sourceTree = "<group>"; };
 		22178EAD257AA715008EB2B4 /* Library */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Library; path = Resources_mini/Library; sourceTree = "<group>"; };
@@ -1229,12 +1229,12 @@
 		22372B712448E85C0033FE07 /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources/usr; sourceTree = "<group>"; };
 		223E61A9250A5320002BF41F /* python3_ios-_cffi_backend.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-_cffi_backend.xcframework"; path = "cpython/XcFrameworks/python3_ios-_cffi_backend.xcframework"; sourceTree = SOURCE_ROOT; };
 		223E61AA250A5338002BF41F /* pythonA-_cffi_backend.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_cffi_backend.xcframework"; path = "cpython/XcFrameworks/pythonA-_cffi_backend.xcframework"; sourceTree = SOURCE_ROOT; };
-		223E61AD250BF6EB002BF41F /* python3_ios-_cffi_ext.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-_cffi_ext.xcframework"; path = "cpython/XcFrameworks/python3_ios-_cffi_ext.xcframework"; sourceTree = SOURCE_ROOT; };
-		223E61AE250BF6F7002BF41F /* pythonA-_cffi_ext.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_cffi_ext.xcframework"; path = "cpython/XcFrameworks/pythonA-_cffi_ext.xcframework"; sourceTree = SOURCE_ROOT; };
 		223E61B1250F9944002BF41F /* pythonA-argon2._ffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-argon2._ffi.xcframework"; path = "cpython/XcFrameworks/pythonA-argon2._ffi.xcframework"; sourceTree = SOURCE_ROOT; };
 		223E61B2250F9954002BF41F /* python3_ios-argon2._ffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-argon2._ffi.xcframework"; path = "cpython/XcFrameworks/python3_ios-argon2._ffi.xcframework"; sourceTree = SOURCE_ROOT; };
 		2242B074232293E5002A20FC /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bin; path = Resources/bin; sourceTree = "<group>"; };
 		2242B07623229BA4002A20FC /* luatexfiles */ = {isa = PBXFileReference; lastKnownFileType = folder; name = luatexfiles; path = ODR/luatexfiles; sourceTree = "<group>"; };
+		22458B1925B349BF00EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-zmq.backend.cffi._cffi.xcframework"; path = "cpython/XcFrameworks/python3_ios-zmq.backend.cffi._cffi.xcframework"; sourceTree = SOURCE_ROOT; };
+		22458B1F25B34A1100EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-zmq.backend.cffi._cffi.xcframework"; path = "cpython/XcFrameworks/pythonA-zmq.backend.cffi._cffi.xcframework"; sourceTree = SOURCE_ROOT; };
 		22484B052434F11E00D6BDDA /* node_modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node_modules; path = Resources/node_modules; sourceTree = "<group>"; };
 		224D10BA22CB247900A234EE /* hterm.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = hterm.html; sourceTree = "<group>"; };
 		225177C5231662240084B9C1 /* Library */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Library; sourceTree = "<group>"; };
@@ -1350,7 +1350,6 @@
 		22C9814E24CADA42006C103E /* python3_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = python3_ios.xcframework; path = cpython/XcFrameworks/python3_ios.xcframework; sourceTree = SOURCE_ROOT; };
 		22C9815024CADA4E006C103E /* pythonA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = pythonA.xcframework; path = cpython/XcFrameworks/pythonA.xcframework; sourceTree = SOURCE_ROOT; };
 		22D23117231940B2005B0C12 /* ExtraCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraCommands.swift; sourceTree = "<group>"; };
-		22D8E2A22582902C0063FD33 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = ../../../SourcePackages/artifacts/ios_system/ios_system.xcframework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22DBA24F233BB0700095C559 /* listTeXFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = listTeXFiles.swift; sourceTree = "<group>"; };
 		22DC1F3925700E6A0068004E /* pythonA-lxml.objectify.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-lxml.objectify.xcframework"; path = "cpython/XcFrameworks/pythonA-lxml.objectify.xcframework"; sourceTree = SOURCE_ROOT; };
 		22DC1F3A25700E6A0068004E /* pythonA-lxml.sax.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-lxml.sax.xcframework"; path = "cpython/XcFrameworks/pythonA-lxml.sax.xcframework"; sourceTree = SOURCE_ROOT; };
@@ -1409,7 +1408,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22D8E2AF2582904F0063FD33 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1425,7 +1423,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22D8E2A3258290410063FD33 /* ios_system.xcframework in Frameworks */,
+				2210321725B5D57200F3251F /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1433,7 +1431,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22D8E2AB258290490063FD33 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1441,7 +1438,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22D8E2A7258290450063FD33 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1490,6 +1486,7 @@
 		225177C923170AA10084B9C1 /* Python3 frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22458B1925B349BF00EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework */,
 				22DC1F4925700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._openssl.xcframework */,
 				22DC1F4A25700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._padding.xcframework */,
 				22DC1F4825700EB00068004E /* python3_ios-lxml._elementpath.xcframework */,
@@ -1529,7 +1526,6 @@
 				227B4E61252CD4850052D056 /* python3_ios-numpy.random._sfc64.xcframework */,
 				227B4E5B252CD4850052D056 /* python3_ios-numpy.random.bit_generator.xcframework */,
 				227B4E5A252CD4850052D056 /* python3_ios-numpy.random.mtrand.xcframework */,
-				223E61AD250BF6EB002BF41F /* python3_ios-_cffi_ext.xcframework */,
 				22239B982502935A0069E539 /* python3_ios-_asyncio.xcframework */,
 				22239B77250293580069E539 /* python3_ios-_bisect.xcframework */,
 				22239B70250293570069E539 /* python3_ios-_blake2.xcframework */,
@@ -1689,6 +1685,7 @@
 		22A0FB00233F5A06009A4DE3 /* PythonA frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22458B1F25B34A1100EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework */,
 				22DC1F4125700E8C0068004E /* pythonA-cryptography.hazmat.bindings._openssl.xcframework */,
 				22DC1F4025700E8B0068004E /* pythonA-cryptography.hazmat.bindings._padding.xcframework */,
 				22DC1F3E25700E7F0068004E /* pythonA-lxml.html.clean.xcframework */,
@@ -1728,7 +1725,6 @@
 				227B4E77252CD4B50052D056 /* pythonA-numpy.random._sfc64.xcframework */,
 				227B4E7A252CD4B50052D056 /* pythonA-numpy.random.bit_generator.xcframework */,
 				227B4E76252CD4B50052D056 /* pythonA-numpy.random.mtrand.xcframework */,
-				223E61AE250BF6F7002BF41F /* pythonA-_cffi_ext.xcframework */,
 				22239BE5250293730069E539 /* pythonA-_asyncio.xcframework */,
 				22239BC6250293710069E539 /* pythonA-_bisect.xcframework */,
 				22239BC4250293710069E539 /* pythonA-_blake2.xcframework */,
@@ -1934,8 +1930,8 @@
 		22DC1F88257012E60068004E /* ios_system */ = {
 			isa = PBXGroup;
 			children = (
+				2210321625B5D56F00F3251F /* ios_system.xcframework */,
 				22BA51D0258E476A00923893 /* mandoc.xcframework */,
-				22D8E2A22582902C0063FD33 /* ios_system.xcframework */,
 				22DC1F8E257012F50068004E /* awk.xcframework */,
 				22DC1F91257012F50068004E /* curl_ios.xcframework */,
 				22DC1F89257012F50068004E /* files.xcframework */,
@@ -2112,8 +2108,8 @@
 				2230F3FA257D230700810B07 /* XCRemoteSwiftPackageReference "network_ios" */,
 				22D8E24C258108FA0063FD33 /* XCRemoteSwiftPackageReference "lua_ios" */,
 				22EB39F62589E1D000877287 /* XCRemoteSwiftPackageReference "ImageMagick" */,
-				22BA523C2599F16000923893 /* XCRemoteSwiftPackageReference "ios_system" */,
 				2267064025A4500800676ECA /* XCRemoteSwiftPackageReference "llvm-project" */,
+				2210322225B5D64A00F3251F /* XCRemoteSwiftPackageReference "ios_system" */,
 			);
 			productRefGroup = 22984EEB22C93DBC00069497 /* Products */;
 			projectDirPath = "";
@@ -2361,7 +2357,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-IntentsUI/a-Shell-mini-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2384,7 +2380,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-IntentsUI/a-Shell-mini-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2407,7 +2403,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-Intents/a-Shell-mini-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2430,7 +2426,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-Intents/a-Shell-mini-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2578,7 +2574,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2622,7 +2618,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2665,7 +2661,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2709,7 +2705,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2750,7 +2746,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2777,7 +2773,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2804,7 +2800,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2827,7 +2823,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 133;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2913,6 +2909,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		2210322225B5D64A00F3251F /* XCRemoteSwiftPackageReference "ios_system" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/holzschu/ios_system.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		222691E524B50431001A0D2F /* XCRemoteSwiftPackageReference "libssh2-for-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/holzschu/libssh2-for-iOS.git";
@@ -2958,14 +2962,6 @@
 			repositoryURL = "https://github.com/holzschu/taskwarrior.git";
 			requirement = {
 				branch = 2.6.0;
-				kind = branch;
-			};
-		};
-		22BA523C2599F16000923893 /* XCRemoteSwiftPackageReference "ios_system" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/holzschu/ios_system.git";
-			requirement = {
-				branch = master;
 				kind = branch;
 			};
 		};
