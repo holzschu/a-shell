@@ -76,6 +76,7 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 - Edit files with vim and ed.
 - Transfer files with curl, tar, scp and sftp.
 - Process files with python3, lua, jsc, clang, pdflatex, lualatex.
+- Open files in other apps with open, play sound and video with play, preview with view.
 - For network queries: nslookup, ping, host, whois, ifconfig...
 
 You can download more commands at: https://github.com/holzschu/a-Shell-commands/
@@ -152,12 +153,10 @@ bc: Gavin Howard BSD port of bc, https://github.com/gavinhoward/bc
 curl: Daniel Stenberg and contributors, https://github.com/curl/curl
 ctags: https://github.com/universal-ctags/ctags/
 file: https://github.com/file/file/
-git: from Dulwich, https://www.dulwich.io
 ImageMagick: ImageMagick Studio LLC, https://imagemagick.org
 Lua: lua.org, PUC-Rio, https://www.lua.org/
 LuaTeX: The LuaTeX team, http://www.luatex.org
 llvm/clang: the LLVM foundation
-make: from almost-make, https://github.com/personalizedrefrigerator/AlmostMake
 openSSL and libSSH2: port by Felix Schulze, https://github.com/x2on/libssh2-for-iOS
 Python3: Python Software Foundation, https://www.python.org/about/
 tar: https://libarchive.org
@@ -704,7 +703,7 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
 }
 
 public func checkBookmarks() {
-    // At startup, go through list of bookmarks, check that they are still valid, remove them
+    // At startup, go through list of bookmarks, check that they are still valid, remove them otherwise
     // and add "home", "shortcuts" and "group".
     let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
     let storedBookmarksDictionary = UserDefaults.standard.dictionary(forKey: "fileBookmarks") ?? [:]
@@ -1072,3 +1071,22 @@ public func jump(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
     return 0
 }
     
+@_cdecl("play_main")
+public func play_media(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let args = convertCArguments(argc: argc, argv: argv)
+    if let delegate = currentDelegate {
+        delegate.resignFirstResponder()
+        return delegate.play_media(arguments: args)
+    }
+    return 0
+}
+
+@_cdecl("preview_main")
+public func preview(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let args = convertCArguments(argc: argc, argv: argv)
+    if let delegate = currentDelegate {
+        delegate.resignFirstResponder()
+        return delegate.preview(arguments: args)
+    }
+    return 0
+}

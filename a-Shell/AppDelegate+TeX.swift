@@ -291,7 +291,8 @@ extension AppDelegate {
             for file in enumerator {
                 let localFileURL = localURL.appendingPathComponent(file as! String)
                 if (FileManager().fileExists(atPath: localFileURL.path) && !localFileURL.isDirectory) {
-                    try! FileManager().removeItem(at: localFileURL)
+                    do { try FileManager().removeItem(at: localFileURL) }
+                   catch { continue }
                 }
             }
         }
@@ -299,7 +300,8 @@ extension AppDelegate {
             // second loop: remove all directories (now empty)
             for file in enumerator {
                 let localFileURL = localURL.appendingPathComponent(file as! String)
-                try! FileManager().removeItem(at: localFileURL)
+                do { try FileManager().removeItem(at: localFileURL) }
+                catch { continue }
             }
         }
     }
@@ -347,7 +349,8 @@ extension AppDelegate {
                     for directory in contents {
                         let localFileURL = localURL.appendingPathComponent(directory)
                         if (FileManager().fileExists(atPath: localFileURL.path) && !localFileURL.isDirectory) {
-                            try! FileManager().removeItem(at: localFileURL)
+                            do { try FileManager().removeItem(at: localFileURL) }
+                            catch { continue }
                         }
                         let distantFileURL = archiveURL.appendingPathComponent(directory)
                         try! FileManager().createSymbolicLink(at: localFileURL, withDestinationURL: distantFileURL)
@@ -369,18 +372,23 @@ extension AppDelegate {
                 if (!FileManager().fileExists(atPath: localURL.path)) {
                     try! FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
                 }
-                let contents = try! FileManager().contentsOfDirectory(atPath: archiveURL.path)
-                for file in contents {
-                    let localFileURL = localURL.appendingPathComponent(file)
-                    do {
-                        if (localFileURL.isSymbolicLink && !FileManager().fileExists(atPath: localFileURL.path)) {
-                            try FileManager().removeItem(at: localFileURL)
+                do {
+                    let contents = try FileManager().contentsOfDirectory(atPath: archiveURL.path)
+                    for file in contents {
+                        let localFileURL = localURL.appendingPathComponent(file)
+                        do {
+                            if (localFileURL.isSymbolicLink && !FileManager().fileExists(atPath: localFileURL.path)) {
+                                try FileManager().removeItem(at: localFileURL)
+                            }
+                            let distantFileURL = archiveURL.appendingPathComponent(file)
+                            try FileManager().createSymbolicLink(at: localFileURL, withDestinationURL: distantFileURL)
+                        } catch {
+                            NSLog("Error copying \(localFileURL.path): \(error)")
                         }
-                        let distantFileURL = archiveURL.appendingPathComponent(file)
-                        try FileManager().createSymbolicLink(at: localFileURL, withDestinationURL: distantFileURL)
-                    } catch {
-                        NSLog("Error copying \(localFileURL.path): \(error)")
                     }
+                }
+                catch {
+                    NSLog("Error listing content of \(archiveURL.path): \(error)")
                 }
                 // Now, we wait until the resource is downloaded.
                 while (opentypeResource.progress.fractionCompleted < 1.0) {
@@ -416,7 +424,8 @@ extension AppDelegate {
         for file in enumerator {
             let localFileURL = localURL.appendingPathComponent(file)
             if (FileManager().fileExists(atPath: localFileURL.path)) {
-                try! FileManager().removeItem(at: localFileURL)
+                do { try FileManager().removeItem(at: localFileURL) }
+                catch { continue }
             }
         }
     }

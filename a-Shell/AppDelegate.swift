@@ -11,6 +11,7 @@ import ios_system
 import UserNotifications
 import Compression
 import Intents // for shortcuts
+import AVFoundation // for media playback
 
 var downloadingTeX = false
 var downloadingTeXError = ""
@@ -260,6 +261,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("keepDirectoryAfterShortcut", "keepDirectoryAfterShortcut", true)
         replaceCommand("wasm", "wasm", true)
         replaceCommand("jsc", "jsc", true)  // use our own jsc instead of ios_system jsc
+        replaceCommand("play", "play_main", true)
+        replaceCommand("view", "preview_main", true)
         // Add these as commands so they appear on the command list, even though we treat them internally:
         replaceCommand("newWindow", "clear", true)
         replaceCommand("exit", "clear", true)
@@ -351,6 +354,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(self.settingsChanged), name: UserDefaults.didChangeNotification, object: nil)
         // Also notification if user changes accessibility settings:
         NotificationCenter.default.addObserver(self, selector: #selector(self.voiceOverChanged), name:  UIAccessibility.voiceOverStatusDidChangeNotification, object: nil)
+        // Enable media playback:
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(.playback, mode: .moviePlayback)
+        }
+        catch {
+            print("Setting category to AVAudioSessionCategoryPlayback failed.")
+        }
         return true
     }
 

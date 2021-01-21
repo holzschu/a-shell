@@ -12,6 +12,8 @@ import WebKit
 import ios_system
 import MobileCoreServices
 import Combine
+import AVKit // for media playback
+import AVFoundation // for media playback
 
 var messageHandlerAdded = false
 var externalKeyboardPresent: Bool? // still needed?
@@ -22,7 +24,7 @@ let factoryFontName = "Menlo"
 
 // Need: dictionary connecting userContentController with output streams (?)
 
-class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate {
+class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIDocumentInteractionControllerDelegate {
     var window: UIWindow?
     var windowScene: UIWindowScene?
     var webView: WKWebView?
@@ -68,12 +70,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var terminalBackgroundColor: UIColor?
     var terminalForegroundColor: UIColor?
     var terminalCursorColor: UIColor?
+    // for audio / video playback:
+    var avplayer: AVPlayer? = nil
+    var avcontroller: AVPlayerViewController? = nil
+    var avControllerPiPEnabled = false
     
     // Create a document picker for directories.
     private let documentPicker =
         UIDocumentPickerViewController(documentTypes: [kUTTypeFolder as String],
                                        in: .open)
-
+    
     var screenWidth: CGFloat {
         if windowScene!.interfaceOrientation.isPortrait {
             return UIScreen.main.bounds.size.width
@@ -114,9 +120,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     var isVimRunning: Bool {
-      return (currentCommand.hasPrefix("vim ")) || (currentCommand == "vim") || (currentCommand.hasPrefix("jump "))
+        return (currentCommand.hasPrefix("vim ")) || (currentCommand == "vim") || (currentCommand.hasPrefix("jump "))
     }
-
+    
     
     @objc private func tabAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + "\u{0009}" + "\");") { (result, error) in
@@ -128,7 +134,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
     }
-
+    
     @objc private func controlAction(_ sender: UIBarButtonItem) {
         controlOn = !controlOn;
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
@@ -165,7 +171,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
     }
-
+    
     @objc private func upAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[A\");") { (result, error) in
             if error != nil {
@@ -200,7 +206,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             
         }
     }
-
+    
     @objc private func rightAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[C\");") { (result, error) in
             if error != nil {
@@ -220,7 +226,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         tabButton.accessibilityLabel = "Tab"
         return tabButton
     }
-
+    
     var controlButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
         // Image used to be control
@@ -263,7 +269,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         leftButton.accessibilityLabel = "Left arrow"
         return leftButton
     }
-
+    
     var rightButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
         let rightButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(rightAction(_:)))
@@ -271,7 +277,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         rightButton.accessibilityLabel = "Right arrow"
         return rightButton
     }
-
+    
     
     public lazy var editorToolbar: UIToolbar = {
         var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
@@ -298,15 +304,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             fputs(command + "\n", thread_stdout)
         }
     }
-
+    
     func printText(string: String) {
         fputs(string, thread_stdout)
     }
-        
+    
     func printError(string: String) {
         fputs(string, thread_stderr)
     }
-
+    
     func closeWindow() {
         // Only close if all running functions are terminated:
         NSLog("Closing window: \(currentCommand)")
@@ -318,7 +324,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         UIApplication.shared.requestSceneSessionDestruction(self.windowScene!.session, options: nil)
     }
-
+    
     func clearScreen() {
         DispatchQueue.main.async {
             // clear entire display: ^[[2J
@@ -421,7 +427,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                         if let errorMessage = array[1] as? String {
                             // webAssembly compile error:
-                           fputs(errorMessage, self.thread_stderr_copy);
+                            fputs(errorMessage, self.thread_stderr_copy);
                         }
                     } else if let string = result! as? String {
                         fputs(string, self.thread_stdout_copy);
@@ -441,7 +447,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     func printJscUsage() {
         fputs("Usage: jsc file.js\n", thread_stdout)
     }
-
+    
     func executeJavascript(arguments: [String]?) {
         guard (arguments != nil) else {
             printJscUsage()
@@ -507,8 +513,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         catch {
-         fputs("Error executing JavaScript  file: " + command + ": \(error) \n", thread_stderr)
-          javascriptRunning = false
+            fputs("Error executing JavaScript  file: " + command + ": \(error) \n", thread_stderr)
+            javascriptRunning = false
         }
         while (javascriptRunning) {
             if (thread_stdout != nil && stdout_active) { fflush(thread_stdout) }
@@ -517,7 +523,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         thread_stdout_copy = nil
         thread_stderr_copy = nil
     }
-
+    
     // display the current configuration of the window.
     func showConfigWindow() {
         if (terminalFontName != nil) {
@@ -568,7 +574,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         fputs("\n", thread_stdout)
     }
-
+    
     func writeConfigWindow() {
         // Force rewrite of all color parameters. Used for reset.
         let traitCollection = webView!.traitCollection
@@ -584,24 +590,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript(command) { (result, error) in
                 if error != nil {
-                   // print(error)
+                    // print(error)
                 }
                 if (result != nil) {
-                   // print(result)
+                    // print(result)
                 }
             }
             command = "window.term_.prefs_.set('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.set('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.set('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.set('font-size', '\(fontSize)'); window.term_.prefs_.set('font-family', '\(fontName)');"
             self.webView?.evaluateJavaScript(command) { (result, error) in
                 if error != nil {
-                   // print(error)
+                    // print(error)
                 }
                 if (result != nil) {
-                   // print(result)
+                    // print(result)
                 }
             }
         }
     }
-
+    
     func configWindow(fontSize: Float?, fontName: String?, backgroundColor: UIColor?, foregroundColor: UIColor?, cursorColor: UIColor?) {
         if (fontSize != nil) {
             terminalFontSize = fontSize
@@ -609,10 +615,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(fontSizeCommand) { (result, error) in
                     if error != nil {
-                      //  print(error)
+                        //  print(error)
                     }
                     if (result != nil) {
-                       // print(result)
+                        // print(result)
                     }
                 }
             }
@@ -712,7 +718,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     // Creates the iOS 13 Font picker, returns the name of the font selected.
     func pickFont() -> String? {
         let rootVC = self.window?.rootViewController
-
+        
         let fontPickerConfig = UIFontPickerViewController.Configuration()
         fontPickerConfig.includeFaces = true
         fontPickerConfig.filteredTraits = .traitMonoSpace
@@ -746,7 +752,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // User cancelled the font picker delegate
         selectedFont = "cancel"
     }
-
+    
     
     func fontPickerViewControllerDidPickFont(_ viewController: UIFontPickerViewController) {
         // We got a font!
@@ -763,7 +769,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         selectedFont = "cancel"
     }
-
+    
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
         selectedDirectory = "cancelled"
     }
@@ -772,7 +778,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // https://developer.apple.com/documentation/uikit/view_controllers/providing_access_to_directories
         documentPicker.allowsMultipleSelection = true
         documentPicker.delegate = self
-
+        
         let rootVC = self.window?.rootViewController
         // Set the initial directory.
         // documentPicker.directoryURL = URL(fileURLWithPath: FileManager().default.currentDirectoryPath)
@@ -783,7 +789,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         while (selectedDirectory == "") { } // wait until a directory is selected, for Shortcuts.
     }
-        
+    
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         // Present the Document View Controller for the first document that was picked.
         // If you support picking multiple items, make sure you handle them all.
@@ -823,8 +829,95 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         selectedDirectory = newDirectory.path
     }
-
-
+    
+    func play_media(arguments: [String]?) -> Int32 {
+        guard (arguments != nil) else { return -1 }
+        guard (arguments!.count >= 2) else { return -1 } // There must be at least one file
+        // copy arguments:
+        let path = arguments![1]
+        if (FileManager().fileExists(atPath: path)) {
+            let url = URL(fileURLWithPath: path)
+            // Create an AVPlayer, passing it the HTTP Live Streaming URL.
+            avplayer = AVPlayer(url: url)
+            
+            // Create a new AVPlayerViewController and pass it a reference to the player.
+            avcontroller = AVPlayerViewController()
+            guard (avcontroller != nil) else {
+                return -1
+            }
+            guard (avplayer != nil) else {
+                return -1
+            }
+            avcontroller!.delegate = self
+            avControllerPiPEnabled = false
+            avplayer?.allowsExternalPlayback = true
+            // Do we have a title?
+            let asset = AVAsset(url: url)
+            let metadata = asset.commonMetadata
+            let titleID = AVMetadataIdentifier.commonIdentifierTitle
+            let titleItems = AVMetadataItem.metadataItems(from: metadata,
+                                                          filteredByIdentifier: titleID)
+            if (titleItems.count == 0) {
+                // No title present, let's use the file name:
+                let titleMetadata = AVMutableMetadataItem()
+                titleMetadata.identifier = AVMetadataIdentifier.commonIdentifierTitle
+                titleMetadata.locale = NSLocale.current
+                titleMetadata.value = arguments![1] as (NSCopying & NSObjectProtocol)?
+                avplayer?.currentItem?.externalMetadata = [titleMetadata]
+            }
+            
+            avcontroller!.player = avplayer
+            
+            // Modally present the player and call the player's play() method when complete.
+            let rootVC = self.window?.rootViewController
+            DispatchQueue.main.async {
+                rootVC?.present(self.avcontroller!, animated: true) {
+                    self.avplayer!.play()
+                }
+            }
+            return 0
+        } else {
+            // File not found.
+            if !path.hasPrefix("-") {
+                fputs("play: file " + path + "not found\n", thread_stderr)
+            }
+            fputs("usage: play file\n", thread_stderr)
+            return -1
+        }
+    }
+    
+    func preview(arguments: [String]?) -> Int32 {
+        guard (arguments != nil) else { return -1 }
+        guard (arguments!.count >= 2) else { return -1 } // There must be at least one command
+        // copy arguments:
+        let path = arguments![1]
+        if (FileManager().fileExists(atPath: path)) {
+        let url = URL(fileURLWithPath: path)
+        let preview = UIDocumentInteractionController(url: url)
+        preview.delegate = self
+        DispatchQueue.main.async {
+            preview.presentPreview(animated: true)
+        }
+        return 0
+        } else {
+            // File not found.
+            if !path.hasPrefix("-") {
+                fputs("view: file " + path + "not found\n", thread_stderr)
+            }
+            fputs("usage: view file\n", thread_stderr)
+            return -1
+        }
+    }
+    
+    func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
+        let rootVC = self.window?.rootViewController
+        if (rootVC == nil) {
+            return self
+        } else {
+            return rootVC!
+        }
+    }
+    
     // Even if Caps-Lock is activated, send lower case letters.
     @objc func insertKey(_ sender: UIKeyCommand) {
         guard (sender.input != nil) else { return }
@@ -1349,9 +1442,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // If .profile exists, load it:
             var dotProfileUrl = try! FileManager().url(for: .documentDirectory,
-                                                      in: .userDomainMask,
-                                                      appropriateFor: nil,
-                                                      create: true)
+                                                       in: .userDomainMask,
+                                                       appropriateFor: nil,
+                                                       create: true)
             dotProfileUrl = dotProfileUrl.appendingPathComponent(".profile")
             // A big issue is that, at this point, the window does not exist yet. So stdin, stdout, stderr also do not exist.
             if (FileManager().fileExists(atPath: dotProfileUrl.path)) {
@@ -1526,7 +1619,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
             }
-
+            
             NotificationCenter.default
                 .publisher(for: UIWindow.didBecomeKeyNotification, object: window)
                 .handleEvents(receiveOutput: { notification in
@@ -1537,7 +1630,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             NotificationCenter.default
                 .publisher(for: UIWindow.didResignKeyNotification, object: window)
                 .merge(with: NotificationCenter.default
-                    .publisher(for: UIResponder.keyboardWillHideNotification))
+                        .publisher(for: UIResponder.keyboardWillHideNotification))
                 .handleEvents(receiveOutput: { notification in
                     NSLog("didResignKey: \(notification.name.rawValue): \(session.persistentIdentifier).")
                 })
@@ -1545,7 +1638,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 .store(in: &cancellables)
         }
     }
-
+    
     
     func scene(_ scene: UIScene, openURLContexts: Set<UIOpenURLContext>) {
         NSLog("Calling openURLContexts with \(openURLContexts)")
@@ -1695,7 +1788,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             setenv("COLORFGBG", "0;15", 1)
         }
     }
-
+    
     func sceneDidBecomeActive(_ scene: UIScene) {
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
@@ -1708,7 +1801,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // TODO: add font size and font name
         let fontSize = terminalFontSize ?? factoryFontSize
         let fontName = terminalFontName ?? factoryFontName
-
+        
         // Window.term_ does not always exist when sceneDidBecomeActive is called. We *also* set window.foregroundColor, and then use that when we create term.
         webView!.tintColor = foregroundColor
         webView!.backgroundColor = backgroundColor
@@ -1758,7 +1851,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         activateVoiceOver(value: UIAccessibility.isVoiceOverRunning)
         ios_signal(SIGWINCH); // is this still required?
     }
-
+    
     func sceneWillResignActive(_ scene: UIScene) {
         // Called when the scene will move from an active state to an inactive state.
         // This may occur due to temporary interruptions (ex. an incoming phone call).
@@ -1885,23 +1978,39 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
                 /* We only restart vim commands. Everything else is creating problems.
-                   Basically, we can only restart commands if we can save their status.
-                NSLog("sceneWillEnterForeground, Restoring command: \(storedCommand)")
-                let restoreCommand = "window.commandToExecute = '" + storedCommand.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n") + "';"
-                NSLog("Calling command: \(restoreCommand)")
-                self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
-                    if error != nil {
-                        // print(error)
-                    }
-                    if (result != nil) {
-                        // print(result)
+                 Basically, we can only restart commands if we can save their status.
+                 NSLog("sceneWillEnterForeground, Restoring command: \(storedCommand)")
+                 let restoreCommand = "window.commandToExecute = '" + storedCommand.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n") + "';"
+                 NSLog("Calling command: \(restoreCommand)")
+                 self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
+                 if error != nil {
+                 // print(error)
+                 }
+                 if (result != nil) {
+                 // print(result)
+                 }
+                 }
+                 */
+            }
+        }
+        
+        // Re-enable video tracks when application enters foreground:
+        // https://stackoverflow.com/questions/64055966/ios-14-play-audio-from-video-in-background/64753248#64753248
+        // But only if picture-in-picture has not started
+        if (!avControllerPiPEnabled) {
+            if let tracks = avplayer?.currentItem?.tracks {
+                for playerItemTrack in tracks
+                {
+                    if playerItemTrack.assetTrack!.hasMediaCharacteristic(AVMediaCharacteristic.visual)
+                    {
+                        // Re-enable the track.
+                        playerItemTrack.isEnabled = true
                     }
                 }
-                */
             }
         }
     }
-
+    
     func sceneDidEnterBackground(_ scene: UIScene) {
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
@@ -1980,12 +2089,27 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                             scene.session.stateRestorationActivity?.userInfo!["terminal"] = printedContent
                                             print("printedContent saved.")
                                         }
-        })
+                                    })
+        // Keep sound going when going in background, by disabling video tracks:
+        // https://stackoverflow.com/questions/64055966/ios-14-play-audio-from-video-in-background/64753248#64753248
+        // But only if Picture-in-Picture has not started
+        if (!avControllerPiPEnabled) {
+            if let tracks = avplayer?.currentItem?.tracks {
+                for playerItemTrack in tracks
+                {
+                    if playerItemTrack.assetTrack!.hasMediaCharacteristic(AVMediaCharacteristic.visual)
+                    {
+                        // Disable the track.
+                        playerItemTrack.isEnabled = false
+                    }
+                }
+            }
+        }
     }
-
+    
     // Called when the stdout file handle is written to
     private var dataBuffer = Data()
-
+    
     func activateVoiceOver(value: Bool) {
         guard (webView != nil) else { return }
         webView?.isAccessibilityElement = false
@@ -2058,6 +2182,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else {
             // NSLog("Couldn't convert data in stdout: \(data)")
         }
+    }
+}
+    
+extension SceneDelegate: AVPlayerViewControllerDelegate {
+    func playerViewControllerWillStartPictureInPicture(_ playerViewController: AVPlayerViewController){
+        NSLog("playerViewControllerWillStartPictureInPicture")
+        avControllerPiPEnabled = true
+    }
+    
+    func playerViewControllerWillStopPictureInPicture(_ playerViewController: AVPlayerViewController) {
+        NSLog("playerViewControllerWillStartPictureInPicture")
+        avControllerPiPEnabled = false
     }
 }
 
@@ -2603,5 +2739,4 @@ extension SceneDelegate: WKUIDelegate {
         }
         decisionHandler(.allow, preferences)
     }
-    
 }
