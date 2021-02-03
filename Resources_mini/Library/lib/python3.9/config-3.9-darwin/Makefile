@@ -48,7 +48,7 @@ GITTAG=		git --git-dir $(srcdir)/.git describe --all --always --dirty
 GITBRANCH=	git --git-dir $(srcdir)/.git name-rev --name-only HEAD
 PGO_PROF_GEN_FLAG=-fprofile-instr-generate
 PGO_PROF_USE_FLAG=-fprofile-instr-use=code.profclangd
-LLVM_PROF_MERGER=/usr/bin/xcrun llvm-profdata merge -output=code.profclangd *.profclangr
+LLVM_PROF_MERGER=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin//llvm-profdata merge -output=code.profclangd *.profclangr
 LLVM_PROF_FILE=LLVM_PROFILE_FILE="code-%p.profclangr"
 LLVM_PROF_ERR=no
 DTRACE=         
@@ -81,7 +81,7 @@ MAKESETUP=      $(srcdir)/Modules/makesetup
 OPT=		-DNDEBUG -O3 -Wall
 BASECFLAGS=	 -Wno-unused-result -Wsign-compare -Wunreachable-code
 BASECPPFLAGS=	
-CONFIGURE_CFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
+CONFIGURE_CFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk
 # CFLAGS_NODIST is used for building the interpreter and stdlib C extensions.
 # Use it when a compiler flag should _not_ be part of the distutils CFLAGS
 # once Python is installed (Issue #21121).
@@ -90,8 +90,8 @@ CONFIGURE_CFLAGS_NODIST= -std=c99 -Wextra -Wno-unused-result -Wno-unused-paramet
 # Use it when a linker flag should _not_ be part of the distutils LDFLAGS
 # once Python is installed (bpo-35257)
 CONFIGURE_LDFLAGS_NODIST=
-CONFIGURE_CPPFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
-CONFIGURE_LDFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
+CONFIGURE_CPPFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk
+CONFIGURE_LDFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk
 # Avoid assigning CFLAGS, LDFLAGS, etc. so users can use them on the
 # command line to append to these values without stomping the pre-set
 # values.
@@ -157,9 +157,9 @@ CONFINCLUDEPY=	$(CONFINCLUDEDIR)/python$(LDVERSION)
 # Symbols used for using shared libraries
 SHLIB_SUFFIX=	.so
 EXT_SUFFIX=	.cpython-39-darwin.so
-LDSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk -lz -L. -lpython3.9 $(PY_LDFLAGS)
-BLDSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk -lz -L. -lpython3.9 $(PY_CORE_LDFLAGS)
-LDCXXSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk -lz -L. -lpython3.9
+LDSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk -lz -L. -lpython3.9 $(PY_LDFLAGS)
+BLDSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk -lz -L. -lpython3.9 $(PY_CORE_LDFLAGS)
+LDCXXSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk -lz -L. -lpython3.9
 DESTSHARED=	$(BINLIBDEST)/lib-dynload
 
 # List of exported symbols for AIX
@@ -212,7 +212,7 @@ EXEMODE=	755
 FILEMODE=	644
 
 # configure script arguments
-CONFIG_ARGS=	 '--prefix=/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library' '--with-system-ffi' '--enable-shared' '--without-computed-gotos' 'ac_cv_file__dev_ptmx=no' 'ac_cv_file__dev_ptc=no' 'ac_cv_func_getentropy=no' 'ac_cv_func_sendfile=no' 'ac_cv_func_setregid=no' 'ac_cv_func_setreuid=no' 'ac_cv_func_setsid=no' 'ac_cv_func_setpgid=no' 'ac_cv_func_setpgrp=no' 'ac_cv_func_setuid=no' 'ac_cv_func_forkpty=no ' 'ac_cv_func_openpty=no' 'ac_cv_func_clock_settime=no' 'CC=clang' 'CFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk' 'LDFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk' 'CPPFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk'
+CONFIG_ARGS=	 '--prefix=/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library' '--with-system-ffi' '--enable-shared' '--without-computed-gotos' 'ac_cv_file__dev_ptmx=no' 'ac_cv_file__dev_ptc=no' 'ac_cv_func_getentropy=no' 'ac_cv_func_sendfile=no' 'ac_cv_func_setregid=no' 'ac_cv_func_setreuid=no' 'ac_cv_func_setsid=no' 'ac_cv_func_setpgid=no' 'ac_cv_func_setpgrp=no' 'ac_cv_func_setuid=no' 'ac_cv_func_forkpty=no ' 'ac_cv_func_openpty=no' 'ac_cv_func_clock_settime=no' 'CC=clang' 'CFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk' 'LDFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk' 'CPPFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk'
 
 
 # Subdirectories with code
@@ -309,7 +309,7 @@ IO_OBJS=	\
 
 ##########################################################################
 
-LIBFFI_INCLUDEDIR=	/usr/local/lib/libffi-3.2.1/include
+LIBFFI_INCLUDEDIR=	
 
 ##########################################################################
 # Parser

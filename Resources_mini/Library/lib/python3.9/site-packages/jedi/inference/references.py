@@ -3,10 +3,10 @@ import re
 
 from parso import python_bytes_to_unicode
 
-from jedi._compatibility import FileNotFoundError
 from jedi.debug import dbg
 from jedi.file_io import KnownContentFileIO
-from jedi.inference.imports import SubModuleName, load_module_from_path
+from jedi.inference.names import SubModuleName
+from jedi.inference.imports import load_module_from_path
 from jedi.inference.filters import ParserTreeFilter
 from jedi.inference.gradual.conversion import convert_names
 
@@ -39,8 +39,7 @@ def _resolve_names(definition_names, avoid_names=()):
             yield name
 
         if name.api_type == 'module':
-            for n in _resolve_names(name.goto(), definition_names):
-                yield n
+            yield from _resolve_names(name.goto(), definition_names)
 
 
 def _dictionarize(names):
@@ -91,8 +90,7 @@ def _add_names_in_same_context(context, string_name):
         names = set(filter_.get(string_name))
         if not names:
             break
-        for name in names:
-            yield name
+        yield from names
         ordered = sorted(names, key=lambda x: x.start_pos)
         until_position = ordered[0].start_pos
 
@@ -110,8 +108,7 @@ def _find_global_variables(names, search_name):
             for global_name in method().get(search_name):
                 yield global_name
                 c = module_context.create_context(global_name.tree_name)
-                for n in _add_names_in_same_context(c, global_name.string_name):
-                    yield n
+                yield from _add_names_in_same_context(c, global_name.string_name)
 
 
 def find_references(module_context, tree_name, only_in_module=False):
@@ -207,11 +204,11 @@ def recurse_find_python_folders_and_files(folder_io, except_paths=()):
         # Delete folders that we don't want to iterate over.
         for file_io in file_ios:
             path = file_io.path
-            if path.endswith('.py') or path.endswith('.pyi'):
+            if path.suffix in ('.py', '.pyi'):
                 if path not in except_paths:
                     yield None, file_io
 
-            if path.endswith('.gitignore'):
+            if path.name == '.gitignore':
                 ignored_paths, ignored_names = \
                     gitignored_lines(root_folder_io, file_io)
                 except_paths |= ignored_paths
@@ -273,9 +270,8 @@ def get_module_contexts_containing_name(inference_state, module_contexts, name,
         return
 
     file_io_iterator = _find_python_files_in_sys_path(inference_state, module_contexts)
-    for x in search_in_file_ios(inference_state, file_io_iterator, name,
-                                limit_reduction=limit_reduction):
-        yield x  # Python 2...
+    yield from search_in_file_ios(inference_state, file_io_iterator, name,
+                                  limit_reduction=limit_reduction)
 
 
 def search_in_file_ios(inference_state, file_io_iterator, name, limit_reduction=1):

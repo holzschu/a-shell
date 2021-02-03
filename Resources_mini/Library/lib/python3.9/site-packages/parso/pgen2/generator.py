@@ -27,11 +27,14 @@ because we made some optimizations.
 """
 
 from ast import literal_eval
+from typing import TypeVar, Generic, Mapping, Sequence, Set, Union
 
 from parso.pgen2.grammar_parser import GrammarParser, NFAState
 
+_TokenTypeT = TypeVar("_TokenTypeT")
 
-class Grammar(object):
+
+class Grammar(Generic[_TokenTypeT]):
     """
     Once initialized, this class supplies the grammar tables for the
     parsing engine implemented by parse.py.  The parsing engine
@@ -41,18 +44,21 @@ class Grammar(object):
     dfas.
     """
 
-    def __init__(self, start_nonterminal, rule_to_dfas, reserved_syntax_strings):
-        self.nonterminal_to_dfas = rule_to_dfas  # Dict[str, List[DFAState]]
+    def __init__(self,
+                 start_nonterminal: str,
+                 rule_to_dfas: Mapping[str, Sequence['DFAState[_TokenTypeT]']],
+                 reserved_syntax_strings: Mapping[str, 'ReservedString']):
+        self.nonterminal_to_dfas = rule_to_dfas
         self.reserved_syntax_strings = reserved_syntax_strings
         self.start_nonterminal = start_nonterminal
 
 
-class DFAPlan(object):
+class DFAPlan:
     """
     Plans are used for the parser to create stack nodes and do the proper
     DFA state transitions.
     """
-    def __init__(self, next_dfa, dfa_pushes=[]):
+    def __init__(self, next_dfa: 'DFAState', dfa_pushes: Sequence['DFAState'] = []):
         self.next_dfa = next_dfa
         self.dfa_pushes = dfa_pushes
 
@@ -60,7 +66,7 @@ class DFAPlan(object):
         return '%s(%s, %s)' % (self.__class__.__name__, self.next_dfa, self.dfa_pushes)
 
 
-class DFAState(object):
+class DFAState(Generic[_TokenTypeT]):
     """
     The DFAState object is the core class for pretty much anything. DFAState
     are the vertices of an ordered graph while arcs and transitions are the
@@ -70,20 +76,21 @@ class DFAState(object):
     transitions are then calculated to connect the DFA state machines that have
     different nonterminals.
     """
-    def __init__(self, from_rule, nfa_set, final):
+    def __init__(self, from_rule: str, nfa_set: Set[NFAState], final: NFAState):
         assert isinstance(nfa_set, set)
         assert isinstance(next(iter(nfa_set)), NFAState)
         assert isinstance(final, NFAState)
         self.from_rule = from_rule
         self.nfa_set = nfa_set
-        self.arcs = {}  # map from terminals/nonterminals to DFAState
+        # map from terminals/nonterminals to DFAState
+        self.arcs: Mapping[str, DFAState] = {}
         # In an intermediary step we set these nonterminal arcs (which has the
         # same structure as arcs). These don't contain terminals anymore.
-        self.nonterminal_arcs = {}
+        self.nonterminal_arcs: Mapping[str, DFAState] = {}
 
         # Transitions are basically the only thing that  the parser is using
         # with is_final. Everyting else is purely here to create a parser.
-        self.transitions = {}  #: Dict[Union[TokenType, ReservedString], DFAPlan]
+        self.transitions: Mapping[Union[_TokenTypeT, ReservedString], DFAPlan] = {}
         self.is_final = final in nfa_set
 
     def add_arc(self, next_, label):
@@ -111,22 +118,20 @@ class DFAState(object):
                 return False
         return True
 
-    __hash__ = None  # For Py3 compatibility.
-
     def __repr__(self):
         return '<%s: %s is_final=%s>' % (
             self.__class__.__name__, self.from_rule, self.is_final
         )
 
 
-class ReservedString(object):
+class ReservedString:
     """
     Most grammars will have certain keywords and operators that are mentioned
     in the grammar as strings (e.g. "if") and not token types (e.g. NUMBER).
     This class basically is the former.
     """
 
-    def __init__(self, value):
+    def __init__(self, value: str):
         self.value = value
 
     def __repr__(self):
@@ -149,7 +154,6 @@ def _simplify_dfas(dfas):
             for j in range(i + 1, len(dfas)):
                 state_j = dfas[j]
                 if state_i == state_j:
-                    #print "  unify", i, j
                     del dfas[j]
                     for state in dfas:
                         state.unifystate(state_j, state_i)
@@ -233,7 +237,7 @@ def _dump_dfas(dfas):
             print("    %s -> %d" % (nonterminal, dfas.index(next_)))
 
 
-def generate_grammar(bnf_grammar, token_namespace):
+def generate_grammar(bnf_grammar: str, token_namespace) -> Grammar:
     """
     ``bnf_text`` is a grammar in extended BNF (using * for repetition, + for
     at-least-once repetition, [] for optional parts, | for alternatives and ()
@@ -245,19 +249,19 @@ def generate_grammar(bnf_grammar, token_namespace):
     rule_to_dfas = {}
     start_nonterminal = None
     for nfa_a, nfa_z in GrammarParser(bnf_grammar).parse():
-        #_dump_nfa(nfa_a, nfa_z)
+        # _dump_nfa(nfa_a, nfa_z)
         dfas = _make_dfas(nfa_a, nfa_z)
-        #_dump_dfas(dfas)
+        # _dump_dfas(dfas)
         # oldlen = len(dfas)
         _simplify_dfas(dfas)
         # newlen = len(dfas)
         rule_to_dfas[nfa_a.from_rule] = dfas
-        #print(nfa_a.from_rule, oldlen, newlen)
+        # print(nfa_a.from_rule, oldlen, newlen)
 
         if start_nonterminal is None:
             start_nonterminal = nfa_a.from_rule
 
-    reserved_strings = {}
+    reserved_strings: Mapping[str, ReservedString] = {}
     for nonterminal, dfas in rule_to_dfas.items():
         for dfa_state in dfas:
             for terminal_or_nonterminal, next_dfa in dfa_state.arcs.items():
@@ -272,7 +276,7 @@ def generate_grammar(bnf_grammar, token_namespace):
                     dfa_state.transitions[transition] = DFAPlan(next_dfa)
 
     _calculate_tree_traversal(rule_to_dfas)
-    return Grammar(start_nonterminal, rule_to_dfas, reserved_strings)
+    return Grammar(start_nonterminal, rule_to_dfas, reserved_strings)  # type: ignore
 
 
 def _make_transition(token_namespace, reserved_syntax_strings, label):

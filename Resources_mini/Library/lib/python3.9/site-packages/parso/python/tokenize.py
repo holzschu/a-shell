@@ -13,12 +13,13 @@ from __future__ import absolute_import
 
 import sys
 import re
-from collections import namedtuple
 import itertools as _itertools
 from codecs import BOM_UTF8
+from typing import NamedTuple, Tuple, Iterator, Iterable, List, Dict, \
+    Pattern, Set
 
 from parso.python.token import PythonTokenTypes
-from parso.utils import split_lines
+from parso.utils import split_lines, PythonVersionInfo, parse_version_string
 
 
 # Maximum code point of Unicode 6.0: 0x10ffff (1,114,111)
@@ -38,31 +39,23 @@ FSTRING_START = PythonTokenTypes.FSTRING_START
 FSTRING_STRING = PythonTokenTypes.FSTRING_STRING
 FSTRING_END = PythonTokenTypes.FSTRING_END
 
-TokenCollection = namedtuple(
-    'TokenCollection',
-    'pseudo_token single_quoted triple_quoted endpats whitespace '
-    'fstring_pattern_map always_break_tokens',
-)
+
+class TokenCollection(NamedTuple):
+    pseudo_token: Pattern
+    single_quoted: Set[str]
+    triple_quoted: Set[str]
+    endpats: Dict[str, Pattern]
+    whitespace: Pattern
+    fstring_pattern_map: Dict[str, str]
+    always_break_tokens: Tuple[str]
+
 
 BOM_UTF8_STRING = BOM_UTF8.decode('utf-8')
 
-_token_collection_cache = {}
-
-if sys.version_info.major >= 3:
-    # Python 3 has str.isidentifier() to check if a char is a valid identifier
-    is_identifier = str.isidentifier
-else:
-    # Python 2 doesn't, but it's not that important anymore and if you tokenize
-    # Python 2 code with this, it's still ok. It's just that parsing Python 3
-    # code with this function is not 100% correct.
-    # This just means that Python 2 code matches a few identifiers too much,
-    # but that doesn't really matter.
-    def is_identifier(s):
-        return True
+_token_collection_cache: Dict[PythonVersionInfo, TokenCollection] = {}
 
 
-def group(*choices, **kwargs):
-    capture = kwargs.pop('capture', False)  # Python 2, arrghhhhh :(
+def group(*choices, capture=False, **kwargs):
     assert not kwargs
 
     start = '('
@@ -76,19 +69,17 @@ def maybe(*choices):
 
 
 # Return the empty string, plus all of the valid string prefixes.
-def _all_string_prefixes(version_info, include_fstring=False, only_fstring=False):
+def _all_string_prefixes(*, include_fstring=False, only_fstring=False):
     def different_case_versions(prefix):
         for s in _itertools.product(*[(c, c.upper()) for c in prefix]):
             yield ''.join(s)
     # The valid string prefixes. Only contain the lower case versions,
     #  and don't contain any permuations (include 'fr', but not
     #  'rf'). The various permutations will be generated.
-    valid_string_prefixes = ['b', 'r', 'u']
-    if version_info.major >= 3:
-        valid_string_prefixes.append('br')
+    valid_string_prefixes = ['b', 'r', 'u', 'br']
 
-    result = set([''])
-    if version_info >= (3, 6) and include_fstring:
+    result = {''}
+    if include_fstring:
         f = ['f', 'fr']
         if only_fstring:
             valid_string_prefixes = f
@@ -104,10 +95,6 @@ def _all_string_prefixes(version_info, include_fstring=False, only_fstring=False
             # create a list with upper and lower versions of each
             #  character
             result.update(different_case_versions(t))
-    if version_info.major == 2:
-        # In Python 2 the order cannot just be random.
-        result.update(different_case_versions('ur'))
-        result.update(different_case_versions('br'))
     return result
 
 
@@ -123,9 +110,14 @@ def _get_token_collection(version_info):
             _create_token_collection(version_info)
         return result
 
-
-fstring_string_single_line = _compile(r'(?:\{\{|\}\}|\\(?:\r\n?|\n)|[^{}\r\n])+')
-fstring_string_multi_line = _compile(r'(?:[^{}]+|\{\{|\}\})+')
+unicode_character_name = r'[A-Za-z0-9\-]+(?: [A-Za-z0-9\-]+)*'
+fstring_string_single_line = _compile(
+    r'(?:\{\{|\}\}|\\N\{' + unicode_character_name +
+    r'\}|\\(?:\r\n?|\n)|\\[^\r\nN]|[^{}\r\n\\])+'
+)
+fstring_string_multi_line = _compile(
+    r'(?:\{\{|\}\}|\\N\{' + unicode_character_name + r'\}|\\[^N]|[^{}\\])+'
+)
 fstring_format_spec_single_line = _compile(r'(?:\\(?:\r\n?|\n)|[^{}\r\n])+')
 fstring_format_spec_multi_line = _compile(r'[^{}]+')
 
@@ -136,53 +128,27 @@ def _create_token_collection(version_info):
     Whitespace = r'[ \f\t]*'
     whitespace = _compile(Whitespace)
     Comment = r'#[^\r\n]*'
-    # Python 2 is pretty much not working properly anymore, we just ignore
-    # parsing unicode properly, which is fine, I guess.
-    if version_info[0] == 2:
-        Name = r'([A-Za-z_0-9]+)'
-    elif sys.version_info[0] == 2:
-        # Unfortunately the regex engine cannot deal with the regex below, so
-        # just use this one.
-        Name = r'(\w+)'
-    else:
-        Name = u'([A-Za-z_0-9\u0080-' + MAX_UNICODE + ']+)'
+    Name = '([A-Za-z_0-9\u0080-' + MAX_UNICODE + ']+)'
 
-    if version_info >= (3, 6):
-        Hexnumber = r'0[xX](?:_?[0-9a-fA-F])+'
-        Binnumber = r'0[bB](?:_?[01])+'
-        Octnumber = r'0[oO](?:_?[0-7])+'
-        Decnumber = r'(?:0(?:_?0)*|[1-9](?:_?[0-9])*)'
-        Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
-        Exponent = r'[eE][-+]?[0-9](?:_?[0-9])*'
-        Pointfloat = group(r'[0-9](?:_?[0-9])*\.(?:[0-9](?:_?[0-9])*)?',
-                           r'\.[0-9](?:_?[0-9])*') + maybe(Exponent)
-        Expfloat = r'[0-9](?:_?[0-9])*' + Exponent
-        Floatnumber = group(Pointfloat, Expfloat)
-        Imagnumber = group(r'[0-9](?:_?[0-9])*[jJ]', Floatnumber + r'[jJ]')
-    else:
-        Hexnumber = r'0[xX][0-9a-fA-F]+'
-        Binnumber = r'0[bB][01]+'
-        if version_info.major >= 3:
-            Octnumber = r'0[oO][0-7]+'
-        else:
-            Octnumber = '0[oO]?[0-7]+'
-        Decnumber = r'(?:0+|[1-9][0-9]*)'
-        Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
-        if version_info[0] < 3:
-            Intnumber += '[lL]?'
-        Exponent = r'[eE][-+]?[0-9]+'
-        Pointfloat = group(r'[0-9]+\.[0-9]*', r'\.[0-9]+') + maybe(Exponent)
-        Expfloat = r'[0-9]+' + Exponent
-        Floatnumber = group(Pointfloat, Expfloat)
-        Imagnumber = group(r'[0-9]+[jJ]', Floatnumber + r'[jJ]')
+    Hexnumber = r'0[xX](?:_?[0-9a-fA-F])+'
+    Binnumber = r'0[bB](?:_?[01])+'
+    Octnumber = r'0[oO](?:_?[0-7])+'
+    Decnumber = r'(?:0(?:_?0)*|[1-9](?:_?[0-9])*)'
+    Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
+    Exponent = r'[eE][-+]?[0-9](?:_?[0-9])*'
+    Pointfloat = group(r'[0-9](?:_?[0-9])*\.(?:[0-9](?:_?[0-9])*)?',
+                       r'\.[0-9](?:_?[0-9])*') + maybe(Exponent)
+    Expfloat = r'[0-9](?:_?[0-9])*' + Exponent
+    Floatnumber = group(Pointfloat, Expfloat)
+    Imagnumber = group(r'[0-9](?:_?[0-9])*[jJ]', Floatnumber + r'[jJ]')
     Number = group(Imagnumber, Floatnumber, Intnumber)
 
     # Note that since _all_string_prefixes includes the empty string,
     #  StringPrefix can be the empty string (making it optional).
-    possible_prefixes = _all_string_prefixes(version_info)
+    possible_prefixes = _all_string_prefixes()
     StringPrefix = group(*possible_prefixes)
-    StringPrefixWithF = group(*_all_string_prefixes(version_info, include_fstring=True))
-    fstring_prefixes = _all_string_prefixes(version_info, include_fstring=True, only_fstring=True)
+    StringPrefixWithF = group(*_all_string_prefixes(include_fstring=True))
+    fstring_prefixes = _all_string_prefixes(include_fstring=True, only_fstring=True)
     FStringStart = group(*fstring_prefixes)
 
     # Tail end of ' string.
@@ -205,9 +171,7 @@ def _create_token_collection(version_info):
 
     Bracket = '[][(){}]'
 
-    special_args = [r'\r\n?', r'\n', r'[;.,@]']
-    if version_info >= (3, 0):
-        special_args.insert(0, r'\.\.\.')
+    special_args = [r'\.\.\.', r'\r\n?', r'\n', r'[;.,@]']
     if version_info >= (3, 8):
         special_args.insert(0, ":=?")
     else:
@@ -258,9 +222,7 @@ def _create_token_collection(version_info):
 
     ALWAYS_BREAK_TOKENS = (';', 'import', 'class', 'def', 'try', 'except',
                            'finally', 'while', 'with', 'return', 'continue',
-                           'break', 'del', 'pass', 'global', 'assert')
-    if version_info >= (3, 5):
-        ALWAYS_BREAK_TOKENS += ('nonlocal', )
+                           'break', 'del', 'pass', 'global', 'assert', 'nonlocal')
     pseudo_token_compiled = _compile(PseudoToken)
     return TokenCollection(
         pseudo_token_compiled, single_quoted, triple_quoted, endpats,
@@ -268,9 +230,14 @@ def _create_token_collection(version_info):
     )
 
 
-class Token(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
+class Token(NamedTuple):
+    type: PythonTokenTypes
+    string: str
+    start_pos: Tuple[int, int]
+    prefix: str
+
     @property
-    def end_pos(self):
+    def end_pos(self) -> Tuple[int, int]:
         lines = split_lines(self.string)
         if len(lines) > 1:
             return self.start_pos[0] + len(lines) - 1, 0
@@ -284,7 +251,7 @@ class PythonToken(Token):
                 self._replace(type=self.type.name))
 
 
-class FStringNode(object):
+class FStringNode:
     def __init__(self, quote):
         self.quote = quote
         self.parentheses_count = 0
@@ -371,10 +338,12 @@ def _find_fstring_string(endpats, fstring_stack, line, lnum, pos):
     return string, new_pos
 
 
-def tokenize(code, version_info, start_pos=(1, 0)):
+def tokenize(
+    code: str, *, version_info: PythonVersionInfo, start_pos: Tuple[int, int] = (1, 0)
+) -> Iterator[PythonToken]:
     """Generate tokens from a the source code (string)."""
     lines = split_lines(code, keepends=True)
-    return tokenize_lines(lines, version_info, start_pos=start_pos)
+    return tokenize_lines(lines, version_info=version_info, start_pos=start_pos)
 
 
 def _print_tokens(func):
@@ -390,7 +359,14 @@ def _print_tokens(func):
 
 
 # @_print_tokens
-def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first_token=True):
+def tokenize_lines(
+    lines: Iterable[str],
+    *,
+    version_info: PythonVersionInfo,
+    indents: List[int] = None,
+    start_pos: Tuple[int, int] = (1, 0),
+    is_first_token=True,
+) -> Iterator[PythonToken]:
     """
     A heavily modified Python standard library tokenizer.
 
@@ -416,7 +392,9 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
     max_ = 0
     numchars = '0123456789'
     contstr = ''
-    contline = None
+    contline: str
+    contstr_start: Tuple[int, int]
+    endprog: Pattern
     # We start with a newline. This makes indent at the first position
     # possible. It's not valid Python, but still better than an INDENT in the
     # second line (and not in the first). This makes quite a few things in
@@ -425,7 +403,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
     prefix = ''  # Should never be required, but here for safety
     additional_prefix = ''
     lnum = start_pos[0] - 1
-    fstring_stack = []
+    fstring_stack: List[FStringNode] = []
     for line in lines:  # loop over lines in stream
         lnum += 1
         pos = 0
@@ -444,14 +422,14 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
             is_first_token = False
 
         if contstr:                                         # continued string
-            endmatch = endprog.match(line)
+            endmatch = endprog.match(line)  # noqa: F821
             if endmatch:
                 pos = endmatch.end(0)
                 yield PythonToken(
                     STRING, contstr + line[:pos],
-                    contstr_start, prefix)
+                    contstr_start, prefix)  # noqa: F821
                 contstr = ''
-                contline = None
+                contline = ''
             else:
                 contstr = contstr + line
                 contline = contline + line
@@ -528,14 +506,12 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
                     if indent_start > indents[-1]:
                         yield PythonToken(INDENT, '', spos, '')
                         indents.append(indent_start)
-                    for t in dedent_if_necessary(indent_start):
-                        yield t
+                    yield from dedent_if_necessary(indent_start)
 
             if not pseudomatch:  # scan for tokens
                 match = whitespace.match(line, pos)
                 if new_line and paren_level == 0 and not fstring_stack:
-                    for t in dedent_if_necessary(match.end()):
-                        yield t
+                    yield from dedent_if_necessary(match.end())
                 pos = match.end()
                 new_line = False
                 yield PythonToken(
@@ -556,18 +532,14 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
                     # We only want to dedent if the token is on a new line.
                     m = re.match(r'[ \f\t]*$', line[:start])
                     if m is not None:
-                        for t in dedent_if_necessary(m.end()):
-                            yield t
-                if is_identifier(token):
+                        yield from dedent_if_necessary(m.end())
+                if token.isidentifier():
                     yield PythonToken(NAME, token, spos, prefix)
                 else:
-                    for t in _split_illegal_unicode_name(token, spos, prefix):
-                        yield t  # yield from Python 2
+                    yield from _split_illegal_unicode_name(token, spos, prefix)
             elif initial in '\r\n':
                 if any(not f.allow_multiline() for f in fstring_stack):
-                    # Would use fstring_stack.clear, but that's not available
-                    # in Python 2.
-                    fstring_stack[:] = []
+                    fstring_stack.clear()
 
                 if not new_line and paren_level == 0 and not fstring_stack:
                     yield PythonToken(NEWLINE, token, spos, prefix)
@@ -681,7 +653,7 @@ def _split_illegal_unicode_name(token, start_pos, prefix):
     pos = start_pos
     for i, char in enumerate(token):
         if is_illegal:
-            if is_identifier(char):
+            if char.isidentifier():
                 yield create_token()
                 found = char
                 is_illegal = False
@@ -691,7 +663,7 @@ def _split_illegal_unicode_name(token, start_pos, prefix):
                 found += char
         else:
             new_found = found + char
-            if is_identifier(new_found):
+            if new_found.isidentifier():
                 found = new_found
             else:
                 if found:
@@ -706,17 +678,9 @@ def _split_illegal_unicode_name(token, start_pos, prefix):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) >= 2:
-        path = sys.argv[1]
-        with open(path) as f:
-            code = f.read()
-    else:
-        code = sys.stdin.read()
+    path = sys.argv[1]
+    with open(path) as f:
+        code = f.read()
 
-    from parso.utils import python_bytes_to_unicode, parse_version_string
-
-    if isinstance(code, bytes):
-        code = python_bytes_to_unicode(code)
-
-    for token in tokenize(code, parse_version_string()):
+    for token in tokenize(code, version_info=parse_version_string('3.10')):
         print(token)

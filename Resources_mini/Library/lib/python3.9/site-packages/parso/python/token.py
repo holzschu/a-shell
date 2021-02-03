@@ -1,8 +1,13 @@
 from __future__ import absolute_import
 
+from enum import Enum
 
-class TokenType(object):
-    def __init__(self, name, contains_syntax=False):
+
+class TokenType:
+    name: str
+    contains_syntax: bool
+
+    def __init__(self, name: str, contains_syntax: bool = False):
         self.name = name
         self.contains_syntax = contains_syntax
 
@@ -10,18 +15,17 @@ class TokenType(object):
         return '%s(%s)' % (self.__class__.__name__, self.name)
 
 
-class TokenTypes(object):
-    """
-    Basically an enum, but Python 2 doesn't have enums in the standard library.
-    """
-    def __init__(self, names, contains_syntax):
-        for name in names:
-            setattr(self, name, TokenType(name, contains_syntax=name in contains_syntax))
-
-
-PythonTokenTypes = TokenTypes((
-    'STRING', 'NUMBER', 'NAME', 'ERRORTOKEN', 'NEWLINE', 'INDENT', 'DEDENT',
-    'ERROR_DEDENT', 'FSTRING_STRING', 'FSTRING_START', 'FSTRING_END', 'OP',
-    'ENDMARKER'),
-    contains_syntax=('NAME', 'OP'),
-)
+class PythonTokenTypes(Enum):
+    STRING = TokenType('STRING')
+    NUMBER = TokenType('NUMBER')
+    NAME = TokenType('NAME', contains_syntax=True)
+    ERRORTOKEN = TokenType('ERRORTOKEN')
+    NEWLINE = TokenType('NEWLINE')
+    INDENT = TokenType('INDENT')
+    DEDENT = TokenType('DEDENT')
+    ERROR_DEDENT = TokenType('ERROR_DEDENT')
+    FSTRING_STRING = TokenType('FSTRING_STRING')
+    FSTRING_START = TokenType('FSTRING_START')
+    FSTRING_END = TokenType('FSTRING_END')
+    OP = TokenType('OP', contains_syntax=True)
+    ENDMARKER = TokenType('ENDMARKER')

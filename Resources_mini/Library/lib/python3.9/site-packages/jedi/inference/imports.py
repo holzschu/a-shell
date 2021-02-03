@@ -5,18 +5,15 @@ not any actual importing done. This module is about finding modules in the
 filesystem. This can be quite tricky sometimes, because Python imports are not
 always that simple.
 
-This module uses imp for python up to 3.2 and importlib for python 3.3 on; the
-correct implementation is delegated to _compatibility.
-
 This module also supports import autocompletion, which means to complete
 statements like ``from datetim`` (cursor at the end would return ``datetime``).
 """
 import os
+from pathlib import Path
 
 from parso.python import tree
 from parso.tree import search_ancestor
 
-from jedi._compatibility import ImplicitNSInfo, force_unicode, FileNotFoundError
 from jedi import debug
 from jedi import settings
 from jedi.file_io import FolderIO
@@ -31,10 +28,11 @@ from jedi.inference.names import ImportName, SubModuleName
 from jedi.inference.base_value import ValueSet, NO_VALUES
 from jedi.inference.gradual.typeshed import import_module_decorator, \
     create_stub_module, parse_stub_module
+from jedi.inference.compiled.subprocess.functions import ImplicitNSInfo
 from jedi.plugins import plugin_manager
 
 
-class ModuleCache(object):
+class ModuleCache:
     def __init__(self):
         self._name_cache = {}
 
@@ -152,7 +150,7 @@ def _level_to_base_import_path(project_path, directory, level):
             return None, directory
 
 
-class Importer(object):
+class Importer:
     def __init__(self, inference_state, import_path, module_context, level=0):
         """
         An implementation similar to ``__import__``. Use `follow`
@@ -211,7 +209,7 @@ class Importer(object):
                     # somewhere out of the filesystem.
                     self._infer_possible = False
                 else:
-                    self._fixed_sys_path = [force_unicode(base_directory)]
+                    self._fixed_sys_path = [base_directory]
 
                 if base_import_path is None:
                     if import_path:
@@ -240,11 +238,49 @@ class Importer(object):
             # inference we want to show the user as much as possible.
             # See GH #1446.
             self._inference_state.get_sys_path(add_init_paths=not is_completion)
-            + sys_path.check_sys_path_modifications(self._module_context)
+            + [
+                str(p) for p
+                in sys_path.check_sys_path_modifications(self._module_context)
+            ]
         )
 
     def follow(self):
-        if not self.import_path or not self._infer_possible:
+        if not self.import_path:
+            if self._fixed_sys_path:
+                # This is a bit of a special case, that maybe should be
+                # revisited. If the project path is wrong or the user uses
+                # relative imports the wrong way, we might end up here, where
+                # the `fixed_sys_path == project.path` in that case we kind of
+                # use the project.path.parent directory as our path. This is
+                # usually not a problem, except if imports in other places are
+                # using the same names. Example:
+                #
+                # foo/                       < #1
+                #   - setup.py
+                #   - foo/                   < #2
+                #     - __init__.py
+                #     - foo.py               < #3
+                #
+                # If the top foo is our project folder and somebody uses
+                # `from . import foo` in `setup.py`, it will resolve to foo #2,
+                # which means that the import for foo.foo is cached as
+                # `__init__.py` (#2) and not as `foo.py` (#3). This is usually
+                # not an issue, because this case is probably pretty rare, but
+                # might be an issue for some people.
+                #
+                # However for most normal cases where we work with different
+                # file names, this code path hits where we basically change the
+                # project path to an ancestor of project path.
+                from jedi.inference.value.namespace import ImplicitNamespaceValue
+                import_path = (os.path.basename(self._fixed_sys_path[0]),)
+                ns = ImplicitNamespaceValue(
+                    self._inference_state,
+                    string_names=import_path,
+                    paths=self._fixed_sys_path,
+                )
+                return ValueSet({ns})
+            return NO_VALUES
+        if not self._infer_possible:
             return NO_VALUES
 
         # Check caches first
@@ -332,7 +368,7 @@ def import_module_by_names(inference_state, import_names, sys_path=None,
         sys_path = inference_state.get_sys_path()
 
     str_import_names = tuple(
-        force_unicode(i.value if isinstance(i, tree.Name) else i)
+        i.value if isinstance(i, tree.Name) else i
         for i in import_names
     )
     value_set = [None]
@@ -470,19 +506,19 @@ def load_module_from_path(inference_state, file_io, import_names=None, is_packag
     here to ensure that a random path is still properly loaded into the Jedi
     module structure.
     """
-    path = file_io.path
+    path = Path(file_io.path)
     if import_names is None:
         e_sys_path = inference_state.get_sys_path()
         import_names, is_package = sys_path.transform_path_to_dotted(e_sys_path, path)
     else:
         assert isinstance(is_package, bool)
 
-    is_stub = file_io.path.endswith('.pyi')
+    is_stub = path.suffix == '.pyi'
     if is_stub:
         folder_io = file_io.get_parent_folder()
         if folder_io.path.endswith('-stubs'):
             folder_io = FolderIO(folder_io.path[:-6])
-        if file_io.path.endswith('__init__.pyi'):
+        if path.name == '__init__.pyi':
             python_file_io = folder_io.get_file_io('__init__.py')
         else:
             python_file_io = folder_io.get_file_io(import_names[-1] + '.py')
@@ -497,8 +533,8 @@ def load_module_from_path(inference_state, file_io, import_names=None, is_packag
             values = NO_VALUES
 
         return create_stub_module(
-            inference_state, values, parse_stub_module(inference_state, file_io),
-            file_io, import_names
+            inference_state, inference_state.latest_grammar, values,
+            parse_stub_module(inference_state, file_io), file_io, import_names
         )
     else:
         module = _load_python_module(
@@ -513,7 +549,7 @@ def load_module_from_path(inference_state, file_io, import_names=None, is_packag
 def load_namespace_from_path(inference_state, folder_io):
     import_names, is_package = sys_path.transform_path_to_dotted(
         inference_state.get_sys_path(),
-        folder_io.path
+        Path(folder_io.path)
     )
     from jedi.inference.value.namespace import ImplicitNamespaceValue
     return ImplicitNamespaceValue(inference_state, import_names, [folder_io.path])

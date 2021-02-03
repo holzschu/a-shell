@@ -1,8 +1,8 @@
 import re
+from itertools import zip_longest
 
 from parso.python import tree
 
-from jedi._compatibility import zip_longest
 from jedi import debug
 from jedi.inference.utils import PushBackIterator
 from jedi.inference import analysis
@@ -124,7 +124,7 @@ def _parse_argument_clinic(string):
             allow_kwargs = True
 
 
-class _AbstractArgumentsMixin(object):
+class _AbstractArgumentsMixin:
     def unpack(self, funcdef=None):
         raise NotImplementedError
 
@@ -142,11 +142,8 @@ def unpack_arglist(arglist):
     if arglist is None:
         return
 
-    # Allow testlist here as well for Python2's class inheritance
-    # definitions.
-    if not (arglist.type in ('arglist', 'testlist') or (
-            # in python 3.5 **arg is an argument, not arglist
-            arglist.type == 'argument' and arglist.children[0] in ('*', '**'))):
+    if arglist.type != 'arglist' and not (
+            arglist.type == 'argument' and arglist.children[0] in ('*', '**')):
         yield 0, arglist
         return
 
@@ -189,16 +186,13 @@ class TreeArguments(AbstractArguments):
                 iterators = [_iterate_star_args(self.context, a, el, funcdef)
                              for a in arrays]
                 for values in list(zip_longest(*iterators)):
-                    # TODO zip_longest yields None, that means this would raise
-                    # an exception?
                     yield None, get_merged_lazy_value(
                         [v for v in values if v is not None]
                     )
             elif star_count == 2:
                 arrays = self.context.infer_node(el)
                 for dct in arrays:
-                    for key, values in _star_star_dict(self.context, dct, el, funcdef):
-                        yield key, values
+                    yield from _star_star_dict(self.context, dct, el, funcdef)
             else:
                 if el.type == 'argument':
                     c = el.children
@@ -221,8 +215,7 @@ class TreeArguments(AbstractArguments):
 
         # Reordering arguments is necessary, because star args sometimes appear
         # after named argument, but in the actual order it's prepended.
-        for named_arg in named_args:
-            yield named_arg
+        yield from named_args
 
     def _as_tree_tuple_objects(self):
         for star_count, argument in unpack_arglist(self.argument_node):
@@ -323,8 +316,7 @@ def _iterate_star_args(context, array, input_node, funcdef=None):
     except AttributeError:
         pass
     else:
-        for lazy_value in iter_():
-            yield lazy_value
+        yield from iter_()
 
 
 def _star_star_dict(context, array, input_node, funcdef):

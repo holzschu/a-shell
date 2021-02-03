@@ -17,7 +17,7 @@ def _create(inference_state, obj):
     )
 
 
-class NamespaceObject(object):
+class NamespaceObject:
     def __init__(self, dct):
         self.__dict__ = dct
 
@@ -29,7 +29,7 @@ class MixedTreeName(TreeNameDefinition):
         provided was already executed. In that case if something is not properly
         inferred, it should still infer from the variables it already knows.
         """
-        inferred = super(MixedTreeName, self).infer()
+        inferred = super().infer()
         if not inferred:
             for compiled_value in self.parent_context.mixed_values:
                 for f in compiled_value.get_filters():
@@ -47,7 +47,7 @@ class MixedParserTreeFilter(ParserTreeFilter):
 
 class MixedModuleContext(ModuleContext):
     def __init__(self, tree_module_value, namespaces):
-        super(MixedModuleContext, self).__init__(tree_module_value)
+        super().__init__(tree_module_value)
         self.mixed_values = [
             self._get_mixed_object(
                 _create(self.inference_state, NamespaceObject(n))
@@ -71,5 +71,4 @@ class MixedModuleContext(ModuleContext):
         )
 
         for mixed_object in self.mixed_values:
-            for filter in mixed_object.get_filters(until_position, origin_scope):
-                yield filter
+            yield from mixed_object.get_filters(until_position, origin_scope)

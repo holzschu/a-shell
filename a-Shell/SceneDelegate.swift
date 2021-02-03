@@ -935,11 +935,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     func executeCommand(command: String) {
         NSLog("executeCommand: \(command)")
+        // There are 2 commands that are called directly, before going to ios_system(), because they need to.
+        // We still allow them to be aliased.
         // We can't call exit through ios_system because it creates a new session
         // Also, we want to call it as soon as possible in case something went wrong
-        if (command == "exit") || (command.hasPrefix("exit ")) {
+        let arguments = command.components(separatedBy: " ")
+        let actualCommand = aliasedCommand(arguments[0])
+        if (actualCommand == "exit") {
             closeWindow()
-            // If we're here, closeWindow did not work. Clear screen:
+            // If we're here, closeWindow did not work. Clear window:
+            // Calling "exit(0)" here results in a major crash (I tried).
             let infoCommand = "window.term_.wipeContents() ; window.printedContent = ''; window.term_.io.print('" + self.escape + "[2J'); window.term_.io.print('" + self.escape + "[1;1H'); "
             self.webView?.evaluateJavaScript(infoCommand) { (result, error) in
                 if error != nil {
@@ -979,7 +984,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         // Can't create/close windows through ios_system, because it creates/closes a new session.
-        if (command == "newWindow") || (command.hasPrefix("newWindow ")) {
+        if (actualCommand == "newWindow") {
             let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.OpenDirectory")
             activity.userInfo!["url"] = URL(fileURLWithPath: FileManager().currentDirectoryPath)
             UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
@@ -1034,11 +1039,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // setlocale(LC_ALL, "UTF-8");
             let commands = command.components(separatedBy: "\n")
             for command in commands {
-                if (command == "exit") || (command.hasPrefix("exit ")) {
+                let arguments = command.components(separatedBy: " ")
+                let actualCommand = aliasedCommand(arguments[0])
+                if (actualCommand == "exit") {
                     self.closeWindow()
                     break // if "exit" didn't work, still don't execute the rest of the commands. 
                 }
-                if (command == "newWindow") || (command.hasPrefix("newWindow ")) {
+                if (actualCommand == "newWindow") {
                     self.executeCommand(command: command)
                     continue
                 }

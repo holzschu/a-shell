@@ -15,9 +15,10 @@ _MAX_BLOCK_SIZE = 20
 _MAX_INDENT_COUNT = 100
 ALLOWED_FUTURES = (
     'nested_scopes', 'generators', 'division', 'absolute_import',
-    'with_statement', 'print_function', 'unicode_literals',
+    'with_statement', 'print_function', 'unicode_literals', 'generator_stop',
 )
 _COMP_FOR_TYPES = ('comp_for', 'sync_comp_for')
+
 
 def _get_rhs_name(node, version):
     type_ = node.type
@@ -39,7 +40,7 @@ def _get_rhs_name(node, version):
         elif (
             first == "("
             and (second == ")"
-            or (len(node.children) == 3 and node.children[1].type == "testlist_comp"))
+                 or (len(node.children) == 3 and node.children[1].type == "testlist_comp"))
         ):
             return "tuple"
         elif first == "(":
@@ -79,8 +80,7 @@ def _get_rhs_name(node, version):
             elif trailer.children[0] == ".":
                 return "attribute"
     elif (
-        ("expr" in type_
-        and "star_expr" not in type_)  # is a substring
+        ("expr" in type_ and "star_expr" not in type_)  # is a substring
         or "_test" in type_
         or type_ in ("term", "factor")
     ):
@@ -91,7 +91,8 @@ def _get_rhs_name(node, version):
         return "tuple"
     elif type_ == "fstring":
         return "f-string expression"
-    return type_ # shouldn't reach here
+    return type_  # shouldn't reach here
+
 
 def _iter_stmts(scope):
     """
@@ -173,13 +174,11 @@ def _iter_definition_exprs_from_lists(exprlist):
             if child.children[0] == '(':
                 testlist_comp = child.children[1]
                 if testlist_comp.type == 'testlist_comp':
-                    for expr in _iter_definition_exprs_from_lists(testlist_comp):
-                        yield expr
+                    yield from _iter_definition_exprs_from_lists(testlist_comp)
                     return
                 else:
                     # It's a paren that doesn't do anything, like 1 + (1)
-                    for c in check_expr(testlist_comp):
-                        yield c
+                    yield from check_expr(testlist_comp)
                     return
             elif child.children[0] == '[':
                 yield testlist_comp
@@ -188,11 +187,9 @@ def _iter_definition_exprs_from_lists(exprlist):
 
     if exprlist.type in _STAR_EXPR_PARENTS:
         for child in exprlist.children[::2]:
-            for c in check_expr(child):  # Python 2 sucks
-                yield c
+            yield from check_expr(child)
     else:
-        for c in check_expr(exprlist):  # Python 2 sucks
-            yield c
+        yield from check_expr(exprlist)
 
 
 def _get_expr_stmt_definition_exprs(expr_stmt):
@@ -225,7 +222,7 @@ def _any_fstring_error(version, node):
         return search_ancestor(node, "fstring")
 
 
-class _Context(object):
+class _Context:
     def __init__(self, node, add_syntax_error, parent_context=None):
         self.node = node
         self.blocks = []
@@ -353,7 +350,7 @@ class ErrorFinder(Normalizer):
     Searches for errors in the syntax tree.
     """
     def __init__(self, *args, **kwargs):
-        super(ErrorFinder, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._error_dict = {}
         self.version = self.grammar.version_info
 
@@ -377,7 +374,7 @@ class ErrorFinder(Normalizer):
                 # might find errors in there that should be ignored, because
                 # the error node itself already shows that there's an issue.
                 return ''
-        return super(ErrorFinder, self).visit(node)
+        return super().visit(node)
 
     @contextmanager
     def visit_node(self, node):
@@ -424,7 +421,9 @@ class ErrorFinder(Normalizer):
                         message = 'invalid syntax'
                         if (
                             self.version >= (3, 9)
-                            and leaf.value in _get_token_collection(self.version).always_break_tokens
+                            and leaf.value in _get_token_collection(
+                                self.version
+                            ).always_break_tokens
                         ):
                             message = "f-string: " + message
                     else:
@@ -440,7 +439,7 @@ class ErrorFinder(Normalizer):
                 self.context = self.context.add_context(parent)
 
         # The rest is rule based.
-        return super(ErrorFinder, self).visit_leaf(leaf)
+        return super().visit_leaf(leaf)
 
     def _add_indentation_error(self, spacing, message):
         self.add_issue(spacing, 903, "IndentationError: " + message)
@@ -466,7 +465,7 @@ class IndentationRule(Rule):
     code = 903
 
     def _get_message(self, message, node):
-        message = super(IndentationRule, self)._get_message(message, node)
+        message = super()._get_message(message, node)
         return "IndentationError: " + message
 
 
@@ -491,7 +490,7 @@ class SyntaxRule(Rule):
     code = 901
 
     def _get_message(self, message, node):
-        message = super(SyntaxRule, self)._get_message(message, node)
+        message = super()._get_message(message, node)
         if (
             "f-string" not in message
             and _any_fstring_error(self._normalizer.version, node)
@@ -589,9 +588,6 @@ class _NameChecks(SyntaxRule):
 
         if leaf.value == '__debug__' and leaf.is_definition():
             return True
-        if leaf.value == 'None' and self._normalizer.version < (3, 0) \
-                and leaf.is_definition():
-            self.add_issue(leaf, message=self.message_none)
 
 
 @ErrorFinder.register_rule(type='string')
@@ -601,7 +597,6 @@ class _StringChecks(SyntaxRule):
     def is_issue(self, leaf):
         string_prefix = leaf.string_prefix.lower()
         if 'b' in string_prefix \
-                and self._normalizer.version >= (3, 0) \
                 and any(c for c in leaf.value if ord(c) > 127):
             # b'ä'
             return True
@@ -609,14 +604,9 @@ class _StringChecks(SyntaxRule):
         if 'r' not in string_prefix:
             # Raw strings don't need to be checked if they have proper
             # escaping.
-            is_bytes = self._normalizer.version < (3, 0)
-            if 'b' in string_prefix:
-                is_bytes = True
-            if 'u' in string_prefix:
-                is_bytes = False
 
             payload = leaf._get_payload()
-            if is_bytes:
+            if 'b' in string_prefix:
                 payload = payload.encode('utf-8')
                 func = codecs.escape_decode
             else:
@@ -675,10 +665,6 @@ class _ReturnAndYieldChecks(SyntaxRule):
                 and any(self._normalizer.context.node.iter_yield_exprs()):
             if leaf.value == 'return' and leaf.parent.type == 'return_stmt':
                 return True
-            elif leaf.value == 'yield' \
-                    and leaf.get_next_leaf() != 'from' \
-                    and self._normalizer.version == (3, 5):
-                self.add_issue(self.get_node(leaf), message=self.message_async_yield)
 
 
 @ErrorFinder.register_rule(type='strings')
@@ -693,12 +679,10 @@ class _BytesAndStringMix(SyntaxRule):
 
     def is_issue(self, node):
         first = node.children[0]
-        # In Python 2 it's allowed to mix bytes and unicode.
-        if self._normalizer.version >= (3, 0):
-            first_is_bytes = self._is_bytes_literal(first)
-            for string in node.children[1:]:
-                if first_is_bytes != self._is_bytes_literal(string):
-                    return True
+        first_is_bytes = self._is_bytes_literal(first)
+        for string in node.children[1:]:
+            if first_is_bytes != self._is_bytes_literal(string):
+                return True
 
 
 @ErrorFinder.register_rule(type='import_as_names')
@@ -731,8 +715,6 @@ class _FutureImportRule(SyntaxRule):
             for from_name, future_name in node.get_paths():
                 name = future_name.value
                 allowed_futures = list(ALLOWED_FUTURES)
-                if self._normalizer.version >= (3, 5):
-                    allowed_futures.append('generator_stop')
                 if self._normalizer.version >= (3, 7):
                     allowed_futures.append('annotations')
                 if name == 'braces':
@@ -755,19 +737,6 @@ class _StarExprRule(SyntaxRule):
             # [*[] for a in [1]]
             if node.parent.children[1].type in _COMP_FOR_TYPES:
                 self.add_issue(node, message=self.message_iterable_unpacking)
-        if self._normalizer.version <= (3, 4):
-            n = search_ancestor(node, 'for_stmt', 'expr_stmt')
-            found_definition = False
-            if n is not None:
-                if n.type == 'expr_stmt':
-                    exprs = _get_expr_stmt_definition_exprs(n)
-                else:
-                    exprs = _get_for_stmt_definition_exprs(n)
-                if node in exprs:
-                    found_definition = True
-
-            if not found_definition:
-                self.add_issue(node, message=self.message_assignment)
 
 
 @ErrorFinder.register_rule(types=_STAR_EXPR_PARENTS)
@@ -892,20 +861,8 @@ class _ArglistRule(SyntaxRule):
         arg_set = set()
         kw_only = False
         kw_unpacking_only = False
-        is_old_starred = False
-        # In python 3 this would be a bit easier (stars are part of
-        # argument), but we have to understand both.
         for argument in node.children:
             if argument == ',':
-                continue
-
-            if argument in ('*', '**'):
-                # Python < 3.5 has the order engraved in the grammar
-                # file.  No need to do anything here.
-                is_old_starred = True
-                continue
-            if is_old_starred:
-                is_old_starred = False
                 continue
 
             if argument.type == 'argument':
@@ -1000,7 +957,11 @@ class _FStringRule(SyntaxRule):
         if '\\' in expr.get_code():
             self.add_issue(expr, message=self.message_expr)
 
-        conversion = fstring_expr.children[2]
+        children_2 = fstring_expr.children[2]
+        if children_2.type == 'operator' and children_2.value == '=':
+            conversion = fstring_expr.children[3]
+        else:
+            conversion = children_2
         if conversion.type == 'fstring_conversion':
             name = conversion.children[1]
             if name.value not in ('s', 'r', 'a'):
@@ -1149,6 +1110,7 @@ class _CompForRule(_CheckAssignmentRule):
 class _ExprStmtRule(_CheckAssignmentRule):
     message = "illegal expression for augmented assignment"
     extended_message = "'{target}' is an " + message
+
     def is_issue(self, node):
         augassign = node.children[1]
         is_aug_assign = augassign != '=' and augassign.type != 'annassign'
@@ -1177,6 +1139,7 @@ class _ExprStmtRule(_CheckAssignmentRule):
                         target=_get_rhs_name(node.children[0], self._normalizer.version)
                     ),
                 )
+
 
 @ErrorFinder.register_rule(type='with_item')
 class _WithItemRule(_CheckAssignmentRule):

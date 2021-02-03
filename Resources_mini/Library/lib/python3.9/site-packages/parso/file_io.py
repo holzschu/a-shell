@@ -1,9 +1,12 @@
 import os
-from parso._compatibility import FileNotFoundError
+from pathlib import Path
+from typing import Union
 
 
-class FileIO(object):
-    def __init__(self, path):
+class FileIO:
+    def __init__(self, path: Union[os.PathLike, str]):
+        if isinstance(path, str):
+            path = Path(path)
         self.path = path
 
     def read(self):  # Returns bytes/str
@@ -19,20 +22,8 @@ class FileIO(object):
         """
         try:
             return os.path.getmtime(self.path)
-        except OSError:
-            # Might raise FileNotFoundError, OSError for Python 2
-            return None
-
-    def _touch(self):
-        try:
-            os.utime(self.path, None)
         except FileNotFoundError:
-            try:
-                file = open(self.path, 'a')
-                file.close()
-            except (OSError, IOError):  # TODO Maybe log this?
-                return False
-        return True
+            return None
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, self.path)
@@ -40,7 +31,7 @@ class FileIO(object):
 
 class KnownContentFileIO(FileIO):
     def __init__(self, path, content):
-        super(KnownContentFileIO, self).__init__(path)
+        super().__init__(path)
         self._content = content
 
     def read(self):

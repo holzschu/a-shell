@@ -204,7 +204,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         for library in libraries {
             let libraryFileURL = libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/" + library + ".a")
             if (FileManager().fileExists(atPath: libraryFileURL.path)) {
-                try! FileManager().removeItem(at: libraryFileURL)
+                do { try FileManager().removeItem(at: libraryFileURL) }
+                catch { NSLog("Can't remove \(libraryFileURL.path)")}
             }
             var pid = ios_fork()
             ios_system("ar cq " + libraryFileURL.path + " " + rootDir + "/usr/src/" + library + "/*")

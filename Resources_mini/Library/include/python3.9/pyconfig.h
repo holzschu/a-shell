@@ -779,6 +779,9 @@
 /* Define if you have the 'prlimit' functions. */
 /* #undef HAVE_PRLIMIT */
 
+/* Define if you have the '_dyld_shared_cache_contains_path' function. */
+#define HAVE_DYLD_SHARED_CACHE_CONTAINS_PATH 1
+
 /* Define to 1 if you have the <process.h> header file. */
 /* #undef HAVE_PROCESS_H */
 
@@ -1270,7 +1273,7 @@
 /* Define if you have a useable wchar_t type defined in wchar.h; useable means
    wchar_t must be an unsigned type with at least 16 bits. (see
    Include/unicodeobject.h). */
-#define HAVE_USABLE_WCHAR_T 1
+/* #undef HAVE_USABLE_WCHAR_T */
 
 /* Define to 1 if you have the <util.h> header file. */
 #define HAVE_UTIL_H 1
@@ -1378,7 +1381,7 @@
 /* #undef PTHREAD_KEY_T_IS_COMPATIBLE_WITH_INT */
 
 /* Defined if PTHREAD_SCOPE_SYSTEM supported. */
-/* #undef PTHREAD_SYSTEM_SCHED_SUPPORTED */
+#define PTHREAD_SYSTEM_SCHED_SUPPORTED 1
 
 /* Define as the preferred size in bits of long digits */
 /* #undef PYLONG_BITS_IN_DIGIT */
@@ -1422,7 +1425,7 @@
 /* #undef SHM_NEEDS_LIBRT */
 
 /* Define if i>>j for signed int i does not extend the sign bit when i < 0 */
-#define SIGNED_RIGHT_SHIFT_ZERO_FILLS 1
+/* #undef SIGNED_RIGHT_SHIFT_ZERO_FILLS */
 
 /* The size of `double', as computed by sizeof. */
 #define SIZEOF_DOUBLE 8

@@ -1,7 +1,5 @@
-import sys
 from abc import abstractmethod, abstractproperty
 
-from parso._compatibility import utf8_repr, encoding
 from parso.utils import split_lines
 
 
@@ -20,12 +18,12 @@ def search_ancestor(node, *node_types):
             return node
 
 
-class NodeOrLeaf(object):
+class NodeOrLeaf:
     """
     The base class for nodes and leaves.
     """
     __slots__ = ()
-    type = None
+    type: str
     '''
     The type is a string that typically matches the types of the grammar file.
     '''
@@ -238,7 +236,6 @@ class Leaf(NodeOrLeaf):
             end_pos_column = len(lines[-1])
         return end_pos_line, end_pos_column
 
-    @utf8_repr
     def __repr__(self):
         value = self.value
         if not value:
@@ -250,7 +247,7 @@ class TypedLeaf(Leaf):
     __slots__ = ('type',)
 
     def __init__(self, type, value, start_pos, prefix=''):
-        super(TypedLeaf, self).__init__(value, start_pos, prefix)
+        super().__init__(value, start_pos, prefix)
         self.type = type
 
 
@@ -260,7 +257,6 @@ class BaseNode(NodeOrLeaf):
     A node has children, a type and possibly a parent node.
     """
     __slots__ = ('children', 'parent')
-    type = None
 
     def __init__(self, children):
         self.children = children
@@ -315,7 +311,6 @@ class BaseNode(NodeOrLeaf):
                 except AttributeError:
                     return element
 
-
             index = int((lower + upper) / 2)
             element = self.children[index]
             if position <= element.end_pos:
@@ -333,11 +328,8 @@ class BaseNode(NodeOrLeaf):
     def get_last_leaf(self):
         return self.children[-1].get_last_leaf()
 
-    @utf8_repr
     def __repr__(self):
         code = self.get_code().replace('\n', ' ').replace('\r', ' ').strip()
-        if not sys.version_info.major >= 3:
-            code = code.encode(encoding, 'replace')
         return "<%s: %s@%s,%s>" % \
             (type(self).__name__, code, self.start_pos[0], self.start_pos[1])
 
@@ -347,7 +339,7 @@ class Node(BaseNode):
     __slots__ = ('type',)
 
     def __init__(self, type, children):
-        super(Node, self).__init__(children)
+        super().__init__(children)
         self.type = type
 
     def __repr__(self):
@@ -373,7 +365,7 @@ class ErrorLeaf(Leaf):
     type = 'error_leaf'
 
     def __init__(self, token_type, value, start_pos, prefix=''):
-        super(ErrorLeaf, self).__init__(value, start_pos, prefix)
+        super().__init__(value, start_pos, prefix)
         self.token_type = token_type
 
     def __repr__(self):

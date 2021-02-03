@@ -1,9 +1,12 @@
 import hashlib
 import os
+from typing import Generic, TypeVar, Union, Dict, Optional, Any
+from pathlib import Path
 
-from parso._compatibility import FileNotFoundError, is_pypy
+from parso._compatibility import is_pypy
 from parso.pgen2 import generate_grammar
-from parso.utils import split_lines, python_bytes_to_unicode, parse_version_string
+from parso.utils import split_lines, python_bytes_to_unicode, \
+    PythonVersionInfo, parse_version_string
 from parso.python.diff import DiffParser
 from parso.python.tokenize import tokenize_lines, tokenize
 from parso.python.token import PythonTokenTypes
@@ -13,23 +16,27 @@ from parso.python.parser import Parser as PythonParser
 from parso.python.errors import ErrorFinderConfig
 from parso.python import pep8
 from parso.file_io import FileIO, KnownContentFileIO
-from parso.normalizer import RefactoringNormalizer
+from parso.normalizer import RefactoringNormalizer, NormalizerConfig
 
-_loaded_grammars = {}
+_loaded_grammars: Dict[str, 'Grammar'] = {}
+
+_NodeT = TypeVar("_NodeT")
 
 
-class Grammar(object):
+class Grammar(Generic[_NodeT]):
     """
     :py:func:`parso.load_grammar` returns instances of this class.
 
     Creating custom none-python grammars by calling this is not supported, yet.
-    """
-    #:param text: A BNF representation of your grammar.
-    _error_normalizer_config = None
-    _token_namespace = None
-    _default_normalizer_config = pep8.PEP8NormalizerConfig()
 
-    def __init__(self, text, tokenizer, parser=BaseParser, diff_parser=None):
+    :param text: A BNF representation of your grammar.
+    """
+    _start_nonterminal: str
+    _error_normalizer_config: Optional[ErrorFinderConfig] = None
+    _token_namespace: Any = None
+    _default_normalizer_config: NormalizerConfig = pep8.PEP8NormalizerConfig()
+
+    def __init__(self, text: str, *, tokenizer, parser=BaseParser, diff_parser=None):
         self._pgen_grammar = generate_grammar(
             text,
             token_namespace=self._get_token_namespace()
@@ -39,7 +46,16 @@ class Grammar(object):
         self._diff_parser = diff_parser
         self._hashed = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
-    def parse(self, code=None, **kwargs):
+    def parse(self,
+              code: Union[str, bytes] = None,
+              *,
+              error_recovery=True,
+              path: Union[os.PathLike, str] = None,
+              start_symbol: str = None,
+              cache=False,
+              diff_cache=False,
+              cache_path: Union[os.PathLike, str] = None,
+              file_io: FileIO = None) -> _NodeT:
         """
         If you want to parse a Python file you want to start here, most likely.
 
@@ -74,21 +90,13 @@ class Grammar(object):
         :return: A subclass of :py:class:`parso.tree.NodeOrLeaf`. Typically a
             :py:class:`parso.python.tree.Module`.
         """
-        if 'start_pos' in kwargs:
-            raise TypeError("parse() got an unexpected keyword argument.")
-        return self._parse(code=code, **kwargs)
-
-    def _parse(self, code=None, error_recovery=True, path=None,
-               start_symbol=None, cache=False, diff_cache=False,
-               cache_path=None, file_io=None, start_pos=(1, 0)):
-        """
-        Wanted python3.5 * operator and keyword only arguments. Therefore just
-        wrap it all.
-        start_pos here is just a parameter internally used. Might be public
-        sometime in the future.
-        """
         if code is None and path is None and file_io is None:
             raise TypeError("Please provide either code or a path.")
+
+        if isinstance(path, str):
+            path = Path(path)
+        if isinstance(cache_path, str):
+            cache_path = Path(cache_path)
 
         if start_symbol is None:
             start_symbol = self._start_nonterminal
@@ -98,14 +106,14 @@ class Grammar(object):
 
         if file_io is None:
             if code is None:
-                file_io = FileIO(path)
+                file_io = FileIO(path)  # type: ignore
             else:
                 file_io = KnownContentFileIO(path, code)
 
         if cache and file_io.path is not None:
             module_node = load_module(self._hashed, file_io, cache_path=cache_path)
             if module_node is not None:
-                return module_node
+                return module_node  # type: ignore
 
         if code is None:
             code = file_io.read()
@@ -124,7 +132,7 @@ class Grammar(object):
                 module_node = module_cache_item.node
                 old_lines = module_cache_item.lines
                 if old_lines == lines:
-                    return module_node
+                    return module_node  # type: ignore
 
                 new_node = self._diff_parser(
                     self._pgen_grammar, self._tokenizer, module_node
@@ -133,12 +141,12 @@ class Grammar(object):
                     new_lines=lines
                 )
                 try_to_save_module(self._hashed, file_io, new_node, lines,
-                            # Never pickle in pypy, it's slow as hell.
-                            pickling=cache and not is_pypy,
-                            cache_path=cache_path)
-                return new_node
+                                   # Never pickle in pypy, it's slow as hell.
+                                   pickling=cache and not is_pypy,
+                                   cache_path=cache_path)
+                return new_node  # type: ignore
 
-        tokens = self._tokenizer(lines, start_pos=start_pos)
+        tokens = self._tokenizer(lines)
 
         p = self._parser(
             self._pgen_grammar,
@@ -149,10 +157,10 @@ class Grammar(object):
 
         if cache or diff_cache:
             try_to_save_module(self._hashed, file_io, root_node, lines,
-                        # Never pickle in pypy, it's slow as hell.
-                        pickling=cache and not is_pypy,
-                        cache_path=cache_path)
-        return root_node
+                               # Never pickle in pypy, it's slow as hell.
+                               pickling=cache and not is_pypy,
+                               cache_path=cache_path)
+        return root_node  # type: ignore
 
     def _get_token_namespace(self):
         ns = self._token_namespace
@@ -206,8 +214,8 @@ class PythonGrammar(Grammar):
     _token_namespace = PythonTokenTypes
     _start_nonterminal = 'file_input'
 
-    def __init__(self, version_info, bnf_text):
-        super(PythonGrammar, self).__init__(
+    def __init__(self, version_info: PythonVersionInfo, bnf_text: str):
+        super().__init__(
             bnf_text,
             tokenizer=self._tokenize_lines,
             parser=PythonParser,
@@ -216,14 +224,14 @@ class PythonGrammar(Grammar):
         self.version_info = version_info
 
     def _tokenize_lines(self, lines, **kwargs):
-        return tokenize_lines(lines, self.version_info, **kwargs)
+        return tokenize_lines(lines, version_info=self.version_info, **kwargs)
 
     def _tokenize(self, code):
         # Used by Jedi.
-        return tokenize(code, self.version_info)
+        return tokenize(code, version_info=self.version_info)
 
 
-def load_grammar(**kwargs):
+def load_grammar(*, version: str = None, path: str = None):
     """
     Loads a :py:class:`parso.Grammar`. The default version is the current Python
     version.
@@ -231,30 +239,26 @@ def load_grammar(**kwargs):
     :param str version: A python version string, e.g. ``version='3.8'``.
     :param str path: A path to a grammar file
     """
-    def load_grammar(language='python', version=None, path=None):
-        if language == 'python':
-            version_info = parse_version_string(version)
+    version_info = parse_version_string(version)
 
-            file = path or os.path.join(
-                'python',
-                'grammar%s%s.txt' % (version_info.major, version_info.minor)
+    file = path or os.path.join(
+        'python',
+        'grammar%s%s.txt' % (version_info.major, version_info.minor)
+    )
+
+    global _loaded_grammars
+    path = os.path.join(os.path.dirname(__file__), file)
+    try:
+        return _loaded_grammars[path]
+    except KeyError:
+        try:
+            with open(path) as f:
+                bnf_text = f.read()
+
+            grammar = PythonGrammar(version_info, bnf_text)
+            return _loaded_grammars.setdefault(path, grammar)
+        except FileNotFoundError:
+            message = "Python version %s.%s is currently not supported." % (
+                version_info.major, version_info.minor
             )
-
-            global _loaded_grammars
-            path = os.path.join(os.path.dirname(__file__), file)
-            try:
-                return _loaded_grammars[path]
-            except KeyError:
-                try:
-                    with open(path) as f:
-                        bnf_text = f.read()
-
-                    grammar = PythonGrammar(version_info, bnf_text)
-                    return _loaded_grammars.setdefault(path, grammar)
-                except FileNotFoundError:
-                    message = "Python version %s.%s is currently not supported." % (version_info.major, version_info.minor)
-                    raise NotImplementedError(message)
-        else:
-            raise NotImplementedError("No support for language %s." % language)
-
-    return load_grammar(**kwargs)
+            raise NotImplementedError(message)

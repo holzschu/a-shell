@@ -3,23 +3,25 @@ Filters are objects that you can use to filter names in different scopes. They
 are needed for name resolution.
 """
 from abc import abstractmethod
+from typing import List, MutableMapping, Type
 import weakref
 
 from parso.tree import search_ancestor
+from parso.python.tree import Name, UsedNamesMapping
 
-from jedi._compatibility import use_metaclass
 from jedi.inference import flow_analysis
 from jedi.inference.base_value import ValueSet, ValueWrapper, \
     LazyValueWrapper
 from jedi.parser_utils import get_cached_parent_scope
 from jedi.inference.utils import to_list
 from jedi.inference.names import TreeNameDefinition, ParamName, \
-    AnonymousParamName, AbstractNameDefinition
+    AnonymousParamName, AbstractNameDefinition, NameWrapper
 
+_definition_name_cache: MutableMapping[UsedNamesMapping, List[Name]]
 _definition_name_cache = weakref.WeakKeyDictionary()
 
 
-class AbstractFilter(object):
+class AbstractFilter:
     _until_position = None
 
     def _filter(self, names):
@@ -36,8 +38,8 @@ class AbstractFilter(object):
         raise NotImplementedError
 
 
-class FilterWrapper(object):
-    name_wrapper_class = None
+class FilterWrapper:
+    name_wrapper_class: Type[NameWrapper]
 
     def __init__(self, wrapped_filter):
         self._wrapped_filter = wrapped_filter
@@ -109,13 +111,13 @@ class ParserTreeFilter(AbstractUsedNamesFilter):
         """
         if node_context is None:
             node_context = parent_context
-        super(ParserTreeFilter, self).__init__(parent_context, node_context.tree_node)
+        super().__init__(parent_context, node_context.tree_node)
         self._node_context = node_context
         self._origin_scope = origin_scope
         self._until_position = until_position
 
     def _filter(self, names):
-        names = super(ParserTreeFilter, self)._filter(names)
+        names = super()._filter(names)
         names = [n for n in names if self._is_name_reachable(n)]
         return list(self._check_flows(names))
 
@@ -143,7 +145,7 @@ class ParserTreeFilter(AbstractUsedNamesFilter):
 
 class _FunctionExecutionFilter(ParserTreeFilter):
     def __init__(self, parent_context, function_value, until_position, origin_scope):
-        super(_FunctionExecutionFilter, self).__init__(
+        super().__init__(
             parent_context,
             until_position=until_position,
             origin_scope=origin_scope,
@@ -167,9 +169,9 @@ class _FunctionExecutionFilter(ParserTreeFilter):
 
 
 class FunctionExecutionFilter(_FunctionExecutionFilter):
-    def __init__(self, *args, **kwargs):
-        self._arguments = kwargs.pop('arguments')  # Python 2
-        super(FunctionExecutionFilter, self).__init__(*args, **kwargs)
+    def __init__(self, *args, arguments, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._arguments = arguments
 
     def _convert_param(self, param, name):
         return ParamName(self._function_value, name, self._arguments)
@@ -230,7 +232,7 @@ class DictFilter(AbstractFilter):
         return '<%s: for {%s}>' % (self.__class__.__name__, keys)
 
 
-class MergedFilter(object):
+class MergedFilter:
     def __init__(self, *filters):
         self._filters = filters
 
@@ -246,10 +248,10 @@ class MergedFilter(object):
 
 class _BuiltinMappedMethod(ValueWrapper):
     """``Generator.__next__`` ``dict.values`` methods and so on."""
-    api_type = u'function'
+    api_type = 'function'
 
     def __init__(self, value, method, builtin_func):
-        super(_BuiltinMappedMethod, self).__init__(builtin_func)
+        super().__init__(builtin_func)
         self._value = value
         self._method = method
 
@@ -264,14 +266,9 @@ class SpecialMethodFilter(DictFilter):
     classes like Generator (for __next__, etc).
     """
     class SpecialMethodName(AbstractNameDefinition):
-        api_type = u'function'
+        api_type = 'function'
 
-        def __init__(self, parent_context, string_name, value, builtin_value):
-            callable_, python_version = value
-            if python_version is not None and \
-                    python_version != parent_context.inference_state.environment.version_info.major:
-                raise KeyError
-
+        def __init__(self, parent_context, string_name, callable_, builtin_value):
             self.parent_context = parent_context
             self.string_name = string_name
             self._callable = callable_
@@ -293,7 +290,7 @@ class SpecialMethodFilter(DictFilter):
             ])
 
     def __init__(self, value, dct, builtin_value):
-        super(SpecialMethodFilter, self).__init__(dct)
+        super().__init__(dct)
         self.value = value
         self._builtin_value = builtin_value
         """
@@ -309,7 +306,7 @@ class SpecialMethodFilter(DictFilter):
 
 class _OverwriteMeta(type):
     def __init__(cls, name, bases, dct):
-        super(_OverwriteMeta, cls).__init__(name, bases, dct)
+        super().__init__(name, bases, dct)
 
         base_dct = {}
         for base_cls in reversed(cls.__bases__):
@@ -326,28 +323,26 @@ class _OverwriteMeta(type):
         cls.overwritten_methods = base_dct
 
 
-class _AttributeOverwriteMixin(object):
+class _AttributeOverwriteMixin:
     def get_filters(self, *args, **kwargs):
         yield SpecialMethodFilter(self, self.overwritten_methods, self._wrapped_value)
-
-        for filter in self._wrapped_value.get_filters(*args, **kwargs):
-            yield filter
+        yield from self._wrapped_value.get_filters(*args, **kwargs)
 
 
-class LazyAttributeOverwrite(use_metaclass(_OverwriteMeta, _AttributeOverwriteMixin,
-                                           LazyValueWrapper)):
+class LazyAttributeOverwrite(_AttributeOverwriteMixin, LazyValueWrapper,
+                             metaclass=_OverwriteMeta):
     def __init__(self, inference_state):
         self.inference_state = inference_state
 
 
-class AttributeOverwrite(use_metaclass(_OverwriteMeta, _AttributeOverwriteMixin,
-                                       ValueWrapper)):
+class AttributeOverwrite(_AttributeOverwriteMixin, ValueWrapper,
+                         metaclass=_OverwriteMeta):
     pass
 
 
-def publish_method(method_name, python_version_match=None):
+def publish_method(method_name):
     def decorator(func):
         dct = func.__dict__.setdefault('registered_overwritten_methods', {})
-        dct[method_name] = func, python_version_match
+        dct[method_name] = func
         return func
     return decorator

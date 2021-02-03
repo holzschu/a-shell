@@ -5,17 +5,11 @@ import hashlib
 import gc
 import shutil
 import platform
-import errno
 import logging
 import warnings
-
-try:
-    import cPickle as pickle
-except:
-    import pickle
-
-from parso._compatibility import FileNotFoundError, PermissionError, scandir
-from parso.file_io import FileIO
+import pickle
+from pathlib import Path
+from typing import Dict, Any
 
 LOG = logging.getLogger(__name__)
 
@@ -64,21 +58,19 @@ _VERSION_TAG = '%s-%s%s-%s' % (
 """
 Short name for distinguish Python implementations and versions.
 
-It's like `sys.implementation.cache_tag` but for Python2
-we generate something similar.  See:
-http://docs.python.org/3/library/sys.html#sys.implementation
+It's a bit similar to `sys.implementation.cache_tag`.
+See: http://docs.python.org/3/library/sys.html#sys.implementation
 """
 
 
 def _get_default_cache_path():
     if platform.system().lower() == 'windows':
-        dir_ = os.path.join(os.getenv('LOCALAPPDATA')
-                            or os.path.expanduser('~'), 'Parso', 'Parso')
+        dir_ = Path(os.getenv('LOCALAPPDATA') or '~', 'Parso', 'Parso')
     elif platform.system().lower() == 'darwin':
-        dir_ = os.path.join('~', 'Library', 'Caches', 'Parso')
+        dir_ = Path('~', 'Library', 'Caches', 'Parso')
     else:
-        dir_ = os.path.join(os.getenv('XDG_CACHE_HOME') or '~/.cache', 'parso')
-    return os.path.expanduser(dir_)
+        dir_ = Path(os.getenv('XDG_CACHE_HOME') or '~/.cache', 'parso')
+    return dir_.expanduser()
 
 
 _default_cache_path = _get_default_cache_path()
@@ -93,21 +85,22 @@ On Linux, if environment variable ``$XDG_CACHE_HOME`` is set,
 
 _CACHE_CLEAR_THRESHOLD = 60 * 60 * 24
 
-def _get_cache_clear_lock(cache_path = None):
+
+def _get_cache_clear_lock_path(cache_path=None):
     """
     The path where the cache lock is stored.
 
     Cache lock will prevent continous cache clearing and only allow garbage
     collection once a day (can be configured in _CACHE_CLEAR_THRESHOLD).
     """
-    cache_path = cache_path or _get_default_cache_path()
-    return FileIO(os.path.join(cache_path, "PARSO-CACHE-LOCK"))
+    cache_path = cache_path or _default_cache_path
+    return cache_path.joinpath("PARSO-CACHE-LOCK")
 
 
-parser_cache = {}
+parser_cache: Dict[str, Any] = {}
 
 
-class _NodeCacheItem(object):
+class _NodeCacheItem:
     def __init__(self, node, lines, change_time=None):
         self.node = node
         self.lines = lines
@@ -142,16 +135,9 @@ def load_module(hashed_grammar, file_io, cache_path=None):
 def _load_from_file_system(hashed_grammar, path, p_time, cache_path=None):
     cache_path = _get_hashed_path(hashed_grammar, path, cache_path=cache_path)
     try:
-        try:
-            if p_time > os.path.getmtime(cache_path):
-                # Cache is outdated
-                return None
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                # In Python 2 instead of an IOError here we get an OSError.
-                raise FileNotFoundError
-            else:
-                raise
+        if p_time > os.path.getmtime(cache_path):
+            # Cache is outdated
+            return None
 
         with open(cache_path, 'rb') as f:
             gc.disable()
@@ -225,52 +211,65 @@ def clear_inactive_cache(
     inactivity_threshold=_CACHED_FILE_MAXIMUM_SURVIVAL,
 ):
     if cache_path is None:
-        cache_path = _get_default_cache_path()
-    if not os.path.exists(cache_path):
+        cache_path = _default_cache_path
+    if not cache_path.exists():
         return False
-    for version_path in os.listdir(cache_path):
-        version_path = os.path.join(cache_path, version_path)
-        if not os.path.isdir(version_path):
+    for dirname in os.listdir(cache_path):
+        version_path = cache_path.joinpath(dirname)
+        if not version_path.is_dir():
             continue
-        for file in scandir(version_path):
-            if (
-                file.stat().st_atime + _CACHED_FILE_MAXIMUM_SURVIVAL
-                <= time.time()
-            ):
+        for file in os.scandir(version_path):
+            if file.stat().st_atime + _CACHED_FILE_MAXIMUM_SURVIVAL <= time.time():
                 try:
                     os.remove(file.path)
-                except OSError: # silently ignore all failures
+                except OSError:  # silently ignore all failures
                     continue
     else:
         return True
 
 
-def _remove_cache_and_update_lock(cache_path = None):
-    lock = _get_cache_clear_lock(cache_path=cache_path)
-    clear_lock_time = lock.get_last_modified()
+def _touch(path):
+    try:
+        os.utime(path, None)
+    except FileNotFoundError:
+        try:
+            file = open(path, 'a')
+            file.close()
+        except (OSError, IOError):  # TODO Maybe log this?
+            return False
+    return True
+
+
+def _remove_cache_and_update_lock(cache_path=None):
+    lock_path = _get_cache_clear_lock_path(cache_path=cache_path)
+    try:
+        clear_lock_time = os.path.getmtime(lock_path)
+    except FileNotFoundError:
+        clear_lock_time = None
     if (
-        clear_lock_time is None # first time
+        clear_lock_time is None  # first time
         or clear_lock_time + _CACHE_CLEAR_THRESHOLD <= time.time()
     ):
-        if not lock._touch():
+        if not _touch(lock_path):
             # First make sure that as few as possible other cleanup jobs also
             # get started. There is still a race condition but it's probably
             # not a big problem.
             return False
 
-        clear_inactive_cache(cache_path = cache_path)
+        clear_inactive_cache(cache_path=cache_path)
+
 
 def _get_hashed_path(hashed_grammar, path, cache_path=None):
     directory = _get_cache_directory_path(cache_path=cache_path)
 
-    file_hash = hashlib.sha256(path.encode("utf-8")).hexdigest()
+    file_hash = hashlib.sha256(str(path).encode("utf-8")).hexdigest()
     return os.path.join(directory, '%s-%s.pkl' % (hashed_grammar, file_hash))
 
 
 def _get_cache_directory_path(cache_path=None):
     if cache_path is None:
         cache_path = _default_cache_path
-    directory = os.path.join(cache_path, _VERSION_TAG)
-    if not os.path.exists(directory):
+    directory = cache_path.joinpath(_VERSION_TAG)
+    if not directory.exists():
         os.makedirs(directory)
     return directory

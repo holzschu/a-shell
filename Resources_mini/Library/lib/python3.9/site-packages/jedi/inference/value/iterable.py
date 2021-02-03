@@ -2,9 +2,6 @@
 Contains all classes and functions to deal with lists, dicts, generators and
 iterators in general.
 """
-import sys
-
-from jedi._compatibility import force_unicode, is_py3
 from jedi.inference import compiled
 from jedi.inference import analysis
 from jedi.inference.lazy_value import LazyKnownValue, LazyKnownValues, \
@@ -22,12 +19,12 @@ from jedi.inference.context import CompForContext
 from jedi.inference.value.dynamic_arrays import check_array_additions
 
 
-class IterableMixin(object):
+class IterableMixin:
     def py__next__(self, contextualized_node=None):
         return self.py__iter__(contextualized_node)
 
     def py__stop_iteration_returns(self):
-        return ValueSet([compiled.builtin_from_name(self.inference_state, u'None')])
+        return ValueSet([compiled.builtin_from_name(self.inference_state, 'None')])
 
     # At the moment, safe values are simple values like "foo", 1 and not
     # lists/dicts. Therefore as a small speed optimization we can just do the
@@ -35,14 +32,7 @@ class IterableMixin(object):
     # doing this in the end as well.
     # This mostly speeds up patterns like `sys.version_info >= (3, 0)` in
     # typeshed.
-    if sys.version_info[0] == 2:
-        # Python 2...........
-        def get_safe_value(self, default=sentinel):
-            if default is sentinel:
-                raise ValueError("There exists no safe value for value %s" % self)
-            return default
-    else:
-        get_safe_value = Value.get_safe_value
+    get_safe_value = Value.get_safe_value
 
 
 class GeneratorBase(LazyAttributeOverwrite, IterableMixin):
@@ -64,13 +54,12 @@ class GeneratorBase(LazyAttributeOverwrite, IterableMixin):
         return ValueSet([self])
 
     @publish_method('send')
-    @publish_method('next', python_version_match=2)
-    @publish_method('__next__', python_version_match=3)
+    @publish_method('__next__')
     def _next(self, arguments):
         return ValueSet.from_sets(lazy_value.infer() for lazy_value in self.py__iter__())
 
     def py__stop_iteration_returns(self):
-        return ValueSet([compiled.builtin_from_name(self.inference_state, u'None')])
+        return ValueSet([compiled.builtin_from_name(self.inference_state, 'None')])
 
     @property
     def name(self):
@@ -86,7 +75,7 @@ class GeneratorBase(LazyAttributeOverwrite, IterableMixin):
 class Generator(GeneratorBase):
     """Handling of `yield` functions."""
     def __init__(self, inference_state, func_execution_context):
-        super(Generator, self).__init__(inference_state)
+        super().__init__(inference_state)
         self._func_execution_context = func_execution_context
 
     def py__iter__(self, contextualized_node=None):
@@ -138,7 +127,7 @@ def comprehension_from_atom(inference_state, value, atom):
     )
 
 
-class ComprehensionMixin(object):
+class ComprehensionMixin:
     @inference_state_method_cache()
     def _get_comp_for_context(self, parent_context, comp_for):
         return CompForContext(parent_context, comp_for)
@@ -164,8 +153,7 @@ class ComprehensionMixin(object):
             )
             with context.predefine_names(comp_for, dct):
                 try:
-                    for result in self._nested(comp_fors[1:], context):
-                        yield result
+                    yield from self._nested(comp_fors[1:], context)
                 except IndexError:
                     iterated = context.infer_node(self._entry_node)
                     if self.array_type == 'dict':
@@ -177,8 +165,7 @@ class ComprehensionMixin(object):
     @to_list
     def _iterate(self):
         comp_fors = tuple(get_sync_comp_fors(self._sync_comp_for_node))
-        for result in self._nested(comp_fors):
-            yield result
+        yield from self._nested(comp_fors)
 
     def py__iter__(self, contextualized_node=None):
         for set_ in self._iterate():
@@ -188,13 +175,13 @@ class ComprehensionMixin(object):
         return "<%s of %s>" % (type(self).__name__, self._sync_comp_for_node)
 
 
-class _DictMixin(object):
+class _DictMixin:
     def _get_generics(self):
         return tuple(c_set.py__class__() for c_set in self.get_mapping_item_values())
 
 
 class Sequence(LazyAttributeOverwrite, IterableMixin):
-    api_type = u'instance'
+    api_type = 'instance'
 
     @property
     def name(self):
@@ -233,14 +220,14 @@ class Sequence(LazyAttributeOverwrite, IterableMixin):
 class _BaseComprehension(ComprehensionMixin):
     def __init__(self, inference_state, defining_context, sync_comp_for_node, entry_node):
         assert sync_comp_for_node.type == 'sync_comp_for'
-        super(_BaseComprehension, self).__init__(inference_state)
+        super().__init__(inference_state)
         self._defining_context = defining_context
         self._sync_comp_for_node = sync_comp_for_node
         self._entry_node = entry_node
 
 
 class ListComprehension(_BaseComprehension, Sequence):
-    array_type = u'list'
+    array_type = 'list'
 
     def py__simple_getitem__(self, index):
         if isinstance(index, slice):
@@ -253,14 +240,14 @@ class ListComprehension(_BaseComprehension, Sequence):
 
 
 class SetComprehension(_BaseComprehension, Sequence):
-    array_type = u'set'
+    array_type = 'set'
 
 
 class GeneratorComprehension(_BaseComprehension, GeneratorBase):
     pass
 
 
-class _DictKeyMixin(object):
+class _DictKeyMixin:
     # TODO merge with _DictMixin?
     def get_mapping_item_values(self):
         return self._dict_keys(), self._dict_values()
@@ -271,11 +258,11 @@ class _DictKeyMixin(object):
 
 
 class DictComprehension(ComprehensionMixin, Sequence, _DictKeyMixin):
-    array_type = u'dict'
+    array_type = 'dict'
 
     def __init__(self, inference_state, defining_context, sync_comp_for_node, key_node, value_node):
         assert sync_comp_for_node.type == 'sync_comp_for'
-        super(DictComprehension, self).__init__(inference_state)
+        super().__init__(inference_state)
         self._defining_context = defining_context
         self._sync_comp_for_node = sync_comp_for_node
         self._entry_node = key_node
@@ -328,25 +315,25 @@ class DictComprehension(ComprehensionMixin, Sequence, _DictKeyMixin):
 
 class SequenceLiteralValue(Sequence):
     _TUPLE_LIKE = 'testlist_star_expr', 'testlist', 'subscriptlist'
-    mapping = {'(': u'tuple',
-               '[': u'list',
-               '{': u'set'}
+    mapping = {'(': 'tuple',
+               '[': 'list',
+               '{': 'set'}
 
     def __init__(self, inference_state, defining_context, atom):
-        super(SequenceLiteralValue, self).__init__(inference_state)
+        super().__init__(inference_state)
         self.atom = atom
         self._defining_context = defining_context
 
         if self.atom.type in self._TUPLE_LIKE:
-            self.array_type = u'tuple'
+            self.array_type = 'tuple'
         else:
             self.array_type = SequenceLiteralValue.mapping[atom.children[0]]
             """The builtin name of the array (list, set, tuple or dict)."""
 
     def _get_generics(self):
-        if self.array_type == u'tuple':
+        if self.array_type == 'tuple':
             return tuple(x.infer().py__class__() for x in self.py__iter__())
-        return super(SequenceLiteralValue, self)._get_generics()
+        return super()._get_generics()
 
     def py__simple_getitem__(self, index):
         """Here the index is an int/str. Raises IndexError/KeyError."""
@@ -369,8 +356,7 @@ class SequenceLiteralValue(Sequence):
                 yield LazyKnownValue(Slice(self._defining_context, None, None, None))
             else:
                 yield LazyTreeValue(self._defining_context, node)
-        for addition in check_array_additions(self._defining_context, self):
-            yield addition
+        yield from check_array_additions(self._defining_context, self)
 
     def py__len__(self):
         # This function is not really used often. It's more of a try.
@@ -436,10 +422,12 @@ class SequenceLiteralValue(Sequence):
 
 
 class DictLiteralValue(_DictMixin, SequenceLiteralValue, _DictKeyMixin):
-    array_type = u'dict'
+    array_type = 'dict'
 
     def __init__(self, inference_state, defining_context, atom):
-        super(SequenceLiteralValue, self).__init__(inference_state)
+        # Intentionally don't call the super class. This is definitely a sign
+        # that the architecture is bad and we should refactor.
+        Sequence.__init__(self, inference_state)
         self._defining_context = defining_context
         self.atom = atom
 
@@ -448,7 +436,7 @@ class DictLiteralValue(_DictMixin, SequenceLiteralValue, _DictKeyMixin):
         compiled_value_index = compiled.create_simple_object(self.inference_state, index)
         for key, value in self.get_tree_entries():
             for k in self._defining_context.infer_node(key):
-                for key_v in k.execute_operation(compiled_value_index, u'=='):
+                for key_v in k.execute_operation(compiled_value_index, '=='):
                     if key_v.get_safe_value():
                         return self._defining_context.infer_node(value)
         raise SimpleGetItemNotFound('No key found in dictionary %s.' % self)
@@ -502,7 +490,7 @@ class _FakeSequence(Sequence):
         """
         type should be one of "tuple", "list"
         """
-        super(_FakeSequence, self).__init__(inference_state)
+        super().__init__(inference_state)
         self._lazy_value_list = lazy_value_list
 
     def py__simple_getitem__(self, index):
@@ -524,18 +512,18 @@ class _FakeSequence(Sequence):
 
 
 class FakeTuple(_FakeSequence):
-    array_type = u'tuple'
+    array_type = 'tuple'
 
 
 class FakeList(_FakeSequence):
-    array_type = u'tuple'
+    array_type = 'tuple'
 
 
 class FakeDict(_DictMixin, Sequence, _DictKeyMixin):
-    array_type = u'dict'
+    array_type = 'dict'
 
     def __init__(self, inference_state, dct):
-        super(FakeDict, self).__init__(inference_state)
+        super().__init__(inference_state)
         self._dct = dct
 
     def py__iter__(self, contextualized_node=None):
@@ -543,21 +531,6 @@ class FakeDict(_DictMixin, Sequence, _DictKeyMixin):
             yield LazyKnownValue(compiled.create_simple_object(self.inference_state, key))
 
     def py__simple_getitem__(self, index):
-        if is_py3 and self.inference_state.environment.version_info.major == 2:
-            # In Python 2 bytes and unicode compare.
-            if isinstance(index, bytes):
-                index_unicode = force_unicode(index)
-                try:
-                    return self._dct[index_unicode].infer()
-                except KeyError:
-                    pass
-            elif isinstance(index, str):
-                index_bytes = index.encode('utf-8')
-                try:
-                    return self._dct[index_bytes].infer()
-                except KeyError:
-                    pass
-
         with reraise_getitem_errors(KeyError, TypeError):
             lazy_value = self._dct[index]
         return lazy_value.infer()
@@ -584,14 +557,13 @@ class FakeDict(_DictMixin, Sequence, _DictKeyMixin):
 
 class MergedArray(Sequence):
     def __init__(self, inference_state, arrays):
-        super(MergedArray, self).__init__(inference_state)
+        super().__init__(inference_state)
         self.array_type = arrays[-1].array_type
         self._arrays = arrays
 
     def py__iter__(self, contextualized_node=None):
         for array in self._arrays:
-            for lazy_value in array.py__iter__():
-                yield lazy_value
+            yield from array.py__iter__()
 
     def py__simple_getitem__(self, index):
         return ValueSet.from_sets(lazy_value.infer() for lazy_value in self.py__iter__())

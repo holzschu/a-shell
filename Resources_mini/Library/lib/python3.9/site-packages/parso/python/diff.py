@@ -247,7 +247,7 @@ def _update_positions(nodes, line_offset, last_leaf):
             _update_positions(children, line_offset, last_leaf)
 
 
-class DiffParser(object):
+class DiffParser:
     """
     An advanced form of parsing a file faster. Unfortunately comes with huge
     side effects. It changes the given module.
@@ -514,7 +514,7 @@ class DiffParser(object):
             yield token
 
 
-class _NodesTreeNode(object):
+class _NodesTreeNode:
     _ChildrenGroup = namedtuple(
         '_ChildrenGroup',
         'prefix children line_offset last_line_offset_leaf')
@@ -589,7 +589,7 @@ class _NodesTreeNode(object):
         return '<%s: %s>' % (self.__class__.__name__, self.tree_node)
 
 
-class _NodesTree(object):
+class _NodesTree:
     def __init__(self, module):
         self._base_node = _NodesTreeNode(module)
         self._working_stack = [self._base_node]

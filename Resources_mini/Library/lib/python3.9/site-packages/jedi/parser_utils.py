@@ -1,13 +1,12 @@
 import re
 import textwrap
+from ast import literal_eval
 from inspect import cleandoc
 from weakref import WeakKeyDictionary
 
 from parso.python import tree
 from parso.cache import parser_cache
 from parso import split_lines
-
-from jedi._compatibility import literal_eval, force_unicode
 
 _EXECUTE_NODES = {'funcdef', 'classdef', 'import_from', 'import_name', 'test',
                   'or_test', 'and_test', 'not_test', 'comparison', 'expr',
@@ -91,7 +90,7 @@ def get_flow_branch_keyword(flow_node, node):
         first_leaf = child.get_first_leaf()
         if first_leaf in _FLOW_KEYWORDS:
             keyword = first_leaf
-    return 0
+    return None
 
 
 def clean_scope_docstring(scope_node):
@@ -102,10 +101,7 @@ def clean_scope_docstring(scope_node):
         # leaves anymore that might be part of the docstring. A
         # docstring can also look like this: ``'foo' 'bar'
         # Returns a literal cleaned version of the ``Token``.
-        cleaned = cleandoc(safe_literal_eval(node.value))
-        # Since we want the docstr output to be always unicode, just
-        # force it.
-        return force_unicode(cleaned)
+        return cleandoc(safe_literal_eval(node.value))
     return ''
 
 
@@ -117,10 +113,7 @@ def find_statement_documentation(tree_node):
             if maybe_string.type == 'simple_stmt':
                 maybe_string = maybe_string.children[0]
                 if maybe_string.type == 'string':
-                    cleaned = cleandoc(safe_literal_eval(maybe_string.value))
-                    # Since we want the docstr output to be always unicode, just
-                    # force it.
-                    return force_unicode(cleaned)
+                    return cleandoc(safe_literal_eval(maybe_string.value))
     return ''
 
 
@@ -131,15 +124,7 @@ def safe_literal_eval(value):
         # manually, but that's right now not implemented.
         return ''
 
-    try:
-        return literal_eval(value)
-    except SyntaxError:
-        # It's possible to create syntax errors with literals like rb'' in
-        # Python 2. This should not be possible and in that case just return an
-        # empty string.
-        # Before Python 3.3 there was a more strict definition in which order
-        # you could define literals.
-        return ''
+    return literal_eval(value)
 
 
 def get_signature(funcdef, width=72, call_string=None,
@@ -254,7 +239,7 @@ def get_parent_scope(node, include_flows=False):
         return None  # It's a module already.
 
     while True:
-        if is_scope(scope) or include_flows and isinstance(scope, tree.Flow):
+        if is_scope(scope):
             if scope.type in ('classdef', 'funcdef', 'lambdef'):
                 index = scope.children.index(':')
                 if scope.children[index].start_pos >= node.start_pos:
@@ -266,6 +251,14 @@ def get_parent_scope(node, include_flows=False):
                         scope = scope.parent
                         continue
             return scope
+        elif include_flows and isinstance(scope, tree.Flow):
+            # The cursor might be on `if foo`, so the parent scope will not be
+            # the if, but the parent of the if.
+            if not (scope.type == 'if_stmt'
+                    and any(n.start_pos <= node.start_pos < n.end_pos
+                            for n in scope.get_test_nodes())):
+                return scope
+
         scope = scope.parent
 
 
@@ -331,3 +324,4 @@ def _function_is_x_method(method_name):
 
 function_is_staticmethod = _function_is_x_method('staticmethod')
 function_is_classmethod = _function_is_x_method('classmethod')
+function_is_property = _function_is_x_method('property')

@@ -1,5 +1,5 @@
 """
-This is the syntax tree for Python syntaxes (2 & 3).  The classes represent
+This is the syntax tree for Python 3 syntaxes. The classes represent
 syntax elements like functions and imports.
 
 All of the nodes can be traced back to the `Python grammar file
@@ -48,7 +48,6 @@ try:
 except ImportError:
     from collections import Mapping
 
-from parso._compatibility import utf8_repr, unicode
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
 from parso.python.prefix import split_prefix
@@ -64,12 +63,12 @@ _FUNC_CONTAINERS = set(
 
 _GET_DEFINITION_TYPES = set([
     'expr_stmt', 'sync_comp_for', 'with_stmt', 'for_stmt', 'import_name',
-    'import_from', 'param', 'del_stmt',
+    'import_from', 'param', 'del_stmt', 'namedexpr_test',
 ])
 _IMPORTS = set(['import_name', 'import_from'])
 
 
-class DocstringMixin(object):
+class DocstringMixin:
     __slots__ = ()
 
     def get_doc_node(self):
@@ -97,7 +96,7 @@ class DocstringMixin(object):
         return None
 
 
-class PythonMixin(object):
+class PythonMixin:
     """
     Some Python specific utilities.
     """
@@ -175,7 +174,6 @@ class EndMarker(_LeafWithoutNewlines):
     __slots__ = ()
     type = 'endmarker'
 
-    @utf8_repr
     def __repr__(self):
         return "<%s: prefix=%s end_pos=%s>" % (
             type(self).__name__, repr(self.prefix), self.end_pos
@@ -187,7 +185,6 @@ class Newline(PythonLeaf):
     __slots__ = ()
     type = 'newline'
 
-    @utf8_repr
     def __repr__(self):
         return "<%s: %s>" % (type(self).__name__, repr(self.value))
 
@@ -227,9 +224,6 @@ class Name(_LeafWithoutNewlines):
             return None
 
         if type_ == 'except_clause':
-            # TODO in Python 2 this doesn't work correctly. See grammar file.
-            #      I think we'll just let it be. Python 2 will be gone in a few
-            #      years.
             if self.get_previous_sibling() == 'as':
                 return node.parent  # The try_stmt.
             return None
@@ -237,8 +231,6 @@ class Name(_LeafWithoutNewlines):
         while node is not None:
             if node.type == 'suite':
                 return None
-            if node.type == 'namedexpr_test':
-                return node.children[0]
             if node.type in _GET_DEFINITION_TYPES:
                 if self in node.get_defined_names(include_setitem):
                     return node
@@ -302,20 +294,16 @@ class FStringEnd(PythonLeaf):
     __slots__ = ()
 
 
-class _StringComparisonMixin(object):
+class _StringComparisonMixin:
     def __eq__(self, other):
         """
         Make comparisons with strings easy.
         Improves the readability of the parser.
         """
-        if isinstance(other, (str, unicode)):
+        if isinstance(other, str):
             return self.value == other
 
         return self is other
-
-    def __ne__(self, other):
-        """Python 2 compatibility."""
-        return not self.__eq__(other)
 
     def __hash__(self):
         return hash(self.value)
@@ -340,7 +328,7 @@ class Scope(PythonBaseNode, DocstringMixin):
     __slots__ = ()
 
     def __init__(self, children):
-        super(Scope, self).__init__(children)
+        super().__init__(children)
 
     def iter_funcdefs(self):
         """
@@ -366,8 +354,7 @@ class Scope(PythonBaseNode, DocstringMixin):
                 if element.type in names:
                     yield element
                 if element.type in _FUNC_CONTAINERS:
-                    for e in scan(element.children):
-                        yield e
+                    yield from scan(element.children)
 
         return scan(self.children)
 
@@ -397,7 +384,7 @@ class Module(Scope):
     type = 'file_input'
 
     def __init__(self, children):
-        super(Module, self).__init__(children)
+        super().__init__(children)
         self._used_names = None
 
     def _iter_future_import_names(self):
@@ -415,18 +402,6 @@ class Module(Scope):
                     names = [name.value for name in path]
                     if len(names) == 2 and names[0] == '__future__':
                         yield names[1]
-
-    def _has_explicit_absolute_import(self):
-        """
-        Checks if imports in this module are explicitly absolute, i.e. there
-        is a ``__future__`` import.
-        Currently not public, might be in the future.
-        :return bool:
-        """
-        for name in self._iter_future_import_names():
-            if name == 'absolute_import':
-                return True
-        return False
 
     def get_used_names(self):
         """
@@ -493,7 +468,7 @@ class Class(ClassOrFunc):
     __slots__ = ()
 
     def __init__(self, children):
-        super(Class, self).__init__(children)
+        super().__init__(children)
 
     def get_super_arglist(self):
         """
@@ -520,24 +495,13 @@ def _create_params(parent, argslist_list):
     You could also say that this function replaces the argslist node with a
     list of Param objects.
     """
-    def check_python2_nested_param(node):
-        """
-        Python 2 allows params to look like ``def x(a, (b, c))``, which is
-        basically a way of unpacking tuples in params. Python 3 has ditched
-        this behavior. Jedi currently just ignores those constructs.
-        """
-        return node.type == 'fpdef' and node.children[0] == '('
-
     try:
         first = argslist_list[0]
     except IndexError:
         return []
 
     if first.type in ('name', 'fpdef'):
-        if check_python2_nested_param(first):
-            return [first]
-        else:
-            return [Param([first], parent)]
+        return [Param([first], parent)]
     elif first == '*':
         return [first]
     else:  # argslist is a `typedargslist` or a `varargslist`.
@@ -555,7 +519,6 @@ def _create_params(parent, argslist_list):
                     if param_children[0] == '*' \
                             and (len(param_children) == 1
                                  or param_children[1] == ',') \
-                            or check_python2_nested_param(param_children[0]) \
                             or param_children[0] == '/':
                         for p in param_children:
                             p.parent = parent
@@ -583,7 +546,7 @@ class Function(ClassOrFunc):
     type = 'funcdef'
 
     def __init__(self, children):
-        super(Function, self).__init__(children)
+        super().__init__(children)
         parameters = self.children[2]  # After `def foo`
         parameters.children[1:-1] = _create_params(parameters, parameters.children[1:-1])
 
@@ -618,8 +581,7 @@ class Function(ClassOrFunc):
                         else:
                             yield element
                 else:
-                    for result in scan(nested_children):
-                        yield result
+                    yield from scan(nested_children)
 
         return scan(self.children)
 
@@ -633,8 +595,7 @@ class Function(ClassOrFunc):
                         or element.type == 'keyword' and element.value == 'return':
                     yield element
                 if element.type in _RETURN_STMT_CONTAINERS:
-                    for e in scan(element.children):
-                        yield e
+                    yield from scan(element.children)
 
         return scan(self.children)
 
@@ -648,8 +609,7 @@ class Function(ClassOrFunc):
                         or element.type == 'keyword' and element.value == 'raise':
                     yield element
                 if element.type in _RETURN_STMT_CONTAINERS:
-                    for e in scan(element.children):
-                        yield e
+                    yield from scan(element.children)
 
         return scan(self.children)
 
@@ -815,8 +775,8 @@ class WithStmt(Flow):
         return names
 
     def get_test_node_from_name(self, name):
-        node = name.parent
-        if node.type != 'with_item':
+        node = search_ancestor(name, "with_item")
+        if node is None:
             raise ValueError('The name is not actually part of a with statement.')
         return node.children[0]
 
@@ -1101,8 +1061,14 @@ class ExprStmt(PythonBaseNode, DocstringMixin):
             first = first.children[2]
         yield first
 
-        for operator in self.children[3::2]:
-            yield operator
+        yield from self.children[3::2]
+
+
+class NamedExpr(PythonBaseNode):
+    type = 'namedexpr_test'
+
+    def get_defined_names(self, include_setitem=False):
+        return _defined_names(self.children[0], include_setitem)
 
 
 class Param(PythonBaseNode):
@@ -1114,7 +1080,7 @@ class Param(PythonBaseNode):
     type = 'param'
 
     def __init__(self, children, parent):
-        super(Param, self).__init__(children)
+        super().__init__(children)
         self.parent = parent
         for child in children:
             child.parent = self
@@ -1214,7 +1180,7 @@ class Param(PythonBaseNode):
         :param include_comma bool: If enabled includes the comma in the string output.
         """
         if include_comma:
-            return super(Param, self).get_code(include_prefix)
+            return super().get_code(include_prefix)
 
         children = self.children
         if children[-1] == ',':

@@ -117,6 +117,7 @@ from cryptography.hazmat.backends.openssl.x509 import (
 from cryptography.hazmat.bindings.openssl import binding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import (
+    dh,
     dsa,
     ec,
     ed25519,
@@ -1368,8 +1369,9 @@ class Backend(object):
         if x509 == self._ffi.NULL:
             self._consume_errors()
             raise ValueError(
-                "Unable to load certificate. See https://cryptography.io/en/la"
-                "test/faq/#why-can-t-i-import-my-pem-file for more details."
+                "Unable to load certificate. See https://cryptography.io/en/"
+                "latest/faq.html#why-can-t-i-import-my-pem-file for more"
+                " details."
             )
 
         x509 = self._ffi.gc(x509, self._lib.X509_free)
@@ -1394,7 +1396,8 @@ class Backend(object):
             self._consume_errors()
             raise ValueError(
                 "Unable to load CRL. See https://cryptography.io/en/la"
-                "test/faq/#why-can-t-i-import-my-pem-file for more details."
+                "test/faq.html#why-can-t-i-import-my-pem-file for more"
+                " details."
             )
 
         x509_crl = self._ffi.gc(x509_crl, self._lib.X509_CRL_free)
@@ -1418,8 +1421,9 @@ class Backend(object):
         if x509_req == self._ffi.NULL:
             self._consume_errors()
             raise ValueError(
-                "Unable to load request. See https://cryptography.io/en/la"
-                "test/faq/#why-can-t-i-import-my-pem-file for more details."
+                "Unable to load request. See https://cryptography.io/en/"
+                "latest/faq.html#why-can-t-i-import-my-pem-file for more"
+                " details."
             )
 
         x509_req = self._ffi.gc(x509_req, self._lib.X509_REQ_free)
@@ -1456,8 +1460,7 @@ class Backend(object):
 
         if evp_pkey == self._ffi.NULL:
             if userdata.error != 0:
-                errors = self._consume_errors()
-                self.openssl_assert(errors)
+                self._consume_errors()
                 if userdata.error == -1:
                     raise TypeError(
                         "Password was not given but private key is encrypted"
@@ -1488,8 +1491,11 @@ class Backend(object):
         errors = self._consume_errors()
 
         if not errors:
-            raise ValueError("Could not deserialize key data.")
-
+            raise ValueError(
+                "Could not deserialize key data. The data may be in an "
+                "incorrect format or it may be encrypted with an unsupported "
+                "algorithm."
+            )
         elif errors[0]._lib_reason_match(
             self._lib.ERR_LIB_EVP, self._lib.EVP_R_BAD_DECRYPT
         ) or errors[0]._lib_reason_match(
@@ -1497,16 +1503,6 @@ class Backend(object):
             self._lib.PKCS12_R_PKCS12_CIPHERFINAL_ERROR,
         ):
             raise ValueError("Bad decrypt. Incorrect password?")
-
-        elif errors[0]._lib_reason_match(
-            self._lib.ERR_LIB_EVP, self._lib.EVP_R_UNKNOWN_PBE_ALGORITHM
-        ) or errors[0]._lib_reason_match(
-            self._lib.ERR_LIB_PEM, self._lib.PEM_R_UNSUPPORTED_ENCRYPTION
-        ):
-            raise UnsupportedAlgorithm(
-                "PEM data is encrypted with an unsupported cipher",
-                _Reasons.UNSUPPORTED_CIPHER,
-            )
 
         elif any(
             error._lib_reason_match(
@@ -1518,12 +1514,11 @@ class Backend(object):
             raise ValueError("Unsupported public key algorithm.")
 
         else:
-            assert errors[0].lib in (
-                self._lib.ERR_LIB_EVP,
-                self._lib.ERR_LIB_PEM,
-                self._lib.ERR_LIB_ASN1,
+            raise ValueError(
+                "Could not deserialize key data. The data may be in an "
+                "incorrect format or it may be encrypted with an unsupported "
+                "algorithm."
             )
-            raise ValueError("Could not deserialize key data.")
 
     def elliptic_curve_supported(self, curve):
         try:
@@ -1660,14 +1655,6 @@ class Backend(object):
     def _ec_key_new_by_curve_nid(self, curve_nid):
         ec_cdata = self._lib.EC_KEY_new_by_curve_name(curve_nid)
         self.openssl_assert(ec_cdata != self._ffi.NULL)
-        # Setting the ASN.1 flag to OPENSSL_EC_NAMED_CURVE is
-        # only necessary on OpenSSL 1.0.2t/u. Once we drop support for 1.0.2
-        # we can remove this as it's done automatically when getting an EC_KEY
-        # from new_by_curve_name
-        # CRYPTOGRAPHY_OPENSSL_102U_OR_GREATER
-        self._lib.EC_KEY_set_asn1_flag(
-            ec_cdata, backend._lib.OPENSSL_EC_NAMED_CURVE
-        )
         return self._ffi.gc(ec_cdata, self._lib.EC_KEY_free)
 
     def load_der_ocsp_request(self, data):
@@ -2100,8 +2087,12 @@ class Backend(object):
         return self._read_mem_bio(bio)
 
     def generate_dh_parameters(self, generator, key_size):
-        if key_size < 512:
-            raise ValueError("DH key_size must be at least 512 bits")
+        if key_size < dh._MIN_MODULUS_SIZE:
+            raise ValueError(
+                "DH key_size must be at least {} bits".format(
+                    dh._MIN_MODULUS_SIZE
+                )
+            )
 
         if generator not in (2, 5):
             raise ValueError("DH generator must be 2 or 5")
@@ -2334,7 +2325,7 @@ class Backend(object):
     def x25519_supported(self):
         if self._fips_enabled:
             return False
-        return self._lib.CRYPTOGRAPHY_OPENSSL_110_OR_GREATER
+        return not self._lib.CRYPTOGRAPHY_IS_LIBRESSL
 
     def x448_load_public_bytes(self, data):
         if len(data) != 56:

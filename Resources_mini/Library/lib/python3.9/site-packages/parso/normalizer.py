@@ -1,6 +1,5 @@
 from contextlib import contextmanager
-
-from parso._compatibility import use_metaclass
+from typing import Dict, List
 
 
 class _NormalizerMeta(type):
@@ -11,9 +10,9 @@ class _NormalizerMeta(type):
         return new_cls
 
 
-class Normalizer(use_metaclass(_NormalizerMeta)):
-    _rule_type_instances = {}
-    _rule_value_instances = {}
+class Normalizer(metaclass=_NormalizerMeta):
+    _rule_type_instances: Dict[str, List[type]] = {}
+    _rule_value_instances: Dict[str, List[type]] = {}
 
     def __init__(self, grammar, config):
         self.grammar = grammar
@@ -77,7 +76,7 @@ class Normalizer(use_metaclass(_NormalizerMeta)):
         return True
 
     @classmethod
-    def register_rule(cls, **kwargs):
+    def register_rule(cls, *, value=None, values=(), type=None, types=()):
         """
         Use it as a class decorator::
 
@@ -86,10 +85,6 @@ class Normalizer(use_metaclass(_NormalizerMeta)):
             class MyRule(Rule):
                 error_code = 42
         """
-        return cls._register_rule(**kwargs)
-
-    @classmethod
-    def _register_rule(cls, value=None, values=(), type=None, types=()):
         values = list(values)
         types = list(types)
         if value is not None:
@@ -110,7 +105,7 @@ class Normalizer(use_metaclass(_NormalizerMeta)):
         return decorator
 
 
-class NormalizerConfig(object):
+class NormalizerConfig:
     normalizer_class = Normalizer
 
     def create_normalizer(self, grammar):
@@ -120,7 +115,7 @@ class NormalizerConfig(object):
         return self.normalizer_class(grammar, self)
 
 
-class Issue(object):
+class Issue:
     def __init__(self, node, code, message):
         self.code = code
         """
@@ -150,9 +145,9 @@ class Issue(object):
         return '<%s: %s>' % (self.__class__.__name__, self.code)
 
 
-class Rule(object):
-    code = None
-    message = None
+class Rule:
+    code: int
+    message: str
 
     def __init__(self, normalizer):
         self._normalizer = normalizer
@@ -194,10 +189,10 @@ class RefactoringNormalizer(Normalizer):
         try:
             return self._node_to_str_map[node]
         except KeyError:
-            return super(RefactoringNormalizer, self).visit(node)
+            return super().visit(node)
 
     def visit_leaf(self, leaf):
         try:
             return self._node_to_str_map[leaf]
         except KeyError:
-            return super(RefactoringNormalizer, self).visit_leaf(leaf)
+            return super().visit_leaf(leaf)

@@ -1594,7 +1594,11 @@ def plain(text):
 def pipepager(text, cmd):
     """Page through text by feeding it to another program."""
     import subprocess
-    proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE)
+    # iOS: don't use shell (sh -c) for the pager
+    useShell = True
+    if (sys.platform == 'darwin' and os.uname().machine.startswith('iP')):
+        useShell = False
+    proc = subprocess.Popen(cmd, shell=useShell, stdin=subprocess.PIPE)
     try:
         with io.TextIOWrapper(proc.stdin, errors='backslashreplace') as pipe:
             try:

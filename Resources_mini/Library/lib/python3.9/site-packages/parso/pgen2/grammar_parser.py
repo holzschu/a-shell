@@ -4,25 +4,49 @@
 # Modifications:
 # Copyright David Halter and Contributors
 # Modifications are dual-licensed: MIT and PSF.
+from typing import Optional, Iterator, Tuple, List
 
 from parso.python.tokenize import tokenize
 from parso.utils import parse_version_string
 from parso.python.token import PythonTokenTypes
 
 
-class GrammarParser():
+class NFAArc:
+    def __init__(self, next_: 'NFAState', nonterminal_or_string: Optional[str]):
+        self.next: NFAState = next_
+        self.nonterminal_or_string: Optional[str] = nonterminal_or_string
+
+    def __repr__(self):
+        return '<%s: %s>' % (self.__class__.__name__, self.nonterminal_or_string)
+
+
+class NFAState:
+    def __init__(self, from_rule: str):
+        self.from_rule: str = from_rule
+        self.arcs: List[NFAArc] = []
+
+    def add_arc(self, next_, nonterminal_or_string=None):
+        assert nonterminal_or_string is None or isinstance(nonterminal_or_string, str)
+        assert isinstance(next_, NFAState)
+        self.arcs.append(NFAArc(next_, nonterminal_or_string))
+
+    def __repr__(self):
+        return '<%s: from %s>' % (self.__class__.__name__, self.from_rule)
+
+
+class GrammarParser:
     """
     The parser for Python grammar files.
     """
-    def __init__(self, bnf_grammar):
+    def __init__(self, bnf_grammar: str):
         self._bnf_grammar = bnf_grammar
         self.generator = tokenize(
             bnf_grammar,
-            version_info=parse_version_string('3.6')
+            version_info=parse_version_string('3.9')
         )
         self._gettoken()  # Initialize lookahead
 
-    def parse(self):
+    def parse(self) -> Iterator[Tuple[NFAState, NFAState]]:
         # grammar: (NEWLINE | rule)* ENDMARKER
         while self.type != PythonTokenTypes.ENDMARKER:
             while self.type == PythonTokenTypes.NEWLINE:
@@ -134,26 +158,3 @@ class GrammarParser():
         line = self._bnf_grammar.splitlines()[self.begin[0] - 1]
         raise SyntaxError(msg, ('<grammar>', self.begin[0],
                                 self.begin[1], line))
-
-
-class NFAArc(object):
-    def __init__(self, next_, nonterminal_or_string):
-        self.next = next_
-        self.nonterminal_or_string = nonterminal_or_string
-
-    def __repr__(self):
-        return '<%s: %s>' % (self.__class__.__name__, self.nonterminal_or_string)
-
-
-class NFAState(object):
-    def __init__(self, from_rule):
-        self.from_rule = from_rule
-        self.arcs = []  # List[nonterminal (str), NFAState]
-
-    def add_arc(self, next_, nonterminal_or_string=None):
-        assert nonterminal_or_string is None or isinstance(nonterminal_or_string, str)
-        assert isinstance(next_, NFAState)
-        self.arcs.append(NFAArc(next_, nonterminal_or_string))
-
-    def __repr__(self):
-        return '<%s: from %s>' % (self.__class__.__name__, self.from_rule)

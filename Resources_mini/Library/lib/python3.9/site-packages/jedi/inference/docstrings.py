@@ -21,7 +21,6 @@ from textwrap import dedent
 
 from parso import parse, ParserSyntaxError
 
-from jedi._compatibility import u
 from jedi import debug
 from jedi.common import indent_block
 from jedi.inference.cache import inference_state_method_cache
@@ -51,7 +50,7 @@ def _get_numpy_doc_string_cls():
     global _numpy_doc_string_cache
     if isinstance(_numpy_doc_string_cache, (ImportError, SyntaxError)):
         raise _numpy_doc_string_cache
-    from numpydoc.docscrape import NumpyDocString
+    from numpydoc.docscrape import NumpyDocString  # type: ignore[import]
     _numpy_doc_string_cache = NumpyDocString
     return _numpy_doc_string_cache
 
@@ -96,8 +95,7 @@ def _search_return_in_numpydocstr(docstr):
         # Return names are optional and if so the type is in the name
         if not r_type:
             r_type = r_name
-        for type_ in _expand_typestr(r_type):
-            yield type_
+        yield from _expand_typestr(r_type)
 
 
 def _expand_typestr(type_str):
@@ -115,7 +113,7 @@ def _expand_typestr(type_str):
     elif type_str.startswith('{'):
         node = parse(type_str, version='3.7').children[0]
         if node.type == 'atom':
-            for leaf in node.children[1].children:
+            for leaf in getattr(node.children[1], "children", []):
                 if leaf.type == 'number':
                     if '.' in leaf.value:
                         yield 'float'
@@ -184,7 +182,7 @@ def _strip_rst_role(type_str):
 
 
 def _infer_for_statement_string(module_context, string):
-    code = dedent(u("""
+    code = dedent("""
     def pseudo_docstring_stuff():
         '''
         Create a pseudo function for docstring statements.
@@ -192,7 +190,7 @@ def _infer_for_statement_string(module_context, string):
         is still a function.
         '''
     {}
-    """))
+    """)
     if string is None:
         return []
 
@@ -201,11 +199,8 @@ def _infer_for_statement_string(module_context, string):
         # (e.g., 'threading' in 'threading.Thread').
         string = 'import %s\n' % element + string
 
-    # Take the default grammar here, if we load the Python 2.7 grammar here, it
-    # will be impossible to use `...` (Ellipsis) as a token. Docstring types
-    # don't need to conform with the current grammar.
     debug.dbg('Parse docstring code %s', string, color='BLUE')
-    grammar = module_context.inference_state.latest_grammar
+    grammar = module_context.inference_state.grammar
     try:
         module = grammar.parse(code.format(indent_block(string)), error_recovery=False)
     except ParserSyntaxError:
@@ -299,9 +294,7 @@ def infer_return_types(function_value):
             if match:
                 yield _strip_rst_role(match.group(1))
         # Check for numpy style return hint
-        for type_ in _search_return_in_numpydocstr(code):
-            yield type_
+        yield from _search_return_in_numpydocstr(code)
 
     for type_str in search_return_in_docstr(function_value.py__doc__()):
-        for value in _infer_for_statement_string(function_value.get_root_context(), type_str):
-            yield value
+        yield from _infer_for_statement_string(function_value.get_root_context(), type_str)

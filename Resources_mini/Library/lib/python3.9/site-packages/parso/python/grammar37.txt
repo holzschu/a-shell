@@ -152,5 +152,5 @@ strings: (STRING | fstring)+
 fstring: FSTRING_START fstring_content* FSTRING_END
 fstring_content: FSTRING_STRING | fstring_expr
 fstring_conversion: '!' NAME
-fstring_expr: '{' testlist [ fstring_conversion ] [ fstring_format_spec ] '}'
+fstring_expr: '{' (testlist_comp | yield_expr) [ fstring_conversion ] [ fstring_format_spec ] '}'
 fstring_format_spec: ':' fstring_content*

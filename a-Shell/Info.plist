@@ -97,6 +97,10 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>a-Shell would like to access to your photo library to upload images</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>a-Shell would like to access to your photo library to upload images</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>ExecuteCommandIntent</string>

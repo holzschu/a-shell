@@ -27,10 +27,9 @@ ad
 load
 """
 
-__version__ = '0.17.2'
+__version__ = '0.18.0'
 
-from jedi.api import Script, Interpreter, set_debug_function, \
-    preload_module, names
+from jedi.api import Script, Interpreter, set_debug_function, preload_module
 from jedi import settings
 from jedi.api.environment import find_virtualenvs, find_system_environments, \
     get_default_environment, InvalidPythonEnvironment, create_environment, \

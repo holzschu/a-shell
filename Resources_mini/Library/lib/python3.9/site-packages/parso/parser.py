@@ -23,6 +23,8 @@ within the statement. This lowers memory usage and cpu time and reduces the
 complexity of the ``Parser`` (there's another parser sitting inside
 ``Statement``, which produces ``Array`` and ``Call``).
 """
+from typing import Dict
+
 from parso import tree
 from parso.pgen2.generator import ReservedString
 
@@ -71,7 +73,7 @@ class Stack(list):
         return list(iterate())
 
 
-class StackNode(object):
+class StackNode:
     def __init__(self, dfa):
         self.dfa = dfa
         self.nodes = []
@@ -86,7 +88,7 @@ class StackNode(object):
 
 def _token_to_transition(grammar, type_, value):
     # Map from token to label
-    if type_.contains_syntax:
+    if type_.value.contains_syntax:
         # Check for reserved words (keywords)
         try:
             return grammar.reserved_syntax_strings[value]
@@ -96,7 +98,7 @@ def _token_to_transition(grammar, type_, value):
     return type_
 
 
-class BaseParser(object):
+class BaseParser:
     """Parser engine.
 
     A Parser instance contains state pertaining to the current token
@@ -108,11 +110,10 @@ class BaseParser(object):
     When a syntax error occurs, error_recovery() is called.
     """
 
-    node_map = {}
+    node_map: Dict[str, type] = {}
     default_node = tree.Node
 
-    leaf_map = {
-    }
+    leaf_map: Dict[str, type] = {}
     default_leaf = tree.Leaf
 
     def __init__(self, pgen_grammar, start_nonterminal='file_input', error_recovery=False):
