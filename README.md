@@ -23,15 +23,17 @@ a-Shell is now <a href="https://holzschu.github.io/a-Shell_iOS/">available on th
 
 If you want to compile the project yourself, you will need the following steps: 
 * download the entire project and its sub-modules: `git submodule update --init --recursive`
-* change directory to `cpython`: `cd cpython`
-* build Python 3.9 and all the associated libraries / frameworks: `sh ./downloadAndCompile.sh` (this step takes more than 30 mn on a 2GHz i5 MBP, YMMV). 
+* download all the xcFrameworks: `swift run --package-path xcfs` (or `downloadFrameworks.sh`)
+* create the Python xcFrameworks (or remove them from the project, if you don't need Python):
+    * change directory to `cpython`: `cd cpython`
+    * build Python 3.9 and all the associated libraries / frameworks: `sh ./downloadAndCompile.sh` (this step takes more than 30 mn on a 2GHz i5 MBP, YMMV). 
 * get back to the main directory, open the Xcode project and click "Build", then "Run" as you like.
 
 I am looking for ways to make the process more automatic. Then again, unless you change things in Python, you won't need to re-run through steps 2 and 3. 
 
 a-Shell now runs on the devices and on the simulator, as you wish. 
 
-Because Python 3.9 uses functions that are only available on the iOS 14 SDK, I've set the mimimum iOS version to 14.0. If you need to run it on an iOS 13 device, you can edit this settings in Xcode, at your own risk.
+Because Python 3.9 uses functions that are only available on the iOS 14 SDK, I've set the mimimum iOS version to 14.0. It also reduces the size of the binaries, so `ios_system` and the other frameworks have the same settings. If you need to run it on an iOS 13 device, you'll have to recompile most frameworks.
 
 ## Home directory
 
