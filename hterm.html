@@ -652,6 +652,7 @@
 									break;
 								case String.fromCharCode(27) + "[A":  // Up arrow
 								case String.fromCharCode(27) + "[1;3A":  // Alt-Up arrow
+								case String.fromCharCode(16):  // Ctrl+P
 									if (window.commandRunning != '') {
 										if (window.commandInsideCommandIndex > 0) {
 											if (window.commandInsideCommandIndex === window.maxCommandInsideCommandIndex) {
@@ -660,7 +661,7 @@
 											}
 											io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor back to initial position
 											io.print('\x1b[0J'); // delete display after cursor
-											if (string == String.fromCharCode(27) + "[A") { 
+											if (string != String.fromCharCode(27) + "[1;3A") {
 												window.commandInsideCommandIndex -= 1;
 												if (window.commandInsideCommandIndex < 0) {
 													window.commandInsideCommandIndex = 0;
@@ -692,7 +693,7 @@
 											var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
 											io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
 											io.print('\x1b[0J'); // delete display after cursor
-											if (string == String.fromCharCode(27) + "[A") { 
+											if (string != String.fromCharCode(27) + "[1;3A") {
 												window.commandIndex -= 1;
 											} else {
 												window.commandIndex -= 5;
@@ -708,11 +709,12 @@
 									break;
 								case String.fromCharCode(27) + "[B":  // Down arrow
 								case String.fromCharCode(27) + "[1;3B":  // Alt-Down arrow
+								case String.fromCharCode(14):  // Ctrl+N
 									if (window.commandRunning != '') {
 										if (window.commandInsideCommandIndex < window.maxCommandInsideCommandIndex) {
 											io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
 											io.print('\x1b[0J'); // delete display after cursor
-											if (string == String.fromCharCode(27) + "[B") { 
+											if (string != String.fromCharCode(27) + "[1;3B") {
 												window.commandInsideCommandIndex += 1;
 											} else {
 												window.commandInsideCommandIndex += 5;
@@ -737,7 +739,7 @@
 											var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
 											io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
 											io.print('\x1b[0J'); // delete display after cursor
-											if (string == String.fromCharCode(27) + "[B") { 
+											if (string != String.fromCharCode(27) + "[1;3B") {
 												window.commandIndex += 1;
 											} else {
 												window.commandIndex += 5;
@@ -752,6 +754,7 @@
 									}
 									break;
 								case String.fromCharCode(27) + "[D":  // Left arrow
+								case String.fromCharCode(2):  // Ctrl+B
 									if (this.document_.getSelection().type == 'Range') {
 										// move cursor to start of selection
 										this.moveCursorPosition(term.scrollPort_.selection.startRow.rowIndex - term.scrollPort_.getTopRowIndex(), term.scrollPort_.selection.startOffset);
@@ -772,6 +775,7 @@
 									}
 									break;
 								case String.fromCharCode(27) + "[C":  // Right arrow
+								case String.fromCharCode(6):  // Ctrl+F
 									if (this.document_.getSelection().type == 'Range') {
 										// move cursor to end of selection
 										this.moveCursorPosition(term.scrollPort_.selection.endRow.rowIndex - term.scrollPort_.getTopRowIndex(), term.scrollPort_.selection.endOffset);
