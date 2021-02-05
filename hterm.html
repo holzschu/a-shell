@@ -215,8 +215,6 @@
 					// let the running command print its own prompt:
 					window.webkit.messageHandlers.aShell.postMessage('input:' + '\n');
 				}
-				window.term_.io.currentCommand = '';
-				currentCommandCursorPosition = 0;
 			}
 
             function updatePromptPosition() {
