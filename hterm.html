@@ -917,6 +917,19 @@
 										window.term_.io.print('\x1b[0J'); // delete display after cursor
 									}
 									break;
+								case String.fromCharCode(21):  // Ctrl-U: kill from cursor to beginning of the line
+									disableAutocompleteMenu();
+									// clear entire line and move cursor to beginning of the line
+									io.print('\x1b[2K\x1b[G');
+									io.currentCommand = io.currentCommand
+										.slice(currentCommandCursorPosition);
+									currentCommandCursorPosition = 0;
+									// redraw command line
+									printPrompt();
+									io.print(io.currentCommand);
+									// move cursor back to beginning of the line
+									io.print(`\x1b[${window.promptMessage.length + 1}G`);
+									break;
 								case String.fromCharCode(12):  // Ctrl-L: clear screen
 									disableAutocompleteMenu();
 									// erase display, move cursor to (1,1)
