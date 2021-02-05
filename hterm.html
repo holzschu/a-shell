@@ -272,6 +272,35 @@
 				}
 			}
 
+			// behaves as if delete key is pressed.
+			function deleteBackward() {
+				if (currentCommandCursorPosition <= 0) {
+					return;
+				}
+
+				const currentChar = window.term_.io.currentCommand[currentCommandCursorPosition - 1];
+				const currentCharWidth = lib.wc.strWidth(currentChar);
+				for (let i = 0; i < currentCharWidth; i++) {
+					window.term_.io.print('\b'); // move cursor back n chars, across lines
+				}
+
+				window.term_.io.print('\x1b[0J'); // delete display after cursor
+
+				// print remainder of command line
+				const endOfCommand = window.term_.io.currentCommand.slice(currentCommandCursorPosition);
+				window.term_.io.print(endOfCommand);
+
+				// move cursor back to where it was (don't use term.screen_.cursorPosition):
+				const wcwidth = lib.wc.strWidth(endOfCommand);
+				for (let i = 0; i < wcwidth; i++) {
+					window.term_.io.print('\b');
+				}
+
+				// remove character from command at current position:
+				window.term_.io.currentCommand = window.term_.io.currentCommand.slice(0, currentCommandCursorPosition - 1) + endOfCommand;
+				currentCommandCursorPosition -= 1;
+			}
+
             function pickCurrentValue() {
 				var currentCommand = window.term_.io.currentCommand;
 				var cursorPosition = window.term_.screen_.cursorPosition.column - window.promptEnd;
@@ -621,28 +650,10 @@
 									break;
 								case String.fromCharCode(127): // delete key from iOS keyboard
 									if (currentCommandCursorPosition > 0) { 
-										var currentChar = io.currentCommand[currentCommandCursorPosition - 1];
-										var currentCharWidth = lib.wc.strWidth(currentChar);
 										if (this.document_.getSelection().type == 'Range') {
 											term.onCut(null); // remove the selection without copying it
 										} else {
-											// clear entire buffer, then reprint. This works even if we are several lines above end of line.
-											for (var i = 0; i < currentCharWidth; i++) {
-												io.print('\b'); // move cursor back n chars
-											}
-											io.print('\x1b[0J'); // delete display after cursor
-											// print remainder of command line
-											var endOfCommand = io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
-											io.print(endOfCommand)
-											// move cursor back to where it was (don't use term.screen_.cursorPosition):
-											var wcwidth = lib.wc.strWidth(endOfCommand);
-											for (var i = 0; i < wcwidth; i++) {
-												io.print('\b'); 
-											}
-											// remove character from command at current position:
-											io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition - 1) + 
-												io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length); 
-											currentCommandCursorPosition -= 1;
+											deleteBackward();
 										}
 									}
 									disableAutocompleteMenu();
@@ -933,6 +944,17 @@
 									io.print(io.currentCommand);
 									// move cursor back to beginning of the line
 									io.print(`\x1b[${window.promptMessage.length + 1}G`);
+									break;
+								case String.fromCharCode(23):  // Ctrl+W: kill the word behind point
+									disableAutocompleteMenu();
+									deleteBackward();
+									while (currentCommandCursorPosition > 0) {
+										const currentChar = io.currentCommand[currentCommandCursorPosition - 1];
+										if (!isLetter(currentChar)) {
+											break;
+										}
+										deleteBackward();
+									}
 									break;
 								case String.fromCharCode(12):  // Ctrl-L: clear screen
 									disableAutocompleteMenu();
