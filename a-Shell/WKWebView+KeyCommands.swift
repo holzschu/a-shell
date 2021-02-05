@@ -93,8 +93,16 @@ extension WKWebView {
         // clear entire display: ^[[2J
         // position cursor on top line: ^[[1;1H
         // print current command again.
-        let javascriptCommand = "window.term_.io.print('" + escape + "[2J'); window.term_.io.print('" + escape + "[1;1H'); " +
-        " window.printPrompt(); window.term_.io.print(window.term_.io.currentCommand); var endOfCommand = window.term_.io.currentCommand.slice(window.currentCommandCursorPosition, window.term_.io.currentCommand.length); var wcwidth = lib.wc.strWidth(endOfCommand); for (var i = 0; i < wcwidth; i++) { io.print('\\b'); }"
+        let javascriptCommand = #"""
+        window.term_.io.print('\#(escape)[2J\#(escape)[1;1H');
+        window.printPrompt();
+        window.term_.io.print(window.term_.io.currentCommand);
+        var endOfCommand = window.term_.io.currentCommand.slice(window.currentCommandCursorPosition, window.term_.io.currentCommand.length);
+        var wcwidth = lib.wc.strWidth(endOfCommand);
+        for (var i = 0; i < wcwidth; i++) {
+            window.term_.io.print('\b');
+        }
+        """#
         evaluateJavaScript(javascriptCommand) { (result, error) in
             if error != nil {
                // print(error)
