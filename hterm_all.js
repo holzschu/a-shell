@@ -16451,12 +16451,11 @@ hterm.TextAttributes.nodeSubstring = function(node, start, end) {
  * characters and runs of double-width characters.
  *
  * @param {string} str The string to split.
- * @return {!Array<{str:string, wcNode:boolean, asciiNode:boolean,
- *     wcStrWidth:number}>} An array of objects that contain substrings of str,
- *     where each substring is either a contiguous runs of single-width
- *     characters or a double-width character.  For objects that contain a
- *     double-width character, its wcNode property is set to true.  For objects
- *     that contain only ASCII content, its asciiNode property is set to true.
+ * @return {Array} An array of objects that contain substrings of str, where
+ *     each substring is either a contiguous runs of single-width characters
+ *     or a double-width character.  For objects that contain a double-width
+ *     character, its wcNode property is set to true.  For objects that contain
+ *     only ASCII content, its asciiNode property is set to true.
  */
 hterm.TextAttributes.splitWidecharString = function(str) {
   const asciiRegex = new RegExp('^[\u0020-\u007f]*$');
