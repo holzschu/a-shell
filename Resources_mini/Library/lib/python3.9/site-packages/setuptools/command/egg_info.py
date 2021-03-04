@@ -8,6 +8,7 @@ from distutils.util import convert_path
 from distutils import log
 import distutils.errors
 import distutils.filelist
+import functools
 import os
 import re
 import sys
@@ -31,7 +32,7 @@ from setuptools.extern import packaging
 from setuptools import SetuptoolsDeprecationWarning
 
 
-def translate_pattern(glob):
+def translate_pattern(glob):  # noqa: C901  # is too complex (14)  # FIXME
     """
     Translate a file path glob like '*.txt' in to a regular expression.
     This differs from fnmatch.translate which allows wildcards to match
@@ -332,70 +333,74 @@ class FileList(_FileList):
         # patterns, (dir and patterns), or (dir_pattern).
         (action, patterns, dir, dir_pattern) = self._parse_template_line(line)
 
+        action_map = {
+            'include': self.include,
+            'exclude': self.exclude,
+            'global-include': self.global_include,
+            'global-exclude': self.global_exclude,
+            'recursive-include': functools.partial(
+                self.recursive_include, dir,
+            ),
+            'recursive-exclude': functools.partial(
+                self.recursive_exclude, dir,
+            ),
+            'graft': self.graft,
+            'prune': self.prune,
+        }
+        log_map = {
+            'include': "warning: no files found matching '%s'",
+            'exclude': (
+                "warning: no previously-included files found "
+                "matching '%s'"
+            ),
+            'global-include': (
+                "warning: no files found matching '%s' "
+                "anywhere in distribution"
+            ),
+            'global-exclude': (
+                "warning: no previously-included files matching "
+                "'%s' found anywhere in distribution"
+            ),
+            'recursive-include': (
+                "warning: no files found matching '%s' "
+                "under directory '%s'"
+            ),
+            'recursive-exclude': (
+                "warning: no previously-included files matching "
+                "'%s' found under directory '%s'"
+            ),
+            'graft': "warning: no directories found matching '%s'",
+            'prune': "no previously-included directories found matching '%s'",
+        }
+
+        try:
+            process_action = action_map[action]
+        except KeyError:
+            raise DistutilsInternalError(
+                "this cannot happen: invalid action '{action!s}'".
+                format(action=action),
+            )
+
         # OK, now we know that the action is valid and we have the
         # right number of words on the line for that action -- so we
         # can proceed with minimal error-checking.
-        if action == 'include':
-            self.debug_print("include " + ' '.join(patterns))
-            for pattern in patterns:
-                if not self.include(pattern):
-                    log.warn("warning: no files found matching '%s'", pattern)
 
-        elif action == 'exclude':
-            self.debug_print("exclude " + ' '.join(patterns))
-            for pattern in patterns:
-                if not self.exclude(pattern):
-                    log.warn(("warning: no previously-included files "
-                              "found matching '%s'"), pattern)
+        action_is_recursive = action.startswith('recursive-')
+        if action in {'graft', 'prune'}:
+            patterns = [dir_pattern]
+        extra_log_args = (dir, ) if action_is_recursive else ()
+        log_tmpl = log_map[action]
 
-        elif action == 'global-include':
-            self.debug_print("global-include " + ' '.join(patterns))
-            for pattern in patterns:
-                if not self.global_include(pattern):
-                    log.warn(("warning: no files found matching '%s' "
-                              "anywhere in distribution"), pattern)
-
-        elif action == 'global-exclude':
-            self.debug_print("global-exclude " + ' '.join(patterns))
-            for pattern in patterns:
-                if not self.global_exclude(pattern):
-                    log.warn(("warning: no previously-included files matching "
-                              "'%s' found anywhere in distribution"),
-                             pattern)
-
-        elif action == 'recursive-include':
-            self.debug_print("recursive-include %s %s" %
-                             (dir, ' '.join(patterns)))
-            for pattern in patterns:
-                if not self.recursive_include(dir, pattern):
-                    log.warn(("warning: no files found matching '%s' "
-                              "under directory '%s'"),
-                             pattern, dir)
-
-        elif action == 'recursive-exclude':
-            self.debug_print("recursive-exclude %s %s" %
-                             (dir, ' '.join(patterns)))
-            for pattern in patterns:
-                if not self.recursive_exclude(dir, pattern):
-                    log.warn(("warning: no previously-included files matching "
-                              "'%s' found under directory '%s'"),
-                             pattern, dir)
-
-        elif action == 'graft':
-            self.debug_print("graft " + dir_pattern)
-            if not self.graft(dir_pattern):
-                log.warn("warning: no directories found matching '%s'",
-                         dir_pattern)
-
-        elif action == 'prune':
-            self.debug_print("prune " + dir_pattern)
-            if not self.prune(dir_pattern):
-                log.warn(("no previously-included directories found "
-                          "matching '%s'"), dir_pattern)
-
-        else:
-            raise DistutilsInternalError(
-                "this cannot happen: invalid action '%s'" % action)
+        self.debug_print(
+            ' '.join(
+                [action] +
+                ([dir] if action_is_recursive else []) +
+                patterns,
+            )
+        )
+        for pattern in patterns:
+            if not process_action(pattern):
+                log.warn(log_tmpl, pattern, *extra_log_args)
 
     def _remove_files(self, predicate):
         """

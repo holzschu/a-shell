@@ -56,7 +56,7 @@ if not CertificateError:
         pass
 
 
-if not match_hostname:
+if not match_hostname:  # noqa: C901  # 'If 59' is too complex (21)  # FIXME
 
     def _dnsname_match(dn, hostname, max_wildcards=1):
         """Matching according to RFC 6125, section 6.4.3

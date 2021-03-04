@@ -2,7 +2,7 @@
 """upload_docs
 
 Implements a Distutils 'upload_docs' subcommand (upload documentation to
-PyPI's pythonhosted.org).
+sites other than PyPi such as devpi).
 """
 
 from base64 import standard_b64encode
@@ -31,7 +31,7 @@ class upload_docs(upload):
     # supported by Warehouse (and won't be).
     DEFAULT_REPOSITORY = 'https://pypi.python.org/pypi/'
 
-    description = 'Upload documentation to PyPI'
+    description = 'Upload documentation to sites other than PyPi such as devpi'
 
     user_options = [
         ('repository=', 'r',
@@ -59,7 +59,7 @@ class upload_docs(upload):
         if self.upload_dir is None:
             if self.has_sphinx():
                 build_sphinx = self.get_finalized_command('build_sphinx')
-                self.target_dir = build_sphinx.builder_target_dir
+                self.target_dir = dict(build_sphinx.builder_target_dirs)['html']
             else:
                 build = self.get_finalized_command('build')
                 self.target_dir = os.path.join(build.build_base, 'docs')
@@ -67,7 +67,7 @@ class upload_docs(upload):
             self.ensure_dirname('upload_dir')
             self.target_dir = self.upload_dir
         if 'pypi.python.org' in self.repository:
-            log.warn("Upload_docs command is deprecated. Use RTD instead.")
+            log.warn("Upload_docs command is deprecated for PyPi. Use RTD instead.")
         self.announce('Using upload directory %s' % self.target_dir)
 
     def create_zipfile(self, filename):

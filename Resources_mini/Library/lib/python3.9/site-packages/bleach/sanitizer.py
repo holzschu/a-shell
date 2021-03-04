@@ -371,6 +371,10 @@ class BleachSanitizerFilter(html5lib_shim.SanitizerFilter):
 
         elif token_type == "Comment":
             if not self.strip_html_comments:
+                # call lxml.sax.saxutils to escape &, <, and > in addition to " and '
+                token["data"] = html5lib_shim.escape(
+                    token["data"], entities={'"': "&quot;", "'": "&#x27;"}
+                )
                 return token
             else:
                 return None

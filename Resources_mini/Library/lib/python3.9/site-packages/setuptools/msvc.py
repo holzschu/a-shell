@@ -24,6 +24,7 @@ from io import open
 from os import listdir, pathsep
 from os.path import join, isfile, isdir, dirname
 import sys
+import contextlib
 import platform
 import itertools
 import subprocess
@@ -724,28 +725,23 @@ class SystemInfo:
         ms = self.ri.microsoft
         vckeys = (self.ri.vc, self.ri.vc_for_python, self.ri.vs)
         vs_vers = []
-        for hkey in self.ri.HKEYS:
-            for key in vckeys:
-                try:
-                    bkey = winreg.OpenKey(hkey, ms(key), 0, winreg.KEY_READ)
-                except (OSError, IOError):
-                    continue
-                with bkey:
-                    subkeys, values, _ = winreg.QueryInfoKey(bkey)
-                    for i in range(values):
-                        try:
-                            ver = float(winreg.EnumValue(bkey, i)[0])
-                            if ver not in vs_vers:
-                                vs_vers.append(ver)
-                        except ValueError:
-                            pass
-                    for i in range(subkeys):
-                        try:
-                            ver = float(winreg.EnumKey(bkey, i))
-                            if ver not in vs_vers:
-                                vs_vers.append(ver)
-                        except ValueError:
-                            pass
+        for hkey, key in itertools.product(self.ri.HKEYS, vckeys):
+            try:
+                bkey = winreg.OpenKey(hkey, ms(key), 0, winreg.KEY_READ)
+            except (OSError, IOError):
+                continue
+            with bkey:
+                subkeys, values, _ = winreg.QueryInfoKey(bkey)
+                for i in range(values):
+                    with contextlib.suppress(ValueError):
+                        ver = float(winreg.EnumValue(bkey, i)[0])
+                        if ver not in vs_vers:
+                            vs_vers.append(ver)
+                for i in range(subkeys):
+                    with contextlib.suppress(ValueError):
+                        ver = float(winreg.EnumKey(bkey, i))
+                        if ver not in vs_vers:
+                            vs_vers.append(ver)
         return sorted(vs_vers)
 
     def find_programdata_vs_vers(self):
@@ -925,8 +921,8 @@ class SystemInfo:
         """
         return self._use_last_dir_name(join(self.WindowsSdkDir, 'lib'))
 
-    @property
-    def WindowsSdkDir(self):
+    @property  # noqa: C901
+    def WindowsSdkDir(self):  # noqa: C901  # is too complex (12)  # FIXME
         """
         Microsoft Windows SDK directory.
 

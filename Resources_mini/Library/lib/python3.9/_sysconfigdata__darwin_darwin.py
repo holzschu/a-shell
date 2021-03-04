@@ -14,13 +14,13 @@ build_time_vars = {'ABIFLAGS': '',
  'BINLIBDEST': '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/lib/python3.9',
  'BLDLIBRARY': '-L. -lpython3.9',
  'BLDSHARED': 'clang -v -undefined error -dynamiclib -isysroot '
-              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
               '-lz -L. -lpython3.9  '
               '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator '
               '-framework ios_system '
               '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator/lib '
               '-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot '
-              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
               '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator '
               '-framework ios_system '
               '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator/lib',
@@ -32,7 +32,7 @@ build_time_vars = {'ABIFLAGS': '',
  'CCSHARED': '',
  'CFLAGS': '-Wno-unused-result -Wsign-compare -Wunreachable-code -DNDEBUG -O3 '
            '-Wall -arch x86_64 -miphonesimulator-version-min=14.0 -isysroot '
-           '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk',
+           '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk',
  'CFLAGSFORSHARED': '',
  'CFLAGS_ALIASING': '',
  'CFLAGS_NODIST': '',
@@ -40,7 +40,7 @@ build_time_vars = {'ABIFLAGS': '',
                 'Makefile.pre.in',
  'CONFIGURE_CFLAGS': '-arch x86_64 -miphonesimulator-version-min=14.0 '
                      '-isysroot '
-                     '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk',
+                     '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk',
  'CONFIGURE_CFLAGS_NODIST': '-std=c99 -Wextra -Wno-unused-result '
                             '-Wno-unused-parameter '
                             '-Wno-missing-field-initializers '
@@ -49,10 +49,10 @@ build_time_vars = {'ABIFLAGS': '',
                             '-fvisibility=hidden',
  'CONFIGURE_CPPFLAGS': '-arch x86_64 -miphonesimulator-version-min=14.0 '
                        '-isysroot '
-                       '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk',
+                       '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk',
  'CONFIGURE_LDFLAGS': '-arch x86_64 -miphonesimulator-version-min=14.0 '
                       '-isysroot '
-                      '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+                      '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
                       '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator '
                       '-framework ios_system '
                       '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator/lib',
@@ -72,16 +72,16 @@ build_time_vars = {'ABIFLAGS': '',
                 "'build_alias=x86_64-apple-darwin' "
                 "'host_alias=x86_64-apple-darwin' 'CC=clang' 'CFLAGS=-arch "
                 'x86_64 -miphonesimulator-version-min=14.0 -isysroot '
-                "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk' "
+                "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk' "
                 "'LDFLAGS=-arch x86_64 -miphonesimulator-version-min=14.0 "
                 '-isysroot '
-                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
                 '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator '
                 '-framework ios_system '
                 "-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator/lib' "
                 "'CPPFLAGS=-arch x86_64 -miphonesimulator-version-min=14.0 "
                 '-isysroot '
-                "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk'",
+                "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk'",
  'CONFINCLUDEDIR': '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/include',
  'CONFINCLUDEPY': '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/include/python3.9',
  'COREPYTHONPATH': '',
@@ -91,7 +91,7 @@ build_time_vars = {'ABIFLAGS': '',
                             'report"',
  'CPPFLAGS': '-I. -I./Include -arch x86_64 -miphonesimulator-version-min=14.0 '
              '-isysroot '
-             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk',
+             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk',
  'CXX': 'clang++',
  'DESTDIRS': '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library '
              '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/lib '
@@ -573,13 +573,13 @@ build_time_vars = {'ABIFLAGS': '',
  'IO_H': 'Modules/_io/_iomodule.h',
  'IO_OBJS': '\\',
  'LDCXXSHARED': 'clang -v -undefined error -dynamiclib -isysroot '
-                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
                 '-lz -L. -lpython3.9  '
                 '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator '
                 '-framework ios_system '
                 '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator/lib',
  'LDFLAGS': '-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot '
-            '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+            '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
             '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator '
             '-framework ios_system '
             '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator/lib',
@@ -587,13 +587,13 @@ build_time_vars = {'ABIFLAGS': '',
  'LDLIBRARY': 'libpython3.9.dylib',
  'LDLIBRARYDIR': '',
  'LDSHARED': 'clang -v -undefined error -dynamiclib -isysroot '
-             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
              '-lz -L. -lpython3.9  '
              '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator '
              '-framework ios_system '
              '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator/lib '
              '-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot '
-             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
              '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator '
              '-framework ios_system '
              '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator/lib',
@@ -703,7 +703,7 @@ build_time_vars = {'ABIFLAGS': '',
                              '-Wunreachable-code -DNDEBUG -O3 -Wall -arch '
                              'x86_64 -miphonesimulator-version-min=14.0 '
                              '-isysroot '
-                             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+                             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
                              '-std=c99 -Wextra -Wno-unused-result '
                              '-Wno-unused-parameter '
                              '-Wno-missing-field-initializers '
@@ -712,12 +712,12 @@ build_time_vars = {'ABIFLAGS': '',
                              '-fvisibility=hidden  -I./Include/internal -I. '
                              '-I./Include -arch x86_64 '
                              '-miphonesimulator-version-min=14.0 -isysroot '
-                             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+                             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
                              '-DPy_BUILD_CORE_BUILTIN',
  'PY_CFLAGS': '-Wno-unused-result -Wsign-compare -Wunreachable-code -DNDEBUG '
               '-O3 -Wall -arch x86_64 -miphonesimulator-version-min=14.0 '
               '-isysroot '
-              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk',
+              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk',
  'PY_CFLAGS_NODIST': '-std=c99 -Wextra -Wno-unused-result '
                      '-Wno-unused-parameter -Wno-missing-field-initializers '
                      '-Wstrict-prototypes '
@@ -727,25 +727,25 @@ build_time_vars = {'ABIFLAGS': '',
  'PY_CORE_CFLAGS': '-Wno-unused-result -Wsign-compare -Wunreachable-code '
                    '-DNDEBUG -O3 -Wall -arch x86_64 '
                    '-miphonesimulator-version-min=14.0 -isysroot '
-                   '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+                   '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
                    '-std=c99 -Wextra -Wno-unused-result -Wno-unused-parameter '
                    '-Wno-missing-field-initializers -Wstrict-prototypes '
                    '-Werror=implicit-function-declaration -fvisibility=hidden  '
                    '-I./Include/internal -I. -I./Include -arch x86_64 '
                    '-miphonesimulator-version-min=14.0 -isysroot '
-                   '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+                   '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
                    '-DPy_BUILD_CORE',
  'PY_CORE_LDFLAGS': '-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot '
-                    '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+                    '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
                     '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator '
                     '-framework ios_system '
                     '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator/lib',
  'PY_CPPFLAGS': '-I. -I./Include -arch x86_64 '
                 '-miphonesimulator-version-min=14.0 -isysroot '
-                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk',
+                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk',
  'PY_FORMAT_SIZE_T': '"z"',
  'PY_LDFLAGS': '-arch x86_64 -miphonesimulator-version-min=14.0 -isysroot '
-               '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+               '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
                '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator '
                '-framework ios_system '
                '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphonesimulator/lib',
@@ -755,7 +755,7 @@ build_time_vars = {'ABIFLAGS': '',
  'PY_STDMODULE_CFLAGS': '-Wno-unused-result -Wsign-compare -Wunreachable-code '
                         '-DNDEBUG -O3 -Wall -arch x86_64 '
                         '-miphonesimulator-version-min=14.0 -isysroot '
-                        '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk '
+                        '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk '
                         '-std=c99 -Wextra -Wno-unused-result '
                         '-Wno-unused-parameter -Wno-missing-field-initializers '
                         '-Wstrict-prototypes '
@@ -763,7 +763,7 @@ build_time_vars = {'ABIFLAGS': '',
                         '-fvisibility=hidden  -I./Include/internal -I. '
                         '-I./Include -arch x86_64 '
                         '-miphonesimulator-version-min=14.0 -isysroot '
-                        '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.3.sdk',
+                        '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk',
  'Py_DEBUG': 0,
  'Py_ENABLE_SHARED': 1,
  'Py_HASH_ALGORITHM': 0,

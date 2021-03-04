@@ -125,6 +125,56 @@ def unpack_zipfile(filename, extract_dir, progress_filter=default_filter):
                 os.chmod(target, unix_attributes)
 
 
+def _resolve_tar_file_or_dir(tar_obj, tar_member_obj):
+    """Resolve any links and extract link targets as normal files."""
+    while tar_member_obj is not None and (
+            tar_member_obj.islnk() or tar_member_obj.issym()):
+        linkpath = tar_member_obj.linkname
+        if tar_member_obj.issym():
+            base = posixpath.dirname(tar_member_obj.name)
+            linkpath = posixpath.join(base, linkpath)
+            linkpath = posixpath.normpath(linkpath)
+        tar_member_obj = tar_obj._getmember(linkpath)
+
+    is_file_or_dir = (
+        tar_member_obj is not None and
+        (tar_member_obj.isfile() or tar_member_obj.isdir())
+    )
+    if is_file_or_dir:
+        return tar_member_obj
+
+    raise LookupError('Got unknown file type')
+
+
+def _iter_open_tar(tar_obj, extract_dir, progress_filter):
+    """Emit member-destination pairs from a tar archive."""
+    # don't do any chowning!
+    tar_obj.chown = lambda *args: None
+
+    with contextlib.closing(tar_obj):
+        for member in tar_obj:
+            name = member.name
+            # don't extract absolute paths or ones with .. in them
+            if name.startswith('/') or '..' in name.split('/'):
+                continue
+
+            prelim_dst = os.path.join(extract_dir, *name.split('/'))
+
+            try:
+                member = _resolve_tar_file_or_dir(tar_obj, member)
+            except LookupError:
+                continue
+
+            final_dst = progress_filter(name, prelim_dst)
+            if not final_dst:
+                continue
+
+            if final_dst.endswith(os.sep):
+                final_dst = final_dst[:-1]
+
+            yield member, final_dst
+
+
 def unpack_tarfile(filename, extract_dir, progress_filter=default_filter):
     """Unpack tar/tar.gz/tar.bz2 `filename` to `extract_dir`
 
@@ -138,38 +188,18 @@ def unpack_tarfile(filename, extract_dir, progress_filter=default_filter):
         raise UnrecognizedFormat(
             "%s is not a compressed or uncompressed tar file" % (filename,)
         ) from e
-    with contextlib.closing(tarobj):
-        # don't do any chowning!
-        tarobj.chown = lambda *args: None
-        for member in tarobj:
-            name = member.name
-            # don't extract absolute paths or ones with .. in them
-            if not name.startswith('/') and '..' not in name.split('/'):
-                prelim_dst = os.path.join(extract_dir, *name.split('/'))
 
-                # resolve any links and to extract the link targets as normal
-                # files
-                while member is not None and (
-                        member.islnk() or member.issym()):
-                    linkpath = member.linkname
-                    if member.issym():
-                        base = posixpath.dirname(member.name)
-                        linkpath = posixpath.join(base, linkpath)
-                        linkpath = posixpath.normpath(linkpath)
-                    member = tarobj._getmember(linkpath)
+    for member, final_dst in _iter_open_tar(
+            tarobj, extract_dir, progress_filter,
+    ):
+        try:
+            # XXX Ugh
+            tarobj._extract_member(member, final_dst)
+        except tarfile.ExtractError:
+            # chown/chmod/mkfifo/mknode/makedev failed
+            pass
 
-                if member is not None and (member.isfile() or member.isdir()):
-                    final_dst = progress_filter(name, prelim_dst)
-                    if final_dst:
-                        if final_dst.endswith(os.sep):
-                            final_dst = final_dst[:-1]
-                        try:
-                            # XXX Ugh
-                            tarobj._extract_member(member, final_dst)
-                        except tarfile.ExtractError:
-                            # chown/chmod/mkfifo/mknode/makedev failed
-                            pass
-        return True
+    return True
 
 
 extraction_drivers = unpack_directory, unpack_zipfile, unpack_tarfile

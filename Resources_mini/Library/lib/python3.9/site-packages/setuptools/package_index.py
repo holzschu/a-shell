@@ -320,7 +320,8 @@ class PackageIndex(Environment):
         else:
             self.opener = urllib.request.urlopen
 
-    def process_url(self, url, retrieve=False):
+    # FIXME: 'PackageIndex.process_url' is too complex (14)
+    def process_url(self, url, retrieve=False):  # noqa: C901
         """Evaluate a URL as a possible download, and maybe retrieve it"""
         if url in self.scanned_urls and not retrieve:
             return
@@ -428,48 +429,52 @@ class PackageIndex(Environment):
             dist.precedence = SOURCE_DIST
             self.add(dist)
 
+    def _scan(self, link):
+        # Process a URL to see if it's for a package page
+        NO_MATCH_SENTINEL = None, None
+        if not link.startswith(self.index_url):
+            return NO_MATCH_SENTINEL
+
+        parts = list(map(
+            urllib.parse.unquote, link[len(self.index_url):].split('/')
+        ))
+        if len(parts) != 2 or '#' in parts[1]:
+            return NO_MATCH_SENTINEL
+
+        # it's a package page, sanitize and index it
+        pkg = safe_name(parts[0])
+        ver = safe_version(parts[1])
+        self.package_pages.setdefault(pkg.lower(), {})[link] = True
+        return to_filename(pkg), to_filename(ver)
+
     def process_index(self, url, page):
         """Process the contents of a PyPI page"""
-
-        def scan(link):
-            # Process a URL to see if it's for a package page
-            if link.startswith(self.index_url):
-                parts = list(map(
-                    urllib.parse.unquote, link[len(self.index_url):].split('/')
-                ))
-                if len(parts) == 2 and '#' not in parts[1]:
-                    # it's a package page, sanitize and index it
-                    pkg = safe_name(parts[0])
-                    ver = safe_version(parts[1])
-                    self.package_pages.setdefault(pkg.lower(), {})[link] = True
-                    return to_filename(pkg), to_filename(ver)
-            return None, None
 
         # process an index page into the package-page index
         for match in HREF.finditer(page):
             try:
-                scan(urllib.parse.urljoin(url, htmldecode(match.group(1))))
+                self._scan(urllib.parse.urljoin(url, htmldecode(match.group(1))))
             except ValueError:
                 pass
 
-        pkg, ver = scan(url)  # ensure this page is in the page index
-        if pkg:
-            # process individual package page
-            for new_url in find_external_links(url, page):
-                # Process the found URL
-                base, frag = egg_info_for_url(new_url)
-                if base.endswith('.py') and not frag:
-                    if ver:
-                        new_url += '#egg=%s-%s' % (pkg, ver)
-                    else:
-                        self.need_version_info(url)
-                self.scan_url(new_url)
-
-            return PYPI_MD5.sub(
-                lambda m: '<a href="%s#md5=%s">%s</a>' % m.group(1, 3, 2), page
-            )
-        else:
+        pkg, ver = self._scan(url)  # ensure this page is in the page index
+        if not pkg:
             return ""  # no sense double-scanning non-package pages
+
+        # process individual package page
+        for new_url in find_external_links(url, page):
+            # Process the found URL
+            base, frag = egg_info_for_url(new_url)
+            if base.endswith('.py') and not frag:
+                if ver:
+                    new_url += '#egg=%s-%s' % (pkg, ver)
+                else:
+                    self.need_version_info(url)
+            self.scan_url(new_url)
+
+        return PYPI_MD5.sub(
+            lambda m: '<a href="%s#md5=%s">%s</a>' % m.group(1, 3, 2), page
+        )
 
     def need_version_info(self, url):
         self.scan_all(
@@ -591,7 +596,7 @@ class PackageIndex(Environment):
                 spec = parse_requirement_arg(spec)
         return getattr(self.fetch_distribution(spec, tmpdir), 'location', None)
 
-    def fetch_distribution(
+    def fetch_distribution(  # noqa: C901  # is too complex (14)  # FIXME
             self, requirement, tmpdir, force_scan=False, source=False,
             develop_ok=False, local_index=None):
         """Obtain a distribution suitable for fulfilling `requirement`
@@ -762,7 +767,8 @@ class PackageIndex(Environment):
     def reporthook(self, url, filename, blocknum, blksize, size):
         pass  # no-op
 
-    def open_url(self, url, warning=None):
+    # FIXME:
+    def open_url(self, url, warning=None):  # noqa: C901  # is too complex (12)
         if url.startswith('file:'):
             return local_open(url)
         try:

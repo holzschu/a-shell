@@ -54,6 +54,12 @@ class VendorImporter:
                 "distribution.".format(**locals())
             )
 
+    def create_module(self, spec):
+        return self.load_module(spec.name)
+
+    def exec_module(self, module):
+        pass
+
     def install(self):
         """
         Install this importer into sys.meta_path if not already present.
