@@ -16451,11 +16451,12 @@ hterm.TextAttributes.nodeSubstring = function(node, start, end) {
  * characters and runs of double-width characters.
  *
  * @param {string} str The string to split.
- * @return {Array} An array of objects that contain substrings of str, where
- *     each substring is either a contiguous runs of single-width characters
- *     or a double-width character.  For objects that contain a double-width
- *     character, its wcNode property is set to true.  For objects that contain
- *     only ASCII content, its asciiNode property is set to true.
+ * @return {!Array<{str:string, wcNode:boolean, asciiNode:boolean,
+ *     wcStrWidth:number}>} An array of objects that contain substrings of str,
+ *     where each substring is either a contiguous runs of single-width
+ *     characters or a double-width character.  For objects that contain a
+ *     double-width character, its wcNode property is set to true.  For objects
+ *     that contain only ASCII content, its asciiNode property is set to true.
  */
 hterm.TextAttributes.splitWidecharString = function(str) {
   const asciiRegex = new RegExp('^[\u0020-\u007f]*$');
@@ -16479,9 +16480,8 @@ hterm.TextAttributes.splitWidecharString = function(str) {
   const it = segmenter.segment(str);
 
   const rv = [];
-  let segment = it.next();
-  while (!segment.done) {
-    const grapheme = segment.value.segment;
+  for (const segment of it) {
+    const grapheme = segment.segment;
     const isAscii = asciiRegex.test(grapheme);
     const strWidth = isAscii ? 1 : lib.wc.strWidth(grapheme);
     const isWideChar =
@@ -16502,8 +16502,6 @@ hterm.TextAttributes.splitWidecharString = function(str) {
         wcStrWidth: strWidth,
       });
     }
-
-    segment = it.next();
   }
 
   return rv;
