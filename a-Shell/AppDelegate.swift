@@ -301,6 +301,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                   in: .userDomainMask,
                                                   appropriateFor: nil,
                                                   create: true)
+        // Make sure aws (Python package) can work:
+        setenv("AWS_SHARED_CREDENTIALS_FILE", documentsUrl.appendingPathComponent(".aws/credentials").path, 1)
+        setenv("AWS_CONFIG_FILE", documentsUrl.appendingPathComponent(".aws/config").path, 1)
+        // Help aiohttp install itself:
+        setenv("YARL_NO_EXTENSIONS", "1", 1)
+        setenv("MULTIDICT_NO_EXTENSIONS", "1", 1)
+        // This one is not required, but it helps:
+        setenv("DISABLE_SQLALCHEMY_CEXT", "1", 1)
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
         if (appVersion != "a-Shell-mini") {

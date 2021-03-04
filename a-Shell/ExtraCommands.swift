@@ -80,7 +80,7 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 - For network queries: nslookup, ping, host, whois, ifconfig...
 
 You can download more commands at: https://github.com/holzschu/a-Shell-commands/
-Follow us on Twitter (@a_Shell_iOS) and github (https://github.com/holzschu/a-shell/issues).
+
 """
         
         if (argc == 1) {
@@ -97,6 +97,7 @@ Follow us on Twitter (@a_Shell_iOS) and github (https://github.com/holzschu/a-sh
             } else if (bashmarks) {
                 delegate.printText(string: "\n- bookmark the current directory with \"s <name>\", and access it later with \"g <name>\".\n- l or p: show current list of bookmarks\n- r <name1> <name2>: rename a bookmark.\n- d <name>: delete a bookmark\n")
             }
+            delegate.printText(string: "\nSupport: e-mail (another_shell@icloud.com), Twitter (@a_Shell_iOS) and github (https://github.com/holzschu/a-shell/issues).\n")
             delegate.printText(string: "\nFor a full list of commands, type help -l\n")
         } else {
             guard let argV = argv?[1] else {
