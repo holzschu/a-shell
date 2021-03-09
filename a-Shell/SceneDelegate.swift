@@ -1425,7 +1425,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 do {
                     // We don't check for exec status, because files inside $APPDIR have no x bit set.
                     for file in try FileManager().contentsOfDirectory(atPath: directory) {
-                        commandsArray.append(URL(fileURLWithPath: file).lastPathComponent)
+                        let newCommand = URL(fileURLWithPath: file).lastPathComponent
+                        // Do not add a command if it is already present:
+                        if (!commandsArray.contains(newCommand)) {
+                            commandsArray.append(newCommand)
+                        }
                     }
                 } catch {
                     // The directory is unreadable, move to next one
