@@ -26,7 +26,7 @@ If you want to compile the project yourself, you will need the following steps:
 * download all the xcFrameworks: `swift run --package-path xcfs` (or `downloadFrameworks.sh`)
 * create the Python xcFrameworks (or remove them from the project, if you don't need Python):
     * You'll need the Xcode command line tools, if you don't already have them: `sudo xcode-select --install` 
-    * You also need the libssh2 and openssl libraries for OSX (we provide the versions for iOS and simulator).
+    * You also need the OpenSSL libraries for OS X (libssl and libcrypto) (we provide the versions for iOS and simulator).
     * change directory to `cpython`: `cd cpython`
     * build Python 3.9 and all the associated libraries / frameworks: `sh ./downloadAndCompile.sh` (this step takes more than 30 mn on a 2GHz i5 MBP, YMMV). 
 * get back to the main directory, open the Xcode project and click "Build", then "Run" as you like.
