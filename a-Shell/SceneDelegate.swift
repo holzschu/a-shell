@@ -21,6 +21,7 @@ var inputFileURLBackup: URL?
 
 let factoryFontSize = Float(13)
 let factoryFontName = "Menlo"
+var stdinString: String = ""
 
 // Need: dictionary connecting userContentController with output streams (?)
 
@@ -28,6 +29,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var window: UIWindow?
     var windowScene: UIWindowScene?
     var webView: WKWebView?
+    var wasmWebView: WKWebView? // webView for executing wasm
     var contentView: ContentView?
     var history: [String] = []
     var width = 80
@@ -396,7 +398,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         thread_stdout_copy = thread_stdout
         thread_stderr_copy = thread_stderr
         DispatchQueue.main.async {
-            self.webView?.evaluateJavaScript(javascript) { (result, error) in
+            self.wasmWebView?.evaluateJavaScript(javascript) { (result, error) in
                 if error != nil {
                     let userInfo = (error! as NSError).userInfo
                     fputs("wasm: Error ", self.thread_stderr_copy)
@@ -471,7 +473,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Code included in {} so variables don't leak. Some variables seem to leak. TODO: investigate
             javascript = "{" + javascript + "}"
             DispatchQueue.main.async {
-                self.webView?.evaluateJavaScript(javascript) { (result, error) in
+                self.wasmWebView?.evaluateJavaScript(javascript) { (result, error) in
                     if error != nil {
                         // Extract information about *where* the error is, etc.
                         let userInfo = (error! as NSError).userInfo
@@ -1050,6 +1052,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     continue
                 }
                 self.currentCommand = command
+                stdinString = "" // reinitialize stdin
                 self.pid = ios_fork()
                 ios_system(self.currentCommand)
                 ios_waitpid(self.pid)
@@ -1138,6 +1141,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (ios_activePager() != 0) { return }
             var command = cmd
             command.removeFirst("input:".count)
+            stdinString += command
             guard let data = command.data(using: .utf8) else { return }
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
@@ -1400,6 +1404,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             webView?.isAccessibilityElement = false
             // toolbar for everyone because I can't change the aspect of inputAssistantItem buttons
             webView?.addInputAccessoryView(toolbar: self.editorToolbar)
+            // We create a separate WkWebView for webAssembly:
+            let config = WKWebViewConfiguration()
+            config.preferences.javaScriptCanOpenWindowsAutomatically = true
+            config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
+            wasmWebView = WKWebView(frame: .zero, configuration: config)
+            let wasmFilePath = Bundle.main.path(forResource: "wasm", ofType: "html")
+            wasmWebView?.isOpaque = false
+            wasmWebView?.loadFileURL(URL(fileURLWithPath: wasmFilePath!), allowingReadAccessTo: URL(fileURLWithPath: wasmFilePath!))
+            wasmWebView?.configuration.userContentController = WKUserContentController()
+            wasmWebView?.configuration.userContentController.add(self, name: "aShell")
+            wasmWebView?.navigationDelegate = self
+            wasmWebView?.uiDelegate = self;
+            wasmWebView?.isAccessibilityElement = false
+            // End separate WkWebView
             // Restore colors and settings from preference (if set):
             if let size = UserDefaults.standard.value(forKey: "fontSize") as? Float {
                 terminalFontSize = size
@@ -2387,21 +2405,48 @@ extension SceneDelegate: WKUIDelegate {
                 if let fd = fileDescriptor(input: arguments[2]) {
                     // arguments[3] = length
                     // arguments[4] = offset
+                    // arguments[5] = tty input
                     // let values = arguments[3].components(separatedBy:",")
                     if let numValues = Int(arguments[3]) {
                         let offset = UInt64(arguments[4]) ?? 0
                         let file = FileHandle(fileDescriptor: fd)
-                        do {
-                            try file.seek(toOffset: offset)
-                        }
-                        catch {
-                            if (offset != 0) {
+                        let isTTY = Int(arguments[5]) ?? 0
+                        if (fd == fileno(thread_stdin_copy)) && (isTTY != 0) {
+                            // Reading from stdin is delicate, we must avoid blocking the UI.
+                            var inputString = stdinString;
+                            if (inputString.count > numValues) {
+                                inputString = String(stdinString.prefix(numValues))
+                                stdinString.removeFirst(numValues)
+                            } else {
+                                stdinString = ""
+                            }
+                            let utf8str = inputString.data(using: .utf8)
+                            if (utf8str == nil) {
+                                completionHandler("")
+                            } else {
+                                completionHandler("\(utf8str!.base64EncodedString(options: Data.Base64EncodingOptions(rawValue: 0)))")
+                            }
+                            return
+                        } else {
+                            do {
+                                try file.seek(toOffset: offset)
+                            }
+                            catch {
+                                if (offset != 0) {
+                                    let errorCode = (error as NSError).code
+                                    completionHandler("\(-errorCode)")
+                                    return
+                                }
+                            }
+                            do {
+                                try data = file.read(upToCount: numValues)!
+                            }
+                            catch {
                                 let errorCode = (error as NSError).code
                                 completionHandler("\(-errorCode)")
                                 return
                             }
                         }
-                        data = file.readData(ofLength: numValues)
                     }
                     completionHandler("\(data.base64EncodedString())")
                 } else {

@@ -117,7 +117,6 @@
 				const loweredWasmBytes = lowerI64Imports(arrayBuffer);
 				var errorMessage = '';
 				var errorCode = 0; 
-				window.standardInput = '';
 				// TODO: link with other libraries/frameworks? impossible, I guess.
 			    // TODO: keyboard input (directly from onkeypress)
 				try {
@@ -558,9 +557,7 @@
 								helpRunning = true;
 							}
 						}
-						if (window.commandRunning.startsWith("wasm")) {
-							window.standardInput += string;
-						} else if (window.interactiveCommandRunning && !helpRunning) {
+						if (window.interactiveCommandRunning && !helpRunning) {
 							// specific treatment for interactive commands: forward all keyboard input to them
 							// window.webkit.messageHandlers.aShell.postMessage('sending: ' + string); // for debugging
 							// post keyboard input to stdin
