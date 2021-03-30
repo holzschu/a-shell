@@ -1190,7 +1190,7 @@ class easy_install(Command):
         for key, val in ei_opts.items():
             if key not in fetch_directives:
                 continue
-            fetch_options[key.replace('_', '-')] = val[1]
+            fetch_options[key] = val[1]
         # create a settings dictionary suitable for `edit_config`
         settings = dict(easy_install=fetch_options)
         cfg_filename = os.path.join(base, 'setup.cfg')

@@ -46,6 +46,7 @@ extern PyObject* PyInit__tracemalloc(void);
 extern PyObject* PyInit__peg_parser(void);
 extern PyObject* PyInit__symtable(void);
 extern PyObject* PyInit_xxsubtype(void);
+
 /* -- ADDMODULE MARKER 1 -- */
 
 extern PyObject* PyMarshal_Init(void);
@@ -57,29 +58,30 @@ extern PyObject* PyInit__string(void);
 
 struct _inittab _PyImport_Inittab[] = {
 
-{"posix", PyInit_posix},
-{"errno", PyInit_errno},
-{"pwd", PyInit_pwd},
-{"_sre", PyInit__sre},
-{"_codecs", PyInit__codecs},
-{"_weakref", PyInit__weakref},
-{"_functools", PyInit__functools},
-{"_operator", PyInit__operator},
-{"_collections", PyInit__collections},
-{"_abc", PyInit__abc},
-{"itertools", PyInit_itertools},
-{"atexit", PyInit_atexit},
-{"_signal", PyInit__signal},
-{"_stat", PyInit__stat},
-{"time", PyInit_time},
-{"_thread", PyInit__thread},
-{"_locale", PyInit__locale},
-{"_io", PyInit__io},
-{"faulthandler", PyInit_faulthandler},
-{"_tracemalloc", PyInit__tracemalloc},
-{"_peg_parser", PyInit__peg_parser},
-{"_symtable", PyInit__symtable},
-{"xxsubtype", PyInit_xxsubtype},
+    {"posix", PyInit_posix},
+    {"errno", PyInit_errno},
+    {"pwd", PyInit_pwd},
+    {"_sre", PyInit__sre},
+    {"_codecs", PyInit__codecs},
+    {"_weakref", PyInit__weakref},
+    {"_functools", PyInit__functools},
+    {"_operator", PyInit__operator},
+    {"_collections", PyInit__collections},
+    {"_abc", PyInit__abc},
+    {"itertools", PyInit_itertools},
+    {"atexit", PyInit_atexit},
+    {"_signal", PyInit__signal},
+    {"_stat", PyInit__stat},
+    {"time", PyInit_time},
+    {"_thread", PyInit__thread},
+    {"_locale", PyInit__locale},
+    {"_io", PyInit__io},
+    {"faulthandler", PyInit_faulthandler},
+    {"_tracemalloc", PyInit__tracemalloc},
+    {"_peg_parser", PyInit__peg_parser},
+    {"_symtable", PyInit__symtable},
+    {"xxsubtype", PyInit_xxsubtype},
+
 /* -- ADDMODULE MARKER 2 -- */
 
     /* This module lives in marshal.c */

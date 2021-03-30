@@ -45,12 +45,21 @@ def _get_py3_cls():
     cmod = sys.modules.pop(cmodname, None)
 
     sys.modules[cmodname] = None
-    pure_pymod = importlib.import_module(pymodname)
-    if cmod is not None:
-        sys.modules[cmodname] = cmod
-    else:
-        sys.modules.pop(cmodname)
-    sys.modules[pymodname] = pymod
+    try:
+        pure_pymod = importlib.import_module(pymodname)
+    finally:
+        # restore module
+        sys.modules[pymodname] = pymod
+        if cmod is not None:
+            sys.modules[cmodname] = cmod
+        else:
+            sys.modules.pop(cmodname, None)
+        # restore attribute on original package
+        etree_pkg = sys.modules["xml.etree"]
+        if pymod is not None:
+            etree_pkg.ElementTree = pymod
+        elif hasattr(etree_pkg, "ElementTree"):
+            del etree_pkg.ElementTree
 
     _XMLParser = pure_pymod.XMLParser
     _iterparse = pure_pymod.iterparse

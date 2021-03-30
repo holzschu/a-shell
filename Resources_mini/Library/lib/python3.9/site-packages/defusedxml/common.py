@@ -16,16 +16,14 @@ if not hasattr(xml.parsers.expat, "ParserCreate"):
 
 
 class DefusedXmlException(ValueError):
-    """Base exception
-    """
+    """Base exception"""
 
     def __repr__(self):
         return str(self)
 
 
 class DTDForbidden(DefusedXmlException):
-    """Document type definition is forbidden
-    """
+    """Document type definition is forbidden"""
 
     def __init__(self, name, sysid, pubid):
         super(DTDForbidden, self).__init__()
@@ -39,8 +37,7 @@ class DTDForbidden(DefusedXmlException):
 
 
 class EntitiesForbidden(DefusedXmlException):
-    """Entity definition is forbidden
-    """
+    """Entity definition is forbidden"""
 
     def __init__(self, name, value, base, sysid, pubid, notation_name):
         super(EntitiesForbidden, self).__init__()
@@ -57,8 +54,7 @@ class EntitiesForbidden(DefusedXmlException):
 
 
 class ExternalReferenceForbidden(DefusedXmlException):
-    """Resolving an external reference is forbidden
-    """
+    """Resolving an external reference is forbidden"""
 
     def __init__(self, context, base, sysid, pubid):
         super(ExternalReferenceForbidden, self).__init__()
@@ -73,8 +69,7 @@ class ExternalReferenceForbidden(DefusedXmlException):
 
 
 class NotSupportedError(DefusedXmlException):
-    """The operation is not supported
-    """
+    """The operation is not supported"""
 
 
 def _apply_defusing(defused_mod):

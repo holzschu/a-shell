@@ -1,7 +1,19 @@
-What's New in IDLE 3.9.1
-Released on 2020-12-07?
-======================================
+What's New in IDLE 3.9.z
+(since 3.9.0)
+=========================
 
+
+bpo-43283: Document why printing to IDLE's Shell is often slower than
+printing to a system terminal and that it can be made faster by
+pre-formatting a single string before printing.
+
+bpo-23544: Disable Debug=>Stack Viewer when user code is running or
+Debugger is active, to prevent hang or crash.  Patch by Zackery Spytz.
+
+bpo-43008: Make IDLE invoke :func:`sys.excepthook` in normal,
+2-process mode.  Patch by Ken Hilton.
+
+bpo-33065: Fix problem debugging user classes with __repr__ method.
 
 bpo-32631: Finish zzdummy example extension module: make menu entries
 work; add docstrings and tests with 100% coverage.

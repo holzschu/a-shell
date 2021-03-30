@@ -179,7 +179,7 @@ PYTHONFRAMEWORKINSTALLDIR=
 # Deployment target selected during configure, to be checked
 # by distutils. The export statement is needed to ensure that the
 # deployment target is active during build.
-MACOSX_DEPLOYMENT_TARGET=10.15
+MACOSX_DEPLOYMENT_TARGET=11.2
 export MACOSX_DEPLOYMENT_TARGET
 
 # Option to install to strip binaries
@@ -256,8 +256,8 @@ PYTHON_FOR_REGEN?=python3
 UPDATE_FILE=python3 $(srcdir)/Tools/scripts/update_file.py
 PYTHON_FOR_BUILD=./$(BUILDPYTHON) -E
 _PYTHON_HOST_PLATFORM=
-BUILD_GNU_TYPE=	x86_64-apple-darwin19.6.0
-HOST_GNU_TYPE=	x86_64-apple-darwin19.6.0
+BUILD_GNU_TYPE=	x86_64-apple-darwin20.3.0
+HOST_GNU_TYPE=	x86_64-apple-darwin20.3.0
 
 # Tcl and Tk config info from --with-tcltk-includes and -libs options
 TCLTK_INCLUDES=	
@@ -286,6 +286,7 @@ SITEPATH=
 DESTPATH=
 MACHDESTLIB=$(BINLIBDEST)
 DESTLIB=$(LIBDEST)
+
 
 
 ##########################################################################

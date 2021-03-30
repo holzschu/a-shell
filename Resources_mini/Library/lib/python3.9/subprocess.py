@@ -1820,7 +1820,9 @@ class Popen(object):
                         builtins, exception_name.decode('ascii'),
                         SubprocessError)
                 if issubclass(child_exception_type, OSError) and hex_errno:
-                    errno_num = int(hex_errno, 16)
+                    # iOS: fix for OSX 11 / clang compiler
+                    errno_num = int.from_bytes(hex_errno, byteorder=sys.byteorder)
+                    # errno_num = int(hex_errno, 16)
                     child_exec_never_called = (err_msg == "noexec")
                     if child_exec_never_called:
                         err_msg = ""
