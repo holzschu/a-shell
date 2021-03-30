@@ -353,12 +353,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let currentiCloudToken = FileManager().ubiquityIdentityToken
         // print("Available fonts: \(UIFont.familyNames)");
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
+#if false // Disabling request for notifications, since we do not use it.
         let center = UNUserNotificationCenter.current()
         // Request permission to display alerts and play sounds.
         center.requestAuthorization(options: [.alert, .sound])
         { (granted, error) in
             // Enable or disable features based on authorization.
         }
+#endif
         // Detect changes in user settings (preferences):
         NotificationCenter.default.addObserver(self, selector: #selector(self.settingsChanged), name: UserDefaults.didChangeNotification, object: nil)
         // Also notification if user changes accessibility settings:
