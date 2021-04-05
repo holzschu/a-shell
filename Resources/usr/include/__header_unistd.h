@@ -5,10 +5,10 @@ struct stat;
 
 #include <__seek.h>
 
-#define F_OK 0
-#define R_OK 1
-#define W_OK 2
-#define X_OK 4
+#define F_OK (0)
+#define X_OK (1)
+#define W_OK (2)
+#define R_OK (4)
 
 #ifdef __cplusplus
 extern "C" {

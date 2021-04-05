@@ -1,6 +1,13 @@
 /**
  * THIS FILE IS AUTO-GENERATED from the following files:
- *   typenames.witx, wasi_snapshot_preview1.witx
+ *   wasi_snapshot_preview1.witx
+ *
+ * To regenerate this file execute:
+ *
+ *     cargo run --manifest-path tools/wasi-headers/Cargo.toml generate-libc
+ *
+ * Modifications to this file will cause CI to fail, the code generator tool
+ * must be modified to change this file.
  *
  * @file
  * This file describes the [WASI] interface, consisting of functions, types,
@@ -502,160 +509,157 @@ typedef uint64_t __wasi_rights_t;
  * If `path_open` is set, includes the right to invoke
  * `path_open` with `fdflags::dsync`.
  */
-#define __WASI_RIGHTS_FD_DATASYNC (UINT64_C(1))
+#define __WASI_RIGHTS_FD_DATASYNC ((__wasi_rights_t)(1 << 0))
 
 /**
  * The right to invoke `fd_read` and `sock_recv`.
  * If `rights::fd_seek` is set, includes the right to invoke `fd_pread`.
  */
-#define __WASI_RIGHTS_FD_READ (UINT64_C(2))
+#define __WASI_RIGHTS_FD_READ ((__wasi_rights_t)(1 << 1))
 
 /**
  * The right to invoke `fd_seek`. This flag implies `rights::fd_tell`.
  */
-#define __WASI_RIGHTS_FD_SEEK (UINT64_C(4))
+#define __WASI_RIGHTS_FD_SEEK ((__wasi_rights_t)(1 << 2))
 
 /**
  * The right to invoke `fd_fdstat_set_flags`.
  */
-#define __WASI_RIGHTS_FD_FDSTAT_SET_FLAGS (UINT64_C(8))
+#define __WASI_RIGHTS_FD_FDSTAT_SET_FLAGS ((__wasi_rights_t)(1 << 3))
 
 /**
  * The right to invoke `fd_sync`.
  * If `path_open` is set, includes the right to invoke
  * `path_open` with `fdflags::rsync` and `fdflags::dsync`.
  */
-#define __WASI_RIGHTS_FD_SYNC (UINT64_C(16))
+#define __WASI_RIGHTS_FD_SYNC ((__wasi_rights_t)(1 << 4))
 
 /**
  * The right to invoke `fd_seek` in such a way that the file offset
  * remains unaltered (i.e., `whence::cur` with offset zero), or to
  * invoke `fd_tell`.
  */
-#define __WASI_RIGHTS_FD_TELL (UINT64_C(32))
+#define __WASI_RIGHTS_FD_TELL ((__wasi_rights_t)(1 << 5))
 
 /**
  * The right to invoke `fd_write` and `sock_send`.
  * If `rights::fd_seek` is set, includes the right to invoke `fd_pwrite`.
  */
-#define __WASI_RIGHTS_FD_WRITE (UINT64_C(64))
+#define __WASI_RIGHTS_FD_WRITE ((__wasi_rights_t)(1 << 6))
 
 /**
  * The right to invoke `fd_advise`.
  */
-#define __WASI_RIGHTS_FD_ADVISE (UINT64_C(128))
+#define __WASI_RIGHTS_FD_ADVISE ((__wasi_rights_t)(1 << 7))
 
 /**
  * The right to invoke `fd_allocate`.
  */
-#define __WASI_RIGHTS_FD_ALLOCATE (UINT64_C(256))
+#define __WASI_RIGHTS_FD_ALLOCATE ((__wasi_rights_t)(1 << 8))
 
 /**
  * The right to invoke `path_create_directory`.
  */
-#define __WASI_RIGHTS_PATH_CREATE_DIRECTORY (UINT64_C(512))
+#define __WASI_RIGHTS_PATH_CREATE_DIRECTORY ((__wasi_rights_t)(1 << 9))
 
 /**
  * If `path_open` is set, the right to invoke `path_open` with `oflags::creat`.
  */
-#define __WASI_RIGHTS_PATH_CREATE_FILE (UINT64_C(1024))
+#define __WASI_RIGHTS_PATH_CREATE_FILE ((__wasi_rights_t)(1 << 10))
 
 /**
  * The right to invoke `path_link` with the file descriptor as the
  * source directory.
  */
-#define __WASI_RIGHTS_PATH_LINK_SOURCE (UINT64_C(2048))
+#define __WASI_RIGHTS_PATH_LINK_SOURCE ((__wasi_rights_t)(1 << 11))
 
 /**
  * The right to invoke `path_link` with the file descriptor as the
  * target directory.
  */
-#define __WASI_RIGHTS_PATH_LINK_TARGET (UINT64_C(4096))
+#define __WASI_RIGHTS_PATH_LINK_TARGET ((__wasi_rights_t)(1 << 12))
 
 /**
  * The right to invoke `path_open`.
  */
-#define __WASI_RIGHTS_PATH_OPEN (UINT64_C(8192))
+#define __WASI_RIGHTS_PATH_OPEN ((__wasi_rights_t)(1 << 13))
 
 /**
  * The right to invoke `fd_readdir`.
  */
-#define __WASI_RIGHTS_FD_READDIR (UINT64_C(16384))
+#define __WASI_RIGHTS_FD_READDIR ((__wasi_rights_t)(1 << 14))
 
 /**
  * The right to invoke `path_readlink`.
  */
-#define __WASI_RIGHTS_PATH_READLINK (UINT64_C(32768))
+#define __WASI_RIGHTS_PATH_READLINK ((__wasi_rights_t)(1 << 15))
 
 /**
  * The right to invoke `path_rename` with the file descriptor as the source directory.
  */
-#define __WASI_RIGHTS_PATH_RENAME_SOURCE (UINT64_C(65536))
+#define __WASI_RIGHTS_PATH_RENAME_SOURCE ((__wasi_rights_t)(1 << 16))
 
 /**
  * The right to invoke `path_rename` with the file descriptor as the target directory.
  */
-#define __WASI_RIGHTS_PATH_RENAME_TARGET (UINT64_C(131072))
+#define __WASI_RIGHTS_PATH_RENAME_TARGET ((__wasi_rights_t)(1 << 17))
 
 /**
  * The right to invoke `path_filestat_get`.
  */
-#define __WASI_RIGHTS_PATH_FILESTAT_GET (UINT64_C(262144))
+#define __WASI_RIGHTS_PATH_FILESTAT_GET ((__wasi_rights_t)(1 << 18))
 
 /**
  * The right to change a file's size (there is no `path_filestat_set_size`).
  * If `path_open` is set, includes the right to invoke `path_open` with `oflags::trunc`.
  */
-#define __WASI_RIGHTS_PATH_FILESTAT_SET_SIZE (UINT64_C(524288))
+#define __WASI_RIGHTS_PATH_FILESTAT_SET_SIZE ((__wasi_rights_t)(1 << 19))
 
 /**
  * The right to invoke `path_filestat_set_times`.
  */
-#define __WASI_RIGHTS_PATH_FILESTAT_SET_TIMES (UINT64_C(1048576))
+#define __WASI_RIGHTS_PATH_FILESTAT_SET_TIMES ((__wasi_rights_t)(1 << 20))
 
 /**
  * The right to invoke `fd_filestat_get`.
  */
-#define __WASI_RIGHTS_FD_FILESTAT_GET (UINT64_C(2097152))
+#define __WASI_RIGHTS_FD_FILESTAT_GET ((__wasi_rights_t)(1 << 21))
 
 /**
  * The right to invoke `fd_filestat_set_size`.
  */
-#define __WASI_RIGHTS_FD_FILESTAT_SET_SIZE (UINT64_C(4194304))
+#define __WASI_RIGHTS_FD_FILESTAT_SET_SIZE ((__wasi_rights_t)(1 << 22))
 
 /**
  * The right to invoke `fd_filestat_set_times`.
  */
-#define __WASI_RIGHTS_FD_FILESTAT_SET_TIMES (UINT64_C(8388608))
+#define __WASI_RIGHTS_FD_FILESTAT_SET_TIMES ((__wasi_rights_t)(1 << 23))
 
 /**
  * The right to invoke `path_symlink`.
  */
-#define __WASI_RIGHTS_PATH_SYMLINK (UINT64_C(16777216))
+#define __WASI_RIGHTS_PATH_SYMLINK ((__wasi_rights_t)(1 << 24))
 
 /**
  * The right to invoke `path_remove_directory`.
  */
-#define __WASI_RIGHTS_PATH_REMOVE_DIRECTORY (UINT64_C(33554432))
+#define __WASI_RIGHTS_PATH_REMOVE_DIRECTORY ((__wasi_rights_t)(1 << 25))
 
 /**
  * The right to invoke `path_unlink_file`.
  */
-#define __WASI_RIGHTS_PATH_UNLINK_FILE (UINT64_C(67108864))
+#define __WASI_RIGHTS_PATH_UNLINK_FILE ((__wasi_rights_t)(1 << 26))
 
 /**
  * If `rights::fd_read` is set, includes the right to invoke `poll_oneoff` to subscribe to `eventtype::fd_read`.
  * If `rights::fd_write` is set, includes the right to invoke `poll_oneoff` to subscribe to `eventtype::fd_write`.
  */
-#define __WASI_RIGHTS_POLL_FD_READWRITE (UINT64_C(134217728))
+#define __WASI_RIGHTS_POLL_FD_READWRITE ((__wasi_rights_t)(1 << 27))
 
 /**
  * The right to invoke `sock_shutdown`.
  */
-#define __WASI_RIGHTS_SOCK_SHUTDOWN (UINT64_C(268435456))
-
-_Static_assert(sizeof(__wasi_rights_t) == 8, "witx calculated size");
-_Static_assert(_Alignof(__wasi_rights_t) == 8, "witx calculated align");
+#define __WASI_RIGHTS_SOCK_SHUTDOWN ((__wasi_rights_t)(1 << 28))
 
 /**
  * A file descriptor handle.
@@ -749,7 +753,7 @@ _Static_assert(sizeof(__wasi_dircookie_t) == 8, "witx calculated size");
 _Static_assert(_Alignof(__wasi_dircookie_t) == 8, "witx calculated align");
 
 /**
- * The type for the $d_namlen field of $dirent.
+ * The type for the `dirent::d_namlen` field of `dirent` struct.
  */
 typedef uint32_t __wasi_dirnamlen_t;
 
@@ -891,32 +895,29 @@ typedef uint16_t __wasi_fdflags_t;
 /**
  * Append mode: Data written to the file is always appended to the file's end.
  */
-#define __WASI_FDFLAGS_APPEND (UINT16_C(1))
+#define __WASI_FDFLAGS_APPEND ((__wasi_fdflags_t)(1 << 0))
 
 /**
  * Write according to synchronized I/O data integrity completion. Only the data stored in the file is synchronized.
  */
-#define __WASI_FDFLAGS_DSYNC (UINT16_C(2))
+#define __WASI_FDFLAGS_DSYNC ((__wasi_fdflags_t)(1 << 1))
 
 /**
  * Non-blocking mode.
  */
-#define __WASI_FDFLAGS_NONBLOCK (UINT16_C(4))
+#define __WASI_FDFLAGS_NONBLOCK ((__wasi_fdflags_t)(1 << 2))
 
 /**
  * Synchronized read I/O operations.
  */
-#define __WASI_FDFLAGS_RSYNC (UINT16_C(8))
+#define __WASI_FDFLAGS_RSYNC ((__wasi_fdflags_t)(1 << 3))
 
 /**
  * Write according to synchronized I/O file integrity completion. In
  * addition to synchronizing the data stored in the file, the implementation
  * may also synchronously update the file's metadata.
  */
-#define __WASI_FDFLAGS_SYNC (UINT16_C(16))
-
-_Static_assert(sizeof(__wasi_fdflags_t) == 2, "witx calculated size");
-_Static_assert(_Alignof(__wasi_fdflags_t) == 2, "witx calculated align");
+#define __WASI_FDFLAGS_SYNC ((__wasi_fdflags_t)(1 << 4))
 
 /**
  * File descriptor attributes.
@@ -969,25 +970,22 @@ typedef uint16_t __wasi_fstflags_t;
 /**
  * Adjust the last data access timestamp to the value stored in `filestat::atim`.
  */
-#define __WASI_FSTFLAGS_ATIM (UINT16_C(1))
+#define __WASI_FSTFLAGS_ATIM ((__wasi_fstflags_t)(1 << 0))
 
 /**
  * Adjust the last data access timestamp to the time of clock `clockid::realtime`.
  */
-#define __WASI_FSTFLAGS_ATIM_NOW (UINT16_C(2))
+#define __WASI_FSTFLAGS_ATIM_NOW ((__wasi_fstflags_t)(1 << 1))
 
 /**
  * Adjust the last data modification timestamp to the value stored in `filestat::mtim`.
  */
-#define __WASI_FSTFLAGS_MTIM (UINT16_C(4))
+#define __WASI_FSTFLAGS_MTIM ((__wasi_fstflags_t)(1 << 2))
 
 /**
  * Adjust the last data modification timestamp to the time of clock `clockid::realtime`.
  */
-#define __WASI_FSTFLAGS_MTIM_NOW (UINT16_C(8))
-
-_Static_assert(sizeof(__wasi_fstflags_t) == 2, "witx calculated size");
-_Static_assert(_Alignof(__wasi_fstflags_t) == 2, "witx calculated align");
+#define __WASI_FSTFLAGS_MTIM_NOW ((__wasi_fstflags_t)(1 << 3))
 
 /**
  * Flags determining the method of how paths are resolved.
@@ -997,10 +995,7 @@ typedef uint32_t __wasi_lookupflags_t;
 /**
  * As long as the resolved path corresponds to a symbolic link, it is expanded.
  */
-#define __WASI_LOOKUPFLAGS_SYMLINK_FOLLOW (UINT32_C(1))
-
-_Static_assert(sizeof(__wasi_lookupflags_t) == 4, "witx calculated size");
-_Static_assert(_Alignof(__wasi_lookupflags_t) == 4, "witx calculated align");
+#define __WASI_LOOKUPFLAGS_SYMLINK_FOLLOW ((__wasi_lookupflags_t)(1 << 0))
 
 /**
  * Open flags used by `path_open`.
@@ -1010,25 +1005,22 @@ typedef uint16_t __wasi_oflags_t;
 /**
  * Create file if it does not exist.
  */
-#define __WASI_OFLAGS_CREAT (UINT16_C(1))
+#define __WASI_OFLAGS_CREAT ((__wasi_oflags_t)(1 << 0))
 
 /**
  * Fail if not a directory.
  */
-#define __WASI_OFLAGS_DIRECTORY (UINT16_C(2))
+#define __WASI_OFLAGS_DIRECTORY ((__wasi_oflags_t)(1 << 1))
 
 /**
  * Fail if file already exists.
  */
-#define __WASI_OFLAGS_EXCL (UINT16_C(4))
+#define __WASI_OFLAGS_EXCL ((__wasi_oflags_t)(1 << 2))
 
 /**
  * Truncate file to size 0.
  */
-#define __WASI_OFLAGS_TRUNC (UINT16_C(8))
-
-_Static_assert(sizeof(__wasi_oflags_t) == 2, "witx calculated size");
-_Static_assert(_Alignof(__wasi_oflags_t) == 2, "witx calculated align");
+#define __WASI_OFLAGS_TRUNC ((__wasi_oflags_t)(1 << 3))
 
 /**
  * Number of hard links to an inode.
@@ -1139,13 +1131,10 @@ typedef uint16_t __wasi_eventrwflags_t;
 /**
  * The peer of this socket has closed or disconnected.
  */
-#define __WASI_EVENTRWFLAGS_FD_READWRITE_HANGUP (UINT16_C(1))
-
-_Static_assert(sizeof(__wasi_eventrwflags_t) == 2, "witx calculated size");
-_Static_assert(_Alignof(__wasi_eventrwflags_t) == 2, "witx calculated align");
+#define __WASI_EVENTRWFLAGS_FD_READWRITE_HANGUP ((__wasi_eventrwflags_t)(1 << 0))
 
 /**
- * The contents of an $event when type is `eventtype::fd_read` or
+ * The contents of an `event` when type is `eventtype::fd_read` or
  * `eventtype::fd_write`.
  */
 typedef struct __wasi_event_fd_readwrite_t {
@@ -1213,10 +1202,7 @@ typedef uint16_t __wasi_subclockflags_t;
  * provided in `subscription_clock::timeout` relative to the
  * current time value of clock `subscription_clock::id`.
  */
-#define __WASI_SUBCLOCKFLAGS_SUBSCRIPTION_CLOCK_ABSTIME (UINT16_C(1))
-
-_Static_assert(sizeof(__wasi_subclockflags_t) == 2, "witx calculated size");
-_Static_assert(_Alignof(__wasi_subclockflags_t) == 2, "witx calculated align");
+#define __WASI_SUBCLOCKFLAGS_SUBSCRIPTION_CLOCK_ABSTIME ((__wasi_subclockflags_t)(1 << 0))
 
 /**
  * The contents of a `subscription` when type is `eventtype::clock`.
@@ -1277,15 +1263,12 @@ typedef union __wasi_subscription_u_u_t {
     __wasi_subscription_fd_readwrite_t fd_write;
 } __wasi_subscription_u_u_t;
 typedef struct __wasi_subscription_u_t {
-    __wasi_eventtype_t tag;
+    uint8_t tag;
     __wasi_subscription_u_u_t u;
 } __wasi_subscription_u_t;
 
 _Static_assert(sizeof(__wasi_subscription_u_t) == 40, "witx calculated size");
 _Static_assert(_Alignof(__wasi_subscription_u_t) == 8, "witx calculated align");
-_Static_assert(offsetof(__wasi_subscription_u_t, u) == 8, "witx calculated union offset");
-_Static_assert(sizeof(__wasi_subscription_u_u_t) == 32, "witx calculated union size");
-_Static_assert(_Alignof(__wasi_subscription_u_u_t) == 8, "witx calculated union align");
 
 /**
  * Subscription to an event.
@@ -1519,15 +1502,12 @@ typedef uint16_t __wasi_riflags_t;
 /**
  * Returns the message without removing it from the socket's receive queue.
  */
-#define __WASI_RIFLAGS_RECV_PEEK (UINT16_C(1))
+#define __WASI_RIFLAGS_RECV_PEEK ((__wasi_riflags_t)(1 << 0))
 
 /**
  * On byte-stream sockets, block until the full amount of data can be returned.
  */
-#define __WASI_RIFLAGS_RECV_WAITALL (UINT16_C(2))
-
-_Static_assert(sizeof(__wasi_riflags_t) == 2, "witx calculated size");
-_Static_assert(_Alignof(__wasi_riflags_t) == 2, "witx calculated align");
+#define __WASI_RIFLAGS_RECV_WAITALL ((__wasi_riflags_t)(1 << 1))
 
 /**
  * Flags returned by `sock_recv`.
@@ -1537,10 +1517,7 @@ typedef uint16_t __wasi_roflags_t;
 /**
  * Returned by `sock_recv`: Message data has been truncated.
  */
-#define __WASI_ROFLAGS_RECV_DATA_TRUNCATED (UINT16_C(1))
-
-_Static_assert(sizeof(__wasi_roflags_t) == 2, "witx calculated size");
-_Static_assert(_Alignof(__wasi_roflags_t) == 2, "witx calculated align");
+#define __WASI_ROFLAGS_RECV_DATA_TRUNCATED ((__wasi_roflags_t)(1 << 0))
 
 /**
  * Flags provided to `sock_send`. As there are currently no flags
@@ -1559,15 +1536,12 @@ typedef uint8_t __wasi_sdflags_t;
 /**
  * Disables further receive operations.
  */
-#define __WASI_SDFLAGS_RD (UINT8_C(1))
+#define __WASI_SDFLAGS_RD ((__wasi_sdflags_t)(1 << 0))
 
 /**
  * Disables further send operations.
  */
-#define __WASI_SDFLAGS_WR (UINT8_C(2))
-
-_Static_assert(sizeof(__wasi_sdflags_t) == 1, "witx calculated size");
-_Static_assert(_Alignof(__wasi_sdflags_t) == 1, "witx calculated align");
+#define __WASI_SDFLAGS_WR ((__wasi_sdflags_t)(1 << 1))
 
 /**
  * Identifiers for preopened capabilities.
@@ -1604,15 +1578,12 @@ typedef union __wasi_prestat_u_t {
     __wasi_prestat_dir_t dir;
 } __wasi_prestat_u_t;
 typedef struct __wasi_prestat_t {
-    __wasi_preopentype_t tag;
+    uint8_t tag;
     __wasi_prestat_u_t u;
 } __wasi_prestat_t;
 
 _Static_assert(sizeof(__wasi_prestat_t) == 8, "witx calculated size");
 _Static_assert(_Alignof(__wasi_prestat_t) == 4, "witx calculated align");
-_Static_assert(offsetof(__wasi_prestat_t, u) == 4, "witx calculated union offset");
-_Static_assert(sizeof(__wasi_prestat_u_t) == 4, "witx calculated union size");
-_Static_assert(_Alignof(__wasi_prestat_u_t) == 4, "witx calculated union align");
 
 /**
  * @defgroup wasi_snapshot_preview1
@@ -1625,270 +1596,169 @@ _Static_assert(_Alignof(__wasi_prestat_u_t) == 4, "witx calculated union align")
  */
 __wasi_errno_t __wasi_args_get(
     uint8_t * * argv,
-
     uint8_t * argv_buf
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("args_get"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Return command-line argument data sizes.
+ * @return
+ * Returns the number of arguments and the size of the argument string
+ * data, or an error.
  */
 __wasi_errno_t __wasi_args_sizes_get(
-    /**
-     * The number of arguments.
-     */
-    __wasi_size_t *argc,
-    /**
-     * The size of the argument string data.
-     */
-    __wasi_size_t *argv_buf_size
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("args_sizes_get"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0,
+    __wasi_size_t *retptr1
+) __attribute__((__warn_unused_result__));
 /**
  * Read environment variable data.
  * The sizes of the buffers should match that returned by `environ_sizes_get`.
  */
 __wasi_errno_t __wasi_environ_get(
     uint8_t * * environ,
-
     uint8_t * environ_buf
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("environ_get"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Return environment variable data sizes.
+ * @return
+ * Returns the number of environment variable arguments and the size of the
+ * environment variable data.
  */
 __wasi_errno_t __wasi_environ_sizes_get(
-    /**
-     * The number of environment variable arguments.
-     */
-    __wasi_size_t *environc,
-    /**
-     * The size of the environment variable data.
-     */
-    __wasi_size_t *environ_buf_size
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("environ_sizes_get"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0,
+    __wasi_size_t *retptr1
+) __attribute__((__warn_unused_result__));
 /**
  * Return the resolution of a clock.
  * Implementations are required to provide a non-zero value for supported clocks. For unsupported clocks,
  * return `errno::inval`.
  * Note: This is similar to `clock_getres` in POSIX.
+ * @return
+ * The resolution of the clock, or an error if one happened.
  */
 __wasi_errno_t __wasi_clock_res_get(
     /**
      * The clock for which to return the resolution.
      */
     __wasi_clockid_t id,
-
-    /**
-     * The resolution of the clock.
-     */
-    __wasi_timestamp_t *resolution
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("clock_res_get"),
-    __warn_unused_result__
-));
-
+    __wasi_timestamp_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Return the time value of a clock.
  * Note: This is similar to `clock_gettime` in POSIX.
+ * @return
+ * The time value of the clock.
  */
 __wasi_errno_t __wasi_clock_time_get(
     /**
      * The clock for which to return the time.
      */
     __wasi_clockid_t id,
-
     /**
      * The maximum lag (exclusive) that the returned time value may have, compared to its actual value.
      */
     __wasi_timestamp_t precision,
-
-    /**
-     * The time value of the clock.
-     */
-    __wasi_timestamp_t *time
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("clock_time_get"),
-    __warn_unused_result__
-));
-
+    __wasi_timestamp_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Provide file advisory information on a file descriptor.
  * Note: This is similar to `posix_fadvise` in POSIX.
  */
 __wasi_errno_t __wasi_fd_advise(
     __wasi_fd_t fd,
-
     /**
      * The offset within the file to which the advisory applies.
      */
     __wasi_filesize_t offset,
-
     /**
      * The length of the region to which the advisory applies.
      */
     __wasi_filesize_t len,
-
     /**
      * The advice.
      */
     __wasi_advice_t advice
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_advise"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Force the allocation of space in a file.
  * Note: This is similar to `posix_fallocate` in POSIX.
  */
 __wasi_errno_t __wasi_fd_allocate(
     __wasi_fd_t fd,
-
     /**
      * The offset at which to start the allocation.
      */
     __wasi_filesize_t offset,
-
     /**
      * The length of the area that is allocated.
      */
     __wasi_filesize_t len
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_allocate"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Close a file descriptor.
  * Note: This is similar to `close` in POSIX.
  */
 __wasi_errno_t __wasi_fd_close(
     __wasi_fd_t fd
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_close"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Synchronize the data of a file to disk.
  * Note: This is similar to `fdatasync` in POSIX.
  */
 __wasi_errno_t __wasi_fd_datasync(
     __wasi_fd_t fd
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_datasync"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Get the attributes of a file descriptor.
  * Note: This returns similar flags to `fsync(fd, F_GETFL)` in POSIX, as well as additional fields.
+ * @return
+ * The buffer where the file descriptor's attributes are stored.
  */
 __wasi_errno_t __wasi_fd_fdstat_get(
     __wasi_fd_t fd,
-
-    /**
-     * The buffer where the file descriptor's attributes are stored.
-     */
-    __wasi_fdstat_t *stat
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_fdstat_get"),
-    __warn_unused_result__
-));
-
+    __wasi_fdstat_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Adjust the flags associated with a file descriptor.
  * Note: This is similar to `fcntl(fd, F_SETFL, flags)` in POSIX.
  */
 __wasi_errno_t __wasi_fd_fdstat_set_flags(
     __wasi_fd_t fd,
-
     /**
      * The desired values of the file descriptor flags.
      */
     __wasi_fdflags_t flags
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_fdstat_set_flags"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Adjust the rights associated with a file descriptor.
  * This can only be used to remove rights, and returns `errno::notcapable` if called in a way that would attempt to add rights
  */
 __wasi_errno_t __wasi_fd_fdstat_set_rights(
     __wasi_fd_t fd,
-
     /**
      * The desired rights of the file descriptor.
      */
     __wasi_rights_t fs_rights_base,
-
     __wasi_rights_t fs_rights_inheriting
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_fdstat_set_rights"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Return the attributes of an open file.
+ * @return
+ * The buffer where the file's attributes are stored.
  */
 __wasi_errno_t __wasi_fd_filestat_get(
     __wasi_fd_t fd,
-
-    /**
-     * The buffer where the file's attributes are stored.
-     */
-    __wasi_filestat_t *buf
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_filestat_get"),
-    __warn_unused_result__
-));
-
+    __wasi_filestat_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Adjust the size of an open file. If this increases the file's size, the extra bytes are filled with zeros.
  * Note: This is similar to `ftruncate` in POSIX.
  */
 __wasi_errno_t __wasi_fd_filestat_set_size(
     __wasi_fd_t fd,
-
     /**
      * The desired file size.
      */
     __wasi_filesize_t size
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_filestat_set_size"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Adjust the timestamps of an open file or directory.
  * Note: This is similar to `futimens` in POSIX.
@@ -1898,12 +1768,10 @@ __wasi_errno_t __wasi_fd_filestat_set_size(
  */
 __wasi_errno_t __wasi_fd_filestat_set_times(
     __wasi_fd_t fd,
-
     /**
      * data access timestamp (seconds).
      */
     __wasi_timestamp_t atim,
-
     /**
      * data access timestamp (nanoseconds).
      */
@@ -1913,7 +1781,6 @@ __wasi_errno_t __wasi_fd_filestat_set_times(
      * data modification timestamp (seconds).
      */
     __wasi_timestamp_t mtim,
-
     /**
      * data modification timestamp (nanoseconds).
      */
@@ -1923,173 +1790,115 @@ __wasi_errno_t __wasi_fd_filestat_set_times(
      * A bitmask indicating which timestamps to adjust.
      */
     __wasi_fstflags_t fst_flags
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_filestat_set_times"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Read from a file descriptor, without using and updating the file descriptor's offset.
  * Note: This is similar to `preadv` in POSIX.
+ * @return
+ * The number of bytes read.
  */
 __wasi_errno_t __wasi_fd_pread(
     __wasi_fd_t fd,
-
     /**
      * List of scatter/gather vectors in which to store data.
      */
     const __wasi_iovec_t *iovs,
-
     /**
      * The length of the array pointed to by `iovs`.
      */
     size_t iovs_len,
-
     /**
      * The offset within the file at which to read.
      */
     __wasi_filesize_t offset,
-
-    /**
-     * The number of bytes read.
-     */
-    __wasi_size_t *nread
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_pread"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Return a description of the given preopened file descriptor.
+ * @return
+ * The buffer where the description is stored.
  */
 __wasi_errno_t __wasi_fd_prestat_get(
     __wasi_fd_t fd,
-
-    /**
-     * The buffer where the description is stored.
-     */
-    __wasi_prestat_t *buf
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_prestat_get"),
-    __warn_unused_result__
-));
-
+    __wasi_prestat_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Return a description of the given preopened file descriptor.
  */
 __wasi_errno_t __wasi_fd_prestat_dir_name(
     __wasi_fd_t fd,
-
     /**
      * A buffer into which to write the preopened directory name.
      */
     uint8_t * path,
-
     __wasi_size_t path_len
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_prestat_dir_name"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Write to a file descriptor, without using and updating the file descriptor's offset.
  * Note: This is similar to `pwritev` in POSIX.
+ * @return
+ * The number of bytes written.
  */
 __wasi_errno_t __wasi_fd_pwrite(
     __wasi_fd_t fd,
-
     /**
      * List of scatter/gather vectors from which to retrieve data.
      */
     const __wasi_ciovec_t *iovs,
-
     /**
      * The length of the array pointed to by `iovs`.
      */
     size_t iovs_len,
-
     /**
      * The offset within the file at which to write.
      */
     __wasi_filesize_t offset,
-
-    /**
-     * The number of bytes written.
-     */
-    __wasi_size_t *nwritten
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_pwrite"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Read from a file descriptor.
  * Note: This is similar to `readv` in POSIX.
+ * @return
+ * The number of bytes read.
  */
 __wasi_errno_t __wasi_fd_read(
     __wasi_fd_t fd,
-
     /**
      * List of scatter/gather vectors to which to store data.
      */
     const __wasi_iovec_t *iovs,
-
     /**
      * The length of the array pointed to by `iovs`.
      */
     size_t iovs_len,
-
-    /**
-     * The number of bytes read.
-     */
-    __wasi_size_t *nread
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_read"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Read directory entries from a directory.
  * When successful, the contents of the output buffer consist of a sequence of
- * directory entries. Each directory entry consists of a dirent_t object,
- * followed by dirent_t::d_namlen bytes holding the name of the directory
+ * directory entries. Each directory entry consists of a `dirent` object,
+ * followed by `dirent::d_namlen` bytes holding the name of the directory
  * entry.
  * This function fills the output buffer as much as possible, potentially
  * truncating the last directory entry. This allows the caller to grow its
  * read buffer size in case it's too small to fit a single large directory
  * entry, or skip the oversized directory entry.
+ * @return
+ * The number of bytes stored in the read buffer. If less than the size of the read buffer, the end of the directory has been reached.
  */
 __wasi_errno_t __wasi_fd_readdir(
     __wasi_fd_t fd,
-
     /**
      * The buffer where directory entries are stored
      */
     uint8_t * buf,
-
     __wasi_size_t buf_len,
-
     /**
      * The location within the directory to start reading
      */
     __wasi_dircookie_t cookie,
-
-    /**
-     * The number of bytes stored in the read buffer. If less than the size of the read buffer, the end of the directory has been reached.
-     */
-    __wasi_size_t *bufused
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_readdir"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Atomically replace a file descriptor by renumbering another file descriptor.
  * Due to the strong focus on thread safety, this environment does not provide
@@ -2102,154 +1911,91 @@ __wasi_errno_t __wasi_fd_readdir(
  */
 __wasi_errno_t __wasi_fd_renumber(
     __wasi_fd_t fd,
-
     /**
      * The file descriptor to overwrite.
      */
     __wasi_fd_t to
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_renumber"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Move the offset of a file descriptor.
  * Note: This is similar to `lseek` in POSIX.
+ * @return
+ * The new offset of the file descriptor, relative to the start of the file.
  */
 __wasi_errno_t __wasi_fd_seek(
     __wasi_fd_t fd,
-
     /**
      * The number of bytes to move.
      */
     __wasi_filedelta_t offset,
-
     /**
      * The base from which the offset is relative.
      */
     __wasi_whence_t whence,
-
-    /**
-     * The new offset of the file descriptor, relative to the start of the file.
-     */
-    __wasi_filesize_t *newoffset
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_seek"),
-    __warn_unused_result__
-));
-
+    __wasi_filesize_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Synchronize the data and metadata of a file to disk.
  * Note: This is similar to `fsync` in POSIX.
  */
 __wasi_errno_t __wasi_fd_sync(
     __wasi_fd_t fd
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_sync"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Return the current offset of a file descriptor.
  * Note: This is similar to `lseek(fd, 0, SEEK_CUR)` in POSIX.
+ * @return
+ * The current offset of the file descriptor, relative to the start of the file.
  */
 __wasi_errno_t __wasi_fd_tell(
     __wasi_fd_t fd,
-
-    /**
-     * The current offset of the file descriptor, relative to the start of the file.
-     */
-    __wasi_filesize_t *offset
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_tell"),
-    __warn_unused_result__
-));
-
+    __wasi_filesize_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Write to a file descriptor.
  * Note: This is similar to `writev` in POSIX.
  */
 __wasi_errno_t __wasi_fd_write(
     __wasi_fd_t fd,
-
     /**
      * List of scatter/gather vectors from which to retrieve data.
      */
     const __wasi_ciovec_t *iovs,
-
     /**
      * The length of the array pointed to by `iovs`.
      */
     size_t iovs_len,
-
-    /**
-     * The number of bytes written.
-     */
-    __wasi_size_t *nwritten
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("fd_write"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Create a directory.
  * Note: This is similar to `mkdirat` in POSIX.
  */
 __wasi_errno_t __wasi_path_create_directory(
     __wasi_fd_t fd,
-
     /**
      * The path at which to create the directory.
      */
-    const char *path,
-
-    /**
-     * The length of the buffer pointed to by `path`.
-     */
-    size_t path_len
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("path_create_directory"),
-    __warn_unused_result__
-));
-
+    const char *path
+) __attribute__((__warn_unused_result__));
 /**
  * Return the attributes of a file or directory.
  * Note: This is similar to `stat` in POSIX.
+ * @return
+ * The buffer where the file's attributes are stored.
  */
 __wasi_errno_t __wasi_path_filestat_get(
     __wasi_fd_t fd,
-
     /**
      * Flags determining the method of how the path is resolved.
      */
     __wasi_lookupflags_t flags,
-
     /**
      * The path of the file or directory to inspect.
      */
     const char *path,
-
-    /**
-     * The length of the buffer pointed to by `path`.
-     */
-    size_t path_len,
-
-    /**
-     * The buffer where the file's attributes are stored.
-     */
-    __wasi_filestat_t *buf
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("path_filestat_get"),
-    __warn_unused_result__
-));
-
+    __wasi_filestat_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Adjust the timestamps of a file or directory.
  * Note: This is similar to `utimensat` in POSIX.
@@ -2259,27 +2005,19 @@ __wasi_errno_t __wasi_path_filestat_get(
  */
 __wasi_errno_t __wasi_path_filestat_set_times(
     __wasi_fd_t fd,
-
     /**
      * Flags determining the method of how the path is resolved.
      */
     __wasi_lookupflags_t flags,
-
     /**
      * The path of the file or directory to operate on.
      */
     const char *path,
 
     /**
-     * The length of the buffer pointed to by `path`.
-     */
-    size_t path_len,
-
-    /**
      * The desired values of the data access timestamp (seconds).
      */
     __wasi_timestamp_t atim,
-
     /**
      * desired values of the data access timestamp (nanoseconds).
      */
@@ -2289,7 +2027,6 @@ __wasi_errno_t __wasi_path_filestat_set_times(
      * The desired values of the data modification timestamp (seconds).
      */
     __wasi_timestamp_t mtim,
-
     /**
      * desired values of the data modification timestamp (nanoseconds).
      */
@@ -2299,54 +2036,30 @@ __wasi_errno_t __wasi_path_filestat_set_times(
      * A bitmask indicating which timestamps to adjust.
      */
     __wasi_fstflags_t fst_flags
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("path_filestat_set_times"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Create a hard link.
  * Note: This is similar to `linkat` in POSIX.
  */
 __wasi_errno_t __wasi_path_link(
     __wasi_fd_t old_fd,
-
     /**
      * Flags determining the method of how the path is resolved.
      */
     __wasi_lookupflags_t old_flags,
-
     /**
      * The source path from which to link.
      */
     const char *old_path,
-
-    /**
-     * The length of the buffer pointed to by `old_path`.
-     */
-    size_t old_path_len,
-
     /**
      * The working directory at which the resolution of the new path starts.
      */
     __wasi_fd_t new_fd,
-
     /**
      * The destination path at which to create the hard link.
      */
-    const char *new_path,
-
-    /**
-     * The length of the buffer pointed to by `new_path`.
-     */
-    size_t new_path_len
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("path_link"),
-    __warn_unused_result__
-));
-
+    const char *new_path
+) __attribute__((__warn_unused_result__));
 /**
  * Open a file or directory.
  * The returned file descriptor is not guaranteed to be the lowest-numbered
@@ -2355,31 +2068,24 @@ __wasi_errno_t __wasi_path_link(
  * is error-prone in multi-threaded contexts. The returned file descriptor is
  * guaranteed to be less than 2**31.
  * Note: This is similar to `openat` in POSIX.
+ * @return
+ * The file descriptor of the file that has been opened.
  */
 __wasi_errno_t __wasi_path_open(
     __wasi_fd_t fd,
-
     /**
      * Flags determining the method of how the path is resolved.
      */
     __wasi_lookupflags_t dirflags,
-
     /**
      * The relative path of the file or directory to open, relative to the
      * `path_open::fd` directory.
      */
     const char *path,
-
-    /**
-     * The length of the buffer pointed to by `path`.
-     */
-    size_t path_len,
-
     /**
      * The method by which to open the file.
      */
     __wasi_oflags_t oflags,
-
     /**
      * The initial rights of the newly created file descriptor. The
      * implementation is allowed to return a file descriptor with fewer rights
@@ -2390,55 +2096,29 @@ __wasi_errno_t __wasi_path_open(
      * file descriptors derived from it.
      */
     __wasi_rights_t fs_rights_base,
-
-    __wasi_rights_t fs_rights_inherting,
-
+    __wasi_rights_t fs_rights_inheriting,
     __wasi_fdflags_t fdflags,
-
-    /**
-     * The file descriptor of the file that has been opened.
-     */
-    __wasi_fd_t *opened_fd
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("path_open"),
-    __warn_unused_result__
-));
-
+    __wasi_fd_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Read the contents of a symbolic link.
  * Note: This is similar to `readlinkat` in POSIX.
+ * @return
+ * The number of bytes placed in the buffer.
  */
 __wasi_errno_t __wasi_path_readlink(
     __wasi_fd_t fd,
-
     /**
      * The path of the symbolic link from which to read.
      */
     const char *path,
-
-    /**
-     * The length of the buffer pointed to by `path`.
-     */
-    size_t path_len,
-
     /**
      * The buffer to which to write the contents of the symbolic link.
      */
     uint8_t * buf,
-
     __wasi_size_t buf_len,
-
-    /**
-     * The number of bytes placed in the buffer.
-     */
-    __wasi_size_t *bufused
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("path_readlink"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Remove a directory.
  * Return `errno::notempty` if the directory is not empty.
@@ -2446,59 +2126,30 @@ __wasi_errno_t __wasi_path_readlink(
  */
 __wasi_errno_t __wasi_path_remove_directory(
     __wasi_fd_t fd,
-
     /**
      * The path to a directory to remove.
      */
-    const char *path,
-
-    /**
-     * The length of the buffer pointed to by `path`.
-     */
-    size_t path_len
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("path_remove_directory"),
-    __warn_unused_result__
-));
-
+    const char *path
+) __attribute__((__warn_unused_result__));
 /**
  * Rename a file or directory.
  * Note: This is similar to `renameat` in POSIX.
  */
 __wasi_errno_t __wasi_path_rename(
     __wasi_fd_t fd,
-
     /**
      * The source path of the file or directory to rename.
      */
     const char *old_path,
-
-    /**
-     * The length of the buffer pointed to by `old_path`.
-     */
-    size_t old_path_len,
-
     /**
      * The working directory at which the resolution of the new path starts.
      */
     __wasi_fd_t new_fd,
-
     /**
      * The destination path to which to rename the file or directory.
      */
-    const char *new_path,
-
-    /**
-     * The length of the buffer pointed to by `new_path`.
-     */
-    size_t new_path_len
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("path_rename"),
-    __warn_unused_result__
-));
-
+    const char *new_path
+) __attribute__((__warn_unused_result__));
 /**
  * Create a symbolic link.
  * Note: This is similar to `symlinkat` in POSIX.
@@ -2508,29 +2159,12 @@ __wasi_errno_t __wasi_path_symlink(
      * The contents of the symbolic link.
      */
     const char *old_path,
-
-    /**
-     * The length of the buffer pointed to by `old_path`.
-     */
-    size_t old_path_len,
-
     __wasi_fd_t fd,
-
     /**
      * The destination path at which to create the symbolic link.
      */
-    const char *new_path,
-
-    /**
-     * The length of the buffer pointed to by `new_path`.
-     */
-    size_t new_path_len
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("path_symlink"),
-    __warn_unused_result__
-));
-
+    const char *new_path
+) __attribute__((__warn_unused_result__));
 /**
  * Unlink a file.
  * Return `errno::isdir` if the path refers to a directory.
@@ -2538,51 +2172,31 @@ __wasi_errno_t __wasi_path_symlink(
  */
 __wasi_errno_t __wasi_path_unlink_file(
     __wasi_fd_t fd,
-
     /**
      * The path to a file to unlink.
      */
-    const char *path,
-
-    /**
-     * The length of the buffer pointed to by `path`.
-     */
-    size_t path_len
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("path_unlink_file"),
-    __warn_unused_result__
-));
-
+    const char *path
+) __attribute__((__warn_unused_result__));
 /**
  * Concurrently poll for the occurrence of a set of events.
+ * @return
+ * The number of events stored.
  */
 __wasi_errno_t __wasi_poll_oneoff(
     /**
      * The events to which to subscribe.
      */
     const __wasi_subscription_t * in,
-
     /**
      * The events that have occurred.
      */
     __wasi_event_t * out,
-
     /**
      * Both the number of subscriptions and events.
      */
     __wasi_size_t nsubscriptions,
-
-    /**
-     * The number of events stored.
-     */
-    __wasi_size_t *nevents
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("poll_oneoff"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Terminate the process normally. An exit code of 0 indicates successful
  * termination of the program. The meanings of other values is dependent on
@@ -2593,10 +2207,7 @@ _Noreturn void __wasi_proc_exit(
      * The exit code returned by the process.
      */
     __wasi_exitcode_t rval
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("proc_exit")));
-
+);
 /**
  * Send a signal to the process of the calling thread.
  * Note: This is similar to `raise` in POSIX.
@@ -2606,24 +2217,14 @@ __wasi_errno_t __wasi_proc_raise(
      * The signal condition to trigger.
      */
     __wasi_signal_t sig
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("proc_raise"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Temporarily yield execution of the calling thread.
  * Note: This is similar to `sched_yield` in POSIX.
  */
 __wasi_errno_t __wasi_sched_yield(
     void
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("sched_yield"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Write high-quality random data into a buffer.
  * This function blocks when the implementation is unable to immediately
@@ -2637,91 +2238,61 @@ __wasi_errno_t __wasi_random_get(
      * The buffer to fill with random data.
      */
     uint8_t * buf,
-
     __wasi_size_t buf_len
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("random_get"),
-    __warn_unused_result__
-));
-
+) __attribute__((__warn_unused_result__));
 /**
  * Receive a message from a socket.
  * Note: This is similar to `recv` in POSIX, though it also supports reading
  * the data into multiple buffers in the manner of `readv`.
+ * @return
+ * Number of bytes stored in ri_data and message flags.
  */
 __wasi_errno_t __wasi_sock_recv(
     __wasi_fd_t fd,
-
     /**
      * List of scatter/gather vectors to which to store data.
      */
     const __wasi_iovec_t *ri_data,
-
     /**
      * The length of the array pointed to by `ri_data`.
      */
     size_t ri_data_len,
-
     /**
      * Message flags.
      */
     __wasi_riflags_t ri_flags,
-
-    /**
-     * Number of bytes stored in ri_data.
-     */
-    __wasi_size_t *ro_datalen,
-    /**
-     * Message flags.
-     */
-    __wasi_roflags_t *ro_flags
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("sock_recv"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0,
+    __wasi_roflags_t *retptr1
+) __attribute__((__warn_unused_result__));
 /**
  * Send a message on a socket.
  * Note: This is similar to `send` in POSIX, though it also supports writing
  * the data from multiple buffers in the manner of `writev`.
+ * @return
+ * Number of bytes transmitted.
  */
 __wasi_errno_t __wasi_sock_send(
     __wasi_fd_t fd,
-
     /**
      * List of scatter/gather vectors to which to retrieve data
      */
     const __wasi_ciovec_t *si_data,
-
     /**
      * The length of the array pointed to by `si_data`.
      */
     size_t si_data_len,
-
     /**
      * Message flags.
      */
     __wasi_siflags_t si_flags,
-
-    /**
-     * Number of bytes transmitted.
-     */
-    __wasi_size_t *so_datalen
-) __attribute__((
-    __import_module__("wasi_snapshot_preview1"),
-    __import_name__("sock_send"),
-    __warn_unused_result__
-));
-
+    __wasi_size_t *retptr0
+) __attribute__((__warn_unused_result__));
 /**
  * Shut down socket send and receive channels.
  * Note: This is similar to `shutdown` in POSIX.
  */
 __wasi_errno_t __wasi_sock_shutdown(
     __wasi_fd_t fd,
-
     /**
      * Which channels on the socket to shut down.
      */
@@ -2741,7 +2312,7 @@ __wasi_errno_t __wasi_ashell_getcwd(
     /**
      * The buffer to which to write the contents of the current directory
      */
-    uint8_t * buf,
+    char * buf,
 
     __wasi_size_t buf_len,
 

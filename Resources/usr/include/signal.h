@@ -1,3 +1,7 @@
+#ifndef _WASI_EMULATED_SIGNAL
+#error "wasm lacks signal support; to enable minimal signal emulation, \
+compile with -D_WASI_EMULATED_SIGNAL and link with -lwasi-emulated-signal"
+#else
 #ifndef _SIGNAL_H
 #define _SIGNAL_H
 
@@ -14,7 +18,6 @@ extern "C" {
 #ifdef __wasilibc_unmodified_upstream /* WASI has no ucontext support */
 #ifdef _GNU_SOURCE
 #define __ucontext ucontext
-#endif
 #endif
 
 #define __NEED_size_t
@@ -44,6 +47,7 @@ extern "C" {
 #define SI_KERNEL 128
 
 typedef struct sigaltstack stack_t;
+#endif
 
 #endif
 
@@ -53,6 +57,7 @@ typedef struct sigaltstack stack_t;
  || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
  || defined(_BSD_SOURCE)
 
+#ifdef __wasilibc_unmodified_upstream /* WASI has no sigaction */
 #define SIG_HOLD ((void (*)(int)) 2)
 
 #define FPE_INTDIV 1
@@ -182,14 +187,25 @@ struct sigevent {
 	union sigval sigev_value;
 	int sigev_signo;
 	int sigev_notify;
-	void (*sigev_notify_function)(union sigval);
-	pthread_attr_t *sigev_notify_attributes;
-	char __pad[56-3*sizeof(long)];
+	union {
+		char __pad[64 - 2*sizeof(int) - sizeof(union sigval)];
+		pid_t sigev_notify_thread_id;
+		struct {
+			void (*sigev_notify_function)(union sigval);
+			pthread_attr_t *sigev_notify_attributes;
+		} __sev_thread;
+	} __sev_fields;
 };
+
+#define sigev_notify_thread_id __sev_fields.sigev_notify_thread_id
+#define sigev_notify_function __sev_fields.__sev_thread.sigev_notify_function
+#define sigev_notify_attributes __sev_fields.__sev_thread.sigev_notify_attributes
 
 #define SIGEV_SIGNAL 0
 #define SIGEV_NONE 1
 #define SIGEV_THREAD 2
+#define SIGEV_THREAD_ID 4
+#endif
 
 #ifdef __wasilibc_unmodified_upstream /* WASI has no realtime signals */
 int __libc_current_sigrtmin(void);
@@ -218,13 +234,15 @@ int sigtimedwait(const sigset_t *__restrict, siginfo_t *__restrict, const struct
 int sigqueue(pid_t, int, union sigval);
 #endif
 
+#ifdef __wasilibc_unmodified_upstream /* WASI has no threads yet */
 int pthread_sigmask(int, const sigset_t *__restrict, sigset_t *__restrict);
 int pthread_kill(pthread_t, int);
-
-#ifdef __wasilibc_unmodified_upstream /* WASI has no signals */
-void psiginfo(const siginfo_t *, const char *);
-void psignal(int, const char *);
 #endif
+
+#ifdef __wasilibc_unmodified_upstream /* WASI has no siginfo */
+void psiginfo(const siginfo_t *, const char *);
+#endif
+void psignal(int, const char *);
 
 #endif
 
@@ -256,7 +274,6 @@ void (*sigset(int, void (*)(int)))(int);
 #endif
 #endif
 
-#ifdef __wasilibc_unmodified_upstream /* WASI has no signals */
 #if defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
 #define NSIG _NSIG
 typedef void (*sig_t)(int);
@@ -265,6 +282,7 @@ typedef void (*sig_t)(int);
 #ifdef _GNU_SOURCE
 typedef void (*sighandler_t)(int);
 void (*bsd_signal(int, void (*)(int)))(int);
+#ifdef __wasilibc_unmodified_upstream /* WASI has no signal sets */
 int sigisemptyset(const sigset_t *);
 int sigorset (sigset_t *, const sigset_t *, const sigset_t *);
 int sigandset(sigset_t *, const sigset_t *, const sigset_t *);
@@ -272,19 +290,30 @@ int sigandset(sigset_t *, const sigset_t *, const sigset_t *);
 #define SA_NOMASK SA_NODEFER
 #define SA_ONESHOT SA_RESETHAND
 #endif
+#endif
 
+#ifdef __wasilibc_unmodified_upstream /* 1 is a valid function pointer on wasm */
 #define SIG_ERR  ((void (*)(int))-1)
 #define SIG_DFL  ((void (*)(int)) 0)
 #define SIG_IGN  ((void (*)(int)) 1)
+#else
+void __SIG_ERR(int);
+void __SIG_IGN(int);
+#define SIG_ERR  (__SIG_ERR)
+#define SIG_DFL  ((void (*)(int)) 0)
+#define SIG_IGN  (__SIG_IGN)
 #endif
 
+#ifdef __wasilibc_unmodified_upstream /* Make sig_atomic_t 64-bit on wasm64 */
 typedef int sig_atomic_t;
-
-#ifdef __wasilibc_unmodified_upstream /* WASI has no signals */
-void (*signal(int, void (*)(int)))(int);
+#else
+typedef long sig_atomic_t;
 #endif
+
+void (*signal(int, void (*)(int)))(int);
 int raise(int);
 
+#ifdef __wasilibc_unmodified_upstream /* WASI has no sigtimedwait */
 #if _REDIR_TIME64
 #if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
  || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
@@ -292,9 +321,11 @@ int raise(int);
 __REDIR(sigtimedwait, __sigtimedwait_time64);
 #endif
 #endif
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif
 #endif

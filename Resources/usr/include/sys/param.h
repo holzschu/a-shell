@@ -28,7 +28,9 @@
 #define roundup(n,d) (howmany(n,d)*(d))
 #define powerof2(n) !(((n)-1) & (n))
 
+#if defined(__wasilibc_unmodified_upstream) || defined(_WASI_EMULATED_PROCESS_CLOCKS)
 #include <sys/resource.h>
+#endif
 #include <endian.h>
 #include <limits.h>
 

@@ -1,5 +1,5 @@
-#ifndef __wasm_basics___errno_h
-#define __wasm_basics___errno_h
+#ifndef __wasilibc___errno_h
+#define __wasilibc___errno_h
 
 #ifdef __cplusplus
 extern "C" {

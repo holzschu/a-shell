@@ -114,6 +114,14 @@ long double creall(long double complex);
 #define cimagf(x) __CIMAG(x, float)
 #define cimagl(x) __CIMAG(x, long double)
 #endif
+#else
+#define creal(x) (__builtin_creal(x))
+#define crealf(x) (__builtin_crealf(x))
+#define creall(x) (__builtin_creall(x))
+
+#define cimag(x) (__builtin_cimag(x))
+#define cimagf(x) (__builtin_cimagf(x))
+#define cimagl(x) (__builtin_cimagl(x))
 #endif
 
 #if __STDC_VERSION__ >= 201112L

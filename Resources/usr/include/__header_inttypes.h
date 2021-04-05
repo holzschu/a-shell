@@ -1,5 +1,5 @@
-#ifndef __wasm_basics___include_inttypes_h
-#define __wasm_basics___include_inttypes_h
+#ifndef __wasilibc___include_inttypes_h
+#define __wasilibc___include_inttypes_h
 
 #include <stdint.h>
 

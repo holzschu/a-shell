@@ -172,6 +172,7 @@ int clearenv(void);
 #ifdef __wasilibc_unmodified_upstream /* WASI has no wait */
 #define WCOREDUMP(s) ((s) & 0x80)
 #define WIFCONTINUED(s) ((s) == 0xffff)
+void *reallocarray (void *, size_t, size_t);
 #endif
 #endif
 

@@ -58,7 +58,16 @@ struct tm {
 #include <__header_time.h>
 #endif
 
+#if defined(__wasilibc_unmodified_upstream) || defined(_WASI_EMULATED_PROCESS_CLOCKS)
 clock_t clock (void);
+#else
+__attribute__((__deprecated__(
+"WASI lacks process-associated clocks; to enable emulation of the `clock` function using "
+"the wall clock, which isn't sensitive to whether the program is running or suspended, "
+"compile with -D_WASI_EMULATED_PROCESS_CLOCKS and link with -lwasi-emulated-process-clocks"
+)))
+clock_t clock (void);
+#endif
 time_t time (time_t *);
 double difftime (time_t, time_t);
 time_t mktime (struct tm *);

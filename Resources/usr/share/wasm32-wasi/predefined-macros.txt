@@ -46,6 +46,7 @@
 #define ARG_MAX 131072
 #define ARMAG "!<arch>\n"
 #define AT_EACCESS (0x0)
+#define AT_FDCWD (-2)
 #define AT_REMOVEDIR (0x4)
 #define AT_SYMLINK_FOLLOW (0x2)
 #define AT_SYMLINK_NOFOLLOW (0x1)
@@ -75,11 +76,6 @@
 #define BLK_RESTART 0x10
 #define BREAK 243
 #define BUFSIZ 1024
-#define BUS_ADRALN 1
-#define BUS_ADRERR 2
-#define BUS_MCEERR_AO 5
-#define BUS_MCEERR_AR 4
-#define BUS_OBJERR 3
 #define BYTE_ORDER __BYTE_ORDER
 #define CANBSIZ 255
 #define CBRK CEOL
@@ -98,12 +94,6 @@
 #define CHRTYPE '3'
 #define CINTR CTRL('c')
 #define CKILL CTRL('u')
-#define CLD_CONTINUED 6
-#define CLD_DUMPED 3
-#define CLD_EXITED 1
-#define CLD_KILLED 2
-#define CLD_STOPPED 5
-#define CLD_TRAPPED 4
 #define CLNEXT CTRL('v')
 #define CLOCKS_PER_SEC ((clock_t)1000000000)
 #define CLOCK_MONOTONIC (&_CLOCK_MONOTONIC)
@@ -384,14 +374,6 @@
 #define FORM_C 3
 #define FORM_N 1
 #define FORM_T 2
-#define FPE_FLTDIV 3
-#define FPE_FLTINV 7
-#define FPE_FLTOVF 4
-#define FPE_FLTRES 6
-#define FPE_FLTSUB 8
-#define FPE_FLTUND 5
-#define FPE_INTDIV 1
-#define FPE_INTOVF 2
 #define FP_ILOGB0 FP_ILOGBNAN
 #define FP_ILOGBNAN (-1-0x7fffffff)
 #define FP_INFINITE 1
@@ -416,7 +398,7 @@
 #define F_GETFD (1)
 #define F_GETFL (3)
 #define F_LOCK 1
-#define F_OK 0
+#define F_OK (0)
 #define F_SETFD (2)
 #define F_SETFL (4)
 #define F_TEST 3
@@ -588,14 +570,6 @@
 #define IGMP_V2_MEMBERSHIP_REPORT 0x16
 #define IGMP_v1_ROUTER 1
 #define IGMP_v2_ROUTER 2
-#define ILL_BADSTK 8
-#define ILL_COPROC 7
-#define ILL_ILLADR 3
-#define ILL_ILLOPC 1
-#define ILL_ILLOPN 2
-#define ILL_ILLTRP 4
-#define ILL_PRVOPC 5
-#define ILL_PRVREG 6
 #define IN6ADDRSZ NS_IN6ADDRSZ
 #define IN6ADDR_ANY_INIT { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }
 #define IN6ADDR_LOOPBACK_INIT { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 } }
@@ -918,6 +892,7 @@
 #define IP_PMTUDISC_PROBE 3
 #define IP_PMTUDISC_WANT 1
 #define IP_RECVERR 11
+#define IP_RECVERR_RFC4884 26
 #define IP_RECVFRAGSIZE 25
 #define IP_RECVOPTS 6
 #define IP_RECVORIGDSTADDR IP_ORIGDSTADDR
@@ -1440,6 +1415,35 @@
 #define PRIxLEAST8 __UINT_LEAST8_FMTx__
 #define PRIxMAX __UINTMAX_FMTx__
 #define PRIxPTR __UINTPTR_FMTx__
+#define PTHREAD_BARRIER_SERIAL_THREAD (-1)
+#define PTHREAD_CANCELED ((void *)-1)
+#define PTHREAD_CANCEL_ASYNCHRONOUS 1
+#define PTHREAD_CANCEL_DEFERRED 0
+#define PTHREAD_CANCEL_DISABLE 1
+#define PTHREAD_CANCEL_ENABLE 0
+#define PTHREAD_CANCEL_MASKED 2
+#define PTHREAD_COND_INITIALIZER {{{0}}}
+#define PTHREAD_CREATE_DETACHED 1
+#define PTHREAD_CREATE_JOINABLE 0
+#define PTHREAD_EXPLICIT_SCHED 1
+#define PTHREAD_INHERIT_SCHED 0
+#define PTHREAD_MUTEX_DEFAULT 0
+#define PTHREAD_MUTEX_ERRORCHECK 2
+#define PTHREAD_MUTEX_INITIALIZER {{{0}}}
+#define PTHREAD_MUTEX_NORMAL 0
+#define PTHREAD_MUTEX_RECURSIVE 1
+#define PTHREAD_MUTEX_ROBUST 1
+#define PTHREAD_MUTEX_STALLED 0
+#define PTHREAD_NULL ((pthread_t)0)
+#define PTHREAD_ONCE_INIT 0
+#define PTHREAD_PRIO_INHERIT 1
+#define PTHREAD_PRIO_NONE 0
+#define PTHREAD_PRIO_PROTECT 2
+#define PTHREAD_PROCESS_PRIVATE 0
+#define PTHREAD_PROCESS_SHARED 1
+#define PTHREAD_RWLOCK_INITIALIZER {{{0}}}
+#define PTHREAD_SCOPE_PROCESS 1
+#define PTHREAD_SCOPE_SYSTEM 0
 #define PTRBITS (sizeof(char *) * 8)
 #define PTRDIFF_MAX INT32_MAX
 #define PTRDIFF_MIN INT32_MIN
@@ -1491,7 +1495,7 @@
 #define RS_HIPRI 0x01
 #define RUSAGE_CHILDREN 2
 #define RUSAGE_SELF 1
-#define R_OK 1
+#define R_OK (4)
 #define SARMAG 8
 #define SB 250
 #define SCHAR_MAX 127
@@ -1571,10 +1575,6 @@
 #define SEEK_END __WASI_WHENCE_END
 #define SEEK_SET __WASI_WHENCE_SET
 #define SEGSIZE 512
-#define SEGV_ACCERR 2
-#define SEGV_BNDERR 3
-#define SEGV_MAPERR 1
-#define SEGV_PKUERR 4
 #define SEM_FAILED ((sem_t *)0)
 #define SERVFAIL ns_r_servfail
 #define SHORTBITS (sizeof(short) * 8)
@@ -1583,59 +1583,10 @@
 #define SHUT_RD __WASI_SDFLAGS_RD
 #define SHUT_RDWR (SHUT_RD | SHUT_WR)
 #define SHUT_WR __WASI_SDFLAGS_WR
-#define SIGABRT __WASI_SIGNAL_ABRT
-#define SIGALRM __WASI_SIGNAL_ALRM
-#define SIGBUS __WASI_SIGNAL_BUS
-#define SIGCHLD __WASI_SIGNAL_CHLD
-#define SIGCONT __WASI_SIGNAL_CONT
-#define SIGEV_NONE 1
-#define SIGEV_SIGNAL 0
-#define SIGEV_THREAD 2
-#define SIGFPE __WASI_SIGNAL_FPE
-#define SIGHUP __WASI_SIGNAL_HUP
-#define SIGILL __WASI_SIGNAL_ILL
-#define SIGINT __WASI_SIGNAL_INT
-#define SIGIO SIGPOLL
-#define SIGIOT SIGABRT
-#define SIGKILL __WASI_SIGNAL_KILL
-#define SIGPIPE __WASI_SIGNAL_PIPE
-#define SIGPOLL __WASI_SIGNAL_POLL
-#define SIGPROF __WASI_SIGNAL_PROF
-#define SIGPWR __WASI_SIGNAL_PWR
-#define SIGQUIT __WASI_SIGNAL_QUIT
-#define SIGSEGV __WASI_SIGNAL_SEGV
-#define SIGSTOP __WASI_SIGNAL_STOP
-#define SIGSYS __WASI_SIGNAL_SYS
-#define SIGTERM __WASI_SIGNAL_TERM
-#define SIGTRAP __WASI_SIGNAL_TRAP
-#define SIGTSTP __WASI_SIGNAL_TSTP
-#define SIGTTIN __WASI_SIGNAL_TTIN
-#define SIGTTOU __WASI_SIGNAL_TTOU
-#define SIGUNUSED SIGSYS
-#define SIGURG __WASI_SIGNAL_URG
-#define SIGUSR1 __WASI_SIGNAL_USR1
-#define SIGUSR2 __WASI_SIGNAL_USR2
-#define SIGVTALRM __WASI_SIGNAL_VTALRM
-#define SIGWINCH __WASI_SIGNAL_WINCH
-#define SIGXCPU __WASI_SIGNAL_XCPU
-#define SIGXFSZ __WASI_SIGNAL_XFSZ
 #define SIG_ATOMIC_MAX INT32_MAX
 #define SIG_ATOMIC_MIN INT32_MIN
-#define SIG_BLOCK 0
-#define SIG_HOLD ((void (*)(int)) 2)
-#define SIG_SETMASK 2
-#define SIG_UNBLOCK 1
 #define SIZE_MAX UINT32_MAX
-#define SI_ASYNCIO (-4)
-#define SI_ASYNCNL (-60)
-#define SI_KERNEL 128
 #define SI_LOAD_SHIFT 16
-#define SI_MESGQ (-3)
-#define SI_QUEUE (-1)
-#define SI_SIGIO (-5)
-#define SI_TIMER (-2)
-#define SI_TKILL (-6)
-#define SI_USER 0
 #define SLC_ABORT 7
 #define SLC_ACK 0x80
 #define SLC_AO 4
@@ -1785,6 +1736,7 @@
 #define TCP_CONGESTION 13
 #define TCP_CORK 3
 #define TCP_DEFER_ACCEPT 9
+#define TCP_ENCAP_ESPINTCP 7
 #define TCP_ESTABLISHED 1
 #define TCP_FASTOPEN 23
 #define TCP_FASTOPEN_CONNECT 30
@@ -1803,7 +1755,8 @@
 #define TCP_MAXSEG 2
 #define TCP_MD5SIG 14
 #define TCP_MD5SIG_EXT 32
-#define TCP_MD5SIG_FLAG_PREFIX 1
+#define TCP_MD5SIG_FLAG_IFINDEX 0x2
+#define TCP_MD5SIG_FLAG_PREFIX 0x1
 #define TCP_MD5SIG_MAXKEYLEN 80
 #define TCP_NODELAY 1
 #define TCP_NOTSENT_LOWAT 25
@@ -2020,8 +1973,8 @@
 #define WONT 252
 #define WORD_BIT 32
 #define WRQ 02
-#define W_OK 2
-#define X_OK 4
+#define W_OK (2)
+#define X_OK (1)
 #define YESEXPR 0x50000
 #define YESSTR 0x50002
 #define YXDOMAIN ns_r_yxdomain
@@ -2220,6 +2173,7 @@
 #define _POSIX_V7_ILP32_OFFBIG (1)
 #define _POSIX_VDISABLE 0
 #define _POSIX_VERSION 200809L
+#define _PTHREAD_H 
 #define _PTRDIFF_T 
 #define _REGEX_H 
 #define _SCHED_H 
@@ -2366,7 +2320,6 @@
 #define _SC_XOPEN_XPG4 100
 #define _SEARCH_H 
 #define _SEMAPHORE_H 
-#define _SIGNAL_H 
 #define _SIZE_T 
 #define _STDALIGN_H 
 #define _STDBOOL_H 
@@ -2386,14 +2339,12 @@
 #define _SYS_PARAM_H 
 #define _SYS_RANDOM_H 
 #define _SYS_REG_H 
-#define _SYS_RESOURCE_H 
 #define _SYS_SELECT_H 
 #define _SYS_SOCKET_H 
 #define _SYS_STAT_H 
 #define _SYS_SYSCALL_H 
 #define _SYS_SYSINFO_H 
 #define _SYS_TIMEB_H 
-#define _SYS_TIMES_H 
 #define _SYS_TIMEX_H 
 #define _SYS_TIME_H 
 #define _SYS_TTYDEFAULTS_H 
@@ -2974,15 +2925,15 @@
 #define __WASI_ERRNO_TIMEDOUT (UINT16_C(73))
 #define __WASI_ERRNO_TXTBSY (UINT16_C(74))
 #define __WASI_ERRNO_XDEV (UINT16_C(75))
-#define __WASI_EVENTRWFLAGS_FD_READWRITE_HANGUP (UINT16_C(1))
+#define __WASI_EVENTRWFLAGS_FD_READWRITE_HANGUP ((__wasi_eventrwflags_t)(1 << 0))
 #define __WASI_EVENTTYPE_CLOCK (UINT8_C(0))
 #define __WASI_EVENTTYPE_FD_READ (UINT8_C(1))
 #define __WASI_EVENTTYPE_FD_WRITE (UINT8_C(2))
-#define __WASI_FDFLAGS_APPEND (UINT16_C(1))
-#define __WASI_FDFLAGS_DSYNC (UINT16_C(2))
-#define __WASI_FDFLAGS_NONBLOCK (UINT16_C(4))
-#define __WASI_FDFLAGS_RSYNC (UINT16_C(8))
-#define __WASI_FDFLAGS_SYNC (UINT16_C(16))
+#define __WASI_FDFLAGS_APPEND ((__wasi_fdflags_t)(1 << 0))
+#define __WASI_FDFLAGS_DSYNC ((__wasi_fdflags_t)(1 << 1))
+#define __WASI_FDFLAGS_NONBLOCK ((__wasi_fdflags_t)(1 << 2))
+#define __WASI_FDFLAGS_RSYNC ((__wasi_fdflags_t)(1 << 3))
+#define __WASI_FDFLAGS_SYNC ((__wasi_fdflags_t)(1 << 4))
 #define __WASI_FILETYPE_BLOCK_DEVICE (UINT8_C(1))
 #define __WASI_FILETYPE_CHARACTER_DEVICE (UINT8_C(2))
 #define __WASI_FILETYPE_DIRECTORY (UINT8_C(3))
@@ -2991,50 +2942,50 @@
 #define __WASI_FILETYPE_SOCKET_STREAM (UINT8_C(6))
 #define __WASI_FILETYPE_SYMBOLIC_LINK (UINT8_C(7))
 #define __WASI_FILETYPE_UNKNOWN (UINT8_C(0))
-#define __WASI_FSTFLAGS_ATIM (UINT16_C(1))
-#define __WASI_FSTFLAGS_ATIM_NOW (UINT16_C(2))
-#define __WASI_FSTFLAGS_MTIM (UINT16_C(4))
-#define __WASI_FSTFLAGS_MTIM_NOW (UINT16_C(8))
-#define __WASI_LOOKUPFLAGS_SYMLINK_FOLLOW (UINT32_C(1))
-#define __WASI_OFLAGS_CREAT (UINT16_C(1))
-#define __WASI_OFLAGS_DIRECTORY (UINT16_C(2))
-#define __WASI_OFLAGS_EXCL (UINT16_C(4))
-#define __WASI_OFLAGS_TRUNC (UINT16_C(8))
+#define __WASI_FSTFLAGS_ATIM ((__wasi_fstflags_t)(1 << 0))
+#define __WASI_FSTFLAGS_ATIM_NOW ((__wasi_fstflags_t)(1 << 1))
+#define __WASI_FSTFLAGS_MTIM ((__wasi_fstflags_t)(1 << 2))
+#define __WASI_FSTFLAGS_MTIM_NOW ((__wasi_fstflags_t)(1 << 3))
+#define __WASI_LOOKUPFLAGS_SYMLINK_FOLLOW ((__wasi_lookupflags_t)(1 << 0))
+#define __WASI_OFLAGS_CREAT ((__wasi_oflags_t)(1 << 0))
+#define __WASI_OFLAGS_DIRECTORY ((__wasi_oflags_t)(1 << 1))
+#define __WASI_OFLAGS_EXCL ((__wasi_oflags_t)(1 << 2))
+#define __WASI_OFLAGS_TRUNC ((__wasi_oflags_t)(1 << 3))
 #define __WASI_PREOPENTYPE_DIR (UINT8_C(0))
-#define __WASI_RIFLAGS_RECV_PEEK (UINT16_C(1))
-#define __WASI_RIFLAGS_RECV_WAITALL (UINT16_C(2))
-#define __WASI_RIGHTS_FD_ADVISE (UINT64_C(128))
-#define __WASI_RIGHTS_FD_ALLOCATE (UINT64_C(256))
-#define __WASI_RIGHTS_FD_DATASYNC (UINT64_C(1))
-#define __WASI_RIGHTS_FD_FDSTAT_SET_FLAGS (UINT64_C(8))
-#define __WASI_RIGHTS_FD_FILESTAT_GET (UINT64_C(2097152))
-#define __WASI_RIGHTS_FD_FILESTAT_SET_SIZE (UINT64_C(4194304))
-#define __WASI_RIGHTS_FD_FILESTAT_SET_TIMES (UINT64_C(8388608))
-#define __WASI_RIGHTS_FD_READ (UINT64_C(2))
-#define __WASI_RIGHTS_FD_READDIR (UINT64_C(16384))
-#define __WASI_RIGHTS_FD_SEEK (UINT64_C(4))
-#define __WASI_RIGHTS_FD_SYNC (UINT64_C(16))
-#define __WASI_RIGHTS_FD_TELL (UINT64_C(32))
-#define __WASI_RIGHTS_FD_WRITE (UINT64_C(64))
-#define __WASI_RIGHTS_PATH_CREATE_DIRECTORY (UINT64_C(512))
-#define __WASI_RIGHTS_PATH_CREATE_FILE (UINT64_C(1024))
-#define __WASI_RIGHTS_PATH_FILESTAT_GET (UINT64_C(262144))
-#define __WASI_RIGHTS_PATH_FILESTAT_SET_SIZE (UINT64_C(524288))
-#define __WASI_RIGHTS_PATH_FILESTAT_SET_TIMES (UINT64_C(1048576))
-#define __WASI_RIGHTS_PATH_LINK_SOURCE (UINT64_C(2048))
-#define __WASI_RIGHTS_PATH_LINK_TARGET (UINT64_C(4096))
-#define __WASI_RIGHTS_PATH_OPEN (UINT64_C(8192))
-#define __WASI_RIGHTS_PATH_READLINK (UINT64_C(32768))
-#define __WASI_RIGHTS_PATH_REMOVE_DIRECTORY (UINT64_C(33554432))
-#define __WASI_RIGHTS_PATH_RENAME_SOURCE (UINT64_C(65536))
-#define __WASI_RIGHTS_PATH_RENAME_TARGET (UINT64_C(131072))
-#define __WASI_RIGHTS_PATH_SYMLINK (UINT64_C(16777216))
-#define __WASI_RIGHTS_PATH_UNLINK_FILE (UINT64_C(67108864))
-#define __WASI_RIGHTS_POLL_FD_READWRITE (UINT64_C(134217728))
-#define __WASI_RIGHTS_SOCK_SHUTDOWN (UINT64_C(268435456))
-#define __WASI_ROFLAGS_RECV_DATA_TRUNCATED (UINT16_C(1))
-#define __WASI_SDFLAGS_RD (UINT8_C(1))
-#define __WASI_SDFLAGS_WR (UINT8_C(2))
+#define __WASI_RIFLAGS_RECV_PEEK ((__wasi_riflags_t)(1 << 0))
+#define __WASI_RIFLAGS_RECV_WAITALL ((__wasi_riflags_t)(1 << 1))
+#define __WASI_RIGHTS_FD_ADVISE ((__wasi_rights_t)(1 << 7))
+#define __WASI_RIGHTS_FD_ALLOCATE ((__wasi_rights_t)(1 << 8))
+#define __WASI_RIGHTS_FD_DATASYNC ((__wasi_rights_t)(1 << 0))
+#define __WASI_RIGHTS_FD_FDSTAT_SET_FLAGS ((__wasi_rights_t)(1 << 3))
+#define __WASI_RIGHTS_FD_FILESTAT_GET ((__wasi_rights_t)(1 << 21))
+#define __WASI_RIGHTS_FD_FILESTAT_SET_SIZE ((__wasi_rights_t)(1 << 22))
+#define __WASI_RIGHTS_FD_FILESTAT_SET_TIMES ((__wasi_rights_t)(1 << 23))
+#define __WASI_RIGHTS_FD_READ ((__wasi_rights_t)(1 << 1))
+#define __WASI_RIGHTS_FD_READDIR ((__wasi_rights_t)(1 << 14))
+#define __WASI_RIGHTS_FD_SEEK ((__wasi_rights_t)(1 << 2))
+#define __WASI_RIGHTS_FD_SYNC ((__wasi_rights_t)(1 << 4))
+#define __WASI_RIGHTS_FD_TELL ((__wasi_rights_t)(1 << 5))
+#define __WASI_RIGHTS_FD_WRITE ((__wasi_rights_t)(1 << 6))
+#define __WASI_RIGHTS_PATH_CREATE_DIRECTORY ((__wasi_rights_t)(1 << 9))
+#define __WASI_RIGHTS_PATH_CREATE_FILE ((__wasi_rights_t)(1 << 10))
+#define __WASI_RIGHTS_PATH_FILESTAT_GET ((__wasi_rights_t)(1 << 18))
+#define __WASI_RIGHTS_PATH_FILESTAT_SET_SIZE ((__wasi_rights_t)(1 << 19))
+#define __WASI_RIGHTS_PATH_FILESTAT_SET_TIMES ((__wasi_rights_t)(1 << 20))
+#define __WASI_RIGHTS_PATH_LINK_SOURCE ((__wasi_rights_t)(1 << 11))
+#define __WASI_RIGHTS_PATH_LINK_TARGET ((__wasi_rights_t)(1 << 12))
+#define __WASI_RIGHTS_PATH_OPEN ((__wasi_rights_t)(1 << 13))
+#define __WASI_RIGHTS_PATH_READLINK ((__wasi_rights_t)(1 << 15))
+#define __WASI_RIGHTS_PATH_REMOVE_DIRECTORY ((__wasi_rights_t)(1 << 25))
+#define __WASI_RIGHTS_PATH_RENAME_SOURCE ((__wasi_rights_t)(1 << 16))
+#define __WASI_RIGHTS_PATH_RENAME_TARGET ((__wasi_rights_t)(1 << 17))
+#define __WASI_RIGHTS_PATH_SYMLINK ((__wasi_rights_t)(1 << 24))
+#define __WASI_RIGHTS_PATH_UNLINK_FILE ((__wasi_rights_t)(1 << 26))
+#define __WASI_RIGHTS_POLL_FD_READWRITE ((__wasi_rights_t)(1 << 27))
+#define __WASI_RIGHTS_SOCK_SHUTDOWN ((__wasi_rights_t)(1 << 28))
+#define __WASI_ROFLAGS_RECV_DATA_TRUNCATED ((__wasi_roflags_t)(1 << 0))
+#define __WASI_SDFLAGS_RD ((__wasi_sdflags_t)(1 << 0))
+#define __WASI_SDFLAGS_WR ((__wasi_sdflags_t)(1 << 1))
 #define __WASI_SIGNAL_ABRT (UINT8_C(6))
 #define __WASI_SIGNAL_ALRM (UINT8_C(14))
 #define __WASI_SIGNAL_BUS (UINT8_C(7))
@@ -3066,7 +3017,7 @@
 #define __WASI_SIGNAL_WINCH (UINT8_C(27))
 #define __WASI_SIGNAL_XCPU (UINT8_C(23))
 #define __WASI_SIGNAL_XFSZ (UINT8_C(24))
-#define __WASI_SUBCLOCKFLAGS_SUBSCRIPTION_CLOCK_ABSTIME (UINT16_C(1))
+#define __WASI_SUBCLOCKFLAGS_SUBSCRIPTION_CLOCK_ABSTIME ((__wasi_subclockflags_t)(1 << 0))
 #define __WASI_WHENCE_CUR (UINT8_C(1))
 #define __WASI_WHENCE_END (UINT8_C(2))
 #define __WASI_WHENCE_SET (UINT8_C(0))
@@ -3102,10 +3053,13 @@
 #define __wasi_libc_environ_h 
 #define __wasi_libc_find_relpath_h 
 #define __wasi_libc_h 
+#define __wasi_libc_nocwd_h 
+#define __wasilibc___errno_h 
 #define __wasilibc___errno_values_h 
 #define __wasilibc___fd_set_h 
 #define __wasilibc___function___isatty_h 
-#define __wasilibc___header_bits_signal_h 
+#define __wasilibc___functions_malloc_h 
+#define __wasilibc___functions_memcpy_h 
 #define __wasilibc___header_dirent_h 
 #define __wasilibc___header_fcntl_h 
 #define __wasilibc___header_netinet_in_h 
@@ -3118,7 +3072,9 @@
 #define __wasilibc___header_sys_stat_h 
 #define __wasilibc___header_time_h 
 #define __wasilibc___header_unistd_h 
+#define __wasilibc___include_inttypes_h 
 #define __wasilibc___macro_FD_SETSIZE_h 
+#define __wasilibc___macro_PAGESIZE_h 
 #define __wasilibc___mode_t_h 
 #define __wasilibc___seek_h 
 #define __wasilibc___struct_dirent_h 
@@ -3133,42 +3089,37 @@
 #define __wasilibc___struct_sockaddr_in_h 
 #define __wasilibc___struct_sockaddr_storage_h 
 #define __wasilibc___struct_sockaddr_un_h 
+#define __wasilibc___struct_stat_h 
+#define __wasilibc___struct_timespec_h 
 #define __wasilibc___struct_timeval_h 
 #define __wasilibc___struct_tm_h 
 #define __wasilibc___struct_tms_h 
 #define __wasilibc___typedef_DIR_h 
+#define __wasilibc___typedef_blkcnt_t_h 
+#define __wasilibc___typedef_blksize_t_h 
+#define __wasilibc___typedef_clock_t_h 
 #define __wasilibc___typedef_clockid_t_h 
+#define __wasilibc___typedef_dev_t_h 
 #define __wasilibc___typedef_fd_set_h 
+#define __wasilibc___typedef_gid_t_h 
 #define __wasilibc___typedef_in_addr_t_h 
 #define __wasilibc___typedef_in_port_t_h 
+#define __wasilibc___typedef_ino_t_h 
+#define __wasilibc___typedef_mode_t_h 
 #define __wasilibc___typedef_nfds_t_h 
+#define __wasilibc___typedef_nlink_t_h 
+#define __wasilibc___typedef_off_t_h 
 #define __wasilibc___typedef_sa_family_t_h 
 #define __wasilibc___typedef_sigset_t_h 
 #define __wasilibc___typedef_socklen_t_h 
+#define __wasilibc___typedef_ssize_t_h 
+#define __wasilibc___typedef_suseconds_t_h 
+#define __wasilibc___typedef_time_t_h 
+#define __wasilibc___typedef_uid_t_h 
 #define __wasm 1
 #define __wasm32 1
 #define __wasm32__ 1
 #define __wasm__ 1
-#define __wasm_basics___errno_h 
-#define __wasm_basics___functions_malloc_h 
-#define __wasm_basics___functions_memcpy_h 
-#define __wasm_basics___include_inttypes_h 
-#define __wasm_basics___macro_PAGESIZE_h 
-#define __wasm_basics___struct_stat_h 
-#define __wasm_basics___struct_timespec_h 
-#define __wasm_basics___typedef_blkcnt_t_h 
-#define __wasm_basics___typedef_blksize_t_h 
-#define __wasm_basics___typedef_clock_t_h 
-#define __wasm_basics___typedef_dev_t_h 
-#define __wasm_basics___typedef_gid_t_h 
-#define __wasm_basics___typedef_ino_t_h 
-#define __wasm_basics___typedef_mode_t_h 
-#define __wasm_basics___typedef_nlink_t_h 
-#define __wasm_basics___typedef_off_t_h 
-#define __wasm_basics___typedef_ssize_t_h 
-#define __wasm_basics___typedef_suseconds_t_h 
-#define __wasm_basics___typedef_time_t_h 
-#define __wasm_basics___typedef_uid_t_h 
 #define _tolower(a) ((a)|0x20)
 #define _toupper(a) ((a)&0x5f)
 #define acos(x) __tg_real_complex(acos, (x))
@@ -3202,6 +3153,8 @@
 #define cbrt(x) __tg_real(cbrt, (x))
 #define ceil(x) __tg_real(ceil, (x))
 #define cimag(x) __tg_complex_retreal(cimag, (x))
+#define cimagf(x) (__builtin_cimagf(x))
+#define cimagl(x) (__builtin_cimagl(x))
 #define clrbit(x,i) __bitop(x,i,&=~)
 #define compl ~
 #define complex _Complex
@@ -3211,6 +3164,8 @@
 #define cosh(x) __tg_real_complex(cosh, (x))
 #define cproj(x) __tg_complex(cproj, (x))
 #define creal(x) __tg_complex_retreal(creal, (x))
+#define crealf(x) (__builtin_crealf(x))
+#define creall(x) (__builtin_creall(x))
 #define creat64 creat
 #define d_fileno d_ino
 #define direct dirent
@@ -3398,6 +3353,9 @@
 #define powerof2(n) !(((n)-1) & (n))
 #define pread64 pread
 #define preadv64 preadv
+#define pthread_cleanup_pop(r) _pthread_cleanup_pop(&__cb, (r)); } while(0)
+#define pthread_cleanup_push(f,x) do { struct __ptcb __cb; _pthread_cleanup_push(&__cb, f, x);
+#define pthread_equal(x,y) ((x)==(y))
 #define pwrite64 pwrite
 #define pwritev64 pwritev
 #define readdir64 readdir
@@ -3411,32 +3369,10 @@
 #define rr_code rr_hdr.icmp6_code
 #define rr_seqnum rr_hdr.icmp6_data32[0]
 #define rr_type rr_hdr.icmp6_type
-#define sa_handler __sa_handler.sa_handler
-#define sa_sigaction __sa_handler.sa_sigaction
 #define scalbln(x,y) __tg_real_2_1(scalbln, (x), (y))
 #define scalbn(x,y) __tg_real_2_1(scalbn, (x), (y))
 #define scandir64 scandir
 #define setbit(x,i) __bitop(x,i,|=)
-#define si_addr __si_fields.__sigfault.si_addr
-#define si_addr_lsb __si_fields.__sigfault.si_addr_lsb
-#define si_arch __si_fields.__sigsys.si_arch
-#define si_band __si_fields.__sigpoll.si_band
-#define si_call_addr __si_fields.__sigsys.si_call_addr
-#define si_fd __si_fields.__sigpoll.si_fd
-#define si_int si_value.sival_int
-#define si_lower __si_fields.__sigfault.__first.__addr_bnd.si_lower
-#define si_overrun __si_fields.__si_common.__first.__timer.si_overrun
-#define si_pid __si_fields.__si_common.__first.__piduid.si_pid
-#define si_pkey __si_fields.__sigfault.__first.si_pkey
-#define si_ptr si_value.sival_ptr
-#define si_status __si_fields.__si_common.__second.__sigchld.si_status
-#define si_stime __si_fields.__si_common.__second.__sigchld.si_stime
-#define si_syscall __si_fields.__sigsys.si_syscall
-#define si_timerid __si_fields.__si_common.__first.__timer.si_timerid
-#define si_uid __si_fields.__si_common.__first.__piduid.si_uid
-#define si_upper __si_fields.__sigfault.__first.__addr_bnd.si_upper
-#define si_utime __si_fields.__si_common.__second.__sigchld.si_utime
-#define si_value __si_fields.__si_common.__second.si_value
 #define signbit(x) (__builtin_signbit(x))
 #define sin(x) __tg_real_complex(sin, (x))
 #define sinh(x) __tg_real_complex(sinh, (x))

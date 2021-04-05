@@ -1,5 +1,5 @@
-#ifndef __wasm_basics___macro_PAGESIZE_h
-#define __wasm_basics___macro_PAGESIZE_h
+#ifndef __wasilibc___macro_PAGESIZE_h
+#define __wasilibc___macro_PAGESIZE_h
 
 /*
  * The page size in WebAssembly is fixed at 64 KiB. If this ever changes,

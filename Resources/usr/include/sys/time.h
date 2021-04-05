@@ -23,20 +23,22 @@ struct itimerval {
 int getitimer (int, struct itimerval *);
 int setitimer (int, const struct itimerval *__restrict, struct itimerval *__restrict);
 #endif
-#ifdef __wasilibc_unmodified_upstream /* WASI libc doesn't build the legacy functions */
+// utimes is defined in a-Shell wasi-libc
+// #ifdef __wasilibc_unmodified_upstream /* WASI libc doesn't build the legacy functions */
 int utimes (const char *, const struct timeval [2]);
-#endif
+// #endif
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 struct timezone {
 	int tz_minuteswest;
 	int tz_dsttime;
 };
-#ifdef __wasilibc_unmodified_upstream /* WASI libc doesn't build the legacy functions */
+// utimes is defined in a-Shell wasi-libc
+// #ifdef __wasilibc_unmodified_upstream /* WASI libc doesn't build the legacy functions */
 int futimes(int, const struct timeval [2]);
 int futimesat(int, const char *, const struct timeval [2]);
 int lutimes(const char *, const struct timeval [2]);
-#endif
+// #endif
 #ifdef __wasilibc_unmodified_upstream /* WASI has no way to set the time */
 int settimeofday(const struct timeval *, const struct timezone *);
 int adjtime (const struct timeval *, struct timeval *);

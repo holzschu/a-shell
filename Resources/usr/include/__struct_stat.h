@@ -1,5 +1,5 @@
-#ifndef __wasm_basics___struct_stat_h
-#define __wasm_basics___struct_stat_h
+#ifndef __wasilibc___struct_stat_h
+#define __wasilibc___struct_stat_h
 
 #include <__typedef_dev_t.h>
 #include <__typedef_ino_t.h>

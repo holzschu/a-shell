@@ -74,8 +74,6 @@ struct ipv6_mreq {
 
 extern const struct in6_addr in6addr_any, in6addr_loopback;
 
-#undef INET_ADDRSTRLEN
-#undef INET6_ADDRSTRLEN
 #define INET_ADDRSTRLEN  16
 #define INET6_ADDRSTRLEN 46
 
@@ -118,8 +116,10 @@ uint16_t ntohs(uint16_t);
 #define IPPROTO_MH       135
 #define IPPROTO_UDPLITE  136
 #define IPPROTO_MPLS     137
+#define IPPROTO_ETHERNET 143
 #define IPPROTO_RAW      255
-#define IPPROTO_MAX      256
+#define IPPROTO_MPTCP    262
+#define IPPROTO_MAX      263
 #endif
 
 #define IN6_IS_ADDR_UNSPECIFIED(a) \
@@ -218,6 +218,7 @@ uint16_t ntohs(uint16_t);
 #define IP_CHECKSUM        23
 #define IP_BIND_ADDRESS_NO_PORT 24
 #define IP_RECVFRAGSIZE    25
+#define IP_RECVERR_RFC4884 26
 #define IP_MULTICAST_IF    32
 #define IP_MULTICAST_TTL   33
 #define IP_MULTICAST_LOOP  34

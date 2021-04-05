@@ -1,3 +1,8 @@
+#ifndef _WASI_EMULATED_PROCESS_CLOCKS
+#error WASI lacks process-associated clocks; to enable emulation of the `times` function using \
+the wall clock, which isn't sensitive to whether the program is running or suspended, \
+compile with -D_WASI_EMULATED_PROCESS_CLOCKS and link with -lwasi-emulated-process-clocks
+#else
 #ifndef	_SYS_TIMES_H
 #define	_SYS_TIMES_H
 
@@ -26,4 +31,4 @@ clock_t times (struct tms *);
 #endif
 
 #endif
-
+#endif
