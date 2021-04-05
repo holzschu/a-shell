@@ -110,8 +110,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NSLog("Error in creating C SDK directory \(localURL): \(error)")
             return
         }
-        // usr/lib/clang/12.0.0/lib/wasi/
-        localURL = libraryURL.appendingPathComponent("usr/lib/clang/12.0.0/lib/wasi/") // $HOME/Library/usr/lib/clang/12.0.0/lib/wasi/
+        // usr/lib/clang/13.0.0/lib/wasi/
+        localURL = libraryURL.appendingPathComponent("usr/lib/clang/13.0.0/lib/wasi/") // $HOME/Library/usr/lib/clang/13.0.0/lib/wasi/
         do {
             if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
                 try FileManager().removeItem(at: localURL)
@@ -127,7 +127,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                  "usr/share",
                                  "usr/lib/wasm32-wasi/crt1.o",
                                  "usr/lib/wasm32-wasi/libc.imports",
-                                 "usr/lib/clang/12.0.0/include",
+                                 "usr/lib/clang/13.0.0/include",
         ]
         let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!)
 
@@ -171,6 +171,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         // Now create the empty libraries:
         let emptyLibraries = [
+            // m rt pthread crypt util xnet resolv dl
             "lib/wasm32-wasi/libcrypt.a",
             "lib/wasm32-wasi/libdl.a",
             "lib/wasm32-wasi/libm.a",
@@ -178,7 +179,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             "lib/wasm32-wasi/libresolv.a",
             "lib/wasm32-wasi/librt.a",
             "lib/wasm32-wasi/libutil.a",
-            "lib/wasm32-wasi/llibxnetibm.a"]
+            "lib/wasm32-wasi/libxnet.a"]
         ios_switchSession("wasiSDKLibrariesCreation")
         for library in emptyLibraries {
             let libraryFileURL = libraryURL.appendingPathComponent("/usr/" + library)
@@ -189,7 +190,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         // One of the libraries is in a different folder:
-        let libraryFileURL = libraryURL.appendingPathComponent("/usr/lib/clang/12.0.0/lib/wasi/libclang_rt.builtins-wasm32.a")
+        let libraryFileURL = libraryURL.appendingPathComponent("/usr/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a")
         if (FileManager().fileExists(atPath: libraryFileURL.path)) {
             try! FileManager().removeItem(at: libraryFileURL)
         }
@@ -200,7 +201,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         pid = ios_fork()
         ios_system("ranlib " + libraryFileURL.path)
         ios_waitpid(pid)
-        let libraries = ["libc", "libc++", "libc++abi", "libc-printscan-long-double", "libc-printscan-no-floating-point", "libwasi-emulated-mman"]
+        let libraries = ["libc", "libc++", "libc++abi", "libc-printscan-long-double", "libc-printscan-no-floating-point", "libwasi-emulated-mman", "libwasi-emulated-signal", "libwasi-emulated-process-clocks"]
         for library in libraries {
             let libraryFileURL = libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/" + library + ".a")
             if (FileManager().fileExists(atPath: libraryFileURL.path)) {

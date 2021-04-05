@@ -461,6 +461,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         let command = arguments![1]
         let fileName = FileManager().currentDirectoryPath + "/" + command
+        thread_stdin_copy = thread_stdin
         thread_stdout_copy = thread_stdout
         thread_stderr_copy = thread_stderr
         if (javascriptRunning) {
@@ -2658,28 +2659,30 @@ extension SceneDelegate: WKUIDelegate {
                     completionHandler("\(result)")
                 }
                 return
-            } else if (arguments[1] == "utimes") {
-                let path = arguments[2]
-                if let atime_sec = Int(arguments[3]) {
-                    var atime_usec = Int32(arguments[4])
-                    if (atime_usec == nil) {
-                        atime_usec = 0
-                    } else {
-                        atime_usec = atime_usec! / 1000
-                    }
-                    let atime: timeval = timeval(tv_sec: atime_sec, tv_usec: atime_usec!)
-                    if let mtime_sec = Int(arguments[5]) {
-                        var mtime_usec = Int32(arguments[6])
-                        if (mtime_usec == nil) {
-                            mtime_usec = 0
-                        } else {
-                            mtime_usec = mtime_usec! / 1000
-                        }
-                        let mtime: timeval = timeval(tv_sec: mtime_sec, tv_usec: mtime_usec!)
-                        var time = UnsafeMutablePointer<timeval>.allocate(capacity: 2)
+            } else if (arguments[1] == "utimensat") {
+                var fd: Int32 = Int32(arguments[2]) ?? AT_FDCWD
+                // Several definitions of AT_FDCWD, but they're all negative
+                if (fd < 0) {
+                    fd = AT_FDCWD
+                }
+                var flag: Int32 = Int32(arguments[3]) ?? 0 // path flags
+                if ((flag & 0x1) != 0) {
+                    // Not the same definition of AT_SYMLINK_NOFOLLOW between wasi-libc and iOS
+                    flag |= AT_SYMLINK_NOFOLLOW
+                }
+                NSLog("Flags: \(flag) vs \(AT_SYMLINK_NOFOLLOW)")
+                let path = arguments[4]
+                if let atime_sec = Int(arguments[5]) {
+                    let atime_nsec = Int(arguments[6]) ?? 0
+                    let atime: timespec = timespec(tv_sec: atime_sec, tv_nsec: atime_nsec)
+                    if let mtime_sec = Int(arguments[7]) {
+                        let mtime_nsec = Int(arguments[8]) ?? 0
+                        let mtime: timespec = timespec(tv_sec: mtime_sec, tv_nsec: mtime_nsec)
+                        // var time = UnsafeMutablePointer<timeval>.allocate(capacity: 2)
+                        var time = UnsafeMutablePointer<Darwin.timespec>.allocate(capacity: 2)
                         time[0] = atime
                         time[1] = mtime
-                        let returnVal = utimes(path, time)
+                        let returnVal = utimensat(fd, path, time, flag)
                         if (returnVal != 0) {
                             completionHandler("\(-errno)")
                             errno = 0
