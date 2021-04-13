@@ -976,7 +976,7 @@ If this option is used several times, the last one will be used.
 .IP "--key <key>"
 (TLS SSH) Private key file name. Allows you to provide your private key in this separate
 file. For SSH, if not specified, curl tries the following candidates in order:
-'~/.ssh/id_rsa', '~/.ssh/id_dsa', './id_rsa', './id_dsa'.
+'~/Documents/.ssh/id_rsa', '~/Documents/.ssh/id_dsa', './id_rsa', './id_dsa'.
 
 If this option is used several times, the last one will be used.
 .IP "--krb <level>"
@@ -2513,7 +2513,7 @@ xdg.origin.url attribute and, for HTTP, the content type is stored in
 the mime_type attribute. If the file system does not support extended
 attributes, a warning is issued.
 .SH FILES
-.I ~/.curlrc
+.I ~/Documents/.curlrc
 .RS
 Default config file, see \fI-K, --config\fP for details.
 .SH ENVIRONMENT
