@@ -170,11 +170,13 @@
 				// forward all keyboard input, let them deal with command history.
 				// TODO: have a list of such interactive commands (array?) 
 				// jump can start vim 
-				// ssh, once connected to the other machine, is interactive (but not ssh-keygen)
+				// ssh and ssh-keygen (new version) are both interactive. 
 				let interactiveRegexp = /^vim|^ipython|^less|^more|^ssh|^jump|\|&? *less|\|&? *more|^man/;
+				return interactiveRegexp.test(commandString) 
 				// It's easier to match a regexp, then take the negation than to test a regexp that does not contain a pattern:
-				let notInteractiveRegexp = /^ssh-keygen/;
-				return interactiveRegexp.test(commandString) && !notInteractiveRegexp.test(commandString);
+				// This is disabled for now, but kept in case it can become useful again.
+				// let notInteractiveRegexp = /^ssh-keygen/;
+				// return interactiveRegexp.test(commandString) && !notInteractiveRegexp.test(commandString);
 			}
 
             // standard functions (terminal, autocomplete, etc)
