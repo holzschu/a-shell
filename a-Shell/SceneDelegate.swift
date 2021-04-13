@@ -1161,7 +1161,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 stdin_file_input = nil
             } else if (command == interrupt) {
-                ios_kill() // TODO: add printPrompt() here if no command running
+                // Calling ios_kill while executing webAssembly or JavaScript is a bad idea.
+                // Do we have a way to interrupt JS execution in WkWebView?
+                if (!javascriptRunning) {
+                    ios_kill() // TODO: add printPrompt() here if no command running
+                }
             } else {
                 guard stdin_file_input != nil else { return }
                 // TODO: don't send data if pipe already closed (^D followed by another key)
