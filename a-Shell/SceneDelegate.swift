@@ -1139,13 +1139,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
         } else if (cmd.hasPrefix("input:")) {
             ios_switchSession(self.persistentIdentifier?.toCString())
+            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
             if (ios_activePager() != 0) { return }
             var command = cmd
             command.removeFirst("input:".count)
             stdinString += command
             guard let data = command.data(using: .utf8) else { return }
-            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
-            ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
             if (command == endOfTransmission) {
                 // Stop standard input for the command:
                 guard stdin_file_input != nil else {
@@ -1175,13 +1175,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         } else if (cmd.hasPrefix("inputInteractive:")) {
             ios_switchSession(self.persistentIdentifier?.toCString())
+            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
             if (ios_activePager() != 0) { return }
             // Interactive commands: just send the input to them. Allows Vim to map control-D to down half a page.
             var command = cmd
             command.removeFirst("inputInteractive:".count)
             guard let data = command.data(using: .utf8) else { return }
-            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
-            ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
             guard stdin_file_input != nil else { return }
             // TODO: don't send data if pipe already closed (^D followed by another key)
             // (store a variable that says the pipe has been closed)
@@ -1195,7 +1195,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             guard let data = command.data(using: .utf8) else { return }
             guard tty_file_input != nil else { return }
             ios_switchSession(self.persistentIdentifier?.toCString())
-            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+            ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
             if (ios_activePager() != 0) {
                 // Remove the string that we just sent from the command input
                 // Sync issues: it could be executed before the string has been added to io.currentCommand
@@ -1771,6 +1772,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 exitCommand = escape + "\n:xa" // save all and quit
             } else if ((currentCommand == "ssh") || currentCommand.hasPrefix("ssh ")) {
                 exitCommand = "\nexit"
+            } else if ((currentCommand == "sftp") || currentCommand.hasPrefix("sftp ")) {
+                exitCommand = "\nquit"
             } else if ((currentCommand == "ed") || currentCommand.hasPrefix("ed ")) {
                 exitCommand = "\n.\nwq" // Won't work if no filename provided. Then again, not much I can do.
             }
