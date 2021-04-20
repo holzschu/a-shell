@@ -382,9 +382,9 @@
 	</array>
 	<key>scp</key>
 	<array>
-		<string>curl_ios.framework/curl_ios</string>
-		<string>curl_main</string>
-		<string>q</string>
+		<string>ssh_cmd.framework/ssh_cmd</string>
+		<string>scp_main</string>
+		<string>12346ABCTdfpqrtvF:J:P:S:c:i:l:o:</string>
 		<string>file</string>
 	</array>
 	<key>sed</key>
@@ -410,9 +410,9 @@
 	</array>
 	<key>sftp</key>
 	<array>
-		<string>curl_ios.framework/curl_ios</string>
-		<string>curl_main</string>
-		<string>q</string>
+		<string>ssh_cmd.framework/ssh_cmd</string>
+		<string>sftp_main</string>
+		<string>1246AafhNpqrvCc:D:i:l:o:s:S:b:B:F:J:P:R:</string>
 		<string>file</string>
 	</array>
 	<key>sh</key>
@@ -426,7 +426,7 @@
 	<array>
 		<string>ssh_cmd.framework/ssh_cmd</string>
 		<string>ssh_main</string>
-		<string>q</string>
+		<string>1246ab:c:e:fgi:kl:m:no:p:qstvxAB:CD:E:F:GI:J:KL:MNO:PQ:R:S:TVw:W:XYy</string>
 		<string>no</string>
 	</array>
 	<key>ssh-keygen</key>
