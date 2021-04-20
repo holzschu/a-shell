@@ -1091,3 +1091,20 @@ public func preview(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
     }
     return 0
 }
+
+@_cdecl("stopInteractive")
+func stopInteractive() {
+    DispatchQueue.main.async {
+        if let delegate = currentDelegate {
+            delegate.resignFirstResponder()
+            delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = false;") { (result, error) in
+                if error != nil {
+                    // print(error)
+                }
+                if (result != nil) {
+                    // print(result)
+                }
+            }
+        }
+    }
+}
