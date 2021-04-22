@@ -158,8 +158,9 @@ ImageMagick: ImageMagick Studio LLC, https://imagemagick.org
 Lua: lua.org, PUC-Rio, https://www.lua.org/
 LuaTeX: The LuaTeX team, http://www.luatex.org
 llvm/clang: the LLVM foundation
-openSSL and libSSH2: port by Felix Schulze, https://github.com/x2on/libssh2-for-iOS
+openSSL and libSSH2: port by Yury Korolev, https://github.com/blinksh/libssh2-apple
 Python3: Python Software Foundation, https://www.python.org/about/
+ssh, scp, sftp: OpenSSH, https://www.openssh.com
 tar: https://libarchive.org
 tree: http://mama.indstate.edu/users/ice/tree/
 TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2019.
@@ -1093,16 +1094,16 @@ public func preview(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
 }
 
 @_cdecl("stopInteractive")
-func stopInteractive() {
+public func stopInteractive() {
     DispatchQueue.main.async {
         if let delegate = currentDelegate {
             delegate.resignFirstResponder()
             delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = false;") { (result, error) in
                 if error != nil {
-                    // print(error)
+                    print(error)
                 }
                 if (result != nil) {
-                    // print(result)
+                    print(result)
                 }
             }
         }
