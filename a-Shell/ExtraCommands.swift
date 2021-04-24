@@ -1100,10 +1100,27 @@ public func stopInteractive() {
             delegate.resignFirstResponder()
             delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = false;") { (result, error) in
                 if error != nil {
-                    print(error)
+                    // print(error)
                 }
                 if (result != nil) {
-                    print(result)
+                    // print(result)
+                }
+            }
+        }
+    }
+}
+
+@_cdecl("startInteractive")
+public func startInteractive() {
+    DispatchQueue.main.async {
+        if let delegate = currentDelegate {
+            delegate.resignFirstResponder()
+            delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = true;") { (result, error) in
+                if error != nil {
+                    // print(error)
+                }
+                if (result != nil) {
+                    // print(result)
                 }
             }
         }
