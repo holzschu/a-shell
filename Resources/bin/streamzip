@@ -1,0 +1,215 @@
+#!/usr/local/bin/perl
+    eval 'exec /usr/local/bin/perl -S $0 ${1+"$@"}'
+	if $running_under_some_shell;
+#!/usr/bin/perl
+
+# Streaming zip
+
+use strict;
+use warnings;
+
+use IO::Compress::Zip qw(zip
+                         ZIP_CM_STORE
+                         ZIP_CM_DEFLATE
+                         ZIP_CM_BZIP2
+                         ZIP_CM_LZMA );
+use Getopt::Long;
+
+my $VERSION = '1.0';
+
+my $compression_method = ZIP_CM_DEFLATE;
+my $stream = 0;
+my $zipfile = '-';
+my $memberName = '-' ;
+my $zip64 = 0 ;
+
+GetOptions("zip64"          => \$zip64,
+           "method=s"       => \&lookupMethod,
+           "stream"         => \$stream,
+           "zipfile=s"      => \$zipfile,
+           "member-name=s"  => \$memberName,
+           'version'        => sub { print "$VERSION\n"; exit 0 },
+           'help'           => \&Usage,
+          )
+    or Usage();
+
+Usage()
+    if @ARGV;
+
+
+zip '-' => $zipfile,
+           Name   => $memberName,
+           Zip64  => $zip64,
+           Method => $compression_method,
+           Stream => $stream
+    or die "Error creating zip file '$zipfile': $\n" ;
+
+exit 0;
+
+sub lookupMethod
+{
+    my $name  = shift;
+    my $value = shift ;
+
+    my %valid = ( store   => ZIP_CM_STORE,
+                  deflate => ZIP_CM_DEFLATE,
+                  bzip2   => ZIP_CM_BZIP2,
+                  lzma    => ZIP_CM_LZMA,
+                );
+
+    my $method = $valid{ lc $value };
+
+    Usage("Unknown method '$value'")
+        if ! defined $method;
+
+    # If LZMA was rquested, check that it is available
+    if ($method == ZIP_CM_LZMA)
+    {
+        eval ' use IO::Compress::Adapter::Lzma';
+        die "Method =. LZMA needs IO::Compress::Adapter::Lzma\n"
+            if ! defined $IO::Compress::Lzma::VERSION;
+    }
+
+    $compression_method =  $method;
+}
+
+sub Usage
+{
+    die <<EOM;
+streamzip [OPTIONS]
+
+Stream data from stdin, compress into a Zip container, and stream to stdout.
+
+OPTIONS
+
+  -zipfile=F      Write zip container to the filename F
+  -member-name=M  member name [Default '-']
+  -zip64          Create a Zip64-compliant zip file [Default: No]
+                  Use Zip64 if input is greater than 4Gig.
+  -stream         Write a streamed zip file
+                  Only applies when 'zipfile' option is used. [Default: No]
+                  Always enabled when writing to stdout.
+  -method=M       Compress using method "M".
+                  Valid methods are
+                    store    Store without compression
+                    deflate  Use Deflate compression [Deflault]
+                    bzip2    Use Bzip2 compression
+                    lzma     Use LZMA compression [needs IO::Compress::Lzma]
+                  Lzma needs IO::Compress::Lzma to be installed.
+  -version        Display version number [$VERSION]
+
+Copyright (c) 2019 Paul Marquess. All rights reserved.
+
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+EOM
+}
+
+
+__END__
+=head1 NAME
+
+streamzip - create a zip file from stdin
+
+=head1 SYNOPSIS
+
+    producer | streamzip [opts] | consumer
+    producer | streamzip [opts] -zipfile=output.zip
+
+=head1 DESCRIPTION
+
+This program will read data from stdin, compress it into a zip container and,
+by default, write a I<streamed> zip file to stdout. No temporary files are created.
+
+The zip container written to stdout is, by necessity, written in streaming
+format.  Most programs that read Zip files can cope with a streamed zip file,
+but if interoperability is important, and your workflow allows you to write the 
+zip file directly to disk you can create a non-streamed zip file using the C<zipfile> option.
+
+=head2 OPTIONS
+
+=over 5
+
+=item -zip64
+
+Create a Zip64-compliant zip container.
+Use this option if the input is greater than 4Gig.
+
+Default is disabled.
+
+=item  -zipfile=F     
+
+Write zip container to the filename F.
+
+Use the C<Stream> option to enable the creation of a  streamed zip file.
+
+=item  -member-name=M  
+
+This option is used to name the "file" in the zip container.
+
+Default is '-'.
+
+=item  -stream         
+
+Ignored when writing to stdout.
+
+If the C<zipfile> option is specified, including this option
+will trigger the creation of a streamed zip file.
+
+Default: Always enabled when writing to stdout, otherwise disabled.
+
+=item  -method=M       
+
+Compress using method "M".
+
+Valid method names are
+
+    * store    Store without compression
+    * deflate  Use Deflate compression [Deflault]
+    * bzip2    Use Bzip2 compression
+    * lzma     Use LZMA compression 
+
+Note that Lzma compress needs IO::Compress::Lzma to be installed.
+
+Default is deflate.
+
+=item  -version        
+
+Display version number [$VERSION]
+
+=item -help
+
+Display help
+
+=back
+
+=head2 When to use a Streamed Zip File
+
+A Zip file created with streaming mode enabled allows you to create a zip file 
+in situations where you cannot seek backwards/forwards in the file. 
+
+A good examples is when you are
+serving dynamic content from a Web Server straight into a socket 
+without needing to create a temporary zip file in the filesystsm.
+
+Similarly if your workfow uses a Linux pipelined commands.
+
+=head1 SUPPORT
+
+General feedback/questions/bug reports should be sent to
+L<https://github.com/pmqs/IO-Compress/issues> (preferred) or
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=IO-Compress>.
+
+
+=head1 AUTHOR
+
+Paul Marquess F<pmqs@cpan.org>.
+
+=head1 COPYRIGHT 
+
+Copyright (c) 2019 Paul Marquess. All rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself. 
+

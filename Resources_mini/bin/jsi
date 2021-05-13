@@ -1,0 +1,848 @@
+#!python
+
+import os, sys, re
+import subprocess, tempfile
+
+from argparse import ArgumentParser
+
+VALID_JS_NAME = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]+$")
+
+LONG_DESCRIPTION = """jsi executes JavaScript by running it within a WkWebView. As such, all standard browser APIs should be available.""".strip()
+
+SHELL_BANNER = "Type 'help' for help and 'quit' to exit."
+
+SHELL_HELP = \
+"""This program is a simple, interactive JavaScript shell.
+In addition to browser-provided APIs, the following commands are provided:
+    print(message)
+    println(message)
+        Prints [message] to the terminal.
+        `println` prints a trailing newline after printing [message].
+
+Note that changes to `document` won't be visible unless jsi is run with the '-w' or '--in-window' option. If this option is not given, code is run in a background WebView.
+"""
+
+JS_UTILITIES = r"""
+/**
+ * Additional functions for script output
+ */
+
+let print = (...output) => {
+    _jsi.notePrintFn(window.print, output);
+    return window.print.apply(this, output);
+};
+
+let println = (...output) => {
+    _jsi.notePrintFn(window.println, output);
+    return window.println.apply(this, output);
+};
+
+let print_error = (...output) => {
+    _jsi.notePrintFn(window.print_error, output);
+    return window.print_error.apply(this, output);
+};
+
+// Define the _jsi namespace.
+(function() {
+
+if (!window._jsi) {
+    window._jsi = {};
+    _jsi.uncollectedPrints = [];
+}
+
+/**
+ * Print unprinted output.
+ */
+_jsi.collectPrints = () => {
+    if (_jsi.uncollectedPrints) {
+        for (let item of _jsi.uncollectedPrints) {
+            item.printFn.apply(item.printFn, item.args);
+        }
+    }
+
+    _jsi.uncollectedPrints = [];
+};
+
+_jsi.pauseSavingFuturePrints = () => {
+    _jsi.savingPrintsPaused = true;
+};
+
+_jsi.saveFuturePrints = () => {
+    _jsi.savingPrintsPaused = false;
+};
+
+/**
+ * Note that we have called a print
+ * function. This allows its output to
+ * be collected later.
+ */
+_jsi.notePrintFn = (fctn, args) => {
+    if (_jsi.savingPrintsPaused) {
+        return;
+    }
+
+    _jsi.uncollectedPrints.push({
+        printFn: fctn,
+        args: args
+    });
+};
+
+/**
+ * @param obj Entity to stringify and print.
+ * @param recurseDepth Maximum depth to print properties of sub-objects.
+ * @param indentation How much to indent the region. Optional.
+ * @param toplevel Optional; used internally.
+ * @return a string description of [obj].
+ */
+_jsi.stringify_obj = function (obj, recurseDepth, indentation, toplevel) {
+    /* Fill default arguments. */
+    indentation = indentation === undefined ? "" : indentation;
+    toplevel = toplevel === undefined ? true : toplevel;
+    recurseDepth = recurseDepth === undefined ? 1 : recurseDepth;
+
+    /* Accumulator for output. */
+    let result = "";
+    let formatLine = "";
+
+    /**
+     * Indent [content] with given indententation and additional characters [additional].
+     */
+    const indent = (content, additional) => {
+        additional = additional || "";
+
+        return (indentation + additional + content).split('\n').join('\n' + indentation + additional);
+    };
+
+    const termEscape = (text) => {
+        return text.split('\033').join('\\033').split('\0').join('\\0').split('\\').join('\\\\');
+    }
+
+    /**
+     * Surrounds text with multiline quotation characters, escapes text content.
+     */
+    const inQuotes = (text) => {
+        return "`" + termEscape(text).split('`').join('\\`') + "`";
+    };
+
+    /**
+     * Append [content] to result with proper indentation and a newline.
+     */
+    const outputLine = (content) => {
+        result += indent(content) + "\n";
+    };
+
+    /* If an object, list its properties */
+    if (recurseDepth >= 0 && typeof(obj) == 'object') {
+        result += '' + obj;
+        result += " {\n";
+
+        let propDescriptions = [];
+
+        for (let prop in obj) {
+            result += indent(prop + ": ", "  ");
+
+            /* Permission errors may prevent us from accessing/enumerating properties of obj[prop]. */
+            try {
+                result += _jsi.stringify_obj(obj[prop], recurseDepth - 1,indentation + "  ", false);
+            } catch(e) {
+                result += "(error `" + e + "`)";
+            }
+
+            result += ",\n";
+        }
+
+        outputLine("}");
+        formatLine = "js";
+    } else if (typeof (obj) == "string") {
+        const quoted = inQuotes(obj);
+        const lines = quoted.split('\n');
+        formatLine = "js";
+
+        if (quoted.length > 100 && recurseDepth < 0) {
+            result += quoted.substring(0, 100) + ' `...';
+        } else if (lines.length == 1) {
+            result += quoted;
+        } else {
+            if (obj.search(/[<][\/][a-zA-Z0-9 \t]+[>]/) >= 0 && recurseDepth >= 0) {
+                for (const line of lines) {
+                    outputLine(line);
+                }
+
+                formatLine = "html";
+            } else {
+                result += quoted;
+            }
+        }
+    } else if (typeof (obj) == 'function') {
+        if (recurseDepth < 0) {
+            result += "[ Function ]";
+        } else {
+            const lines = termEscape(obj + '').split('\n');
+
+            for (let i = 0; i < lines.length; i++) {
+                if (i == 0) {
+                    result += lines[i] + '\n';
+                } else if (i == lines.length - 1) {
+                    result += indent(lines[i]);
+                } else {
+                    outputLine(lines[i]);
+                }
+            }
+        }
+
+        formatLine = "js";
+    } else if (obj == undefined) {
+        result += "undefined";
+        formatLine = "undefined";
+    } else {
+        result += termEscape('' + obj);
+    }
+
+    formatLine += " " + result.split("\n").length;
+
+    if (!toplevel) {
+        formatLine = "";
+    } else {
+        result = "\n" + result;
+        formatLine = "\n" + formatLine;
+    }
+
+    return result + formatLine;
+};
+
+})(); /* End declaration of _jsi "namespace". */
+"""
+
+def getJSInfo(text, stopIdx=-1):
+    """
+    Returns information about [text] if
+    interpreted as JavaScript. Information
+    is returned as a dictionary in the form,
+    {
+        endsWithOp: '+', '-', '*', '/', '&', '|', '^', or None
+        parenLevel: Number of unclosed nested parens
+        squareBracketLevel: Number of unclosed nested '[' ']' brackets
+        curlyBraceLevel: Number of unclosed nested '{' '}' braces.
+        escaped: True iff the last character processed was escaped escaped
+        inComment: The last character processed was in some (single or multi-line) comment
+        inMultiLineComment: True iff the last character processed was in a multi-line comment
+        inQuote: '`', '"', "'", or None
+        trailingEmptyLineCount: Number of lines with no non-space characters processed at the end of the input.
+        endsWithSemicolon: Whether the last character in the input is ';'
+    }
+    """
+
+    inQuote = None
+    inSLComment = False
+    inMLComment = False
+    escaped = False
+    parenLevel = 0
+    curlyBraceLevel = 0
+    squareBracketLevel = 0
+    endsWithOperator = None
+    emptyLineCount = 0
+    endsWithSemicolon = False
+
+    if stopIdx > len(text) or stopIdx < 0:
+        stopIdx = len(text)
+
+    for i in range(0, stopIdx):
+        char = text[i]
+        nextChar = ''
+        if i + 1 < len(text):
+            nextChar = text[i + 1]
+
+        isSpaceChar = char == ' ' or char == '\t' or char == '\n'
+
+        if not isSpaceChar:
+            endsWithOperator = None
+            emptyLineCount = 0
+        endsWithSemicolon = False
+
+        if escaped:
+            escaped = False
+        elif char == '\n':
+            emptyLineCount += 1
+            inSLComment = False
+        elif char == '*' and nextChar == '/':
+            inMLComment = False
+        elif inMLComment or inSLComment:
+            pass
+        elif char == '"' or char == "'" or char == '`':
+            if inQuote is None:
+                inQuote = char
+            elif char == inQuote:
+                inQuote = None
+        elif inQuote:
+            pass
+        elif char == '/' and nextChar == '*':
+            inMLComment = True
+        elif char == '/' and nextChar == '/':
+            inSLComment = True
+        elif char == '\\':
+            escaped = True
+        elif char == '(':
+            parenLevel += 1
+        elif char == ')':
+            parenLevel -= 1
+        elif char == '{':
+            curlyBraceLevel += 1
+        elif char == '}':
+            curlyBraceLevel -= 1
+        elif char == '[':
+            squareBracketLevel += 1
+        elif char == ']':
+            squareBracketLevel -= 1
+        elif char == ';':
+            endsWithSemicolon = True
+        elif char == '+' or char == '-' or char == '*' or char == '/' or char == '&' or char == '^' or char == '|':
+            endsWithOperator = char
+
+    result = {}
+    result['endsWithOp'] = endsWithOperator
+    result['parenLevel'] = parenLevel
+    result['squareBracketLevel'] = squareBracketLevel
+    result['curlyBraceLevel'] = curlyBraceLevel
+    result['escaped'] = escaped
+    result['inComment'] = inMLComment or inSLComment
+    result['inMultiLineComment'] = inMLComment
+    result['inQuote'] = inQuote
+    result['trailingEmptyLineCount'] = emptyLineCount
+    result['endsWithSemicolon'] = endsWithSemicolon
+    return result
+
+
+def shouldNewlineAccept(text):
+    """
+    Returns true iff pressing Return
+    should append a newline to text.
+    """
+
+    ctx = getJSInfo(text)
+    hasUnfinishedCode = ctx['squareBracketLevel'] > 0 or \
+            ctx['curlyBraceLevel'] > 0 or\
+            ctx['parenLevel'] > 0 or \
+            ctx['inQuote'] or \
+            ctx['inMultiLineComment'] or \
+            ctx['endsWithOp']
+#            ctx['endsWithSemicolon']
+
+    return ctx['trailingEmptyLineCount'] < 2 and hasUnfinishedCode or ctx['escaped']
+
+
+try:
+    import pygments
+    from pygments.lexers.javascript import JavascriptLexer
+    from pygments.lexers.html import HtmlLexer
+    from pygments.formatters import TerminalFormatter
+    havePygments = True
+except:
+    havePygments = False
+
+try:
+    import prompt_toolkit, prompt_toolkit.filters, prompt_toolkit.validation
+    from prompt_toolkit.lexers import PygmentsLexer
+    from prompt_toolkit.completion import Completion, Completer, NestedCompleter
+
+    class NewlineAcceptTester(prompt_toolkit.filters.Condition, prompt_toolkit.validation.Validator):
+        def __init__(self, session):
+            self._session = session
+            self._text = ""
+        def validate(self, document):
+            self._text = document.text
+        def __call__(self):
+            return shouldNewlineAccept(self._text)
+        def __bool__(self):
+            return True
+
+    class JSCompleter(Completer):
+        completions = {
+            "window": None,
+            "if": None,
+            "else": None,
+            "var": None,
+            "let": None,
+            "for": None,
+            "of": None,
+            "in": None,
+            "while": None,
+            "const": None,
+            "class": None,
+            "extends": None,
+            "new": None,
+            "function": None,
+            "println": None,
+            "print": None,
+            "Math": {
+                "random": None,
+                "sin": None,
+                "cos": None,
+                "asin": None,
+                "acos": None,
+                "atan": None,
+                "atan2": None,
+                "tan": None,
+                "pow": None,
+                "log": None,
+                "abs": None,
+                "cbrt": None,
+                "sqrt": None,
+                "exp": None,
+                "floor": None,
+                "round": None,
+                "ceil": None,
+                "PI": None,
+                "E": None,
+                "SQRT2": None,
+                "LN2": None,
+                "LN10": None
+            },
+            "BigInt": None,
+            "Number": None,
+            "Date": None,
+            "help": None,
+            "quit": None
+        }
+
+        def __init__(self, runJS):
+            self._userPopulated = {}
+            self._runJS = runJS
+            self._populateFromJS("window")
+            self.completions["window"]["window"] = self.completions["window"]
+            for key in self.completions["window"]:
+                self.completions[key] = self.completions["window"][key]
+
+        def get_completions(self, document, complete_event):
+            cursor = document.cursor_position
+            text = document.text
+            word = document.get_word_before_cursor(pattern=re.compile(r"[a-z0-9A-Z._]+"))
+
+            # First, if we're in a quote or comment, quit.
+            ctx = getJSInfo(text, cursor)
+            if ctx['inComment'] or ctx['inQuote']:
+                return
+
+            def fromDict(parts, completionDict):
+                """ Yields completions matching parts from completionDict """
+                result = []
+
+                if len(parts) > 0:
+                    for key in completionDict:
+                        if len(key) >= len(parts[0]) and key[:len(parts[0])] == parts[0]:
+                            if len(parts) == 1:
+                                result.append(Completion(key, start_position = -len(parts[0])))
+                            elif completionDict[key]:
+                                result += fromDict(parts[1:], completionDict[key])
+                return result
+
+            parts = word.split('.')
+            completionCount = 0
+
+            for completion in fromDict(parts, self.completions):
+                completionCount += 1
+                yield completion
+
+            if completionCount == 0 and len(word) > 0 and len(parts) >= 2:
+                # If the word's parent isn't in this' completion dict,
+                # stop.
+                checkDict = self.completions
+                for part in parts[:-2]:
+                    if not part in checkDict:
+                        return
+                    checkDict = checkDict[part]
+
+                if word[-1] == '.':
+                    word = word[:-1]
+                populateFrom = ".".join(parts[:-1])
+
+                # If we've already tried to populate suggestions
+                # for this, stop. There may not be any
+                if populateFrom in self._userPopulated:
+                    return
+
+                self._populateFromJS(populateFrom)
+                self._userPopulated[populateFrom] = True
+
+        def _populateFromJS(self, base, parentDict = None, depth = 0, maxDepth = 0):
+            if depth > maxDepth:
+                return
+
+            if parentDict is None:
+                parts = base.split('.')
+                parentDict = self.completions
+                baseSoFar = []
+
+                for part in parts:
+                    baseSoFar.append(part)
+                    if not part in parentDict or not parentDict[part]:
+                        partExistsResult = self._runJS("""
+                        try {
+                            %s;
+                            println('success');
+                        } catch(e) {
+                            println('error');
+                        }
+                        """ % ".".join(baseSoFar)).strip()
+
+                        # If it doesn't exist, don't generate completions
+                        # for it!
+                        if partExistsResult != "success":
+                            return
+
+                        parentDict[part] = {}
+                    parentDict = parentDict[part]
+
+            out = self._runJS("""let result = '';
+            try
+            {
+                for (let key in eval(%s)) {
+                    if (key.indexOf('\\n') == -1) {
+                        result += key + "\\n";
+                    }
+                }
+            } catch(e) { }
+            println(result); """ % jsQuote(base))
+
+            for key in out.split('\n'):
+                if key != "" and VALID_JS_NAME.match(key):
+                    parentDict[key] = { }
+                    self._populateFromJS(base + "." + key, parentDict[key], depth + 1, maxDepth)
+
+    promptTkSession = prompt_toolkit.PromptSession()
+except Exception as e:
+    print ("Warning: Unable to import prompt_toolkit: " + str(e))
+    promptTkSession = None
+
+class SourceFormatter:
+    def __init__(self, disableColor=False):
+        self._disableColor = disableColor or not havePygments
+
+    def isHighlightingEnabled(self):
+        return not self._disableColor
+
+    def formatHtml(self, text):
+        """ Returns [text] highlighted via ASCII escape sequences """
+
+        if self._disableColor:
+            return text
+        else:
+            return self._highlight(text, HtmlLexer())
+
+    def formatJavascript(self, text):
+        """
+            Returns [text] with ASCII escape sequences inserted to provide
+        syntax highlighting
+        """
+
+        if self._disableColor:
+            return text
+        else:
+            return self._highlight(text, JavascriptLexer()).rstrip()
+
+    def getJavascriptLexer(self):
+        """
+            Returns JavascriptLexer, or None, depending on whether coloring is enabled.
+        """
+
+        if self._disableColor:
+            return None
+        else:
+            return JavascriptLexer
+
+    def formatError(self, text):
+        if self._disableColor:
+            return text
+        else:
+            return "\033[92m%s\033[0m" % text
+
+    def _highlight(self, text, lexer):
+        return pygments.highlight(text, lexer, TerminalFormatter())
+
+class InputReader:
+    def __init__(self, disableFormatting, promptText, runJS):
+        self._formattingDisabled = disableFormatting or not promptTkSession
+        self._promptText = promptText
+
+        if not self._formattingDisabled:
+            self._makeInteractive()
+            self._lexer = PygmentsLexer(JavascriptLexer)
+            self._shouldNewlineAcceptTest = NewlineAcceptTester(promptTkSession)
+            self._completer = JSCompleter(runJS)
+
+    def prompt(self):
+        if self._formattingDisabled:
+            print(self._promptText, end='')
+            result = str(input())
+            while shouldNewlineAccept(result):
+                result += "\n" + str(input())
+            return result
+        else:
+            return promptTkSession.prompt(self._promptText,
+                    lexer=self._lexer,
+                    multiline=self._shouldNewlineAcceptTest,
+                    validator=self._shouldNewlineAcceptTest,
+                    completer=self._completer)
+
+    def _makeInteractive(self):
+        runJS("window.interactiveCommandRunning = true;", inTermContext = True)
+
+class Printer:
+    PRIMARY_COLOR="\033[94m"
+    SECONDARY_COLOR="\033[33m"
+    HIGHLIGHT_COLOR="\033[93m"
+    NO_COLOR="\033[0m"
+
+    def __init__(self, disableColorization):
+        self._colorDisabled = disableColorization
+
+    def print(self, text, end='\n'):
+        """ Print [text] with no additional formatting. """
+
+        self._print(text, end=end)
+
+    def printPrimary(self, text, end='\n'):
+        """ Print [text] with primary formatting. """
+
+        self._print(text, self.PRIMARY_COLOR, end=end)
+
+    def printSecondary(self, text, end='\n'):
+        """ Print [text] with secondary formatting. """
+
+        self._print(text, self.SECONDARY_COLOR, end=end)
+
+    def printHighlight(self, text, end='\n'):
+        """ Print [text], highlighted """
+
+        self._print(text, self.HIGHLIGHT_COLOR, end=end)
+
+    def _print(self, text, colorize=None, end='\n'):
+        if colorize is None or self._colorDisabled:
+            print(text, end=end)
+        else:
+            print("%s%s%s" % (colorize, text, self.NO_COLOR), end=end)
+
+
+## Returns [text] within a string, line breaks, etc. escaped.
+def jsQuote(text):
+    result = '`'
+    for char in text:
+        if char == '`' or char == '\\':
+            result += '\\'
+        result += char
+    result += '`'
+
+    return result
+
+def exportVarDefs(js):
+    VARDECL_LETTERS = { '', 'l', 'e', 't', 'c', 'o', 'n', 's', 't' }
+    result = ''
+
+    inQuote = None
+    escaped = False
+    buff = ''
+    bracketLevel = 0
+    inSingleLineComment = False
+    inMultiLineComment = False
+
+    def flushBuff(nextChar):
+        nonlocal buff, result
+        if nextChar == '\t' or nextChar == '\n' or nextChar == ' ':
+            if buff.strip() == 'let' or buff.strip() == 'const':
+                if bracketLevel == 0 and not inSingleLineComment and not inMultiLineComment and inQuote is None:
+                    buff = 'var'
+        result += buff
+        buff = ''
+
+    for i in range(0, len(js)):
+        char = js[i]
+        nextChar = ''
+
+        if i + 1 < len(js):
+            nextChar = js[i + 1]
+
+        inComment = inSingleLineComment or inMultiLineComment
+
+        buff += char
+        if escaped:
+            escaped = False
+            continue
+        elif inSingleLineComment and char == '\n':
+            inSingleLineComment = False
+        elif char == '*' and nextChar == '/':
+            inMultiLineComment = False
+        elif inComment:
+            continue
+        elif char == '"' or char == "'" or char == '`':
+            if char == inQuote:
+                inQuote = None
+            else:
+                inQuote = char
+        elif inQuote:
+            continue
+        elif char == '/' and nextChar == '/':
+            inSingleLineComment = True
+        elif char == '/' and nextChar == '*':
+            inMultiLineComment = True
+        elif char == '{':
+            bracketLevel += 1
+        elif char == '}':
+            bracketLevel -= 1
+        elif char == '\\':
+            escaped = True
+
+        if not nextChar in VARDECL_LETTERS or not char in VARDECL_LETTERS:
+            flushBuff(nextChar)
+
+    result += buff
+    return result
+
+## Evaluates [content] as JavaScript. If
+##  [inTermContext], [content] is evaluated
+##  in the same context as the terminal UI.
+## Returns the output, if any, produced by [content].
+##  If [collectPrints], any async/delayed print statements' output is also returned.
+def runJS(content, inTermContext=False, recurseDepth=1, sourceFormatter=SourceFormatter(), collectPrints = False):
+    toRun = JS_UTILITIES
+
+    if collectPrints:
+        toRun += "_jsi.collectPrints();\n"
+
+    # Don't re-print what was printed while jsc was running
+    toRun += "_jsi.pauseSavingFuturePrints();\n"
+    toRun += "print(_jsi.stringify_obj(eval(%s), %d));" % (jsQuote(exportVarDefs(content)), recurseDepth)
+
+    # Save any async prints for later collection
+    toRun += "_jsi.saveFuturePrints();"
+
+    outFile = tempfile.NamedTemporaryFile(delete=False)
+    outFile.write(bytes(toRun, "utf-8"))
+    outFile.close()
+
+    args = ["jsc"]
+    if inTermContext:
+        args.append("--in-window")
+    args.append(os.path.relpath(outFile.name))
+
+    output = subprocess.check_output(args)
+    output = output.decode("utf-8").rstrip(" \r\n")
+
+    os.unlink(outFile.name)
+
+    ## The last line is always a format specifier, unless an error occurred.
+    outLines = output.split('\n')
+
+    if len(outLines) == 0:
+        return "No output"
+
+    lastLine = outLines[-1].split(" ")
+    outLines = outLines[:-1]
+
+    # If we don't have two words in the output's
+    # format specification line, an error occurred.
+    if len(lastLine) != 2 or not lastLine[1].isdecimal():
+        return sourceFormatter.formatError(output)
+
+    formatType = lastLine[0]
+    formatLineCount = int(lastLine[1])
+
+    formatLines = "\n".join(outLines[-formatLineCount:])
+    unformatLines = "\n".join(outLines[:-formatLineCount])
+
+    if formatType == 'js':
+        formatLines = sourceFormatter.formatJavascript(formatLines)
+    elif formatType == 'html':
+        formatLines = sourceFormatter.formatHtml(formatLines)
+    elif formatType == "undefined":
+        formatLines = ""
+
+        # Remove trailing linebreak from unformatted lines, we don't need it.
+        if len(unformatLines) > 1 and unformatLines[-1] == '\n':
+            unformatLines = unformatLines[:-1]
+
+    result = unformatLines + formatLines
+    return result
+
+## Parse commandline arguments and take action on them, if necessary.
+## Returns a map with the following keys:
+## {
+##  prompt: The prompt to use when interacting with the user.
+##  omitIntro: False iff a brief introductory help message should be printed.
+##  inTermWebView: True iff scripts should be run in the same WkWebView as the terminal UI.
+##  noColor: True iff output should have no color formatting.
+## }
+def parseCmdlineArguments():
+    args = ArgumentParser(
+            description="An interactive JavaScript shell",
+            epilog=LONG_DESCRIPTION
+    )
+
+    isTTY = True
+    omitIntro = False
+    defaultPrompt = "% "
+
+    # If we're getting input from a pipe (i.e. cat foo.js | jsi)
+    # don't print a prompt (by default).
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
+        defaultPrompt = ""
+        omitIntro = True
+        isTTY = False
+
+    args.add_argument("--prompt", default=defaultPrompt)
+    args.add_argument("--no-banner",
+            default=omitIntro, action="store_true", dest="omitIntro")
+    args.add_argument("--no-color",
+            default=not isTTY,
+            dest="noColor", action="store_true", help="Disable colorized output")
+    args.add_argument("-d", "--inspect-depth",
+            default=0,
+            type=int,
+            help="When printing the details of an object, how many levels of sub-objects to inspect. This should be a small number (e.g. 0, 1, or 2).",
+            dest="inspectDepth")
+    args.add_argument("-w", "--in-window",
+            action="store_true", dest="inTermWebView",
+            help="Run JavaScript in the same WkWebView as the terminal UI.")
+
+    result = args.parse_args()
+
+    if not "omitIntro" in result:
+        result.omitIntro = omitIntro
+
+    return result
+
+
+if __name__ == "__main__":
+    args = parseCmdlineArguments()
+    promptText = args.prompt
+    response = ''
+
+    formatter = SourceFormatter(args.noColor)
+    execJS = lambda js, collectPrints=False: \
+            runJS(js,
+                    args.inTermWebView,
+                    args.inspectDepth,
+                    formatter,
+                    collectPrints=collectPrints)
+
+    out = Printer(args.noColor)
+    readIn = InputReader(args.noColor, promptText, execJS)
+
+    if not args.omitIntro:
+        out.printPrimary(SHELL_BANNER)
+
+    while True:
+        try:
+            response = readIn.prompt()
+        except EOFError:
+            print()
+            break
+        except KeyboardInterrupt:
+            print("quit")
+            break
+        if response == "quit":
+            break
+        elif response == "help":
+            out.printPrimary(SHELL_HELP)
+        else:
+            out.print(execJS(response,  collectPrints=True))
+
+
