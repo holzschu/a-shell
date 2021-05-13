@@ -331,6 +331,13 @@
 		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
 		<string>file</string>
 	</array>
+	<key>python3.9</key>
+	<array>
+		<string>python3_ios.framework/python3_ios</string>
+		<string>Py_BytesMain</string>
+		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
+		<string>file</string>
+	</array>
 	<key>python</key>
 	<array>
 		<string>python3_ios.framework/python3_ios</string>
@@ -846,6 +853,13 @@
 	<array>
 		<string>shell.framework/shell</string>
 		<string>sleep_main</string>
+		<string></string>
+		<string>none</string>
+	</array>
+	<key>perl</key>
+	<array>
+		<string>perl.framework/perl</string>
+		<string>main</string>
 		<string></string>
 		<string>none</string>
 	</array>
