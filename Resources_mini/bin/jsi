@@ -1,6 +1,6 @@
 #!python
 
-import os, sys, re
+import os, sys, re, time
 import subprocess, tempfile
 
 from argparse import ArgumentParser
@@ -18,8 +18,12 @@ In addition to browser-provided APIs, the following commands are provided:
     println(message)
         Prints [message] to the terminal.
         `println` prints a trailing newline after printing [message].
+    print_error(message)
+        Prints [message] to stderr.
 
 Note that changes to `document` won't be visible unless jsi is run with the '-w' or '--in-window' option. If this option is not given, code is run in a background WebView.
+
+When '--in-window' is given, the terminal can be interacted with via the global variable, term_.
 """
 
 JS_UTILITIES = r"""
@@ -349,7 +353,7 @@ try:
             self._session = session
             self._text = ""
         def validate(self, document):
-            self._text = document.text
+            self._text = document.text[0:document.cursor_position + 1]
         def __call__(self):
             return shouldNewlineAccept(self._text)
         def __bool__(self):
@@ -457,11 +461,16 @@ try:
 
                 # If we've already tried to populate suggestions
                 # for this, stop. There may not be any
-                if populateFrom in self._userPopulated:
+                if populateFrom in self._userPopulated \
+                        and ctx['curlyBraceLevel'] >= self._userPopulated[populateFrom]['curlyBraceLevel'] \
+                        and time.time() < self._userPopulated[populateFrom]['timestamp'] + 5:
                     return
 
                 self._populateFromJS(populateFrom)
-                self._userPopulated[populateFrom] = True
+                self._userPopulated[populateFrom] = {
+                        'curlyBraceLevel': ctx['curlyBraceLevel'],
+                        'timestamp': time.time()
+                }
 
         def _populateFromJS(self, base, parentDict = None, depth = 0, maxDepth = 0):
             if depth > maxDepth:
@@ -492,7 +501,8 @@ try:
                         parentDict[part] = {}
                     parentDict = parentDict[part]
 
-            out = self._runJS("""let result = '';
+            out = self._runJS("""{
+            let result = '';
             try
             {
                 for (let key in eval(%s)) {
@@ -501,14 +511,16 @@ try:
                     }
                 }
             } catch(e) { }
-            println(result); """ % jsQuote(base))
+            println(result); }""" % jsQuote(base))
 
             for key in out.split('\n'):
                 if key != "" and VALID_JS_NAME.match(key):
                     parentDict[key] = { }
                     self._populateFromJS(base + "." + key, parentDict[key], depth + 1, maxDepth)
 
-    promptTkSession = prompt_toolkit.PromptSession()
+    promptTkSession = None
+    if sys.stdin.isatty():
+        promptTkSession = prompt_toolkit.PromptSession(vi_mode=True)
 except Exception as e:
     print ("Warning: Unable to import prompt_toolkit: " + str(e))
     promptTkSession = None
@@ -792,7 +804,8 @@ def parseCmdlineArguments():
             default=omitIntro, action="store_true", dest="omitIntro")
     args.add_argument("--no-color",
             default=not isTTY,
-            dest="noColor", action="store_true", help="Disable colorized output")
+            dest="noColor",
+            action="store_true", help="Disable colorized output")
     args.add_argument("-d", "--inspect-depth",
             default=0,
             type=int,
@@ -829,6 +842,13 @@ if __name__ == "__main__":
     if not args.omitIntro:
         out.printPrimary(SHELL_BANNER)
 
+    # If input is not directly from a user,
+    # run input to this, then exit.
+    if not sys.stdin.isatty():
+        toRun = sys.stdin.read()
+        out.print(execJS(toRun))
+        sys.exit(0)
+
     while True:
         try:
             response = readIn.prompt()
@@ -844,5 +864,3 @@ if __name__ == "__main__":
             out.printPrimary(SHELL_HELP)
         else:
             out.print(execJS(response,  collectPrints=True))
-
-
