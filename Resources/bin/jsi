@@ -326,7 +326,8 @@ def shouldNewlineAccept(text):
     hasUnfinishedCode = ctx['squareBracketLevel'] > 0 or \
             ctx['curlyBraceLevel'] > 0 or\
             ctx['parenLevel'] > 0 or \
-            ctx['inQuote'] or \
+            ctx['inQuote'] == '`' or \
+            ctx['escaped'] or \
             ctx['inMultiLineComment'] or \
             ctx['endsWithOp']
 #            ctx['endsWithSemicolon']
@@ -347,14 +348,31 @@ try:
     import prompt_toolkit, prompt_toolkit.filters, prompt_toolkit.validation
     from prompt_toolkit.lexers import PygmentsLexer
     from prompt_toolkit.completion import Completion, Completer, NestedCompleter
+    from prompt_toolkit.application import get_app
 
     class NewlineAcceptTester(prompt_toolkit.filters.Condition, prompt_toolkit.validation.Validator):
         def __init__(self, session):
             self._session = session
             self._text = ""
+            self._doc = None
+
         def validate(self, document):
-            self._text = document.text[0:document.cursor_position + 1]
+            self.update(document)
+
+        def update(self, document):
+            self._doc = document
+            cursor = document.cursor_position
+            self._text = document.text
+
+            # Trim _text to the first linebreak after the cursor
+            for i in range(cursor, len(self._text)):
+                if self._text[i] == '\n':
+                    self._text = self._text[:i]
+                    break
         def __call__(self):
+            buff = get_app().current_buffer
+            if buff and buff.document:
+                self.update(buff.document)
             return shouldNewlineAccept(self._text)
         def __bool__(self):
             return True
@@ -520,7 +538,7 @@ try:
 
     promptTkSession = None
     if sys.stdin.isatty():
-        promptTkSession = prompt_toolkit.PromptSession(vi_mode=True)
+        promptTkSession = prompt_toolkit.PromptSession(vi_mode=True, mouse_support=True)
 except Exception as e:
     print ("Warning: Unable to import prompt_toolkit: " + str(e))
     promptTkSession = None
