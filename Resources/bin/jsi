@@ -492,7 +492,8 @@ try:
                         parentDict[part] = {}
                     parentDict = parentDict[part]
 
-            out = self._runJS("""let result = '';
+            out = self._runJS("""{
+            let result = '';
             try
             {
                 for (let key in eval(%s)) {
@@ -501,14 +502,16 @@ try:
                     }
                 }
             } catch(e) { }
-            println(result); """ % jsQuote(base))
+            println(result); }""" % jsQuote(base))
 
             for key in out.split('\n'):
                 if key != "" and VALID_JS_NAME.match(key):
                     parentDict[key] = { }
                     self._populateFromJS(base + "." + key, parentDict[key], depth + 1, maxDepth)
 
-    promptTkSession = prompt_toolkit.PromptSession()
+    promptTkSession = None
+    if sys.stdin.isatty():
+        promptTkSession = prompt_toolkit.PromptSession()
 except Exception as e:
     print ("Warning: Unable to import prompt_toolkit: " + str(e))
     promptTkSession = None
@@ -792,7 +795,8 @@ def parseCmdlineArguments():
             default=omitIntro, action="store_true", dest="omitIntro")
     args.add_argument("--no-color",
             default=not isTTY,
-            dest="noColor", action="store_true", help="Disable colorized output")
+            dest="noColor",
+            action="store_true", help="Disable colorized output")
     args.add_argument("-d", "--inspect-depth",
             default=0,
             type=int,
@@ -828,6 +832,13 @@ if __name__ == "__main__":
 
     if not args.omitIntro:
         out.printPrimary(SHELL_BANNER)
+
+    # If input is not directly from a user,
+    # run input to this, then exit.
+    if not sys.stdin.isatty():
+        toRun = sys.stdin.read()
+        out.print(execJS(toRun))
+        sys.exit(0)
 
     while True:
         try:
