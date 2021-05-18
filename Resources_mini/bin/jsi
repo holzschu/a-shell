@@ -749,7 +749,7 @@ def runJS(content, inTermContext=False, recurseDepth=1, sourceFormatter=SourceFo
     toRun += "_jsi.saveFuturePrints();"
 
     outFile = tempfile.NamedTemporaryFile(delete=False)
-    outFile.write(bytes(toRun, "utf-8"))
+    outFile.write(bytes("{ " + toRun + " }", "utf-8"))
     outFile.close()
 
     args = ["jsc"]
