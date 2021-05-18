@@ -437,7 +437,7 @@ try:
         def get_completions(self, document, complete_event):
             cursor = document.cursor_position
             text = document.text
-            word = document.get_word_before_cursor(pattern=re.compile(r"[a-z0-9A-Z._]+"))
+            word = document.get_word_before_cursor(pattern=re.compile(r"[a-z0-9A-Z._\[\]]+"))
 
             # First, if we're in a quote or comment, quit.
             ctx = getJSInfo(text, cursor)
@@ -492,6 +492,10 @@ try:
 
         def _populateFromJS(self, base, parentDict = None, depth = 0, maxDepth = 0):
             if depth > maxDepth:
+                return
+
+            # Invalid base.
+            if base.startswith('.'):
                 return
 
             if parentDict is None:
