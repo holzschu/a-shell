@@ -13,7 +13,7 @@ _ = Package(
         .binaryTarget(
             name: "libssh2",
             url: "https://github.com/blinksh/libssh2-apple/releases/download/v1.9.0/libssh2-dynamic.xcframework.zip",
-            checksum: "79b18673040a51e7c62259965c2310b5df2a686de83b9cc94c54db944621c32c"
+            checksum: "a4b5d09cd799b32a019148168983499e8501d93c2a458a9cc547b03028d96040"
         ),
         .binaryTarget(
             name: "openssl",
