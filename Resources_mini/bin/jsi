@@ -494,6 +494,8 @@ try:
             # Invalid base.
             if base.startswith('.'):
                 return
+            elif '..' in base:
+                return
 
             if parentDict is None:
                 parts = base.split('.')
@@ -502,6 +504,13 @@ try:
 
                 for part in parts:
                     baseSoFar.append(part)
+
+                    # If we were given something with
+                    # multiple consecutive '.'s, it's
+                    # invalid.
+                    if part.strip() == '':
+                        return
+
                     if not part in parentDict or not parentDict[part]:
                         partExistsResult = self._runJS("""
                         try {
