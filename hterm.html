@@ -456,6 +456,63 @@
 				}
 			}
 
+function handleTermSelectionStyling() {
+    const termDoc = term_.document_;
+
+    const TERMDOC_SELECTION_STYLES = `
+        body {
+            transition: filter 0.3s ease;
+        }
+
+        body.hasSelection {
+            /*
+              When we're selecting things, change terminal's
+              colors for better contrast with the selected region.
+             */
+            filter: invert(0.2);
+        }
+
+        * {
+            /*
+               The WebView ignores the 0.01 when computing
+               the selection's opacity. As such, this makes
+               the cursor nearly invisible and the selection
+               visible.
+
+               At least in iOS 14.5, we can't do
+               'caret-color: transparent' and change this
+               onselectionchange because the WkWebView
+               doesn't always update the caret-color when
+               the property changes in CSS. This is a WkWebView
+               bug we're working around and may be fixed eventually.
+            */
+            caret-color: rgba(30,100,255,0.01) !important;
+            transition: caret-color 0.1s ease;
+        }
+    `;
+
+    termDoc.addEventListener('selectionchange', () => {
+        if (!termDoc.getSelection().isCollapsed) {
+            // If more than just a caret,
+            termDoc.body.classList.add('hasSelection');
+        } else {
+            // Otherwise, just a caret. Remove the style class and
+            // let CSS handle showing/hiding it.
+            termDoc.body.classList.remove('hasSelection');
+        }
+    });
+
+    // If this function is run multiple times, re-use
+    // the same stylesheet.
+    const newCssElem = window.htermSelectionCSS_
+        || document.createElement("style");
+    newCssElem.innerHTML = TERMDOC_SELECTION_STYLES;
+    termDoc.body.appendChild(newCssElem);
+
+    // Expose the CSS stylesheet for debugging.
+    window.htermSelectionCSS_ = newCssElem;
+}
+
             function setupHterm() {
 				const term = new hterm.Terminal();
 				// Default monospaced fonts installed: Menlo and Courier. 
@@ -539,7 +596,10 @@
 
 				// 
 				term.onTerminalReady = function() {
-					const io = this.io.push();
+                    // Hide the default HTML cursor.
+					handleTermSelectionStyling();
+
+                    const io = this.io.push();
 					io.onVTKeystroke = (string) => {
 						if (window.controlOn) {
 							// produce string = control + character 
@@ -1062,7 +1122,6 @@
 					this.keyboard.characterEncoding = 'raw';
 					// this.keyboard.bindings.addBinding('F11', 'PASS');
 					// this.keyboard.bindings.addBinding('Ctrl-R', 'PASS');
-					
 				};
 				term.decorate(document.querySelector('#terminal'));
 				term.installKeyboard();
@@ -1104,4 +1163,4 @@ window.onload = function() {
 		</script>
 
 	</body>
-</html
+</html>
