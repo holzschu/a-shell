@@ -168,10 +168,7 @@ _jsi.stringify_obj = function (obj, recurseDepth, indentation, toplevel) {
             result += quoted;
         } else {
             if (obj.search(/[<][\/][a-zA-Z0-9 \t]+[>]/) >= 0 && recurseDepth >= 0) {
-                for (const line of lines) {
-                    outputLine(line);
-                }
-
+                result += termEscape(obj);
                 formatLine = "html";
             } else {
                 result += quoted;
@@ -265,6 +262,8 @@ def getJSInfo(text, stopIdx=-1):
 
         if escaped:
             escaped = False
+        elif char == '\\':
+            escaped = True
         elif char == '\n':
             emptyLineCount += 1
             inSLComment = False
@@ -283,8 +282,6 @@ def getJSInfo(text, stopIdx=-1):
             inMLComment = True
         elif char == '/' and nextChar == '/':
             inSLComment = True
-        elif char == '\\':
-            escaped = True
         elif char == '(':
             parenLevel += 1
         elif char == ')':
@@ -786,6 +783,10 @@ def runJS(content, inTermContext=False, recurseDepth=1, sourceFormatter=SourceFo
         formatLines = sourceFormatter.formatJavascript(formatLines)
     elif formatType == 'html':
         formatLines = sourceFormatter.formatHtml(formatLines)
+
+        # Quote formatLines; if given
+        # as HTML, it isn't quoted already.
+        formatLines = '`' + formatLines.replace('`', '\\`') + '`'
     elif formatType == "undefined":
         formatLines = ""
 
