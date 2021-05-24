@@ -15,7 +15,7 @@ DSHLIBEXT =	.dylib
 
 AR?=		ar
 ARFLAGS?=	rl
-RANLIB =
+RANLIB =    ranlib
 
 AS?=		as
 AFLAGS?=
@@ -26,24 +26,13 @@ LINK.S?=	${CC} ${AFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
 PIPE?=		-pipe
 
-.if exists(/usr/bin/clang)
-CC?=		cc ${PIPE}
-CXX?=		c++
-.elif exists(/usr/bin/gcc)
-CC?=		gcc ${PIPE}
-.else
-CC?=		cc ${PIPE}
-.endif
+CC?=		clang ${PIPE}
 DBG?=		-O2
 CFLAGS?=	${DBG}
 COMPILE.c?=	${CC} ${CFLAGS} ${CPPFLAGS} -c
 LINK.c?=	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
-.if exists(/usr/bin/g++)
-CXX?=		g++
-.else
-CXX?=		c++
-.endif
+CXX?=		clang++
 CXXFLAGS?=	${CFLAGS}
 COMPILE.cc?=	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c
 LINK.cc?=	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS}
@@ -87,9 +76,9 @@ LIBEXT = .dylib
 LINT?=		lint
 LINTFLAGS?=	-chapbx
 
-LORDER?=	lorder
+LORDER?=	
 
-NM?=		nm
+NM?=	
 
 PC?=		pc
 PFLAGS?=
@@ -98,7 +87,7 @@ LINK.p?=	${PC} ${PFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
 SIZE?=		size
 
-TSORT?=		tsort -q
+TSORT?=		
 
 YACC?=		bison -y
 YFLAGS?=	-d

@@ -465,7 +465,7 @@
 				term.prefs_.set('foreground-color', window.foregroundColor);
 				term.prefs_.set('background-color', window.backgroundColor);
 				term.prefs_.set('cursor-color', window.cursorColor);
-				term.prefs_.set('cursor-blink', true); 
+				term.prefs_.set('cursor-blink', false); 
 				term.prefs_.set('enable-clipboard-notice', false); 
 				term.prefs_.set('use-default-window-copy', true); 
 				term.prefs_.set('clear-selection-after-copy', true); 
@@ -557,6 +557,8 @@
 				            var lastLine = window.printedContent.substr(lastNewline + 2); // skip \n\r
 							if (lastLine.startsWith("help>")) {
 								helpRunning = true;
+							} else if (lastLine.includes("Do you really want to exit ([y]/n)?")) {
+							    helpRunning = true;
 							}
 						}
 						if (window.interactiveCommandRunning && !helpRunning) {
@@ -982,7 +984,7 @@
 									// insert character at cursor position:
 									if (this.document_.getSelection().type == 'Range') {
 										term.onCut(null); // remove the selection without copying it
-									}
+								    }
 									this.document_.getSelection().empty(); 
 									printString(newString);  // print before we update io.currentCommand
 									io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + newString + 
@@ -1000,7 +1002,6 @@
 						if (io.currentCommand === '') { 
 							updatePromptPosition(); 
 						}
-						
 						var scrolledLines = window.promptScroll - this.scrollPort_.getTopRowIndex();
 						var topRowCommand = window.promptLine + scrolledLines;
 						// Don't move cursor outside of current line
@@ -1054,6 +1055,7 @@
 					}
 					updatePromptPosition(); 
 					this.setCursorVisible(true);
+					this.setCursorBlink(false);
 					this.setFontSize(window.fontSize); 
 					this.setFontFamily(window.fontFamily); 
 					this.setForegroundColor(window.foregroundColor);
@@ -1104,4 +1106,4 @@ window.onload = function() {
 		</script>
 
 	</body>
-</html
+</html>

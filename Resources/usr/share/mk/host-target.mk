@@ -3,15 +3,18 @@
 
 # Host platform information; may be overridden
 .if !defined(_HOST_OSNAME)
-_HOST_OSNAME !=	uname -s
+_HOST_OSNAME =	Darwin
+# != uname -s
 .export _HOST_OSNAME
 .endif
 .if !defined(_HOST_OSREL)
-_HOST_OSREL  !=	uname -r
+_HOST_OSREL  = 20.4.0
+# != uname -r
 .export _HOST_OSREL
 .endif
 .if !defined(_HOST_MACHINE)
-_HOST_MACHINE != uname -m
+_HOST_MACHINE = iPad6,7
+# != uname -m
 .export _HOST_MACHINE
 .endif
 .if !defined(_HOST_ARCH)
@@ -19,7 +22,8 @@ _HOST_MACHINE != uname -m
 .if ${_HOST_OSNAME:NNetBSD} == ""
 _HOST_ARCH := ${_HOST_MACHINE}
 .else
-_HOST_ARCH != uname -p 2> /dev/null || uname -m
+_HOST_ARCH = iPad6,7
+# uname -m
 # uname -p may produce garbage on linux
 .if ${_HOST_ARCH:[\#]} > 1 || ${_HOST_ARCH:Nunknown} == ""
 _HOST_ARCH := ${_HOST_MACHINE}

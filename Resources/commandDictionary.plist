@@ -861,7 +861,49 @@
 		<string>perl.framework/perl</string>
 		<string>main</string>
 		<string></string>
+		<string>file</string>
+	</array>
+	<key>perl5</key>
+	<array>
+		<string>perl.framework/perl</string>
+		<string>main</string>
+		<string></string>
 		<string>none</string>
+	</array>
+	<key>perlA</key>
+	<array>
+		<string>perlA.framework/perlA</string>
+		<string>main</string>
+		<string></string>
+		<string>none</string>
+	</array>
+	<key>perlB</key>
+	<array>
+		<string>perlB.framework/perlB</string>
+		<string>main</string>
+		<string></string>
+		<string>none</string>
+	</array>
+	<key>make</key>
+	<array>
+		<string>make.framework/make</string>
+		<string>main</string>
+		<string>BC:D:I:J:NST:V:WXd:ef:ij:km:nqrstv:w</string>
+		<string>file</string>
+	</array>
+	<key>true</key>
+	<array>
+		<string>SELF</string>
+		<string>true_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>type</key>
+	<array>
+		<string>SELF</string>
+		<string>type_main</string>
+		<string></string>
+		<string>no</string>
 	</array>
 </dict>
 </plist>

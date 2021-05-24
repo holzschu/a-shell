@@ -324,7 +324,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             closeAfterCommandTerminates = true
             return
         }
-        UIApplication.shared.requestSceneSessionDestruction(self.windowScene!.session, options: nil)
+        let deviceModel = UIDevice.current.model
+        if (deviceModel.hasPrefix("iPad")) {
+            UIApplication.shared.requestSceneSessionDestruction(self.windowScene!.session, options: nil)
+        }
     }
     
     func clearScreen() {
@@ -447,7 +450,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     func printJscUsage() {
-        fputs("Usage: jsc file.js\n", thread_stdout)
+        fputs("Usage: jsc [--in-window] file.js\nExecutes file.js.\n--in-window: runs inside the main window (can change terminal appearance or behaviour; use with caution).\n", thread_stdout)
     }
     
     func executeJavascript(arguments: [String]?) {
@@ -455,11 +458,21 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             printJscUsage()
             return
         }
-        guard (arguments!.count == 2) else {
+        guard ((arguments!.count <= 3) && (arguments!.count > 1)) else {
             printJscUsage()
             return
         }
-        let command = arguments![1]
+        var command = arguments![1]
+        var jscWebView = wasmWebView
+        if (arguments!.count == 3) {
+            if (arguments![1] == "--in-window") {
+                command = arguments![2]
+                jscWebView = webView
+            } else {
+                printJscUsage()
+                return
+            }
+        }
         let fileName = FileManager().currentDirectoryPath + "/" + command
         thread_stdin_copy = thread_stdin
         thread_stdout_copy = thread_stdout
@@ -470,11 +483,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         javascriptRunning = true
         do {
-            var javascript = try String(contentsOf: URL(fileURLWithPath: fileName), encoding: String.Encoding.utf8)
-            // Code included in {} so variables don't leak. Some variables seem to leak. TODO: investigate
-            javascript = "{" + javascript + "}"
+            let javascript = try String(contentsOf: URL(fileURLWithPath: fileName), encoding: String.Encoding.utf8)
             DispatchQueue.main.async {
-                self.wasmWebView?.evaluateJavaScript(javascript) { (result, error) in
+                jscWebView?.evaluateJavaScript(javascript) { (result, error) in
                     if error != nil {
                         // Extract information about *where* the error is, etc.
                         let userInfo = (error! as NSError).userInfo
@@ -1057,6 +1068,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.pid = ios_fork()
                 ios_system(self.currentCommand)
                 ios_waitpid(self.pid)
+                ios_releaseThreadId(self.pid)
                 NSLog("Done executing command: \(command)")
                 NSLog("Current directory: \(FileManager().currentDirectoryPath)")
             }
@@ -1077,8 +1089,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             close(stdout_pipe.fileHandleForWriting.fileDescriptor)
             if (self.closeAfterCommandTerminates) {
                 self.closeAfterCommandTerminates = false
-                let session = self.windowScene!.session
-                UIApplication.shared.requestSceneSessionDestruction(session, options: nil)
+                let deviceModel = UIDevice.current.model
+                if (deviceModel.hasPrefix("iPad")) {
+                    let session = self.windowScene!.session
+                    UIApplication.shared.requestSceneSessionDestruction(session, options: nil)
+                }
             }
             // Did the command change the current directory?
             let newDirectory = FileManager().currentDirectoryPath
@@ -1483,30 +1498,31 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             dotProfileUrl = dotProfileUrl.appendingPathComponent(".profile")
             // A big issue is that, at this point, the window does not exist yet. So stdin, stdout, stderr also do not exist.
             if (FileManager().fileExists(atPath: dotProfileUrl.path)) {
-                do {
-                    let contentOfFile = try String(contentsOf: dotProfileUrl, encoding: String.Encoding.utf8)
-                    let commands = contentOfFile.split(separator: "\n")
-                    ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
-                    thread_stdin  = stdin
-                    thread_stdout = stdout
-                    thread_stderr = stderr
-                    for command in commands {
-                        let trimmedCommand = command.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if (trimmedCommand.count == 0) { continue } // skip white lines
-                        if (trimmedCommand.hasPrefix("#")) { continue } // skip comments
-                        // reset the LC_CTYPE (some commands (luatex) can change it):
-                        setenv("LC_CTYPE", "UTF-8", 1);
-                        setlocale(LC_CTYPE, "UTF-8");
-                        let pid = ios_fork()
-                        ios_system(trimmedCommand)
-                        ios_waitpid(pid)
-                        // NSLog("Done executing command from .profile: \(command)")
-                        // NSLog("Current directory: \(FileManager().currentDirectoryPath)")
+                // Avoid interference with C SDK creation by interpreting .profile in installQueue:
+                installQueue.async {
+                    do {
+                        let contentOfFile = try String(contentsOf: dotProfileUrl, encoding: String.Encoding.utf8)
+                        let commands = contentOfFile.split(separator: "\n")
+                        ios_switchSession(self.persistentIdentifier?.toCString())
+                        ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+                        thread_stdin  = stdin
+                        thread_stdout = stdout
+                        thread_stderr = stderr
+                        for command in commands {
+                            let trimmedCommand = command.trimmingCharacters(in: .whitespacesAndNewlines)
+                            if (trimmedCommand.count == 0) { continue } // skip white lines
+                            if (trimmedCommand.hasPrefix("#")) { continue } // skip comments
+                            // reset the LC_CTYPE (some commands (luatex) can change it):
+                            setenv("LC_CTYPE", "UTF-8", 1);
+                            setlocale(LC_CTYPE, "UTF-8");
+                            executeCommandAndWait(command: trimmedCommand)
+                            // NSLog("Done executing command from .profile: \(command)")
+                            // NSLog("Current directory: \(FileManager().currentDirectoryPath)")
+                        }
                     }
-                }
-                catch {
-                    NSLog("Could not load .profile: \(error.localizedDescription)")
+                    catch {
+                        NSLog("Could not load .profile: \(error.localizedDescription)")
+                    }
                 }
             }
             // Was this window created with a purpose?
@@ -2124,7 +2140,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                         }
                                         if (printedContent != nil) {
                                             scene.session.stateRestorationActivity?.userInfo!["terminal"] = printedContent
-                                            print("printedContent saved.")
+                                            // print("printedContent saved.")
                                         }
                                     })
         // Keep sound going when going in background, by disabling video tracks:
@@ -2322,7 +2338,6 @@ extension SceneDelegate: WKUIDelegate {
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo,
                  completionHandler: @escaping (String?) -> Void) {
         // communication with libc from webAssembly:
-        
         let arguments = prompt.components(separatedBy: "\n")
         // NSLog("prompt: \(prompt)")
         let title = arguments[0]
@@ -2409,7 +2424,7 @@ extension SceneDelegate: WKUIDelegate {
                 completionHandler("\(returnValue)")
                 return
             } else if (arguments[1] == "read") {
-                var data = Data.init()
+                var data: Data?
                 if let fd = fileDescriptor(input: arguments[2]) {
                     // arguments[3] = length
                     // arguments[4] = offset
@@ -2447,7 +2462,7 @@ extension SceneDelegate: WKUIDelegate {
                                 }
                             }
                             do {
-                                try data = file.read(upToCount: numValues)!
+                                try data = file.read(upToCount: numValues)
                             }
                             catch {
                                 let errorCode = (error as NSError).code
@@ -2456,7 +2471,11 @@ extension SceneDelegate: WKUIDelegate {
                             }
                         }
                     }
-                    completionHandler("\(data.base64EncodedString())")
+                    if (data != nil) {
+                        completionHandler("\(data!.base64EncodedString())")
+                    } else {
+                        completionHandler("") // Did not read anything
+                    }
                 } else {
                     completionHandler("\(-EBADF)") // Invalid file descriptor
                 }
@@ -2637,6 +2656,7 @@ extension SceneDelegate: WKUIDelegate {
                 let pid = ios_fork()
                 let result = ios_system(arguments[2])
                 ios_waitpid(pid)
+                ios_releaseThreadId(self.pid)
                 completionHandler("\(result)")
                 return
             } else if (arguments[1] == "getenv") {
@@ -2677,7 +2697,6 @@ extension SceneDelegate: WKUIDelegate {
                     // Not the same definition of AT_SYMLINK_NOFOLLOW between wasi-libc and iOS
                     flag |= AT_SYMLINK_NOFOLLOW
                 }
-                NSLog("Flags: \(flag) vs \(AT_SYMLINK_NOFOLLOW)")
                 let path = arguments[4]
                 if let atime_sec = Int(arguments[5]) {
                     let atime_nsec = Int(arguments[6]) ?? 0

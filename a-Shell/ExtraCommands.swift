@@ -154,11 +154,14 @@ bc: Gavin Howard BSD port of bc, https://github.com/gavinhoward/bc
 curl: Daniel Stenberg and contributors, https://github.com/curl/curl
 ctags: https://github.com/universal-ctags/ctags/
 file: https://github.com/file/file/
+jsi: Henry Heino, https://github.com/personalizedrefrigerator
 ImageMagick: ImageMagick Studio LLC, https://imagemagick.org
 Lua: lua.org, PUC-Rio, https://www.lua.org/
 LuaTeX: The LuaTeX team, http://www.luatex.org
 llvm/clang: the LLVM foundation
+make: bmake, http://www.crufty.net/help/sjg/bmake.html
 openSSL and libSSH2: port by Yury Korolev, https://github.com/blinksh/libssh2-apple
+Perl: Larry Wall, http://www.perl.org/, type perldoc perlintro
 Python3: Python Software Foundation, https://www.python.org/about/
 ssh, scp, sftp: OpenSSH, https://www.openssh.com
 tar: https://libarchive.org
@@ -1059,10 +1062,8 @@ public func jump(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
         let fileExists = FileManager().fileExists(atPath: pathString, isDirectory: &isDirectory)
         if (fileExists && !isDirectory.boolValue) {
             // it's a file: edit it with default editor:
-            let pid = ios_fork()
             // TODO: customize editor
-            ios_system("vim " + pathString.replacingOccurrences(of: " ", with: "\\ "))
-            ios_waitpid(pid)
+            executeCommandAndWait(command: "vim " + pathString.replacingOccurrences(of: " ", with: "\\ "))
         } else {
             // probably a stale bookmark:
             fputs("jump: bookmark for \(name) is no longer valid.\n", thread_stderr)
@@ -1125,4 +1126,12 @@ public func startInteractive() {
             }
         }
     }
+}
+
+public func executeCommandAndWait(command: String) {
+    let pid = ios_fork()
+    _ = ios_system(command)
+    fflush(thread_stdout)
+    ios_waitpid(pid)
+    ios_releaseThreadId(pid)
 }

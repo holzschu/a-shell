@@ -110,7 +110,8 @@ MACHINE_ARCH = ${MACHINE_ARCH.${MACHINE}}
 .endif
 
 .ifndef ROOT_GROUP
-ROOT_GROUP != sed -n /:0:/s/:.*//p /etc/group
+ROOT_GROUP ?= wheel 
+# != sed -n /:0:/s/:.*//p /etc/group
 .export ROOT_GROUP
 .endif
 

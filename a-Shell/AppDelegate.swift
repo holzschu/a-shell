@@ -19,6 +19,8 @@ var percentTeXDownloadComplete = 0.0
 var downloadingOpentype = false
 var downloadingOpentypeError = ""
 var percentOpentypeDownloadComplete = 0.0
+let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
+// Need SDK install to be over before starting commands.
 
 @objcMembers
 @UIApplicationMain
@@ -92,130 +94,123 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // This operation copies the C SDK from $APPDIR to $HOME/Library and creates the *.a libraries
         // (we can't ship with .a libraries because of the AppStore rules, but we can ship with *.o
         // object files, provided they are in WASM format.
-        NSLog("Starting creating C SDK")
-        let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                in: .userDomainMask,
-                                                appropriateFor: nil,
-                                                create: true)
-        // usr/lib/wasm32-wasi
-        var localURL = libraryURL.appendingPathComponent("usr/lib/wasm32-wasi") // $HOME/Library/usr/lib/wasm32-wasi
-        do {
-            if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
-                try FileManager().removeItem(at: localURL)
-            }
-            if (!FileManager().fileExists(atPath: localURL.path)) {
-                try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
-            }
-        } catch {
-            NSLog("Error in creating C SDK directory \(localURL): \(error)")
-            return
-        }
-        // usr/lib/clang/13.0.0/lib/wasi/
-        localURL = libraryURL.appendingPathComponent("usr/lib/clang/13.0.0/lib/wasi/") // $HOME/Library/usr/lib/clang/13.0.0/lib/wasi/
-        do {
-            if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
-                try FileManager().removeItem(at: localURL)
-            }
-            if (!FileManager().fileExists(atPath: localURL.path)) {
-                try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
-            }
-        } catch {
-            NSLog("Error in creating C SDK directory \(localURL): \(error)")
-            return
-        }
-        let linkedCDirectories = ["usr/include",
-                                 "usr/share",
-                                 "usr/lib/wasm32-wasi/crt1.o",
-                                 "usr/lib/wasm32-wasi/libc.imports",
-                                 "usr/lib/clang/13.0.0/include",
-        ]
-        let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!)
-
-        for linkedObject in linkedCDirectories {
-            let bundleFile = bundleUrl.appendingPathComponent(linkedObject)
-            if (!FileManager().fileExists(atPath: bundleFile.path)) {
-                NSLog("createCSDK: requested file \(bundleFile.path) does not exist")
-                continue
-            }
-            // Symbolic links are both faster to create and use less disk space.
-            // We just have to make sure the destination exists
-            let homeFile = libraryURL.appendingPathComponent(linkedObject)
+        installQueue.async{
+            // Use a queue so it does not take time at startup:
+            NSLog("Starting creating C SDK")
+            let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                    in: .userDomainMask,
+                                                    appropriateFor: nil,
+                                                    create: true)
+            // usr/lib/wasm32-wasi
+            var localURL = libraryURL.appendingPathComponent("usr/lib/wasm32-wasi") // $HOME/Library/usr/lib/wasm32-wasi
             do {
-                let firstFileAttribute = try FileManager().attributesOfItem(atPath: homeFile.path)
-                if (firstFileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
-                    // It's a symbolic link, does the destination exist?
-                    let destination = try! FileManager().destinationOfSymbolicLink(atPath: homeFile.path)
-                    if (!FileManager().fileExists(atPath: destination)) {
+                if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
+                    try FileManager().removeItem(at: localURL)
+                }
+                if (!FileManager().fileExists(atPath: localURL.path)) {
+                    try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
+                }
+            } catch {
+                NSLog("Error in creating C SDK directory \(localURL): \(error)")
+                return
+            }
+            // usr/lib/clang/13.0.0/lib/wasi/
+            localURL = libraryURL.appendingPathComponent("usr/lib/clang/13.0.0/lib/wasi/") // $HOME/Library/usr/lib/clang/13.0.0/lib/wasi/
+            do {
+                if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
+                    try FileManager().removeItem(at: localURL)
+                }
+                if (!FileManager().fileExists(atPath: localURL.path)) {
+                    try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
+                }
+            } catch {
+                NSLog("Error in creating C SDK directory \(localURL): \(error)")
+                return
+            }
+            let linkedCDirectories = ["usr/include",
+                                      "usr/share",
+                                      "usr/lib/wasm32-wasi/crt1.o",
+                                      "usr/lib/wasm32-wasi/libc.imports",
+                                      "usr/lib/clang/13.0.0/include",
+            ]
+            let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!)
+            
+            for linkedObject in linkedCDirectories {
+                let bundleFile = bundleUrl.appendingPathComponent(linkedObject)
+                if (!FileManager().fileExists(atPath: bundleFile.path)) {
+                    NSLog("createCSDK: requested file \(bundleFile.path) does not exist")
+                    continue
+                }
+                // Symbolic links are both faster to create and use less disk space.
+                // We just have to make sure the destination exists
+                let homeFile = libraryURL.appendingPathComponent(linkedObject)
+                do {
+                    let firstFileAttribute = try FileManager().attributesOfItem(atPath: homeFile.path)
+                    if (firstFileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
+                        // It's a symbolic link, does the destination exist?
+                        let destination = try! FileManager().destinationOfSymbolicLink(atPath: homeFile.path)
+                        if (!FileManager().fileExists(atPath: destination)) {
+                            try! FileManager().removeItem(at: homeFile)
+                            try! FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
+                        }
+                    } else {
+                        // Not a symbolic link, replace:
                         try! FileManager().removeItem(at: homeFile)
                         try! FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
                     }
-                } else {
-                    // Not a symbolic link, replace:
-                    try! FileManager().removeItem(at: homeFile)
-                    try! FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
-                }
-            }
-            catch {
-                // The file does not exist, and maybe the directory doesn't either:
-                let localDirectory = homeFile.deletingLastPathComponent()
-                if (!FileManager().fileExists(atPath: localDirectory.path)) {
-                    try! FileManager().createDirectory(atPath: localDirectory.path, withIntermediateDirectories: true)
-                }
-                do {
-                    try FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
                 }
                 catch {
-                    NSLog("Can't create file: \(homeFile.path): \(error)")
+                    // The file does not exist, and maybe the directory doesn't either:
+                    let localDirectory = homeFile.deletingLastPathComponent()
+                    if (!FileManager().fileExists(atPath: localDirectory.path)) {
+                        try! FileManager().createDirectory(atPath: localDirectory.path, withIntermediateDirectories: true)
+                    }
+                    do {
+                        try FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
+                    }
+                    catch {
+                        NSLog("Can't create file: \(homeFile.path): \(error)")
+                    }
                 }
             }
-        }
-        // Now create the empty libraries:
-        let emptyLibraries = [
-            // m rt pthread crypt util xnet resolv dl
-            "lib/wasm32-wasi/libcrypt.a",
-            "lib/wasm32-wasi/libdl.a",
-            "lib/wasm32-wasi/libm.a",
-            "lib/wasm32-wasi/libpthread.a",
-            "lib/wasm32-wasi/libresolv.a",
-            "lib/wasm32-wasi/librt.a",
-            "lib/wasm32-wasi/libutil.a",
-            "lib/wasm32-wasi/libxnet.a"]
-        ios_switchSession("wasiSDKLibrariesCreation")
-        for library in emptyLibraries {
-            let libraryFileURL = libraryURL.appendingPathComponent("/usr/" + library)
-            if (!FileManager().fileExists(atPath: libraryFileURL.path)) {
-                let pid = ios_fork()
-                ios_system("ar crs " + libraryURL.path + "/usr/" + library)
-                ios_waitpid(pid)
+            // Now create the empty libraries:
+            let emptyLibraries = [
+                // m rt pthread crypt util xnet resolv dl
+                "lib/wasm32-wasi/libcrypt.a",
+                "lib/wasm32-wasi/libdl.a",
+                "lib/wasm32-wasi/libm.a",
+                "lib/wasm32-wasi/libpthread.a",
+                "lib/wasm32-wasi/libresolv.a",
+                "lib/wasm32-wasi/librt.a",
+                "lib/wasm32-wasi/libutil.a",
+                "lib/wasm32-wasi/libxnet.a"]
+            ios_switchSession("wasiSDKLibrariesCreation")
+            for library in emptyLibraries {
+                let libraryFileURL = libraryURL.appendingPathComponent("/usr/" + library)
+                if (!FileManager().fileExists(atPath: libraryFileURL.path)) {
+                    executeCommandAndWait(command: "ar crs " + libraryURL.path + "/usr/" + library)
+                }
             }
-        }
-        // One of the libraries is in a different folder:
-        let libraryFileURL = libraryURL.appendingPathComponent("/usr/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a")
-        if (FileManager().fileExists(atPath: libraryFileURL.path)) {
-            try! FileManager().removeItem(at: libraryFileURL)
-        }
-        let rootDir = Bundle.main.resourcePath!
-        var pid = ios_fork()
-        ios_system("ar cq " + libraryFileURL.path + " " + rootDir + "/usr/src/libclang_rt.builtins-wasm32/*")
-        ios_waitpid(pid)
-        pid = ios_fork()
-        ios_system("ranlib " + libraryFileURL.path)
-        ios_waitpid(pid)
-        let libraries = ["libc", "libc++", "libc++abi", "libc-printscan-long-double", "libc-printscan-no-floating-point", "libwasi-emulated-mman", "libwasi-emulated-signal", "libwasi-emulated-process-clocks"]
-        for library in libraries {
-            let libraryFileURL = libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/" + library + ".a")
+            // One of the libraries is in a different folder:
+            let libraryFileURL = libraryURL.appendingPathComponent("/usr/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a")
             if (FileManager().fileExists(atPath: libraryFileURL.path)) {
-                do { try FileManager().removeItem(at: libraryFileURL) }
-                catch { NSLog("Can't remove \(libraryFileURL.path)")}
+                try! FileManager().removeItem(at: libraryFileURL)
             }
-            var pid = ios_fork()
-            ios_system("ar cq " + libraryFileURL.path + " " + rootDir + "/usr/src/" + library + "/*")
-            ios_waitpid(pid)
-            pid = ios_fork()
-            ios_system("ranlib " + libraryFileURL.path)
-            ios_waitpid(pid)
+            let rootDir = Bundle.main.resourcePath!
+            executeCommandAndWait(command: "ar cq " + libraryFileURL.path + " " + rootDir + "/usr/src/libclang_rt.builtins-wasm32/*")
+            executeCommandAndWait(command: "ranlib " + libraryFileURL.path)
+            let libraries = ["libc", "libc++", "libc++abi", "libc-printscan-long-double", "libc-printscan-no-floating-point", "libwasi-emulated-mman", "libwasi-emulated-signal", "libwasi-emulated-process-clocks"]
+            for library in libraries {
+                let libraryFileURL = libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/" + library + ".a")
+                if (FileManager().fileExists(atPath: libraryFileURL.path)) {
+                    do { try FileManager().removeItem(at: libraryFileURL) }
+                    catch { NSLog("Can't remove \(libraryFileURL.path)")}
+                }
+                executeCommandAndWait(command: "ar cq " + libraryFileURL.path + " " + rootDir + "/usr/src/" + library + "/*")
+                executeCommandAndWait(command: "ranlib " + libraryFileURL.path)
+            }
+            NSLog("Finished creating C SDK") // Approx 2 seconds
         }
-        NSLog("Finished creating C SDK") // Approx 2 seconds
     }
     
     func removePython37Files() {
@@ -291,8 +286,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
-        setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
-        setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments
         setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
         setenv("PAGER", "less", 1)
         setenv("MAGICK_HOME", Bundle.main.resourcePath! +  "/ImageMagick-7", 1)
@@ -313,28 +306,45 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
         if (appVersion != "a-Shell-mini") {
+            // clang options:
+            setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
+            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments
+            // Make:
+            setenv("MAKESYSPATH", Bundle.main.resourcePath! +  "/usr/share/mk" , 1)
+            // Perl location of modules:
+            setenv("PERL5LIB", documentsUrl.appendingPathComponent("perl5/lib/perl5").path + ":" + Bundle.main.resourcePath! +  "/Perl" , 1)
+            // set-up for local::lib:
+            setenv("PERL_LOCAL_LIB_ROOT", documentsUrl.appendingPathComponent("perl5").path, 1)
+            setenv("PERL_CPANM_HOME", documentsUrl.appendingPathComponent(".cpanm").path, 1)
+            setenv("PERL_MM_OPT", "'INSTALL_BASE=" + documentsUrl.appendingPathComponent("perl5").path + "'", 1)
+            setenv("PERL_MB_OPT", "--install_base \"" + documentsUrl.appendingPathComponent("perl5").path + "\"", 1)
+            setenv("CPAN_OPTS", "-T", 1) // Do not test CPAN modules when installing, because tests tend to fork, and then hang.
+            setenv("PATH", documentsUrl.appendingPathComponent("perl5").appendingPathComponent("bin").path + ":" + String(utf8String: getenv("PATH"))!, 1)
+            setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man:" + documentsUrl.appendingPathComponent("perl5").appendingPathComponent("man").path, 1)
             if (!versionUpToDate || needToUpdateCFiles()) {
                 createCSDK()
             }
             if (needToRemovePython37Files()) {
-                // Remove files and directories created with Python 3.7
-                removePython37Files()
-                // Move all remaining packages to $HOME/Library/lib/python3.9/site-packages/
-                var pid = ios_fork()
-                ios_system("mv " + libraryURL.path + "/lib/python3.7/site-packages/* " + libraryURL.path + "/lib/python3.9/site-packages/")
-                ios_waitpid(pid)
-                // Erase the directory
-                pid = ios_fork()
-                ios_system("rm -rf " + libraryURL.path + "/lib/python3.7/")
-                ios_waitpid(pid)
+                installQueue.async{
+                    ios_switchSession("wasiSDKLibrariesCreation")
+                    // Remove files and directories created with Python 3.7
+                    self.removePython37Files()
+                    // Move all remaining packages to $HOME/Library/lib/python3.9/site-packages/
+                    executeCommandAndWait(command: "mv " + libraryURL.path + "/lib/python3.7/site-packages/* " + libraryURL.path + "/lib/python3.9/site-packages/")
+                    // Erase the directory
+                    executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/lib/python3.7/")
+                }
             }
         }
         if (!versionUpToDate) {
-            // The version number changed, so the App has been re-installed. Clean all pre-compiled Python files:
-            NSLog("Cleaning __pycache__")
-            let pid = ios_fork()
-            ios_system("rm -rf " + libraryURL.path + "/__pycache__/*")
-            ios_waitpid(pid)
+            installQueue.async{
+                // The version number changed, so the App has been re-installed. Clean all pre-compiled Python files:
+                NSLog("Cleaning __pycache__")
+                ios_switchSession("wasiSDKLibrariesCreation")
+                executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/__pycache__/*")
+                // Also clean all CPAN build directories (they aren't valid anymore)    :
+                executeCommandAndWait(command: "rm -rf " + documentsUrl.appendingPathComponent(".cpan").path + "/build/*")
+            }
         }
         // Now set the version number to the current version:
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String
