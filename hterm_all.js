@@ -15318,6 +15318,22 @@ hterm.Terminal.prototype.setAutomaticMouseHiding = function(v=null) {
  * @param {KeyboardEvent} e The keyboard event that triggered us.
  */
 hterm.Terminal.prototype.onKeyboardActivity_ = function(e) {
+	const selection = this.document_.getSelection();
+	// Long-press on space can change the position of the cursor, 
+	// without sending us any event. Before a key is entered, we
+	// synchronize our cursor position with the cursor position on screen.
+	// For reasons, this does not work inside vim, because anchorOffset is not in the right place.
+	if (selection.isCollapsed) {
+		var anchorRow = selection.anchorNode;
+		while (anchorRow && anchorRow.nodeName != 'X-ROW') {
+			anchorRow = anchorRow.parentNode;
+		}
+		if (anchorRow) {
+			const topRowIndex = this.scrollPort_.getTopRowIndex();
+			var selectionRow = anchorRow.rowIndex - topRowIndex;
+			window.term_.moveCursorPosition(selectionRow, selection.anchorOffset);
+		}
+	}
   // When the user starts typing, hide the mouse cursor.
   if (this.mouseHideWhileTyping_ && !this.mouseHideDelay_)
     this.setCssVar('mouse-cursor-style', 'none');
