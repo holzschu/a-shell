@@ -19,7 +19,7 @@ struct Webview : UIViewRepresentable {
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
         config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
         // Does not change anything either way (??? !!!)
-        // config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
+        config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
         config.selectionGranularity = .character; // Could be .dynamic
         // let preferences = WKWebpagePreferences()
         // preferences.allowsContentJavaScript = true

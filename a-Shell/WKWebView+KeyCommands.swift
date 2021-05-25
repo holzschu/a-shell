@@ -129,6 +129,7 @@ extension WKWebView {
             UIKeyCommand(input: "x", modifierFlags:.command, action: #selector(cutText), discoverabilityTitle: "Cut"),
             // Still required with external keyboards as of May 26, 2020: control-C maps to control-C
             UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC)),
+            UIKeyCommand(input: "d", modifierFlags:.control, action: #selector(insertD)),
         ]
         /* Caps Lock remapped to escape: */
         if (UserDefaults.standard.bool(forKey: "escape_preference")) {
@@ -164,6 +165,21 @@ extension WKWebView {
         var string = sender.input!
         if (sender.modifierFlags.contains(.control)) {
             string = "\u{003}"
+        }
+        let commandString = "window.term_.io.onVTKeystroke(\'\(string)');"
+        evaluateJavaScript(commandString) { (result, error) in
+            if error != nil {
+               // print(error)
+               // print(result)
+            }
+        }
+    }
+    @objc func insertD(_ sender: UIKeyCommand) {
+        // Make sure we send control-C from external KB:
+        guard (sender.input != nil) else { return }
+        var string = sender.input!
+        if (sender.modifierFlags.contains(.control)) {
+            string = "\u{004}"
         }
         let commandString = "window.term_.io.onVTKeystroke(\'\(string)');"
         evaluateJavaScript(commandString) { (result, error) in

@@ -172,6 +172,12 @@
 				// jump can start vim 
 				// ssh and ssh-keygen (new version) are both interactive. So is scp. sftp is interactive until connected.
 				let interactiveRegexp = /^vim|^ipython|^less|^more|^ssh|^scp|^sftp|^jump|\|&? *less|\|&? *more|^man/;
+				let vimRegexp = /^vim/;
+				if (vimRegexp.test(commandString)) {
+                    window.term_.scrollPort_.screen_.style.setProperty('caret-color', 'transparent !important'); // iOS 13 addition
+                    window.term_.document_.documentElement.style.setProperty('caret-color', 'transparent !important'); 
+                    window.term_.setCssVar('caret-color', 'transparent !important'); // iOS 13 addition
+				}
 				return interactiveRegexp.test(commandString) 
 				// It's easier to match a regexp, then take the negation than to test a regexp that does not contain a pattern:
 				// This is disabled for now, but kept in case it can become useful again.
@@ -212,6 +218,9 @@
 				    window.term_.io.print(window.promptMessage); 
 				    window.commandRunning = '';
 				    window.interactiveCommandRunning = false;
+                    window.term_.scrollPort_.screen_.style.setProperty('caret-color', window.cursorColor); // iOS 13 addition
+                    window.term_.document_.documentElement.style.setProperty('caret-color', window.cursorColor); 
+                    window.term_.setCssVar('caret-color', window.cursorColor); // iOS 13 addition				    			
 				} else {
 					// let the running command print its own prompt:
 					window.webkit.messageHandlers.aShell.postMessage('input:' + '\n');
@@ -369,34 +378,55 @@
 						}
 					}
 				} else {
-					if ((predicate[0] == "/") && (predicate.lastIndexOf("/") == 0)) {
-						// special case for root
-						directory = "/";
-						file = predicate.substr(1);
+					if ((predicate[0] == "~") && (predicate.lastIndexOf("/") == -1)) {
+						// string beginning with ~, with no / at the end: it's a bookmark.
+						directory = '';
+						file = predicate;
+					    if (lastDirectory == '~bookmarkNames') {
+			                // First, remove 
+					    	for (var i = 0, len = fileList.length; i < len; i++) {
+					    		if (fileList[i].startsWith(file)) {
+					    			var value = fileList[i].replace(file, "")
+					    			autocompleteList[numFound] = value; 
+					    			lastFound = value; 
+					    			numFound += 1;
+					    		}
+					    	}
+					    } else {
+					    	// asynchronous communication. Will have to execute the rest of the command too.
+					    	window.webkit.messageHandlers.aShell.postMessage('listBookmarks:');
+					    }
 					} else {
-						var lastSlash = predicate.lastIndexOf("/");
-						if ((predicate.length > 0) && (lastSlash > 0) && (lastSlash < predicate.length)) {
-							var directory = predicate.substr(0, lastSlash); // include "/" in directory
-							file = predicate.substr(lastSlash + 1); // don't include "/" in file name
-						} else {
-							var directory = ".";
-							file = predicate;
-						}
-					}
-					// Need to get list of files from directory. 
-					if (directory == lastDirectory) {
-			            // First, remove 
-						for (var i = 0, len = fileList.length; i < len; i++) {
-							if (fileList[i].startsWith(file)) {
-								var value = fileList[i].replace(file, "")
-								autocompleteList[numFound] = value; 
-								lastFound = value; 
-								numFound += 1;
-							}
-						}
-					} else {
-						// asynchronous communication. Will have to execute the rest of the command too.
-						window.webkit.messageHandlers.aShell.postMessage('listDirectory:' + directory);
+					    if ((predicate[0] == "/") && (predicate.lastIndexOf("/") == 0)) {
+					    	// special case for root
+					    	directory = "/";
+					    	file = predicate.substr(1);
+					    // This will only work for shortcuts expansion:
+					    } else {
+					    	var lastSlash = predicate.lastIndexOf("/");
+					    	if ((predicate.length > 0) && (lastSlash > 0) && (lastSlash < predicate.length)) {
+					    		var directory = predicate.substr(0, lastSlash); // include "/" in directory
+					    		file = predicate.substr(lastSlash + 1); // don't include "/" in file name
+					    	} else {
+					    		var directory = ".";
+					    		file = predicate;
+					    	}
+					    }
+					    // Need to get list of files from directory. 
+					    if (directory == lastDirectory) {
+			                // First, remove 
+					    	for (var i = 0, len = fileList.length; i < len; i++) {
+					    		if (fileList[i].startsWith(file)) {
+					    			var value = fileList[i].replace(file, "")
+					    			autocompleteList[numFound] = value; 
+					    			lastFound = value; 
+					    			numFound += 1;
+					    		}
+					    	}
+					    } else {
+					    	// asynchronous communication. Will have to execute the rest of the command too.
+					    	window.webkit.messageHandlers.aShell.postMessage('listDirectory:' + directory);
+					    }
 					}
 				}
 				// substring of io.currentCommand, ending at currentCommandCursorPosition, going back until first space or "/"
@@ -911,7 +941,6 @@
 											io.currentCommand.slice(currentCommandCursorPosition + 1, io.currentCommand.length); 
 									}
 									break;
-									
 								case String.fromCharCode(5):  // Ctrl-E: end of line
 									disableAutocompleteMenu();
 									if (currentCommandCursorPosition < io.currentCommand.length) {

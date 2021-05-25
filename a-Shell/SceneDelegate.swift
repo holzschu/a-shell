@@ -1225,6 +1225,28 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 tty_file_input?.write(data)
             }
+        } else if (cmd.hasPrefix("listBookmarks:")) {
+            let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+            let sortedKeys = storedNamesDictionary.keys.sorted()
+            var javascriptCommand = "fileList = [ \"~/\", "
+            for key in sortedKeys {
+                // print(filePath)
+                // escape spaces, replace "\r" in filenames with "?"
+                javascriptCommand += "\"~" + key.replacingOccurrences(of: " ", with: "\\ ") + "/\", "
+            }
+            // We need to re-escapce spaces for string comparison to work in JS:
+            javascriptCommand += "]; lastDirectory = \"~bookmarkNames\"; updateFileMenu(); "
+            // print(javascriptCommand)
+            DispatchQueue.main.async {
+                self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
+                    if error != nil {
+                        print(error)
+                    }
+                    if (result != nil) {
+                        NSLog(result! as! String)
+                    }
+                }
+            }
         } else if (cmd.hasPrefix("listDirectory:")) {
             var directory = cmd
             directory.removeFirst("listDirectory:".count)
@@ -1233,14 +1255,40 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 ios_switchSession(self.persistentIdentifier?.toCString())
                 ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
                 // NSLog("about to list: \(directory)")
-                var filePaths = try FileManager().contentsOfDirectory(atPath: directory.replacingOccurrences(of: "\\ ", with: " ")) // un-escape spaces
+                var directoryForListing = directory
+                let components = directoryForListing.components(separatedBy: "/")
+                var name = components[0]
+                if (name.hasPrefix("~")) {
+                    // TODO: also for ~shortcuts, separate from ~/...
+                    // JS removes the last slash before sending. No difference btw ~/ and ~
+                    // But behaviour *must* be different --> other function
+                    // ~ : HOME
+                    // ~/something: HOME
+                    // ~somt: find in bookmarkNames dictionary, if not found get list of bookmarks instead of filePaths
+                    // ~somt/something: find in bookmarkNames dictionary
+                    directoryForListing.removeFirst("~".count)
+                    let homeUrl = try! FileManager().url(for: .documentDirectory,
+                                                              in: .userDomainMask,
+                                                              appropriateFor: nil,
+                                                              create: true).deletingLastPathComponent()
+                    directoryForListing = homeUrl.path + "/" + directoryForListing
+                } else if (name.hasPrefix("$")) {
+                    name.removeFirst(1) // without the '$'
+                    let value = ios_getenv(name)
+                    if (value != nil) {
+                        directoryForListing.removeFirst(name.count + 1)
+                        directoryForListing = String(cString: value!) + "/" + directoryForListing
+                    }
+                }
+                // NSLog("after parsing: \(directoryForListing)")
+                var filePaths = try FileManager().contentsOfDirectory(atPath: directoryForListing.replacingOccurrences(of: "\\ ", with: " ")) // un-escape spaces
                 filePaths.sort()
                 var javascriptCommand = "fileList = ["
                 for filePath in filePaths {
                     // print(filePath)
                     // escape spaces, replace "\r" in filenames with "?"
                     javascriptCommand += "\"" + filePath.replacingOccurrences(of: " ", with: "\\\\ ").replacingOccurrences(of: "\r", with: "?")
-                    let fullPath = directory.replacingOccurrences(of: "\\ ", with: " ") + "/" + filePath
+                    let fullPath = directoryForListing.replacingOccurrences(of: "\\ ", with: " ") + "/" + filePath
                     // NSLog("path = \(fullPath) , isDirectory: \(URL(fileURLWithPath: fullPath).isDirectory)")
                     if URL(fileURLWithPath: fullPath).isDirectory {
                         javascriptCommand += "/"
@@ -1287,6 +1335,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (thread_stderr_copy != nil) {
                 fputs(string, self.thread_stderr_copy)
             }
+        } else if (cmd.hasPrefix("reload:")) {
+            // Reload the web page:
+            self.webView?.reload()
         } else {
             // Usually debugging information
             // NSLog("JavaScript message: \(message.body)")
