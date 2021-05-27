@@ -172,12 +172,6 @@
 				// jump can start vim 
 				// ssh and ssh-keygen (new version) are both interactive. So is scp. sftp is interactive until connected.
 				let interactiveRegexp = /^vim|^ipython|^less|^more|^ssh|^scp|^sftp|^jump|\|&? *less|\|&? *more|^man/;
-				let vimRegexp = /^vim/;
-				if (vimRegexp.test(commandString)) {
-                    window.term_.scrollPort_.screen_.style.setProperty('caret-color', 'transparent !important'); // iOS 13 addition
-                    window.term_.document_.documentElement.style.setProperty('caret-color', 'transparent !important'); 
-                    window.term_.setCssVar('caret-color', 'transparent !important'); // iOS 13 addition
-				}
 				return interactiveRegexp.test(commandString) 
 				// It's easier to match a regexp, then take the negation than to test a regexp that does not contain a pattern:
 				// This is disabled for now, but kept in case it can become useful again.
@@ -218,9 +212,6 @@
 				    window.term_.io.print(window.promptMessage); 
 				    window.commandRunning = '';
 				    window.interactiveCommandRunning = false;
-                    window.term_.scrollPort_.screen_.style.setProperty('caret-color', window.cursorColor); // iOS 13 addition
-                    window.term_.document_.documentElement.style.setProperty('caret-color', window.cursorColor); 
-                    window.term_.setCssVar('caret-color', window.cursorColor); // iOS 13 addition				    			
 				} else {
 					// let the running command print its own prompt:
 					window.webkit.messageHandlers.aShell.postMessage('input:' + '\n');

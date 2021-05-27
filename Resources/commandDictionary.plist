@@ -905,5 +905,12 @@
 		<string></string>
 		<string>no</string>
 	</array>
+	<key>xxd</key>
+	<array>
+		<string>xxd.framework/xxd</string>
+		<string>main</string>
+		<string>abeupiCrEvcgosl</string>
+		<string>file</string>
+	</array>
 </dict>
 </plist>
