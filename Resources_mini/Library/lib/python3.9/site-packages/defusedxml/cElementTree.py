@@ -18,7 +18,19 @@ from xml.etree.cElementTree import tostring
 # iterparse from ElementTree!
 from xml.etree.ElementTree import iterparse as _iterparse
 
-from .ElementTree import DefusedXMLParser
+# This module is an alias for ElementTree just like xml.etree.cElementTree
+from .ElementTree import (
+    XML,
+    XMLParse,
+    XMLParser,
+    XMLTreeBuilder,
+    fromstring,
+    iterparse,
+    parse,
+    tostring,
+    DefusedXMLParser,
+    ParseError,
+)
 
 __origin__ = "xml.etree.cElementTree"
 
@@ -38,6 +50,7 @@ parse, iterparse, fromstring = _generate_etree_functions(
 XML = fromstring
 
 __all__ = [
+    "ParseError",
     "XML",
     "XMLParse",
     "XMLParser",

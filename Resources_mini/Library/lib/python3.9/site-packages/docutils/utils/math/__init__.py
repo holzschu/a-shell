@@ -1,4 +1,4 @@
-# :Id: $Id: __init__.py 7865 2015-04-12 10:06:43Z milde $
+# :Id: $Id: __init__.py 8554 2020-09-04 16:52:11Z milde $
 # :Author: Guenter Milde.
 # :License: Released under the terms of the `2-Clause BSD license`_, in short:
 #
@@ -7,7 +7,7 @@
 #    notice and this notice are preserved.
 #    This file is offered as-is, without any warranty.
 #
-# .. _2-Clause BSD license: http://www.spdx.org/licenses/BSD-2-Clause
+# .. _2-Clause BSD license: https://opensource.org/licenses/BSD-2-Clause
 
 """
 This is the Docutils (Python Documentation Utilities) "math" sub-package.

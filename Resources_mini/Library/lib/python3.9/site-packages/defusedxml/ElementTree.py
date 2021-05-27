@@ -9,6 +9,7 @@ from __future__ import print_function, absolute_import
 
 import sys
 import warnings
+from xml.etree.ElementTree import ParseError
 from xml.etree.ElementTree import TreeBuilder as _TreeBuilder
 from xml.etree.ElementTree import parse as _parse
 from xml.etree.ElementTree import tostring
@@ -20,7 +21,6 @@ if PY3:
 else:
     from xml.etree.ElementTree import XMLParser as _XMLParser
     from xml.etree.ElementTree import iterparse as _iterparse
-    from xml.etree.ElementTree import ParseError
 
 
 from .common import (
@@ -63,13 +63,15 @@ def _get_py3_cls():
 
     _XMLParser = pure_pymod.XMLParser
     _iterparse = pure_pymod.iterparse
-    ParseError = pure_pymod.ParseError
+    # patch pure module to use ParseError from C extension
+    pure_pymod.ParseError = ParseError
 
-    return _XMLParser, _iterparse, ParseError
+    return _XMLParser, _iterparse
 
 
 if PY3:
-    _XMLParser, _iterparse, ParseError = _get_py3_cls()
+    _XMLParser, _iterparse = _get_py3_cls()
+
 
 _sentinel = object()
 

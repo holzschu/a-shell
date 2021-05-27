@@ -8,16 +8,15 @@
 #    notice and this notice are preserved.
 #    This file is offered as-is, without any warranty.
 #
-# .. _2-Clause BSD license: http://www.spdx.org/licenses/BSD-2-Clause
+# .. _2-Clause BSD license: https://opensource.org/licenses/BSD-2-Clause
 #
-# Revision: $Revision: 8410 $
-# Date: $Date: 2019-11-04 22:14:43 +0100 (Mo, 04. Nov 2019) $
+# Revision: $Revision: 8567 $
+# Date: $Date: 2020-09-30 13:57:21 +0200 (Mi, 30. Sep 2020) $
 
 """
 A minimal front end to the Docutils Publisher, producing HTML 5 documents.
 
-The output also conforms to XHTML 1.0 transitional
-(except for the doctype declaration).
+The output is also valid XML.
 """
 
 try:
@@ -28,8 +27,8 @@ except locale.Error:
 
 from docutils.core import publish_cmdline, default_description
 
-description = (u'Generates HTML 5 documents from standalone '
-               u'reStructuredText sources '
+description = (u'Generates HTML5 documents from standalone '
+               u'reStructuredText sources.\n'
                + default_description)
 
 publish_cmdline(writer_name='html5', description=description)

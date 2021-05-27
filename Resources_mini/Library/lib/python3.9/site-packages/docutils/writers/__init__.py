@@ -1,4 +1,4 @@
-# $Id: __init__.py 8239 2018-11-21 21:46:00Z milde $
+# $Id: __init__.py 8673 2021-04-07 17:57:27Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -10,11 +10,11 @@ __docformat__ = 'reStructuredText'
 
 import os.path
 import sys
+from importlib import import_module
 
 import docutils
 from docutils import languages, Component
 from docutils.transforms import universal
-
 
 class Writer(Component):
 
@@ -120,15 +120,22 @@ class UnfilteredWriter(Writer):
 _writer_aliases = {
       'html': 'html4css1',  # may change to html5 some day
       'html4': 'html4css1',
+      'xhtml10': 'html4css1',
       'html5': 'html5_polyglot',
+      'xhtml': 'html5_polyglot',
+      's5': 's5_html',
       'latex': 'latex2e',
+      'xelatex': 'xetex',
+      'luatex': 'xetex',
+      'lualatex': 'xetex',
+      'odf': 'odf_odt',                   
+      'odt': 'odf_odt',                   
+      'ooffice': 'odf_odt',                   
+      'openoffice': 'odf_odt',                   
+      'libreoffice': 'odf_odt',                   
       'pprint': 'pseudoxml',
       'pformat': 'pseudoxml',
       'pdf': 'rlpdf',
-      's5': 's5_html',
-      'xelatex': 'xetex',
-      'xhtml': 'html5_polyglot',
-      'xhtml10': 'html4css1',
       'xml': 'docutils_xml'}
 
 def get_writer_class(writer_name):
@@ -137,7 +144,10 @@ def get_writer_class(writer_name):
     if writer_name in _writer_aliases:
         writer_name = _writer_aliases[writer_name]
     try:
-        module = __import__(writer_name, globals(), locals(), level=1)
+        module = import_module('docutils.writers.'+writer_name)
     except ImportError:
-        module = __import__(writer_name, globals(), locals(), level=0)
+        try:
+            module = import_module(writer_name)
+        except ImportError as err:
+            raise ImportError('No writer named "%s".' % writer_name) 
     return module.Writer

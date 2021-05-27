@@ -136,6 +136,14 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
         completion(EnumResolutionResult.success(with: intent.openWindow))
     }
     
+    func resolveKeepGoing(for intent: ExecuteCommandIntent, with completion: @escaping (INBooleanResolutionResult) -> Void) {
+        if let keepGoing = intent.keepGoing {
+            completion(INBooleanResolutionResult.success(with: keepGoing as! Bool))
+        } else {
+            completion(INBooleanResolutionResult.success(with: false)) // Don't continue by default.
+        }
+    }
+    
     let sessionIdentifier = "inExtension"
     let endOfTransmission = "\u{0004}"  // control-D, used to signal end of transmission
     var response = ""
@@ -166,11 +174,12 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
     
 
     // Commands that do not require interaction, access to local library files, access to local configuration files, access to JS...
-    let localCommands = ["awk", "calc", "cat", "chflags", "chksum", "chmod", "compress", "cp", "curl", "date", "diff", "dig", "du", "echo", "egrep", "env", "fgrep", "find", "grep", "gunzip", "gzip", "head", "host", "ifconfig", "lex", "link", "ln", "ls", "lua", "luac", "md5", "mkdir", "mv", "nc", "nslookup", "openurl", "pbcopy", "pbpaste",  "ping", "printenv", "pwd", "readlink", "rm", "rmdir", "say", "scp", "setenv", "sftp", "sort", "stat", "sum", "tail", "tar", "tee", "touch", "tr", "uname", "uncompress", "uniq", "unlink", "unsetenv", "uptime", "wc", "whoami", "whois", "xargs"]
+    let localCommands = ["awk", "calc", "cat", "chflags", "chksum", "chmod", "compress", "cp", "curl", "date", "diff", "dig", "du", "echo", "egrep", "env", "fgrep", "find", "grep", "gunzip", "gzip", "head", "host", "ifconfig", "lex", "link", "ln", "ls", "lua", "luac", "md5", "mkdir", "mv", "nc", "nslookup", "openurl", "pbcopy", "pbpaste",  "ping", "printenv", "pwd", "readlink", "rm", "rmdir", "say", "scp", "setenv", "sftp", "sort", "stat", "sum", "tail", "tar", "tee", "touch", "tr", "true", "uname", "uncompress", "uniq", "unlink", "unsetenv", "uptime", "wc", "whoami", "whois", "xargs", "xxd"]
 
     func handle(intent: ExecuteCommandIntent, completion: @escaping (ExecuteCommandIntentResponse) -> Void) {
         if let commands = intent.command {
             var open = intent.openWindow // .open: always open the app. .close: never open the app
+            var keepGoing = intent.keepGoing as? Bool
             if (open != .open) && (open != .close) {
                // Should we open the App to resolve this set of commands?
                // Make the decision based on all commands
@@ -201,7 +210,7 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
                 var result:Int32 = 0
                 for command in commands {
                     result = executeCommandInExtension(command: command)
-                    if (result != 0) { break } // Stop executing after an error
+                    if (result != 0) && (keepGoing != nil) && (!keepGoing!) { break } // Stop executing after an error
                 }
                 var intentResponse: ExecuteCommandIntentResponse
                 if (result == 0) {

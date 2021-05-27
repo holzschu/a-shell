@@ -1,4 +1,4 @@
-# $Id: components.py 4564 2006-05-21 20:44:42Z wiemann $
+# $Id: components.py 8603 2021-01-08 15:24:32Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -35,7 +35,8 @@ class Filter(Transform):
     For example, the reStructuredText "meta" directive creates a "pending"
     element containing a "meta" element (in ``pending.details['nodes']``).
     Only writers (``pending.details['component'] == 'writer'``) supporting the
-    "html" format (``pending.details['format'] == 'html'``) will include the
+    "html", latex, or "odf" formats 
+    (``pending.details['format'] == 'html,latex,odf'``) will include the
     "meta" element; it will be deleted from the output of all other writers.
     """
 
@@ -44,9 +45,11 @@ class Filter(Transform):
     def apply(self):
         pending = self.startnode
         component_type = pending.details['component'] # 'reader' or 'writer'
-        format = pending.details['format']
+        formats = (pending.details['format']).split(',')
         component = self.document.transformer.components[component_type]
-        if component.supports(format):
-            pending.replace_self(pending.details['nodes'])
+        for format in formats:
+            if component.supports(format):
+                pending.replace_self(pending.details['nodes'])
+                break
         else:
             pending.parent.remove(pending)

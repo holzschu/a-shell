@@ -23,6 +23,8 @@ link_attrs = frozenset([
     'usemap',
     # Not standard:
     'dynsrc', 'lowsrc',
+    # HTML5 formaction
+    'formaction'
     ])
 
 # Not in the HTML 4 spec:

@@ -31,8 +31,8 @@
 			<key>IntentsSupported</key>
 			<array>
 				<string>ExecuteCommandIntent</string>
-				<string>PutFileIntent</string>
 				<string>GetFileIntent</string>
+				<string>PutFileIntent</string>
 			</array>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>

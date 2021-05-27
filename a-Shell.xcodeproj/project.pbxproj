@@ -223,7 +223,7 @@
 		228E13FC25C95F4E0065D825 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		228E140025C95F550065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		2291286722D9DAC40004A5EA /* UIColor+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291286622D9DAC40004A5EA /* UIColor+hexString.swift */; };
-		22942C40263F15C2004BEA41 /* perl.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22942C3F263F15B1004BEA41 /* perl.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22942C40263F15C2004BEA41 /* perl.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22942C3F263F15B1004BEA41 /* perl.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22942C42264037B9004BEA41 /* Perl in Resources */ = {isa = PBXBuildFile; fileRef = 22942C41264037AB004BEA41 /* Perl */; };
 		2294A9D0254C1A38008C1490 /* pythonA-kiwisolver.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9C9254C1A20008C1490 /* pythonA-kiwisolver.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2294A9D7254C1A60008C1490 /* python3_ios-kiwisolver.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9C0254C1A05008C1490 /* python3_ios-kiwisolver.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -542,17 +542,25 @@
 		22DC1FB2257013BA0068004E /* lex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F7E257010BC0068004E /* lex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1FB4257013BF0068004E /* libssh2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F822570120E0068004E /* libssh2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1FB5257013BF0068004E /* openssl.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F83257012190068004E /* openssl.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22DE173E2653DC9A0031A029 /* make.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DE173D2653DC960031A029 /* make.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22DE173E2653DC9A0031A029 /* make.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DE173D2653DC960031A029 /* make.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22E1B53A243DF64000EA8FBD /* require.js in Resources */ = {isa = PBXBuildFile; fileRef = 22E1B539243DF63E00EA8FBD /* require.js */; };
 		22E9F57F2558468F00673D11 /* network_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F57D2558468E00673D11 /* network_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22E9F585255846A600673D11 /* lua_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F583255846A500673D11 /* lua_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22E9F5A2255846F400673D11 /* vim.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5A0255846F300673D11 /* vim.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22E9F5A72558470600673D11 /* bc_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5A52558470600673D11 /* bc_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F04B4824EFF9B900F9F30A /* pythonA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22C9815024CADA4E006C103E /* pythonA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22F20175264E82BA004FBA5C /* perlA.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20174264E81E1004FBA5C /* perlA.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22F20178265260C2004FBA5C /* perlB.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20177265260B7004FBA5C /* perlB.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F20175264E82BA004FBA5C /* perlA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20174264E81E1004FBA5C /* perlA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F20178265260C2004FBA5C /* perlB.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20177265260B7004FBA5C /* perlB.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F75D41265FA3970056AFD2 /* xxd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D40265FA3500056AFD2 /* xxd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F75D42265FA3A30056AFD2 /* xxd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D40265FA3500056AFD2 /* xxd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F75D4C265FFFD80056AFD2 /* python3_ios-pyfftw.pyfftw.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D46265FFEE30056AFD2 /* python3_ios-pyfftw.pyfftw.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F75D4D265FFFD80056AFD2 /* python3_ios-wordcloud.query_integral_image.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D47265FFEF50056AFD2 /* python3_ios-wordcloud.query_integral_image.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F75D4E265FFFD80056AFD2 /* python3_ios-regex._regex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D48265FFF020056AFD2 /* python3_ios-regex._regex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F75D4F265FFFE00056AFD2 /* pythonA-pyfftw.pyfftw.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D49265FFF2C0056AFD2 /* pythonA-pyfftw.pyfftw.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F75D50265FFFE10056AFD2 /* pythonA-wordcloud.query_integral_image.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D4A265FFF340056AFD2 /* pythonA-wordcloud.query_integral_image.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F75D51265FFFE10056AFD2 /* pythonA-regex._regex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D4B265FFF3E0056AFD2 /* pythonA-regex._regex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F75D52266000630056AFD2 /* pythonA-regex._regex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D4B265FFF3E0056AFD2 /* pythonA-regex._regex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F75D53266000730056AFD2 /* python3_ios-regex._regex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D48265FFF020056AFD2 /* python3_ios-regex._regex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 /* End PBXBuildFile section */
 
@@ -689,6 +697,7 @@
 				229D24FE257931E4004A78AC /* pythonA-binascii.xcframework in Embed Frameworks */,
 				229D24FF257931E4004A78AC /* pythonA-cmath.xcframework in Embed Frameworks */,
 				229D2500257931E4004A78AC /* pythonA-fcntl.xcframework in Embed Frameworks */,
+				22F75D52266000630056AFD2 /* pythonA-regex._regex.xcframework in Embed Frameworks */,
 				229D2501257931E4004A78AC /* pythonA-grp.xcframework in Embed Frameworks */,
 				229D2502257931E4004A78AC /* pythonA-math.xcframework in Embed Frameworks */,
 				229D2503257931E4004A78AC /* pythonA-mmap.xcframework in Embed Frameworks */,
@@ -795,6 +804,7 @@
 				229D259E257931E4004A78AC /* python3_ios-lxml.objectify.xcframework in Embed Frameworks */,
 				229D259F257931E4004A78AC /* python3_ios-lxml.sax.xcframework in Embed Frameworks */,
 				22458B2825B34A5000EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */,
+				22F75D53266000730056AFD2 /* python3_ios-regex._regex.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1082,10 +1092,16 @@
 				22DC1F5325700ECC0068004E /* python3_ios-lxml.sax.xcframework in Embed Frameworks */,
 				223E61AC250A5CF1002BF41F /* pythonA-_cffi_backend.xcframework in Embed Frameworks */,
 				22458B1B25B349F700EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */,
-				22942C40263F15C2004BEA41 /* perl.framework in Embed Frameworks */,
-				22F20175264E82BA004FBA5C /* perlA.framework in Embed Frameworks */,
-				22F20178265260C2004FBA5C /* perlB.framework in Embed Frameworks */,
-				22DE173E2653DC9A0031A029 /* make.framework in Embed Frameworks */,
+				22F75D4C265FFFD80056AFD2 /* python3_ios-pyfftw.pyfftw.xcframework in Embed Frameworks */,
+				22F75D4D265FFFD80056AFD2 /* python3_ios-wordcloud.query_integral_image.xcframework in Embed Frameworks */,
+				22F75D4E265FFFD80056AFD2 /* python3_ios-regex._regex.xcframework in Embed Frameworks */,
+				22F75D4F265FFFE00056AFD2 /* pythonA-pyfftw.pyfftw.xcframework in Embed Frameworks */,
+				22F75D50265FFFE10056AFD2 /* pythonA-wordcloud.query_integral_image.xcframework in Embed Frameworks */,
+				22F75D51265FFFE10056AFD2 /* pythonA-regex._regex.xcframework in Embed Frameworks */,
+				22942C40263F15C2004BEA41 /* perl.xcframework in Embed Frameworks */,
+				22F20175264E82BA004FBA5C /* perlA.xcframework in Embed Frameworks */,
+				22F20178265260C2004FBA5C /* perlB.xcframework in Embed Frameworks */,
+				22DE173E2653DC9A0031A029 /* make.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1300,7 +1316,7 @@
 		227B4E83252CD4B60052D056 /* pythonA-numpy.core._multiarray_umath.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-numpy.core._multiarray_umath.xcframework"; path = "cpython/XcFrameworks/pythonA-numpy.core._multiarray_umath.xcframework"; sourceTree = SOURCE_ROOT; };
 		228E13F225C95F2D0065D825 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = ../ios_system/.build/ios_system.xcframework; sourceTree = "<group>"; };
 		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIColor+hexString.swift"; path = "Util/UIColor+hexString.swift"; sourceTree = SOURCE_ROOT; };
-		22942C3F263F15B1004BEA41 /* perl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = perl.framework; path = Frameworks/perl.framework; sourceTree = SOURCE_ROOT; };
+		22942C3F263F15B1004BEA41 /* perl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perl.xcframework; path = xcfs/.build/artifacts/xcfs/perl.xcframework; sourceTree = SOURCE_ROOT; };
 		22942C41264037AB004BEA41 /* Perl */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Perl; path = Resources/Perl; sourceTree = "<group>"; };
 		2294A9BE254C19D0008C1490 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = "cpython/Python-aux/freetype.xcframework"; sourceTree = SOURCE_ROOT; };
 		2294A9C0254C1A05008C1490 /* python3_ios-kiwisolver.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-kiwisolver.xcframework"; path = "cpython/XcFrameworks/python3_ios-kiwisolver.xcframework"; sourceTree = SOURCE_ROOT; };
@@ -1420,15 +1436,21 @@
 		22DC1F8F257012F50068004E /* text.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = text.xcframework; path = xcfs/.build/artifacts/xcfs/text.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F90257012F50068004E /* shell.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = shell.xcframework; path = xcfs/.build/artifacts/xcfs/shell.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F91257012F50068004E /* curl_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = curl_ios.xcframework; path = xcfs/.build/artifacts/xcfs/curl_ios.xcframework; sourceTree = SOURCE_ROOT; };
-		22DE173D2653DC960031A029 /* make.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = make.framework; path = Frameworks/make.framework; sourceTree = SOURCE_ROOT; };
+		22DE173D2653DC960031A029 /* make.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = make.xcframework; path = xcfs/.build/artifacts/xcfs/make.xcframework; sourceTree = SOURCE_ROOT; };
 		22E1B539243DF63E00EA8FBD /* require.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = require.js; sourceTree = "<group>"; };
 		22E9F57D2558468E00673D11 /* network_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = network_ios.xcframework; path = xcfs/.build/artifacts/xcfs/network_ios.xcframework; sourceTree = SOURCE_ROOT; };
 		22E9F583255846A500673D11 /* lua_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lua_ios.xcframework; path = xcfs/.build/artifacts/xcfs/lua_ios.xcframework; sourceTree = SOURCE_ROOT; };
 		22E9F5A0255846F300673D11 /* vim.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = vim.xcframework; path = xcfs/.build/artifacts/xcfs/vim.xcframework; sourceTree = SOURCE_ROOT; };
 		22E9F5A52558470600673D11 /* bc_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bc_ios.xcframework; path = xcfs/.build/artifacts/xcfs/bc_ios.xcframework; sourceTree = SOURCE_ROOT; };
-		22F20174264E81E1004FBA5C /* perlA.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = perlA.framework; path = Frameworks/perlA.framework; sourceTree = SOURCE_ROOT; };
-		22F20177265260B7004FBA5C /* perlB.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = perlB.framework; path = Frameworks/perlB.framework; sourceTree = SOURCE_ROOT; };
+		22F20174264E81E1004FBA5C /* perlA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlA.xcframework; path = xcfs/.build/artifacts/xcfs/perlA.xcframework; sourceTree = SOURCE_ROOT; };
+		22F20177265260B7004FBA5C /* perlB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlB.xcframework; path = xcfs/.build/artifacts/xcfs/perlB.xcframework; sourceTree = SOURCE_ROOT; };
 		22F75D40265FA3500056AFD2 /* xxd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xxd.xcframework; path = xcfs/.build/artifacts/xcfs/xxd.xcframework; sourceTree = SOURCE_ROOT; };
+		22F75D46265FFEE30056AFD2 /* python3_ios-pyfftw.pyfftw.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-pyfftw.pyfftw.xcframework"; path = "cpython/XcFrameworks/python3_ios-pyfftw.pyfftw.xcframework"; sourceTree = SOURCE_ROOT; };
+		22F75D47265FFEF50056AFD2 /* python3_ios-wordcloud.query_integral_image.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-wordcloud.query_integral_image.xcframework"; path = "cpython/XcFrameworks/python3_ios-wordcloud.query_integral_image.xcframework"; sourceTree = SOURCE_ROOT; };
+		22F75D48265FFF020056AFD2 /* python3_ios-regex._regex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-regex._regex.xcframework"; path = "cpython/XcFrameworks/python3_ios-regex._regex.xcframework"; sourceTree = SOURCE_ROOT; };
+		22F75D49265FFF2C0056AFD2 /* pythonA-pyfftw.pyfftw.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-pyfftw.pyfftw.xcframework"; path = "cpython/XcFrameworks/pythonA-pyfftw.pyfftw.xcframework"; sourceTree = SOURCE_ROOT; };
+		22F75D4A265FFF340056AFD2 /* pythonA-wordcloud.query_integral_image.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-wordcloud.query_integral_image.xcframework"; path = "cpython/XcFrameworks/pythonA-wordcloud.query_integral_image.xcframework"; sourceTree = SOURCE_ROOT; };
+		22F75D4B265FFF3E0056AFD2 /* pythonA-regex._regex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-regex._regex.xcframework"; path = "cpython/XcFrameworks/pythonA-regex._regex.xcframework"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1517,6 +1539,9 @@
 		225177C923170AA10084B9C1 /* Python3 frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22F75D46265FFEE30056AFD2 /* python3_ios-pyfftw.pyfftw.xcframework */,
+				22F75D47265FFEF50056AFD2 /* python3_ios-wordcloud.query_integral_image.xcframework */,
+				22F75D48265FFF020056AFD2 /* python3_ios-regex._regex.xcframework */,
 				22458B1925B349BF00EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework */,
 				22DC1F4925700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._openssl.xcframework */,
 				22DC1F4A25700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._padding.xcframework */,
@@ -1718,6 +1743,9 @@
 		22A0FB00233F5A06009A4DE3 /* PythonA frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22F75D49265FFF2C0056AFD2 /* pythonA-pyfftw.pyfftw.xcframework */,
+				22F75D4A265FFF340056AFD2 /* pythonA-wordcloud.query_integral_image.xcframework */,
+				22F75D4B265FFF3E0056AFD2 /* pythonA-regex._regex.xcframework */,
 				22458B1F25B34A1100EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework */,
 				22DC1F4125700E8C0068004E /* pythonA-cryptography.hazmat.bindings._openssl.xcframework */,
 				22DC1F4025700E8B0068004E /* pythonA-cryptography.hazmat.bindings._padding.xcframework */,
@@ -1854,7 +1882,7 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				22DE173D2653DC960031A029 /* make.framework */,
+				22DE173D2653DC960031A029 /* make.xcframework */,
 				22F201762652609A004FBA5C /* Perl */,
 				22DC1F81257011FD0068004E /* openssl */,
 				22DC1F7B2570105A0068004E /* taskwarrior */,
@@ -1980,9 +2008,9 @@
 		22F201762652609A004FBA5C /* Perl */ = {
 			isa = PBXGroup;
 			children = (
-				22942C3F263F15B1004BEA41 /* perl.framework */,
-				22F20174264E81E1004FBA5C /* perlA.framework */,
-				22F20177265260B7004FBA5C /* perlB.framework */,
+				22942C3F263F15B1004BEA41 /* perl.xcframework */,
+				22F20174264E81E1004FBA5C /* perlA.xcframework */,
+				22F20177265260B7004FBA5C /* perlB.xcframework */,
 			);
 			name = Perl;
 			sourceTree = "<group>";
