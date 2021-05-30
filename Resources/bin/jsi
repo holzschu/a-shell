@@ -741,7 +741,10 @@ def exportVarDefs(js):
 ##  in the same context as the terminal UI.
 ## Returns the output, if any, produced by [content].
 ##  If [collectPrints], any async/delayed print statements' output is also returned.
-def runJS(content, inTermContext=False, recurseDepth=1, sourceFormatter=SourceFormatter(), collectPrints = False):
+##  If [noinspect], details of the resultant type are not printed.
+def runJS(content, inTermContext=False, recurseDepth=1,
+        sourceFormatter=SourceFormatter(), collectPrints = False,
+        noinspect=False):
     toRun = JS_UTILITIES
 
     if collectPrints:
@@ -749,7 +752,14 @@ def runJS(content, inTermContext=False, recurseDepth=1, sourceFormatter=SourceFo
 
     # Don't re-print what was printed while jsc was running
     toRun += "_jsi.pauseSavingFuturePrints();\n"
-    toRun += "print(_jsi.stringify_obj(eval(%s), %d));" % (jsQuote(exportVarDefs(content)), recurseDepth)
+
+    # Add inspection code, if requested.
+    if not noinspect:
+        toRun += "print(_jsi.stringify_obj("
+    toRun += "eval(%s)" % jsQuote(exportVarDefs(content))
+    if not noinspect:
+        toRun += ", %d))" % recurseDepth
+    toRun += ";\n"
 
     # Save any async prints for later collection
     toRun += "_jsi.saveFuturePrints();"
@@ -767,6 +777,11 @@ def runJS(content, inTermContext=False, recurseDepth=1, sourceFormatter=SourceFo
     output = output.decode("utf-8").rstrip(" \r\n")
 
     os.unlink(outFile.name)
+
+    # If not inspecting output, we shouldn't have
+    # a trailing format line.
+    if noinspect:
+        return output
 
     ## The last line is always a format specifier, unless an error occurred.
     outLines = output.split('\n')
@@ -838,6 +853,14 @@ def parseCmdlineArguments():
             default=not isTTY,
             dest="noColor",
             action="store_true", help="Disable colorized output")
+    args.add_argument("-c", "--exec",
+            default=None, metavar="JS",
+            help="Execute [JS] instead of entering interactive mode or reading from standard input.",
+            dest="execFirst")
+    args.add_argument("--force-inspect",
+            default=False, action="store_true",
+            dest="forceInspect",
+            help="Print the details of the last object, even if not in interactive mode.")
     args.add_argument("-d", "--inspect-depth",
             default=0,
             type=int,
@@ -861,25 +884,37 @@ if __name__ == "__main__":
     response = ''
 
     formatter = SourceFormatter(args.noColor)
-    execJS = lambda js, collectPrints=False: \
+    execJS = lambda js, collectPrints=False, noinspect=False: \
             runJS(js,
                     args.inTermWebView,
                     args.inspectDepth,
                     formatter,
-                    collectPrints=collectPrints)
+                    collectPrints=collectPrints,
+                    noinspect=noinspect)
 
     out = Printer(args.noColor)
     readIn = InputReader(args.noColor, promptText, execJS)
 
+    # Code to run instead of entering interactive mode
+    toRun = None
+
+    # If the user wants us to execute JavaScript instead
+    # of entering interactive mode, do that instead.
+    if not (args.execFirst is None):
+        toRun = args.execFirst
+    elif not sys.stdin.isatty():
+        # If input isn't directly from a user, run everything
+        # from stdin.
+        toRun = sys.stdin.read()
+
+    if not (toRun is None):
+        result = execJS(toRun, noinspect=(not args.forceInspect))
+        if result != "":
+            out.print(result)
+        sys.exit(0)
+
     if not args.omitIntro:
         out.printPrimary(SHELL_BANNER)
-
-    # If input is not directly from a user,
-    # run input to this, then exit.
-    if not sys.stdin.isatty():
-        toRun = sys.stdin.read()
-        out.print(execJS(toRun))
-        sys.exit(0)
 
     while True:
         try:
