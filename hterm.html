@@ -171,7 +171,7 @@
 				// TODO: have a list of such interactive commands (array?) 
 				// jump can start vim 
 				// ssh and ssh-keygen (new version) are both interactive. So is scp. sftp is interactive until connected.
-				let interactiveRegexp = /^vim|^ipython|^less|^more|^ssh|^scp|^sftp|^jump|\|&? *less|\|&? *more|^man/;
+				let interactiveRegexp = /^vim|^ipython|^ptpython|^less|^more|^ssh|^scp|^sftp|^jump|\|&? *less|\|&? *more|^man/;
 				return interactiveRegexp.test(commandString) 
 				// It's easier to match a regexp, then take the negation than to test a regexp that does not contain a pattern:
 				// This is disabled for now, but kept in case it can become useful again.
@@ -235,13 +235,17 @@
 				var currentCommand = window.term_.io.currentCommand;
 				// clear the rest of the line, then reprint. 
 				window.term_.io.print('\x1b[0J'); // delete display after cursor
-				window.term_.io.print(string);  
+				window.term_.io.print(string);
 				
 				// print remainder of command line
 				window.term_.io.print(currentCommand.slice(currentCommandCursorPosition, currentCommand.length));
 				// move cursor back to where it was (don't use term.screen_.cursorPosition):
 				var endOfCommand = currentCommand.slice(currentCommandCursorPosition, currentCommand.length);
 				var endOfCommandWidth = lib.wc.strWidth(endOfCommand);
+				if ((lib.wc.strWidth(currentCommand) + lib.wc.strWidth(window.promptMessage) + 1 >= window.term_.screenSize.width) && (endOfCommandWidth == 0)) {
+					window.term_.io.print(' ');
+					endOfCommandWidth = 1;
+				} 
 				for (var i = 0; i < endOfCommandWidth; i++) {
 					window.term_.io.print('\b'); 
 				}
@@ -994,8 +998,10 @@
 			                    case String.fromCharCode(32): // Space: end auto-complete
 			                        disableAutocompleteMenu(); 
 								default:
+						            // window.webkit.messageHandlers.aShell.postMessage('onVTKeyStroke received ' + string);									
 									// Remove all escape characters if we reach this point:
-									var newString = string.replace(String.fromCharCode(27), '');
+									// Also remove '\r' and ^D characters (when pasting):
+									var newString = string.replaceAll(String.fromCharCode(27), '').replaceAll(String.fromCharCode(13), '').replaceAll(String.fromCharCode(4), '');
 									// For debugging:
 									// for (var i = 0; i < newString.length; i++) {
 									// 	var charcode = newString.charCodeAt(i);
