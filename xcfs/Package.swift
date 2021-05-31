@@ -24,47 +24,47 @@ _ = Package(
         .binaryTarget(
             name: "ios_system",
             url: "https://github.com/holzschu/ios_system/releases/download/v2.9.0/ios_system.xcframework.zip",
-            checksum: "f7da5f7643a5d218712a628dd03f417e964e9a797e7db8be76d1b12bc7fb64be"
+            checksum: "6a41de307993536beca9b9c1b126085f80921ab8722ad890a8d54f1e8f6079ae"
         ),
         .binaryTarget(
             name: "awk",
             url: "https://github.com/holzschu/ios_system/releases/download/v2.9.0/awk.xcframework.zip",
-            checksum: "32dc167823bffb8eabd657ff5bf63899bedbac07257edc5f73701b1d30ecb005"
+            checksum: "d4063a5c4a1eeac56f9ff9167e0a9e754f35fc8217476970700b9cf200e5c715"
         ),
         .binaryTarget(
             name: "curl_ios",
             url: "https://github.com/holzschu/ios_system/releases/download/v2.9.0/curl_ios.xcframework.zip",
-            checksum: "45a1a2cd33845d60771dcbe5201f3be650ccf3ac73b810ab5ae859f51356abcb"
+            checksum: "40f4d113484d3d935320044940ab9791369fa839f4605056c309087fa99ff89f"
         ),
         .binaryTarget(
             name: "files",
             url: "https://github.com/holzschu/ios_system/releases/download/v2.9.0/files.xcframework.zip",
-            checksum: "6dbe110482d15dc842dcb10bce1fe0a6a8d779843881eeffebd8c497b98e4f3c"
+            checksum: "0447973bcb65f88cc84f66bb9f540fb8462b50a94c80fd634d4da19ff793e119"
         ),
         .binaryTarget(
             name: "shell",
             url: "https://github.com/holzschu/ios_system/releases/download/v2.9.0/shell.xcframework.zip",
-            checksum: "1d559902bc615491e836671c8932af668f5a984aa49c55f71598960f7170d49c"
+            checksum: "aa22db5bb759ecfca021edfebad7442dea0c2bc09abfdb311c059985e4ea3391"
         ),
         .binaryTarget(
             name: "ssh_cmd",
             url: "https://github.com/holzschu/ios_system/releases/download/v2.9.0/ssh_cmd.xcframework.zip",
-            checksum: "ec2de9ee4eab9ef74ff2c88830bd129fa5977e43af42e64379f743d58446ba9b"
+            checksum: "8483ce068ed6751343583ed29daed90d70d17dd595d3f46967ef8226dd784dfb"
         ),
         .binaryTarget(
             name: "tar",
             url: "https://github.com/holzschu/ios_system/releases/download/v2.9.0/tar.xcframework.zip",
-            checksum: "45beadec61532e59ea431a8cde6c43767d309521b88d8a9d388f561d8b54caef"
+            checksum: "dd60d2d4f63f666f7a3391410714f2a6f61457ace2cbf8de7ee070f20854eddc"
         ),
         .binaryTarget(
             name: "text",
             url: "https://github.com/holzschu/ios_system/releases/download/v2.9.0/text.xcframework.zip",
-            checksum: "3ea15f4ba15ffaa4c54873e7e660e9d9c7dafafdd43037d81c6747029c260371"
+            checksum: "2053a9d30c07968b0b10c51c5235feac006c1799828876e7a04436bfe5b40625"
         ),
         .binaryTarget(
             name: "mandoc",
             url: "https://github.com/holzschu/ios_system/releases/download/2.7/mandoc.xcframework.zip",
-            checksum: "428eadde2515ad58ede9943a54e0bd56f8cd2980cf89a7b1762c7f36594737f5"
+            checksum: "02b952191ec311fe04df0001e85e8812f68473b6616eaed4a03c045aed111a43"
         ),
         // network_ios
         .binaryTarget(
@@ -198,27 +198,22 @@ _ = Package(
         .binaryTarget(
             name: "perl",
             url: "https://github.com/holzschu/ios_system/releases/download/2.7/perl.xcframework.zip",
-            checksum: "76c9b42b86ecbf65bf97d8d624fef317d505cae1a852818dc014c47785698872"
+            checksum: "7f470ea838139a4aaa4dee8f3f0505c3a5d8769a54fcda9336b5d60b60abec62"
         ),
         .binaryTarget(
             name: "perlA",
             url: "https://github.com/holzschu/ios_system/releases/download/2.7/perlA.xcframework.zip",
-            checksum: "b3d4cbd2d7dcc9df484c78acf5a9d37b9fdc8a28126fac435252fcd39dc0e6b7"
+            checksum: "8015a11ab6fa15aeb16c417b229d10b28e28e756c533b7f3faf3b6029b83dc49"
         ),
         .binaryTarget(
             name: "perlB",
             url: "https://github.com/holzschu/ios_system/releases/download/2.7/perlB.xcframework.zip",
-            checksum: "67266f5278203f9ff7f080502e2095bd7a4e3d12b645a63a34d03d3e89c41131"
+            checksum: "fd2ca9fb3853aba1d6744c03db6cc88783d170ed0c119bd97e8ebe6fa3ec30b3"
         ),
         .binaryTarget(
             name: "make",
             url: "https://github.com/holzschu/ios_system/releases/download/2.7/make.xcframework.zip",
-            checksum: "397bc5bb13a6e349d0f72d508eb5edc46afb4547e99ab298f034ff6f0e3bfdb0"
-        ),
-        //
-        .target(
-            name: "build",
-            dependencies: ["FMake"]
-        ), 
+            checksum: "942a05e1cd165c4fb955b274e08a1069e388ae6706770e617e47ce55927b2b2f"
+        )
     ]
 )
