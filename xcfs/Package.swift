@@ -214,6 +214,11 @@ _ = Package(
             name: "make",
             url: "https://github.com/holzschu/ios_system/releases/download/2.7/make.xcframework.zip",
             checksum: "942a05e1cd165c4fb955b274e08a1069e388ae6706770e617e47ce55927b2b2f"
-        )
+        ),
+        //
+        .target(
+            name: "build",
+            dependencies: ["FMake"]
+        ), 
     ]
 )
