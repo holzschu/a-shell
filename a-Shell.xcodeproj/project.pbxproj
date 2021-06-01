@@ -548,6 +548,10 @@
 		22E9F585255846A600673D11 /* lua_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F583255846A500673D11 /* lua_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22E9F5A2255846F400673D11 /* vim.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5A0255846F300673D11 /* vim.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22E9F5A72558470600673D11 /* bc_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5A52558470600673D11 /* bc_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22EA905B266696A800CC9B88 /* wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 22EA905A266696A700CC9B88 /* wasm.js */; };
+		22EA905C266696CA00CC9B88 /* wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 22EA905A266696A700CC9B88 /* wasm.js */; };
+		22EA905E266698E000CC9B88 /* script.js in Resources */ = {isa = PBXBuildFile; fileRef = 22EA905D266698DD00CC9B88 /* script.js */; };
+		22EA905F266698ED00CC9B88 /* script.js in Resources */ = {isa = PBXBuildFile; fileRef = 22EA905D266698DD00CC9B88 /* script.js */; };
 		22F04B4824EFF9B900F9F30A /* pythonA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22C9815024CADA4E006C103E /* pythonA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F20175264E82BA004FBA5C /* perlA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20174264E81E1004FBA5C /* perlA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F20178265260C2004FBA5C /* perlB.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20177265260B7004FBA5C /* perlB.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1442,6 +1446,8 @@
 		22E9F583255846A500673D11 /* lua_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lua_ios.xcframework; path = xcfs/.build/artifacts/xcfs/lua_ios.xcframework; sourceTree = SOURCE_ROOT; };
 		22E9F5A0255846F300673D11 /* vim.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = vim.xcframework; path = xcfs/.build/artifacts/xcfs/vim.xcframework; sourceTree = SOURCE_ROOT; };
 		22E9F5A52558470600673D11 /* bc_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bc_ios.xcframework; path = xcfs/.build/artifacts/xcfs/bc_ios.xcframework; sourceTree = SOURCE_ROOT; };
+		22EA905A266696A700CC9B88 /* wasm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm.js; sourceTree = "<group>"; };
+		22EA905D266698DD00CC9B88 /* script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = script.js; sourceTree = "<group>"; };
 		22F20174264E81E1004FBA5C /* perlA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlA.xcframework; path = xcfs/.build/artifacts/xcfs/perlA.xcframework; sourceTree = SOURCE_ROOT; };
 		22F20177265260B7004FBA5C /* perlB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlB.xcframework; path = xcfs/.build/artifacts/xcfs/perlB.xcframework; sourceTree = SOURCE_ROOT; };
 		22F75D40265FA3500056AFD2 /* xxd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xxd.xcframework; path = xcfs/.build/artifacts/xcfs/xxd.xcframework; sourceTree = SOURCE_ROOT; };
@@ -1666,7 +1672,6 @@
 		22984EE122C93DBC00069497 = {
 			isa = PBXGroup;
 			children = (
-				223FC3C22611F57C00CDC89F /* wasm.html */,
 				223FC3CA2611F9C300CDC89F /* wasm.html */,
 				22AD8712246B3ACA00F415DE /* Intents.intentdefinition */,
 				22BF6242231589DB00FEA585 /* Settings.bundle */,
@@ -1910,6 +1915,9 @@
 		22B1B81A22CB9E5500F7C452 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				223FC3C22611F57C00CDC89F /* wasm.html */,
+				22EA905A266696A700CC9B88 /* wasm.js */,
+				22EA905D266698DD00CC9B88 /* script.js */,
 				22942C41264037AB004BEA41 /* Perl */,
 				2231A51D258923D900B5EDFD /* ImageMagick-7 */,
 				22239A6124FFF9C90069E539 /* Library */,
@@ -2219,6 +2227,8 @@
 				229BAF4222E8A73A00C2269B /* hterm.html in Resources */,
 				223FC3CB2611F9C400CDC89F /* wasm.html in Resources */,
 				229BAF4322E8A73A00C2269B /* hterm_all.js in Resources */,
+				22EA905B266696A800CC9B88 /* wasm.js in Resources */,
+				22EA905F266698ED00CC9B88 /* script.js in Resources */,
 				22BF623E23157F2400FEA585 /* cacert.pem in Resources */,
 				226012EF231D239500AEB059 /* texCommandsDictionary.plist in Resources */,
 				22601307232195AD00AEB059 /* luatexCommandsDictionary.plist in Resources */,
@@ -2254,6 +2264,8 @@
 				229D2490257931E4004A78AC /* hterm.html in Resources */,
 				223FC3C32611F57D00CDC89F /* wasm.html in Resources */,
 				229D2491257931E4004A78AC /* hterm_all.js in Resources */,
+				22EA905C266696CA00CC9B88 /* wasm.js in Resources */,
+				22EA905E266698E000CC9B88 /* script.js in Resources */,
 				229D2492257931E4004A78AC /* cacert.pem in Resources */,
 				229D2495257931E4004A78AC /* LaunchScreen.storyboard in Resources */,
 				229D2497257931E4004A78AC /* Preview Assets.xcassets in Resources */,
@@ -2421,7 +2433,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-IntentsUI/a-Shell-mini-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2444,7 +2456,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-IntentsUI/a-Shell-mini-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2467,7 +2479,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-Intents/a-Shell-mini-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2490,7 +2502,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-Intents/a-Shell-mini-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2638,7 +2650,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2682,7 +2694,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2725,7 +2737,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2769,7 +2781,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2810,7 +2822,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2837,7 +2849,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2864,7 +2876,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2887,7 +2899,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 161;
+				CURRENT_PROJECT_VERSION = 163;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
