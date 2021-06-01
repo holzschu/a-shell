@@ -669,7 +669,6 @@ lib.colors.crackRGB = function(color) {
     }
   }
 
-  window.webkit.messageHandlers.aShell.postMessage('Couldn\'t crack: ' + color);
   console.error('Couldn\'t crack: ' + color);
   return null;
 };
@@ -2003,7 +2002,6 @@ lib.MessageManager.prototype.processI18nAttribute = function(node) {
   try {
     i18n = JSON.parse(i18n);
   } catch (ex) {
-	window.webkit.messageHandlers.aShell.postMessage('Can\'t parse ' + node.tagName + '#' + node.id + ': ' + i18n);
     console.error('Can\'t parse ' + node.tagName + '#' + node.id + ': ' + i18n);
     throw ex;
   }
@@ -3081,7 +3079,6 @@ lib.Storage.Chrome.prototype.setItem = function(key, value, opt_callback) {
         setTimeout(() => this.setItem(key, value, onComplete), 1000);
         return;
       } else {
-		window.webkit.messageHandlers.aShell.postMessage(`Unknown runtime error: ${err}`);
         console.error(`Unknown runtime error: ${err}`);
       }
     }
@@ -4633,8 +4630,6 @@ hterm.getClientHeight = function(dom) {
  * @param {string} str The string data to copy out.
  */
 hterm.copySelectionToClipboard = function(document, str) {
-	window.webkit.messageHandlers.aShell.postMessage('hterm.copySelectionToClipboard: '  + str); 
-
   // Request permission if need be.
   const requestPermission = () => {
     // Use the Permissions API if available.
@@ -4672,7 +4667,6 @@ hterm.copySelectionToClipboard = function(document, str) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       // If this fails (perhaps due to focus changing windows), fallback to the
       // legacy copy method.
-	  window.webkit.messageHandlers.aShell.postMessage('writing to clipboard: ' + str);
       return navigator.clipboard.writeText(str)
         .catch(execCommand);
     } else {
@@ -4993,7 +4987,6 @@ hterm.AccessibilityReader = function(div) {
                               width: 0; height: 0;
                               overflow: hidden;
                               left: 0; top: 0;`;
-                          //     left: -1000px; top: -1000px;`;
   div.appendChild(liveRegion);
 
   // Whether command output should be rendered for Assistive Technology.
@@ -6043,7 +6036,6 @@ hterm.Keyboard.prototype.onTextInput_ = function(e) {
 hterm.Keyboard.prototype.onKeyPress_ = function(e) {
   // FF doesn't set keyCode reliably in keypress events.  Stick to the which
   // field here until we can move to keydown entirely.
-
   const key = String.fromCharCode(e.which).toLowerCase();
   if ((e.ctrlKey || e.metaKey) && (key == 'c' || key == 'v')) {
     // On FF the key press (not key down) event gets fired for copy/paste.
@@ -6101,7 +6093,6 @@ hterm.Keyboard.prototype.onFocusOut_ = function(e) {
 };
 
 hterm.Keyboard.prototype.onKeyUp_ = function(e) {
-	
   if (e.keyCode == 18)
     this.altKeyPressed = this.altKeyPressed & ~(1 << (e.location - 1));
 
@@ -6113,7 +6104,6 @@ hterm.Keyboard.prototype.onKeyUp_ = function(e) {
  * Handle onKeyDown events.
  */
 hterm.Keyboard.prototype.onKeyDown_ = function(e) {
-	
   if (e.keyCode == 18)
     this.altKeyPressed = this.altKeyPressed | (1 << (e.location - 1));
 
@@ -6125,7 +6115,6 @@ hterm.Keyboard.prototype.onKeyDown_ = function(e) {
     // If this key hasn't been explicitly registered, fall back to the unknown
     // key mapping (keyCode == 0), and then automatically register it to avoid
     // any further warnings here.
-    window.webkit.messageHandlers.aShell.postMessage('No definition for key ' + e.key + '(keyCode: ' + e.keyCode + ')'); 
     console.warn(`No definition for key ${e.key} (keyCode ${e.keyCode})`);
     keyDef = this.keyMap.keyDefs[0];
     this.keyMap.addKeyDef(e.keyCode, keyDef);
@@ -9217,7 +9206,6 @@ hterm.Screen.prototype.commitLineOverflow = function() {
  * @param {integer} column The zero based column.
  */
 hterm.Screen.prototype.setCursorPosition = function(row, column) {
-  	
   if (!this.rowsArray.length) {
     console.warn('Attempt to set cursor position on empty screen.');
     return;
@@ -9278,7 +9266,6 @@ hterm.Screen.prototype.setCursorPosition = function(row, column) {
     currentColumn += width;
     node = node.nextSibling;
   }
-  	
 };
 
 /**
@@ -9287,7 +9274,13 @@ hterm.Screen.prototype.setCursorPosition = function(row, column) {
  */
 hterm.Screen.prototype.syncSelectionCaret = function(selection) {
   try {
-    selection.collapse(this.cursorNode_, this.cursorOffset_);
+  	if (this.cursorNode_.innerHTML != undefined) {
+  	  // The issue with cursor position in vim is here: if innerHTML is not undefined, 
+  	  // selection.collapse() ends in the wrong position.
+      selection.collapse(this.cursorNode_, this.cursorOffset_);
+	} else {
+      selection.collapse(this.cursorNode_, this.cursorOffset_);
+	}
   } catch (firefoxIgnoredException) {
     window.webkit.messageHandlers.aShell.postMessage('selection.collapse triggered exception: '  + firefoxIgnoredException); 
     // FF can throw an exception if the range is off, rather than just not
@@ -9384,7 +9377,6 @@ hterm.Screen.prototype.maybeClipCurrentRow = function() {
  * using hterm.Screen..commitLineOverflow().
  */
 hterm.Screen.prototype.insertString = function(str, wcwidth=undefined) {
-  	
   var cursorNode = this.cursorNode_;
   var cursorNodeText = cursorNode.textContent;
 
@@ -10295,7 +10287,6 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
                                               this.onResize_.bind(this));
 
   var doc = this.document_ = this.iframe_.contentDocument;
- 
   doc.body.style.cssText = (
       'margin: 0px;' +
       'padding: 0px;' +
@@ -10439,7 +10430,6 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
   this.allowScrollButtonsToDisplay_ = false;
   setTimeout(() => { this.allowScrollButtonsToDisplay_ = true; }, 500);
   this.document_.addEventListener('selectionchange', (e) => {
-      
     this.selection.sync();
 
     if (!this.allowScrollButtonsToDisplay_)
@@ -11575,13 +11565,11 @@ hterm.ScrollPort.prototype.onTouch = function(e) {
  * Handler for touch events.
  */
 hterm.ScrollPort.prototype.onTouch_ = function(e) {
-	
   this.onTouch(e);
 
   if (e.defaultPrevented)
     return;
 
-	
   // Extract the fields from the Touch event that we need.  If we saved the
   // event directly, it has references to other objects (like x-row) that
   // might stick around for a long time.  This way we only have small objects
@@ -12889,7 +12877,6 @@ hterm.Terminal.prototype.setWidth = function(columnCount) {
   this.div_.style.width = Math.ceil(
       this.scrollPort_.characterSize.width *
       columnCount + this.scrollPort_.currentScrollbarWidthPx) - 2 + 'px';
-
   this.realizeSize_(columnCount, this.screenSize.height);
   this.scheduleSyncCursorPosition_();
 };
@@ -13720,7 +13707,6 @@ hterm.Terminal.prototype.print = function(str) {
       didOverflow = true;
       count = this.screenSize.width - this.screen_.cursorPosition.column;
     }
-      
 
     if (didOverflow && !this.options_.wraparound) {
       // If the string overflowed the line but wraparound is off, then the
@@ -13733,9 +13719,7 @@ hterm.Terminal.prototype.print = function(str) {
       substr = lib.wc.substr(str, startOffset, count);
     }
 
-	  
     var tokens = hterm.TextAttributes.splitWidecharString(substr);
-
     for (var i = 0; i < tokens.length; i++) {
       this.screen_.textAttributes.wcNode = tokens[i].wcNode;
       this.screen_.textAttributes.asciiNode = tokens[i].asciiNode;
@@ -14936,8 +14920,6 @@ hterm.Terminal.prototype.paste = function() {
  * @param {string} str The string to copy.
  */
 hterm.Terminal.prototype.copyStringToClipboard = function(str) {
-	window.webkit.messageHandlers.aShell.postMessage('copyStringToClipboard: '  + str); 
-	
   if (this.prefs_.get('enable-clipboard-notice'))
     setTimeout(this.showOverlay.bind(this, hterm.notifyCopyMessage, 500), 200);
 
@@ -15451,7 +15433,6 @@ hterm.Terminal.prototype.onMouse_ = function(e) {
           (this.mouseRightClickPaste && e.button == 2 /* right button */)) {
         if (!this.paste())
           console.warn('Could not paste manually due to web restrictions');
-	      window.webkit.messageHandlers.aShell.postMessage('Could not paste manually due to web restrictions'); 
       }
     }
 
@@ -15947,7 +15928,6 @@ hterm.Terminal.IO.prototype.writeUTF16 = function(string) {
   // If another process has the foreground IO, buffer new data sent to this IO
   // (since it's in the background).  When we're made the foreground IO again,
   // we'll flush everything.
-
   if (this.terminal_.io != this) {
     this.buffered_ += string;
     return;
@@ -16253,11 +16233,9 @@ hterm.TextAttributes.prototype.createContainer = function(opt_textContent) {
  *     this attributes instance.
  */
 hterm.TextAttributes.prototype.matchesContainer = function(obj) {
-
-  if (typeof obj == 'string' || obj.nodeType == Node.TEXT_NODE) {
+  if (typeof obj == 'string' || obj.nodeType == Node.TEXT_NODE)
     return this.isDefault();
-  }
-	
+
   var style = obj.style;
 
   // We don't want to put multiple characters in a wcNode or a tile.
@@ -16300,7 +16278,6 @@ hterm.TextAttributes.prototype.setDefaults = function(foreground, background) {
  *
  */
 hterm.TextAttributes.prototype.syncColors = function() {
-
   function getBrightIndex(i) {
     if (i < 8) {
       // If the color is from the lower half of the ANSI 16, add 8.
@@ -17047,7 +17024,6 @@ hterm.VT.prototype.onTerminalMouse_ = function(e) {
  * The buffer will be decoded according to the 'receive-encoding' preference.
  */
 hterm.VT.prototype.interpret = function(buf) {
-
   this.parseState_.resetBuf(buf);
 
   while (!this.parseState_.isComplete()) {
@@ -17059,8 +17035,7 @@ hterm.VT.prototype.interpret = function(buf) {
 
     if (this.parseState_.func == func && this.parseState_.pos == pos &&
         this.parseState_.buf == buf) {
-		window.webkit.messageHandlers.aShell.postMessage('Parser did not alter the state!');
-		throw 'Parser did not alter the state!';
+      throw 'Parser did not alter the state!';
     }
   }
 };
@@ -17073,7 +17048,6 @@ hterm.VT.prototype.interpret = function(buf) {
 hterm.VT.prototype.setEncoding = function(encoding) {
   switch (encoding) {
     default:
-		window.webkit.messageHandlers.aShell.postMessage('Invalid value for "terminal-encoding": ' + encoding);
       console.warn('Invalid value for "terminal-encoding": ' + encoding);
       // Fall through.
     case 'iso-2022':
@@ -17119,7 +17093,6 @@ hterm.VT.prototype.parseUnknown_ = function(parseState) {
   function print(str) {
     if (!self.codingSystemUtf8_ && self[self.GL].GL)
       str = self[self.GL].GL(str);
-
 
     self.terminal.print(str);
   }
