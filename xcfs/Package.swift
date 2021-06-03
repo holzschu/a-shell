@@ -110,12 +110,12 @@ _ = Package(
         .binaryTarget(
             name: "vim",
             url: "https://github.com/holzschu/vim/releases/download/ios_1.0/vim.xcframework.zip",
-            checksum: "b490cce70155afa85cb7477f248b625f3da3359a47d29aa67d5ada849588f9df"
+            checksum: "217b49891a0f75cf1a8e62d011e488d6a9b684831423642a511038826c6f8613"
         ),
         .binaryTarget(
             name: "xxd",
             url: "https://github.com/holzschu/vim/releases/download/ios_1.0/xxd.xcframework.zip",
-            checksum: "51564908abd1e19678d24e424ed32bb4e39dd8e177e5d27a8b851402ea15937b"
+            checksum: "fa5ec10eac43280b18bbec877144647ac6b8d662a1c2671e56b254e12ed5b5db"
         ),
         // LLVM:
         .binaryTarget(
