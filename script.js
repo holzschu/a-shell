@@ -855,8 +855,7 @@ function setupHterm() {
 					case String.fromCharCode(32): // Space: end auto-complete
 						disableAutocompleteMenu(); 
 					default:
-						window.webkit.messageHandlers.aShell.postMessage('onVTKeyStroke received ' + string);									
-						window.webkit.messageHandlers.aShell.postMessage('selection: ' + this.document_.getSelection().type + ' ' + this.document_.getSelection().isCollapsed);
+						// window.webkit.messageHandlers.aShell.postMessage('onVTKeyStroke received ' + string);
 						// insert character at cursor position:
 						// DID NOT CUT?? What is my selection? 
 						if (this.document_.getSelection().type == 'Range') {
@@ -883,6 +882,7 @@ function setupHterm() {
 			}
 		};
 		term.moveCursorPosition = function(y, x) {
+		    // window.webkit.messageHandlers.aShell.postMessage('moveCursorPosition ' + x + ' ' + y);
 			// If currentCommand is empty, update prompt position (JS is asynchronous, position might have been computed before the end of the scroll)
 			if (io.currentCommand === '') { 
 				updatePromptPosition(); 
@@ -1808,9 +1808,12 @@ hterm.Terminal.prototype.realizeWidth_ = function(columnCount) {
   }
 
   // iOS addition: reset the caret at each resize (includes switching to/from alternate screen)
-  if (!this.isPrimaryScreen()) {
+  if (!this.isPrimaryScreen() && window.commandRunning.startsWith('vim')) {
 	  this.setCssVar('caret-color', 'transparent'); // iOS 13 addition
 	  this.scrollPort_.screen_.style.setProperty('caret-color', 'transparent'); // iOS 13 addition
+	  this.scrollPort_.screen_.style.setProperty('--hterm-caret-color', 'transparent'); // iOS 13 addition
+	  document.getElementsByTagName("html")[0].style.setProperty('caret-color', 'transparent'); 
+	  document.getElementsByTagName("html")[0].style.setProperty('--hterm-caret-color', 'transparent'); 
   } else {
 	  this.setCursorColor(window.cursorColor); 
   }
