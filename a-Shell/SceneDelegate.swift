@@ -610,13 +610,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // print(result)
                 }
             }
-            command = "window.term_.prefs_.set('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.set('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.set('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.set('font-size', '\(fontSize)'); window.term_.prefs_.set('font-family', '\(fontName)');"
+            command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');"
             self.webView?.evaluateJavaScript(command) { (result, error) in
                 if error != nil {
-                    // print(error)
+                    print(error)
                 }
                 if (result != nil) {
-                    // print(result)
+                    print(result)
                 }
             }
         }
@@ -1938,13 +1938,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             // print(result)
                         }
                     }
-                    command = "window.term_.prefs_.set('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.set('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.set('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.set('font-size', '\(fontSize)'); window.term_.prefs_.set('font-family', '\(fontName)');"
+                    command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');"
                     self.webView!.evaluateJavaScript(command) { (result, error) in
                         if error != nil {
+                            NSLog("Error in sceneDidBecomeActive, line = \(command)")
                             print(error)
                         }
                         if (result != nil) {
-                            // print(result)
+                            print(result)
                         }
                     }
                 }

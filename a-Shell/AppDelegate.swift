@@ -303,6 +303,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("MULTIDICT_NO_EXTENSIONS", "1", 1)
         // This one is not required, but it helps:
         setenv("DISABLE_SQLALCHEMY_CEXT", "1", 1)
+        // Only for debugging, disable before shipping
+        setenv("CG_NUMERICS_SHOW_BACKTRACE", "1", 1)
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
         if (appVersion != "a-Shell-mini") {
