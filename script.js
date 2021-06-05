@@ -1935,3 +1935,52 @@ hterm.VT.CSI['?n'] = function(parseState) {
   }
 };
 
+/**
+ * Set a preference to a specific value.
+ *
+ * This will dispatch the onChange handler if the preference value actually
+ * changes.
+ *
+ * @param {string} name The preference to set.
+ * @param {*} newValue The value to set.  Anything that can be represented in
+ *     JSON is a valid value.
+ * @param {function()=} onComplete Callback when the set call completes.
+ * @param {boolean=} saveToStorage Whether to commit the change to the backing
+ *     storage or only the in-memory record copy.
+ * @return {!Promise<void>} Promise which resolves once all observers are
+ *     notified.
+ */
+// synchronous version, to be used when called from Swift/WKWebView
+lib.PreferenceManager.prototype.setSync = function(
+    name, newValue, onComplete = undefined, saveToStorage = true) {
+  const record = this.prefRecords_[name];
+  if (!record) {
+    throw new Error('Unknown preference: ' + name);
+  }
+
+  const oldValue = record.get();
+
+  if (!this.diff(oldValue, newValue)) {
+    return; 
+  }
+
+  if (this.diff(record.defaultValue, newValue)) {
+    record.currentValue = newValue;
+    if (saveToStorage) {
+      this.storage.setItem(this.prefix + name, newValue).then(onComplete);
+    }
+  } else {
+    record.currentValue = this.DEFAULT_VALUE;
+    if (saveToStorage) {
+      this.storage.removeItem(this.prefix + name).then(onComplete);
+    }
+  }
+
+  // We need to manually send out the notification on this instance.  If we
+  // The storage event won't fire a notification because we've already changed
+  // the currentValue, so it won't see a difference.  If we delayed changing
+  // currentValue until the storage event, a pref read immediately after a write
+  // would return the previous value.
+  this.notifyChange_(name);
+};
+
