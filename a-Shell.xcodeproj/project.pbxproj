@@ -1318,7 +1318,7 @@
 		227B4E81252CD4B60052D056 /* pythonA-numpy.random._common.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-numpy.random._common.xcframework"; path = "cpython/XcFrameworks/pythonA-numpy.random._common.xcframework"; sourceTree = SOURCE_ROOT; };
 		227B4E82252CD4B60052D056 /* pythonA-numpy.random._pcg64.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-numpy.random._pcg64.xcframework"; path = "cpython/XcFrameworks/pythonA-numpy.random._pcg64.xcframework"; sourceTree = SOURCE_ROOT; };
 		227B4E83252CD4B60052D056 /* pythonA-numpy.core._multiarray_umath.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-numpy.core._multiarray_umath.xcframework"; path = "cpython/XcFrameworks/pythonA-numpy.core._multiarray_umath.xcframework"; sourceTree = SOURCE_ROOT; };
-		228E13F225C95F2D0065D825 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = ../ios_system/.build/ios_system.xcframework; sourceTree = "<group>"; };
+		228E13F225C95F2D0065D825 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = xcfs/.build/artifacts/xcfs/ios_system.xcframework; sourceTree = "<group>"; };
 		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIColor+hexString.swift"; path = "Util/UIColor+hexString.swift"; sourceTree = SOURCE_ROOT; };
 		22942C3F263F15B1004BEA41 /* perl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perl.xcframework; path = xcfs/.build/artifacts/xcfs/perl.xcframework; sourceTree = SOURCE_ROOT; };
 		22942C41264037AB004BEA41 /* Perl */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Perl; path = Resources/Perl; sourceTree = "<group>"; };
@@ -1434,7 +1434,7 @@
 		22DC1F83257012190068004E /* openssl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = openssl.xcframework; path = xcfs/.build/artifacts/xcfs/openssl.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F86257012B70068004E /* ar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ar.xcframework; path = xcfs/.build/artifacts/xcfs/ar.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F89257012F50068004E /* files.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = files.xcframework; path = xcfs/.build/artifacts/xcfs/files.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F8B257012F50068004E /* ssh_cmd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_cmd.xcframework; path = ../ios_system/.build/ssh_cmd.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F8B257012F50068004E /* ssh_cmd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_cmd.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_cmd.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F8D257012F50068004E /* tar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = tar.xcframework; path = xcfs/.build/artifacts/xcfs/tar.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F8E257012F50068004E /* awk.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = awk.xcframework; path = xcfs/.build/artifacts/xcfs/awk.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F8F257012F50068004E /* text.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = text.xcframework; path = xcfs/.build/artifacts/xcfs/text.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2433,7 +2433,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-IntentsUI/a-Shell-mini-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2442,7 +2442,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.a-Shell-mini-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -2456,7 +2456,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-IntentsUI/a-Shell-mini-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2465,7 +2465,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.a-Shell-mini-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -2479,7 +2479,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-Intents/a-Shell-mini-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2488,7 +2488,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.a-Shell-mini-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -2502,7 +2502,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-Intents/a-Shell-mini-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2511,7 +2511,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.a-Shell-mini-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -2650,7 +2650,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2670,7 +2670,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -2694,7 +2694,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2714,7 +2714,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -2737,7 +2737,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2757,7 +2757,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -2781,7 +2781,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2801,7 +2801,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -2822,7 +2822,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2834,7 +2834,7 @@
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -2849,7 +2849,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2861,7 +2861,7 @@
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -2876,7 +2876,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2884,7 +2884,7 @@
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -2899,7 +2899,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 164;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2907,7 +2907,7 @@
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.7.2;
+				MARKETING_VERSION = 1.7.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
