@@ -100,10 +100,10 @@ extension WKWebView {
     }
 
     func focus() {
-        let command = "window.term_.onFocusChange_(true)"
+        let command = "window.term_.onFocusChange_(true); window.term_.scrollEnd();"
         self.evaluateJavaScript(command) { result, error in
             if let error = error {
-                // print(error)
+                print(error)
             }
             if let result = result {
                 // print(result)
@@ -115,7 +115,7 @@ extension WKWebView {
         let command = "window.term_.onFocusChange_(false)"
         self.evaluateJavaScript(command) { result, error in
             if let error = error {
-                // print(error)
+                print(error)
             }
             if let result = result {
                 // print(result)

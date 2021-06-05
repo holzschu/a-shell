@@ -951,7 +951,6 @@ function setupHterm() {
 		this.keyboard.characterEncoding = 'raw';
 		// this.keyboard.bindings.addBinding('F11', 'PASS');
 		// this.keyboard.bindings.addBinding('Ctrl-R', 'PASS');
-
 	};
 	term.decorate(document.querySelector('#terminal'));
 	term.installKeyboard();

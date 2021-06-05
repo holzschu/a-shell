@@ -58,36 +58,37 @@ struct ContentView: View {
         // Now map the merged notification stream into a height value.
         .map { (note) -> CGFloat in
             let height = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).size.height
+            let x = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).origin.x
+            let y = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).origin.y
             let userInfo = note.userInfo
-            // NSLog("Received \(note.name.rawValue) with height \(height)")
-            // This is really annoying. Based on values from simulator.
-            // Need to redo everything?
-            if (height == 336) { return 306 } // Bug in iPhone 11 & 11 Pro Max, keyboard overestimated
-            if (height == 89) { return 35 } // Bug in iPhone 11 with external keyboard, keyboard overestimated
-            if (height == 326) { return 306 } // Bug in iPhone 11 Pro, keyboard is overestimated.
-            if (height == 400) { return 380 } // Bug in iPad Pro 12.9 inch 3rd Gen
-            if (height == 398) { return 380 } // Bug in iPad Pro 12.9 inch 3rd Gen
-            if (height == 493) { return 476 } // Bug in iPad Pro 12.9 inch 3rd Gen
-            if (height == 50) { return 40 } // Bug in iPad Pro 12.9 inch 3rd Gen with external keyboard
+            // NSLog("Received \(note.name.rawValue) with height \(height) origin: \(x) -- \(y)")
+            // if (height > 200) && (x > 0) {
+            //     NSLog("Undetected floating keyboard detected")
+            // }
             // We have no way to make the difference between "no keyboard on screen" and "external kb connected"
-            // (some BT keyboards do not register as such)
+            // (some BT keyboards do not register as such) (also floating keyboards have null height)
+            // height == 0 ==> there's probably a keyboard, but we didn't detect it.
+            // height != 0 ==> there is a keyboard, and iOS did detect it, so no need to change the height.
+            // A bit counter-intuitive, but it works.
+            // Except sometimes with a floating keyboard, we get h = 324 and view not set.
             if (height == 0) { return 40 } // At least the size of the toolbar -- if no keyboard present
-            return height
+            else if (height > 200) && (x > 0) { return 40 } // Floating keyboard not detected
+            else { return 0 }
     }
     
     let webview = Webview()
     
     var body: some View {
-        if #available(iOS 14.0, *) {
+        /* if #available(iOS 14.0, *) {
             // on iOS 14, it seems that the webview adapts to the size of the keyboard.
             // Well, at least on the simulator.
             webview.padding(.top, 0)
-        } else {
+        } else { */
             // resize depending on keyboard. Specify size (.frame) instead of padding.
             webview.onReceive(keyboardChangePublisher) { self.keyboardHeight = $0 }
                 .padding(.top, 0) // Important, to set the size of the view
                 .padding(.bottom, keyboardHeight)
-        }
+        // }
     }
 }
 

@@ -292,7 +292,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript("window.commandRunning = ''; window.printPrompt(); window.updatePromptPosition();") { (result, error) in
                 if error != nil {
-                    // print(error)
+                    print(error)
                 }
                 if (result != nil) {
                     // print(result)
@@ -604,10 +604,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript(command) { (result, error) in
                 if error != nil {
-                    // print(error)
+                    print(error)
                 }
                 if (result != nil) {
-                    // print(result)
+                    print(result)
                 }
             }
             command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');"
@@ -629,7 +629,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(fontSizeCommand) { (result, error) in
                     if error != nil {
-                        //  print(error)
+                        print(error)
                     }
                     if (result != nil) {
                         // print(result)
@@ -939,7 +939,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Only remap the keys if we are in a notebook, editing cell:
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + sender.input! + "\");") { (result, error) in
             if error != nil {
-                // print(error)
+                print(error)
             }
             if (result != nil) {
                 // print(result)
@@ -1217,7 +1217,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // Sync issues: it could be executed before the string has been added to io.currentCommand
                 webView?.evaluateJavaScript("window.term_.io.currentCommand = window.term_.io.currentCommand.substr(\(command.count));") { (result, error) in
                     if error != nil {
-                        // print(error)
+                        print(error)
                     }
                     if (result != nil) {
                         // print(result)
@@ -1304,7 +1304,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 DispatchQueue.main.async {
                     self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
                         if error != nil {
-                            // print(error)
+                            print(error)
                         }
                         if (result != nil) {
                             // print(result)
@@ -1535,7 +1535,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
                     NSLog("Error in creating command list, line = \(javascriptCommand)")
-                    // print(error)
+                    print(error)
                 }
                 if (result != nil) {
                     // print(result)
@@ -1639,7 +1639,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     let restoreCommand = "window.term_.io.println(\"Executing URL: \(command)\"); window.commandToExecute = '" + command + "';"
                     self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
                         if error != nil {
-                            // print(error)
+                            print(error)
                         }
                         if (result != nil) {
                             // print(result)
@@ -1667,7 +1667,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     let openFileCommand = "window.commandRunning = 'vim';"
                     self.webView?.evaluateJavaScript(openFileCommand) { (result, error) in
                         if error != nil {
-                            // print(error)
+                            print(error)
                         }
                         if (result != nil) {
                             // print(result)
@@ -1710,7 +1710,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                 if error != nil {
                                     let userInfo = (error! as NSError).userInfo
                                     NSLog("error: " + (userInfo["WKJavaScriptExceptionMessage"] as? String)!)
-                                    // print(error)
+                                    print(error)
                                 }
                                 if (result != nil) {
                                     NSLog("result: " + (result as! String))
@@ -1722,8 +1722,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             
-            NotificationCenter.default
+           NotificationCenter.default
                 .publisher(for: UIWindow.didBecomeKeyNotification, object: window)
+                .merge(with: NotificationCenter.default
+                        .publisher(for: UIResponder.keyboardWillShowNotification))
                 .handleEvents(receiveOutput: { notification in
                     NSLog("didBecomeKey: \(notification.name.rawValue): \(session.persistentIdentifier).")
                 })
@@ -1988,7 +1990,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
                     NSLog("Error in recreating history, line = \(javascriptCommand)")
-                    // print(error)
+                    print(error)
                 }
                 if (result != nil) {
                     // print(result)x
@@ -2051,7 +2053,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
                     // NSLog("Error in resetting terminal, line = \(javascriptCommand)")
-                    // print(error)
+                    print(error)
                 }
                 // if (result != nil) { print(result) }
             }
@@ -2188,7 +2190,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                     completionHandler: { (printedContent: Any?, error: Error?) in
                                         if error != nil {
                                             NSLog("Error in capturing terminal content: \(error!.localizedDescription)")
-                                            // print(error)
+                                            print(error)
                                         }
                                         if (printedContent != nil) {
                                             scene.session.stateRestorationActivity?.userInfo!["terminal"] = printedContent
@@ -2256,8 +2258,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {
             self.webView!.evaluateJavaScript(command) { (result, error) in
                 if error != nil {
-                    // NSLog("Error in print; offending line = \(parsedString)")
-                    // print(error)
+                    NSLog("Error in print; offending line = \(parsedString)")
+                    print(error)
                 }
                 if (result != nil) {
                     // print(result)
