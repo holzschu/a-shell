@@ -1909,8 +1909,7 @@
 				22AD8722246EBFFB00F415DE /* IntentsUI.framework */,
 			);
 			name = Frameworks;
-			path = "../../../../../../../../src/Xcode_iPad/a-Shell";
-			sourceTree = BUILT_PRODUCTS_DIR;
+			sourceTree = SOURCE_ROOT;
 		};
 		22B1B81A22CB9E5500F7C452 /* Resources */ = {
 			isa = PBXGroup;
@@ -1994,8 +1993,7 @@
 				22DC1F83257012190068004E /* openssl.xcframework */,
 			);
 			name = openssl;
-			path = "../../../../../../../../src/Xcode_iPad/a-Shell";
-			sourceTree = BUILT_PRODUCTS_DIR;
+			sourceTree = SOURCE_ROOT;
 		};
 		22DC1F88257012E60068004E /* ios_system */ = {
 			isa = PBXGroup;
