@@ -23,10 +23,10 @@ function initContent(io) {
 function isInteractive(commandString) {
 	// If the command is interactive or contains interactive commands, set the flag,
 	// forward all keyboard input, let them deal with command history.
-	// TODO: have a list of such interactive commands (array?) 
-	// jump can start vim 
+	// Commands that call CPR (Cursor Position Request) are not in the list because we detect them separately
+	// (vim, ipython, ptpython, jupyter-console...) (see hterm.VT.CSI['n'])
 	// ssh and ssh-keygen (new version) are both interactive. So is scp. sftp is interactive until connected.
-	let interactiveRegexp = /^vim|^ipython|^ptpython|^less|^more|^ssh|^scp|^sftp|^jump|\|&? *less|\|&? *more|^man/;
+	let interactiveRegexp = /^less|^more|^ssh|^scp|^sftp|\|&? *less|\|&? *more|^man/;
 	return interactiveRegexp.test(commandString) 
 	// It's easier to match a regexp, then take the negation than to test a regexp that does not contain a pattern:
 	// This is disabled for now, but kept in case it can become useful again.
@@ -1873,6 +1873,65 @@ hterm.Terminal.IO.prototype.writeUTF16 = function(string) {
   // to restore terminal status later and resize.
   if (this.terminal_.isPrimaryScreen()) {
      window.printedContent += string;
+  }
+};
+
+
+// If a command sends a Cursor Position Request (CPR), then it must be an interactive command, 
+// so we set up window.interactiveCommandRunning to true. There are two CPR functions. The former
+// seems to be used more often than the latter.
+/**
+ * Device Status Report (DSR, DEC Specific).
+ *
+ * 5 - Status Report. Result (OK) is CSI 0 n
+ * 6 - Report Cursor Position (CPR) [row;column]. Result is CSI r ; c R
+ *
+ * @this {!hterm.VT}
+ * @param {!hterm.VT.ParseState} parseState
+ */
+hterm.VT.CSI['n'] = function(parseState) {
+  if (parseState.args[0] == 5) {
+    this.terminal.io.sendString('\x1b0n');
+  } else if (parseState.args[0] == 6) {
+	window.webkit.messageHandlers.aShell.postMessage('CPR request (n)');
+	window.interactiveCommandRunning = true;
+    const row = this.terminal.getCursorRow() + 1;
+    const col = this.terminal.getCursorColumn() + 1;
+    this.terminal.io.sendString('\x1b[' + row + ';' + col + 'R');
+  }
+};
+
+/**
+ * Device Status Report (DSR, DEC Specific).
+ *
+ * 6  - Report Cursor Position (CPR) [row;column] as CSI ? r ; c R
+ * 15 - Report Printer status as CSI ? 1 0 n (ready) or
+ *      CSI ? 1 1 n (not ready).
+ * 25 - Report UDK status as CSI ? 2 0 n (unlocked) or CSI ? 2 1 n (locked).
+ * 26 - Report Keyboard status as CSI ? 2 7 ; 1 ; 0 ; 0 n (North American).
+ *      The last two parameters apply to VT400 & up, and denote keyboard ready
+ *      and LK01 respectively.
+ * 53 - Report Locator status as CSI ? 5 3 n Locator available, if compiled-in,
+ *      or CSI ? 5 0 n No Locator, if not.
+ *
+ * @this {!hterm.VT}
+ * @param {!hterm.VT.ParseState} parseState
+ */
+hterm.VT.CSI['?n'] = function(parseState) {
+  if (parseState.args[0] == 6) {
+	window.webkit.messageHandlers.aShell.postMessage('CPR request (?n)');
+	window.interactiveCommandRunning = true;
+    const row = this.terminal.getCursorRow() + 1;
+    const col = this.terminal.getCursorColumn() + 1;
+    this.terminal.io.sendString('\x1b[' + row + ';' + col + 'R');
+  } else if (parseState.args[0] == 15) {
+    this.terminal.io.sendString('\x1b[?11n');
+  } else if (parseState.args[0] == 25) {
+    this.terminal.io.sendString('\x1b[?21n');
+  } else if (parseState.args[0] == 26) {
+    this.terminal.io.sendString('\x1b[?12;1;0;0n');
+  } else if (parseState.args[0] == 53) {
+    this.terminal.io.sendString('\x1b[?50n');
   }
 };
 
