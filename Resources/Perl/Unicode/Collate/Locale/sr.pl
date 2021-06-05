@@ -1,0 +1,8 @@
++{
+   locale_version => 1.27,
+   suppress => [0x0418, 0x0438],
+   entry => <<'ENTRY', # for DUCET v10.0.0
+0439      ; [.20E6.0020.0002][.0000.0026.0002] # CYRILLIC SMALL LETTER SHORT I
+0419      ; [.20E6.0020.0008][.0000.0026.0002] # CYRILLIC CAPITAL LETTER SHORT I
+ENTRY
+};

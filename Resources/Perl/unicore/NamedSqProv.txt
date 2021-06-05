@@ -1,0 +1,90 @@
+# NamedSequencesProv-13.0.0.txt
+# Date: 2020-01-22, 19:32:00 GMT [KW, LI]
+# © 2020 Unicode®, Inc.
+# For terms of use, see http://www.unicode.org/terms_of_use.html
+#
+# Unicode Character Database
+# For documentation, see http://www.unicode.org/reports/tr44/
+#
+# Provisional Unicode Named Character Sequences
+#
+# Note: This data file contains those named character
+#   sequences which have been designated to be provisional,
+#   rather than fully approved.
+#
+# Format:
+# Name of Sequence; Code Point Sequence for USI
+#
+# Code point sequences in the Unicode Character Database
+# use spaces as delimiters. The corresponding format for a
+# UCS Sequence Identifier (USI) in ISO/IEC 10646 uses
+# comma delimitation and angle brackets. Thus, a Unicode
+# named character sequence of the form:
+#
+# EXAMPLE NAME;1000 1001 1002
+#
+# in this data file, would correspond to an ISO/IEC 10646 USI
+# as follows:
+#
+# <1000, 1001, 1002>
+#
+# For more information, see UAX #34: Unicode Named Character
+# Sequences, at http://www.unicode.org/unicode/reports/tr34/
+#
+# Note: The order of entries in this file is not significant.
+# However, entries are generally in script order corresponding
+# to block order in the Unicode Standard, to make it easier
+# to find entries currently in the list.
+
+# ================================================
+
+# Provisional entries for NamedSequences.txt.
+
+# Entries that correspond to Indic characters with nuktas
+# that are also listed in CompositionExclusions.txt.
+# These characters decompose for normalized text, even
+# in NFC. Having named sequences for these helps in
+# certain specifications, including Label Generation Rules (LGR)
+# for Internationalized Domain Names (IDN).
+#
+# Provisional 2020-01-16
+
+DEVANAGARI SEQUENCE FOR LETTER QA; 0915 093C
+DEVANAGARI SEQUENCE FOR LETTER KHHA; 0916 093C
+DEVANAGARI SEQUENCE FOR LETTER GHHA; 0917 093C
+DEVANAGARI SEQUENCE FOR LETTER ZA; 091C 093C
+DEVANAGARI SEQUENCE FOR LETTER DDDHA; 0921 093C
+DEVANAGARI SEQUENCE FOR LETTER RHA; 0922 093C
+DEVANAGARI SEQUENCE FOR LETTER FA; 092B 093C
+DEVANAGARI SEQUENCE FOR LETTER YYA; 092F 093C
+BENGALI SEQUENCE FOR LETTER RRA; 09A1 09BC
+BENGALI SEQUENCE FOR LETTER RHA; 09A2 09BC
+BENGALI SEQUENCE FOR LETTER YYA; 09AF 09BC
+GURMUKHI SEQUENCE FOR LETTER LLA; 0A32 0A3C
+GURMUKHI SEQUENCE FOR LETTER SHA; 0A38 0A3C
+GURMUKHI SEQUENCE FOR LETTER KHHA; 0A16 0A3C
+GURMUKHI SEQUENCE FOR LETTER GHHA; 0A17 0A3C
+GURMUKHI SEQUENCE FOR LETTER ZA; 0A1C 0A3C
+GURMUKHI SEQUENCE FOR LETTER FA; 0A2B 0A3C
+ORIYA SEQUENCE FOR LETTER RRA; 0B21 0B3C
+ORIYA SEQUENCE FOR LETTER RHA; 0B22 0B3C
+
+# ================================================
+
+# Entries from Unicode 4.1.0 version of NamedSequences.txt,
+# subsequently disapproved because of potential errors in
+# representation.
+
+# GURMUKHI HALF YA;0A2F 0A4D
+# GURMUKHI PARI YA;0A4D 0A2F
+
+# Entry removed 2006-05-18:
+#
+# LATIN SMALL LETTER A WITH ACUTE AND OGONEK;00E1 0328
+#
+# This entry was removed because the sequence was not in NFC,
+# as required. It was replaced with the NFC version of
+# the sequence, based on the Lithuanian additions accepted
+# for Unicode 5.0.
+
+# EOF

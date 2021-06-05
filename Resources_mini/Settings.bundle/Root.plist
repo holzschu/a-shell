@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>StringsTable</key>
+	<string>Root</string>
+	<key>PreferenceSpecifiers</key>
+	<array>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Open files in Vim:</string>
+			<key>Key</key>
+			<string>VimOpenFile</string>
+			<key>DefaultValue</key>
+			<string>window</string>
+			<key>Titles</key>
+			<array>
+				<string>New window</string>
+				<string>New tab</string>
+				<string>New buffer</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>window</string>
+				<string>tab</string>
+				<string>buffer</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>Caps-Lock = Escape</string>
+			<key>Key</key>
+			<string>escape_preference</string>
+			<key>DefaultValue</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>zshmarks-style bookmarks (jump, bookmark...)</string>
+			<key>Key</key>
+			<string>zshmarks</string>
+			<key>DefaultValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>bashmarks-style bookmarks (l, s, g...)</string>
+			<key>Key</key>
+			<string>bashmarks</string>
+			<key>DefaultValue</key>
+			<false/>
+		</dict>
+	</array>
+</dict>
+</plist>
