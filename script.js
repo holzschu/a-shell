@@ -1893,7 +1893,7 @@ hterm.VT.CSI['n'] = function(parseState) {
   if (parseState.args[0] == 5) {
     this.terminal.io.sendString('\x1b0n');
   } else if (parseState.args[0] == 6) {
-	window.webkit.messageHandlers.aShell.postMessage('CPR request (n)');
+	// window.webkit.messageHandlers.aShell.postMessage('CPR request (n)');
 	window.interactiveCommandRunning = true;
     const row = this.terminal.getCursorRow() + 1;
     const col = this.terminal.getCursorColumn() + 1;
@@ -1919,7 +1919,7 @@ hterm.VT.CSI['n'] = function(parseState) {
  */
 hterm.VT.CSI['?n'] = function(parseState) {
   if (parseState.args[0] == 6) {
-	window.webkit.messageHandlers.aShell.postMessage('CPR request (?n)');
+	// window.webkit.messageHandlers.aShell.postMessage('CPR request (?n)');
 	window.interactiveCommandRunning = true;
     const row = this.terminal.getCursorRow() + 1;
     const col = this.terminal.getCursorColumn() + 1;
