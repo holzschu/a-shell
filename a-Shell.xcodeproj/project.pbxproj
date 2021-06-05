@@ -1288,7 +1288,6 @@
 		22601304232190BE00AEB059 /* texlive_2019_texmf-dist_fonts_otf_ttf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_otf_ttf"; path = "ODR/texlive_2019_texmf-dist_fonts_otf_ttf"; sourceTree = "<group>"; };
 		22601306232195A100AEB059 /* luatexCommandsDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = luatexCommandsDictionary.plist; path = Resources/luatexCommandsDictionary.plist; sourceTree = "<group>"; };
 		226AD81D23436B7A00E5D672 /* UIViewController+showAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+showAlert.swift"; sourceTree = "<group>"; };
-		22750E9024D19E4F00775A0C /* hterm_simulator.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = hterm_simulator.html; sourceTree = "<group>"; };
 		227722EA239D1F9F0020037E /* task */ = {isa = PBXFileReference; lastKnownFileType = folder; name = task; path = Resources/task; sourceTree = "<group>"; };
 		227B4E59252CD4850052D056 /* python3_ios-numpy.random._generator.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-numpy.random._generator.xcframework"; path = "cpython/XcFrameworks/python3_ios-numpy.random._generator.xcframework"; sourceTree = SOURCE_ROOT; };
 		227B4E5A252CD4850052D056 /* python3_ios-numpy.random.mtrand.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-numpy.random.mtrand.xcframework"; path = "cpython/XcFrameworks/python3_ios-numpy.random.mtrand.xcframework"; sourceTree = SOURCE_ROOT; };
@@ -1921,7 +1920,6 @@
 				22942C41264037AB004BEA41 /* Perl */,
 				2231A51D258923D900B5EDFD /* ImageMagick-7 */,
 				22239A6124FFF9C90069E539 /* Library */,
-				22750E9024D19E4F00775A0C /* hterm_simulator.html */,
 				22365230249A39AA00221868 /* man */,
 				22372B712448E85C0033FE07 /* usr */,
 				22E1B539243DF63E00EA8FBD /* require.js */,
