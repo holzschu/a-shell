@@ -666,7 +666,7 @@ class Printer:
 def jsQuote(text):
     result = '`'
     for char in text:
-        if char == '`' or char == '\\':
+        if char == '`' or char == '\\' or char == '$':
             result += '\\'
         result += char
     result += '`'
