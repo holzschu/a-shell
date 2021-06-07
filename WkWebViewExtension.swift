@@ -100,7 +100,7 @@ extension WKWebView {
     }
 
     func focus() {
-        let command = "window.term_.onFocusChange_(true); window.term_.scrollEnd();"
+        let command = "window.term_.onFocusChange_(true); window.term_.scrollPort_.isScrolledEnd = true;"
         self.evaluateJavaScript(command) { result, error in
             if let error = error {
                 print(error)
