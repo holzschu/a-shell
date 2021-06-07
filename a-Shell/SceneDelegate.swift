@@ -1338,6 +1338,26 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else if (cmd.hasPrefix("reload:")) {
             // Reload the web page:
             self.webView?.reload()
+        } else if (cmd.hasPrefix("JS Error:")) {
+            let file = "jsError.txt"
+            if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                let logFile = dir.appendingPathComponent(file)
+                guard let data = cmd.data(using: String.Encoding.utf8) else { return }
+                if FileManager.default.fileExists(atPath: logFile.path) {
+                    if let fileHandle = try? FileHandle(forWritingTo: logFile) {
+                        fileHandle.seekToEndOfFile()
+                        fileHandle.write(data)
+                        fileHandle.closeFile()
+                    }
+                } else {
+                    do {
+                        try cmd.write(to: logFile, atomically: false, encoding: .utf8)
+                    }
+                    catch {
+                        NSLog("Error writing logfile jsError")
+                    }
+                }
+            }
         } else {
             // Usually debugging information
             // NSLog("JavaScript message: \(message.body)")
@@ -1727,7 +1747,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 .merge(with: NotificationCenter.default
                         .publisher(for: UIResponder.keyboardWillShowNotification))
                 .handleEvents(receiveOutput: { notification in
-                    NSLog("didBecomeKey: \(notification.name.rawValue): \(session.persistentIdentifier).")
+                    // NSLog("didBecomeKey: \(notification.name.rawValue): \(session.persistentIdentifier).")
                 })
                 .sink { _ in self.webView?.focus() }
                 .store(in: &cancellables)
@@ -1736,7 +1756,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 .merge(with: NotificationCenter.default
                         .publisher(for: UIResponder.keyboardWillHideNotification))
                 .handleEvents(receiveOutput: { notification in
-                    NSLog("didResignKey: \(notification.name.rawValue): \(session.persistentIdentifier).")
+                    // NSLog("didResignKey: \(notification.name.rawValue): \(session.persistentIdentifier).")
                 })
                 .sink { _ in self.webView?.blur() }
                 .store(in: &cancellables)
@@ -1940,7 +1960,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             // print(result)
                         }
                     }
-                    command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');"
+                    command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');  window.term_.scrollPort_.isScrolledEnd = true;"
                     self.webView!.evaluateJavaScript(command) { (result, error) in
                         if error != nil {
                             NSLog("Error in sceneDidBecomeActive, line = \(command)")
@@ -2052,7 +2072,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let javascriptCommand = "window.printedContent = \"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\"; "
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
-                    // NSLog("Error in resetting terminal, line = \(javascriptCommand)")
+                    NSLog("Error in resetting terminal, line = \(javascriptCommand)")
+                    print(error)
+                }
+                // if (result != nil) { print(result) }
+            }
+        } else {
+            let javascriptCommand = "window.printedContent = \"\"; "
+            webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
+                if error != nil {
+                    NSLog("Error in setting terminal to empty, line = \(javascriptCommand)")
                     print(error)
                 }
                 // if (result != nil) { print(result) }
@@ -2186,7 +2215,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // An iPad pro screen is 5000 characters, so this is 5 screens of content.
         // When window.printedContent is too large, this function does not return before the session is terminated.
         // Note: if this fails, check window.printedContent length at the start/end of a command, not after each print.
-        webView!.evaluateJavaScript("window.printedContent.substring(window.printedContent.length - 25000)",
+        // webView!.evaluateJavaScript("window.printedContent.substring(window.printedContent.length - 25000)",
+        webView!.evaluateJavaScript("window.printedContent",
                                     completionHandler: { (printedContent: Any?, error: Error?) in
                                         if error != nil {
                                             NSLog("Error in capturing terminal content: \(error!.localizedDescription)")

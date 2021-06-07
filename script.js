@@ -1,3 +1,18 @@
+window.onerror = (msg, url, line, column, error) => {
+  const message = {
+    message: msg,
+    url: url,
+    line: line,
+    column: column,
+    error: JSON.stringify(error)
+  }
+
+  if (window.webkit) {
+   window.webkit.messageHandlers.aShell.postMessage('JS Error:' + msg + ' message: ' + error.message + ' stack: ' + error.stack + '\n');
+  } else {
+    console.log("Error:", message);
+  }
+};
 // functions to deal with executeJavaScript: 
 function print(printString) {
 	window.webkit.messageHandlers.aShell.postMessage('print:' + printString);
@@ -337,6 +352,7 @@ function updateAutocompleteMenu(io, cursorPosition) {
 }
 
 function setupHterm() {
+// setTimeout(() => {
 	const term = new hterm.Terminal();
 	// Default monospaced fonts installed: Menlo and Courier. 
 	term.prefs_.set('cursor-shape', 'BLOCK'); 
@@ -735,7 +751,7 @@ function setupHterm() {
 								// Work on autocomplete list / current command
 								updateAutocompleteMenu(io, currentCommandCursorPosition); 
 							}
-						} else {
+n						} else {
 							// no autocomplete inside running commands. Just print 4 spaces.
 							// (spaces because tab confuse hterm)
 							io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + "    " + 
@@ -932,15 +948,8 @@ function setupHterm() {
 		};
 		io.sendString = io.onVTKeystroke; // was io.print
 		initContent(io);
-		if ((window.printedContent === undefined) || (window.printedContent == "")) {
-			printPrompt(); // first prompt
-		} else {
-			window.webkit.messageHandlers.aShell.postMessage('Restored terminal content from previous session');
-			window.term_.io.print(window.printedContent);
-		}
 		// Store currentCommand in term.io:
 		io.currentCommand = '';
-		updatePromptPosition(); 
 		this.setCursorVisible(true);
 		this.setCursorBlink(false);
 		this.setFontSize(window.fontSize); 
@@ -971,6 +980,10 @@ function setupHterm() {
 	if (window.printedContent === undefined) {
 		window.printedContent = '';
 	}
+	if (window.printedContent == '') {
+		printPrompt(); // first prompt
+	}
+	updatePromptPosition(); 
 	window.commandInsideCommandArray = new Array();
 	window.commandInsideCommandIndex = 0;
 	window.maxCommandInsideCommandIndex = 0;
@@ -986,10 +999,13 @@ function setupHterm() {
 		window.commandRunning = window.commandToExecute;
 		window.commandToExecute = ""; 
 	}
-}
+//  }, 3000);
+};
 
-window.onload = function() {
-	lib.init();
+// see https://github.com/holzschu/a-shell/issues/235
+// This will be whatever normal entry/initialization point your project uses.
+window.onload = async function() {
+	await lib.init();
 	setupHterm();
 };
 
@@ -1001,7 +1017,8 @@ hterm.Terminal.IO.prototype.onTerminalResize = function(width, height) {
 };
 
 hterm.Frame.prototype.postMessage = function(name, argv) {
-  window.webkit.messageHandlers.aShell.postMessage(name + ' argv= ' + argv); 
+  window.webkit.messageHandlers.aShell.postMessage('JS Error:' + ' hterm.Frame.prototype.postMessage.\n');	
+  window.webkit.messageHandlers.aShell.postMessage('JS Error:' + name + ' argv= ' + argv); 
   if (this.messageChannel_) {
 	  this.messageChannel_.port1.postMessage({name: name, argv: argv});
   }
@@ -1772,6 +1789,9 @@ hterm.Terminal.prototype.setWidth = function(columnCount) {
 hterm.Terminal.prototype.setCursorColor = function(color) {
 	if (color === undefined)
 		color = this.prefs_.get('cursor-color');
+	// iOS change: too early in the process, bail out
+	if (color === undefined) 
+		return;
 
 	this.setCssVar('cursor-color', color);
 	this.setCssVar('caret-color', color); // iOS 13 addition
@@ -1807,14 +1827,19 @@ hterm.Terminal.prototype.realizeWidth_ = function(columnCount) {
   }
 
   // iOS addition: reset the caret at each resize (includes switching to/from alternate screen)
-  if (!this.isPrimaryScreen() && window.commandRunning.startsWith('vim')) {
-	  this.setCssVar('caret-color', 'transparent'); // iOS 13 addition
-	  this.scrollPort_.screen_.style.setProperty('caret-color', 'transparent'); // iOS 13 addition
-	  this.scrollPort_.screen_.style.setProperty('--hterm-caret-color', 'transparent'); // iOS 13 addition
-	  document.getElementsByTagName("html")[0].style.setProperty('caret-color', 'transparent'); 
-	  document.getElementsByTagName("html")[0].style.setProperty('--hterm-caret-color', 'transparent'); 
-  } else {
-	  this.setCursorColor(window.cursorColor); 
+  if ((window.term_ != undefined) && (window.term_.ready_)) {
+  	if (!this.isPrimaryScreen() && window.commandRunning.startsWith('vim')) {
+  		this.setCssVar('caret-color', 'transparent'); // iOS 13 addition
+  		this.scrollPort_.screen_.style.setProperty('caret-color', 'transparent'); // iOS 13 addition
+  		this.scrollPort_.screen_.style.setProperty('--hterm-caret-color', 'transparent'); // iOS 13 addition
+  		document.getElementsByTagName("html")[0].style.setProperty('caret-color', 'transparent'); 
+  		document.getElementsByTagName("html")[0].style.setProperty('--hterm-caret-color', 'transparent'); 
+  	} else {
+		color = this.getCssVar('cursor-color');
+		if (color != window.cursorColor) {
+			this.setCursorColor(window.cursorColor); 
+		}
+  	}
   }
   const deltaColumns = columnCount - this.screen_.getWidth();
   if (deltaColumns == 0) {
@@ -1840,16 +1865,20 @@ hterm.Terminal.prototype.realizeWidth_ = function(columnCount) {
   }
 
   this.screen_.setColumnCount(this.screenSize.width);
-	// iOS: rewrite everything after each resize:
-	if (window.term_ != undefined) {
-		// But only for primary screen:
-		if (this.isPrimaryScreen()) { 
-			let content = window.printedContent; 
-			window.term_.wipeContents(); 
-			window.printedContent = '';
-			this.io.print(content);
-		}
-	}
+  // iOS: rewrite everything after each resize:
+  if ((window.term_ != undefined) && (window.term_.ready_)) {
+  	// But only for primary screen:
+  	if (this.isPrimaryScreen()) { 
+      window.webkit.messageHandlers.aShell.postMessage('Reprint everything');
+      window.webkit.messageHandlers.aShell.postMessage('JS Error: Reprint everything: \n' + window.printedContent);
+	  if (window.printedContent !== undefined) {
+	  	let content = window.printedContent; 
+	  	window.term_.wipeContents(); 
+	  	window.printedContent = '';
+	  	this.io.print(content);
+	  }
+  	}
+  }
 };
 
 /**
@@ -1981,5 +2010,36 @@ lib.PreferenceManager.prototype.setSync = function(
   // currentValue until the storage event, a pref read immediately after a write
   // would return the previous value.
   this.notifyChange_(name);
+};
+
+/**
+ * Synchronizes the visible cursor with the current cursor coordinates.
+ *
+ * The sync will happen asynchronously, soon after the call stack winds down.
+ * Multiple calls will be coalesced into a single sync. This should be called
+ * prior to the cursor actually changing position.
+ */
+hterm.Terminal.prototype.scheduleSyncCursorPosition_ = function() {
+  if (this.timeouts_.syncCursor) {
+    return;
+  }
+
+  if (this.accessibilityReader_ != null) {
+    if (this.accessibilityReader_.accessibilityEnabled) {
+      // Report the previous position of the cursor for accessibility purposes.
+      const cursorRowIndex = this.scrollbackRows_.length +
+          this.screen_.cursorPosition.row;
+      const cursorColumnIndex = this.screen_.cursorPosition.column;
+      const cursorLineText =
+          this.screen_.rowsArray[this.screen_.cursorPosition.row].innerText;
+      this.accessibilityReader_.beforeCursorChange(
+          cursorLineText, cursorRowIndex, cursorColumnIndex);
+    }
+  }
+
+  this.timeouts_.syncCursor = setTimeout(() => {
+    this.syncCursorPosition_();
+    delete this.timeouts_.syncCursor;
+  });
 };
 
