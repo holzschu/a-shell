@@ -1,3 +1,4 @@
+/* Only used when debugging:
 window.onerror = (msg, url, line, column, error) => {
   const message = {
     message: msg,
@@ -13,6 +14,7 @@ window.onerror = (msg, url, line, column, error) => {
     console.log("Error:", message);
   }
 };
+*/
 // functions to deal with executeJavaScript: 
 function print(printString) {
 	window.webkit.messageHandlers.aShell.postMessage('print:' + printString);
@@ -751,7 +753,7 @@ function setupHterm() {
 								// Work on autocomplete list / current command
 								updateAutocompleteMenu(io, currentCommandCursorPosition); 
 							}
-n						} else {
+						} else {
 							// no autocomplete inside running commands. Just print 4 spaces.
 							// (spaces because tab confuse hterm)
 							io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + "    " + 
@@ -977,13 +979,6 @@ n						} else {
 		window.commandIndex = 0;
 		window.maxCommandIndex = 0;
 	}
-	if (window.printedContent === undefined) {
-		window.printedContent = '';
-	}
-	if (window.printedContent == '') {
-		printPrompt(); // first prompt
-	}
-	updatePromptPosition(); 
 	window.commandInsideCommandArray = new Array();
 	window.commandInsideCommandIndex = 0;
 	window.maxCommandInsideCommandIndex = 0;
@@ -994,6 +989,13 @@ n						} else {
 	if (window.voiceOver != undefined) {
 		window.term_.setAccessibilityEnabled(window.voiceOver);
 	}
+	if (window.printedContent === undefined) {
+		window.printedContent = '';
+	}
+	if (window.printedContent == '') {
+		printPrompt(); // first prompt
+	}
+	updatePromptPosition();	
 	if ((window.commandToExecute != undefined) && (window.commandToExecute != "")) {
 		window.webkit.messageHandlers.aShell.postMessage('shell:' + window.commandToExecute);
 		window.commandRunning = window.commandToExecute;
@@ -1017,7 +1019,6 @@ hterm.Terminal.IO.prototype.onTerminalResize = function(width, height) {
 };
 
 hterm.Frame.prototype.postMessage = function(name, argv) {
-  window.webkit.messageHandlers.aShell.postMessage('JS Error:' + ' hterm.Frame.prototype.postMessage.\n');	
   window.webkit.messageHandlers.aShell.postMessage('JS Error:' + name + ' argv= ' + argv); 
   if (this.messageChannel_) {
 	  this.messageChannel_.port1.postMessage({name: name, argv: argv});
@@ -1870,10 +1871,9 @@ hterm.Terminal.prototype.realizeWidth_ = function(columnCount) {
   	// But only for primary screen:
   	if (this.isPrimaryScreen()) { 
       window.webkit.messageHandlers.aShell.postMessage('Reprint everything');
-      window.webkit.messageHandlers.aShell.postMessage('JS Error: Reprint everything: \n' + window.printedContent);
-	  if (window.printedContent !== undefined) {
+	  if ((window.printedContent !== undefined) && (window.printedContent != 'undefined')) {
 	  	let content = window.printedContent; 
-	  	window.term_.wipeContents(); 
+	  	window.term_.wipeContents();
 	  	window.printedContent = '';
 	  	this.io.print(content);
 	  }
@@ -2011,35 +2011,3 @@ lib.PreferenceManager.prototype.setSync = function(
   // would return the previous value.
   this.notifyChange_(name);
 };
-
-/**
- * Synchronizes the visible cursor with the current cursor coordinates.
- *
- * The sync will happen asynchronously, soon after the call stack winds down.
- * Multiple calls will be coalesced into a single sync. This should be called
- * prior to the cursor actually changing position.
- */
-hterm.Terminal.prototype.scheduleSyncCursorPosition_ = function() {
-  if (this.timeouts_.syncCursor) {
-    return;
-  }
-
-  if (this.accessibilityReader_ != null) {
-    if (this.accessibilityReader_.accessibilityEnabled) {
-      // Report the previous position of the cursor for accessibility purposes.
-      const cursorRowIndex = this.scrollbackRows_.length +
-          this.screen_.cursorPosition.row;
-      const cursorColumnIndex = this.screen_.cursorPosition.column;
-      const cursorLineText =
-          this.screen_.rowsArray[this.screen_.cursorPosition.row].innerText;
-      this.accessibilityReader_.beforeCursorChange(
-          cursorLineText, cursorRowIndex, cursorColumnIndex);
-    }
-  }
-
-  this.timeouts_.syncCursor = setTimeout(() => {
-    this.syncCursorPosition_();
-    delete this.timeouts_.syncCursor;
-  });
-};
-

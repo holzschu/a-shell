@@ -1338,7 +1338,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else if (cmd.hasPrefix("reload:")) {
             // Reload the web page:
             self.webView?.reload()
-        } else if (cmd.hasPrefix("JS Error:")) {
+        } /* else if (cmd.hasPrefix("JS Error:")) {
+            // When debugging JS, output warning/error messages to a file.
             let file = "jsError.txt"
             if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
                 let logFile = dir.appendingPathComponent(file)
@@ -1358,7 +1359,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
             }
-        } else {
+        } */ else {
             // Usually debugging information
             // NSLog("JavaScript message: \(message.body)")
             print("JavaScript message: \(message.body)")
@@ -2029,8 +2030,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         if let currentDirectoryData = userInfo["cwd"] {
-            if let currentDirectory = currentDirectoryData as? String {
+            if var currentDirectory = currentDirectoryData as? String {
                 NSLog("got currentDirectory as \(currentDirectory)")
+                if (!FileManager().fileExists(atPath: currentDirectory) || !FileManager().isReadableFile(atPath: currentDirectory)) {
+                    // The directory does not exist anymore (often home directory, changes after reinstall)
+                    currentDirectory = try! FileManager().url(for: .documentDirectory,
+                                                              in: .userDomainMask,
+                                                              appropriateFor: nil,
+                                                              create: true).path
+                    NSLog("reset currentDirectory to \(currentDirectory)")
+                }
                 if (FileManager().fileExists(atPath: currentDirectory) && FileManager().isReadableFile(atPath: currentDirectory)) {
                     NSLog("set currentDirectory to \(currentDirectory)")
                     // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
