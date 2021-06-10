@@ -2078,14 +2078,32 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             print("printedContent restored = \(terminalData.count) End")
-            let javascriptCommand = "window.printedContent = \"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\"; "
-            webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
-                if error != nil {
-                    NSLog("Error in resetting terminal, line = \(javascriptCommand)")
-                    print(error)
-                }
-                // if (result != nil) { print(result) }
-            }
+            webView!.evaluateJavaScript("window.setWindowContent",
+                                        completionHandler: { (function: Any?, error: Error?) in
+                                            if (error != nil) || (function == nil) {
+                                                NSLog("function does not exist, set window.printedContent")
+                                                // the function is undefined, we are here before JS initialization:
+                                                let javascriptCommand = "window.printedContent = \"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\"; "
+                                                self.webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
+                                                    if error != nil {
+                                                        NSLog("Error in setting window.printedContent, line = \(javascriptCommand)")
+                                                        print(error)
+                                                    }
+                                                    // if (result != nil) { print(result) }
+                                                }
+                                            } else {
+                                                // The function is defined, we are here *after* JS initialization:
+                                                NSLog("function does exist, calling window.setWindowContent")
+                                                let javascriptCommand = "window.setWindowContent(\"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\"); "
+                                                self.webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
+                                                    if error != nil {
+                                                        NSLog("Error in resetting terminal w setWindowContent, line = \(javascriptCommand)")
+                                                        print(error)
+                                                    }
+                                                    // if (result != nil) { print(result) }
+                                                }
+                                            }
+                                        })
         } else {
             let javascriptCommand = "window.printedContent = \"\"; "
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
