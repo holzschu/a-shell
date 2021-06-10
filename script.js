@@ -73,6 +73,15 @@ function isLetter(c) {
 	return (c.toLowerCase() != c.toUpperCase());
 }
 
+// Required because printedContent now arrives after the first prompt has been printed.
+function setWindowContent(string) {
+	window.term_.wipeContents();
+	window.printedContent = '';
+	window.term_.io.print(string);
+	printPrompt();
+	window.webkit.messageHandlers.aShell.postMessage('done re-writing the window content.');
+}
+
 function printPrompt() {
 	// prints the prompt and initializes all variables related to prompt position
 	window.term_.io.print('\x1b[0m\x1b[39;49m');  // default font, default color
@@ -354,7 +363,6 @@ function updateAutocompleteMenu(io, cursorPosition) {
 }
 
 function setupHterm() {
-// setTimeout(() => {
 	const term = new hterm.Terminal();
 	// Default monospaced fonts installed: Menlo and Courier. 
 	term.prefs_.set('cursor-shape', 'BLOCK'); 
@@ -907,6 +915,7 @@ function setupHterm() {
 			}
 			var scrolledLines = window.promptScroll - this.scrollPort_.getTopRowIndex();
 			var topRowCommand = window.promptLine + scrolledLines;
+			// window.webkit.messageHandlers.aShell.postMessage('topRowCommand: ' + topRowCommand + ' window.promptEnd: ' + window.promptEnd);
 			// Don't move cursor outside of current line
 			if (y < topRowCommand) { 
 				return; 
@@ -1001,7 +1010,6 @@ function setupHterm() {
 		window.commandRunning = window.commandToExecute;
 		window.commandToExecute = ""; 
 	}
-//  }, 3000);
 };
 
 // see https://github.com/holzschu/a-shell/issues/235
@@ -1675,6 +1683,16 @@ hterm.ScrollPort.prototype.onTouch_ = function(e) {
 
     case 'touchcancel':
     case 'touchend':
+    	  // iOS addition:
+      if (Object.values(this.lastTouch_).length == 1) {
+      	  // single touch
+        touch = scrubTouch(e.changedTouches[0]);
+        if ((this.lastTouch_[touch.id].y == touch.y) && (this.lastTouch_[touch.id].x == touch.x)) {
+        	var xcursor = (touch.x / this.characterSize.width);
+        	var ycursor = (touch.y / this.characterSize.height);
+			window.term_.moveCursorPosition(Math.floor(ycursor), Math.floor(xcursor));
+		} 
+	  }    	  
       // Throw away existing touches that we're finished with.
       for (i = 0; i < e.changedTouches.length; ++i) {
         delete this.lastTouch_[e.changedTouches[i].identifier];
