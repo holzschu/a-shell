@@ -426,6 +426,13 @@ function initializeTerminalGestures()
 
   gestures_.gesturePtrDown = (evt) => {
     showDebugMsg("Down@" + evt.pageX + "," + evt.pageY);
+
+    // If the start of a new gesture (we may have lost
+    // the end of the previous):
+    if (evt.isPrimary) {
+      currentGesture = new Gesture();
+    }
+
     if (!currentGesture) {
       origTermTouchFn = term_.scrollPort_.onTouch;
     }
@@ -481,4 +488,3 @@ function initializeTerminalGestures()
     momentum = [0, 0];
   };
 }
-
