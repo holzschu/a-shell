@@ -52,7 +52,7 @@ function initializeTerminalGestures()
       gestures_.gesturePtrDown(evt));
     targetElem.addEventListener('pointermove', (evt) =>
       gestures_.gesturePtrMove(evt));
-    targetElem.addEventListener('pointerup', (evt) =>
+    targetElem.addEventListener('pointerleave', (evt) =>
       gestures_.gesturePtrUp(evt));
     window.term_.document_.body.addEventListener('keydown', (evt) =>
       gestures_.handleKeyEvent(evt));
@@ -344,10 +344,14 @@ function initializeTerminalGestures()
         this.isScrollGesture_ = false;
 
         if (dx >= HORIZ_KEYBOARD_KEYPRESS_CHARS) {
+          // Tab key
           term_.io.sendString("\t");
         } else if (dx <= -HORIZ_KEYBOARD_KEYPRESS_CHARS) {
+          // Escape key
           term_.io.sendString("\x1b");
         }
+
+        term_.scrollEnd();
       } else if (!isLessRunning()) {
         // Horizontal gestures: Don't move cursor if in `man'
         moveCursor(dx, 0);
@@ -476,23 +480,29 @@ function initializeTerminalGestures()
     // scrolling.
     momentum = [0, 0];
 
+    if (!currentGesture) {
+      return;
+    }
+
     evt.preventDefault();
 
-    try
-    {
+    try {
       currentGesture.onPointerMove(evt);
-    }
-    catch(e)
-    {
-      alert(e);
+    } catch(e) {
+      if (DEBUG) {
+        alert(e);
+      }
     }
   };
 
   gestures_.gesturePtrUp = (evt) => {
     showDebugMsg(" Up @" + evt.pageX + "," + evt.pageY);
 
-    try
-    {
+    if (!currentGesture) {
+      return;
+    }
+
+    try {
       currentGesture.onPointerUp(evt, startInertialScroll);
 
       if (currentGesture.getPtrDownCount() == 0) {
@@ -500,7 +510,9 @@ function initializeTerminalGestures()
         enableHtermTouchScrolling();
       }
     } catch(e) {
-      alert(e);
+      if (DEBUG) {
+        alert(e);
+      }
     }
   };
 
@@ -509,3 +521,4 @@ function initializeTerminalGestures()
     momentum = [0, 0];
   };
 }
+
