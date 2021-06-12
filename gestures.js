@@ -97,7 +97,7 @@ function initializeTerminalGestures()
   // Attempts to determine whether `less` or `man` are currently running.
   // Returns true if it thinks less or man is.
   const isLessRunning = () => {
-    return window.commandRunning.search(new RegExp("(^less|^man|.*[|]\\s*less)")) == 0;
+    return window.commandRunning.search(new RegExp("(^less|^man|^perldoc|.*[|]\\s*less)")) == 0;
   };
 
   // Tries to determine whether the current command is vim.
@@ -371,7 +371,7 @@ function initializeTerminalGestures()
       }
 
       // Vertical gestures: Move cursor if in vim/less/man
-      if (window.interactiveCommandRunning && (isVimRunning() || isLessRunning()) || this.maxPtrCount_ == 2) {
+      if (isVimRunning() || isLessRunning() || this.maxPtrCount_ == 2) {
         moveCursor(0, dy);
         term_.scrollEnd();
       } else {
