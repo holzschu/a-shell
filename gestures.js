@@ -4,7 +4,7 @@
 
 function initializeTerminalGestures()
 {
-  const DEBUG = true;
+  const DEBUG = false;
 
   // Determines the decay rate of the inertial scroll
   // velocity.
