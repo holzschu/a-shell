@@ -1007,13 +1007,15 @@ function setupHterm() {
 	if (window.printedContent == '') {
 		printPrompt(); // first prompt
 	}
-	updatePromptPosition();	
+	updatePromptPosition();
 	if ((window.commandToExecute != undefined) && (window.commandToExecute != "")) {
 		window.webkit.messageHandlers.aShell.postMessage('shell:' + window.commandToExecute);
 		window.commandRunning = window.commandToExecute;
-		window.commandToExecute = ""; 
+		window.commandToExecute = "";
 	}
 	window.duringResize = false;
+
+	initializeTerminalGestures();
 };
 
 // see https://github.com/holzschu/a-shell/issues/235
