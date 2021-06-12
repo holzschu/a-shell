@@ -371,7 +371,7 @@ function initializeTerminalGestures()
       }
 
       // Vertical gestures: Move cursor if in vim/less/man
-      if (window.interactiveCommandRunning && (isVimRunning() || isLessRunning()) || this.maxPtrCount_ == 2) {
+      if (isVimRunning() || isLessRunning() || this.maxPtrCount_ == 2) {
         moveCursor(0, dy);
         term_.scrollEnd();
       } else {
