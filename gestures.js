@@ -46,11 +46,13 @@ function initializeTerminalGestures()
     gestures_.gesturePtrMove = () => {};
     gestures_.gesturePtrUp = () => {};
 
-    window.term_.document_.body.addEventListener('pointerdown', (evt) =>
+    const targetElem = window.term_.scrollPort_.screen_;
+
+    targetElem.addEventListener('pointerdown', (evt) =>
       gestures_.gesturePtrDown(evt));
-    window.term_.document_.body.addEventListener('pointermove', (evt) =>
+    targetElem.addEventListener('pointermove', (evt) =>
       gestures_.gesturePtrMove(evt));
-    window.term_.document_.body.addEventListener('pointerup', (evt) =>
+    targetElem.addEventListener('pointerup', (evt) =>
       gestures_.gesturePtrUp(evt));
     window.term_.document_.body.addEventListener('keydown', (evt) =>
       gestures_.handleKeyEvent(evt));
@@ -116,6 +118,26 @@ function initializeTerminalGestures()
   /// Returns the { width: px, height: px } size of a character in the terminal.
   const getCharSize = () => {
     return term_.scrollPort_.characterSize;
+  };
+
+  let origTouchFn = term_.scrollPort_.onTouch;
+  let disableTouchFn = undefined;
+
+  const disableHtermTouchScrolling = () => {
+    if (term_.scrollPort_.onTouch !== disableTouchFn) {
+      origTouchFn = term_.scrollPort_.onTouch;
+
+      term_.scrollPort_.onTouch = (evt) => {
+        origTouchFn(evt);
+        evt.preventDefault();
+      };
+
+      disableTouchFn = term_.scrollPort_.onTouch;
+    }
+  };
+
+  const enableHtermTouchScrolling = () => {
+    term_.scrollPort_.onTouch = origTouchFn;
   };
 
   /// Tracks the velocity of a given
@@ -338,7 +360,8 @@ function initializeTerminalGestures()
     /// and must have magnitude \geq 1.
     handleVertical_(dy) {
       // Don't do built-in touch scrolling.
-      term_.scrollPort_.onTouch = (e) => { e.preventDefault(); };
+      disableHtermTouchScrolling();
+
       this.isScrollGesture_ = true;
 
       // We count arrow key gestures as ``scroll gestures''.
@@ -433,10 +456,6 @@ function initializeTerminalGestures()
       currentGesture = new Gesture();
     }
 
-    if (!currentGesture) {
-      origTermTouchFn = term_.scrollPort_.onTouch;
-    }
-
     try
     {
       momentum = [ 0, 0 ];
@@ -457,6 +476,8 @@ function initializeTerminalGestures()
     // scrolling.
     momentum = [0, 0];
 
+    evt.preventDefault();
+
     try
     {
       currentGesture.onPointerMove(evt);
@@ -475,8 +496,8 @@ function initializeTerminalGestures()
       currentGesture.onPointerUp(evt, startInertialScroll);
 
       if (currentGesture.getPtrDownCount() == 0) {
-        term_.scrollPort_.onTouch = origTermTouchFn;
         currentGesture = undefined;
+        enableHtermTouchScrolling();
       }
     } catch(e) {
       alert(e);
