@@ -1338,6 +1338,49 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else if (cmd.hasPrefix("reload:")) {
             // Reload the web page:
             self.webView?.reload()
+        } else if (cmd.hasPrefix("resendConfiguration:")) {
+            // For some reason the "window.foregroundColor = ..." in sceneDidBecomeActive did not stick.
+            // We send it again (issue in iOS 15 beta 1)
+            let backgroundColor = terminalBackgroundColor ?? UIColor.systemBackground.resolvedColor(with: traitCollection)
+            let foregroundColor = terminalForegroundColor ?? UIColor.placeholderText.resolvedColor(with: traitCollection)
+            let cursorColor = terminalCursorColor ?? UIColor.link.resolvedColor(with: traitCollection)
+            // TODO: add font size and font name
+            let fontSize = terminalFontSize ?? factoryFontSize
+            let fontName = terminalFontName ?? factoryFontName
+            var command = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
+            NSLog("resendConfiguration, command=\(command)")
+            self.webView!.evaluateJavaScript(command) { (result, error) in
+                if error != nil {
+                    NSLog("Error in resendConfiguration, line = \(command)")
+                    print(error)
+                }
+                if (result != nil) {
+                    NSLog("Return from resendConfiguration, line = \(command)")
+                    print(result)
+                }
+            }
+            command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
+            self.webView!.evaluateJavaScript(command) { (result, error) in
+                if error != nil {
+                    NSLog("Error in resendConfiguration, line = \(command)")
+                    print(error)
+                }
+                if (result != nil) {
+                    NSLog("Return from resendConfiguration, line = \(command)")
+                    print(result)
+                }
+            }
+            command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');  window.term_.scrollPort_.isScrolledEnd = true;"
+            self.webView!.evaluateJavaScript(command) { (result, error) in
+                if error != nil {
+                    NSLog("Error in resendConfiguration, line = \(command)")
+                    print(error)
+                }
+                if (result != nil) {
+                    NSLog("Return from resendConfiguration, line = \(command)")
+                    print(result)
+                }
+            }
         } /* else if (cmd.hasPrefix("JS Error:")) {
             // When debugging JS, output warning/error messages to a file.
             let file = "jsError.txt"
@@ -1935,15 +1978,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         var command = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
         webView!.evaluateJavaScript(command) { (result, error) in
             if error != nil {
-                NSLog("Error in sceneDidBecomeActive, line = \(command)")
-                print(error)
+                // NSLog("Error in sceneDidBecomeActive, line = \(command)")
+                // print(error)
             }
             if (result != nil) {
-                // sprint(result)
+                // NSLog("Return from sceneDidBecomeActive, line = \(command)")
+                // print(result)
             }
         }
-        
-        command = "window.term_ != undefined"
+        // Current status: window.term_ is undefined here in iOS 15b1.
+        command = "(window.term_ != undefined)"
         webView!.evaluateJavaScript(command) { (result, error) in
             if error != nil {
                 print(error)
@@ -1954,21 +1998,23 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
                     self.webView!.evaluateJavaScript(command) { (result, error) in
                         if error != nil {
-                            NSLog("Error in sceneDidBecomeActive, line = \(command)")
-                            print(error)
+                            // NSLog("Error in sceneDidBecomeActive, line = \(command)")
+                            // print(error)
                         }
                         if (result != nil) {
+                            // NSLog("Return from sceneDidBecomeActive, line = \(command)")
                             // print(result)
                         }
                     }
                     command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');  window.term_.scrollPort_.isScrolledEnd = true;"
                     self.webView!.evaluateJavaScript(command) { (result, error) in
                         if error != nil {
-                            NSLog("Error in sceneDidBecomeActive, line = \(command)")
-                            print(error)
+                            // NSLog("Error in sceneDidBecomeActive, line = \(command)")
+                            // print(error)
                         }
                         if (result != nil) {
-                            print(result)
+                            // NSLog("Return from sceneDidBecomeActive, line = \(command)")
+                            // print(result)
                         }
                     }
                 }
@@ -2051,19 +2097,29 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Window preferences, stored on a per-session basis:
         if let fontSize = userInfo["fontSize"] as? Float {
             terminalFontSize = fontSize
+        } else {
+            terminalFontSize = factoryFontSize
         }
         if let fontName = userInfo["fontName"] as? String {
             terminalFontName = fontName
+        } else {
+            terminalFontName = factoryFontName
         }
         // We store colors as hex strings:
         if let backgroundColor = userInfo["backgroundColor"] as? String {
             terminalBackgroundColor = UIColor(hexString: backgroundColor)
+        } else {
+            terminalBackgroundColor = UIColor.systemBackground.resolvedColor(with: traitCollection)
         }
         if let foregroundColor = userInfo["foregroundColor"] as? String {
             terminalForegroundColor =  UIColor(hexString: foregroundColor)
+        } else {
+            terminalForegroundColor = UIColor.placeholderText.resolvedColor(with: traitCollection)
         }
         if let cursorColor = userInfo["cursorColor"] as? String {
             terminalCursorColor = UIColor(hexString: cursorColor)
+        } else {
+            terminalCursorColor = UIColor.link.resolvedColor(with: traitCollection)
         }
         if var terminalData = userInfo["terminal"] as? String {
             if (terminalData.contains(";Thanks for flying Vim")) {
@@ -2105,13 +2161,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                             }
                                         })
         } else {
-            let javascriptCommand = "window.printedContent = \"\"; "
+            let javascriptCommand = "window.printedContent = \"\";"
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
                     NSLog("Error in setting terminal to empty, line = \(javascriptCommand)")
                     print(error)
                 }
-                // if (result != nil) { print(result) }
+                if (result != nil) {
+                    NSLog("Result in setting terminal to empty, line = \(javascriptCommand)")
+                    print(result)
+                }
             }
         }
         // restart the current command if one was running before

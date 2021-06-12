@@ -79,7 +79,7 @@ function setWindowContent(string) {
 	window.printedContent = '';
 	window.term_.io.print(string);
 	printPrompt();
-	window.webkit.messageHandlers.aShell.postMessage('done re-writing the window content.');
+	io.currentCommand = '';
 }
 
 function printPrompt() {
@@ -365,7 +365,7 @@ function updateAutocompleteMenu(io, cursorPosition) {
 function setupHterm() {
 	const term = new hterm.Terminal();
 	// Default monospaced fonts installed: Menlo and Courier. 
-	term.prefs_.set('cursor-shape', 'BLOCK'); 
+	term.prefs_.set('cursor-shape', 'UNDERLINE'); 
 	term.prefs_.set('font-family', window.fontFamily);
 	term.prefs_.set('font-size', window.fontSize); 
 	term.prefs_.set('foreground-color', window.foregroundColor);
@@ -469,7 +469,7 @@ function setupHterm() {
 					helpRunning = true;
 				}
 			}
-			if (window.interactiveCommandRunning && !helpRunning) {
+			if (window.interactiveCommandRunning && (window.commandRunning != '') && !helpRunning) {
 				// specific treatment for interactive commands: forward all keyboard input to them
 				// window.webkit.messageHandlers.aShell.postMessage('sending: ' + string); // for debugging
 				// post keyboard input to stdin
@@ -979,6 +979,9 @@ function setupHterm() {
 	console.log = println
 	console.warn = window.webkit.messageHandlers.aShell.postMessage
 	console.error = window.webkit.messageHandlers.aShell.postMessage
+	if (window.foregroundColor === undefined) {
+		window.webkit.messageHandlers.aShell.postMessage('resendConfiguration:');
+	}
 	if (window.commandRunning === undefined) {
 		window.commandRunning = '';
 	}
@@ -1010,6 +1013,7 @@ function setupHterm() {
 		window.commandRunning = window.commandToExecute;
 		window.commandToExecute = ""; 
 	}
+	window.duringResize = false;
 };
 
 // see https://github.com/holzschu/a-shell/issues/235
@@ -1886,14 +1890,36 @@ hterm.Terminal.prototype.realizeWidth_ = function(columnCount) {
   this.screen_.setColumnCount(this.screenSize.width);
   // iOS: rewrite everything after each resize:
   if ((window.term_ != undefined) && (window.term_.ready_)) {
-  	// But only for primary screen:
+  	// Check that config has been set:
+	if (window.term_.getForegroundColor() === undefined) {
+	    window.term_.setForegroundColor(window.foregroundColor);
+	    window.term_.prefs_.set('foreground-color', window.foregroundColor);
+	}
+	if (window.term_.getBackgroundColor() === undefined) {
+		window.term_.setBackgroundColor(window.backgroundColor);
+		window.term_.prefs_.set('background-color', window.backgroundColor);
+	}
+	if (window.term_.getFontSize() === undefined) {
+		window.term_.setFontSize(window.fontSize); 
+		window.term_.prefs_.set('font-size', window.fontSize); 
+	}
+	if (window.term_.getFontFamily() === undefined) {
+		window.term_.setFontFamily(window.fontFamily); 
+		window.term_.prefs_.set('font-family', window.fontFamily);
+	}
+	if (window.term_.getCursorColor() === undefined) {
+		window.term_.setCursorColor(window.cursorColor);
+		window.term_.prefs_.set('cursor-color', window.cursorColor);
+	}
+  	// only rewrite content for primary screen:
   	if (this.isPrimaryScreen()) { 
-      window.webkit.messageHandlers.aShell.postMessage('Reprint everything');
 	  if ((window.printedContent !== undefined) && (window.printedContent != 'undefined')) {
 	  	let content = window.printedContent; 
 	  	window.term_.wipeContents();
 	  	window.printedContent = '';
-	  	this.io.print(content);
+		window.duringResize = true;
+		this.io.print(content);
+		window.duringResize = false;
 	  }
   	}
   }
@@ -1940,7 +1966,9 @@ hterm.VT.CSI['n'] = function(parseState) {
     this.terminal.io.sendString('\x1b0n');
   } else if (parseState.args[0] == 6) {
 	// window.webkit.messageHandlers.aShell.postMessage('CPR request (n)');
-	window.interactiveCommandRunning = true;
+	if ((window.commandRunning !== undefined) && (window.commandRunning != '') && (!window.duringResize)) {
+		window.interactiveCommandRunning = true;
+	}
     const row = this.terminal.getCursorRow() + 1;
     const col = this.terminal.getCursorColumn() + 1;
     this.terminal.io.sendString('\x1b[' + row + ';' + col + 'R');
@@ -1966,7 +1994,9 @@ hterm.VT.CSI['n'] = function(parseState) {
 hterm.VT.CSI['?n'] = function(parseState) {
   if (parseState.args[0] == 6) {
 	// window.webkit.messageHandlers.aShell.postMessage('CPR request (?n)');
-	window.interactiveCommandRunning = true;
+	if ((window.commandRunning !== undefined) && (window.commandRunning != '') && (!window.duringResize)) {
+		window.interactiveCommandRunning = true;
+	}
     const row = this.terminal.getCursorRow() + 1;
     const col = this.terminal.getCursorColumn() + 1;
     this.terminal.io.sendString('\x1b[' + row + ';' + col + 'R');

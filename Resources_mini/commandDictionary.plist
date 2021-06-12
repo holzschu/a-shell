@@ -758,5 +758,12 @@
 		<string>abeupiCrEvcgosl</string>
 		<string>file</string>
 	</array>
+	<key>lg2</key>
+	<array>
+		<string>lg2.framework/lg2</string>
+		<string>main</string>
+		<string></string>
+		<string>directory</string>
+	</array>
 </dict>
 </plist>
