@@ -15,7 +15,7 @@ function initializeTerminalGestures()
 
   // Minimum lines/second for speed to trigger
   // inertial scrolling.
-  const INERTIAL_SCROLL_MIN_INITIAL_SPEED = 10;
+  const INERTIAL_SCROLL_MIN_INITIAL_SPEED = 15;
 
   // While inertial scrolling, if the inertial scroll speed
   // drops below this many lines per second, inertial scrolling
@@ -25,7 +25,7 @@ function initializeTerminalGestures()
   // When we start inertial scrolling, scroll this many times faster
   // than how fast we were scrolling with the user's finger/pointer
   // on the screen.
-  const INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER = 1.5;
+  const INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER = 1.4;
 
   // Minimum number of characters a cursor must move to trigger a
   //(non-arrow-)key press.
@@ -182,7 +182,10 @@ function initializeTerminalGestures()
   }
 
   class Gesture {
-    constructor() {
+    /// [carryoverMomentum]: Any inertial scroll momentum (with mass=1)
+    /// remaining just before the start of this gesture. Copied during
+    /// initialization.
+    constructor(carryoverMomentum) {
       // Last positions at which pointer
       // data was eaten by an action.
       this.ptrLastHandledPositions_ = {};
@@ -204,6 +207,8 @@ function initializeTerminalGestures()
       // Maximum value of ptrsDown_
       // during this gesture.
       this.maxPtrCount_ = 0;
+
+      this.origMomentum_ = [carryoverMomentum[0], carryoverMomentum[1]];
     }
 
     getPtrDownCount() {
@@ -293,7 +298,20 @@ function initializeTerminalGestures()
       if (this.ptrCount_ == 0
           && this.isScrollGesture_
           && Math.abs(vy) >= INERTIAL_SCROLL_MIN_INITIAL_SPEED) {
-        startInertialScroll(this, vx * INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER, vy * INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER);
+        let carryoverX = this.origMomentum_[0];
+        let carryoverY = this.origMomentum_[1];
+
+        if (Math.sign(carryoverX) != Math.sign(vx)) {
+          carryoverX = 0;
+        }
+
+        if (Math.sign(carryoverY) != Math.sign(vy)) {
+          carryoverY = 0;
+        }
+
+        startInertialScroll(this,
+          vx * INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER + carryoverX,
+          vy * INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER + carryoverY);
       }
     }
 
@@ -403,7 +421,6 @@ function initializeTerminalGestures()
   const startInertialScroll = (gesture, vx, vy) => {
     let momentumLoop;
     let lastT = (new Date()).getTime();
-    let unhandledP = [ 0, 0 ];
 
     // Updates the "momentum" of the viewport in a loop.
     momentumLoop = () => {
@@ -417,19 +434,10 @@ function initializeTerminalGestures()
       p[0] *= decay;
       p[1] *= decay;
 
-      unhandledP[0] += p[0] * dt;
-      unhandledP[1] += p[1] * dt;
-
       // If we're still scrolling fast enough, continue
       // updating the momentum
       if (gesture.shouldKeepInertialScrolling(p[0], p[1])) {
-
-        // Take action on any unhandled momentum
-        if (Math.abs(unhandledP[1]) > 1) {
-          // At present, not tracking p[0].
-          gesture.onInertialScrollUpdate(0, unhandledP[1]);
-          unhandledP[1] = 0;
-        }
+        gesture.onInertialScrollUpdate(p[0] * dt, p[1] * dt);
 
         momentumLoopRunning = true;
         lastT = nowT;
@@ -457,21 +465,21 @@ function initializeTerminalGestures()
     // If the start of a new gesture (we may have lost
     // the end of the previous):
     if (evt.isPrimary) {
-      currentGesture = new Gesture();
+      currentGesture = new Gesture(momentum);
     }
 
-    try
-    {
-      momentum = [ 0, 0 ];
+    try {
       if (!currentGesture) {
-        currentGesture = new Gesture();
+        currentGesture = new Gesture(momentum);
       }
 
+      momentum = [ 0, 0 ];
+
       currentGesture.onPointerDown(evt);
-    }
-    catch(e)
-    {
-      alert(e);
+    } catch(e) {
+      if (DEBUG) {
+        alert(e);
+      }
     }
   };
 
@@ -521,4 +529,3 @@ function initializeTerminalGestures()
     momentum = [0, 0];
   };
 }
-
