@@ -146,7 +146,7 @@ You can download more commands at: https://github.com/holzschu/a-Shell-commands/
 public func credits(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     if let delegate = currentDelegate {
         let creditText = """
-a-Shell owes to many open-source contributors. The current code contains contributions from: Yury Korolev, Ian McDowell, Louis d'Hauwe, Anders Borum, Adrian Labbé, Kenta Kubo, Ian Willis and suggestions for improvements from many others.
+a-Shell owes to many open-source contributors. The current code contains contributions from: Yury Korolev, Ian McDowell, Louis d'Hauwe, Anders Borum, Adrian Labbé, Kenta Kubo, Ian Willis, Henry Heino and suggestions for improvements from many others.
 
 Most terminal commands are from the BSD distribution, mainly through the Apple OpenSource program.
 

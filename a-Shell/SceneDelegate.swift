@@ -1135,7 +1135,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 width = newWidth
                 ios_setWindowSize(Int32(width), Int32(height), self.persistentIdentifier?.toCString())
                 setenv("COLUMNS", "\(width)".toCString(), 1)
-                ios_signal(SIGWINCH);
             }
         } else if (cmd.hasPrefix("height:")) {
             var command = cmd
@@ -1146,7 +1145,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // NSLog("Calling ios_setWindowSize: \(width) x \(height)")
                 ios_setWindowSize(Int32(width), Int32(height), self.persistentIdentifier?.toCString())
                 setenv("LINES", "\(height)".toCString(), 1)
-                ios_signal(SIGWINCH);
             }
         } else if (cmd.hasPrefix("controlOff")) {
             controlOn = false
@@ -1348,15 +1346,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let fontSize = terminalFontSize ?? factoryFontSize
             let fontName = terminalFontName ?? factoryFontName
             var command = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
-            NSLog("resendConfiguration, command=\(command)")
+            // NSLog("resendConfiguration, command=\(command)")
             self.webView!.evaluateJavaScript(command) { (result, error) in
                 if error != nil {
                     NSLog("Error in resendConfiguration, line = \(command)")
                     print(error)
                 }
                 if (result != nil) {
-                    NSLog("Return from resendConfiguration, line = \(command)")
-                    print(result)
+                    // NSLog("Return from resendConfiguration, line = \(command)")
+                    // print(result)
                 }
             }
             command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
@@ -1366,8 +1364,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     print(error)
                 }
                 if (result != nil) {
-                    NSLog("Return from resendConfiguration, line = \(command)")
-                    print(result)
+                    // NSLog("Return from resendConfiguration, line = \(command)")
+                    // print(result)
                 }
             }
             command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');  window.term_.scrollPort_.isScrolledEnd = true;"
@@ -1377,8 +1375,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     print(error)
                 }
                 if (result != nil) {
-                    NSLog("Return from resendConfiguration, line = \(command)")
-                    print(result)
+                    // NSLog("Return from resendConfiguration, line = \(command)")
+                    // print(result)
                 }
             }
         } /* else if (cmd.hasPrefix("JS Error:")) {
@@ -2023,7 +2021,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         setEnvironmentFGBG(foregroundColor: foregroundColor, backgroundColor: backgroundColor)
         webView!.allowDisplayingKeyboardWithoutUserAction()
         activateVoiceOver(value: UIAccessibility.isVoiceOverRunning)
-        ios_signal(SIGWINCH); // is this still required?
     }
     
     func sceneWillResignActive(_ scene: UIScene) {
