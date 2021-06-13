@@ -5,6 +5,7 @@
 function initializeTerminalGestures()
 {
   const DEBUG = false;
+  	
 
   // Determines the decay rate of the inertial scroll
   // velocity.
@@ -104,6 +105,7 @@ function initializeTerminalGestures()
     gestureStatus.style.display = "block";
     gestureStatus.innerText = "...";
     showDebugMsg = (text) => {
+      window.webkit.messageHandlers.aShell.postMessage('showDebugMsg:' + text);
       gestureStatus.innerText = text;
     };
   }

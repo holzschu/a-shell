@@ -1,4 +1,4 @@
-/* Only used when debugging:
+/* Only used when debugging: 
 window.onerror = (msg, url, line, column, error) => {
   const message = {
     message: msg,
@@ -15,6 +15,7 @@ window.onerror = (msg, url, line, column, error) => {
   }
 };
 */
+//
 // functions to deal with executeJavaScript: 
 function print(printString) {
 	window.webkit.messageHandlers.aShell.postMessage('print:' + printString);
