@@ -28,7 +28,7 @@ function initializeTerminalGestures()
   // When we start inertial scrolling, scroll this many times faster
   // than how fast we were scrolling with the user's finger/pointer
   // on the screen.
-  const INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER = 1.1;
+  const INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER = 1.4;
 
   // Minimum number of characters a cursor must move to trigger a
   //(non-arrow-)key press.
@@ -172,6 +172,11 @@ function initializeTerminalGestures()
         const dx = (evt.pageX - this.lastPosition_[0]) / getCharSize().width;
         const dy = (evt.pageY - this.lastPosition_[1]) / getCharSize().height;
         const dt = (nowTime - this.lastTime_) / 1000;
+
+        // Too small of a time difference -> inaccurate velocities.
+        if (dt < 0.02) {
+          return;
+        }
 
         // Average the current estimated
         // velocity and the last for
