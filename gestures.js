@@ -22,6 +22,9 @@ function initializeTerminalGestures()
   // stops.
   const MIN_INERTIAL_SCROLL_CONTINUE_SPEED = 3;
 
+  // Maximum number of lines/second we can scroll
+  const MAX_INERTIAL_SCROLL_SPEED = 2000;
+
   // When we start inertial scrolling, scroll this many times faster
   // than how fast we were scrolling with the user's finger/pointer
   // on the screen.
@@ -98,11 +101,6 @@ function initializeTerminalGestures()
   // Returns true if it thinks less or man is.
   const isLessRunning = () => {
     return window.commandRunning.search(new RegExp("(^less|^man|^perldoc|.*[|]\\s*less)")) == 0;
-  };
-
-  // Tries to determine whether the current command is vim.
-  const isVimRunning = () => {
-    return window.commandRunning.startsWith("vim");
   };
 
   // Commands like less and vim generally use an alternate screen
@@ -452,6 +450,12 @@ function initializeTerminalGestures()
         momentumLoopRunning = false;
       }
     };
+
+    // Some programs stop working if too much input/second
+    // is given.
+    if (Math.abs(vy) > MAX_INERTIAL_SCROLL_SPEED) {
+      vy = Math.sign(vy) * MAX_INERTIAL_SCROLL_SPEED;
+    }
 
     momentum = [vx, vy];
     if (!momentumLoopRunning) {
