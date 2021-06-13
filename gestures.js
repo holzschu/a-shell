@@ -215,6 +215,7 @@ function initializeTerminalGestures()
       this.maxPtrCount_ = 0;
 
       this.origMomentum_ = [carryoverMomentum[0], carryoverMomentum[1]];
+      this.gestureStartTime_ = (new Date()).getTime();
     }
 
     getPtrDownCount() {
@@ -301,11 +302,15 @@ function initializeTerminalGestures()
       const vx = velocity[0];
       const vy = velocity[1];
 
+      const nowTime = (new Date()).getTime();
+      const dt = (nowTime - this.gestureStartTime_) / 1000;
+
+
       if (this.ptrCount_ == 0
           && this.isScrollGesture_
           && Math.abs(vy) >= INERTIAL_SCROLL_MIN_INITIAL_SPEED) {
-        let carryoverX = this.origMomentum_[0];
-        let carryoverY = this.origMomentum_[1];
+        let carryoverX = this.origMomentum_[0] * Math.pow( INERTIAL_SCROLL_DECAY_FACTOR, dt);
+        let carryoverY = this.origMomentum_[1] * Math.pow(INERTIAL_SCROLL_DECAY_FACTOR, dt);
 
         if (Math.sign(carryoverX) != Math.sign(vx)) {
           carryoverX = 0;
