@@ -28,7 +28,7 @@ function initializeTerminalGestures()
   // When we start inertial scrolling, scroll this many times faster
   // than how fast we were scrolling with the user's finger/pointer
   // on the screen.
-  const INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER = 1.4;
+  const INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER = 1.1;
 
   // Minimum number of characters a cursor must move to trigger a
   //(non-arrow-)key press.
@@ -56,6 +56,8 @@ function initializeTerminalGestures()
     targetElem.addEventListener('pointermove', (evt) =>
       gestures_.gesturePtrMove(evt));
     targetElem.addEventListener('pointerleave', (evt) =>
+      gestures_.gesturePtrUp(evt));
+    targetElem.addEventListener('pointerup', (evt) =>
       gestures_.gesturePtrUp(evt));
     window.term_.document_.body.addEventListener('keydown', (evt) =>
       gestures_.handleKeyEvent(evt));
