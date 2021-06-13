@@ -105,6 +105,12 @@ function initializeTerminalGestures()
     return window.commandRunning.startsWith("vim");
   };
 
+  // Commands like less and vim generally use an alternate screen
+  // to display content.
+  const isUsingAlternateScreen = () => {
+    return !term_.isPrimaryScreen();
+  };
+
   const moveCursor = (dx, dy) => {
     for (let i = 0; i <= Math.abs(dx) - 1; i++) {
       term_.io.sendString(dx < 0 ? "\x1b[D" : "\033[C");
@@ -393,7 +399,7 @@ function initializeTerminalGestures()
       }
 
       // Vertical gestures: Move cursor if in vim/less/man
-      if (isVimRunning() || isLessRunning() || this.maxPtrCount_ == 2) {
+      if (isUsingAlternateScreen() || this.maxPtrCount_ == 2) {
         moveCursor(0, dy);
         term_.scrollEnd();
       } else {
