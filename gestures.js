@@ -572,7 +572,7 @@ function initializeTerminalGestures()
 
       // We don't really know how long the gesture took,
       // but let's guess:
-      let dt = 4;
+      let dt = 500;
 
       // Scroll events deltaY can be specified in units other than
       // lines. See
