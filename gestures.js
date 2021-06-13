@@ -63,7 +63,12 @@ function initializeTerminalGestures()
 
     window.term_.document_.body.addEventListener('keydown', (evt) =>
       gestures_.handleKeyEvent(evt));
+
+    // Have listeners inside and outside the terminal iframe:
+    // We want to intercept the wheel event.
     document.body.addEventListener('wheel', (evt) =>
+      gestures_.gestureMouseWheel(evt));
+    window.term_.document_.body.addEventListener('wheel', (evt) =>
       gestures_.gestureMouseWheel(evt));
   }
 
@@ -562,7 +567,7 @@ function initializeTerminalGestures()
 
       // We don't really know how long the gesture took,
       // but let's guess:
-      let dt = 0.25;
+      let dt = 4;
 
       // Scroll events deltaY can be specified in units other than
       // lines. See
@@ -570,10 +575,11 @@ function initializeTerminalGestures()
       if (evt.deltaMode == WheelEvent.DOM_DELTA_PIXEL) {
         dy /= lineHeight;
       } else if (evt.deltaMode == WheelEvent.DOM_DELTA_PAGE) {
-        dy *= term_.screenSize.height;
+        dy *= 0.5 * term_.screenSize.height;
       }
 
-      currentGesture.handleVertical_(evt.deltaY);
+      showDebugMsg("Wheel: " + dy);
+      currentGesture.handleVertical_(dy);
 
       // Estimate a velocity and try to start inertial scrolling.
       const estimatedVy = dy / dt;
