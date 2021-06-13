@@ -48,6 +48,7 @@ function initializeTerminalGestures()
     gestures_.gesturePtrDown = () => {};
     gestures_.gesturePtrMove = () => {};
     gestures_.gesturePtrUp = () => {};
+    gestures_.gestureMouseWheel = () => {};
 
     const targetElem = window.term_.scrollPort_.screen_;
 
@@ -59,8 +60,11 @@ function initializeTerminalGestures()
       gestures_.gesturePtrUp(evt));
     targetElem.addEventListener('pointerup', (evt) =>
       gestures_.gesturePtrUp(evt));
+
     window.term_.document_.body.addEventListener('keydown', (evt) =>
       gestures_.handleKeyEvent(evt));
+    document.body.addEventListener('wheel', (evt) =>
+      gestures_.gestureMouseWheel(evt));
   }
 
   let gestureStatus = gestures_.gestureStatus;
@@ -280,6 +284,9 @@ function initializeTerminalGestures()
       if (!this.shouldBufferDy_(this.bufferedDy_)) {
         showDebugMsg("Vert:" + dy);
 
+        // Don't do built-in touch scrolling.
+        disableHtermTouchScrolling();
+
         this.handleVertical_(this.bufferedDy_, evt);
         this.bufferedDy_ = 0;
       }
@@ -397,9 +404,6 @@ function initializeTerminalGestures()
     /// [dy] is in units of characters
     /// and must have magnitude \geq 1.
     handleVertical_(dy) {
-      // Don't do built-in touch scrolling.
-      disableHtermTouchScrolling();
-
       this.isScrollGesture_ = true;
 
       // We count arrow key gestures as ``scroll gestures''.
@@ -539,6 +543,41 @@ function initializeTerminalGestures()
         currentGesture = undefined;
         enableHtermTouchScrolling();
       }
+    } catch(e) {
+      if (DEBUG) {
+        alert(e);
+      }
+    }
+  };
+
+  gestures_.gestureMouseWheel = (evt) => {
+    if (!currentGesture) {
+      currentGesture = new Gesture(momentum);
+    }
+
+    const lineHeight = getCharSize().height;
+
+    try {
+      let dy = evt.deltaY;
+
+      // We don't really know how long the gesture took,
+      // but let's guess:
+      let dt = 0.25;
+
+      // Scroll events deltaY can be specified in units other than
+      // lines. See
+      //  https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
+      if (evt.deltaMode == WheelEvent.DOM_DELTA_PIXEL) {
+        dy /= lineHeight;
+      } else if (evt.deltaMode == WheelEvent.DOM_DELTA_PAGE) {
+        dy *= term_.screenSize.height;
+      }
+
+      currentGesture.handleVertical_(evt.deltaY);
+
+      // Estimate a velocity and try to start inertial scrolling.
+      const estimatedVy = dy / dt;
+      startInertialScroll(currentGesture, 0, estimatedVy);
     } catch(e) {
       if (DEBUG) {
         alert(e);
