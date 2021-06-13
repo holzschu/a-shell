@@ -556,6 +556,8 @@ function initializeTerminalGestures()
   };
 
   gestures_.gestureMouseWheel = (evt) => {
+    evt.preventDefault();
+
     if (!currentGesture) {
       currentGesture = new Gesture(momentum);
     }
@@ -564,6 +566,9 @@ function initializeTerminalGestures()
 
     try {
       let dy = evt.deltaY;
+
+      // Don't scroll the main window.
+      document.scrollingElement.scrollTop = 0;
 
       // We don't really know how long the gesture took,
       // but let's guess:
