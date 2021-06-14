@@ -5,7 +5,6 @@
 function initializeTerminalGestures()
 {
   const DEBUG = false;
-  	
 
   // Determines the decay rate of the inertial scroll
   // velocity.
@@ -140,6 +139,9 @@ function initializeTerminalGestures()
   let origTouchFn = term_.scrollPort_.onTouch;
   let disableTouchFn = undefined;
 
+  /// Temporarily turn off hterm's touch scrolling.
+  /// Does nothing if touch scrolling has already been disabled
+  /// by this method.
   const disableHtermTouchScrolling = () => {
     if (term_.scrollPort_.onTouch !== disableTouchFn) {
       origTouchFn = term_.scrollPort_.onTouch;
@@ -288,11 +290,17 @@ function initializeTerminalGestures()
         this.bufferedDx_ = 0;
       }
 
-      if (!this.shouldBufferDy_(this.bufferedDy_)) {
-        showDebugMsg("Vert:" + dy);
+      if (Math.abs(this.bufferedDy_) > 0.5) {
+        showDebugMsg("Disabled hterm scrolling.");
 
+        // hterm's built-in touch scrolling can take effect
+        // after the user attemtpts to scroll less than a line.
         // Don't do built-in touch scrolling.
         disableHtermTouchScrolling();
+      }
+
+      if (!this.shouldBufferDy_(this.bufferedDy_)) {
+        showDebugMsg("Vert:" + dy);
 
         this.handleVertical_(this.bufferedDy_, evt);
         this.bufferedDy_ = 0;
@@ -324,7 +332,14 @@ function initializeTerminalGestures()
       const nowTime = (new Date()).getTime();
       const dt = (nowTime - this.gestureStartTime_) / 1000;
 
+      this.startInertialScroll_(vx, vy, dt, startInertialScroll);
+    }
 
+    /// Decide whether to start inertial scrolling.
+    /// [vy] is the gesture's end velocity and [dt]
+    /// is the time it took to complete the gesture.
+    /// Returns true iff inertial scrolling was started.
+    startInertialScroll_(vx, vy, dt, startInertialScroll) {
       if (this.ptrCount_ == 0
           && this.isScrollGesture_
           && Math.abs(vy) >= INERTIAL_SCROLL_MIN_INITIAL_SPEED) {
@@ -342,7 +357,10 @@ function initializeTerminalGestures()
         startInertialScroll(this,
           vx * INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER + carryoverX,
           vy * INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER + carryoverY);
+        return true;
       }
+
+      return false;
     }
 
     /// Handle inertial scrolling.
@@ -421,7 +439,14 @@ function initializeTerminalGestures()
 
       // Vertical gestures: Move cursor if in vim/less/man
       if (isUsingAlternateScreen() || this.maxPtrCount_ == 2) {
-        moveCursor(0, dy);
+        // In less, cursor movement scrolls content,
+        // so invert the cursor movement direction for
+        // more natural scrolling.
+        if (isLessRunning()) {
+          moveCursor(0, -dy);
+        } else {
+          moveCursor(0, dy);
+        }
         term_.scrollEnd();
       } else {
         // Otherwise, scroll.
@@ -574,7 +599,7 @@ function initializeTerminalGestures()
 
       // We don't really know how long the gesture took,
       // but let's guess:
-      let dt = 500;
+      let dt = 0.5;
 
       // Scroll events deltaY can be specified in units other than
       // lines. See
@@ -590,7 +615,7 @@ function initializeTerminalGestures()
 
       // Estimate a velocity and try to start inertial scrolling.
       const estimatedVy = dy / dt;
-      startInertialScroll(currentGesture, 0, estimatedVy);
+      currentGesture.startInertialScroll_(0, estimatedVy, dt, startInertialScroll);
     } catch(e) {
       if (DEBUG) {
         alert(e);
@@ -603,3 +628,5 @@ function initializeTerminalGestures()
     momentum = [0, 0];
   };
 }
+
+
