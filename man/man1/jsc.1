@@ -1,0 +1,32 @@
+.TH JSC 1 "13 June 2021"
+.SH NAME
+jsc \- Execute JavaScript
+.SH SYNOPSIS
+\fBjsc\fP [ --in-window ] \fIfilename\fP
+.SH DESCRIPTION
+\fBjsc\fP executes JavaScript in a \fIWkWebView\fP,
+either the terminal's WebView or a background WebView.
+.SS Options
+.TP
+\fB--in-window\fP
+Run the contents of the given file in the same
+WkWebView as the terminal GUI.
+If this option is given, the terminal can be
+accessed through the \fIterm_\fP global variable.
+.SS "Using term_"
+The terminal used by \fIa-Shell\fP is accessible via
+the global \fIterm_\fP variable if \fI--in-window\fP is given.
+.PP
+The terminal is inside of an \fIiframe\fP element.
+The \fIiframe\fP's \fIdocument\fP element can be accessed
+via \fIterm_.getDocument()\fP.
+.PP
+If possible, avoid using members of \fIterm_\fP that end with
+an underscore.
+These are private variables whose names are more likely to change
+than variables that do not have such names.
+.SH "SEE ALSO"
+jsi(1)
+.SH BUGS
+The \fIterm_\fP API is unstable!
+Its contents may change when \fIa-Shell\fP updates.
