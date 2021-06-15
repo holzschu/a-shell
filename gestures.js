@@ -33,6 +33,23 @@ function initializeTerminalGestures()
   // Minimum number of characters a cursor must move to trigger a
   //(non-arrow-)key press.
   const HORIZ_KEYBOARD_KEYPRESS_CHARS = 7;
+  
+  // We don't know how long wheel gestures actually take, but we can
+  // guess.
+  const MOUSE_WHEEL_GESTURE_EST_D_TIME = 0.5;
+
+  // Multiplies the number of lines by which mouse wheel gestures scroll.
+  const MOUSE_WHEEL_SENSITIVITY = 2;
+  
+  // Maximum estimated mouse wheel gesture speed in lines/second.
+  const MOUSE_WHEEL_GESTURE_MAX_SPEED = 60;
+  
+  // Discard wheel events that happen within this number of seconds after
+  // the previous.
+  const MIN_TIME_BETWEEN_WHEEL_GESTURES = 0.05;
+  
+  // Minimum number of lines a single mouse wheel gesture can scroll.
+  const MOUSE_WHEEL_MIN_LINES = 1;
 
   // Things that should only be done once: Useful for
   // debugging if we want to run this script multiple times
@@ -519,6 +536,11 @@ function initializeTerminalGestures()
 
   gestures_.gesturePtrDown = (evt) => {
     showDebugMsg("Down@" + evt.pageX + "," + evt.pageY);
+    
+    // Only interpret touch events as gestures
+    if (evt.pointerType != "touch") {
+      return;
+    }
 
     // If the start of a new gesture (we may have lost
     // the end of the previous):
@@ -582,14 +604,17 @@ function initializeTerminalGestures()
     }
   };
 
+  let lastWheelTime = (new Date()).getTime();
   gestures_.gestureMouseWheel = (evt) => {
     evt.preventDefault();
 
     if (!currentGesture) {
       currentGesture = new Gesture(momentum);
+      momentum = [ 0, 0 ];
     }
 
     const lineHeight = getCharSize().height;
+    const nowTime = (new Date()).getTime();
 
     try {
       let dy = evt.deltaY;
@@ -599,7 +624,18 @@ function initializeTerminalGestures()
 
       // We don't really know how long the gesture took,
       // but let's guess:
-      let dt = 0.5;
+      let dt = MOUSE_WHEEL_GESTURE_EST_D_TIME;
+      let actualDt = (nowTime - lastWheelTime) / 1000;
+           
+      if (actualDt < MIN_TIME_BETWEEN_WHEEL_GESTURES) {
+          return;
+      }
+      
+      // If the actual time between this and the last scroll gestures
+      // is less than our estimate, use the actual time as our estimate.
+      if (actualDt < dt) {
+        dt = actualDt;
+      }
 
       // Scroll events deltaY can be specified in units other than
       // lines. See
@@ -607,20 +643,34 @@ function initializeTerminalGestures()
       if (evt.deltaMode == WheelEvent.DOM_DELTA_PIXEL) {
         dy /= lineHeight;
       } else if (evt.deltaMode == WheelEvent.DOM_DELTA_PAGE) {
-        dy *= 0.5 * term_.screenSize.height;
+        dy *= term_.screenSize.height / MOUSE_WHEEL_SENSITIVITY;
+      }
+      
+      dy *= MOUSE_WHEEL_SENSITIVITY;
+      if (Math.abs(dy) < MOUSE_WHEEL_MIN_LINES) {
+        dy = Math.sign(dy) * MOUSE_WHEEL_MIN_LINES;
       }
 
       showDebugMsg("Wheel: " + dy);
       currentGesture.handleVertical_(dy);
 
       // Estimate a velocity and try to start inertial scrolling.
-      const estimatedVy = dy / dt;
+      let estimatedVy = dy / dt;
+      
+      // Bound the estimated velocity.
+      if (Math.abs(estimatedVy) > MOUSE_WHEEL_GESTURE_MAX_SPEED) {
+        estimatedVy = Math.sign(estimatedVy) * MOUSE_WHEEL_GESTURE_MAX_SPEED;
+      }
+      
       currentGesture.startInertialScroll_(0, estimatedVy, dt, startInertialScroll);
+      currentGesture = undefined;
     } catch(e) {
       if (DEBUG) {
         alert(e);
       }
     }
+    
+    lastWheelTime = nowTime;
   };
 
   // Stop inertial scrolling if the user presses a key:
