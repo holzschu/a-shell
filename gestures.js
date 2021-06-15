@@ -574,6 +574,9 @@ function initializeTerminalGestures()
 
     evt.preventDefault();
 
+    // Don't scroll the main window.
+    document.scrollingElement.scrollTop = 0;
+
     try {
       currentGesture.onPointerMove(evt);
     } catch(e) {
