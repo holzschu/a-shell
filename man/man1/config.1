@@ -1,0 +1,84 @@
+.TH CONFIG 1 "14 June 2021"
+.SH NAME
+config \- Configure \fIa-Shell\fP.
+.SH SYNOPSIS
+\fBconfig\fP [ -s font size ]
+  [ -n \fIfont_name\fP? ]
+  [ -b \fIbackground_color\fP ]
+  [ -f \fIforeground_color\fP ]
+  [ -c \fIcursor_color\fP ]
+  [ -g | --global ]
+  [ -p | --permanent ]
+  [ -r | --reset ]
+  [ -d | --default ]
+  [ --show ]
+.SH DESCRIPTION
+\fBconfig\fP can change the settings of the current session,
+the settings of all open sessions,
+or the default settings for new sessions.
+.PP
+For all parameters:
+specify "\fIdefault\fP" to get the default value currently stored,
+"\fIfactory\fP" to get a-Shell factory defaults.
+.PP
+Colors can be defined by names,
+RGB triplets (i.e. red green blue),
+or HexStrings (i.e. '#00FF00').
+.SS Options
+.TP
+\fB-h | --help\fP
+Display usage for \fBconfig\fP.
+.TP
+\fB-s | --size\fP \fISIZE\fP
+Set the font size to \fISIZE\fP `pt'.
+This should be a number.
+Don't include units.
+.TP
+\fB-n | --name\fP \fINAME\fP?
+Set font name to \fINAME\fP or show a font picker dialog.
+.PP
+If \fINAME\fP is not given or is \fIpicker\fP,
+the system font picker dialog is shown.
+.TP
+\fB-b | --background\fP [ \fIFULL_COLOR\fP | \fICOLOR_R COLOR_G COLOR_B\fP ]
+Set background color to \fIFULL_COLOR\fP
+or to \fIrgb(COLOR_R, COLOR_G, COLOR_B)\fP,
+where each component ranges from zero to one.
+.TP
+\fB-f | --foreground\fP [ \fICOLOR\fP | \fICOLOR_R COLOR_G COLOR_B\fP ]
+Set foreground color
+.TP
+\fB-c | --cursor\fP [ \fICOLOR\fP | \fICOLOR_R COLOR_G COLOR_B\fP ]
+set cursor and highlight color.
+.TP
+\fB-g | --global\fP
+Apply settings to all windows currently open
+.TP
+\fB-p | --permanent\fP
+Store settings as default values
+.TP
+\fB-d | --default\fP
+Reset all settings to default values
+.TP
+\fB-r | --reset\fP
+Reset all settings to factory defaults
+.TP
+\fB--show\fP
+Show current settings
+.SS Examples
+.TP
+\fBconfig -p\fP
+Make settings for current window the default for future windows.
+.TP
+\fBconfig -dgp\fP
+Revert all open and future windows to stored default.
+.TP
+\fBconfig -b 0 0 0 -f #00ff00\fP
+Get a green-on-black VT100 look.
+.TP
+\fBconfig -p -b 0 0 0 -f 1 0.5 1\fP
+Set the current session's background
+to black (rgb 0 0 0) with a magenta
+foreground.
+Make this the default configuration.
+
