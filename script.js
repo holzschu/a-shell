@@ -2062,3 +2062,22 @@ lib.PreferenceManager.prototype.setSync = function(
   // would return the previous value.
   this.notifyChange_(name);
 };
+
+
+/**
+ * Select the font-family and font-smoothing for this scrollport.
+ *
+ * @param {string} fontFamily Value of the CSS 'font-family' to use for this
+ *     scrollport.  Should be a monospace font.
+ * @param {string=} smoothing Optional value for '-webkit-font-smoothing'.
+ *     Defaults to an empty string if not specified.
+ */
+// iOS edit: added a backup font in case the requested font cannot be loaded. It has to be hardcoded.
+hterm.ScrollPort.prototype.setFontFamily = function(
+    fontFamily, smoothing = '') {
+  this.screen_.style.fontFamily = fontFamily + ", Menlo, monospace";
+  this.screen_.style.webkitFontSmoothing = smoothing;
+
+  this.syncCharacterSize();
+};
+
