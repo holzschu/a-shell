@@ -2,8 +2,7 @@
  * Handles gesture recognition and inertial scrolling.
  */
 
-function initializeTerminalGestures()
-{
+function initializeTerminalGestures() {
   const DEBUG = false;
 
   // Determines the decay rate of the inertial scroll
@@ -33,35 +32,51 @@ function initializeTerminalGestures()
   // Minimum number of characters a cursor must move to trigger a
   //(non-arrow-)key press.
   const HORIZ_KEYBOARD_KEYPRESS_CHARS = 7;
-  
+
   // We don't know how long wheel gestures actually take, but we can
   // guess.
   const MOUSE_WHEEL_GESTURE_EST_D_TIME = 0.5;
 
   // Multiplies the number of lines by which mouse wheel gestures scroll.
   const MOUSE_WHEEL_SENSITIVITY = 2;
-  
+
   // Maximum estimated mouse wheel gesture speed in lines/second.
   const MOUSE_WHEEL_GESTURE_MAX_SPEED = 60;
-  
+
   // Discard wheel events that happen within this number of seconds after
   // the previous.
   const MIN_TIME_BETWEEN_WHEEL_GESTURES = 0.05;
-  
+
   // Minimum number of lines a single mouse wheel gesture can scroll.
   const MOUSE_WHEEL_MIN_LINES = 1;
 
   // Things that should only be done once: Useful for
   // debugging if we want to run this script multiple times
   // in the same instance of a-Shell.
-  if (!window.gestures_)
-  {
+  if (!window.gestures_) {
     window.gestures_ = {};
-    window.gestures_.gestureStatus = document.createElement("div");
 
+    // User-settable preferences
+    // Can be overridden after loading this script.
+    gestures_.preferences = {
+      swipeLeft: {
+        // At present, one-finger swipes are always arrow keys
+        2: '\x1b[1~', // Two-finger left swipe: HOME
+        3: '\x1b', // Three-finger left swipe: ESC
+      },
+      swipeRight: {
+        2: '\t', // Two-finger right swipe: tab
+ // TODO: \n doesn't act as expected:
+ //        3: '\n', // Three-finger right swipe: Enter
+      },
+    };
+
+    // Debug view
+    window.gestures_.gestureStatus = document.createElement("div");
     term_.document_.body.appendChild(gestures_.gestureStatus);
     gestures_.gestureStatus.classList.add("gestureStatus");
 
+    // Events
     gestures_.gesturePtrDown = () => {};
     gestures_.gesturePtrMove = () => {};
     gestures_.gesturePtrUp = () => {};
@@ -426,12 +441,16 @@ function initializeTerminalGestures()
         this.isKeyboardGesture_ = true;
         this.isScrollGesture_ = false;
 
+        let key = null;
+
         if (dx >= HORIZ_KEYBOARD_KEYPRESS_CHARS) {
-          // Tab key
-          term_.io.sendString("\t");
+          key = gestures_.preferences.swipeRight[this.maxPtrCount_] || key;
         } else if (dx <= -HORIZ_KEYBOARD_KEYPRESS_CHARS) {
-          // Escape key
-          term_.io.sendString("\x1b");
+          key = gestures_.preferences.swipeLeft[this.maxPtrCount_] || key;
+        }
+
+        if (key) {
+          term_.io.sendString(key);
         }
 
         term_.scrollEnd();
@@ -536,7 +555,7 @@ function initializeTerminalGestures()
 
   gestures_.gesturePtrDown = (evt) => {
     showDebugMsg("Down@" + evt.pageX + "," + evt.pageY);
-    
+
     // Only interpret touch events as gestures
     if (evt.pointerType != "touch") {
       return;
@@ -629,11 +648,11 @@ function initializeTerminalGestures()
       // but let's guess:
       let dt = MOUSE_WHEEL_GESTURE_EST_D_TIME;
       let actualDt = (nowTime - lastWheelTime) / 1000;
-           
+
       if (actualDt < MIN_TIME_BETWEEN_WHEEL_GESTURES) {
           return;
       }
-      
+
       // If the actual time between this and the last scroll gestures
       // is less than our estimate, use the actual time as our estimate.
       if (actualDt < dt) {
@@ -648,7 +667,7 @@ function initializeTerminalGestures()
       } else if (evt.deltaMode == WheelEvent.DOM_DELTA_PAGE) {
         dy *= term_.screenSize.height / MOUSE_WHEEL_SENSITIVITY;
       }
-      
+
       dy *= MOUSE_WHEEL_SENSITIVITY;
       if (Math.abs(dy) < MOUSE_WHEEL_MIN_LINES) {
         dy = Math.sign(dy) * MOUSE_WHEEL_MIN_LINES;
@@ -659,12 +678,12 @@ function initializeTerminalGestures()
 
       // Estimate a velocity and try to start inertial scrolling.
       let estimatedVy = dy / dt;
-      
+
       // Bound the estimated velocity.
       if (Math.abs(estimatedVy) > MOUSE_WHEEL_GESTURE_MAX_SPEED) {
         estimatedVy = Math.sign(estimatedVy) * MOUSE_WHEEL_GESTURE_MAX_SPEED;
       }
-      
+
       currentGesture.startInertialScroll_(0, estimatedVy, dt, startInertialScroll);
       currentGesture = undefined;
     } catch(e) {
@@ -672,7 +691,7 @@ function initializeTerminalGestures()
         alert(e);
       }
     }
-    
+
     lastWheelTime = nowTime;
   };
 
@@ -681,5 +700,4 @@ function initializeTerminalGestures()
     momentum = [0, 0];
   };
 }
-
 
