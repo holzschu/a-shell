@@ -155,11 +155,19 @@ function initializeTerminalGestures() {
 
   const moveCursor = (dx, dy) => {
     for (let i = 0; i <= Math.abs(dx) - 1; i++) {
-      term_.io.sendString(dx < 0 ? "\x1b[D" : "\033[C");
+      if (term_.keyboard.applicationCursor) {
+		  term_.io.sendString(dx < 0 ? "\x1bOD" : "\033OC");
+	  } else {
+		  term_.io.sendString(dx < 0 ? "\x1b[D" : "\033[C");
+	  }
     }
 
     for (let i = 0; i <= Math.abs(dy) - 1; i++) {
-      term_.io.sendString(dy > 0 ? "\x1b[B" : "\033[A");
+      if (term_.keyboard.applicationCursor) {
+		  term_.io.sendString(dy > 0 ? "\x1bOB" : "\033OA");
+	  } else {
+		  term_.io.sendString(dy > 0 ? "\x1b[B" : "\033[A");
+	  }
     }
   };
 
