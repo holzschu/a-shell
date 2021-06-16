@@ -1,0 +1,56 @@
+.TH JSI 1 "13 June 2021"
+.SH NAME
+jsi \- An interactive JavaScript shell
+.SH SYNOPSIS
+\fBjsi\fP [ -w ] [ --prompt \fIPROMPT\fP ] [ --no-banner ]
+ [ --no-color ] [ -c \fIJS\fP ]
+ [ --force-inspect ] [ -d \fIINSPECTDEPTH\fP ]
+.SH DESCRIPTION
+\fBjsi\fP is a convenient way to run JavaScript.
+It both accepts input via \fIstdin\fP and the command line.
+.SS Options
+.TP
+\fB-h | --help\fP
+Display a short help message.
+.TP
+\fB-w | --in-window\fP
+Run JavaScript in the same \fIWkWebView\fP as \fIa-Shell\fP's terminal UI.
+.PP
+If this option is given, \fIterm_\fP provides an
+(\fBunstable\fP) terminal API.
+.TP
+\fB--prompt\fP \fIPROMPT\fP
+Specify the prompt string.
+By default, the prompt is \fI% \fP.
+Note that this prompt is only printed if input is from the terminal.
+.TP
+\fB--no-banner\fP
+Don't show a welcome message when entering interactive mode.
+When not entering interactive mode, a welcome message is never shown.
+.TP
+\fB--no-color\fP
+Disable colorized output.
+This also disables autocomplete and autosuggest.
+.TP
+\fB-c\fP \fIJS\fP | \fB--exec\fP \fIJS\fP
+Execute \fIJS\fP instead of entering interactive mode or reading from standard input.
+.TP
+\fB--force-inspect\fP
+Print the details of expressions' resultant objects,
+even if \fBjsi\fP is not in interactive mode.
+.TP
+\fB-d\fP \fIINSPECTDEPTH\fP | \fB--inspect-depth\fP \fIINSPECTDEPTH\fP
+Print \fIINSPECT\fP levels of sub-objects when inspecting an object.
+By default, this is zero.
+.SH "SEE ALSO"
+jsc(1)
+.SH BUGS
+On small screens, colorized input and autocomplete may not function
+properly in \fIa-Shell\fP.
+This is likely a bug in either an underlying library (\fIprompt_toolkit\fP)
+or in \fIa-Shell\fP.
+.PP
+New variables (e.g. \fIlet foo = 3\fP) may not show up in auto-suggest
+until a property of them is referenced.
+In the case of \fIfoo\fP, a user would have to type \fIfoo.something\fP
+to see \fIfoo\fP in the auto-suggest list.
