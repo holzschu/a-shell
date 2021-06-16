@@ -2,10 +2,8 @@
  * Handles gesture recognition and inertial scrolling.
  */
 
-function initializeTerminalGestures()
-{
+function initializeTerminalGestures() {
   const DEBUG = false;
-  	
 
   // Determines the decay rate of the inertial scroll
   // velocity.
@@ -35,17 +33,50 @@ function initializeTerminalGestures()
   //(non-arrow-)key press.
   const HORIZ_KEYBOARD_KEYPRESS_CHARS = 7;
 
+  // We don't know how long wheel gestures actually take, but we can
+  // guess.
+  const MOUSE_WHEEL_GESTURE_EST_D_TIME = 0.5;
+
+  // Multiplies the number of lines by which mouse wheel gestures scroll.
+  const MOUSE_WHEEL_SENSITIVITY = 2;
+
+  // Maximum estimated mouse wheel gesture speed in lines/second.
+  const MOUSE_WHEEL_GESTURE_MAX_SPEED = 60;
+
+  // Discard wheel events that happen within this number of seconds after
+  // the previous.
+  const MIN_TIME_BETWEEN_WHEEL_GESTURES = 0.05;
+
+  // Minimum number of lines a single mouse wheel gesture can scroll.
+  const MOUSE_WHEEL_MIN_LINES = 1;
+
   // Things that should only be done once: Useful for
   // debugging if we want to run this script multiple times
   // in the same instance of a-Shell.
-  if (!window.gestures_)
-  {
+  if (!window.gestures_) {
     window.gestures_ = {};
-    window.gestures_.gestureStatus = document.createElement("div");
 
+    // User-settable preferences
+    // Can be overridden after loading this script.
+    gestures_.preferences = {
+      swipeLeft: {
+        // At present, one-finger swipes are always arrow keys
+        2: '\x1b[1~', // Two-finger left swipe: HOME
+        3: '\x1b', // Three-finger left swipe: ESC
+      },
+      swipeRight: {
+        2: '\t', // Two-finger right swipe: tab
+ // TODO: \n doesn't act as expected:
+ //        3: '\n', // Three-finger right swipe: Enter
+      },
+    };
+
+    // Debug view
+    window.gestures_.gestureStatus = document.createElement("div");
     term_.document_.body.appendChild(gestures_.gestureStatus);
     gestures_.gestureStatus.classList.add("gestureStatus");
 
+    // Events
     gestures_.gesturePtrDown = () => {};
     gestures_.gesturePtrMove = () => {};
     gestures_.gesturePtrUp = () => {};
@@ -140,6 +171,9 @@ function initializeTerminalGestures()
   let origTouchFn = term_.scrollPort_.onTouch;
   let disableTouchFn = undefined;
 
+  /// Temporarily turn off hterm's touch scrolling.
+  /// Does nothing if touch scrolling has already been disabled
+  /// by this method.
   const disableHtermTouchScrolling = () => {
     if (term_.scrollPort_.onTouch !== disableTouchFn) {
       origTouchFn = term_.scrollPort_.onTouch;
@@ -288,11 +322,17 @@ function initializeTerminalGestures()
         this.bufferedDx_ = 0;
       }
 
-      if (!this.shouldBufferDy_(this.bufferedDy_)) {
-        showDebugMsg("Vert:" + dy);
+      if (Math.abs(this.bufferedDy_) > 0.5) {
+        showDebugMsg("Disabled hterm scrolling.");
 
+        // hterm's built-in touch scrolling can take effect
+        // after the user attemtpts to scroll less than a line.
         // Don't do built-in touch scrolling.
         disableHtermTouchScrolling();
+      }
+
+      if (!this.shouldBufferDy_(this.bufferedDy_)) {
+        showDebugMsg("Vert:" + dy);
 
         this.handleVertical_(this.bufferedDy_, evt);
         this.bufferedDy_ = 0;
@@ -324,7 +364,14 @@ function initializeTerminalGestures()
       const nowTime = (new Date()).getTime();
       const dt = (nowTime - this.gestureStartTime_) / 1000;
 
+      this.startInertialScroll_(vx, vy, dt, startInertialScroll);
+    }
 
+    /// Decide whether to start inertial scrolling.
+    /// [vy] is the gesture's end velocity and [dt]
+    /// is the time it took to complete the gesture.
+    /// Returns true iff inertial scrolling was started.
+    startInertialScroll_(vx, vy, dt, startInertialScroll) {
       if (this.ptrCount_ == 0
           && this.isScrollGesture_
           && Math.abs(vy) >= INERTIAL_SCROLL_MIN_INITIAL_SPEED) {
@@ -342,7 +389,10 @@ function initializeTerminalGestures()
         startInertialScroll(this,
           vx * INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER + carryoverX,
           vy * INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER + carryoverY);
+        return true;
       }
+
+      return false;
     }
 
     /// Handle inertial scrolling.
@@ -391,12 +441,16 @@ function initializeTerminalGestures()
         this.isKeyboardGesture_ = true;
         this.isScrollGesture_ = false;
 
+        let key = null;
+
         if (dx >= HORIZ_KEYBOARD_KEYPRESS_CHARS) {
-          // Tab key
-          term_.io.sendString("\t");
+          key = gestures_.preferences.swipeRight[this.maxPtrCount_] || key;
         } else if (dx <= -HORIZ_KEYBOARD_KEYPRESS_CHARS) {
-          // Escape key
-          term_.io.sendString("\x1b");
+          key = gestures_.preferences.swipeLeft[this.maxPtrCount_] || key;
+        }
+
+        if (key) {
+          term_.io.sendString(key);
         }
 
         term_.scrollEnd();
@@ -421,7 +475,14 @@ function initializeTerminalGestures()
 
       // Vertical gestures: Move cursor if in vim/less/man
       if (isUsingAlternateScreen() || this.maxPtrCount_ == 2) {
-        moveCursor(0, dy);
+        // In less, cursor movement scrolls content,
+        // so invert the cursor movement direction for
+        // more natural scrolling.
+        if (isLessRunning()) {
+          moveCursor(0, -dy);
+        } else {
+          moveCursor(0, dy);
+        }
         term_.scrollEnd();
       } else {
         // Otherwise, scroll.
@@ -495,6 +556,11 @@ function initializeTerminalGestures()
   gestures_.gesturePtrDown = (evt) => {
     showDebugMsg("Down@" + evt.pageX + "," + evt.pageY);
 
+    // Only interpret touch events as gestures
+    if (evt.pointerType != "touch") {
+      return;
+    }
+
     // If the start of a new gesture (we may have lost
     // the end of the previous):
     if (evt.isPrimary) {
@@ -527,6 +593,9 @@ function initializeTerminalGestures()
 
     evt.preventDefault();
 
+    // Don't scroll the main window.
+    document.scrollingElement.scrollTop = 0;
+
     try {
       currentGesture.onPointerMove(evt);
     } catch(e) {
@@ -557,14 +626,17 @@ function initializeTerminalGestures()
     }
   };
 
+  let lastWheelTime = (new Date()).getTime();
   gestures_.gestureMouseWheel = (evt) => {
     evt.preventDefault();
 
     if (!currentGesture) {
       currentGesture = new Gesture(momentum);
+      momentum = [ 0, 0 ];
     }
 
     const lineHeight = getCharSize().height;
+    const nowTime = (new Date()).getTime();
 
     try {
       let dy = evt.deltaY;
@@ -574,7 +646,18 @@ function initializeTerminalGestures()
 
       // We don't really know how long the gesture took,
       // but let's guess:
-      let dt = 500;
+      let dt = MOUSE_WHEEL_GESTURE_EST_D_TIME;
+      let actualDt = (nowTime - lastWheelTime) / 1000;
+
+      if (actualDt < MIN_TIME_BETWEEN_WHEEL_GESTURES) {
+          return;
+      }
+
+      // If the actual time between this and the last scroll gestures
+      // is less than our estimate, use the actual time as our estimate.
+      if (actualDt < dt) {
+        dt = actualDt;
+      }
 
       // Scroll events deltaY can be specified in units other than
       // lines. See
@@ -582,20 +665,34 @@ function initializeTerminalGestures()
       if (evt.deltaMode == WheelEvent.DOM_DELTA_PIXEL) {
         dy /= lineHeight;
       } else if (evt.deltaMode == WheelEvent.DOM_DELTA_PAGE) {
-        dy *= 0.5 * term_.screenSize.height;
+        dy *= term_.screenSize.height / MOUSE_WHEEL_SENSITIVITY;
+      }
+
+      dy *= MOUSE_WHEEL_SENSITIVITY;
+      if (Math.abs(dy) < MOUSE_WHEEL_MIN_LINES) {
+        dy = Math.sign(dy) * MOUSE_WHEEL_MIN_LINES;
       }
 
       showDebugMsg("Wheel: " + dy);
       currentGesture.handleVertical_(dy);
 
       // Estimate a velocity and try to start inertial scrolling.
-      const estimatedVy = dy / dt;
-      startInertialScroll(currentGesture, 0, estimatedVy);
+      let estimatedVy = dy / dt;
+
+      // Bound the estimated velocity.
+      if (Math.abs(estimatedVy) > MOUSE_WHEEL_GESTURE_MAX_SPEED) {
+        estimatedVy = Math.sign(estimatedVy) * MOUSE_WHEEL_GESTURE_MAX_SPEED;
+      }
+
+      currentGesture.startInertialScroll_(0, estimatedVy, dt, startInertialScroll);
+      currentGesture = undefined;
     } catch(e) {
       if (DEBUG) {
         alert(e);
       }
     }
+
+    lastWheelTime = nowTime;
   };
 
   // Stop inertial scrolling if the user presses a key:
@@ -603,3 +700,4 @@ function initializeTerminalGestures()
     momentum = [0, 0];
   };
 }
+
