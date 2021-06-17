@@ -103,7 +103,7 @@ function initializeTerminalGestures() {
     window.term_.document_.body.addEventListener('wheel', (evt) =>
       gestures_.gestureMouseWheel(evt));
   }
-
+  gestures_.preferences = gestures_.preferences || {};
   let gestureStatus = gestures_.gestureStatus;
 
   // Style the debug output region.
@@ -154,8 +154,7 @@ function initializeTerminalGestures() {
   };
 
   const moveCursor = (dx, dy) => {
-    let escPrefix = gestures_.preferences.altApplicationCursor && term_.keyboard.applicationCursor
-      ? "\x1bO" : "\x1b[";
+    let escPrefix = term_.keyboard.applicationCursor ? "\x1bO" : "\x1b[";
     for (let i = 0; i <= Math.abs(dx) - 1; i++) {
       term_.io.onVTKeystroke(dx < 0 ? escPrefix + "D" : escPrefix + "C");
     }
