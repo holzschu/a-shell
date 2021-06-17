@@ -154,13 +154,14 @@ function initializeTerminalGestures() {
   };
 
   const moveCursor = (dx, dy) => {
-    let escPrefix = term_.keyboard.applicationCursor ? "\x1bO" : "\x1b[";
+    let escPrefix = gestures_.preferences.altApplicationCursor && term_.keyboard.applicationCursor
+      ? "\x1bO" : "\x1b[";
     for (let i = 0; i <= Math.abs(dx) - 1; i++) {
-      term_.io.sendString(dx < 0 ? escPrefix + "D" : escPrefix + "C");
+      term_.io.onVTKeystroke(dx < 0 ? escPrefix + "D" : escPrefix + "C");
     }
 
     for (let i = 0; i <= Math.abs(dy) - 1; i++) {
-      term_.io.sendString(dy > 0 ? escPrefix + "B" : escPrefix + "A");
+      term_.io.onVTKeystroke(dy > 0 ? escPrefix + "B" : escPrefix + "A");
     }
   };
 
