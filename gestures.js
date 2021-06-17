@@ -154,20 +154,13 @@ function initializeTerminalGestures() {
   };
 
   const moveCursor = (dx, dy) => {
+    let escPrefix = term_.keyboard.applicationCursor ? "\x1bO" : "\x1b[";
     for (let i = 0; i <= Math.abs(dx) - 1; i++) {
-      if (term_.keyboard.applicationCursor) {
-		  term_.io.sendString(dx < 0 ? "\x1bOD" : "\033OC");
-	  } else {
-		  term_.io.sendString(dx < 0 ? "\x1b[D" : "\033[C");
-	  }
+      term_.io.sendString(dx < 0 ? escPrefix + "D" : escPrefix + "C");
     }
 
     for (let i = 0; i <= Math.abs(dy) - 1; i++) {
-      if (term_.keyboard.applicationCursor) {
-		  term_.io.sendString(dy > 0 ? "\x1bOB" : "\033OA");
-	  } else {
-		  term_.io.sendString(dy > 0 ? "\x1b[B" : "\033[A");
-	  }
+      term_.io.sendString(dy > 0 ? escPrefix + "B" : escPrefix + "A");
     }
   };
 
@@ -569,19 +562,21 @@ function initializeTerminalGestures() {
       return;
     }
 
-    // If the start of a new gesture (we may have lost
-    // the end of the previous):
-    if (evt.isPrimary) {
-      currentGesture = new Gesture(momentum);
-    }
-
     try {
-      if (!currentGesture) {
+      // If the user has selected something, exit. Let them continue
+      // the selection.
+      const selection = term_.document_.getSelection();
+      if (!selection.isCollapsed) {
+        return;
+      }
+
+      // If the start of a new gesture (we may have lost
+      // the end of the previous):
+      if (evt.isPrimary || !currentGesture) {
         currentGesture = new Gesture(momentum);
       }
 
       momentum = [ 0, 0 ];
-
       currentGesture.onPointerDown(evt);
     } catch(e) {
       if (DEBUG) {
@@ -708,4 +703,3 @@ function initializeTerminalGestures() {
     momentum = [0, 0];
   };
 }
-
