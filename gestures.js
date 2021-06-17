@@ -61,8 +61,7 @@ function initializeTerminalGestures() {
     gestures_.preferences = {
       swipeLeft: {
         // At present, one-finger swipes are always arrow keys
-        2: '\x1b[1~', // Two-finger left swipe: HOME
-        3: '\x1b', // Three-finger left swipe: ESC
+        2: '\x1b', // Two-finger left swipe: ESC
       },
       swipeRight: {
         2: '\t', // Two-finger right swipe: tab
@@ -103,7 +102,7 @@ function initializeTerminalGestures() {
     window.term_.document_.body.addEventListener('wheel', (evt) =>
       gestures_.gestureMouseWheel(evt));
   }
-  gestures_.preferences = gestures_.preferences || {};
+
   let gestureStatus = gestures_.gestureStatus;
 
   // Style the debug output region.
@@ -156,11 +155,11 @@ function initializeTerminalGestures() {
   const moveCursor = (dx, dy) => {
     let escPrefix = term_.keyboard.applicationCursor ? "\x1bO" : "\x1b[";
     for (let i = 0; i <= Math.abs(dx) - 1; i++) {
-      term_.io.onVTKeystroke(dx < 0 ? escPrefix + "D" : escPrefix + "C");
+      term_.io.sendString(dx < 0 ? escPrefix + "D" : escPrefix + "C");
     }
 
     for (let i = 0; i <= Math.abs(dy) - 1; i++) {
-      term_.io.onVTKeystroke(dy > 0 ? escPrefix + "B" : escPrefix + "A");
+      term_.io.sendString(dy > 0 ? escPrefix + "B" : escPrefix + "A");
     }
   };
 
@@ -703,3 +702,4 @@ function initializeTerminalGestures() {
     momentum = [0, 0];
   };
 }
+
