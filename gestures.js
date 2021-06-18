@@ -61,8 +61,9 @@ function initializeTerminalGestures() {
     gestures_.preferences = {
       swipeLeft: {
         // At present, one-finger swipes are always arrow keys
-        2: '\x1b[1~', // Two-finger left swipe: HOME
-        3: '\x1b', // Three-finger left swipe: ESC
+          // For release, two-finger left = escape
+        2: '\x1b', // Three-finger left swipe: ESC
+        3: '\x1b[1~', // Two-finger left swipe: HOME
       },
       swipeRight: {
         2: '\t', // Two-finger right swipe: tab
