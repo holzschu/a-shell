@@ -175,7 +175,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     @objc private func upAction(_ sender: UIBarButtonItem) {
-        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[A\");") { (result, error) in
+        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[A' : '\\x1bOA');") { (result, error) in
             if error != nil {
                 // print(error)
             }
@@ -186,7 +186,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     @objc private func downAction(_ sender: UIBarButtonItem) {
-        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[B\");") { (result, error) in
+        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[B' : '\\x1bOB');") { (result, error) in
             if error != nil {
                 // print(error)
             }
@@ -198,7 +198,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     @objc private func leftAction(_ sender: UIBarButtonItem) {
-        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[D\");") { (result, error) in
+        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[D' : '\\x1bOD');") { (result, error) in
             if error != nil {
                 // print(error)
             }
@@ -210,7 +210,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     @objc private func rightAction(_ sender: UIBarButtonItem) {
-        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[C\");") { (result, error) in
+        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[C' : '\\x1bOC');") { (result, error) in
             if error != nil {
                 // print(error)
             }
@@ -473,7 +473,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 return
             }
         }
-        let fileName = FileManager().currentDirectoryPath + "/" + command
+        // let fileName = FileManager().currentDirectoryPath + "/" + command
+        let fileName = command.hasPrefix("/") ? command : currentDirectory + "/" + command
         thread_stdin_copy = thread_stdin
         thread_stdout_copy = thread_stdout
         thread_stderr_copy = thread_stderr
@@ -1157,6 +1158,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (ios_activePager() != 0) { return }
             var command = cmd
             command.removeFirst("input:".count)
+            NSLog("Writing \(command) to stdin")
             stdinString += command
             guard let data = command.data(using: .utf8) else { return }
             if (command == endOfTransmission) {
@@ -1198,7 +1200,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             guard stdin_file_input != nil else { return }
             // TODO: don't send data if pipe already closed (^D followed by another key)
             // (store a variable that says the pipe has been closed)
-            // NSLog("Writing (interactive) \(command) to stdin")
+            NSLog("Writing (interactive) \(command) to stdin")
             if (ios_activePager() == 0) {
                 stdin_file_input?.write(data)
             }
@@ -1376,6 +1378,41 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 if (result != nil) {
                     // NSLog("Return from resendConfiguration, line = \(command)")
+                    // print(result)
+                }
+            }
+            // also initialize command list for autocomplete:
+            guard var commandsArray = commandsAsArray() as! [String]? else { return }
+            // Also scan PATH for executable files:
+            let executablePath = String(cString: getenv("PATH"))
+            // NSLog("\(executablePath)")
+            for directory in executablePath.components(separatedBy: ":") {
+                do {
+                    // We don't check for exec status, because files inside $APPDIR have no x bit set.
+                    for file in try FileManager().contentsOfDirectory(atPath: directory) {
+                        let newCommand = URL(fileURLWithPath: file).lastPathComponent
+                        // Do not add a command if it is already present:
+                        if (!commandsArray.contains(newCommand)) {
+                            commandsArray.append(newCommand)
+                        }
+                    }
+                } catch {
+                    // The directory is unreadable, move to next one
+                    continue
+                }
+            }
+            commandsArray.sort() // make sure it's in alphabetical order
+            var javascriptCommand = "var commandList = ["
+            for command in commandsArray {
+                javascriptCommand += "\"" + command + "\", "
+            }
+            javascriptCommand += "];"
+            webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
+                if error != nil {
+                    NSLog("Error in creating command list, line = \(javascriptCommand)")
+                    print(error)
+                }
+                if (result != nil) {
                     // print(result)
                 }
             }

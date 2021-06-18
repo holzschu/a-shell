@@ -287,7 +287,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 appropriateFor: nil,
                                                 create: true)
         setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
-        setenv("PAGER", "less", 1)
+        setenv("PAGER", "less -r", 1) // send control sequences directly to terminal
         setenv("MAGICK_HOME", Bundle.main.resourcePath! +  "/ImageMagick-7", 1)
         setenv("MAGICK_CONFIGURE_PATH", Bundle.main.resourcePath! +  "/ImageMagick-7/config", 1)
         setenv("TZ", TimeZone.current.identifier, 1) // TimeZone information, since "systemsetup -gettimezone" won't work.
@@ -364,6 +364,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
         let currentiCloudToken = FileManager().ubiquityIdentityToken
+        let iCloudDocumentsURL = FileManager().url(forUbiquityContainerIdentifier: nil)
+        if (iCloudDocumentsURL != nil) {
+            // Create a document in the iCloud folder to make it visible.
+            NSLog("iCloudContainer = \(iCloudDocumentsURL)")
+            let iCloudDirectory = iCloudDocumentsURL?.appendingPathComponent("Documents")
+            if let iCloudDirectoryWelcome = iCloudDirectory?.appendingPathComponent(".Trash") {
+                if (!FileManager().fileExists(atPath: iCloudDirectoryWelcome.path)) {
+                    NSLog("Creating iCloud welcome directory")
+                    do {
+                        try FileManager().createDirectory(atPath: iCloudDirectoryWelcome.path, withIntermediateDirectories: true)
+                    }
+                    catch {
+                        NSLog("Error in creating folder")
+                    }
+                }
+            }
+        }
         // print("Available fonts: \(UIFont.familyNames)");
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
 #if false // Disabling request for notifications, since we do not use it.

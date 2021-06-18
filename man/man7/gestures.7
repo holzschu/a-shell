@@ -1,0 +1,45 @@
+.Dd June 17 2021
+.Dt GESTURES 7
+.Os
+.Sh NAME
+.Nm gestures
+.Nd summary of a-Shell gestures.
+.Sh DESCRIPTION
+.Pp
+Gestures are slightly different in different programs.
+In general, however,
+.Bd -offset indent
+.Pp
+single finger gestures move the cursor or scroll,
+.Pp
+two-finger right swipes send `Tab' keypresses,
+.Pp
+two-finger left swipes send `Escape' keypresses,
+.Pp
+and two-finger vertical swipes send `Up' or `Down' arrow key input.
+.Ed
+.Sh DIFFERENCES WITH DIFFERENT COMMANDS
+.Pp
+Unless running `less' or `vim',
+vertical swipes scroll the viewport.
+.Pp
+If in `vim', however,
+vertical swipes send `Up' or `Down' arrow keys --
+they move the cursor.
+.Pp
+In `less', vertical swipes scroll and
+single-finger horizontal gestures are disabled.
+.Pp
+Scrolling is done by sending `Up' and `Down'
+arrow keypresses to `less'.
+A downwards swipe sends `Up' and
+a down-to-up swipe sends `Down',
+for more natural scrolling.
+.Sh BUGS
+.Pp
+At present, a command is treated like `less' if
+its name contains `| less',
+or starts with `perldoc' or `man'.
+.Pp
+As such, commands can run `less' and still not be
+considered `less-like'.

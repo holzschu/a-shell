@@ -66,7 +66,9 @@ public func help(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
         let helpText = """
 a-Shell is a terminal emulator for iOS, with many Unix commands: ls, pwd, tar, mkdir, grep....
 
-a-Shell can do most of the things you can do in a terminal, locally on your iPhone or iPad. You can redirect command output to a file with ">" and you can pipe commands with "|".
+a-Shell can do most of the things you can do in a terminal, locally on your iPhone or iPad. You can redirect command output to a file with ">" (append with ">>") and you can pipe commands with "|".
+
+ - Single-finger swipes move the cursor or scroll, two-finger swipes send keyboard input (up, down, escape, tab). "man gestures" for more.
 
 - customize appearance with config
 - pickFolder: open, bookmark and access a directory anywhere (another app, iCloud, WorkingCopy, file providers...)
@@ -487,6 +489,18 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             continue
         case "--show":
             delegate?.showConfigWindow()
+            continue
+        case "--default":
+            revertToDefault = true
+            continue
+        case "--permanent":
+            makePermanent = true
+            continue
+        case "--global":
+            makeGlobal = true
+            continue
+        case "--reset":
+            revertToFactory = true
             continue
         default:
             // -g, -p, -gp, -pg are all valid options

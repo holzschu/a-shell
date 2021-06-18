@@ -25,6 +25,7 @@ extension WKWebView {
         }
     }
     
+    /*
     @objc private func upAction(_ sender: UIBarButtonItem) {
         evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[A\");") { (result, error) in
             if error != nil {
@@ -70,7 +71,7 @@ extension WKWebView {
             }
             
         }
-    }
+    } */
     
     @objc private func newWindow(_ sender: UIBarButtonItem) {
         UIApplication.shared.requestSceneSessionActivation(nil, userActivity: nil, options: nil)
@@ -118,16 +119,17 @@ extension WKWebView {
         // In case we need keyboard personalization for specific languages
         // var language = textInputMode?.primaryLanguage ?? "en-US"
         var basicKeyCommands = [
-            UIKeyCommand(input: UIKeyCommand.inputUpArrow, modifierFlags: [], action: #selector(upAction)),
-            UIKeyCommand(input: UIKeyCommand.inputDownArrow, modifierFlags: [], action: #selector(downAction)),
-            UIKeyCommand(input: UIKeyCommand.inputLeftArrow, modifierFlags: [], action: #selector(leftAction)),
-            UIKeyCommand(input: UIKeyCommand.inputRightArrow, modifierFlags: [], action: #selector(rightAction)),
+            // 16/6/2021: hterm_all deals with the keyboard arrow keys.
+            // UIKeyCommand(input: UIKeyCommand.inputUpArrow, modifierFlags: [], action: #selector(upAction)),
+            // UIKeyCommand(input: UIKeyCommand.inputDownArrow, modifierFlags: [], action: #selector(downAction)),
+            // UIKeyCommand(input: UIKeyCommand.inputLeftArrow, modifierFlags: [], action: #selector(leftAction)),
+            // UIKeyCommand(input: UIKeyCommand.inputRightArrow, modifierFlags: [], action: #selector(rightAction)),
             // "discoverabilityTitle:)' was deprecated in iOS 13.0" but it's quite convenient
             UIKeyCommand(input: "k", modifierFlags:.command, action: #selector(clearScreen), discoverabilityTitle: "Clear screen"),
             UIKeyCommand(input: "n", modifierFlags:.command, action: #selector(newWindow), discoverabilityTitle: "New window"),
             UIKeyCommand(input: "w", modifierFlags:.command, action: #selector(closeWindow), discoverabilityTitle: "Close window"),
             UIKeyCommand(input: "x", modifierFlags:.command, action: #selector(cutText), discoverabilityTitle: "Cut"),
-            // Still required with external keyboards as of May 26, 2020: control-C maps to control-C
+            // Still required with external keyboards as of May 26, 2020: control-C maps to control-C (and same with control-D)
             UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC)),
             UIKeyCommand(input: "d", modifierFlags:.control, action: #selector(insertD)),
         ]
