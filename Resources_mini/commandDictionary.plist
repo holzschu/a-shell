@@ -35,7 +35,7 @@
 		<string>SELF</string>
 		<string>cd_main</string>
 		<string></string>
-		<string>directory</string>
+		<string>no</string>
 	</array>
 	<key>chflags</key>
 	<array>

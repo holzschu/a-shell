@@ -105,6 +105,18 @@
 	<string>a-Shell mini would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>a-Shell mini would like to access to your photo library to upload images</string>
+	<key>NSUbiquitousContainers</key>
+	<dict>
+		<key>iCloud.AsheKube.app.a-Shell</key>
+		<dict>
+			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
+			<true/>
+			<key>NSUbiquitousContainerName</key>
+			<string>a-Shell</string>
+			<key>NSUbiquitousContainerSupportedFolderLevels</key>
+			<string>Any</string>
+		</dict>
+	</dict>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>ExecuteCommandIntent</string>

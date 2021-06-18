@@ -82,7 +82,7 @@ _ = Package(
         .binaryTarget(
             name: "lua_ios",
             url: "https://github.com/holzschu/lua_ios/releases/download/1.0/lua_ios.xcframework.zip",
-            checksum: "117eeae75290a59259b12d04bda1fe9a2c6683b54f54ef5141f9afd720adc3e2"
+            checksum: "0ccdab671f31c20daf8833452cc36598b49f84441851d7142b305443425bc527"
         ),
         // ImageMagick:
         .binaryTarget(
