@@ -2669,10 +2669,7 @@ extension SceneDelegate: WKUIDelegate {
                                 try data = file.read(upToCount: numValues)
                             }
                             catch {
-                                let errorCode = (error as NSError).code
-                                completionHandler("\(-errorCode)")
-                                return
-                            }
+                             }
                         }
                     }
                     if (data != nil) {
@@ -2860,7 +2857,7 @@ extension SceneDelegate: WKUIDelegate {
                 let pid = ios_fork()
                 let result = ios_system(arguments[2])
                 ios_waitpid(pid)
-                ios_releaseThreadId(self.pid)
+                ios_releaseThreadId(pid)
                 completionHandler("\(result)")
                 return
             } else if (arguments[1] == "getenv") {

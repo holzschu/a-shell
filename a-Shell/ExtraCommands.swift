@@ -158,6 +158,7 @@ ctags: https://github.com/universal-ctags/ctags/
 file: https://github.com/file/file/
 jsi: Henry Heino, https://github.com/personalizedrefrigerator
 ImageMagick: ImageMagick Studio LLC, https://imagemagick.org
+libgit2: https://libgit2.org 
 Lua: lua.org, PUC-Rio, https://www.lua.org/
 LuaTeX: The LuaTeX team, http://www.luatex.org
 llvm/clang: the LLVM foundation
@@ -769,6 +770,18 @@ public func checkBookmarks() {
     if (storedGroup == nil) || (storedGroup != shortcutsPath) {
         mutableNamesDictionary["group"] = shortcutsPath
         mustUpdateDictionaries = true
+    }
+    if let iCloudUrl = FileManager().url(forUbiquityContainerIdentifier: nil) {
+        let storedCloud = mutableNamesDictionary["cloud"] as? String
+        if (storedCloud == nil) || (storedCloud != iCloudUrl.appendingPathComponent("Documents").path) {
+            mutableNamesDictionary["cloud"] = iCloudUrl.appendingPathComponent("Documents").path
+            mustUpdateDictionaries = true
+        }
+        let storediCloud = mutableNamesDictionary["iCloud"] as? String
+        if (storediCloud == nil) || (storediCloud != iCloudUrl.appendingPathComponent("Documents").path) {
+            mutableNamesDictionary["iCloud"] = iCloudUrl.appendingPathComponent("Documents").path
+            mustUpdateDictionaries = true
+        }
     }
     if (mustUpdateDictionaries) {
         UserDefaults.standard.set(mutableBookmarkDictionary, forKey: "fileBookmarks")

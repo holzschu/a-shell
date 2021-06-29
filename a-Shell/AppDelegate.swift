@@ -287,7 +287,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 appropriateFor: nil,
                                                 create: true)
         setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
-        setenv("PAGER", "less -r", 1) // send control sequences directly to terminal
+        setenv("PAGER", "less", 1) // send control sequences directly to terminal
         setenv("MAGICK_HOME", Bundle.main.resourcePath! +  "/ImageMagick-7", 1)
         setenv("MAGICK_CONFIGURE_PATH", Bundle.main.resourcePath! +  "/ImageMagick-7/config", 1)
         setenv("TZ", TimeZone.current.identifier, 1) // TimeZone information, since "systemsetup -gettimezone" won't work.
@@ -303,8 +303,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("MULTIDICT_NO_EXTENSIONS", "1", 1)
         // This one is not required, but it helps:
         setenv("DISABLE_SQLALCHEMY_CEXT", "1", 1)
-        // Only for debugging, disable before shipping
-        setenv("CG_NUMERICS_SHOW_BACKTRACE", "1", 1)
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
         if (appVersion != "a-Shell-mini") {
