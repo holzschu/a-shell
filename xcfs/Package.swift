@@ -107,15 +107,15 @@ _ = Package(
             checksum: "4732b1eaad5f9060faaea73b33e43fb5d59af884b3eff678df27e2abb9b98cf0"
         ),
         // Vim:
-        .binaryTarget(
+      .binaryTarget(
             name: "vim",
             url: "https://github.com/holzschu/vim/releases/download/ios_1.0/vim.xcframework.zip",
-            checksum: "217b49891a0f75cf1a8e62d011e488d6a9b684831423642a511038826c6f8613"
+            checksum: "0a1d915355b7f7301cfabffb8bb543355ace8377a174d73065f488816d464c93"
         ),
         .binaryTarget(
             name: "xxd",
             url: "https://github.com/holzschu/vim/releases/download/ios_1.0/xxd.xcframework.zip",
-            checksum: "fa5ec10eac43280b18bbec877144647ac6b8d662a1c2671e56b254e12ed5b5db"
+            checksum: "e4497125969914be5dd7fc8012b71646dbc7a5b3f50f50d8254682a8a369dd5b"
         ),
         // LLVM:
         .binaryTarget(
