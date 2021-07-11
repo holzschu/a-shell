@@ -892,6 +892,9 @@ if __name__ == "__main__":
                     collectPrints=collectPrints,
                     noinspect=noinspect)
 
+    # The background WkWebView may not exist yet. If so, create it.
+    execJS(";", collectPrints=False, noinspect=True)
+
     out = Printer(args.noColor)
     readIn = InputReader(args.noColor, promptText, execJS)
 
