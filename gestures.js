@@ -14,12 +14,14 @@ function initializeTerminalGestures() {
 
   // Minimum lines/second for speed to trigger
   // inertial scrolling.
-  const INERTIAL_SCROLL_MIN_INITIAL_SPEED = 15;
+  const MIN_INERTIAL_SCROLL_START_SPEED_X = 40;
+  const MIN_INERTIAL_SCROLL_START_SPEED_Y = 15;
 
   // While inertial scrolling, if the inertial scroll speed
   // drops below this many lines per second, inertial scrolling
   // stops.
-  const MIN_INERTIAL_SCROLL_CONTINUE_SPEED = 3;
+  const MIN_INERTIAL_SCROLL_CONTINUE_SPEED_X = 5;
+  const MIN_INERTIAL_SCROLL_CONTINUE_SPEED_Y = 3;
 
   // Maximum number of lines/second we can scroll
   const MAX_INERTIAL_SCROLL_SPEED = 2000;
@@ -32,6 +34,12 @@ function initializeTerminalGestures() {
   // Minimum number of characters a cursor must move to trigger a
   //(non-arrow-)key press.
   const HORIZ_KEYBOARD_KEYPRESS_CHARS = 7;
+
+  // If input is currently interpreted as a horizontal gesture,
+  // SNAP_BREAKAWAY_HORIZ_CHARS is the number of characters the
+  // pointer needs to move to switch the gesture to a vertical gesture.
+  const SNAP_BREAKAWAY_HORIZ_CHARS = 6;
+  const SNAP_BREAKAWAY_VERT_CHARS = 4;
 
   // We don't know how long wheel gestures actually take, but we can
   // guess.
@@ -68,6 +76,12 @@ function initializeTerminalGestures() {
  // TODO: \n doesn't act as expected:
  //        3: '\n', // Three-finger right swipe: Enter
       },
+
+      // True iff inertial "scrolling" can also trigger keypresses
+      // associated with gestures.
+      inertialScroll: {
+        allowNonarrowKeys: false,
+      },
     };
 
     // Debug view
@@ -102,6 +116,11 @@ function initializeTerminalGestures() {
     window.term_.document_.body.addEventListener('wheel', (evt) =>
       gestures_.gestureMouseWheel(evt));
   }
+
+  // When debugging (if another, older instance of gestures.js
+  // has already been run) ensure that we don't attempt to access
+  // properties of `undefined`.
+  gestures_.preferences.inertialScroll = gestures_.preferences.inertialScroll || {};
 
   let gestureStatus = gestures_.gestureStatus;
 
@@ -266,6 +285,9 @@ function initializeTerminalGestures() {
 
       this.origMomentum_ = [carryoverMomentum[0], carryoverMomentum[1]];
       this.gestureStartTime_ = (new Date()).getTime();
+
+      this.isHorizontal_ = Math.abs(this.origMomentum_[0]) > 0;
+      this.isVertical_ = Math.abs(this.origMomentum_[1]) > 0;
     }
 
     getPtrDownCount() {
@@ -372,9 +394,15 @@ function initializeTerminalGestures() {
     /// is the time it took to complete the gesture.
     /// Returns true iff inertial scrolling was started.
     startInertialScroll_(vx, vy, dt, startInertialScroll) {
-      if (this.ptrCount_ == 0
-          && this.isScrollGesture_
-          && Math.abs(vy) >= INERTIAL_SCROLL_MIN_INITIAL_SPEED) {
+      if (!this.isHorizontal_) {
+        vx = 0;
+      }
+
+      if (!this.isVertical_) {
+        vy = 0;
+      }
+
+      if (this.ptrCount_ == 0) {
         let carryoverX = this.origMomentum_[0] * Math.pow( INERTIAL_SCROLL_DECAY_FACTOR, dt);
         let carryoverY = this.origMomentum_[1] * Math.pow(INERTIAL_SCROLL_DECAY_FACTOR, dt);
 
@@ -386,10 +414,19 @@ function initializeTerminalGestures() {
           carryoverY = 0;
         }
 
-        startInertialScroll(this,
-          vx * INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER + carryoverX,
-          vy * INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER + carryoverY);
-        return true;
+        vx *= INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER;
+        vy *= INITIAL_INERTIAL_SCROLL_VEL_MULTIPLIER;
+        vx += carryoverX;
+        vy += carryoverY;
+
+        const isReasonableStartingVel =
+             Math.abs(vx) >= MIN_INERTIAL_SCROLL_START_SPEED_X
+          || Math.abs(vy) >= MIN_INERTIAL_SCROLL_START_SPEED_Y;
+
+        if (isReasonableStartingVel) {
+          startInertialScroll(this, vx, vy);
+          return true;
+        }
       }
 
       return false;
@@ -400,12 +437,22 @@ function initializeTerminalGestures() {
     /// characters and must have magnitude
     /// at least one.
     onInertialScrollUpdate(dx, dy) {
-      //this.bufferedDx_ += dx; // Don't inertial scroll with horizontal gestures.
+      this.bufferedDx_ += dx;
       this.bufferedDy_ += dy;
 
       if (!this.shouldBufferDy_(this.bufferedDy_)) {
         this.handleVertical_(this.bufferedDy_);
         this.bufferedDy_ = 0;
+      }
+
+      if (!this.shouldBufferDx_(this.bufferedDx_)) {
+        // Only trigger nonarrowkey strokes if explicitly requested.
+        const allowNonarrowKeys = gestures_.preferences.inertialScroll.allowNonarrowKeys;
+        if (!this.isKeyboardGesture_ || allowNonarrowKeys) {
+          this.handleHorizontal_(this.bufferedDx_);
+        }
+
+        this.bufferedDx_ = 0;
       }
     }
 
@@ -414,12 +461,19 @@ function initializeTerminalGestures() {
     /// inertial scroll velocity is
     /// [vx, vy] in characters.
     shouldKeepInertialScrolling(vx, vy) {
-      return Math.abs(vy) >= MIN_INERTIAL_SCROLL_CONTINUE_SPEED;
+      const vyIsEnough = (Math.abs(vy) >= MIN_INERTIAL_SCROLL_CONTINUE_SPEED_Y);
+      const vxIsEnough = (Math.abs(vx) >= MIN_INERTIAL_SCROLL_CONTINUE_SPEED_X);
+
+      return vxIsEnough || vyIsEnough;
     }
 
     // Returns true if the given [dx] shouldn't
     // be handled, but rather, buffered.
     shouldBufferDx_(dx) {
+      if (this.isVertical_ && !this.isHorizontal_) {
+        return Math.abs(dx) < SNAP_BREAKAWAY_HORIZ_CHARS;
+      }
+
       if (this.maxPtrCount_ > 1) {
         return Math.abs(dx) < HORIZ_KEYBOARD_KEYPRESS_CHARS;
       }
@@ -430,12 +484,31 @@ function initializeTerminalGestures() {
     // Returns true if the given dy should be buffered,
     // rather than handled.
     shouldBufferDy_(dy) {
+      if (this.isHorizontal_ && !this.isVertical_) {
+        return Math.abs(dy) < SNAP_BREAKAWAY_VERT_CHARS;
+      }
+
       return Math.abs(dy) < 1;
     }
 
     /// [dx] is in units of characters
     /// and must have magnitude \geq 1
     handleHorizontal_(dx) {
+      if (!this.isHorizontal_ && this.isVertical_) {
+        // If we're breaking away from a snap...
+        this.isVertical_ = false;
+
+        // Only move one char
+        dx = Math.sign(dx);
+      }
+
+      this.isHorizontal_ = true;
+
+      // Snap to a horizontal gesture.
+      if (!this.isVertical_) {
+        this.bufferedDy_ = 0;
+      }
+
       if (this.maxPtrCount_ >= 2) {
         // Stop scrolling, start keyboard gestures.
         this.isKeyboardGesture_ = true;
@@ -452,25 +525,40 @@ function initializeTerminalGestures() {
         if (key) {
           term_.io.sendString(key);
         }
-
-        term_.scrollEnd();
       } else if (!isLessRunning()) {
         // Horizontal gestures: Don't move cursor if in `man'
         moveCursor(dx, 0);
       }
 
+      term_.scrollEnd();
       return this;
     }
 
     /// [dy] is in units of characters
     /// and must have magnitude \geq 1.
     handleVertical_(dy) {
+      if (!this.isVertical_ && this.isHorizontal_) {
+        // If we're breaking away from a snap,
+        // switch from horizontal to vertical.
+        this.isHorizontal_ = false;
+
+        // Only move one char when breaking away.
+        dy = Math.sign(dy);
+      }
+
       this.isScrollGesture_ = true;
+      this.isVertical_ = true;
 
       // We count arrow key gestures as ``scroll gestures''.
       if (this.isKeyboardGesture_) {
         this.isScrollGesture_ = false;
         return;
+      }
+
+      // If not handling horizontal gestures,
+      // snap to a vertical gesture.
+      if (!this.isHorizontal_) {
+        this.bufferedDx_ = 0;
       }
 
       // Vertical gestures: Move cursor if in vim/less/man
@@ -531,15 +619,27 @@ function initializeTerminalGestures() {
         lastT = nowT;
         requestAnimationFrame(momentumLoop);
       } else {
+        p[0] = 0;
+        p[1] = 0;
+
         momentumLoopRunning = false;
       }
     };
 
-    // Some programs stop working if too much input/second
-    // is given.
-    if (Math.abs(vy) > MAX_INERTIAL_SCROLL_SPEED) {
-      vy = Math.sign(vy) * MAX_INERTIAL_SCROLL_SPEED;
-    }
+    /// Returns v iff |v| is within (-MAX_INERTIAL_SCROLL_SPEED, MAX_INERTIAL_SCROLL_SPEED)
+    /// Otherwise, returns the maximum inertial scroll speed in the
+    /// direction of v.
+    const getClampedVelocity = (v) => {
+      if (Math.abs(v) > MAX_INERTIAL_SCROLL_SPEED) {
+        return Math.sign(v) * MAX_INERTIAL_SCROLL_SPEED;
+      }
+      return v;
+    };
+
+    // Clamp <vx, vy> because some programs break if given to much input/sec
+    vy = getClampedVelocity(vy);
+    vx = getClampedVelocity(vx);
+
 
     momentum = [vx, vy];
     if (!momentumLoopRunning) {
@@ -633,6 +733,9 @@ function initializeTerminalGestures() {
     evt.preventDefault();
 
     if (!currentGesture) {
+      // Not a horizontal gesture.
+      momentum[0] = 0;
+
       currentGesture = new Gesture(momentum);
       momentum = [ 0, 0 ];
     }
