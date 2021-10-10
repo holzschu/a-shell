@@ -10,8 +10,9 @@ import SwiftUI
 import WebKit
 
 struct Webview : UIViewRepresentable {
+    typealias WebViewType = KBWebViewBase
 
-    let webView: WKWebView
+    let webView: WebViewType
 
     init() {
         let config = WKWebViewConfiguration()
@@ -23,14 +24,14 @@ struct Webview : UIViewRepresentable {
         config.selectionGranularity = .character; // Could be .dynamic
         // let preferences = WKWebpagePreferences()
         // preferences.allowsContentJavaScript = true
-        webView = WKWebView(frame: .zero, configuration: config)
+        webView = .init(frame: .zero, configuration: config)
     }
     
-    func makeUIView(context: Context) -> WKWebView  {
+    func makeUIView(context: Context) -> WebViewType {
         return webView
     }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {
+    func updateUIView(_ uiView: WebViewType, context: Context) {
         if (uiView.url != nil) { return } // Already loaded the page
         let htermFilePath = Bundle.main.path(forResource: "hterm", ofType: "html")
         uiView.isOpaque = false

@@ -28,7 +28,7 @@ var stdinString: String = ""
 class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIDocumentInteractionControllerDelegate {
     var window: UIWindow?
     var windowScene: UIWindowScene?
-    var webView: WKWebView?
+    var webView: Webview.WebViewType?
     var wasmWebView: WKWebView? // webView for executing wasm
     var contentView: ContentView?
     var history: [String] = []
