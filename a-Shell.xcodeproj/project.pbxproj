@@ -579,6 +579,7 @@
 		22F8457D266FDB7300A0BF11 /* perlA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20174264E81E1004FBA5C /* perlA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F8457E266FDB7400A0BF11 /* perlB.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20177265260B7004FBA5C /* perlB.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F8457F266FDB7C00A0BF11 /* lg2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2234FB14266F765A00702AD1 /* lg2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		891608902713056B00CED1C9 /* KBWebViewBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 8916088E2713056900CED1C9 /* KBWebViewBase.m */; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 /* End PBXBuildFile section */
 
@@ -1497,6 +1498,9 @@
 		22F75D49265FFF2C0056AFD2 /* pythonA-pyfftw.pyfftw.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-pyfftw.pyfftw.xcframework"; path = "cpython/XcFrameworks/pythonA-pyfftw.pyfftw.xcframework"; sourceTree = SOURCE_ROOT; };
 		22F75D4A265FFF340056AFD2 /* pythonA-wordcloud.query_integral_image.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-wordcloud.query_integral_image.xcframework"; path = "cpython/XcFrameworks/pythonA-wordcloud.query_integral_image.xcframework"; sourceTree = SOURCE_ROOT; };
 		22F75D4B265FFF3E0056AFD2 /* pythonA-regex._regex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-regex._regex.xcframework"; path = "cpython/XcFrameworks/pythonA-regex._regex.xcframework"; sourceTree = SOURCE_ROOT; };
+		8916088D2713056800CED1C9 /* a-Shell-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "a-Shell-Bridging-Header.h"; sourceTree = "<group>"; };
+		8916088E2713056900CED1C9 /* KBWebViewBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KBWebViewBase.m; sourceTree = "<group>"; };
+		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1752,12 +1756,15 @@
 				22984EF122C93DBC00069497 /* ContentView.swift */,
 				2208ACC822D24703003985D6 /* WkWebViewExtension.swift */,
 				22BF62282314223D00FEA585 /* WKWebView+KeyCommands.swift */,
+				8916088F2713056A00CED1C9 /* KBWebViewBase.h */,
+				8916088E2713056900CED1C9 /* KBWebViewBase.m */,
 				225177C7231663430084B9C1 /* ListPythonFiles.swift */,
 				221DA54B26F7688100BEA92A /* listTeXscripts.swift */,
 				22984EF322C93DBF00069497 /* Assets.xcassets */,
 				22984EF822C93DBF00069497 /* LaunchScreen.storyboard */,
 				22984EFB22C93DBF00069497 /* Info.plist */,
 				22984EF522C93DBF00069497 /* Preview Content */,
+				8916088D2713056800CED1C9 /* a-Shell-Bridging-Header.h */,
 			);
 			path = "a-Shell";
 			sourceTree = "<group>";
@@ -2409,6 +2416,7 @@
 				2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */,
 				2208ACBF22CCE57E003985D6 /* String+C.swift in Sources */,
 				22984EF222C93DBC00069497 /* ContentView.swift in Sources */,
+				891608902713056B00CED1C9 /* KBWebViewBase.m in Sources */,
 				226013032320403D00AEB059 /* AppDelegate+TeX.swift in Sources */,
 				2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */,
 				22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */,
@@ -2760,6 +2768,7 @@
 				STRIP_INSTALLED_PRODUCT = NO;
 				STRIP_STYLE = debugging;
 				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "a-Shell/a-Shell-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -2804,6 +2813,7 @@
 				STRIP_INSTALLED_PRODUCT = NO;
 				STRIP_STYLE = debugging;
 				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "a-Shell/a-Shell-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
