@@ -14,10 +14,8 @@ import Intents // for shortcuts
 import AVFoundation // for media playback
 
 var downloadingTeX = false
-var downloadingTeXError = ""
 var percentTeXDownloadComplete = 0.0
 var downloadingOpentype = false
-var downloadingOpentypeError = ""
 var percentOpentypeDownloadComplete = 0.0
 let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
 // Need SDK install to be over before starting commands.
@@ -38,6 +36,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.a-Shell
         // Bundle.main.infoDictionary?["CFBundleName"] = a-Shell
         return Bundle.main.infoDictionary?["CFBundleName"] as? String
+    }
+    
+    func createDirectory(localURL: URL) -> Bool {
+        do {
+            if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
+                try FileManager().removeItem(at: localURL)
+            }
+            if (!FileManager().fileExists(atPath: localURL.path)) {
+                try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
+            }
+        } catch {
+            NSLog("Error in creating directory \(localURL.path): \(error)")
+            return false
+        }
+        return true
     }
     
     func needToUpdateCFiles() -> Bool {
@@ -242,6 +255,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
             UserDefaults.standard.register(defaults: ["TeXOpenType" : false])
+            UserDefaults.standard.register(defaults: ["TeXVersion" : "2000"])
+            UserDefaults.standard.register(defaults: ["LuaTeXVersion" : "2000"])
         }
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
@@ -260,18 +275,38 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("jsc", "jsc", true)  // use our own jsc instead of ios_system jsc
         replaceCommand("play", "play_main", true)
         replaceCommand("view", "preview_main", true)
-        // Add these as commands so they appear on the command list, even though we treat them internally:
-        replaceCommand("newWindow", "clear", true)
+        replaceCommand("downloadFile", "downloadFile", true)
+        replaceCommand("downloadFolder", "downloadFolder", true)
+        // Add these two as commands so they appear on the command list, even though we treat them internally:
+        if (UIDevice.current.model.hasPrefix("iPad")) {
+            replaceCommand("newWindow", "clear", true)
+        }
         replaceCommand("exit", "clear", true)
         // for debugging TeX issues:
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
         if (appVersion != "a-Shell-mini") {
+            if let installedTexVersion = UserDefaults.standard.string(forKey: "TeXVersion") {
+                if (installedTexVersion >= "2021") {
+                    // We have TeX files already installed. Activate commands:
+                    TeXEnabled = true;
+                    addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
+                }
+            }
+            if (TeXEnabled) {
+                if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
+                    if (installedLuatexVersion >= "2021") {
+                        // We have LuaTeX files already installed. Activate commands:
+                        OpentypeEnabled = true;
+                        addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
+                    }
+                }
+            }
             activateFakeTeXCommands()
-            if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
+            if (!TeXEnabled && UserDefaults.standard.bool(forKey: "TeXEnabled")) {
                 downloadTeX();
             }
-            if (UserDefaults.standard.bool(forKey: "TeXOpenType")) {
+            if (!OpentypeEnabled && UserDefaults.standard.bool(forKey: "TeXOpenType")) {
                 downloadOpentype();
             }
         }
@@ -309,6 +344,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
             setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments
+            // TeX variables (for tlmgr to work) = only when installing from scratch
+            // default texmf.cnf available:
+            // setenv("TEXMFCNF", Bundle.main.resourcePath!, 1)
             // Make:
             setenv("MAKESYSPATH", Bundle.main.resourcePath! +  "/usr/share/mk" , 1)
             // Perl location of modules:
@@ -498,8 +536,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     downloadTeX()
                 }
             } else {
-                // it is disabled: make sure it has been removed:
-                disableTeX()
+                let TeXVersion = UserDefaults.standard.string(forKey: "TeXVersion")
+                if (TeXVersion != "2000") {
+                    // it is disabled: make sure it has been removed:
+                    disableTeX()
+                    UserDefaults.standard.setValue("2000", forKey: "TeXVersion")
+                }
             }
             let userSettingsOpentype = UserDefaults.standard.bool(forKey: "TeXOpenType")
             if (userSettingsOpentype) {
@@ -508,8 +550,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     downloadOpentype()
                 }
             } else {
-                // it was enabled before, it was disabled: we remove it
-                disableOpentype()
+                let LuaTeXVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion")
+                if (LuaTeXVersion != "2000") {
+                    // it was enabled before, it was disabled: we remove it
+                    disableOpentype()
+                    UserDefaults.standard.setValue("2000", forKey: "LuaTeXVersion")
+                }
             }
         }// a-Shell mini
         // bookmarks management, copied from zshmarks: https://github.com/jocelynmallon/zshmarks

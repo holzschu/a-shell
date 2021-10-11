@@ -74,7 +74,9 @@ extension WKWebView {
     } */
     
     @objc private func newWindow(_ sender: UIBarButtonItem) {
-        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: nil, options: nil)
+        if (UIDevice.current.model.hasPrefix("iPad")) {
+            UIApplication.shared.requestSceneSessionActivation(nil, userActivity: nil, options: nil)
+        }
     }
 
     @objc private func closeWindow(_ sender: UIBarButtonItem) {

@@ -99,10 +99,12 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>a-Shell would like to access your camera</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>a-Shell would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>a-Shell would like to access to your photo library to upload images</string>
+	<string>a-Shell would like to access to your photo library to view images</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
 		<key>iCloud.AsheKube.app.a-Shell</key>

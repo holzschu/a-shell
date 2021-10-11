@@ -187,10 +187,6 @@ bashmarks-style bookmarks inspired by bashmarks: https://github.com/huyng/bashma
 @_cdecl("tex")
 public func tex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let command = argv![0]
-    if (downloadingTeXError != "") {
-        fputs("There was an error in downloading the TeX distribution: " + downloadingTeXError + "\n", thread_stderr)
-        downloadingTeXError = ""
-    }
     if (downloadingTeX) {
         let percentString = String(format: "%.02f", percentTeXDownloadComplete)
         fputs("Currently updating the TeX distribution. (" + percentString + " % complete)\n", thread_stderr)
@@ -199,7 +195,7 @@ public func tex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int
         return 0
     }
     fputs(command, thread_stderr)
-    fputs(" requires the TeX distribution, which is not currently installed.\nDo you want to download and install it? (0.8 GB) (y/N)", thread_stderr)
+    fputs(" requires the TeX distribution, which is not currently installed.\nDo you want to download and install it? (1.3 GB) (y/N)", thread_stderr)
     fflush(thread_stderr)
     var byte: Int8 = 0
     let count = read(fileno(thread_stdin), &byte, 1)
@@ -215,11 +211,6 @@ public func tex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int
 @_cdecl("luatex")
 public func luatex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let command = argv![0]
-    if (downloadingOpentypeError != "") {
-        fputs("There was an error in downloading the LuaTeX extension: ", thread_stderr)
-        fputs(downloadingOpentypeError + "\n", thread_stderr)
-        downloadingOpentypeError = ""
-    }
     if (downloadingTeX) {
         let percentString = String(format: "%.02f", percentTeXDownloadComplete)
         fputs("Currently updating the TeX distribution. (" + percentString + " % complete)\n", thread_stderr)
@@ -235,7 +226,7 @@ public func luatex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
         fputs(" requires the LuaTeX extension on top of the TeX distribution\nDo you want to download and install them? (0.3 GB) (y/N)", thread_stderr)
     } else {
-        fputs(" requires the TeX distribution, which is not currently installed, along with the LuaTeX extension.\nDo you want to download and install them? (2 GB) (y/N)", thread_stderr)
+        fputs(" requires the TeX distribution, which is not currently installed, along with the LuaTeX extension.\nDo you want to download and install them? (1.8 GB) (y/N)", thread_stderr)
     }
     fflush(thread_stderr)
     var byte: Int8 = 0
@@ -888,7 +879,7 @@ public func deletemark(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
         return 0
     }
     let commandName = String(cString: commandNameC)
-    let usage = "Usage: " + commandName + " name [name1 name2 name3...]\n"
+    let usage = "Usage: " + commandName + " name [name1 name2 name3...] or " + commandName + " --all\n"
     let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
     var mutableNamesDictionary : [String:Any] = storedNamesDictionary
     var mustUpdateDictionary = false
@@ -903,19 +894,39 @@ public func deletemark(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
         fputs(usage, thread_stderr)
         return 0
     }
-    for i in 1..<Int(argc) {
-        guard let argC = argv?[i] else {
-            return 0
+    if (String(cString: firstArgC) == "--all") {
+        // delete all bookmarks (except system bookmarks):
+        // home, shortcuts, cloud, iCloud, group
+        mustUpdateDictionary = true
+        mutableNamesDictionary.removeAll()
+        let documentsUrl = try! FileManager().url(for: .documentDirectory,
+                                                  in: .userDomainMask,
+                                                  appropriateFor: nil,
+                                                  create: true)
+        let homeUrl = documentsUrl.deletingLastPathComponent()
+        mutableNamesDictionary["home"] = homeUrl.path
+        let shortcutsPath = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path
+        mutableNamesDictionary["shortcuts"] = shortcutsPath
+        mutableNamesDictionary["group"] = shortcutsPath
+        if let iCloudUrl = FileManager().url(forUbiquityContainerIdentifier: nil) {
+            mutableNamesDictionary["cloud"] = iCloudUrl.appendingPathComponent("Documents").path
+            mutableNamesDictionary["iCloud"] = iCloudUrl.appendingPathComponent("Documents").path
         }
-        let key = String(cString: argC)
-        let result = mutableNamesDictionary.removeValue(forKey: key)
-        if (result == nil) {
-            fputs("deletemark: \(key) not found\n", thread_stderr)
-            if (i == 1) {
-                fputs(usage, thread_stderr)
+    } else {
+        for i in 1..<Int(argc) {
+            guard let argC = argv?[i] else {
+                return 0
             }
-        } else {
-            mustUpdateDictionary = true
+            let key = String(cString: argC)
+            let result = mutableNamesDictionary.removeValue(forKey: key)
+            if (result == nil) {
+                fputs("deletemark: \(key) not found\n", thread_stderr)
+                if (i == 1) {
+                    fputs(usage, thread_stderr)
+                }
+            } else {
+                mustUpdateDictionary = true
+            }
         }
     }
     if (mustUpdateDictionary) {
@@ -924,11 +935,109 @@ public func deletemark(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
     return 0
 }
 
+func downloadRemoteFileFromCloud(fileURL: URL) {
+    var lastPathComponent = fileURL.lastPathComponent
+    // Delete the "." which is at the beginning of the file name
+    lastPathComponent.removeFirst()
+    let folderPath = fileURL.deletingLastPathComponent().path
+    let downloadedFilePath = folderPath + "/" + lastPathComponent.replacingOccurrences(of: ".icloud", with: "")
+    do {
+        NSLog("Started downloading file \(downloadedFilePath) from iCloud")
+        try FileManager().startDownloadingUbiquitousItem(at: URL(fileURLWithPath: downloadedFilePath))
+        let startingTime = Date()
+        // try downloading the file for 5s, then give up:
+        while (!FileManager().fileExists(atPath: fileURL.path) && (Date().timeIntervalSince(startingTime) < 5)) { }
+    }
+    catch {
+        NSLog("Could not download file \(downloadedFilePath) from iCloud")
+        print(error)
+    }
+}
+
+@_cdecl("downloadFile")
+public func downloadFile(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    // download a file from iCloud. Input: filename as ".file.icloud"
+    // Possible improvement: also delete the permission bookmark
+    guard let commandNameC = argv?[0] else {
+        fputs("downloadFile: Can't read command name\n", thread_stderr)
+        return 0
+    }
+    let commandName = String(cString: commandNameC)
+    let usage = "downloadFile: force download of files from iCloud\nUsage: " + commandName + " .name.icloud [.name1.icloud .name2.icloud ...]\n"
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    if args.count == 1 {
+        fputs(usage, thread_stdout)
+        return 0
+    }
+    if ((args[1] == "-h") || (args[1] == "--help")) {
+        fputs(usage, thread_stdout)
+        return 0
+    }
+    for i in 1..<args.count {
+        downloadRemoteFileFromCloud(fileURL: URL(fileURLWithPath: args[i]))
+    }
+    return 0
+}
+
+@_cdecl("downloadFolder")
+public func downloadFolder(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    // download a file from iCloud. Input: filename as ".file.icloud"
+    // Possible improvement: also delete the permission bookmark
+    guard let commandNameC = argv?[0] else {
+        fputs("downloadFolder: Can't read command name\n", thread_stderr)
+        return 0
+    }
+    let commandName = String(cString: commandNameC)
+    let usage = "downloadFolder: download all non-downloaded iCloud files for a folder.\nUsage: " + commandName + " [folder1 folder2 ...] (default is current directory)\n"
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    if args.count == 1 {
+        downloadFilesFromRemoteFolder(fileURL: URL(fileURLWithPath: "."))
+        return 0
+    }
+    if ((args[1] == "-h") || (args[1] == "--help")) {
+        fputs(usage, thread_stdout)
+        return 0
+    }
+    for i in 1..<args.count {
+        if (FileManager().fileExists(atPath: args[i])) {
+            let fileURL = URL(fileURLWithPath: args[i])
+            if (fileURL.isDirectory) {
+                downloadFilesFromRemoteFolder(fileURL: fileURL)
+            } else {
+                fputs("downloadFolder: file \(args[i]) is not a directory\n", thread_stdout)
+                fputs(usage, thread_stdout)
+                return 1
+            }
+        } else {
+            fputs("downloadFolder: file not found: \(args[i])\n", thread_stdout)
+            fputs(usage, thread_stdout)
+            return 1
+        }
+    }
+    return 0
+}
+
+func downloadFilesFromRemoteFolder(fileURL: URL) {
+    // If it's a directory, download all files inside
+    if let urls = try? FileManager().contentsOfDirectory(at: fileURL, includingPropertiesForKeys: nil, options: []) {
+        for myURL in urls {
+            // We have our url
+            let lastPathComponent = myURL.lastPathComponent
+            if lastPathComponent.contains(".icloud") {
+                downloadRemoteFileFromCloud(fileURL: myURL)
+            }
+        }
+    }
+}
+
 public func downloadRemoteFile(fileURL: URL) -> Bool {
     if (FileManager().fileExists(atPath: fileURL.path)) {
+        if (fileURL.isDirectory) {
+            downloadFilesFromRemoteFolder(fileURL: fileURL)
+        }
         return true
     }
-    // NSLog("Try downloading file from iCloud: \(fileURL)")
+    NSLog("Try downloading file from iCloud: \(fileURL)")
     do {
         // this will work with iCloud, but not Dropbox or Microsoft OneDrive, who have a specific API.
         // TODO: find out how to authorize a-Shell for Dropbox, OneDrive, GoogleDrive.
@@ -939,6 +1048,9 @@ public func downloadRemoteFile(fileURL: URL) -> Bool {
         // TODO: add an alert, ask if user wants to continue
         // NSLog("Done downloading, new status: \(FileManager().fileExists(atPath: fileURL.path))")
         if (FileManager().fileExists(atPath: fileURL.path)) {
+            if (fileURL.isDirectory) {
+                downloadFilesFromRemoteFolder(fileURL: fileURL)
+            }
             return true
         }
     }
@@ -1028,7 +1140,9 @@ public func changeDirectory(path: String) -> Bool {
                     return originalFileURL.isDirectory // success
                 } else {
                     if (originalFileURL.isDirectory) {
-                        fputs("Could not change directory to \(path)", thread_stderr)
+                        if (thread_stderr != nil) {
+                            fputs("Could not change directory to \(path)", thread_stderr)
+                        }
                         return true
                     } else {
                         return false

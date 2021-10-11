@@ -41,6 +41,7 @@ struct Webview : UIViewRepresentable {
 
 struct ContentView: View {
     @State private var keyboardHeight: CGFloat = 0
+    @State private var keyboardWidth: CGFloat = 0
 
     // Adapt window size to keyboard height, see:
     // https://stackoverflow.com/questions/56491881/move-textfield-up-when-thekeyboard-has-appeared-by-using-swiftui-ios
@@ -58,10 +59,11 @@ struct ContentView: View {
         // Now map the merged notification stream into a height value.
         .map { (note) -> CGFloat in
             let height = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).size.height
+            let width = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).size.width
             let x = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).origin.x
             let y = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).origin.y
             let userInfo = note.userInfo
-            // NSLog("Received \(note.name.rawValue) with height \(height) origin: \(x) -- \(y)")
+            // NSLog("Received \(note.name.rawValue) with height \(height) width \(width) origin: \(x) -- \(y)")
             // if (height > 200) && (x > 0) {
             //     NSLog("Undetected floating keyboard detected")
             // }
@@ -72,8 +74,11 @@ struct ContentView: View {
             // A bit counter-intuitive, but it works.
             // Except sometimes with a floating keyboard, we get h = 324 and view not set.
             if (height == 0) { return 40 } // At least the size of the toolbar -- if no keyboard present
+            // Floating window detected (at least on iPad Pro 12.9). 40 is too much, 20 not enough.
+            else if (height == 60) { return 20 } // floating window detected, external keyboard
             else if (height > 200) && (x > 0) { return 40 } // Floating keyboard not detected
-            else { return 0 }
+            else { return 0 } // SwiftUI has done its job and returned the proper keyboard size.
+            // Missing: toolbar for floating window. h=60.
     }
     
     let webview = Webview()
@@ -85,9 +90,15 @@ struct ContentView: View {
             webview.padding(.top, 0)
         } else { */
             // resize depending on keyboard. Specify size (.frame) instead of padding.
-            webview.onReceive(keyboardChangePublisher) { self.keyboardHeight = $0 }
+            webview.onReceive(keyboardChangePublisher) {
+                self.keyboardHeight = $0
+                // NSLog("Bounds \(webview.webView.coordinateSpace.bounds)")
+                // NSLog("Screen \(UIScreen.main.bounds)")
+            }
                 .padding(.top, 0) // Important, to set the size of the view
                 .padding(.bottom, keyboardHeight)
+               // .padding(.bottom, webview.webView.intrinsicContentSize.width)
+        
         // }
     }
 }

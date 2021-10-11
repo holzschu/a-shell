@@ -292,10 +292,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript("window.commandRunning = ''; window.printPrompt(); window.updatePromptPosition();") { (result, error) in
                 if error != nil {
-                    print(error)
+                    NSLog("Error in executing window.commandRunning = ''; = \(error)")
                 }
                 if (result != nil) {
-                    // print(result)
+                    NSLog("Result of executing window.commandRunning = ''; = \(result)")
                 }
             }
         }
@@ -960,7 +960,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             closeWindow()
             // If we're here, closeWindow did not work. Clear window:
             // Calling "exit(0)" here results in a major crash (I tried).
-            let infoCommand = "window.term_.wipeContents() ; window.printedContent = ''; window.term_.io.print('" + self.escape + "[2J'); window.term_.io.print('" + self.escape + "[1;1H'); "
+            let infoCommand = "window.term_.wipeContents() ; window.printedContent = ''; window.term_.io.print('" + self.escape + "[2J'); window.term_.io.print('" + self.escape + "[1;1H'); window.commandArray = []; window.commandIndex = 0; window.maxCommandIndex = 0;"
             self.webView?.evaluateJavaScript(infoCommand) { (result, error) in
                 if error != nil {
                     print(error)
@@ -969,6 +969,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     print(result)
                 }
             }
+            // Also clear history:
+            history = []
             // Also reset directory:
             if (resetDirectoryAfterCommandTerminates != "") {
                 // NSLog("Calling resetDirectoryAfterCommandTerminates in exit to \(resetDirectoryAfterCommandTerminates)")
@@ -1067,9 +1069,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.currentCommand = command
                 stdinString = "" // reinitialize stdin
                 self.pid = ios_fork()
+                DispatchQueue.main.async {
+                    UIApplication.shared.isIdleTimerDisabled = true
+                }
                 ios_system(self.currentCommand)
                 ios_waitpid(self.pid)
                 ios_releaseThreadId(self.pid)
+                DispatchQueue.main.async {
+                    UIApplication.shared.isIdleTimerDisabled = false
+                }
                 NSLog("Done executing command: \(command)")
                 NSLog("Current directory: \(FileManager().currentDirectoryPath)")
             }
@@ -1158,7 +1166,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (ios_activePager() != 0) { return }
             var command = cmd
             command.removeFirst("input:".count)
-            NSLog("Writing \(command) to stdin")
+            // NSLog("Writing \(command) to stdin")
             stdinString += command
             guard let data = command.data(using: .utf8) else { return }
             if (command == endOfTransmission) {
@@ -1200,7 +1208,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             guard stdin_file_input != nil else { return }
             // TODO: don't send data if pipe already closed (^D followed by another key)
             // (store a variable that says the pipe has been closed)
-            NSLog("Writing (interactive) \(command) to stdin")
+            // NSLog("Writing (interactive) \(command) to stdin")
             if (ios_activePager() == 0) {
                 stdin_file_input?.write(data)
             }
@@ -1416,6 +1424,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // print(result)
                 }
             }
+        } else if (cmd.hasPrefix("resendCommand:")) {
+            var command = "window.commandRunning = '\(currentCommand)'; window.interactiveCommandRunning = isInteractive(window.commandRunning);"
+            NSLog("resendCommand, command=\(command)")
+            self.webView!.evaluateJavaScript(command) { (result, error) in
+                if error != nil {
+                    NSLog("Error in resendCommand, line = \(command)")
+                    print(error)
+                }
+                if (result != nil) {
+                    NSLog("Return from resendCommand, line = \(command)")
+                    print(result)
+                }
+            }
+
         } /* else if (cmd.hasPrefix("JS Error:")) {
             // When debugging JS, output warning/error messages to a file.
             let file = "jsError.txt"
@@ -1439,8 +1461,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         } */ else {
             // Usually debugging information
-            // NSLog("JavaScript message: \(message.body)")
-            print("JavaScript message: \(message.body)")
+            NSLog("JavaScript message: \(message.body)")
+            // print("JavaScript message: \(message.body)")
         }
     }
     
@@ -1531,7 +1553,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // window.commandToExecute: too late for that (term_ is already created)
                     // executeCommand: too early for that. (keyboard is not ready yet)
                     commandSent = commandSent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n")
-                    let restoreCommand = "window.term_.io.println(\"Executing Shortcut: \(commandSent.replacingOccurrences(of: "\\n", with: "\\n\\r"))\");\nwindow.webkit.messageHandlers.aShell.postMessage('shell:' + '\(commandSent)');\nwindow.commandRunning = '\(commandSent)';\nwindow.commandToExecute = '';"
+                    let restoreCommand = "window.term_.io.println(\"Executing Shortcut: \(commandSent.replacingOccurrences(of: "\\n", with: "\\n\\r"))\");\nwindow.webkit.messageHandlers.aShell.postMessage('shell:' + '\(commandSent)');\nwindow.commandRunning = '\(commandSent)';\n"
                     self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
                         if error != nil {
                             print(error)
@@ -1554,7 +1576,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnecting:SceneSession` instead).
         // Use a UIHostingController as window root view controller
-        NSLog("Scene, willConnectTo session: \(connectionOptions)")
+        // NSLog("Scene, willConnectTo session: \(connectionOptions)")
         if let windowScene = scene as? UIWindowScene {
             self.windowScene = windowScene
             let window = UIWindow(windowScene: windowScene)
@@ -1633,8 +1655,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             javascriptCommand += "];"
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
-                    NSLog("Error in creating command list, line = \(javascriptCommand)")
-                    print(error)
+                    // NSLog("Error in creating command list, line = \(javascriptCommand)")
+                    // print(error)
                 }
                 if (result != nil) {
                     // print(result)
@@ -1677,7 +1699,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Was this window created with a purpose?
             // Case 1: url to open is inside urlContexts
-            NSLog("connectionOptions.urlContexts: \(connectionOptions.urlContexts.first)")
+            // NSLog("connectionOptions.urlContexts: \(connectionOptions.urlContexts.first)")
             if let urlContext = connectionOptions.urlContexts.first {
                 // let sendingAppID = urlContext.options.sourceApplication
                 let fileURL = urlContext.url
@@ -1704,45 +1726,44 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     storeName(fileURL: fileURL, name: fileURL.lastPathComponent)
                     if (fileURL.isDirectory) {
                         // it's a directory.
-                        changeDirectory(path: fileURL.path) // call cd_main and checks secured bookmarked URLs
-                        closeAfterCommandTerminates = false
-                    } else {
-                        // It's a file
-                        // TODO: customize the command (vim, microemacs, python, clang, TeX?)
-                        executeCommand(command: "vim " + (fileURL.path.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ ")))
-                        let openFileCommand = "window.commandRunning = 'vim';"
-                        self.webView?.evaluateJavaScript(openFileCommand) { (result, error) in
-                            if error != nil {
-                                // print(error)
+                        if let userInfo = scene.session.stateRestorationActivity?.userInfo {
+                            NSLog("Passing the directory to sceneWillEnterForeground: \(fileURL.path)")
+                            if (currentDirectory == "") {
+                                currentDirectory = FileManager().currentDirectoryPath
                             }
-                            if (result != nil) {
-                                // print(result)
+                            scene.session.stateRestorationActivity?.userInfo?["prev_wd"] = currentDirectory
+                            scene.session.stateRestorationActivity?.userInfo?["cwd"] = fileURL.path
+                        } else {
+                            NSLog("Calling changeDirectory: \(fileURL.path)")  // seldom called
+                            installQueue.async {
+                                changeDirectory(path: fileURL.path) // call cd_main and checks secured bookmarked URLs
+                                self.closeAfterCommandTerminates = false
                             }
                         }
-                        closeAfterCommandTerminates = true
+                    } else {
+                        // Go through installQueue so that the command is launched *after* the .profile is executed
+                        self.closeAfterCommandTerminates = true
+                        // It's a file
+                        // TODO: customize the command (vim, microemacs, python, clang, TeX?)
+                        installQueue.async {
+                            self.executeCommand(command: "vim " + (fileURL.path.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ ")))
+                        }
                     }
                 } else if (fileURL.scheme == "ashell") {
                     NSLog("We received an URL: \(fileURL)") // received "ashell:ls"
                     // The window is not yet fully opened, so executeCommand might fail.
-                    // Instead, we use commandToExecute sent to JavaScript.
+                    // We use installQueue to be called once the window is ready.
                     var command = fileURL.absoluteString
                     command.removeFirst("ashell:".count)
                     command = command.removingPercentEncoding!
-                    // Set the working directory to somewhere safe:
-                    // (but do not reset afterwards, since this is a new window)
                     closeAfterCommandTerminates = false
-                    if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
-                        changeDirectory(path: groupUrl.path)
-                    }
-                    command = command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n")
-                    let restoreCommand = "window.term_.io.println(\"Executing URL: \(command)\"); window.commandToExecute = '" + command + "';"
-                    self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
-                        if error != nil {
-                            print(error)
+                    installQueue.async {
+                        // Set the working directory to somewhere safe:
+                        // (but do not reset afterwards, since this is a new window)
+                        if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
+                            changeDirectory(path: groupUrl.path)
                         }
-                        if (result != nil) {
-                            // print(result)
-                        }
+                        self.executeCommand(command: command)
                     }
                 }
             }
@@ -1750,29 +1771,23 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // NSLog("connectionOptions.userActivities.first: \(connectionOptions.userActivities.first)")
             // NSLog("stateRestorationActivity: \(session.stateRestorationActivity)")
             for userActivity in connectionOptions.userActivities {
-                NSLog("Found userActivity: \(userActivity)")
-                NSLog("Type: \(userActivity.activityType)")
-                NSLog("URL: \(userActivity.userInfo!["url"])")
-                NSLog("UserInfo: \(userActivity.userInfo!)")
+                // NSLog("Found userActivity: \(userActivity)")
+                // NSLog("Type: \(userActivity.activityType)")
+                // NSLog("URL: \(userActivity.userInfo!["url"])")
+                // NSLog("UserInfo: \(userActivity.userInfo!)")
                 if (userActivity.activityType == "AsheKube.app.a-Shell.EditDocument") {
-                    if let fileURL: NSURL = userActivity.userInfo!["url"] as? NSURL {
-                        // NSLog("willConnectTo: \(fileURL.path!.replacingOccurrences(of: "%20", with: " "))")
-                        executeCommand(command: "vim " + (fileURL.path!.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ ")))
-                    } else {
-                        // NSLog("Empty URL -- using backup")
-                        executeCommand(command: "vim " + ((inputFileURLBackup?.path.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ "))!))
-                        inputFileURLBackup = nil
-                    }
-                    let openFileCommand = "window.commandRunning = 'vim';"
-                    self.webView?.evaluateJavaScript(openFileCommand) { (result, error) in
-                        if error != nil {
-                            print(error)
-                        }
-                        if (result != nil) {
-                            // print(result)
+                    self.closeAfterCommandTerminates = true
+                    window.makeKeyAndVisible() // We need it a 2nd time for keyboard to resize itself.
+                    installQueue.async {
+                        if let fileURL: NSURL = userActivity.userInfo!["url"] as? NSURL {
+                            // NSLog("willConnectTo: \(fileURL.path!.replacingOccurrences(of: "%20", with: " "))")
+                            self.executeCommand(command: "vim " + (fileURL.path!.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ ")))
+                        } else {
+                            // NSLog("Empty URL -- using backup")
+                            self.executeCommand(command: "vim " + ((inputFileURLBackup?.path.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ "))!))
+                            inputFileURLBackup = nil
                         }
                     }
-                    closeAfterCommandTerminates = true
                 } else if (userActivity.activityType == "AsheKube.app.a-Shell.OpenDirectory") {
                     if let fileURL: NSURL = userActivity.userInfo!["url"] as? NSURL {
                         //  ???
@@ -1785,7 +1800,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // This can be either from open URL (ashell:command) or from Shortcuts
                     // Set working directory to a safer place (also used by shortcuts):
                     // But do not reset afterwards, since this is a new window
-                    NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
+                    // NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
                     if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
                         changeDirectory(path: groupUrl.path)
                     }
@@ -1800,27 +1815,22 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                     closeAfterCommandTerminates = true
                                 }
                             }
-                            NSLog("Command to execute: " + commandSent)
                             // We can't go through executeCommand because the window is not fully created yet.
                             // Same reason we can't print the shortcut that is about to be executed.
-                            commandSent = commandSent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n")
-                            let restoreCommand = "window.commandToExecute = '" + commandSent + "';"
-                            self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
-                                if error != nil {
-                                    let userInfo = (error! as NSError).userInfo
-                                    NSLog("error: " + (userInfo["WKJavaScriptExceptionMessage"] as? String)!)
-                                    print(error)
-                                }
-                                if (result != nil) {
-                                    NSLog("result: " + (result as! String))
-                                    // print(result)
-                                }
+                            // installQueue will be called after the .profile has been processed.
+                            if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
+                                changeDirectory(path: groupUrl.path)
+                                NSLog("groupUrl: " + groupUrl.path)
+                            }
+                            installQueue.async {
+                                NSLog("Command to execute: " + commandSent)
+                                self.executeCommand(command: commandSent)
                             }
                         }
                     }
                 }
             }
-            
+
            NotificationCenter.default
                 .publisher(for: UIWindow.didBecomeKeyNotification, object: window)
                 .merge(with: NotificationCenter.default
@@ -1850,10 +1860,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let fileURL = urlContext.url
             if (fileURL.scheme == "ashell") {
                 NSLog("We received an URL: \(fileURL)") // received "ashell:ls"
-                let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.ExecuteCommand")
-                activity.userInfo!["url"] = fileURL
-                // create a window and execute the command:
-                UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
+                if (UIDevice.current.model.hasPrefix("iPad")) {
+                    // iPad, so always open a new window to execute the command
+                    let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.ExecuteCommand")
+                    activity.userInfo!["url"] = fileURL
+                    // create a window and execute the command:
+                    UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
+                } else {
+                    // iPhone: create the command, send it to the window once it's created.
+                    var command = fileURL.absoluteString
+                    command.removeFirst("ashell:".count)
+                    command = command.removingPercentEncoding!
+                    installQueue.async {
+                        if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
+                            changeDirectory(path: groupUrl.path)
+                        }
+                        self.executeCommand(command: command)
+                    }
+                }
                 continue
             }
             // Otherwise, ensure the URL is a file URL
@@ -1881,9 +1905,27 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (fileURL.isDirectory) {
                 // it's a directory.
                 // TODO: customize the command (cd, other?)
-                let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.OpenDirectory")
-                activity.userInfo!["url"] = fileURL
-                UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
+                if (UIDevice.current.model.hasPrefix("iPad")) {
+                    let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.OpenDirectory")
+                    activity.userInfo!["url"] = fileURL
+                    UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
+                } else {
+                    // sceneWillEnterForeground will be called soon, will call cwd.
+                    if let userInfo = scene.session.stateRestorationActivity?.userInfo {
+                        NSLog("Passing the directory to sceneWillEnterForeground: \(fileURL.path)")
+                        if (currentDirectory == "") {
+                            currentDirectory = FileManager().currentDirectoryPath
+                        }
+                        scene.session.stateRestorationActivity?.userInfo?["prev_wd"] = currentDirectory
+                        scene.session.stateRestorationActivity?.userInfo?["cwd"] = fileURL.path
+                    } else {
+                        NSLog("Calling changeDirectory: \(fileURL.path)")
+                        installQueue.async {
+                            changeDirectory(path: fileURL.path) // call cd_main and checks secured bookmarked URLs
+                            self.closeAfterCommandTerminates = false
+                        }
+                    }
+                }
             } else {
                 // TODO: customize the command (vim, microemacs, python, clang, TeX?)
                 //  NSLog("Storing URL: \(fileURL.path)")
@@ -1912,7 +1954,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                 }
-                UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
+                if (UIDevice.current.model.hasPrefix("iPad")) {
+                    UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
+                } else {
+                    // Not an iPad, so no requestSceneSessionActivation().
+                    let openFileCommand = "window.commandRunning = 'vim'; window.interactiveCommandRunning = true; "
+                    NSLog("About to execute \(openFileCommand), webview: \(self.webView)")
+                    self.webView?.evaluateJavaScript(openFileCommand) { (result, error) in
+                        if error != nil {
+                            // print(error)
+                        }
+                        if (result != nil) {
+                            // print(result)
+                        }
+                    }
+                    installQueue.async {
+                        self.executeCommand(command: "vim " + (fileURL.path.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ ")))
+                    }
+                }
             }
         }
     }
@@ -1958,7 +2017,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
             } else {
-                NSLog("Un-recognized command: \(currentCommand)")
+                // NSLog("Un-recognized command: \(currentCommand)")
                 // send sigquit to the command:
                 if (self.pid != 0) {
                     ios_killpid(self.pid, SIGQUIT)
@@ -2025,7 +2084,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         command = "(window.term_ != undefined)"
         webView!.evaluateJavaScript(command) { (result, error) in
             if error != nil {
-                print(error)
+                // print(error)
             }
             if let resultN = result as? Int {
                 if (resultN == 1) {
@@ -2090,8 +2149,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             javascriptCommand += "]; window.commandIndex = \(history.count); window.maxCommandIndex = \(history.count)"
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
-                    NSLog("Error in recreating history, line = \(javascriptCommand)")
-                    print(error)
+                    // NSLog("Error in recreating history, line = \(javascriptCommand)")
+                    // print(error)
                 }
                 if (result != nil) {
                     // print(result)x
@@ -2131,29 +2190,19 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Window preferences, stored on a per-session basis:
         if let fontSize = userInfo["fontSize"] as? Float {
             terminalFontSize = fontSize
-        } else {
-            terminalFontSize = factoryFontSize
         }
         if let fontName = userInfo["fontName"] as? String {
             terminalFontName = fontName
-        } else {
-            terminalFontName = factoryFontName
         }
         // We store colors as hex strings:
         if let backgroundColor = userInfo["backgroundColor"] as? String {
             terminalBackgroundColor = UIColor(hexString: backgroundColor)
-        } else {
-            terminalBackgroundColor = UIColor.systemBackground.resolvedColor(with: traitCollection)
         }
         if let foregroundColor = userInfo["foregroundColor"] as? String {
             terminalForegroundColor =  UIColor(hexString: foregroundColor)
-        } else {
-            terminalForegroundColor = UIColor.placeholderText.resolvedColor(with: traitCollection)
         }
         if let cursorColor = userInfo["cursorColor"] as? String {
             terminalCursorColor = UIColor(hexString: cursorColor)
-        } else {
-            terminalCursorColor = UIColor.link.resolvedColor(with: traitCollection)
         }
         if var terminalData = userInfo["terminal"] as? String {
             if (terminalData.contains(";Thanks for flying Vim")) {
@@ -2176,8 +2225,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                 let javascriptCommand = "window.printedContent = \"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\"; "
                                                 self.webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                                                     if error != nil {
-                                                        NSLog("Error in setting window.printedContent, line = \(javascriptCommand)")
-                                                        print(error)
+                                                        // NSLog("Error in setting window.printedContent, line = \(javascriptCommand)")
+                                                        // print(error)
                                                     }
                                                     // if (result != nil) { print(result) }
                                                 }
@@ -2187,8 +2236,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                 let javascriptCommand = "window.setWindowContent(\"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\"); "
                                                 self.webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                                                     if error != nil {
-                                                        NSLog("Error in resetting terminal w setWindowContent, line = \(javascriptCommand)")
-                                                        print(error)
+                                                        // NSLog("Error in resetting terminal w setWindowContent, line = \(javascriptCommand)")
+                                                        // print(error)
                                                     }
                                                     // if (result != nil) { print(result) }
                                                 }
@@ -2198,12 +2247,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let javascriptCommand = "window.printedContent = \"\";"
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
-                    NSLog("Error in setting terminal to empty, line = \(javascriptCommand)")
-                    print(error)
+                    // NSLog("Error in setting terminal to empty, line = \(javascriptCommand)")
+                    // print(error)
                 }
                 if (result != nil) {
-                    NSLog("Result in setting terminal to empty, line = \(javascriptCommand)")
-                    print(result)
+                    // NSLog("Result in setting terminal to empty, line = \(javascriptCommand)")
+                    // print(result)
                 }
             }
         }
