@@ -83,6 +83,14 @@ extension AppDelegate {
                                                        appropriateFor: nil,
                                                        create: true)
             let localPath = libraryURL.appendingPathComponent("bin") // $HOME/Library/bin
+            if (!FileManager().fileExists(atPath: localPath.path)) {
+                do {
+                    try (FileManager().createDirectory(at: localPath, withIntermediateDirectories: true))
+                }
+                catch {
+                    NSLog("Unable to create binary directory \(localPath.path): \(error)")
+                }
+            }
             for script in TeXscripts {
                 let command = localPath.path + "/" + script[0]
                 let location = "../texlive/2021/texmf-dist/" + script[1]
@@ -212,15 +220,15 @@ extension AppDelegate {
         copyContentsOfDirectory(at: URL(fileURLWithPath: forbidden), to: tl2021)
         let tl2019 = localURL.appendingPathComponent("2019")
         if (FileManager().fileExists(atPath: tl2019.path)) {
-            // If ~/Library/texlive/2019 exists, copy texmf-local:
+            // If ~/Library/texlive/2019/texmf-local exists, copy it to ~/Library/texmf-local:
             let tl2019_local = localURL.appendingPathComponent("2019").appendingPathComponent("texmf-local")
             if (FileManager().fileExists(atPath: tl2019_local.path) && tl2019_local.isDirectory) {
                 do {
-                    try FileManager().moveItem(at: tl2019_local, to: tl2021.appendingPathComponent("texmf-local"))
+                    try FileManager().moveItem(at: tl2019_local, to: localURL.appendingPathComponent("texmf-local"))
                     try FileManager().removeItem(at: tl2019)
                 }
                 catch {
-                    NSLog("Error in moving texmf-local to texlive/2021: \(error)")
+                    NSLog("Error in moving texmf-local to texlive: \(error)")
                 }
             } else {
                 do {
@@ -230,6 +238,11 @@ extension AppDelegate {
                     NSLog("Error in removing texlive/2019: \(error)")
                 }
             }
+        }
+        // Create ~/Library/texlive/texmf-local if it does not exist yet:
+        let tl_local = localURL.appendingPathComponent("texmf-local")
+        if (!FileManager().fileExists(atPath: tl_local.path)) {
+            createDirectory(localURL: tl_local)
         }
         // We load resources sequentially to avoid clogging networks and servers:
         texmf_distResource.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent

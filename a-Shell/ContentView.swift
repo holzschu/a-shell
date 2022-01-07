@@ -9,6 +9,10 @@
 import SwiftUI
 import WebKit
 
+public var toolbarVisible = true
+public var showToolbar = true
+public var showKeyboardAtStartup = true
+
 struct Webview : UIViewRepresentable {
     typealias WebViewType = KBWebViewBase
 
@@ -43,7 +47,8 @@ struct Webview : UIViewRepresentable {
 struct ContentView: View {
     @State private var keyboardHeight: CGFloat = 0
     @State private var keyboardWidth: CGFloat = 0
-
+    let webview = Webview()
+    
     // Adapt window size to keyboard height, see:
     // https://stackoverflow.com/questions/56491881/move-textfield-up-when-thekeyboard-has-appeared-by-using-swiftui-ios
     // A publisher that combines all of the relevant keyboard changing notifications and maps them into a `CGFloat` representing the new height of the
@@ -74,15 +79,13 @@ struct ContentView: View {
             // height != 0 ==> there is a keyboard, and iOS did detect it, so no need to change the height.
             // A bit counter-intuitive, but it works.
             // Except sometimes with a floating keyboard, we get h = 324 and view not set.
-            if (height == 0) { return 40 } // At least the size of the toolbar -- if no keyboard present
+            if (height == 0) && showToolbar { return 40 } // At least the size of the toolbar -- if no keyboard present
             // Floating window detected (at least on iPad Pro 12.9). 40 is too much, 20 not enough.
             else if (height == 60) { return 20 } // floating window detected, external keyboard
             else if (height > 200) && (x > 0) { return 40 } // Floating keyboard not detected
             else { return 0 } // SwiftUI has done its job and returned the proper keyboard size.
             // Missing: toolbar for floating window. h=60.
     }
-    
-    let webview = Webview()
     
     var body: some View {
         /* if #available(iOS 14.0, *) {

@@ -16,7 +16,6 @@ import AVKit // for media playback
 import AVFoundation // for media playback
 
 var messageHandlerAdded = false
-var externalKeyboardPresent: Bool? // still needed?
 var inputFileURLBackup: URL?
 
 let factoryFontSize = Float(13)
@@ -25,7 +24,7 @@ var stdinString: String = ""
 
 // Need: dictionary connecting userContentController with output streams (?)
 
-class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIDocumentInteractionControllerDelegate {
+class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate {
     var window: UIWindow?
     var windowScene: UIWindowScene?
     var webView: Webview.WebViewType?
@@ -58,6 +57,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var closeAfterCommandTerminates = false
     var resetDirectoryAfterCommandTerminates = ""
     var currentCommand = ""
+    var shortcutCommandReceived: String? = nil
     var pid: pid_t = 0
     private var selectedDirectory = ""
     private var selectedFont = ""
@@ -280,12 +280,38 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return rightButton
     }
     
+    @objc func hideKeyboard() {
+        DispatchQueue.main.async {
+            guard self.webView != nil else { return }
+            self.webView!.endEditing(true)
+            self.webView!.keyboardDisplayRequiresUserAction = true
+        }
+    }
     
+    @objc func longPressAction(_ sender: UILongPressGestureRecognizer) {
+        hideKeyboard()
+    }
+
     public lazy var editorToolbar: UIToolbar = {
-        var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
-        toolbar.tintColor = .label
-        toolbar.items = [tabButton, controlButton, escapeButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil), upButton, downButton, leftButton, rightButton]
-        return toolbar
+        if (toolbarVisible) {
+            showToolbar = true
+            var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
+            toolbar.tintColor = .label
+            toolbar.items = [tabButton, controlButton, escapeButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil), upButton, downButton, leftButton, rightButton]
+            // Long press gesture recognsizer:
+            let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
+            longPressGesture.minimumPressDuration = 1.0 // 1 second press
+            longPressGesture.allowableMovement = 15 // 15 points
+            longPressGesture.delegate = self
+            toolbar.addGestureRecognizer(longPressGesture)
+            return toolbar
+        } else {
+            showToolbar = false
+            var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
+            toolbar.tintColor = .label
+            toolbar.items = []
+            return toolbar
+        }
     }()
     
     func printPrompt() {
@@ -446,6 +472,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (thread_stdout != nil && stdout_active) { fflush(thread_stdout) }
             if (thread_stderr != nil && stdout_active) { fflush(thread_stderr) }
         }
+        if (thread_stdin_copy == nil) {
+            // Strangely, the letters typed after ^D do not appear on screen. We force two carriage return to get the prompt visible:
+            webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"\\n\\n\"); window.term_.io.currentCommand = '';") { (result, error) in
+                if error != nil {
+                    // print(error)
+                }
+                if (result != nil) {
+                    // print(result)
+                }
+            }
+        }
+        thread_stdin_copy = nil
+        thread_stdout_copy = nil
+        thread_stderr_copy = nil
         return errorCode
     }
     
@@ -535,6 +575,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (thread_stdout != nil && stdout_active) { fflush(thread_stdout) }
             if (thread_stderr != nil && stdout_active) { fflush(thread_stderr) }
         }
+        thread_stdin_copy = nil
         thread_stdout_copy = nil
         thread_stderr_copy = nil
     }
@@ -1058,6 +1099,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             for command in commands {
                 let arguments = command.components(separatedBy: " ")
                 let actualCommand = aliasedCommand(arguments[0])
+                NSLog("Received command to execute: \(actualCommand)")
                 if (actualCommand == "exit") {
                     self.closeWindow()
                     break // if "exit" didn't work, still don't execute the rest of the commands. 
@@ -1170,6 +1212,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             stdinString += command
             guard let data = command.data(using: .utf8) else { return }
             if (command == endOfTransmission) {
+                // There is a webAssembly command running, do not close stdin.
+                if (javascriptRunning && (thread_stdin_copy != nil)) {
+                    fclose(thread_stdin_copy);
+                    thread_stdin_copy = nil;
+                    return
+                }
                 // Stop standard input for the command:
                 guard stdin_file_input != nil else {
                     // no command running, maybe it ended without us knowing:
@@ -1425,19 +1473,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
         } else if (cmd.hasPrefix("resendCommand:")) {
-            var command = "window.commandRunning = '\(currentCommand)'; window.interactiveCommandRunning = isInteractive(window.commandRunning);"
-            NSLog("resendCommand, command=\(command)")
-            self.webView!.evaluateJavaScript(command) { (result, error) in
-                if error != nil {
-                    NSLog("Error in resendCommand, line = \(command)")
-                    print(error)
-                }
-                if (result != nil) {
-                    NSLog("Return from resendCommand, line = \(command)")
-                    print(result)
+            if (shortcutCommandReceived != nil) {
+                NSLog("resendCommand for Shortcut, command=\(shortcutCommandReceived)")
+                executeCommand(command: shortcutCommandReceived!)
+                shortcutCommandReceived = nil
+            } else {
+                var command = "window.commandRunning = '\(currentCommand)'; window.interactiveCommandRunning = isInteractive(window.commandRunning);"
+                NSLog("resendCommand, command=\(command)")
+                self.webView!.evaluateJavaScript(command) { (result, error) in
+                    if error != nil {
+                        NSLog("Error in resendCommand, line = \(command)")
+                        print(error)
+                    }
+                    if (result != nil) {
+                        NSLog("Return from resendCommand, line = \(command)")
+                        print(result)
+                    }
                 }
             }
-
         } /* else if (cmd.hasPrefix("JS Error:")) {
             // When debugging JS, output warning/error messages to a file.
             let file = "jsError.txt"
@@ -1552,7 +1605,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     NSLog("Command to execute: " + commandSent)
                     // window.commandToExecute: too late for that (term_ is already created)
                     // executeCommand: too early for that. (keyboard is not ready yet)
-                    commandSent = commandSent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n")
+                    commandSent = commandSent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n")
                     let restoreCommand = "window.term_.io.println(\"Executing Shortcut: \(commandSent.replacingOccurrences(of: "\\n", with: "\\n\\r"))\");\nwindow.webkit.messageHandlers.aShell.postMessage('shell:' + '\(commandSent)');\nwindow.commandRunning = '\(commandSent)';\n"
                     self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
                         if error != nil {
@@ -1800,7 +1853,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // This can be either from open URL (ashell:command) or from Shortcuts
                     // Set working directory to a safer place (also used by shortcuts):
                     // But do not reset afterwards, since this is a new window
-                    // NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
+                    NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
                     if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
                         changeDirectory(path: groupUrl.path)
                     }
@@ -1822,10 +1875,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                 changeDirectory(path: groupUrl.path)
                                 NSLog("groupUrl: " + groupUrl.path)
                             }
-                            installQueue.async {
-                                NSLog("Command to execute: " + commandSent)
-                                self.executeCommand(command: commandSent)
-                            }
+                            // We wait until the window is fully initialized. This will be used when "resendCommand:" is triggered, at the end of window setting.
+                            shortcutCommandReceived = commandSent
                         }
                     }
                 }
@@ -2115,7 +2166,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         setEnvironmentFGBG(foregroundColor: foregroundColor, backgroundColor: backgroundColor)
-        webView!.allowDisplayingKeyboardWithoutUserAction()
+        NSLog("hideKeyboard: before webView!.keyboardDisplayRequiresUserAction; showKeyboardAtStartup= \(showKeyboardAtStartup)")
+        if (showKeyboardAtStartup) {
+            webView!.keyboardDisplayRequiresUserAction = false
+        }
         activateVoiceOver(value: UIAccessibility.isVoiceOverRunning)
     }
     
@@ -2457,8 +2511,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {
             self.webView!.evaluateJavaScript(command) { (result, error) in
                 if error != nil {
-                    NSLog("Error in print; offending line = \(parsedString)")
-                    print(error)
+                    NSLog("Error in print; offending line = \(parsedString), error = \(error)")
+                    // print(error)
                 }
                 if (result != nil) {
                     // print(result)
@@ -2577,13 +2631,25 @@ extension SceneDelegate: WKUIDelegate {
             return nil
         }
         if (fd == 0) {
-            return fileno(self.thread_stdin_copy)
+            if (thread_stdin_copy != nil) {
+                return fileno(thread_stdin_copy)
+            } else {
+                return nil
+            }
         }
         if (fd == 1) {
-            return fileno(self.thread_stdout_copy)
+            if (thread_stdout_copy != nil) {
+                return fileno(thread_stdout_copy)
+            } else {
+                return nil
+            }
         }
         if (fd == 2) {
-            return fileno(self.thread_stderr_copy)
+            if (thread_stderr_copy != nil) {
+                return fileno(thread_stderr_copy)
+            } else {
+                return nil
+            }
         }
         return fd
     }
@@ -2621,7 +2687,9 @@ extension SceneDelegate: WKUIDelegate {
             } else if (arguments[1] == "close") {
                 var returnValue:Int32 = -1
                 if let fd = fileDescriptor(input: arguments[2]) {
-                    if (fd == fileno(self.thread_stdin_copy)) || (fd == fileno(self.thread_stdout_copy)) || (fd == fileno(self.thread_stderr_copy)) {
+                    if (((thread_stdin_copy != nil) && (fd == fileno(self.thread_stdin_copy))) ||
+                        ((thread_stdout_copy != nil) && (fd == fileno(self.thread_stdout_copy))) ||
+                        ((thread_stderr_copy != nil) && (fd == fileno(self.thread_stderr_copy)))) {
                         // don't close stdin/stdout/stderr
                         returnValue = 0
                     } else {
@@ -2696,7 +2764,10 @@ extension SceneDelegate: WKUIDelegate {
                             } else {
                                 stdinString = ""
                             }
-                            let utf8str = inputString.data(using: .utf8)
+                            var utf8str = inputString.data(using: .utf8)
+                            if (utf8str == nil) {
+                                utf8str = inputString.data(using: .ascii)
+                            }
                             if (utf8str == nil) {
                                 completionHandler("")
                             } else {
@@ -2758,7 +2829,7 @@ extension SceneDelegate: WKUIDelegate {
                     errno = 0
                 }
                 return
-            } else if (arguments[1] == "readdir") {
+            } else if (arguments[1] == "re") {
                 do {
                     // Much more compact code than using readdir.
                     let items = try FileManager().contentsOfDirectory(atPath: arguments[2])

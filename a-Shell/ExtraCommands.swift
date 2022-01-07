@@ -77,6 +77,7 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 
 - Edit files with vim and ed.
 - Transfer files with curl, tar, scp and sftp.
+- Clone repositories and do version control with lg2 (uses libgit2).
 - Process files with python3, lua, jsc, clang, pdflatex, lualatex.
 - Open files in other apps with open, play sound and video with play, preview with view.
 - For network queries: nslookup, ping, host, whois, ifconfig...
@@ -1059,6 +1060,17 @@ public func downloadRemoteFile(fileURL: URL) -> Bool {
         print(error)
     }
     return false
+}
+
+// hide the on-screen keyboard
+@_cdecl("hideKeyboard")
+public func hideKeyboard(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    NSLog("Entered hideKeyboard at app level")
+    showKeyboardAtStartup = false
+    if let delegate = currentDelegate {
+        delegate.hideKeyboard()
+    }
+    return 0
 }
 
 // tries to change the directory, returns false if path is a file:

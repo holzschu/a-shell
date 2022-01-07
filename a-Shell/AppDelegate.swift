@@ -261,6 +261,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
+        UserDefaults.standard.register(defaults: ["show_toolbar" : true])
+        // Only read at startup time:
+        toolbarVisible = UserDefaults.standard.bool(forKey: "show_toolbar")
         initializeEnvironment()
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
@@ -277,6 +280,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("view", "preview_main", true)
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
+        replaceCommand("hideKeyboard", "hideKeyboard", true)
         // Add these two as commands so they appear on the command list, even though we treat them internally:
         if (UIDevice.current.model.hasPrefix("iPad")) {
             replaceCommand("newWindow", "clear", true)
