@@ -8,6 +8,7 @@
 
 import Intents
 import ios_system
+// import a_Shell
 
 // As an example, this class is set up to handle Message intents.
 // You will want to replace this or add other intents as appropriate.
@@ -174,7 +175,8 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
     
 
     // Commands that do not require interaction, access to local library files, access to local configuration files, access to JS...
-    let localCommands = ["awk", "calc", "cat", "chflags", "chksum", "chmod", "compress", "cp", "curl", "date", "diff", "dig", "du", "echo", "egrep", "env", "fgrep", "find", "grep", "gunzip", "gzip", "head", "host", "ifconfig", "lex", "link", "ln", "ls", "lua", "luac", "md5", "mkdir", "mv", "nc", "nslookup", "openurl", "pbcopy", "pbpaste",  "ping", "printenv", "pwd", "readlink", "rm", "rmdir", "say", "scp", "setenv", "sftp", "sort", "stat", "sum", "tail", "tar", "tee", "touch", "tr", "true", "uname", "uncompress", "uniq", "unlink", "unsetenv", "uptime", "wc", "whoami", "whois", "xargs", "xxd"]
+    // Also imageMagick commands since I have added ImageMagick configuration files. Not python by default, but users can force it.
+    let localCommands = ["awk", "calc", "cat", "chflags", "chksum", "chmod", "compress", "cp", "curl", "date", "diff", "dig", "du", "echo", "egrep", "env", "fgrep", "find", "grep", "gunzip", "gzip", "head", "host", "ifconfig", "lex", "link", "ln", "ls", "lua", "luac", "md5", "mkdir", "mv", "nc", "nslookup", "openurl", "pbcopy", "pbpaste",  "ping", "printenv", "pwd", "readlink", "rm", "rmdir", "say", "scp", "setenv", "sftp", "sort", "stat", "sum", "tail", "tar", "tee", "touch", "tr", "true", "uname", "uncompress", "uniq", "unlink", "unsetenv", "uptime", "wc", "whoami", "whois", "xargs", "xxd", "convert", "identify"]
 
     func handle(intent: ExecuteCommandIntent, completion: @escaping (ExecuteCommandIntentResponse) -> Void) {
         if let commands = intent.command {
@@ -266,6 +268,31 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
         // reset the LC_CTYPE (some commands (luatex) can change it):
         setenv("LC_CTYPE", "UTF-8", 1);
         setlocale(LC_CTYPE, "UTF-8");
+        // Environment variables for configuration files that are inside the main app dir:
+        let mainAppResourceURL = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
+        setenv("APPDIR", mainAppResourceURL.path.toCString(), 1)
+        let bundleUrl = mainAppResourceURL.appendingPathComponent("Library")
+        setenv("PYTHONHOME", bundleUrl.path.toCString(), 1)
+        setenv("MAGICK_HOME", bundleUrl.path +  "/ImageMagick-7", 1)
+        setenv("MAGICK_CONFIGURE_PATH", bundleUrl.path +  "/ImageMagick-7/config", 1)
+        setenv("TZ", TimeZone.current.identifier, 1) // TimeZone information, since "systemsetup -gettimezone" won't work.
+        setenv("SSL_CERT_FILE", bundleUrl.path +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
+        setenv("SHORTCUTS", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
+        setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
+        setenv("PYTHONUSERDIR", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.appendingPathComponent("Library").path, 1) // Python packages for extension
+        // Compiled files: ~/Library/__pycache__
+        setenv("PYTHONPYCACHEPREFIX", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.appendingPathComponent("Library").appendingPathComponent("__pycache__").path.toCString(), 1)
+        numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
+        // PATH: $APPDIR/bin:$APPDIR/Library/bin:$SHORTCUTS/Library/bin:$SHORTCUTS/bin:$PATH
+        var newPath = mainAppResourceURL.appendingPathComponent("bin").path
+        + ":" + mainAppResourceURL.appendingPathComponent("Library").appendingPathComponent("bin").path
+        if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
+            newPath = newPath + ":" + groupUrl.appendingPathComponent("Library").appendingPathComponent("bin").path
+            newPath = newPath + ":" + groupUrl.appendingPathComponent("bin").path
+        }
+        newPath = newPath + ":" + String(utf8String: getenv("PATH"))!
+        setenv("PATH", newPath, 1)
+        // End environment variables
         outputReceived = false
         var returnVal: Int32 = 0
         let commands = command.components(separatedBy: "\n")
@@ -340,5 +367,5 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
     }
         
     // Once resolution is completed, perform validation on the intent and provide confirmation (optional).
-    
+
 }
