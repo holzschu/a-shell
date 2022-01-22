@@ -22,7 +22,7 @@ BEGIN {
                         $FIND_VERSION $ERROR $CHECK_INC_HASH $FORCE_SAFE_INC ];
     use Exporter;
     @ISA            = qw[Exporter];
-    $VERSION        = '0.70';
+    $VERSION        = '0.74';
     $VERBOSE        = 0;
     $DEPRECATED     = 0;
     $FIND_VERSION   = 1;
@@ -238,7 +238,7 @@ sub check_install {
                 $filename = File::Spec->catfile($dir, $file);
                 next unless -e $filename;
 
-                $fh = new FileHandle;
+                $fh = FileHandle->new();
                 if (!$fh->open($filename)) {
                     warn loc(q[Cannot open file '%1': %2], $file, $!)
                             if $args->{verbose};
@@ -320,6 +320,7 @@ sub check_install {
         require Module::CoreList;
         require Config;
 
+        no warnings 'once';
         $href->{uptodate} = 0 if
            exists $Module::CoreList::version{ 0+$] }{ $args->{module} } and
            Module::CoreList::is_deprecated( $args->{module} ) and

@@ -7,7 +7,7 @@ use Perl::OSType qw/os_type/;
 
 use warnings;
 use strict;
-our $VERSION = '0.280234'; # VERSION
+our $VERSION = '0.280236'; # VERSION
 our @ISA;
 
 # We only use this once - don't waste a symbol table entry on it.

@@ -2,7 +2,7 @@ package Test2::Hub::Interceptor;
 use strict;
 use warnings;
 
-our $VERSION = '1.302175';
+our $VERSION = '1.302183';
 
 
 use Test2::Hub::Interceptor::Terminator();
@@ -26,6 +26,62 @@ sub inherit {
         my $ipc = $from->{+IPC};
         $self->{+IPC} = $ipc;
         $ipc->add_hub($self->{+HID});
+    }
+
+    if (my $ls = $from->{+_LISTENERS}) {
+        push @{$self->{+_LISTENERS}} => grep { $_->{intercept_inherit} } @$ls;
+    }
+
+    if (my $pfs = $from->{+_PRE_FILTERS}) {
+        push @{$self->{+_PRE_FILTERS}} => grep { $_->{intercept_inherit} } @$pfs;
+    }
+
+    if (my $fs = $from->{+_FILTERS}) {
+        push @{$self->{+_FILTERS}} => grep { $_->{intercept_inherit} } @$fs;
+    }
+}
+
+sub clean_inherited {
+    my $self = shift;
+    my %params = @_;
+
+    my @sets = (
+        $self->{+_LISTENERS},
+        $self->{+_PRE_FILTERS},
+        $self->{+_FILTERS},
+    );
+
+    for my $set (@sets) {
+        next unless $set;
+
+        for my $i (@$set) {
+            my $cbs = $i->{intercept_inherit} or next;
+            next unless ref($cbs) eq 'HASH';
+            my $cb = $cbs->{clean} or next;
+            $cb->(%params);
+        }
+    }
+}
+
+sub restore_inherited {
+    my $self = shift;
+    my %params = @_;
+
+    my @sets = (
+        $self->{+_FILTERS},
+        $self->{+_PRE_FILTERS},
+        $self->{+_LISTENERS},
+    );
+
+    for my $set (@sets) {
+        next unless $set;
+
+        for my $i (@$set) {
+            my $cbs = $i->{intercept_inherit} or next;
+            next unless ref($cbs) eq 'HASH';
+            my $cb = $cbs->{restore} or next;
+            $cb->(%params);
+        }
     }
 }
 
@@ -78,7 +134,7 @@ F<http://github.com/Test-More/test-more/>.
 
 =head1 COPYRIGHT
 
-Copyright 2019 Chad Granum E<lt>exodist@cpan.orgE<gt>.
+Copyright 2020 Chad Granum E<lt>exodist@cpan.orgE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

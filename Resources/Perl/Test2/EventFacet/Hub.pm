@@ -2,7 +2,7 @@ package Test2::EventFacet::Hub;
 use strict;
 use warnings;
 
-our $VERSION = '1.302175';
+our $VERSION = '1.302183';
 
 sub is_list { 1 }
 sub facet_key { 'hubs' }
@@ -99,7 +99,7 @@ F<http://github.com/Test-More/test-more/>.
 
 =head1 COPYRIGHT
 
-Copyright 2019 Chad Granum E<lt>exodist@cpan.orgE<gt>.
+Copyright 2020 Chad Granum E<lt>exodist@cpan.orgE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

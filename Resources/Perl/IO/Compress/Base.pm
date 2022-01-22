@@ -6,7 +6,7 @@ require 5.006 ;
 use strict ;
 use warnings;
 
-use IO::Compress::Base::Common 2.093 ;
+use IO::Compress::Base::Common 2.101 ;
 
 use IO::File (); ;
 use Scalar::Util ();
@@ -20,7 +20,7 @@ use Symbol();
 our (@ISA, $VERSION);
 @ISA    = qw(IO::File Exporter);
 
-$VERSION = '2.093';
+$VERSION = '2.102';
 
 #Can't locate object method "SWASHNEW" via package "utf8" (perhaps you forgot to load "utf8"?) at .../ext/Compress-Zlib/Gzip/blib/lib/Compress/Zlib/Common.pm line 16.
 
@@ -254,8 +254,8 @@ sub _create
         *$obj->{Compress} = $obj->mkComp($got)
             or return undef;
 
-        *$obj->{UnCompSize} = new U64 ;
-        *$obj->{CompSize} = new U64 ;
+        *$obj->{UnCompSize} = U64->new;
+        *$obj->{CompSize} = U64->new;
 
         if ( $outType eq 'buffer') {
             ${ *$obj->{Buffer} }  = ''
@@ -279,7 +279,7 @@ sub _create
                 my $mode = '>' ;
                 $mode = '>>'
                     if $appendOutput;
-                *$obj->{FH} = new IO::File "$mode $outValue"
+                *$obj->{FH} = IO::File->new( "$mode $outValue" )
                     or return $obj->saveErrorString(undef, "cannot open file '$outValue': $!", $!) ;
                 *$obj->{StdIO} = ($outValue eq '-');
                 setBinModeOutput(*$obj->{FH}) ;
@@ -340,7 +340,7 @@ sub _def
     my $haveOut = @_ ;
     my $output = shift ;
 
-    my $x = new IO::Compress::Base::Validator($class, *$obj->{Error}, $name, $input, $output)
+    my $x = IO::Compress::Base::Validator->new($class, *$obj->{Error}, $name, $input, $output)
         or return undef ;
 
     push @_, $output if $haveOut && $x->{Hash};
@@ -493,7 +493,7 @@ sub _wr2
 
         if ( ! $isFilehandle )
         {
-            $fh = new IO::File "<$input"
+            $fh = IO::File->new( "<$input" )
                 or return $self->saveErrorString(undef, "cannot open file '$input': $!", $!) ;
         }
         binmode $fh ;
@@ -983,23 +983,27 @@ sub _notAvailable
     return sub { Carp::croak "$name Not Available: File opened only for output" ; } ;
 }
 
-*read     = _notAvailable('read');
-*READ     = _notAvailable('read');
-*readline = _notAvailable('readline');
-*READLINE = _notAvailable('readline');
-*getc     = _notAvailable('getc');
-*GETC     = _notAvailable('getc');
+{
+    no warnings 'once';
 
-*FILENO   = \&fileno;
-*PRINT    = \&print;
-*PRINTF   = \&printf;
-*WRITE    = \&syswrite;
-*write    = \&syswrite;
-*SEEK     = \&seek;
-*TELL     = \&tell;
-*EOF      = \&eof;
-*CLOSE    = \&close;
-*BINMODE  = \&binmode;
+    *read     = _notAvailable('read');
+    *READ     = _notAvailable('read');
+    *readline = _notAvailable('readline');
+    *READLINE = _notAvailable('readline');
+    *getc     = _notAvailable('getc');
+    *GETC     = _notAvailable('getc');
+
+    *FILENO   = \&fileno;
+    *PRINT    = \&print;
+    *PRINTF   = \&printf;
+    *WRITE    = \&syswrite;
+    *write    = \&syswrite;
+    *SEEK     = \&seek;
+    *TELL     = \&tell;
+    *EOF      = \&eof;
+    *CLOSE    = \&close;
+    *BINMODE  = \&binmode;
+}
 
 #*sysread  = \&_notAvailable;
 #*syswrite = \&_write;
@@ -1023,7 +1027,7 @@ purpose is to be sub-classed by IO::Compress modules.
 
 =head1 SUPPORT
 
-General feedback/questions/bug reports should be sent to 
+General feedback/questions/bug reports should be sent to
 L<https://github.com/pmqs/IO-Compress/issues> (preferred) or
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=IO-Compress>.
 
@@ -1047,8 +1051,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2019 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2021 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-

@@ -23,9 +23,11 @@ require IO::Socket::UNIX if ($^O ne 'epoc' && $^O ne 'symbian');
 
 our @ISA = qw(IO::Handle);
 
-our $VERSION = "1.43";
+our $VERSION = "1.46";
 
 our @EXPORT_OK = qw(sockatmark);
+
+our $errstr;
 
 sub import {
     my $pkg = shift;
@@ -120,7 +122,7 @@ sub connect {
 	if (defined $timeout && ($!{EINPROGRESS} || $!{EWOULDBLOCK})) {
 	    require IO::Select;
 
-	    my $sel = new IO::Select $sock;
+	    my $sel = IO::Select->new( $sock );
 
 	    undef $!;
 	    my($r,$w,$e) = IO::Select::select(undef,$sel,$sel,$timeout);
@@ -132,11 +134,11 @@ sub connect {
 		# set we now emulate the behavior in Linux
 		#    - Karthik Rajagopalan
 		$err = $sock->getsockopt(SOL_SOCKET,SO_ERROR);
-		$@ = "connect: $err";
+		$errstr = $@ = "connect: $err";
 	    }
 	    elsif(!@$w[0]) {
 		$err = $! || (exists &Errno::ETIMEDOUT ? &Errno::ETIMEDOUT : 1);
-		$@ = "connect: timeout";
+		$errstr = $@ = "connect: timeout";
 	    }
 	    elsif (!connect($sock,$addr) &&
                 not ($!{EISCONN} || ($^O eq 'MSWin32' &&
@@ -147,12 +149,12 @@ sub connect {
 		# Windows sets errno to WSAEINVAL (10022) (pre-5.19.4) or
 		# EINVAL (22) (5.19.4 onwards).
 		$err = $!;
-		$@ = "connect: $!";
+		$errstr = $@ = "connect: $!";
 	    }
 	}
         elsif ($blocking || !($!{EINPROGRESS} || $!{EWOULDBLOCK}))  {
 	    $err = $!;
-	    $@ = "connect: $!";
+	    $errstr = $@ = "connect: $!";
 	}
     }
 
@@ -243,10 +245,10 @@ sub accept {
     if(defined $timeout) {
 	require IO::Select;
 
-	my $sel = new IO::Select $sock;
+	my $sel = IO::Select->new( $sock );
 
 	unless ($sel->can_read($timeout)) {
-	    $@ = 'accept: timeout';
+	    $errstr = $@ = 'accept: timeout';
 	    $! = (exists &Errno::ETIMEDOUT ? &Errno::ETIMEDOUT : 1);
 	    return;
 	}
@@ -529,6 +531,18 @@ the L<IO::Socket/"Domain"> argument. The L<IO::Socket/"Domain"> argument can,
 by default, be either C<AF_INET> or C<AF_UNIX>. Other domains can be used if a
 proper subclass for the domain family is registered. All other arguments will
 be passed to the C<configuration> method of the package for that domain.
+
+If the constructor fails it will return C<undef> and set the C<$errstr> package
+variable to contain an error message.
+
+    $sock = IO::Socket->new(...)
+        or die "Cannot create socket - $IO::Socket::errstr\n";
+
+For legacy reasons the error message is also set into the global C<$@>
+variable, and you may still find older code which looks here instead.
+
+    $sock = IO::Socket->new(...)
+        or die "Cannot create socket - $@\n";
 
 =head1 METHODS
 
@@ -832,7 +846,7 @@ Let's create a TCP server on C<localhost:3333>.
         LocalPort => 3333,
         ReusePort => 1,
         Listen => 5,
-    ) || die "Can't open socket: $@";
+    ) || die "Can't open socket: $IO::Socket::errstr";
     say "Waiting on 3333";
 
     while (1) {
@@ -873,7 +887,7 @@ A client for such a server could be
         proto => 'tcp',
         PeerPort => 3333,
         PeerHost => '0.0.0.0',
-    ) || die "Can't open socket: $@";
+    ) || die "Can't open socket: $IO::Socket::errstr";
 
     say "Sending Hello World!";
     my $size = $client->send("Hello World!");

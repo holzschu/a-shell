@@ -1,17 +1,20 @@
 #  You may distribute under the terms of either the GNU General Public License
 #  or the Artistic License (the same terms as Perl itself)
 #
-#  (C) Paul Evans, 2010-2015 -- leonerd@leonerd.org.uk
+#  (C) Paul Evans, 2010-2020 -- leonerd@leonerd.org.uk
 
 package IO::Socket::IP;
+
+use v5;
+use strict;
+use warnings;
+
 # $VERSION needs to be set before  use base 'IO::Socket'
 #  - https://rt.cpan.org/Ticket/Display.html?id=92107
 BEGIN {
-   $VERSION = '0.39';
+   our $VERSION = '0.41';
 }
 
-use strict;
-use warnings;
 use base qw( IO::Socket );
 
 use Carp;
@@ -96,11 +99,10 @@ falling back to IPv4-only on systems which don't.
 
 =head1 REPLACING C<IO::Socket> DEFAULT BEHAVIOUR
 
-By placing C<-register> in the import list, L<IO::Socket> uses
-C<IO::Socket::IP> rather than C<IO::Socket::INET> as the class that handles
-C<PF_INET>.  C<IO::Socket> will also use C<IO::Socket::IP> rather than
-C<IO::Socket::INET6> to handle C<PF_INET6>, provided that the C<AF_INET6>
-constant is available.
+By placing C<-register> in the import list to C<IO::Socket::IP>, it will
+register itself with L<IO::Socket> as the class that handles C<PF_INET>. It
+will also ask to handle C<PF_INET6> as well, provided that constant is
+available.
 
 Changing C<IO::Socket>'s default behaviour means that calling the
 C<IO::Socket> constructor with either C<PF_INET> or C<PF_INET6> as the
@@ -167,7 +169,9 @@ sub import
 
 =cut
 
-=head2 $sock = IO::Socket::IP->new( %args )
+=head2 new
+
+   $sock = IO::Socket::IP->new( %args )
 
 Creates a new C<IO::Socket::IP> object, containing a newly created socket
 handle according to the named arguments passed. The recognised arguments are:
@@ -353,7 +357,9 @@ If the constructor fails, it will set C<$@> to an appropriate error message;
 this may be from C<$!> or it may be some other string; not every failure
 necessarily has an associated C<errno> value.
 
-=head2 $sock = IO::Socket::IP->new( $peeraddr )
+=head2 new (one arg)
+
+   $sock = IO::Socket::IP->new( $peeraddr )
 
 As a special case, if the constructor is passed a single argument (as
 opposed to an even-sized list of key/value pairs), it is taken to be the value
@@ -817,7 +823,9 @@ sub _unpack_sockaddr
    }
 }
 
-=head2 ( $host, $service ) = $sock->sockhost_service( $numeric )
+=head2 sockhost_service
+
+   ( $host, $service ) = $sock->sockhost_service( $numeric )
 
 Returns the hostname and service name of the local address (that is, the
 socket address given by the C<sockname> method).
@@ -840,19 +848,27 @@ sub sockhost_service
    $self->_get_host_service( $self->sockname, $numeric ? NI_NUMERICHOST|NI_NUMERICSERV : 0 );
 }
 
-=head2 $addr = $sock->sockhost
+=head2 sockhost
+
+   $addr = $sock->sockhost
 
 Return the numeric form of the local address as a textual representation
 
-=head2 $port = $sock->sockport
+=head2 sockport
+
+   $port = $sock->sockport
 
 Return the numeric form of the local port number
 
-=head2 $host = $sock->sockhostname
+=head2 sockhostname
+
+   $host = $sock->sockhostname
 
 Return the resolved name of the local address
 
-=head2 $service = $sock->sockservice
+=head2 sockservice
+
+   $service = $sock->sockservice
 
 Return the resolved name of the local port number
 
@@ -864,7 +880,9 @@ sub sockport { my $self = shift; scalar +( $self->_get_host_service( $self->sock
 sub sockhostname { my $self = shift; scalar +( $self->_get_host_service( $self->sockname, 0, NIx_NOSERV ) )[0] }
 sub sockservice  { my $self = shift; scalar +( $self->_get_host_service( $self->sockname, 0, NIx_NOHOST ) )[1] }
 
-=head2 $addr = $sock->sockaddr
+=head2 sockaddr
+
+   $addr = $sock->sockaddr
 
 Return the local address as a binary octet string
 
@@ -872,7 +890,9 @@ Return the local address as a binary octet string
 
 sub sockaddr { my $self = shift; _unpack_sockaddr $self->sockname }
 
-=head2 ( $host, $service ) = $sock->peerhost_service( $numeric )
+=head2 peerhost_service
+
+   ( $host, $service ) = $sock->peerhost_service( $numeric )
 
 Returns the hostname and service name of the peer address (that is, the
 socket address given by the C<peername> method), similar to the
@@ -893,19 +913,27 @@ sub peerhost_service
    $self->_get_host_service( $self->peername, $numeric ? NI_NUMERICHOST|NI_NUMERICSERV : 0 );
 }
 
-=head2 $addr = $sock->peerhost
+=head2 peerhost
+
+   $addr = $sock->peerhost
 
 Return the numeric form of the peer address as a textual representation
 
-=head2 $port = $sock->peerport
+=head2 peerport
+
+   $port = $sock->peerport
 
 Return the numeric form of the peer port number
 
-=head2 $host = $sock->peerhostname
+=head2 peerhostname
+
+   $host = $sock->peerhostname
 
 Return the resolved name of the peer address
 
-=head2 $service = $sock->peerservice
+=head2 peerservice
+
+   $service = $sock->peerservice
 
 Return the resolved name of the peer port number
 
@@ -917,7 +945,9 @@ sub peerport { my $self = shift; scalar +( $self->_get_host_service( $self->peer
 sub peerhostname { my $self = shift; scalar +( $self->_get_host_service( $self->peername, 0, NIx_NOSERV ) )[0] }
 sub peerservice  { my $self = shift; scalar +( $self->_get_host_service( $self->peername, 0, NIx_NOHOST ) )[1] }
 
-=head2 $addr = $peer->peeraddr
+=head2 peeraddr
+
+   $addr = $peer->peeraddr
 
 Return the peer address as a binary octet string
 
@@ -967,7 +997,9 @@ BEGIN {
    }
 }
 
-=head2 $inet = $sock->as_inet
+=head2 as_inet
+
+   $inet = $sock->as_inet
 
 Returns a new L<IO::Socket::INET> instance wrapping the same filehandle. This
 may be useful in cases where it is required, for backward-compatibility, to
@@ -1089,7 +1121,9 @@ If the C<...Host> argument is in this special form and the corresponding
 C<...Service> or C<...Port> argument is also defined, the one parsed from
 the C<...Host> argument will take precedence and the other will be ignored.
 
-=head2 ( $host, $port ) = IO::Socket::IP->split_addr( $addr )
+=head2 split_addr
+
+   ( $host, $port ) = IO::Socket::IP->split_addr( $addr )
 
 Utility method that provides the parsing functionality described above.
 Returns a 2-element list, containing either the split hostname and port
@@ -1125,7 +1159,9 @@ sub split_addr
    return ( $addr, undef );
 }
 
-=head2 $addr = IO::Socket::IP->join_addr( $host, $port )
+=head2 join_addr
+
+   $addr = IO::Socket::IP->join_addr( $host, $port )
 
 Utility method that performs the reverse of C<split_addr>, returning a string
 formed by joining the specified host address and port number. The host address

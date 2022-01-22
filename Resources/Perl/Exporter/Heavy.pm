@@ -4,7 +4,7 @@ use strict;
 no strict 'refs';
 
 # On one line so MakeMaker will see it.
-require Exporter;  our $VERSION = $Exporter::VERSION;
+our $VERSION = '5.76';
 
 =head1 NAME
 

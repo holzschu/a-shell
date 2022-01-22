@@ -8,24 +8,24 @@ use bytes;
 
 require Exporter ;
 
-use IO::Compress::RawDeflate 2.093 () ; 
-use IO::Compress::Adapter::Deflate 2.093 ;
+use IO::Compress::RawDeflate 2.101 () ;
+use IO::Compress::Adapter::Deflate 2.101 ;
 
-use IO::Compress::Base::Common  2.093 qw(:Status );
-use IO::Compress::Gzip::Constants 2.093 ;
-use IO::Compress::Zlib::Extra 2.093 ;
+use IO::Compress::Base::Common  2.101 qw(:Status );
+use IO::Compress::Gzip::Constants 2.101 ;
+use IO::Compress::Zlib::Extra 2.101 ;
 
 BEGIN
 {
-    if (defined &utf8::downgrade ) 
+    if (defined &utf8::downgrade )
       { *noUTF8 = \&utf8::downgrade }
     else
-      { *noUTF8 = sub {} }  
+      { *noUTF8 = sub {} }
 }
 
 our ($VERSION, @ISA, @EXPORT_OK, %EXPORT_TAGS, %DEFLATE_CONSTANTS, $GzipError);
 
-$VERSION = '2.093';
+$VERSION = '2.102';
 $GzipError = '' ;
 
 @ISA    = qw(IO::Compress::RawDeflate Exporter);
@@ -65,7 +65,7 @@ sub getExtraParams
     return (
             # zlib behaviour
             $self->getZlibParams(),
-           
+
             # Gzip header fields
             'minimal'   => [IO::Compress::Base::Common::Parse_boolean,   0],
             'comment'   => [IO::Compress::Base::Common::Parse_any,       undef],
@@ -105,7 +105,7 @@ sub ckParams
         # Also check that they only contain ISO 8859-1 chars.
         if ($got->parsed('name') && defined $got->getValue('name')) {
             my $name = $got->getValue('name');
-                
+
             return $self->saveErrorString(undef, "Null Character found in Name",
                                                 Z_DATA_ERROR)
                 if $strict && $name =~ /\x00/ ;
@@ -132,16 +132,16 @@ sub ckParams
 
             return $self->saveErrorString(undef, "OS_Code must be between 0 and 255, got '$value'")
                 if $value < 0 || $value > 255 ;
-            
+
         }
 
         # gzip only supports Deflate at present
         $got->setValue('method' => Z_DEFLATED) ;
 
         if ( ! $got->parsed('extraflags')) {
-            $got->setValue('extraflags' => 2) 
+            $got->setValue('extraflags' => 2)
                 if $got->getValue('level') == Z_BEST_COMPRESSION ;
-            $got->setValue('extraflags' => 4) 
+            $got->setValue('extraflags' => 4)
                 if $got->getValue('level') == Z_BEST_SPEED ;
         }
 
@@ -161,12 +161,13 @@ sub ckParams
 sub mkTrailer
 {
     my $self = shift ;
-    return pack("V V", *$self->{Compress}->crc32(), 
+    return pack("V V", *$self->{Compress}->crc32(),
                        *$self->{UnCompSize}->get32bit());
 }
 
 sub getInverseClass
 {
+    no warnings 'once';
     return ('IO::Uncompress::Gunzip',
                 \$IO::Uncompress::Gunzip::GunzipError);
 }
@@ -184,7 +185,7 @@ sub getFileInfo
     $params->setValue('name' => $filename)
         if ! $params->parsed('name') ;
 
-    $params->setValue('time' => $defaultTime) 
+    $params->setValue('time' => $defaultTime)
         if ! $params->parsed('time') ;
 }
 
@@ -207,7 +208,7 @@ sub mkHeader
     $flags |= GZIP_FLG_FEXTRA   if $param->wantValue('extrafield') ;
     $flags |= GZIP_FLG_FNAME    if $param->wantValue('name') ;
     $flags |= GZIP_FLG_FCOMMENT if $param->wantValue('comment') ;
-    
+
     # MTIME
     my $time = $param->valueOrDefault('time', GZIP_MTIME_DEFAULT) ;
 
@@ -218,7 +219,7 @@ sub mkHeader
     my $os_code = $param->valueOrDefault('os_code', GZIP_OS_DEFAULT) ;
 
 
-    my $out = pack("C4 V C C", 
+    my $out = pack("C4 V C C",
             GZIP_ID1,   # ID1
             GZIP_ID2,   # ID2
             $method,    # Compression Method
@@ -240,7 +241,7 @@ sub mkHeader
         $name =~ s/\x00.*$//;
         $out .= $name ;
         # Terminate the filename with NULL unless it already is
-        $out .= GZIP_NULL_BYTE 
+        $out .= GZIP_NULL_BYTE
             if !length $name or
                substr($name, 1, -1) ne GZIP_NULL_BYTE ;
     }
@@ -257,7 +258,7 @@ sub mkHeader
     }
 
     # HEADER CRC
-    $out .= pack("v", Compress::Raw::Zlib::crc32($out) & 0x00FF ) 
+    $out .= pack("v", Compress::Raw::Zlib::crc32($out) & 0x00FF )
         if $param->getValue('headercrc') ;
 
     noUTF8($out);
@@ -270,7 +271,7 @@ sub mkFinalTrailer
     return '';
 }
 
-1; 
+1;
 
 __END__
 
@@ -285,7 +286,7 @@ IO::Compress::Gzip - Write RFC 1952 files/buffers
     my $status = gzip $input => $output [,OPTS]
         or die "gzip failed: $GzipError\n";
 
-    my $z = new IO::Compress::Gzip $output [,OPTS]
+    my $z = IO::Compress::Gzip->new( $output [,OPTS] )
         or die "gzip failed: $GzipError\n";
 
     $z->print($string);
@@ -573,7 +574,7 @@ compressed data to a buffer, C<$buffer>.
     use IO::Compress::Gzip qw(gzip $GzipError) ;
     use IO::File ;
 
-    my $input = new IO::File "<file1.txt"
+    my $input = IO::File->new( "<file1.txt" )
         or die "Cannot open 'file1.txt': $!\n" ;
     my $buffer ;
     gzip $input => \$buffer
@@ -610,7 +611,7 @@ and if you want to compress each file one at a time, this will do the trick
 
 The format of the constructor for C<IO::Compress::Gzip> is shown below
 
-    my $z = new IO::Compress::Gzip $output [,OPTS]
+    my $z = IO::Compress::Gzip->new( $output [,OPTS] )
         or die "IO::Compress::Gzip failed: $GzipError\n";
 
 It returns an C<IO::Compress::Gzip> object on success and undef on failure.
@@ -1226,7 +1227,7 @@ See L<IO::Compress::FAQ|IO::Compress::FAQ/"Compressed files and Net::FTP">
 
 =head1 SUPPORT
 
-General feedback/questions/bug reports should be sent to 
+General feedback/questions/bug reports should be sent to
 L<https://github.com/pmqs/IO-Copress/issues> (preferred) or
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=IO-Copress>.
 
@@ -1263,8 +1264,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2019 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2021 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-

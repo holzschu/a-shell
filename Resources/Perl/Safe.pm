@@ -3,7 +3,7 @@ package Safe;
 use 5.003_11;
 use Scalar::Util qw(reftype refaddr);
 
-$Safe::VERSION = "2.41_01";
+$Safe::VERSION = "2.43";
 
 # *** Don't declare any lexicals above this point ***
 #
@@ -67,7 +67,7 @@ require utf8;
 # particular code points don't cause it to load.
 # (Swashes are cached internally by perl in PL_utf8_* variables
 # independent of being inside/outside of Safe. So once loaded they can be)
-do { my $a = pack('U',0x100); my $b = chr 0x101; utf8::upgrade $b; $a =~ /$b/i };
+do { my $a = pack('U',0x100); $a =~ m/\x{1234}/; $a =~ tr/\x{1234}//; };
 # now we can safely include utf8::SWASHNEW in $default_share defined below.
 
 my $default_root  = 0;

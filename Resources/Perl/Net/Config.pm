@@ -1,7 +1,7 @@
 # Net::Config.pm
 #
 # Copyright (C) 2000 Graham Barr.  All rights reserved.
-# Copyright (C) 2013-2014, 2016 Steve Hay.  All rights reserved.
+# Copyright (C) 2013-2014, 2016, 2020 Steve Hay.  All rights reserved.
 # This module is free software; you can redistribute it and/or modify it under
 # the same terms as Perl itself, i.e. under the terms of either the GNU General
 # Public License or the Artistic License, as specified in the F<LICENCE> file.
@@ -18,7 +18,7 @@ use Socket qw(inet_aton inet_ntoa);
 
 our @EXPORT  = qw(%NetConfig);
 our @ISA     = qw(Net::LocalCfg Exporter);
-our $VERSION = "3.11";
+our $VERSION = "3.13";
 
 our($CONFIGURE, $LIBNET_CFG);
 
@@ -86,7 +86,7 @@ if ($< == $> and !$CONFIGURE) {
   my $home = eval { local $SIG{__DIE__}; (getpwuid($>))[7] } || $ENV{HOME};
   $home ||= $ENV{HOMEDRIVE} . ($ENV{HOMEPATH} || '') if defined $ENV{HOMEDRIVE};
   if (defined $home) {
-    $file      = $home . "Documents/.libnetrc";
+    $file      = $home . "/Documents/.libnetrc";
     $ref       = eval { local $SIG{__DIE__}; do $file } if -f $file;
     %NetConfig = (%NetConfig, %{$ref})
       if ref($ref) eq 'HASH';
@@ -159,7 +159,7 @@ For example
     }
     __END__
 
-=head1 METHODS
+=head2 Class Methods
 
 C<Net::Config> defines the following methods. They are methods as they are
 invoked as class methods. This is because C<Net::Config> inherits from
@@ -167,7 +167,7 @@ C<Net::LocalCfg> so you can override these methods if you want.
 
 =over 4
 
-=item requires_firewall ( HOST )
+=item C<requires_firewall($host)>
 
 Attempts to determine if a given host is outside your firewall. Possible
 return values are.
@@ -181,7 +181,7 @@ the configuration data.
 
 =back
 
-=head1 NetConfig VALUES
+=head2 NetConfig Values
 
 =over 4
 
@@ -323,23 +323,59 @@ If true then C<Configure> will check each hostname given that it exists
 
 =back
 
+=head1 EXPORTS
+
+The following symbols are, or can be, exported by this module:
+
+=over 4
+
+=item Default Exports
+
+C<%NetConfig>.
+
+=item Optional Exports
+
+I<None>.
+
+=item Export Tags
+
+I<None>.
+
+=back
+
+=head1 KNOWN BUGS
+
+I<None>.
+
 =head1 AUTHOR
 
-Graham Barr E<lt>F<gbarr@pobox.com>E<gt>.
+Graham Barr E<lt>L<gbarr@pobox.com|mailto:gbarr@pobox.com>E<gt>.
 
-Steve Hay E<lt>F<shay@cpan.org>E<gt> is now maintaining libnet as of version
-1.22_02.
+Steve Hay E<lt>L<shay@cpan.org|mailto:shay@cpan.org>E<gt> is now maintaining
+libnet as of version 1.22_02.
 
 =head1 COPYRIGHT
 
-Copyright (C) 1998-2011 Graham Barr.  All rights reserved.
+Copyright (C) 2000 Graham Barr.  All rights reserved.
 
-Copyright (C) 2013-2014, 2016 Steve Hay.  All rights reserved.
+Copyright (C) 2013-2014, 2016, 2020 Steve Hay.  All rights reserved.
 
 =head1 LICENCE
 
 This module is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself, i.e. under the terms of either the GNU General Public
 License or the Artistic License, as specified in the F<LICENCE> file.
+
+=head1 VERSION
+
+Version 3.13
+
+=head1 DATE
+
+23 Dec 2020
+
+=head1 HISTORY
+
+See the F<Changes> file.
 
 =cut

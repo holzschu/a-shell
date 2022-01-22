@@ -3,7 +3,7 @@ use strict;
 use Exporter;
 
 
-our $VERSION = '3.78';
+our $VERSION = '3.80';
 my $xs_version = $VERSION;
 $VERSION =~ tr/_//d;
 
@@ -185,7 +185,9 @@ unless ($pwd_cmd) {
     # Isn't this wrong?  _backtick_pwd() will fail if someone has
     # pwd in their path but it is not /bin/pwd or /usr/bin/pwd?
     # See [perl #16774]. --jhi
-    $pwd_cmd = 'pwd';
+	# $pwd_cmd = 'pwd';
+	# iOS: we need the actual path from pwd, so pwd -P (pwd returns ~/Documents).
+    $pwd_cmd = 'pwd -P';
 }
 
 # Lazy-load Carp

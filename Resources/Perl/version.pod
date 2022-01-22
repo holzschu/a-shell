@@ -224,11 +224,11 @@ term will be converted to a version object using C<parse()>.  This may give
 surprising results:
 
   $v1 = version->parse("v0.95.0");
-  $bool = $v1 < 0.96; # FALSE since 0.96 is v0.960.0
+  $bool = $v1 < 0.94; # TRUE since 0.94 is v0.940.0
 
 Always comparing to a version object will help avoid surprises:
 
-  $bool = $v1 < version->parse("v0.96.0"); # TRUE
+  $bool = $v1 < version->parse("v0.94.0"); # FALSE
 
 Note that "alpha" version objects (where the version string contains
 a trailing underscore segment) compare as less than the equivalent

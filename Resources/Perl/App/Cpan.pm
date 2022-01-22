@@ -6,7 +6,7 @@ use vars qw($VERSION);
 
 use if $] < 5.008 => 'IO::Scalar';
 
-$VERSION = '1.675';
+$VERSION = '1.676';
 
 =head1 NAME
 
@@ -410,9 +410,7 @@ sub _process_options
 	{
 	my %options;
 
-	# see https://github.com/andk/cpanpm/issues/131 CPAN_OPTS must go before module name:
-	# push @ARGV, grep $_, split /\s+/, $ENV{CPAN_OPTS} || '';
-	unshift @ARGV, grep $_, split /\s+/, $ENV{CPAN_OPTS} || '';
+	push @ARGV, grep $_, split /\s+/, $ENV{CPAN_OPTS} || '';
 
 	# if no arguments, just drop into the shell
 	if( 0 == @ARGV ) { CPAN::shell(); exit 0 }
@@ -691,7 +689,7 @@ sub _hook_into_CPANpm_report
 
 	*CPAN::Shell::mywarn = sub {
 		my($self,$what) = @_;
-		$scalar .= $what;
+		$scalar .= $what if defined $what;
 		$self->print_ornamented($what,
 			$CPAN::Config->{colorize_warn}||'bold red on_white'
 			);

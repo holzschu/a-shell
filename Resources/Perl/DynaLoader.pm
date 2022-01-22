@@ -16,7 +16,7 @@ package DynaLoader;
 # Tim.Bunce@ig.co.uk, August 1994
 
 BEGIN {
-    $VERSION = '1.47_01';
+    $VERSION = '1.50';
 }
 
 use Config;
@@ -260,7 +260,6 @@ sub dl_findfile {
             push(@names, $_);
         }
 	my $dirsep = '/';
-	
         foreach $dir (@dirs, @dl_library_path) {
             next unless -d $dir;
 	    

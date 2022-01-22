@@ -11,7 +11,7 @@ use IO::Socket;
 use Carp;
 
 our @ISA = qw(IO::Socket);
-our $VERSION = "1.41";
+our $VERSION = "1.46";
 
 IO::Socket::UNIX->register_domain( AF_UNIX );
 
@@ -30,6 +30,10 @@ sub configure {
     $sock->socket(AF_UNIX, $type, 0) or
 	return undef;
 
+    if(exists $arg->{Blocking}) {
+        $sock->blocking($arg->{Blocking}) or
+	    return undef;
+    }
     if(exists $arg->{Local}) {
 	my $addr = sockaddr_un($arg->{Local});
 	$sock->bind($addr) or
@@ -122,6 +126,18 @@ If the constructor is only passed a single argument, it is assumed to
 be a C<Peer> specification.
 
 If the C<Listen> argument is given, but false, the queue size will be set to 5.
+
+If the constructor fails it will return C<undef> and set the
+C<$IO::Socket::errstr> package variable to contain an error message.
+
+    $sock = IO::Socket::UNIX->new(...)
+        or die "Cannot create socket - $IO::Socket::errstr\n";
+
+For legacy reasons the error message is also set into the global C<$@>
+variable, and you may still find older code which looks here instead.
+
+    $sock = IO::Socket::UNIX->new(...)
+        or die "Cannot create socket - $@\n";
 
 =back
 

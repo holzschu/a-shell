@@ -6,7 +6,7 @@ use strict;
 
 our($VERSION, @ISA, @EXPORT_OK);
 
-$VERSION = "1.48";
+$VERSION = "1.50";
 
 use Carp;
 use Exporter ();
@@ -435,6 +435,7 @@ These are a hotchpotch of opcodes still waiting to be considered
     localtime gmtime
 
     entertry leavetry -- can be used to 'hide' fatal errors
+    entertrycatch poptry catch leavetrycatch -- similar
 
     entergiven leavegiven
     enterwhen leavewhen

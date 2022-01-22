@@ -18,7 +18,7 @@ our @EXPORT_OK = qw(is_language_tag same_language_tag
                );
 our %EXPORT_TAGS = ('ALL' => \@EXPORT_OK);
 
-our $VERSION = "0.44";
+our $VERSION = "0.45";
 our %Panic;
 
 sub uniq { my %seen; return grep(!($seen{$_}++), @_); } # a util function
@@ -677,7 +677,7 @@ sub alternate_language_tags {
    # And the panic languages for English is, of course, nil!
 
    # My guesses at Slavic intelligibility:
-   ([qw(ru be uk)]) x 2,  # Russian, Belarusian, Ukranian
+   ([qw(ru be uk)]) x 2,  # Russian, Belarusian, Ukrainian
    ([qw(sr hr bs)]) x 2,  # Serbian, Croatian, Bosnian
    'cs' => 'sk', 'sk' => 'cs', # Czech + Slovak
 

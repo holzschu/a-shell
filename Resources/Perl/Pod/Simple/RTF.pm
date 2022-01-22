@@ -8,7 +8,7 @@ package Pod::Simple::RTF;
 
 use strict;
 use vars qw($VERSION @ISA %Escape $WRAP %Tagmap);
-$VERSION = '3.40';
+$VERSION = '3.42';
 use Pod::Simple::PullParser ();
 BEGIN {@ISA = ('Pod::Simple::PullParser')}
 
@@ -494,7 +494,7 @@ END
   # None of the following things should need escaping, I dare say!
     $tag, 
     $ISA[0], $ISA[0]->VERSION(),
-    $], scalar(gmtime),
+    $], scalar(gmtime($ENV{SOURCE_DATE_EPOCH} || time)),
   ;
 }
 

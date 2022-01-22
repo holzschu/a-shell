@@ -4,10 +4,10 @@ use strict;
 use warnings;
 use bytes;
 
-use IO::Compress::Base::Common  2.093 qw(:Status);
+use IO::Compress::Base::Common  2.101 qw(:Status);
 our ($VERSION);
 
-$VERSION = '2.093';
+$VERSION = '2.102';
 
 sub mkCompObject
 {
@@ -19,7 +19,7 @@ sub mkCompObject
                   'UnCompSize' => 0,
                   'Error'      => '',
                   'ErrorNo'    => 0,
-                 } ;     
+                 } ;
 }
 
 sub compr
@@ -30,7 +30,7 @@ sub compr
         $self->{CompSize} += length ${ $_[0] } ;
         $self->{UnCompSize} = $self->{CompSize} ;
 
-        if ( ref $_[1] ) 
+        if ( ref $_[1] )
           { ${ $_[1] } .= ${ $_[0] } }
         else
           { $_[1] .= ${ $_[0] } }
@@ -43,14 +43,14 @@ sub flush
 {
     my $self = shift ;
 
-    return STATUS_OK;    
+    return STATUS_OK;
 }
 
 sub close
 {
     my $self = shift ;
 
-    return STATUS_OK;    
+    return STATUS_OK;
 }
 
 sub reset
@@ -60,14 +60,14 @@ sub reset
     $self->{CompSize}   = 0;
     $self->{UnCompSize} = 0;
 
-    return STATUS_OK;    
+    return STATUS_OK;
 }
 
-sub deflateParams 
+sub deflateParams
 {
     my $self = shift ;
 
-    return STATUS_OK;   
+    return STATUS_OK;
 }
 
 #sub total_out
@@ -98,4 +98,3 @@ sub uncompressedBytes
 
 
 __END__
-

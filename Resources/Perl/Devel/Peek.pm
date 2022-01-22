@@ -3,7 +3,7 @@
 
 package Devel::Peek;
 
-$VERSION = '1.28';
+$VERSION = '1.30';
 $XS_VERSION = $VERSION;
 $VERSION = eval $VERSION;
 
@@ -119,7 +119,7 @@ All output is to STDERR.
 
 The C<Dump()> function takes one or two arguments: something to dump, and
 an optional limit for recursion and array elements (default is 4).  The
-first argument is evaluted in rvalue scalar context, with exceptions for
+first argument is evaluated in rvalue scalar context, with exceptions for
 @array and %hash, which dump the array or hash itself.  So C<Dump @array>
 works, as does C<Dump $foo>.  And C<Dump pos> will call C<pos> in rvalue
 context, whereas C<Dump ${\pos}> will call it in lvalue context.

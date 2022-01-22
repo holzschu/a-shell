@@ -27,11 +27,11 @@ TAP::Parser - Parse L<TAP|Test::Harness::TAP> output
 
 =head1 VERSION
 
-Version 3.42
+Version 3.43
 
 =cut
 
-our $VERSION = '3.42';
+our $VERSION = '3.43';
 
 my $DEFAULT_TAP_VERSION = 12;
 my $MAX_TAP_VERSION     = 13;
@@ -1384,8 +1384,8 @@ sub _iter {
     my $state       = 'INIT';
     my $state_table = $self->_make_state_table;
 
-    $self->start_time( $self->get_time );
-    $self->start_times( $self->get_times );
+    $self->start_time( $self->get_time ) unless $self->{start_time};
+    $self->start_times( $self->get_times ) unless $self->{start_times};
 
     # Make next_state closure
     my $next_state = sub {

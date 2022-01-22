@@ -4,7 +4,7 @@ perlfaq6 - Regular Expressions
 
 =head1 VERSION
 
-version 5.20200523
+version 5.20210411
 
 =head1 DESCRIPTION
 
@@ -692,47 +692,34 @@ X<regular expression, efficiency>
 
 (contributed by brian d foy)
 
-If you have Perl 5.10 or later, this is almost trivial. You just smart
-match against an array of regular expression objects:
-
-    my @patterns = ( qr/Fr.d/, qr/B.rn.y/, qr/W.lm./ );
-
-    if( $string ~~ @patterns ) {
-        ...
-    };
-
-The smart match stops when it finds a match, so it doesn't have to try
-every expression.
-
-Earlier than Perl 5.10, you have a bit of work to do. You want to
+You want to
 avoid compiling a regular expression every time you want to match it.
 In this example, perl must recompile the regular expression for every
-iteration of the C<foreach> loop since it has no way to know what
-C<$pattern> will be:
+iteration of the C<foreach> loop since C<$pattern> can change:
 
-    my @patterns = qw( foo bar baz );
+    my @patterns = qw( fo+ ba[rz] );
 
-    LINE: while( <DATA> ) {
-        foreach $pattern ( @patterns ) {
-            if( /\b$pattern\b/i ) {
-                print;
+    LINE: while( my $line = <> ) {
+        foreach my $pattern ( @patterns ) {
+            if( $line =~ m/\b$pattern\b/i ) {
+                print $line;
                 next LINE;
             }
         }
     }
 
-The C<qr//> operator showed up in perl 5.005. It compiles a regular
+The C<qr//> operator compiles a regular
 expression, but doesn't apply it. When you use the pre-compiled
 version of the regex, perl does less work. In this example, I inserted
 a C<map> to turn each pattern into its pre-compiled form. The rest of
 the script is the same, but faster:
 
-    my @patterns = map { qr/\b$_\b/i } qw( foo bar baz );
+    my @patterns = map { qr/\b$_\b/i } qw( fo+ ba[rz] );
 
-    LINE: while( <> ) {
-        foreach $pattern ( @patterns ) {
-            if( /$pattern/ ) {
-                print;
+    LINE: while( my $line = <> ) {
+        foreach my $pattern ( @patterns ) {
+            if( $line =~ m/$pattern/ ) {
+                print $line;
                 next LINE;
             }
         }
@@ -740,13 +727,17 @@ the script is the same, but faster:
 
 In some cases, you may be able to make several patterns into a single
 regular expression. Beware of situations that require backtracking
-though.
+though. In this example, the regex is only compiled once because
+C<$regex> doesn't change between iterations:
 
-    my $regex = join '|', qw( foo bar baz );
+    my $regex = join '|', qw( fo+ ba[rz] );
 
-    LINE: while( <> ) {
-        print if /\b(?:$regex)\b/i;
+    while( my $line = <> ) {
+        print if $line =~ m/\b(?:$regex)\b/i;
     }
+
+The function L<Data::Munge/list2re> on CPAN can also be used to form
+a single regex that matches a list of literal strings (not regexes).
 
 For more details on regular expression efficiency, see I<Mastering
 Regular Expressions> by Jeffrey Friedl. He explains how the regular

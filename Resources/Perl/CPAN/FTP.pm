@@ -15,7 +15,7 @@ use vars qw($connect_to_internet_ok $Ua $Thesite $ThesiteURL $Themethod);
 use vars qw(
             $VERSION
 );
-$VERSION = "5.5012";
+$VERSION = "5.5013";
 
 sub _plus_append_open {
     my($fh, $file) = @_;
@@ -38,7 +38,7 @@ sub _ftp_statistics {
     return if defined $ftpstats_size && $ftpstats_size <= 0;
     my $locktype = $fh ? LOCK_EX : LOCK_SH;
     # XXX On Windows flock() implements mandatory locking, so we can
-    # XXX only use shared locking to still allow _yaml_load_file() to
+    # XXX only use shared locking to still allow _yaml_loadfile() to
     # XXX read from the file using a different filehandle.
     $locktype = LOCK_SH if $^O eq "MSWin32";
 

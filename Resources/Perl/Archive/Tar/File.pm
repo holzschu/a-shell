@@ -7,13 +7,11 @@ use File::Spec::Unix    ();
 use File::Spec          ();
 use File::Basename      ();
 
-### avoid circular use, so only require;
-require Archive::Tar;
 use Archive::Tar::Constant;
 
 use vars qw[@ISA $VERSION];
 #@ISA        = qw[Archive::Tar];
-$VERSION    = '2.36';
+$VERSION    = '2.38';
 
 ### set value to 1 to oct() it during the unpack ###
 
@@ -469,6 +467,8 @@ sub extract {
 
     local $Carp::CarpLevel += 1;
 
+    ### avoid circular use, so only require;
+    require Archive::Tar;
     return Archive::Tar->_extract_file( $self, @_ );
 }
 

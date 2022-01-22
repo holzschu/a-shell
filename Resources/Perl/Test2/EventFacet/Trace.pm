@@ -2,14 +2,14 @@ package Test2::EventFacet::Trace;
 use strict;
 use warnings;
 
-our $VERSION = '1.302175';
+our $VERSION = '1.302183';
 
 BEGIN { require Test2::EventFacet; our @ISA = qw(Test2::EventFacet) }
 
 use Test2::Util qw/get_tid pkg_to_file gen_uid/;
 use Carp qw/confess/;
 
-use Test2::Util::HashBase qw{^frame ^pid ^tid ^cid -hid -nested details -buffered -uuid -huuid};
+use Test2::Util::HashBase qw{^frame ^pid ^tid ^cid -hid -nested details -buffered -uuid -huuid <full_caller};
 
 {
     no warnings 'once';
@@ -70,10 +70,14 @@ sub throw {
 
 sub call { @{$_[0]->{+FRAME}} }
 
+sub full_call { @{$_[0]->{+FULL_CALLER}} }
+
 sub package { $_[0]->{+FRAME}->[0] }
 sub file    { $_[0]->{+FRAME}->[1] }
 sub line    { $_[0]->{+FRAME}->[2] }
 sub subname { $_[0]->{+FRAME}->[3] }
+
+sub warning_bits { $_[0]->{+FULL_CALLER} ? $_[0]->{+FULL_CALLER}->[9] : undef }
 
 1;
 
@@ -118,6 +122,8 @@ C<< at <FILE> line <LINE> >> when calling C<< $trace->debug >>.
 
 Get the call frame arrayref.
 
+    [$package, $file, $line, $subname]
+
 =item $int = $trace->{pid}
 
 =item $int = $trace->pid()
@@ -142,6 +148,27 @@ The ID of the context that was used to create the event.
 
 The UUID of the context that was used to create the event. (If uuid tagging was
 enabled)
+
+=item ($pkg, $file, $line, $subname) = $trace->call
+
+Get the basic call info as a list.
+
+=item @caller = $trace->full_call
+
+Get the full caller(N) results.
+
+=item $warning_bits = $trace->warning_bits
+
+Get index 9 from the full caller info. This is the warnings_bits field.
+
+The value of this is not portable across perl versions or even processes.
+However it can be used in the process that generated it to reproduce the
+warnings settings in a new scope.
+
+    eval <<EOT;
+    BEGIN { ${^WARNING_BITS} = $trace->warning_bits };
+    ... context's warning settings apply here ...
+    EOT
 
 =back
 
@@ -269,7 +296,7 @@ F<http://github.com/Test-More/test-more/>.
 
 =head1 COPYRIGHT
 
-Copyright 2019 Chad Granum E<lt>exodist@cpan.orgE<gt>.
+Copyright 2020 Chad Granum E<lt>exodist@cpan.orgE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

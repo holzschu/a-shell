@@ -1,8 +1,9 @@
 package Digest::base;
 
 use strict;
-use vars qw($VERSION);
-$VERSION = "1.16";
+use warnings;
+
+our $VERSION = "1.19";
 
 # subclass is supposed to implement at least these
 sub new;
@@ -12,21 +13,21 @@ sub digest;
 
 sub reset {
     my $self = shift;
-    $self->new(@_);  # ugly
+    $self->new(@_);    # ugly
 }
 
 sub addfile {
-    my ($self, $handle) = @_;
+    my ( $self, $handle ) = @_;
 
     my $n;
     my $buf = "";
 
-    while (($n = read($handle, $buf, 4*1024))) {
+    while ( ( $n = read( $handle, $buf, 4 * 1024 ) ) ) {
         $self->add($buf);
     }
-    unless (defined $n) {
-	require Carp;
-	Carp::croak("Read failed: $!");
+    unless ( defined $n ) {
+        require Carp;
+        Carp::croak("Read failed: $!");
     }
 
     $self;
@@ -36,32 +37,37 @@ sub add_bits {
     my $self = shift;
     my $bits;
     my $nbits;
-    if (@_ == 1) {
-	my $arg = shift;
-	$bits = pack("B*", $arg);
-	$nbits = length($arg);
+    if ( @_ == 1 ) {
+        my $arg = shift;
+        $bits  = pack( "B*", $arg );
+        $nbits = length($arg);
     }
     else {
-	($bits, $nbits) = @_;
+        ( $bits, $nbits ) = @_;
     }
-    if (($nbits % 8) != 0) {
-	require Carp;
-	Carp::croak("Number of bits must be multiple of 8 for this algorithm");
+    if ( ( $nbits % 8 ) != 0 ) {
+        require Carp;
+        Carp::croak("Number of bits must be multiple of 8 for this algorithm");
     }
-    return $self->add(substr($bits, 0, $nbits/8));
+    return $self->add( substr( $bits, 0, $nbits / 8 ) );
 }
 
 sub hexdigest {
     my $self = shift;
-    return unpack("H*", $self->digest(@_));
+    return unpack( "H*", $self->digest(@_) );
 }
 
 sub b64digest {
     my $self = shift;
-    require MIME::Base64;
-    my $b64 = MIME::Base64::encode($self->digest(@_), "");
+    my $b64  = $self->base64_padded_digest;
     $b64 =~ s/=+$//;
     return $b64;
+}
+
+sub base64_padded_digest {
+    my $self = shift;
+    require MIME::Base64;
+    return MIME::Base64::encode( $self->digest(@_), "" );
 }
 
 1;

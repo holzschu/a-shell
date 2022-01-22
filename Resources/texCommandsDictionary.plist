@@ -58,6 +58,13 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>makeindex</key>
+	<array>
+		<string>makeindex.framework/makeindex</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>mex</key>
 	<array>
 		<string>pdftex.framework/pdftex</string>
@@ -160,6 +167,20 @@
 	<array>
 		<string>pdftex.framework/pdftex</string>
 		<string>dllpdftexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>texlua</key>
+	<array>
+		<string>luatex.framework/luatex</string>
+		<string>dllluatexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>texluac</key>
+	<array>
+		<string>luatex.framework/luatex</string>
+		<string>dllluatexmain</string>
 		<string></string>
 		<string>file</string>
 	</array>

@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '2.07';
+$VERSION = '2.09';
 
 # Figure out if we have support for native sized types
 my $N = do { my $foo = eval { pack "L!", 0 }; $@ ? '' : '!' };
@@ -39,7 +39,7 @@ my $N = do { my $foo = eval { pack "L!", 0 }; $@ ? '' : '!' };
 }
 
 sub new {
-    @_ == 4 || croak 'new ' . __PACKAGE__ . '( KEY, NSEMS, FLAGS )';
+    @_ == 4 || croak __PACKAGE__ . '->new( KEY, NSEMS, FLAGS )';
     my $class = shift;
 
     my $id = semget($_[0],$_[1],$_[2]);

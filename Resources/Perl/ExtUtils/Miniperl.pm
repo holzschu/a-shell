@@ -6,7 +6,7 @@ use ExtUtils::Embed 1.31, qw(xsi_header xsi_protos xsi_body);
 
 our @ISA = qw(Exporter);
 our @EXPORT = qw(writemain);
-our $VERSION = '1.09';
+our $VERSION = '1.10';
 
 # blead will run this with miniperl, hence we can't use autodie or File::Temp
 my $temp;
@@ -87,15 +87,6 @@ sub writemain{
 static void xs_init (pTHX);
 static PerlInterpreter *my_perl;
 
-#if defined(PERL_GLOBAL_STRUCT_PRIVATE)
-/* The static struct perl_vars* may seem counterproductive since the
- * whole idea PERL_GLOBAL_STRUCT_PRIVATE was to avoid statics, but note
- * that this static is not in the shared perl library, the globals PL_Vars
- * and PL_VarsPtr will stay away. */
-static struct perl_vars* my_plvarsp;
-struct perl_vars* Perl_GetVarsPrivate(void) { return my_plvarsp; }
-#endif
-
 #ifdef NO_ENV_ARRAY_IN_MAIN
 extern char **environ;
 int
@@ -106,14 +97,6 @@ main(int argc, char **argv, char **env)
 #endif
 {
     int exitstatus, i;
-#ifdef PERL_GLOBAL_STRUCT
-    struct perl_vars *my_vars = init_global_struct();
-#  ifdef PERL_GLOBAL_STRUCT_PRIVATE
-    int veto;
-
-    my_plvarsp = my_vars;
-#  endif
-#endif /* PERL_GLOBAL_STRUCT */
 #ifndef NO_ENV_ARRAY_IN_MAIN
     PERL_UNUSED_ARG(env);
 #endif
@@ -186,20 +169,6 @@ main(int argc, char **argv, char **env)
 #endif
 
     PERL_SYS_TERM();
-
-#ifdef PERL_GLOBAL_STRUCT
-#  ifdef PERL_GLOBAL_STRUCT_PRIVATE
-    veto = my_plvarsp->Gveto_cleanup;
-#  endif
-    free_global_struct(my_vars);
-#  ifdef PERL_GLOBAL_STRUCT_PRIVATE
-    if (!veto)
-        my_plvarsp = NULL;
-    /* Remember, functions registered with atexit() can run after this point,
-       and may access "global" variables, and hence end up calling
-       Perl_GetVarsPrivate()  */
-#endif
-#endif /* PERL_GLOBAL_STRUCT */
 
     exit(exitstatus);
 }

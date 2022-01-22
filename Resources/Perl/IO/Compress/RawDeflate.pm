@@ -6,15 +6,16 @@ use strict ;
 use warnings;
 use bytes;
 
-use IO::Compress::Base 2.093 ;
-use IO::Compress::Base::Common  2.093 qw(:Status );
-use IO::Compress::Adapter::Deflate 2.093 ;
+use IO::Compress::Base 2.101 ;
+use IO::Compress::Base::Common  2.101 qw(:Status :Parse);
+use IO::Compress::Adapter::Deflate 2.101 ;
+use Compress::Raw::Zlib  2.101 qw(Z_DEFLATED Z_DEFAULT_COMPRESSION Z_DEFAULT_STRATEGY);
 
 require Exporter ;
 
 our ($VERSION, @ISA, @EXPORT_OK, %DEFLATE_CONSTANTS, %EXPORT_TAGS, $RawDeflateError);
 
-$VERSION = '2.093';
+$VERSION = '2.102';
 $RawDeflateError = '';
 
 @ISA = qw(IO::Compress::Base Exporter);
@@ -28,8 +29,8 @@ push @EXPORT_OK, @IO::Compress::Adapter::Deflate::EXPORT_OK ;
     my %seen;
     foreach (keys %EXPORT_TAGS )
     {
-        push @{$EXPORT_TAGS{constants}}, 
-                 grep { !$seen{$_}++ } 
+        push @{$EXPORT_TAGS{constants}},
+                 grep { !$seen{$_}++ }
                  @{ $EXPORT_TAGS{$_} }
     }
     $EXPORT_TAGS{all} = $EXPORT_TAGS{constants} ;
@@ -41,7 +42,7 @@ push @EXPORT_OK, @IO::Compress::Adapter::Deflate::EXPORT_OK ;
 #push @{ $EXPORT_TAGS{all} }, @EXPORT_OK ;
 
 Exporter::export_ok_tags('all');
-              
+
 
 
 sub new
@@ -82,7 +83,7 @@ sub mkComp
    return $self->saveErrorString(undef, $errstr, $errno)
        if ! defined $obj;
 
-   return $obj;    
+   return $obj;
 }
 
 
@@ -116,8 +117,6 @@ sub getExtraParams
     return getZlibParams();
 }
 
-use IO::Compress::Base::Common  2.093 qw(:Parse);
-use Compress::Raw::Zlib  2.093 qw(Z_DEFLATED Z_DEFAULT_COMPRESSION Z_DEFAULT_STRATEGY);
 our %PARAMS = (
             #'method'   => [IO::Compress::Base::Common::Parse_unsigned,  Z_DEFLATED],
             'level'     => [IO::Compress::Base::Common::Parse_signed,    Z_DEFAULT_COMPRESSION],
@@ -125,17 +124,18 @@ our %PARAMS = (
 
             'crc32'     => [IO::Compress::Base::Common::Parse_boolean,   0],
             'adler32'   => [IO::Compress::Base::Common::Parse_boolean,   0],
-            'merge'     => [IO::Compress::Base::Common::Parse_boolean,   0], 
+            'merge'     => [IO::Compress::Base::Common::Parse_boolean,   0],
         );
-        
+
 sub getZlibParams
 {
-    return %PARAMS;    
+    return %PARAMS;
 }
 
 sub getInverseClass
 {
-    return ('IO::Uncompress::RawInflate', 
+    no warnings 'once';
+    return ('IO::Uncompress::RawInflate',
                 \$IO::Uncompress::RawInflate::RawInflateError);
 }
 
@@ -144,7 +144,7 @@ sub getFileInfo
     my $self = shift ;
     my $params = shift;
     my $file = shift ;
-    
+
 }
 
 use Fcntl qw(SEEK_SET);
@@ -156,20 +156,20 @@ sub createMerge
     my $outType = shift ;
 
     my ($invClass, $error_ref) = $self->getInverseClass();
-    eval "require $invClass" 
+    eval "require $invClass"
         or die "aaaahhhh" ;
 
-    my $inf = $invClass->new( $outValue, 
-                             Transparent => 0, 
+    my $inf = $invClass->new( $outValue,
+                             Transparent => 0,
                              #Strict     => 1,
                              AutoClose   => 0,
                              Scan        => 1)
        or return $self->saveErrorString(undef, "Cannot create InflateScan object: $$error_ref" ) ;
 
     my $end_offset = 0;
-    $inf->scan() 
+    $inf->scan()
         or return $self->saveErrorString(undef, "Error Scanning: $$error_ref", $inf->errorNo) ;
-    $inf->zap($end_offset) 
+    $inf->zap($end_offset)
         or return $self->saveErrorString(undef, "Error Zapping: $$error_ref", $inf->errorNo) ;
 
     my $def = *$self->{Compress} = $inf->createDeflate();
@@ -178,10 +178,10 @@ sub createMerge
     *$self->{UnCompSize} = *$inf->{UnCompSize}->clone();
     *$self->{CompSize} = *$inf->{CompSize}->clone();
     # TODO -- fix this
-    #*$self->{CompSize} = new U64(0, *$self->{UnCompSize_32bit});
+    #*$self->{CompSize} = U64->new(0, *$self->{UnCompSize_32bit});
 
 
-    if ( $outType eq 'buffer') 
+    if ( $outType eq 'buffer')
       { substr( ${ *$self->{Buffer} }, $end_offset) = '' }
     elsif ($outType eq 'handle' || $outType eq 'filename') {
         *$self->{FH} = *$inf->{FH} ;
@@ -189,8 +189,8 @@ sub createMerge
         *$self->{FH}->flush() ;
         *$self->{Handle} = 1 if $outType eq 'handle';
 
-        #seek(*$self->{FH}, $end_offset, SEEK_SET) 
-        *$self->{FH}->seek($end_offset, SEEK_SET) 
+        #seek(*$self->{FH}, $end_offset, SEEK_SET)
+        *$self->{FH}->seek($end_offset, SEEK_SET)
             or return $self->saveErrorString(undef, $!, $!) ;
     }
 
@@ -199,7 +199,7 @@ sub createMerge
 
 #### zlib specific methods
 
-sub deflateParams 
+sub deflateParams
 {
     my $self = shift ;
 
@@ -210,7 +210,7 @@ sub deflateParams
     return $self->saveErrorString(0, *$self->{Compress}{Error}, *$self->{Compress}{ErrorNo})
         if $status == STATUS_ERROR;
 
-    return 1;    
+    return 1;
 }
 
 
@@ -231,7 +231,7 @@ IO::Compress::RawDeflate - Write RFC 1951 files/buffers
     my $status = rawdeflate $input => $output [,OPTS]
         or die "rawdeflate failed: $RawDeflateError\n";
 
-    my $z = new IO::Compress::RawDeflate $output [,OPTS]
+    my $z = IO::Compress::RawDeflate->new( $output [,OPTS] )
         or die "rawdeflate failed: $RawDeflateError\n";
 
     $z->print($string);
@@ -511,7 +511,7 @@ compressed data to a buffer, C<$buffer>.
     use IO::Compress::RawDeflate qw(rawdeflate $RawDeflateError) ;
     use IO::File ;
 
-    my $input = new IO::File "<file1.txt"
+    my $input = IO::File->new( "<file1.txt" )
         or die "Cannot open 'file1.txt': $!\n" ;
     my $buffer ;
     rawdeflate $input => \$buffer
@@ -548,7 +548,7 @@ and if you want to compress each file one at a time, this will do the trick
 
 The format of the constructor for C<IO::Compress::RawDeflate> is shown below
 
-    my $z = new IO::Compress::RawDeflate $output [,OPTS]
+    my $z = IO::Compress::RawDeflate->new( $output [,OPTS] )
         or die "IO::Compress::RawDeflate failed: $RawDeflateError\n";
 
 It returns an C<IO::Compress::RawDeflate> object on success and undef on failure.
@@ -970,7 +970,7 @@ See L<IO::Compress::FAQ|IO::Compress::FAQ/"Compressed files and Net::FTP">
 
 =head1 SUPPORT
 
-General feedback/questions/bug reports should be sent to 
+General feedback/questions/bug reports should be sent to
 L<https://github.com/pmqs/IO-Compress/issues> (preferred) or
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=IO-Compress>.
 
@@ -1007,8 +1007,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2019 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2021 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-

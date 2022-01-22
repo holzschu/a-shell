@@ -16,11 +16,11 @@ TAP::Harness - Run test scripts with statistics
 
 =head1 VERSION
 
-Version 3.42
+Version 3.43
 
 =cut
 
-our $VERSION = '3.42';
+our $VERSION = '3.43';
 
 $ENV{HARNESS_ACTIVE}  = 1;
 $ENV{HARNESS_VERSION} = $VERSION;
@@ -619,6 +619,10 @@ sub _aggregate_parallel {
 
             my ( $parser, $session ) = $self->make_parser($job);
             $mux->add( $parser, [ $session, $job ] );
+
+            # The job has started: begin the timers
+            $parser->start_time( $parser->get_time );
+            $parser->start_times( $parser->get_times );
         }
 
         if ( my ( $parser, $stash, $result ) = $mux->next ) {

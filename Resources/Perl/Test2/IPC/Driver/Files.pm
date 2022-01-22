@@ -2,7 +2,7 @@ package Test2::IPC::Driver::Files;
 use strict;
 use warnings;
 
-our $VERSION = '1.302175';
+our $VERSION = '1.302183';
 
 BEGIN { require Test2::IPC::Driver; our @ISA = qw(Test2::IPC::Driver) }
 
@@ -181,10 +181,10 @@ do so if Test::Builder is loaded for legacy reasons.
 
     # Write and rename the file.
     my ($ren_ok, $ren_err);
-    my ($ok, $err) = try_sig_mask {
+    my ($ok, $err) = try_sig_mask(sub {
         Storable::store($e, $file);
         ($ren_ok, $ren_err) = do_rename("$file", $ready);
-    };
+    });
 
     if ($ok) {
         $self->abort("Could not rename file '$file' -> '$ready': $ren_err") unless $ren_ok;
@@ -493,7 +493,7 @@ F<http://github.com/Test-More/test-more/>.
 
 =head1 COPYRIGHT
 
-Copyright 2019 Chad Granum E<lt>exodist@cpan.orgE<gt>.
+Copyright 2020 Chad Granum E<lt>exodist@cpan.orgE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

@@ -32,6 +32,11 @@ and other miscellaneous objects.  The remaining sections list various
 constants and macros in an organization which roughly follows IEEE Std
 1003.1b-1993.
 
+The notation C<[C99]> indicates functions that were added in the ISO/IEC
+9899:1999 version of the C language standard.  Some may not be available
+on your system if it adheres to an earlier standard.  Attempts to use
+any missing one will result in a fatal runtime error message.
+
 =head1 CAVEATS
 
 I<Everything is exported by default> (with a handful of exceptions).
@@ -111,7 +116,7 @@ the arcus cosine of its numerical argument.  See also L<Math::Trig>.
 
 This is identical to the C function C<acosh()>, returning the
 hyperbolic arcus cosine of its numerical argument [C99].  See also
-L<Math::Trig>.
+L<Math::Trig>.  Added in Perl v5.22.
 
 =item C<alarm>
 
@@ -139,6 +144,10 @@ The C<$mon> is zero-based: January equals C<0>.  The C<$year> is
 1900-based: 2001 equals C<101>.  C<$wday> and C<$yday> default to zero
 (and are usually ignored anyway), and C<$isdst> defaults to -1.
 
+Note the result is always in English.  Use C<L</strftime>> instead to
+get a result suitable for the current locale.  That function's C<%c>
+format yields the locale's preferred representation.
+
 =item C<asin>
 
 This is identical to the C function C<asin()>, returning
@@ -148,7 +157,7 @@ the arcus sine of its numerical argument.  See also L<Math::Trig>.
 
 This is identical to the C function C<asinh()>, returning the
 hyperbolic arcus sine of its numerical argument [C99].  See also
-L<Math::Trig>.
+L<Math::Trig>.  Added in Perl v5.22.
 
 =item C<assert>
 
@@ -164,7 +173,7 @@ arcus tangent of its numerical argument.  See also L<Math::Trig>.
 
 This is identical to the C function C<atanh()>, returning the
 hyperbolic arcus tangent of its numerical argument [C99].  See also
-L<Math::Trig>.
+L<Math::Trig>.  Added in Perl v5.22.
 
 =item C<atan2>
 
@@ -204,7 +213,7 @@ Not implemented.  C<calloc()> is C-specific.  Perl does memory management transp
 
 =item C<cbrt>
 
-The cube root [C99].
+The cube root [C99].  Added in Perl v5.22.
 
 =item C<ceil>
 
@@ -283,7 +292,7 @@ the hyperbolic cosine of its numeric argument.  See also L<Math::Trig>.
 
 =item C<copysign>
 
-Returns C<x> but with the sign of C<y> [C99].
+Returns C<x> but with the sign of C<y> [C99].  Added in Perl v5.22.
 
  $x_with_sign_of_y = POSIX::copysign($x, $y);
 
@@ -352,11 +361,11 @@ Returns C<undef> on failure.
 
 =item C<erf>
 
-The error function [C99].
+The error function [C99].  Added in Perl v5.22.
 
 =item C<erfc>
 
-The complementary error function [C99].
+The complementary error function [C99].  Added in Perl v5.22.
 
 =item C<errno>
 
@@ -404,6 +413,7 @@ see L<perlfunc/exp>.
 =item C<expm1>
 
 Equivalent to C<exp(x) - 1>, but more precise for small argument values [C99].
+Added in Perl v5.22.
 
 See also L</log1p>.
 
@@ -463,6 +473,7 @@ integer value less than or equal to the numerical argument.
 =item C<fdim>
 
 "Positive difference", S<C<x - y>> if S<C<x E<gt> y>>, zero otherwise [C99].
+Added in Perl v5.22.
 
 =item C<fegetround>
 
@@ -471,27 +482,31 @@ Returns the current floating point rounding mode, one of
   FE_TONEAREST FE_TOWARDZERO FE_UPWARD FE_DOWNWARD
 
 C<FE_TONEAREST> is like L</round>, C<FE_TOWARDZERO> is like L</trunc> [C99].
+Added in Perl v5.22.
 
 =item C<fesetround>
 
-Sets the floating point rounding mode, see L</fegetround> [C99].
+Sets the floating point rounding mode, see L</fegetround> [C99].  Added in
+Perl v5.22.
 
 =item C<fma>
 
 "Fused multiply-add", S<C<x * y + z>>, possibly faster (and less lossy)
-than the explicit two operations [C99].
+than the explicit two operations [C99].  Added in Perl v5.22.
 
  my $fused = POSIX::fma($x, $y, $z);
 
 =item C<fmax>
 
 Maximum of C<x> and C<y>, except when either is C<NaN>, returns the other [C99].
+Added in Perl v5.22.
 
  my $min = POSIX::fmax($x, $y);
 
 =item C<fmin>
 
 Minimum of C<x> and C<y>, except when either is C<NaN>, returns the other [C99].
+Added in Perl v5.22.
 
  my $min = POSIX::fmin($x, $y);
 
@@ -538,6 +553,7 @@ telling the class of the argument [C99].  C<FP_INFINITE> is positive
 or negative infinity, C<FP_NAN> is not-a-number.  C<FP_SUBNORMAL>
 means subnormal numbers (also known as denormals), very small numbers
 with low precision. C<FP_ZERO> is zero.  C<FP_NORMAL> is all the rest.
+Added in Perl v5.22.
 
 =item C<fprintf>
 
@@ -664,7 +680,7 @@ L<perlfunc/getlogin>.
 	use POSIX ':nan_payload';
 	getpayload($var)
 
-Returns the C<NaN> payload.
+Returns the C<NaN> payload.  Added in Perl v5.24.
 
 Note the API instability warning in L</setpayload>.
 
@@ -721,11 +737,11 @@ see L<perlfunc/gmtime>.
 =item C<hypot>
 
 Equivalent to C<S<sqrt(x * x + y * y)>> except more stable on very large
-or very small arguments [C99].
+or very small arguments [C99].  Added in Perl v5.22.
 
 =item C<ilogb>
 
-Integer binary logarithm [C99]
+Integer binary logarithm [C99].  Added in Perl v5.22.
 
 For example C<ilogb(20)> is 4, as an integer.
 
@@ -743,13 +759,13 @@ See also L</isinf>, and L</fpclassify>.
 
 =item C<isalnum>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:alnum:]]+ $ /x>>, which you should convert
 to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
 =item C<isalpha>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:alpha:]]+ $ /x>>, which you should convert
 to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
@@ -760,26 +776,26 @@ to a tty.  Similar to the C<-t> operator, see L<perlfunc/-X>.
 
 =item C<iscntrl>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:cntrl:]]+ $ /x>>, which you should convert
 to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
 =item C<isdigit>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:digit:]]+ $ /x>>, which you should convert
 to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
 =item C<isfinite>
 
 Returns true if the argument is a finite number (that is, not an
-infinity, or the not-a-number) [C99].
+infinity, or the not-a-number) [C99].  Added in Perl v5.22.
 
 See also L</isinf>, L</isnan>, and L</fpclassify>.
 
 =item C<isgraph>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:graph:]]+ $ /x>>, which you should convert
 to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
@@ -788,23 +804,26 @@ to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 (Also C<isgreaterequal>, C<isless>, C<islessequal>, C<islessgreater>,
 C<isunordered>)
 
-Floating point comparisons which handle the C<NaN> [C99].
+Floating point comparisons which handle the C<NaN> [C99].  Added in Perl
+v5.22.
 
 =item C<isinf>
 
 Returns true if the argument is an infinity (positive or negative) [C99].
+Added in Perl v5.22.
 
 See also L</Inf>, L</isnan>, L</isfinite>, and L</fpclassify>.
 
 =item C<islower>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:lower:]]+ $ /x>>, which you should convert
 to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
 =item C<isnan>
 
-Returns true if the argument is C<NaN> (not-a-number) [C99].
+Returns true if the argument is C<NaN> (not-a-number) [C99].  Added in
+Perl v5.22.
 
 Note that you cannot test for "C<NaN>-ness" with
 
@@ -817,19 +836,19 @@ See also L</nan>, L</NaN>, L</isinf>, and L</fpclassify>.
 =item C<isnormal>
 
 Returns true if the argument is normal (that is, not a subnormal/denormal,
-and not an infinity, or a not-a-number) [C99].
+and not an infinity, or a not-a-number) [C99].  Added in Perl v5.22.
 
 See also L</isfinite>, and L</fpclassify>.
 
 =item C<isprint>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:print:]]+ $ /x>>, which you should convert
 to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
 =item C<ispunct>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:punct:]]+ $ /x>>, which you should convert
 to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
@@ -838,7 +857,7 @@ to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 	use POSIX ':nan_payload';
 	issignaling($var, $payload)
 
-Return true if the argument is a I<signaling> NaN.
+Return true if the argument is a I<signaling> NaN.  Added in Perl v5.24.
 
 Note the API instability warning in L</setpayload>.
 
@@ -846,19 +865,19 @@ See L</nan> for more discussion about C<NaN>.
 
 =item C<isspace>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:space:]]+ $ /x>>, which you should convert
 to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
 =item C<isupper>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:upper:]]+ $ /x>>, which you should convert
 to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
 =item C<isxdigit>
 
-This function has been removed as of v5.24.  It was very similar to
+This function has been removed as of Perl v5.24.  It was very similar to
 matching against S<C<qr/ ^ [[:xdigit:]]+ $ /x>>, which you should
 convert to use instead.  See L<perlrecharclass/POSIX Character Classes>.
 
@@ -910,24 +929,24 @@ C<ldiv()> is C-specific, use C</> and C<int()> instead.
 
 =item C<lgamma>
 
-The logarithm of the Gamma function [C99].
+The logarithm of the Gamma function [C99].  Added in Perl v5.22.
 
 See also L</tgamma>.
 
 =item C<log1p>
 
 Equivalent to S<C<log(1 + x)>>, but more stable results for small argument
-values [C99].
+values [C99].  Added in Perl v5.22.
 
 =item C<log2>
 
-Logarithm base two [C99].
+Logarithm base two [C99].  Added in Perl v5.22.
 
 See also L</expm1>.
 
 =item C<logb>
 
-Integer binary logarithm [C99].
+Integer binary logarithm [C99].  Added in Perl v5.22.
 
 For example C<logb(20)> is 4, as a floating point number.
 
@@ -953,7 +972,7 @@ the underlying locale is C or POSIX.  This is because it otherwise
 changes the locale, which globally affects all threads simultaneously.
 Windows platforms starting with Visual Studio 2005 are mostly
 thread-safe, but use of this function in those prior to Visual Studio
-2015 can interfere with a thread that has called
+2015 can have a race with a thread that has called
 L<perlapi/switch_to_global_locale>.
 
 Here is how to query the database for the B<de> (Deutsch or German) locale.
@@ -1049,13 +1068,14 @@ Returns C<undef> on failure.
 Depending on the current floating point rounding mode, rounds the
 argument either toward nearest (like L</round>), toward zero (like
 L</trunc>), downward (toward negative infinity), or upward (toward
-positive infinity) [C99].
+positive infinity) [C99].  Added in Perl v5.22.
 
 For the rounding mode, see L</fegetround>.
 
 =item C<lround>
 
-Like L</round>, but as integer, as opposed to floating point [C99].
+Like L</round>, but as integer, as opposed to floating point [C99].  Added
+in Perl v5.22.
 
 See also L</ceil>, L</floor>, L</trunc>.
 
@@ -1207,7 +1227,7 @@ See also L</nan>, C</isnan>, and L</fpclassify>.
 
    my $nan = nan();
 
-Returns C<NaN>, not-a-number [C99].
+Returns C<NaN>, not-a-number [C99].  Added in Perl v5.22.
 
 The returned NaN is always a I<quiet> NaN, as opposed to I<signaling>.
 
@@ -1243,12 +1263,12 @@ See also L</isnan>, L</NaN>, L</setpayload> and L</issignaling>.
 =item C<nearbyint>
 
 Returns the nearest integer to the argument, according to the current
-rounding mode (see L</fegetround>) [C99].
+rounding mode (see L</fegetround>) [C99].  Added in Perl v5.22.
 
 =item C<nextafter>
 
 Returns the next representable floating point number after C<x> in the
-direction of C<y> [C99].
+direction of C<y> [C99].  Added in Perl v5.22.
 
  my $nextafter = POSIX::nextafter($x, $y);
 
@@ -1257,7 +1277,7 @@ Like L</nexttoward>, but potentially less accurate.
 =item C<nexttoward>
 
 Returns the next representable floating point number after C<x> in the
-direction of C<y> [C99].
+direction of C<y> [C99].  Added in Perl v5.22.
 
  my $nexttoward = POSIX::nexttoward($x, $y);
 
@@ -1416,7 +1436,7 @@ Not implemented.  C<realloc()> is C-specific.  Perl does memory management trans
 =item C<remainder>
 
 Given C<x> and C<y>, returns the value S<C<x - n*y>>, where C<n> is the integer
-closest to C<x>/C<y>. [C99]
+closest to C<x>/C<y> [C99].  Added in Perl v5.22.
 
  my $remainder = POSIX::remainder($x, $y)
 
@@ -1430,7 +1450,7 @@ files and L<perlfunc/rmdir> for directories.
 =item C<remquo>
 
 Like L</remainder> but also returns the low-order bits of the quotient (n)
-[C99]
+[C99].  Added in Perl v5.22.
 
 (This is quite esoteric interface, mainly used to implement numerical
 algorithms.)
@@ -1461,13 +1481,13 @@ for removing (empty) directories, see L<perlfunc/rmdir>.
 =item C<round>
 
 Returns the integer (but still as floating point) nearest to the
-argument [C99].
+argument [C99].  Added in Perl v5.22.
 
 See also L</ceil>, L</floor>, L</lround>, L</modf>, and L</trunc>.
 
 =item C<scalbn>
 
-Returns S<C<x * 2**y>> [C99].
+Returns S<C<x * 2**y>> [C99].  Added in Perl v5.22.
 
 See also L</frexp> and L</ldexp>.
 
@@ -1551,7 +1571,7 @@ out which locales are available in your system.
 	use POSIX ':nan_payload';
 	setpayload($var, $payload);
 
-Sets the C<NaN> payload of var.
+Sets the C<NaN> payload of var.  Added in Perl v5.24.
 
 NOTE: the NaN payload APIs are based on the latest (as of June 2015)
 proposed ISO C interfaces, but they are not yet a standard.  Things
@@ -1566,7 +1586,8 @@ See also L</setpayloadsig>, L</isnan>, L</getpayload>, and L</issignaling>.
 	use POSIX ':nan_payload';
 	setpayloadsig($var, $payload);
 
-Like L</setpayload> but also makes the NaN I<signaling>.
+Like L</setpayload> but also makes the NaN I<signaling>.  Added in Perl
+v5.24.
 
 Depending on the platform the NaN may or may not behave differently.
 
@@ -1624,7 +1645,7 @@ semantics, as defined by POSIX/SUSv3:
                 otherwise the signal was sent by the kernel
 
 The constants for specific C<code> values can be imported individually
-or using the C<:signal_h_si_code> tag.
+or using the C<:signal_h_si_code> tag, since Perl v5.24.
 
 The following are also defined by POSIX/SUSv3, but unfortunately
 not very widely implemented:
@@ -1653,6 +1674,7 @@ Not implemented.  C<siglongjmp()> is C-specific: use L<perlfunc/die> instead.
 =item C<signbit>
 
 Returns zero for positive arguments, non-zero for negative arguments [C99].
+Added in Perl v5.22.
 
 =item C<sigpending>
 
@@ -1768,6 +1790,10 @@ Perl can do this transparently, see L<perllocale>.
 Beware that in a UTF-8 locale, anything you pass to this function must
 be in UTF-8; and when not in a UTF-8 locale, anything passed must not be
 UTF-8 encoded.
+
+Note also that it doesn't make sense for a string to be encoded in one
+locale (say, ISO-8859-6, Arabic) and to collate it based on another
+(like ISO-8859-7, Greek).  The results will be essentially meaningless.
 
 =item C<strcpy>
 
@@ -1940,7 +1966,7 @@ String transformation.  Returns the transformed string.
 
 	$dst = POSIX::strxfrm( $src );
 
-Used in conjunction with the C<strcoll()> function, see L</strcoll>.
+Used with C<eq> or C<cmp> as an alternative to C<L</strcoll>>.
 
 Not really needed since Perl can do this transparently, see
 L<perllocale>.
@@ -2018,7 +2044,7 @@ Returns C<undef> on failure.
 
 =item C<tgamma>
 
-The Gamma function [C99].
+The Gamma function [C99].  Added in Perl v5.22.
 
 See also L</lgamma>.
 
@@ -2049,11 +2075,11 @@ Not implemented.  Use method C<IO::File::new_tmpfile()> instead, or see L<File::
 
 For security reasons, which are probably detailed in your system's
 documentation for the C library C<tmpnam()> function, this interface
-is no longer available; instead use L<File::Temp>.
+is no longer available since Perl v5.26; instead use L<File::Temp>.
 
 =item C<tolower>
 
-This function has been removed as of v5.26.
+This function has been removed as of Perl v5.26.
 This is identical to the C function, except that it can apply to a single
 character or to a whole string, and currently operates as if the locale
 always is "C".  Consider using the C<lc()> function, see L<perlfunc/lc>,
@@ -2062,7 +2088,7 @@ strings.
 
 =item C<toupper>
 
-This function has been removed as of v5.26.
+This function has been removed as of Perl v5.26.
 This is similar to the C function, except that it can apply to a single
 character or to a whole string, and currently operates as if the locale
 always is "C".  Consider using the C<uc()> function, see L<perlfunc/uc>,
@@ -2070,7 +2096,8 @@ or the equivalent C<\U> operator inside doublequotish strings.
 
 =item C<trunc>
 
-Returns the integer toward zero from the argument [C99].
+Returns the integer toward zero from the argument [C99].  Added in Perl
+v5.22.
 
 See also L</ceil>, L</floor>, and L</round>.
 
@@ -2561,6 +2588,8 @@ Imported with the C<:sys_resource_h> tag.
 
 =item Constants
 
+Added in Perl v5.28:
+
 C<PRIO_PROCESS> C<PRIO_PGRP> C<PRIO_USER>
 
 =back
@@ -2666,6 +2695,8 @@ on systems that support them.
 
 C<HUGE_VAL>
 
+Added in Perl v5.22:
+
 C<FP_ILOGB0> C<FP_ILOGBNAN> C<FP_INFINITE> C<FP_NAN> C<FP_NORMAL> C<FP_SUBNORMAL> C<FP_ZERO>
 C<INFINITY> C<NAN> C<Inf> C<NaN>
 C<M_1_PI> C<M_2_PI> C<M_2_SQRTPI> C<M_E> C<M_LN10> C<M_LN2> C<M_LOG10E> C<M_LOG2E> C<M_PI>
@@ -2685,6 +2716,9 @@ C<SA_SIGINFO> C<SIGABRT> C<SIGALRM> C<SIGCHLD> C<SIGCONT> C<SIGFPE> C<SIGHUP> C<
 C<SIGKILL> C<SIGPIPE> C<SIGQUIT> C<SIGSEGV> C<SIGSTOP> C<SIGTERM> C<SIGTSTP> C<SIGTTIN> C<SIGTTOU>
 C<SIGUSR1> C<SIGUSR2> C<SIG_BLOCK> C<SIG_DFL> C<SIG_ERR> C<SIG_IGN> C<SIG_SETMASK>
 C<SIG_UNBLOCK>
+
+Added in Perl v5.24:
+
 C<ILL_ILLOPC> C<ILL_ILLOPN> C<ILL_ILLADR> C<ILL_ILLTRP> C<ILL_PRVOPC> C<ILL_PRVREG> C<ILL_COPROC>
 C<ILL_BADSTK> C<FPE_INTDIV> C<FPE_INTOVF> C<FPE_FLTDIV> C<FPE_FLTOVF> C<FPE_FLTUND> C<FPE_FLTRES>
 C<FPE_FLTINV> C<FPE_FLTSUB> C<SEGV_MAPERR> C<SEGV_ACCERR> C<BUS_ADRALN> C<BUS_ADRERR>
@@ -2823,6 +2857,8 @@ is true)
 =over 8
 
 =item Constants
+
+Added in Perl v5.24:
 
 C<WSAEINTR> C<WSAEBADF> C<WSAEACCES> C<WSAEFAULT> C<WSAEINVAL> C<WSAEMFILE> C<WSAEWOULDBLOCK>
 C<WSAEINPROGRESS> C<WSAEALREADY> C<WSAENOTSOCK> C<WSAEDESTADDRREQ> C<WSAEMSGSIZE>

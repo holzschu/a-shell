@@ -1,7 +1,7 @@
 # Net::FTP.pm
 #
 # Copyright (C) 1995-2004 Graham Barr.  All rights reserved.
-# Copyright (C) 2013-2017 Steve Hay.  All rights reserved.
+# Copyright (C) 2013-2017, 2020 Steve Hay.  All rights reserved.
 # This module is free software; you can redistribute it and/or modify it under
 # the same terms as Perl itself, i.e. under the terms of either the GNU General
 # Public License or the Artistic License, as specified in the F<LICENCE> file.
@@ -23,7 +23,7 @@ use Net::Config;
 use Socket;
 use Time::Local;
 
-our $VERSION = '3.11';
+our $VERSION = '3.13';
 
 our $IOCLASS;
 my $family_key;
@@ -110,10 +110,13 @@ sub new {
       # use SNI if supported by IO::Socket::SSL
       $pkg->can_client_sni ? (SSL_hostname => $hostname):(),
       # reuse SSL session of control connection in data connections
-      SSL_session_cache => Net::FTP::_SSL_SingleSessionCache->new,
+      SSL_session_cache_size => 10,
+      SSL_session_key => $hostname,
     );
     # user defined SSL arg
     $tlsargs{$_} = $arg{$_} for(grep { m{^SSL_} } keys %arg);
+    $tlsargs{SSL_reuse_ctx} = IO::Socket::SSL::SSL_Context->new(%tlsargs)
+      or return;
 
   } elsif ($arg{SSL}) {
     croak("IO::Socket::SSL >= 2.007 needed for SSL support");
@@ -262,7 +265,7 @@ sub mdtm {
 
   $ftp->_MDTM($file)
     && $ftp->message =~ /((\d\d)(\d\d\d?))(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/
-    ? timegm($8, $7, $6, $5, $4 - 1, $2 eq '19' ? $3 : ($1 - 1900))
+    ? timegm($8, $7, $6, $5, $4 - 1, $2 eq '19' ? ($3 + 1900) : $1)
     : undef;
 }
 
@@ -426,7 +429,7 @@ sub login {
 
 
 sub account {
-  @_ == 2 or croak 'usage: $ftp->account( ACCT )';
+  @_ == 2 or croak 'usage: $ftp->account($acct)';
   my $ftp  = shift;
   my $acct = shift;
   $ftp->_ACCT($acct) == CMD_OK;
@@ -452,7 +455,7 @@ sub _auth_id {
 
 
 sub authorize {
-  @_ >= 1 || @_ <= 3 or croak 'usage: $ftp->authorize( [AUTH [, RESP]])';
+  @_ >= 1 || @_ <= 3 or croak 'usage: $ftp->authorize([$auth[, $resp]])';
 
   my ($ftp, $auth, $resp) = &_auth_id;
 
@@ -466,12 +469,12 @@ sub authorize {
 
 
 sub rename {
-  @_ == 3 or croak 'usage: $ftp->rename(FROM, TO)';
+  @_ == 3 or croak 'usage: $ftp->rename($oldname, $newname)';
 
-  my ($ftp, $from, $to) = @_;
+  my ($ftp, $oldname, $newname) = @_;
 
-  $ftp->_RNFR($from)
-    && $ftp->_RNTO($to);
+  $ftp->_RNFR($oldname)
+    && $ftp->_RNTO($newname);
 }
 
 
@@ -619,7 +622,7 @@ sub get {
 
 
 sub cwd {
-  @_ == 1 || @_ == 2 or croak 'usage: $ftp->cwd( [ DIR ] )';
+  @_ == 1 || @_ == 2 or croak 'usage: $ftp->cwd([$dir])';
 
   my ($ftp, $dir) = @_;
 
@@ -656,7 +659,7 @@ sub pwd {
 # Initial version contributed by Dinkum Software
 #
 sub rmdir {
-  @_ == 2 || @_ == 3 or croak('usage: $ftp->rmdir( DIR [, RECURSE ] )');
+  @_ == 2 || @_ == 3 or croak('usage: $ftp->rmdir($dir[, $recurse])');
 
   # Pick off the args
   my ($ftp, $dir, $recurse) = @_;
@@ -702,7 +705,7 @@ sub rmdir {
 
 
 sub restart {
-  @_ == 2 || croak 'usage: $ftp->restart( BYTE_OFFSET )';
+  @_ == 2 || croak 'usage: $ftp->restart($where)';
 
   my ($ftp, $where) = @_;
 
@@ -713,7 +716,7 @@ sub restart {
 
 
 sub mkdir {
-  @_ == 2 || @_ == 3 or croak 'usage: $ftp->mkdir( DIR [, RECURSE ] )';
+  @_ == 2 || @_ == 3 or croak 'usage: $ftp->mkdir($dir[, $recurse])';
 
   my ($ftp, $dir, $recurse) = @_;
 
@@ -758,7 +761,7 @@ sub mkdir {
 
 
 sub delete {
-  @_ == 2 || croak 'usage: $ftp->delete( FILENAME )';
+  @_ == 2 || croak 'usage: $ftp->delete($filename)';
 
   $_[0]->_DELE($_[1]);
 }
@@ -881,12 +884,12 @@ sub _store_cmd {
 
 
 sub port {
-    @_ == 1 || @_ == 2 or croak 'usage: $self->port([PORT])';
+    @_ == 1 || @_ == 2 or croak 'usage: $self->port([$port])';
     return _eprt('PORT',@_);
 }
 
 sub eprt {
-  @_ == 1 || @_ == 2 or croak 'usage: $self->eprt([PORT])';
+  @_ == 1 || @_ == 2 or croak 'usage: $self->eprt([$port])';
   return _eprt('EPRT',@_);
 }
 
@@ -959,7 +962,7 @@ sub unique_name {
 
 
 sub supported {
-  @_ == 2 or croak 'usage: $ftp->supported( CMD )';
+  @_ == 2 or croak 'usage: $ftp->supported($cmd)';
   my $ftp  = shift;
   my $cmd  = uc shift;
   my $hash = ${*$ftp}{'net_ftp_supported'} ||= {};
@@ -1282,36 +1285,36 @@ sub pasv_xfer {
 
 
 sub pasv_wait {
-  @_ == 2 or croak 'usage: $ftp->pasv_wait(NON_PASV_FTP)';
+  @_ == 2 or croak 'usage: $ftp->pasv_wait($non_pasv_server)';
 
-  my ($ftp, $non_pasv) = @_;
+  my ($ftp, $non_pasv_server) = @_;
   my ($file, $rin, $rout);
 
   vec($rin = '', fileno($ftp), 1) = 1;
   select($rout = $rin, undef, undef, undef);
 
   my $dres = $ftp->response();
-  my $sres = $non_pasv->response();
+  my $sres = $non_pasv_server->response();
 
   return
     unless $dres == CMD_OK && $sres == CMD_OK;
 
   return
-    unless $ftp->ok() && $non_pasv->ok();
+    unless $ftp->ok() && $non_pasv_server->ok();
 
   return $1
     if $ftp->message =~ /unique file name:\s*(\S*)\s*\)/;
 
   return $1
-    if $non_pasv->message =~ /unique file name:\s*(\S*)\s*\)/;
+    if $non_pasv_server->message =~ /unique file name:\s*(\S*)\s*\)/;
 
   return 1;
 }
 
 
 sub feature {
-  @_ == 2 or croak 'usage: $ftp->feature( NAME )';
-  my ($ftp, $feat) = @_;
+  @_ == 2 or croak 'usage: $ftp->feature($name)';
+  my ($ftp, $name) = @_;
 
   my $feature = ${*$ftp}{net_ftp_feature} ||= do {
     my @feat;
@@ -1329,7 +1332,7 @@ sub feature {
     \@feat;
   };
 
-  return grep { /^\Q$feat\E\b/i } @$feature;
+  return grep { /^\Q$name\E\b/i } @$feature;
 }
 
 
@@ -1397,25 +1400,6 @@ sub _SYST { shift->unsupported(@_) }
 sub _STRU { shift->unsupported(@_) }
 sub _REIN { shift->unsupported(@_) }
 
-{
-  # Session Cache with single entry
-  # used to make sure that we reuse same session for control and data channels
-  package Net::FTP::_SSL_SingleSessionCache;
-  sub new { my $x; return bless \$x,shift }
-  sub add_session {
-    my ($cache,$key,$session) = @_;
-    Net::SSLeay::SESSION_free($$cache) if $$cache;
-    $$cache = $session;
-  }
-  sub get_session {
-    my $cache = shift;
-    return $$cache
-  }
-  sub DESTROY {
-    my $cache = shift;
-    Net::SSLeay::SESSION_free($$cache) if $$cache;
-  }
-}
 
 1;
 
@@ -1456,7 +1440,7 @@ and explicit FTPS as defined in RFC4217.
 The Net::FTP class is a subclass of Net::Cmd and (depending on avaibility) of
 IO::Socket::IP, IO::Socket::INET6 or IO::Socket::INET.
 
-=head1 OVERVIEW
+=head2 Overview
 
 FTP stands for File Transfer Protocol.  It is a way of transferring
 files between networked machines.  The protocol defines a client
@@ -1487,19 +1471,19 @@ this if you really know what you're doing).  This class does not support
 the EBCDIC or byte formats, and will default to binary instead if they
 are attempted.
 
-=head1 CONSTRUCTOR
+=head2 Class Methods
 
 =over 4
 
-=item new ([ HOST ] [, OPTIONS ])
+=item C<new([$host][, %options])>
 
-This is the constructor for a new Net::FTP object. C<HOST> is the
+This is the constructor for a new Net::FTP object. C<$host> is the
 name of the remote host to which an FTP connection is required.
 
-C<HOST> is optional. If C<HOST> is not given then it may instead be
+C<$host> is optional. If C<$host> is not given then it may instead be
 passed as the C<Host> option described below. 
 
-C<OPTIONS> are passed in a hash like fashion, using key and value pairs.
+C<%options> are passed in a hash like fashion, using key and value pairs.
 Possible options are:
 
 B<Host> - FTP host to connect to. It may be a single scalar, as defined for
@@ -1570,7 +1554,7 @@ be in $@
 
 =back
 
-=head1 METHODS
+=head2 Object Methods
 
 Unless otherwise stated all methods return either a I<true> or I<false>
 value, with I<true> meaning that the operation was a success. When a method
@@ -1583,7 +1567,7 @@ documented here.
 
 =over 4
 
-=item login ([LOGIN [,PASSWORD [, ACCOUNT] ] ])
+=item C<login([$login[, $password[, $account]]])>
 
 Log into the remote FTP server with the given login information. If
 no arguments are given then the C<Net::FTP> uses the C<Net::Netrc>
@@ -1595,114 +1579,114 @@ will be used for password.
 If the connection is via a firewall then the C<authorize> method will
 be called with no arguments.
 
-=item starttls ()
+=item C<starttls()>
 
 Upgrade existing plain connection to SSL.
 The SSL arguments have to be given in C<new> already because they are needed for
 data connections too.
 
-=item stoptls ()
+=item C<stoptls()>
 
 Downgrade existing SSL connection back to plain.
 This is needed to work with some FTP helpers at firewalls, which need to see the
 PORT and PASV commands and responses to dynamically open the necessary ports.
 In this case C<starttls> is usually only done to protect the authorization.
 
-=item prot ( LEVEL )
+=item C<prot($level)>
 
 Set what type of data channel protection the client and server will be using.
-Only C<LEVEL>s "C" (clear) and "P" (private) are supported.
+Only C<$level>s "C" (clear) and "P" (private) are supported.
 
-=item host ()
+=item C<host()>
 
 Returns the value used by the constructor, and passed to the IO::Socket super
 class to connect to the host.
 
-=item account( ACCT )
+=item C<account($acct)>
 
 Set a string identifying the user's account.
 
-=item authorize ( [AUTH [, RESP]])
+=item C<authorize([$auth[, $resp]])>
 
 This is a protocol used by some firewall ftp proxies. It is used
 to authorise the user to send data out.  If both arguments are not specified
 then C<authorize> uses C<Net::Netrc> to do a lookup.
 
-=item site (ARGS)
+=item C<site($args)>
 
 Send a SITE command to the remote server and wait for a response.
 
 Returns most significant digit of the response code.
 
-=item ascii ()
+=item C<ascii()>
 
 Transfer file in ASCII. CRLF translation will be done if required
 
-=item binary ()
+=item C<binary()>
 
 Transfer file in binary mode. No transformation will be done.
 
 B<Hint>: If both server and client machines use the same line ending for
 text files, then it will be faster to transfer all files in binary mode.
 
-=item type ( [ TYPE ] )
+=item C<type([$type])>
 
 Set or get if files will be transferred in ASCII or binary mode.
 
-=item rename ( OLDNAME, NEWNAME )
+=item C<rename($oldname, $newname)>
 
-Rename a file on the remote FTP server from C<OLDNAME> to C<NEWNAME>. This
+Rename a file on the remote FTP server from C<$oldname> to C<$newname>. This
 is done by sending the RNFR and RNTO commands.
 
-=item delete ( FILENAME )
+=item C<delete($filename)>
 
-Send a request to the server to delete C<FILENAME>.
+Send a request to the server to delete C<$filename>.
 
-=item cwd ( [ DIR ] )
+=item C<cwd([$dir])>
 
 Attempt to change directory to the directory given in C<$dir>.  If
 C<$dir> is C<"..">, the FTP C<CDUP> command is used to attempt to
 move up one directory. If no directory is given then an attempt is made
 to change the directory to the root directory.
 
-=item cdup ()
+=item C<cdup()>
 
 Change directory to the parent of the current directory.
 
-=item passive ( [ PASSIVE ] )
+=item C<passive([$passive])>
 
 Set or get if data connections will be initiated in passive mode.
 
-=item pwd ()
+=item C<pwd()>
 
 Returns the full pathname of the current directory.
 
-=item restart ( WHERE )
+=item C<restart($where)>
 
 Set the byte offset at which to begin the next data transfer. Net::FTP simply
 records this value and uses it when during the next data transfer. For this
 reason this method will not return an error, but setting it may cause
 a subsequent data transfer to fail.
 
-=item rmdir ( DIR [, RECURSE ])
+=item C<rmdir($dir[, $recurse])>
 
-Remove the directory with the name C<DIR>. If C<RECURSE> is I<true> then
+Remove the directory with the name C<$dir>. If C<$recurse> is I<true> then
 C<rmdir> will attempt to delete everything inside the directory.
 
-=item mkdir ( DIR [, RECURSE ])
+=item C<mkdir($dir[, $recurse])>
 
-Create a new directory with the name C<DIR>. If C<RECURSE> is I<true> then
+Create a new directory with the name C<$dir>. If C<$recurse> is I<true> then
 C<mkdir> will attempt to create all the directories in the given path.
 
 Returns the full pathname to the new directory.
 
-=item alloc ( SIZE [, RECORD_SIZE] )
+=item C<alloc($size[, $record_size])>
 
 The alloc command allows you to give the ftp server a hint about the size
 of the file about to be transferred using the ALLO ftp command. Some storage
 systems use this to make intelligent decisions about how to store the file.
-The C<SIZE> argument represents the size of the file in bytes. The
-C<RECORD_SIZE> argument indicates a maximum record or page size for files
+The C<$size> argument represents the size of the file in bytes. The
+C<$record_size> argument indicates a maximum record or page size for files
 sent with a record or page structure.
 
 The size of the file will be determined, and sent to the server
@@ -1710,70 +1694,70 @@ automatically for normal files so that this method need only be called if
 you are transferring data from a socket, named pipe, or other stream not
 associated with a normal file.
 
-=item ls ( [ DIR ] )
+=item C<ls([$dir])>
 
-Get a directory listing of C<DIR>, or the current directory.
-
-In an array context, returns a list of lines returned from the server. In
-a scalar context, returns a reference to a list.
-
-=item dir ( [ DIR ] )
-
-Get a directory listing of C<DIR>, or the current directory in long format.
+Get a directory listing of C<$dir>, or the current directory.
 
 In an array context, returns a list of lines returned from the server. In
 a scalar context, returns a reference to a list.
 
-=item get ( REMOTE_FILE [, LOCAL_FILE [, WHERE]] )
+=item C<dir([$dir])>
 
-Get C<REMOTE_FILE> from the server and store locally. C<LOCAL_FILE> may be
+Get a directory listing of C<$dir>, or the current directory in long format.
+
+In an array context, returns a list of lines returned from the server. In
+a scalar context, returns a reference to a list.
+
+=item C<get($remote_file[, $local_file[, $where]])>
+
+Get C<$remote_file> from the server and store locally. C<$local_file> may be
 a filename or a filehandle. If not specified, the file will be stored in
 the current directory with the same leafname as the remote file.
 
-If C<WHERE> is given then the first C<WHERE> bytes of the file will
+If C<$where> is given then the first C<$where> bytes of the file will
 not be transferred, and the remaining bytes will be appended to
 the local file if it already exists.
 
-Returns C<LOCAL_FILE>, or the generated local file name if C<LOCAL_FILE>
+Returns C<$local_file>, or the generated local file name if C<$local_file>
 is not given. If an error was encountered undef is returned.
 
-=item put ( LOCAL_FILE [, REMOTE_FILE ] )
+=item C<put($local_file[, $remote_file])>
 
-Put a file on the remote server. C<LOCAL_FILE> may be a name or a filehandle.
-If C<LOCAL_FILE> is a filehandle then C<REMOTE_FILE> must be specified. If
-C<REMOTE_FILE> is not specified then the file will be stored in the current
-directory with the same leafname as C<LOCAL_FILE>.
+Put a file on the remote server. C<$local_file> may be a name or a filehandle.
+If C<$local_file> is a filehandle then C<$remote_file> must be specified. If
+C<$remote_file> is not specified then the file will be stored in the current
+directory with the same leafname as C<$local_file>.
 
-Returns C<REMOTE_FILE>, or the generated remote filename if C<REMOTE_FILE>
+Returns C<$remote_file>, or the generated remote filename if C<$remote_file>
 is not given.
 
 B<NOTE>: If for some reason the transfer does not complete and an error is
 returned then the contents that had been transferred will not be remove
 automatically.
 
-=item put_unique ( LOCAL_FILE [, REMOTE_FILE ] )
+=item C<put_unique($local_file[, $remote_file])>
 
 Same as put but uses the C<STOU> command.
 
 Returns the name of the file on the server.
 
-=item append ( LOCAL_FILE [, REMOTE_FILE ] )
+=item C<append($local_file[, $remote_file])>
 
 Same as put but appends to the file on the remote server.
 
-Returns C<REMOTE_FILE>, or the generated remote filename if C<REMOTE_FILE>
+Returns C<$remote_file>, or the generated remote filename if C<$remote_file>
 is not given.
 
-=item unique_name ()
+=item C<unique_name()>
 
 Returns the name of the last file stored on the server using the
 C<STOU> command.
 
-=item mdtm ( FILE )
+=item C<mdtm($file)>
 
 Returns the I<modification time> of the given file
 
-=item size ( FILE )
+=item C<size($file)>
 
 Returns the size in bytes for the given file as stored on the remote server.
 
@@ -1783,11 +1767,11 @@ and the remote server and local machine have different ideas about
 "End Of Line" then the size of file on the local machine after transfer
 may be different.
 
-=item supported ( CMD )
+=item C<supported($cmd)>
 
 Returns TRUE if the remote server supports the given command.
 
-=item hash ( [FILEHANDLE_GLOB_REF],[ BYTES_PER_HASH_MARK] )
+=item C<hash([$filehandle_glob_ref[, $bytes_per_hash_mark]])>
 
 Called without parameters, or with the first argument false, hash marks
 are suppressed.  If the first argument is true but not a reference to a 
@@ -1796,7 +1780,7 @@ of bytes per hash mark printed, and defaults to 1024.  In all cases the
 return value is a reference to an array of two:  the filehandle glob reference
 and the bytes per hash mark.
 
-=item feature ( NAME )
+=item C<feature($name)>
 
 Determine if the server supports the specified feature. The return
 value is a list of lines the server responded with to describe the
@@ -1822,33 +1806,33 @@ reference to a C<Net::FTP::dataconn> based object.
 
 =over 4
 
-=item nlst ( [ DIR ] )
+=item C<nlst([$dir])>
 
 Send an C<NLST> command to the server, with an optional parameter.
 
-=item list ( [ DIR ] )
+=item C<list([$dir])>
 
 Same as C<nlst> but using the C<LIST> command
 
-=item retr ( FILE )
+=item C<retr($file)>
 
-Begin the retrieval of a file called C<FILE> from the remote server.
+Begin the retrieval of a file called C<$file> from the remote server.
 
-=item stor ( FILE )
+=item C<stor($file)>
 
-Tell the server that you wish to store a file. C<FILE> is the
+Tell the server that you wish to store a file. C<$file> is the
 name of the new file that should be created.
 
-=item stou ( FILE )
+=item C<stou($file)>
 
 Same as C<stor> but using the C<STOU> command. The name of the unique
 file which was created on the server will be available via the C<unique_name>
 method after the data connection has been closed.
 
-=item appe ( FILE )
+=item C<appe($file)>
 
 Tell the server that we want to append some data to the end of a file
-called C<FILE>. If this file does not exist then create it.
+called C<$file>. If this file does not exist then create it.
 
 =back
 
@@ -1862,17 +1846,17 @@ C<put_unique> and those that do not require data connections.
 
 =over 4
 
-=item port ( [ PORT ] )
+=item C<port([$port])>
 
-=item eprt ( [ PORT ] )
+=item C<eprt([$port])>
 
-Send a C<PORT> (IPv4) or C<EPRT> (IPv6) command to the server. If C<PORT> is
+Send a C<PORT> (IPv4) or C<EPRT> (IPv6) command to the server. If C<$port> is
 specified then it is sent to the server. If not, then a listen socket is created
 and the correct information sent to the server.
 
-=item pasv ()
+=item C<pasv()>
 
-=item epsv ()
+=item C<epsv()>
 
 Tell the server to go into passive mode (C<pasv> for IPv4, C<epsv> for IPv6).
 Returns the text that represents the port on which the server is listening, this
@@ -1886,38 +1870,38 @@ servers, providing that these two servers can connect directly to each other.
 
 =over 4
 
-=item pasv_xfer ( SRC_FILE, DEST_SERVER [, DEST_FILE ] )
+=item C<pasv_xfer($src_file, $dest_server[, $dest_file ])>
 
 This method will do a file transfer between two remote ftp servers. If
-C<DEST_FILE> is omitted then the leaf name of C<SRC_FILE> will be used.
+C<$dest_file> is omitted then the leaf name of C<$src_file> will be used.
 
-=item pasv_xfer_unique ( SRC_FILE, DEST_SERVER [, DEST_FILE ] )
+=item C<pasv_xfer_unique($src_file, $dest_server[, $dest_file ])>
 
 Like C<pasv_xfer> but the file is stored on the remote server using
 the STOU command.
 
-=item pasv_wait ( NON_PASV_SERVER )
+=item C<pasv_wait($non_pasv_server)>
 
 This method can be used to wait for a transfer to complete between a passive
 server and a non-passive server. The method should be called on the passive
 server with the C<Net::FTP> object for the non-passive server passed as an
 argument.
 
-=item abort ()
+=item C<abort()>
 
 Abort the current data transfer.
 
-=item quit ()
+=item C<quit()>
 
 Send the QUIT command to the remote FTP server and close the socket connection.
 
 =back
 
-=head2 Methods for the adventurous
+=head2 Methods for the Adventurous
 
 =over 4
 
-=item quot (CMD [,ARGS])
+=item C<quot($cmd[, $args])>
 
 Send a command, that Net::FTP does not directly support, to the remote
 server and wait for a response.
@@ -1927,62 +1911,83 @@ Returns most significant digit of the response code.
 B<WARNING> This call should only be used on commands that do not require
 data connections. Misuse of this method can hang the connection.
 
-=item can_inet6 ()
+=item C<can_inet6()>
 
 Returns whether we can use IPv6.
 
-=item can_ssl ()
+=item C<can_ssl()>
 
 Returns whether we can use SSL.
 
 =back
 
-=head1 THE dataconn CLASS
+=head2 The dataconn Class
 
 Some of the methods defined in C<Net::FTP> return an object which will
 be derived from the C<Net::FTP::dataconn> class. See L<Net::FTP::dataconn> for
 more details.
 
-=head1 UNIMPLEMENTED
+=head2 Unimplemented
 
 The following RFC959 commands have not been implemented:
 
 =over 4
 
-=item B<SMNT>
+=item C<SMNT>
 
 Mount a different file system structure without changing login or
 accounting information.
 
-=item B<HELP>
+=item C<HELP>
 
 Ask the server for "helpful information" (that's what the RFC says) on
 the commands it accepts.
 
-=item B<MODE>
+=item C<MODE>
 
 Specifies transfer mode (stream, block or compressed) for file to be
 transferred.
 
-=item B<SYST>
+=item C<SYST>
 
 Request remote server system identification.
 
-=item B<STAT>
+=item C<STAT>
 
 Request remote server status.
 
-=item B<STRU>
+=item C<STRU>
 
 Specifies file structure for file to be transferred.
 
-=item B<REIN>
+=item C<REIN>
 
 Reinitialize the connection, flushing all I/O and account information.
 
 =back
 
-=head1 REPORTING BUGS
+=head1 EXAMPLES
+
+For an example of the use of Net::FTP see
+
+=over 4
+
+=item L<https://www.csh.rit.edu/~adam/Progs/>
+
+C<autoftp> is a program that can retrieve, send, or list files via
+the FTP protocol in a non-interactive manner.
+
+=back
+
+=head1 EXPORTS
+
+I<None>.
+
+=head1 KNOWN BUGS
+
+See L<https://rt.cpan.org/Dist/Display.html?Status=Active&Queue=libnet>.
+
+=head2 Reporting Bugs
 
 When reporting bugs/problems please include as much information as possible.
 It may be difficult for me to reproduce the problem as almost every setup
@@ -1994,56 +1999,59 @@ passed to the constructor, and the output sent with the bug report. If you
 cannot include a small script then please include a Debug trace from a
 run of your program which does yield the problem.
 
-=head1 AUTHOR
-
-Graham Barr E<lt>F<gbarr@pobox.com>E<gt>.
-
-Steve Hay E<lt>F<shay@cpan.org>E<gt> is now maintaining libnet as of version
-1.22_02.
-
 =head1 SEE ALSO
 
 L<Net::Netrc>,
 L<Net::Cmd>,
-L<IO::Socket::SSL>
+L<IO::Socket::SSL>;
 
-ftp(1), ftpd(8), RFC 959, RFC 2428, RFC 4217
-http://www.ietf.org/rfc/rfc959.txt
-http://www.ietf.org/rfc/rfc2428.txt
-http://www.ietf.org/rfc/rfc4217.txt
+L<ftp(1)>,
+L<ftpd(8)>;
 
-=head1 USE EXAMPLES
+L<https://www.ietf.org/rfc/rfc959.txt>,
+L<https://www.ietf.org/rfc/rfc2428.txt>,
+L<https://www.ietf.org/rfc/rfc4217.txt>.
 
-For an example of the use of Net::FTP see
+=head1 ACKNOWLEDGEMENTS
 
-=over 4
+Henry Gabryjelski E<lt>L<henryg@WPI.EDU|mailto:henryg@WPI.EDU>E<gt> - for the
+suggestion of creating directories recursively.
 
-=item http://www.csh.rit.edu/~adam/Progs/
+Nathan Torkington E<lt>L<gnat@frii.com|mailto:gnat@frii.com>E<gt> - for some
+input on the documentation.
 
-C<autoftp> is a program that can retrieve, send, or list files via
-the FTP protocol in a non-interactive manner.
+Roderick Schertler E<lt>L<roderick@gate.net|mailto:roderick@gate.net>E<gt> - for
+various inputs
 
-=back
+=head1 AUTHOR
 
-=head1 CREDITS
+Graham Barr E<lt>L<gbarr@pobox.com|mailto:gbarr@pobox.com>E<gt>.
 
-Henry Gabryjelski <henryg@WPI.EDU> - for the suggestion of creating directories
-recursively.
-
-Nathan Torkington <gnat@frii.com> - for some input on the documentation.
-
-Roderick Schertler <roderick@gate.net> - for various inputs
+Steve Hay E<lt>L<shay@cpan.org|mailto:shay@cpan.org>E<gt> is now maintaining
+libnet as of version 1.22_02.
 
 =head1 COPYRIGHT
 
 Copyright (C) 1995-2004 Graham Barr.  All rights reserved.
 
-Copyright (C) 2013-2017 Steve Hay.  All rights reserved.
+Copyright (C) 2013-2017, 2020 Steve Hay.  All rights reserved.
 
 =head1 LICENCE
 
 This module is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself, i.e. under the terms of either the GNU General Public
 License or the Artistic License, as specified in the F<LICENCE> file.
+
+=head1 VERSION
+
+Version 3.13
+
+=head1 DATE
+
+23 Dec 2020
+
+=head1 HISTORY
+
+See the F<Changes> file.
 
 =cut

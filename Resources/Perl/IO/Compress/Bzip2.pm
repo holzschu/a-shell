@@ -5,16 +5,16 @@ use warnings;
 use bytes;
 require Exporter ;
 
-use IO::Compress::Base 2.093 ;
+use IO::Compress::Base 2.101 ;
 
-use IO::Compress::Base::Common  2.093 qw();
-use IO::Compress::Adapter::Bzip2 2.093 ;
+use IO::Compress::Base::Common  2.101 qw();
+use IO::Compress::Adapter::Bzip2 2.101 ;
 
 
 
 our ($VERSION, @ISA, @EXPORT_OK, %EXPORT_TAGS, $Bzip2Error);
 
-$VERSION = '2.093';
+$VERSION = '2.102';
 $Bzip2Error = '';
 
 @ISA    = qw(IO::Compress::Base Exporter);
@@ -40,7 +40,7 @@ sub bzip2
 }
 
 
-sub mkHeader 
+sub mkHeader
 {
     my $self = shift ;
     return '';
@@ -51,9 +51,9 @@ sub getExtraParams
 {
     my $self = shift ;
 
-    use IO::Compress::Base::Common  2.093 qw(:Parse);
-    
-    return (  
+    use IO::Compress::Base::Common  2.101 qw(:Parse);
+
+    return (
             'blocksize100k' => [IO::Compress::Base::Common::Parse_unsigned,  1],
             'workfactor'    => [IO::Compress::Base::Common::Parse_unsigned,  0],
             'verbosity'     => [IO::Compress::Base::Common::Parse_boolean,   0],
@@ -66,7 +66,7 @@ sub ckParams
 {
     my $self = shift ;
     my $got = shift;
-    
+
     # check that BlockSize100K is a number between 1 & 9
     if ($got->parsed('blocksize100k')) {
         my $value = $got->getValue('blocksize100k');
@@ -101,7 +101,7 @@ sub mkComp
 
     return $self->saveErrorString(undef, $errstr, $errno)
         if ! defined $obj;
-    
+
     return $obj;
 }
 
@@ -133,7 +133,7 @@ sub getFileInfo
     my $self = shift ;
     my $params = shift;
     my $file = shift ;
-    
+
 }
 
 1;
@@ -151,7 +151,7 @@ IO::Compress::Bzip2 - Write bzip2 files/buffers
     my $status = bzip2 $input => $output [,OPTS]
         or die "bzip2 failed: $Bzip2Error\n";
 
-    my $z = new IO::Compress::Bzip2 $output [,OPTS]
+    my $z = IO::Compress::Bzip2->new( $output [,OPTS] )
         or die "bzip2 failed: $Bzip2Error\n";
 
     $z->print($string);
@@ -426,7 +426,7 @@ compressed data to a buffer, C<$buffer>.
     use IO::Compress::Bzip2 qw(bzip2 $Bzip2Error) ;
     use IO::File ;
 
-    my $input = new IO::File "<file1.txt"
+    my $input = IO::File->new( "<file1.txt" )
         or die "Cannot open 'file1.txt': $!\n" ;
     my $buffer ;
     bzip2 $input => \$buffer
@@ -463,7 +463,7 @@ and if you want to compress each file one at a time, this will do the trick
 
 The format of the constructor for C<IO::Compress::Bzip2> is shown below
 
-    my $z = new IO::Compress::Bzip2 $output [,OPTS]
+    my $z = IO::Compress::Bzip2->new( $output [,OPTS] )
         or die "IO::Compress::Bzip2 failed: $Bzip2Error\n";
 
 It returns an C<IO::Compress::Bzip2> object on success and undef on failure.
@@ -765,7 +765,7 @@ See the L</"Constructor Options"> section for more details.
 
 =head1 Importing
 
-No symbolic constants are required by this IO::Compress::Bzip2 at present.
+No symbolic constants are required by IO::Compress::Bzip2 at present.
 
 =over 5
 
@@ -790,7 +790,7 @@ See L<IO::Compress::FAQ|IO::Compress::FAQ/"Compressed files and Net::FTP">
 
 =head1 SUPPORT
 
-General feedback/questions/bug reports should be sent to 
+General feedback/questions/bug reports should be sent to
 L<https://github.com/pmqs/IO-Compress/issues> (preferred) or
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=IO-Compress>.
 
@@ -818,8 +818,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2019 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2021 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-

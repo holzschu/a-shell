@@ -5,16 +5,16 @@ use strict ;
 use warnings;
 use bytes;
 
-use Compress::Raw::Zlib  2.093 ;
-use IO::Compress::Base::Common  2.093 qw(:Status );
+use Compress::Raw::Zlib  2.101 ;
+use IO::Compress::Base::Common  2.101 qw(:Status );
 
-use IO::Uncompress::Base  2.093 ;
-use IO::Uncompress::Adapter::Inflate  2.093 ;
+use IO::Uncompress::Base  2.101 ;
+use IO::Uncompress::Adapter::Inflate  2.101 ;
 
 require Exporter ;
 our ($VERSION, @ISA, @EXPORT_OK, %EXPORT_TAGS, %DEFLATE_CONSTANTS, $RawInflateError);
 
-$VERSION = '2.093';
+$VERSION = '2.102';
 $RawInflateError = '';
 
 @ISA    = qw(IO::Uncompress::Base Exporter);
@@ -25,16 +25,16 @@ push @{ $EXPORT_TAGS{all} }, @EXPORT_OK ;
 Exporter::export_ok_tags('all');
 
 #{
-#    # Execute at runtime  
+#    # Execute at runtime
 #    my %bad;
 #    for my $module (qw(Compress::Raw::Zlib IO::Compress::Base::Common IO::Uncompress::Base IO::Uncompress::Adapter::Inflate))
 #    {
 #        my $ver = ${ $module . "::VERSION"} ;
-#        
+#
 #        $bad{$module} = $ver
 #            if $ver ne $VERSION;
 #    }
-#    
+#
 #    if (keys %bad)
 #    {
 #        my $string = join "\n", map { "$_ $bad{$_}" } keys %bad;
@@ -148,14 +148,14 @@ sub _isRawx
 
     my $buffer = '';
 
-    $self->smartRead(\$buffer, *$self->{BlockSize}) >= 0  
+    $self->smartRead(\$buffer, *$self->{BlockSize}) >= 0
         or return $self->saveErrorString(undef, "No data to read");
 
     my $temp_buf = $magic . $buffer ;
-    *$self->{HeaderPending} = $temp_buf ;    
+    *$self->{HeaderPending} = $temp_buf ;
     $buffer = '';
     my $status = *$self->{Uncomp}->uncompr(\$temp_buf, \$buffer, $self->smartEof()) ;
-    
+
     return $self->saveErrorString(undef, *$self->{Uncomp}{Error}, STATUS_ERROR)
         if $status == STATUS_ERROR;
 
@@ -163,12 +163,12 @@ sub _isRawx
 
     return $self->saveErrorString(undef, "unexpected end of file", STATUS_ERROR)
         if $self->smartEof() && $status != STATUS_ENDSTREAM;
-            
+
     #my $buf_len = *$self->{Uncomp}->uncompressedBytes();
     my $buf_len = length $buffer;
 
     if ($status == STATUS_ENDSTREAM) {
-        if (*$self->{MultiStream} 
+        if (*$self->{MultiStream}
                     && (length $temp_buf || ! $self->smartEof())){
             *$self->{NewStream} = 1 ;
             *$self->{EndStream} = 0 ;
@@ -177,9 +177,9 @@ sub _isRawx
             *$self->{EndStream} = 1 ;
         }
     }
-    *$self->{HeaderPending} = $buffer ;    
-    *$self->{InflatedBytesRead} = $buf_len ;    
-    *$self->{TotalInflatedBytesRead} += $buf_len ;    
+    *$self->{HeaderPending} = $buffer ;
+    *$self->{InflatedBytesRead} = $buf_len ;
+    *$self->{TotalInflatedBytesRead} += $buf_len ;
     *$self->{Type} = 'rfc1951';
 
     $self->saveStatus(STATUS_OK);
@@ -229,7 +229,7 @@ sub inflateSync
                 return $self->saveErrorString(0, "unexpected end of file", STATUS_ERROR);
             }
         }
-        
+
         $status = *$self->{Uncomp}->sync($temp_buf) ;
 
         if ($status == STATUS_OK)
@@ -251,23 +251,23 @@ sub inflateSync
 #    my $status ;
 #    my $end_offset = 0;
 #
-#    $status = $self->scan() 
+#    $status = $self->scan()
 #    #or return $self->saveErrorString(undef, "Error Scanning: $$error_ref", $self->errorNo) ;
 #        or return $self->saveErrorString(G_ERR, "Error Scanning: $status")
 #
-#    $status = $self->zap($end_offset) 
+#    $status = $self->zap($end_offset)
 #        or return $self->saveErrorString(G_ERR, "Error Zapping: $status");
 #    #or return $self->saveErrorString(undef, "Error Zapping: $$error_ref", $self->errorNo) ;
 #
 #    #(*$obj->{Deflate}, $status) = $inf->createDeflate();
 #
 ##    *$obj->{Header} = *$inf->{Info}{Header};
-##    *$obj->{UnCompSize_32bit} = 
+##    *$obj->{UnCompSize_32bit} =
 ##        *$obj->{BytesWritten} = *$inf->{UnCompSize_32bit} ;
 ##    *$obj->{CompSize_32bit} = *$inf->{CompSize_32bit} ;
 #
 #
-##    if ( $outType eq 'buffer') 
+##    if ( $outType eq 'buffer')
 ##      { substr( ${ *$self->{Buffer} }, $end_offset) = '' }
 ##    elsif ($outType eq 'handle' || $outType eq 'filename') {
 ##        *$self->{FH} = *$inf->{FH} ;
@@ -275,11 +275,11 @@ sub inflateSync
 ##        *$obj->{FH}->flush() ;
 ##        *$obj->{Handle} = 1 if $outType eq 'handle';
 ##
-##        #seek(*$obj->{FH}, $end_offset, SEEK_SET) 
-##        *$obj->{FH}->seek($end_offset, SEEK_SET) 
+##        #seek(*$obj->{FH}, $end_offset, SEEK_SET)
+##        *$obj->{FH}->seek($end_offset, SEEK_SET)
 ##            or return $obj->saveErrorString(undef, $!, $!) ;
 ##    }
-#    
+#
 #}
 
 sub scan
@@ -292,7 +292,7 @@ sub scan
     my $buffer = '' ;
     my $len = 0;
 
-    $len = $self->_raw_read(\$buffer, 1) 
+    $len = $self->_raw_read(\$buffer, 1)
         while ! *$self->{EndStream} && $len >= 0 ;
 
     #return $len if $len < 0 ? $len : 0 ;
@@ -310,16 +310,16 @@ sub zap
     #printf "# block_offset $block_offset %x\n", $block_offset;
     my $byte ;
     ( $self->smartSeek($block_offset) &&
-      $self->smartRead(\$byte, 1) ) 
-        or return $self->saveErrorString(0, $!, $!); 
+      $self->smartRead(\$byte, 1) )
+        or return $self->saveErrorString(0, $!, $!);
 
     #printf "#byte is %x\n", unpack('C*',$byte);
     *$self->{Uncomp}->resetLastBlockByte($byte);
     #printf "#to byte is %x\n", unpack('C*',$byte);
 
-    ( $self->smartSeek($block_offset) && 
+    ( $self->smartSeek($block_offset) &&
       $self->smartWrite($byte) )
-        or return $self->saveErrorString(0, $!, $!); 
+        or return $self->saveErrorString(0, $!, $!);
 
     #$self->smartSeek($end_offset, 1);
 
@@ -335,12 +335,12 @@ sub createDeflate
                                     -CRC32      => *$self->{Params}->getValue('crc32'),
                                     -ADLER32    => *$self->{Params}->getValue('adler32'),
                                 );
-    
-    return wantarray ? ($status, $def) : $def ;                                
+
+    return wantarray ? ($status, $def) : $def ;
 }
 
 
-1; 
+1;
 
 __END__
 
@@ -356,7 +356,7 @@ IO::Uncompress::RawInflate - Read RFC 1951 files/buffers
     my $status = rawinflate $input => $output [,OPTS]
         or die "rawinflate failed: $RawInflateError\n";
 
-    my $z = new IO::Uncompress::RawInflate $input [OPTS]
+    my $z = IO::Uncompress::RawInflate->new( $input [OPTS] )
         or die "rawinflate failed: $RawInflateError\n";
 
     $status = $z->read($buffer)
@@ -646,7 +646,7 @@ uncompressed data to a buffer, C<$buffer>.
     use IO::Uncompress::RawInflate qw(rawinflate $RawInflateError) ;
     use IO::File ;
 
-    my $input = new IO::File "<file1.txt.1951"
+    my $input = IO::File->new( "<file1.txt.1951" )
         or die "Cannot open 'file1.txt.1951': $!\n" ;
     my $buffer ;
     rawinflate $input => \$buffer
@@ -681,7 +681,7 @@ and if you want to compress each file one at a time, this will do the trick
 
 The format of the constructor for IO::Uncompress::RawInflate is shown below
 
-    my $z = new IO::Uncompress::RawInflate $input [OPTS]
+    my $z = IO::Uncompress::RawInflate->new( $input [OPTS] )
         or die "IO::Uncompress::RawInflate failed: $RawInflateError\n";
 
 Returns an C<IO::Uncompress::RawInflate> object on success and undef on failure.
@@ -1064,7 +1064,7 @@ C<InputLength> option in the constructor.
 
 =head1 Importing
 
-No symbolic constants are required by this IO::Uncompress::RawInflate at present.
+No symbolic constants are required by IO::Uncompress::RawInflate at present.
 
 =over 5
 
@@ -1085,7 +1085,7 @@ See L<IO::Compress::FAQ|IO::Compress::FAQ/"Compressed files and Net::FTP">
 
 =head1 SUPPORT
 
-General feedback/questions/bug reports should be sent to 
+General feedback/questions/bug reports should be sent to
 L<https://github.com/pmqs/IO-Compress/issues> (preferred) or
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=IO-Compress>.
 
@@ -1122,8 +1122,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2019 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2021 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-

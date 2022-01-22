@@ -28,7 +28,7 @@ our @EXPORT_OK = qw(
 our ($canonical, $forgive_me);
 
 BEGIN {
-  our $VERSION = '3.21';
+  our $VERSION = '3.23';
 }
 
 our $recursion_limit;
@@ -1423,7 +1423,7 @@ Murray Nesbitt made Storable thread-safe.  Marc Lehmann added overloading
 and references to tied items support.  Benjamin Holzman added a performance
 improvement for overloaded classes; thanks to Grant Street Group for footing
 the bill.
-Reini Urban took over maintainance from p5p, and added security fixes
+Reini Urban took over maintenance from p5p, and added security fixes
 and huge object support.
 
 =head1 AUTHOR

@@ -2,7 +2,7 @@ package Test2::Event::V2;
 use strict;
 use warnings;
 
-our $VERSION = '1.302175';
+our $VERSION = '1.302183';
 
 use Scalar::Util qw/reftype/;
 use Carp qw/croak/;
@@ -33,7 +33,8 @@ sub init {
 
         $self->{+ABOUT}->{uuid} = $uuid;
     }
-    elsif ($uuid = $self->{+ABOUT}->{uuid}) {
+    elsif ($self->{+ABOUT} && $self->{+ABOUT}->{uuid}) {
+        $uuid = $self->{+ABOUT}->{uuid};
         $self->SUPER::set_uuid($uuid);
     }
 
@@ -228,7 +229,7 @@ F<http://github.com/Test-More/test-more/>.
 
 =head1 COPYRIGHT
 
-Copyright 2019 Chad Granum E<lt>exodist@cpan.orgE<gt>.
+Copyright 2020 Chad Granum E<lt>exodist@cpan.orgE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

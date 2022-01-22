@@ -1,0 +1,6 @@
+#! lua
+
+-- run the updmap command with --sys arguments. 
+-- This will keep the install scripts running.
+-- TODO: add the arguments passed to lua to the command
+os.execute("updmap --sys")

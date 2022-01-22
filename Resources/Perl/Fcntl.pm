@@ -61,7 +61,7 @@ our($VERSION, @ISA, @EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 require Exporter;
 require XSLoader;
 @ISA = qw(Exporter);
-$VERSION = '1.13';
+$VERSION = '1.14';
 
 XSLoader::load();
 

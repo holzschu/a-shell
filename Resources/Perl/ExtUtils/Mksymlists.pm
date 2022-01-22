@@ -3,6 +3,7 @@ package ExtUtils::Mksymlists;
 use 5.006;
 use strict qw[ subs refs ];
 # no strict 'vars';  # until filehandles are exempted
+use warnings;
 
 use Carp;
 use Exporter;
@@ -10,7 +11,7 @@ use Config;
 
 our @ISA = qw(Exporter);
 our @EXPORT = qw(&Mksymlists);
-our $VERSION = '7.44';
+our $VERSION = '7.62';
 $VERSION =~ tr/_//d;
 
 sub Mksymlists {

@@ -1,7 +1,7 @@
 # Net::Time.pm
 #
 # Copyright (C) 1995-2004 Graham Barr.  All rights reserved.
-# Copyright (C) 2014 Steve Hay.  All rights reserved.
+# Copyright (C) 2014, 2020 Steve Hay.  All rights reserved.
 # This module is free software; you can redistribute it and/or modify it under
 # the same terms as Perl itself, i.e. under the terms of either the GNU General
 # Public License or the Artistic License, as specified in the F<LICENCE> file.
@@ -22,7 +22,7 @@ use Net::Config;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(inet_time inet_daytime);
 
-our $VERSION = "3.11";
+our $VERSION = "3.13";
 
 our $TIMEOUT = 120;
 
@@ -123,42 +123,81 @@ Net::Time - time and daytime network client interface
 
 C<Net::Time> provides subroutines that obtain the time on a remote machine.
 
+=head2 Functions
+
 =over 4
 
-=item inet_time ( [HOST [, PROTOCOL [, TIMEOUT]]])
+=item C<inet_time([$host[, $protocol[, $timeout]]])>
 
-Obtain the time on C<HOST>, or some default host if C<HOST> is not given
+Obtain the time on C<$host>, or some default host if C<$host> is not given
 or not defined, using the protocol as defined in RFC868. The optional
-argument C<PROTOCOL> should define the protocol to use, either C<tcp> or
+argument C<$protocol> should define the protocol to use, either C<tcp> or
 C<udp>. The result will be a time value in the same units as returned
 by time() or I<undef> upon failure.
 
-=item inet_daytime ( [HOST [, PROTOCOL [, TIMEOUT]]])
+=item C<inet_daytime([$host[, $protocol[, $timeout]]])>
 
-Obtain the time on C<HOST>, or some default host if C<HOST> is not given
+Obtain the time on C<$host>, or some default host if C<$host> is not given
 or not defined, using the protocol as defined in RFC867. The optional
-argument C<PROTOCOL> should define the protocol to use, either C<tcp> or
+argument C<$protocol> should define the protocol to use, either C<tcp> or
 C<udp>. The result will be an ASCII string or I<undef> upon failure.
 
 =back
 
+=head1 EXPORTS
+
+The following symbols are, or can be, exported by this module:
+
+=over 4
+
+=item Default Exports
+
+I<None>.
+
+=item Optional Exports
+
+C<inet_time>,
+C<inet_daytime>.
+
+=item Export Tags
+
+I<None>.
+
+=back
+
+=head1 KNOWN BUGS
+
+I<None>.
+
 =head1 AUTHOR
 
-Graham Barr E<lt>F<gbarr@pobox.com>E<gt>.
+Graham Barr E<lt>L<gbarr@pobox.com|mailto:gbarr@pobox.com>E<gt>.
 
-Steve Hay E<lt>F<shay@cpan.org>E<gt> is now maintaining libnet as of version
-1.22_02.
+Steve Hay E<lt>L<shay@cpan.org|mailto:shay@cpan.org>E<gt> is now maintaining
+libnet as of version 1.22_02.
 
 =head1 COPYRIGHT
 
 Copyright (C) 1995-2004 Graham Barr.  All rights reserved.
 
-Copyright (C) 2014 Steve Hay.  All rights reserved.
+Copyright (C) 2014, 2020 Steve Hay.  All rights reserved.
 
 =head1 LICENCE
 
 This module is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself, i.e. under the terms of either the GNU General Public
 License or the Artistic License, as specified in the F<LICENCE> file.
+
+=head1 VERSION
+
+Version 3.13
+
+=head1 DATE
+
+23 Dec 2020
+
+=head1 HISTORY
+
+See the F<Changes> file.
 
 =cut

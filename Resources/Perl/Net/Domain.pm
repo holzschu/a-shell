@@ -1,7 +1,7 @@
 # Net::Domain.pm
 #
 # Copyright (C) 1995-1998 Graham Barr.  All rights reserved.
-# Copyright (C) 2013-2014 Steve Hay.  All rights reserved.
+# Copyright (C) 2013-2014, 2020 Steve Hay.  All rights reserved.
 # This module is free software; you can redistribute it and/or modify it under
 # the same terms as Perl itself, i.e. under the terms of either the GNU General
 # Public License or the Artistic License, as specified in the F<LICENCE> file.
@@ -19,7 +19,7 @@ use Net::Config;
 
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(hostname hostdomain hostfqdn domainname);
-our $VERSION = "3.11";
+our $VERSION = "3.13";
 
 my ($host, $domain, $fqdn) = (undef, undef, undef);
 
@@ -321,45 +321,88 @@ of the current host. From this determine the host-name and the host-domain.
 
 Each of the functions will return I<undef> if the FQDN cannot be determined.
 
+=head2 Functions
+
 =over 4
 
-=item hostfqdn ()
+=item C<hostfqdn()>
 
 Identify and return the FQDN of the current host.
 
-=item domainname ()
+=item C<domainname()>
 
-An alias for hostfqdn ().
+An alias for hostfqdn().
 
-=item hostname ()
+=item C<hostname()>
 
 Returns the smallest part of the FQDN which can be used to identify the host.
 
-=item hostdomain ()
+=item C<hostdomain()>
 
 Returns the remainder of the FQDN after the I<hostname> has been removed.
 
 =back
 
+=head1 EXPORTS
+
+The following symbols are, or can be, exported by this module:
+
+=over 4
+
+=item Default Exports
+
+I<None>.
+
+=item Optional Exports
+
+C<hostname>,
+C<hostdomain>,
+C<hostfqdn>,
+C<domainname>.
+
+=item Export Tags
+
+I<None>.
+
+=back
+
+
+=head1 KNOWN BUGS
+
+See L<https://rt.cpan.org/Dist/Display.html?Status=Active&Queue=libnet>.
+
 =head1 AUTHOR
 
-Graham Barr E<lt>F<gbarr@pobox.com>E<gt>.
+Graham Barr E<lt>L<gbarr@pobox.com|mailto:gbarr@pobox.com>E<gt>.
 
-Adapted from Sys::Hostname by David Sundstrom E<lt>F<sunds@asictest.sc.ti.com>E<gt>.
+Adapted from Sys::Hostname by David Sundstrom
+E<lt>L<sunds@asictest.sc.ti.com|mailto:sunds@asictest.sc.ti.com>E<gt>.
 
-Steve Hay E<lt>F<shay@cpan.org>E<gt> is now maintaining libnet as of version
-1.22_02.
+Steve Hay E<lt>L<shay@cpan.org|mailto:shay@cpan.org>E<gt> is now maintaining
+libnet as of version 1.22_02.
 
 =head1 COPYRIGHT
 
 Copyright (C) 1995-1998 Graham Barr.  All rights reserved.
 
-Copyright (C) 2013-2014 Steve Hay.  All rights reserved.
+Copyright (C) 2013-2014, 2020 Steve Hay.  All rights reserved.
 
 =head1 LICENCE
 
 This module is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself, i.e. under the terms of either the GNU General Public
 License or the Artistic License, as specified in the F<LICENCE> file.
+
+=head1 VERSION
+
+Version 3.13
+
+=head1 DATE
+
+23 Dec 2020
+
+=head1 HISTORY
+
+See the F<Changes> file.
 
 =cut

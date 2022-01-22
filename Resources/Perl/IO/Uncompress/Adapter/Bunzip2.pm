@@ -4,19 +4,19 @@ use strict;
 use warnings;
 use bytes;
 
-use IO::Compress::Base::Common 2.093 qw(:Status);
+use IO::Compress::Base::Common 2.101 qw(:Status);
 
-use Compress::Raw::Bzip2 2.093 ;
+use Compress::Raw::Bzip2 2.101 ;
 
 our ($VERSION, @ISA);
-$VERSION = '2.093';
+$VERSION = '2.102';
 
 sub mkUncompObject
 {
     my $small     = shift || 0;
     my $verbosity = shift || 0;
 
-    my ($inflate, $status) = new Compress::Raw::Bunzip2(1, 1, $small, $verbosity, 1);
+    my ($inflate, $status) = Compress::Raw::Bunzip2->new(1, 1, $small, $verbosity, 1);
 
     return (undef, "Could not create Inflation object: $status", $status)
         if $status != BZ_OK ;
@@ -26,8 +26,8 @@ sub mkUncompObject
                   'UnCompSize'    => 0,
                   'Error'         => '',
                   'ConsumesInput' => 1,
-                 }  ;     
-    
+                 }  ;
+
 }
 
 sub uncompr
@@ -48,7 +48,7 @@ sub uncompr
         return STATUS_ERROR;
     }
 
-    
+
     return STATUS_OK        if $status == BZ_OK ;
     return STATUS_ENDSTREAM if $status == BZ_STREAM_END ;
     return STATUS_ERROR ;
@@ -59,12 +59,12 @@ sub reset
 {
     my $self = shift ;
 
-    my ($inf, $status) = new Compress::Raw::Bunzip2();
+    my ($inf, $status) = Compress::Raw::Bunzip2->new();
     $self->{ErrorNo} = ($status == BZ_OK) ? 0 : $status ;
 
     if ($status != BZ_OK)
     {
-        $self->{Error} = "Cannot create Inflate object: $status"; 
+        $self->{Error} = "Cannot create Inflate object: $status";
         return STATUS_ERROR;
     }
 
@@ -100,8 +100,8 @@ sub adler32
 sub sync
 {
     my $self = shift ;
-    #( $self->{Inf}->inflateSync(@_) == BZ_OK) 
-    #        ? STATUS_OK 
+    #( $self->{Inf}->inflateSync(@_) == BZ_OK)
+    #        ? STATUS_OK
     #        : STATUS_ERROR ;
 }
 
@@ -109,4 +109,3 @@ sub sync
 1;
 
 __END__
-

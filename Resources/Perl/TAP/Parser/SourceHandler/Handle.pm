@@ -16,11 +16,11 @@ TAP::Parser::SourceHandler::Handle - Stream TAP from an IO::Handle or a GLOB.
 
 =head1 VERSION
 
-Version 3.42
+Version 3.43
 
 =cut
 
-our $VERSION = '3.42';
+our $VERSION = '3.43';
 
 =head1 SYNOPSIS
 

@@ -9,9 +9,8 @@
 
 package Data::Dumper;
 
-BEGIN {
-    $VERSION = '2.174_01'; # Don't forget to set version and release
-}               # date in POD below!
+use strict;
+use warnings;
 
 #$| = 1;
 
@@ -22,7 +21,17 @@ use constant IS_PRE_516_PERL => $] < 5.016;
 
 use Carp ();
 
+# Globals people alter.
+our ( $Indent, $Trailingcomma, $Purity, $Pad, $Varname, $Useqq, $Terse, $Freezer,
+      $Toaster, $Deepcopy, $Quotekeys, $Bless, $Maxdepth, $Pair, $Sortkeys,
+      $Deparse, $Sparseseen, $Maxrecurse, $Useperl );
+
+our ( @ISA, @EXPORT, @EXPORT_OK, $VERSION );
+
 BEGIN {
+    $VERSION = '2.179'; # Don't forget to set version and release
+                        # date in POD below!
+
     @ISA = qw(Exporter);
     @EXPORT = qw(Dumper);
     @EXPORT_OK = qw(DumperX);
@@ -237,6 +246,7 @@ sub Dump {
 # dump the refs in the current dumper object.
 # expects same args as new() if called via package name.
 #
+our @post;
 sub Dumpperl {
   my($s) = shift;
   my(@out, $val, $name);
@@ -485,7 +495,7 @@ sub _dump {
       if ($s->{deparse}) {
         require B::Deparse;
         my $sub =  'sub ' . (B::Deparse->new)->coderef2text($val);
-        $pad    =  $s->{sep} . $s->{pad} . $s->{apad} . $s->{xpad} x ($s->{level} - 1);
+        my $pad =  $s->{sep} . $s->{pad} . $s->{apad} . $s->{xpad} x ($s->{level} - 1);
         $sub    =~ s/\n/$pad/gs;
         $out   .=  $sub;
       }
@@ -1029,15 +1039,14 @@ so that they can be chained together nicely.
 $Data::Dumper::Indent  I<or>  I<$OBJ>->Indent(I<[NEWVAL]>)
 
 Controls the style of indentation.  It can be set to 0, 1, 2 or 3.  Style 0
-spews output without any newlines, indentation, or spaces between list
-items.  It is the most compact format possible that can still be called
-valid perl.  Style 1 outputs a readable form with newlines but no fancy
-indentation (each level in the structure is simply indented by a fixed
-amount of whitespace).  Style 2 (the default) outputs a very readable form
-which takes into account the length of hash keys (so the hash value lines
-up).  Style 3 is like style 2, but also annotates the elements of arrays
-with their index (but the comment is on its own line, so array output
-consumes twice the number of lines).  Style 2 is the default.
+spews output without any newlines, indentation, or spaces between list items.
+It is the most compact format possible that can still be called valid perl.
+Style 1 outputs a readable form with newlines but no fancy indentation (each
+level in the structure is simply indented by a fixed amount of whitespace).
+Style 2 (the default) outputs a very readable form which lines up the hash
+keys.  Style 3 is like style 2, but also annotates the elements of arrays with
+their index (but the comment is on its own line, so array output consumes
+twice the number of lines).  Style 2 is the default.
 
 =item *
 
@@ -1467,7 +1476,7 @@ modify it under the same terms as Perl itself.
 
 =head1 VERSION
 
-Version 2.174_01
+Version 2.179
 
 =head1 SEE ALSO
 

@@ -18,7 +18,7 @@ BEGIN {
 
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
-$VERSION   = '2.16';
+$VERSION   = '2.18';
 $VERSION   = eval $VERSION;
 @ISA       = qw(Exporter);
 @EXPORT    = qw(mkpath rmtree);
@@ -38,10 +38,7 @@ BEGIN {
 
   # Unix-like systems need to stat each directory in order to detect
   # race condition. MS-Windows is immune to this particular attack.
-  # *_NEED_STAT_CHECK = !(_IS_MSWIN32()) ? sub () { 1 } : sub () { 0 };
-  # iOS: trying without _NEED_STAT_CHECK, as it fails:
-  # TODO: does it still fail? (probably)
-  *_NEED_STAT_CHECK = sub () { 0 };
+  *_NEED_STAT_CHECK = !(_IS_MSWIN32()) ? sub () { 1 } : sub () { 0 };
 }
 
 sub _carp {
@@ -636,7 +633,7 @@ File::Path - Create or remove directory trees
 
 =head1 VERSION
 
-2.16 - released August 31 2018.
+2.18 - released November 4 2020.
 
 =head1 SYNOPSIS
 
@@ -1280,7 +1277,7 @@ Contributors to File::Path, in alphabetical order by first name.
 =head1 COPYRIGHT
 
 This module is copyright (C) Charles Bailey, Tim Bunce, David Landgren,
-James Keenan and Richard Elberger 1995-2018. All rights reserved.
+James Keenan and Richard Elberger 1995-2020. All rights reserved.
 
 =head1 LICENSE
 

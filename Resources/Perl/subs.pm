@@ -1,6 +1,9 @@
 package subs;
 
-our $VERSION = '1.03';
+use strict;
+use warnings;
+
+our $VERSION = '1.04';
 
 =head1 NAME
 
@@ -27,14 +30,13 @@ See L<perlmodlib/Pragmatic Modules> and L<strict/strict subs>.
 
 =cut
 
-require 5.000;
-
 sub import {
     my $callpack = caller;
     my $pack = shift;
     my @imports = @_;
     foreach my $sym (@imports) {
-	*{"${callpack}::$sym"} = \&{"${callpack}::$sym"};
+        no strict 'refs';
+        *{"${callpack}::$sym"} = \&{"${callpack}::$sym"};
     }
 };
 

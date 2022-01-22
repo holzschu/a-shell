@@ -603,7 +603,7 @@ and C<$type> can be used as in typemaps.
 
      bool_t
      rpcb_gettime(host,timep)
-          char *host = (char *)SvPV_nolen($arg);
+          char *host = (char *)SvPVbyte_nolen($arg);
           time_t &timep = 0;
         OUTPUT:
           timep
@@ -630,7 +630,7 @@ Here's a truly obscure example:
      bool_t
      rpcb_gettime(host,timep)
           time_t &timep; /* \$v{timep}=@{[$v{timep}=$arg]} */
-          char *host + SvOK($v{timep}) ? SvPV_nolen($arg) : NULL;
+          char *host + SvOK($v{timep}) ? SvPVbyte_nolen($arg) : NULL;
         OUTPUT:
           timep
 
@@ -993,7 +993,7 @@ The XS code, with ellipsis, follows.
           char *host = "localhost";
         CODE:
 	  if( items > 1 )
-	       host = (char *)SvPV_nolen(ST(1));
+	       host = (char *)SvPVbyte_nolen(ST(1));
 	  RETVAL = rpcb_gettime( host, &timep );
         OUTPUT:
           timep
@@ -1294,7 +1294,7 @@ prototypes.
           char *host = "localhost";
         CODE:
 		  if( items > 1 )
-		       host = (char *)SvPV_nolen(ST(1));
+		       host = (char *)SvPVbyte_nolen(ST(1));
 		  RETVAL = rpcb_gettime( host, &timep );
         OUTPUT:
           timep
@@ -2103,7 +2103,8 @@ File C<RPC.xs>: Interface to some ONC+ RPC bind library functions.
      #include "perl.h"
      #include "XSUB.h"
 
-     #include <rpc/rpc.h>
+     /* Note: On glibc 2.13 and earlier, this needs be <rpc/rpc.h> */
+     #include <tirpc/rpc.h>
 
      typedef struct netconfig Netconfig;
 
@@ -2162,6 +2163,8 @@ File C<rpctest.pl>: Perl test program for the RPC extension.
      $a = rpcb_gettime("poplar");
      print "time = $a\n";
      print "netconf = $netconf\n";
+
+In Makefile.PL add -ltirpc and -I/usr/include/tirpc.
 
 =head1 CAVEATS
 
@@ -2273,7 +2276,7 @@ per-thread locales.  Perl makes this transparent to perl-space code.  It
 continues to use C<POSIX::setlocale()>, and the interpreter translates
 that into the per-thread functions.
 
-All other locale-senstive functions automatically use the per-thread
+All other locale-sensitive functions automatically use the per-thread
 locale, if that is turned on, and failing that, the global locale.  Thus
 calls to C<setlocale> are ineffective on POSIX systems for the current
 thread if that thread is using a per-thread locale.  If perl is compiled

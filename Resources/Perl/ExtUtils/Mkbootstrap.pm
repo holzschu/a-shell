@@ -1,9 +1,9 @@
 package ExtUtils::Mkbootstrap;
 
-# There's just too much Dynaloader incest here to turn on strict vars.
-use strict 'refs';
+use strict;
+use warnings;
 
-our $VERSION = '7.44';
+our $VERSION = '7.62';
 $VERSION =~ tr/_//d;
 
 require Exporter;
@@ -33,6 +33,7 @@ sub Mkbootstrap {
     if (-f "${baseext}_BS"){
 	$_ = "${baseext}_BS";
 	package DynaLoader; # execute code as if in DynaLoader
+	no strict 'vars';
 	local($osname, $dlsrc) = (); # avoid warnings
 	($osname, $dlsrc) = @Config::Config{qw(osname dlsrc)};
 	$bscode = "";
@@ -43,6 +44,7 @@ sub Mkbootstrap {
 
     if ($Config{'dlsrc'} =~ /^dl_dld/){
 	package DynaLoader;
+	no strict 'vars';
 	push(@dl_resolve_using, dl_findfile('-lc'));
     }
 

@@ -1,10 +1,11 @@
 package Module::Load;
 
-$VERSION = '0.34';
-
 use strict;
 use warnings;
 use File::Spec ();
+
+our $VERSION = '0.36';
+
 
 sub import {
     my $who = _who();
@@ -358,7 +359,7 @@ Thanks to Jonas B. Nielsen for making explicit imports work.
 
 =head1 BUG REPORTS
 
-Please report bugs or other issues to E<lt>bug-module-load@rt.cpan.org<gt>.
+Please report bugs or other issues to E<lt>bug-module-load@rt.cpan.orgE<gt>.
 
 =head1 AUTHOR
 

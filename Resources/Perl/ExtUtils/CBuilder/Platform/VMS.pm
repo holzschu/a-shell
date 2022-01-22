@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use ExtUtils::CBuilder::Base;
 
-our $VERSION = '0.280234'; # VERSION
+our $VERSION = '0.280236'; # VERSION
 our @ISA = qw(ExtUtils::CBuilder::Base);
 
 use File::Spec::Functions qw(catfile catdir);

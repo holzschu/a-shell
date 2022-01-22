@@ -4,7 +4,7 @@ perlfaq - Frequently asked questions about Perl
 
 =head1 VERSION
 
-version 5.20200523
+version 5.20210411
 
 =head1 DESCRIPTION
 
@@ -15,7 +15,7 @@ into nine major sections outlined in this document.
 =head2 Where to find the perlfaq
 
 The perlfaq is an evolving document.  Read the latest version at
-L<http://learn.perl.org/faq/>.  It is also included in the standard Perl
+L<https://perldoc.perl.org/perlfaq>.  It is also included in the standard Perl
 distribution.
 
 =head2 How to use the perlfaq
@@ -35,9 +35,8 @@ Review L<https://github.com/perl-doc-cats/perlfaq/wiki>.  If you don't find
 your suggestion create an issue or pull request against
 L<https://github.com/perl-doc-cats/perlfaq>.
 
-Once approved, changes are merged into L<https://github.com/tpf/perlfaq>, the
-repository which drives L<http://learn.perl.org/faq/>, and they are
-distributed with the next Perl 5 release.
+Once approved, changes will be distributed with the next Perl release and
+subsequently appear at L<https://perldoc.perl.org/perlfaq>.
 
 =head2 What if my question isn't answered in the FAQ?
 
@@ -473,6 +472,10 @@ How do I find the soundex value of a string?
 =item *
 
 How can I expand variables in text strings?
+
+=item *
+
+Does Perl have anything like Ruby's #{} or Python's f string?
 
 =item *
 

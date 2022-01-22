@@ -450,6 +450,13 @@
 		<string>bcCdfghik:Mmno:RrsS:t:T:uVz</string>
 		<string>file</string>
 	</array>
+	<key>source</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>source</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>stat</key>
 	<array>
 		<string>files.framework/files</string>
@@ -918,6 +925,34 @@
 		<string>main</string>
 		<string></string>
 		<string>directory</string>
+	</array>
+	<key>ffmpeg</key>
+	<array>
+		<string>ffmpeg.framework/ffmpeg</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>ffprobe</key>
+	<array>
+		<string>ffprobe.framework/ffprobe</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>unrar</key>
+	<array>
+		<string>unrar.framework/unrar</string>
+		<string>main</string>
+		<string></string>
+		<string>directory</string>
+	</array>
+	<key>kpsewhich</key>
+	<array>
+		<string>kpsewhich.framework/kpsewhich</string>
+		<string>main</string>
+		<string></string>
+		<string>none</string>
 	</array>
 </dict>
 </plist>

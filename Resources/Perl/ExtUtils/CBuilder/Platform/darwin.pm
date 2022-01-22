@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use ExtUtils::CBuilder::Platform::Unix;
 
-our $VERSION = '0.280234'; # VERSION
+our $VERSION = '0.280236'; # VERSION
 our @ISA = qw(ExtUtils::CBuilder::Platform::Unix);
 
 sub compile {
@@ -15,6 +15,10 @@ sub compile {
   # it's mistakenly in Config.pm as both.  Make the correction here.
   local $cf->{ccflags} = $cf->{ccflags};
   $cf->{ccflags} =~ s/-flat_namespace//;
+
+  # XCode 12 makes this fatal, breaking tons of XS modules
+  $cf->{ccflags} .= ($cf->{ccflags} ? ' ' : '').'-Wno-error=implicit-function-declaration';
+
   $self->SUPER::compile(@_);
 }
 

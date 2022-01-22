@@ -14,6 +14,8 @@ you invoke a script with C<perl -d>. This documentation tries to outline the
 structure and services provided by C<perl5db.pl>, and to describe how you
 can use them.
 
+See L<perldebug> for an overview of how to use the debugger.
+
 =head1 GENERAL NOTES
 
 The debugger can look pretty forbidding to many Perl programmers. There are
@@ -529,7 +531,7 @@ BEGIN {
 use vars qw($VERSION $header);
 
 # bump to X.XX in blead, only use X.XX_XX in maint
-$VERSION = '1.57';
+$VERSION = '1.60';
 
 $header = "perl5db.pl version $VERSION";
 
@@ -643,6 +645,7 @@ use vars qw(
     $filename
     $histfile
     $histsize
+    $histitemminlength
     $IN
     $inhibit_exit
     @ini_INC
@@ -938,6 +941,7 @@ are to be accepted.
 
 @options = qw(
   CommandSet   HistFile      HistSize
+  HistItemMinLength
   hashDepth    arrayDepth    dumpDepth
   DumpDBFiles  DumpPackages  DumpReused
   compactDump  veryCompact   quote
@@ -986,6 +990,7 @@ use vars qw(%optionVars);
     windowSize    => \$window,
     HistFile      => \$histfile,
     HistSize      => \$histsize,
+    HistItemMinLength => \$histitemminlength
 );
 
 =pod
@@ -1086,7 +1091,6 @@ share($signalLevel);
 share($pre);
 share($post);
 share($pretype);
-share($rl);
 share($CreateTTY);
 share($CommandSet);
 
@@ -1874,7 +1878,7 @@ sub _DB__trim_command_and_return_first_component {
     # A single-character debugger command can be immediately followed by its
     # argument if they aren't both alphanumeric; otherwise require space
     # between commands and arguments:
-    my ($verb, $args) = $cmd =~ m{\A(.\b|\S*)\s*(.*)}s;
+    my ($verb, $args) = $cmd =~ m{\A([^\.-]\b|\S*)\s*(.*)}s;
 
     $obj->cmd_verb($verb);
     $obj->cmd_args($args);
@@ -2509,6 +2513,311 @@ EOP
     return;
 }
 
+=head3 C<_DB__handle_i_command> - inheritance display
+
+Display the (nested) parentage of the module or object given.
+
+=cut
+
+sub _DB__handle_i_command {
+    my $self = shift;
+
+    my $line = $self->cmd_args;
+    require mro;
+    foreach my $isa ( split( /\s+/, $line ) ) {
+        $evalarg = "$isa";
+        # The &-call is here to ascertain the mutability of @_.
+        ($isa) = &DB::eval;
+        no strict 'refs';
+        print join(
+            ', ',
+            map {
+                "$_"
+                  . (
+                    defined( ${"$_\::VERSION"} )
+                    ? ' ' . ${"$_\::VERSION"}
+                    : undef )
+              } @{mro::get_linear_isa(ref($isa) || $isa)}
+        );
+        print "\n";
+    }
+    next CMD;
+}
+
+=head3 C<cmd_l> - list lines (command)
+
+Most of the command is taken up with transforming all the different line
+specification syntaxes into 'start-stop'. After that is done, the command
+runs a loop over C<@dbline> for the specified range of lines. It handles
+the printing of each line and any markers (C<==E<gt>> for current line,
+C<b> for break on this line, C<a> for action on this line, C<:> for this
+line breakable).
+
+We save the last line listed in the C<$start> global for further listing
+later.
+
+=cut
+
+sub _min {
+    my $min = shift;
+    foreach my $v (@_) {
+        if ($min > $v) {
+            $min = $v;
+        }
+    }
+    return $min;
+}
+
+sub _max {
+    my $max = shift;
+    foreach my $v (@_) {
+        if ($max < $v) {
+            $max = $v;
+        }
+    }
+    return $max;
+}
+
+sub _minify_to_max {
+    my $ref = shift;
+
+    $$ref = _min($$ref, $max);
+
+    return;
+}
+
+sub _cmd_l_handle_var_name {
+    my $var_name = shift;
+
+    $evalarg = $var_name;
+
+    my ($s) = DB::eval();
+
+    # Ooops. Bad scalar.
+    if ($@) {
+        print {$OUT} "Error: $@\n";
+        next CMD;
+    }
+
+    # Good scalar. If it's a reference, find what it points to.
+    $s = CvGV_name($s);
+    print {$OUT} "Interpreted as: $1 $s\n";
+    $line = "$1 $s";
+
+    # Call self recursively to really do the command.
+    return _cmd_l_main( $s );
+}
+
+sub _cmd_l_handle_subname {
+
+    my $s = $subname;
+
+    # De-Perl4.
+    $subname =~ s/\'/::/;
+
+    # Put it in this package unless it starts with ::.
+    $subname = $package . "::" . $subname unless $subname =~ /::/;
+
+    # Put it in CORE::GLOBAL if t doesn't start with :: and
+    # it doesn't live in this package and it lives in CORE::GLOBAL.
+    $subname = "CORE::GLOBAL::$s"
+    if not defined &$subname
+        and $s !~ /::/
+        and defined &{"CORE::GLOBAL::$s"};
+
+    # Put leading '::' names into 'main::'.
+    $subname = "main" . $subname if substr( $subname, 0, 2 ) eq "::";
+
+    # Get name:start-stop from find_sub, and break this up at
+    # colons.
+    my @pieces = split( /:/, find_sub($subname) || $sub{$subname} );
+
+    # Pull off start-stop.
+    my $subrange = pop @pieces;
+
+    # If the name contained colons, the split broke it up.
+    # Put it back together.
+    $file = join( ':', @pieces );
+
+    # If we're not in that file, switch over to it.
+    if ( $file ne $filename ) {
+        if (! $slave_editor) {
+            print {$OUT} "Switching to file '$file'.\n";
+        }
+
+        # Switch debugger's magic structures.
+        *dbline   = $main::{ '_<' . $file };
+        $max      = $#dbline;
+        $filename = $file;
+    } ## end if ($file ne $filename)
+
+    # Subrange is 'start-stop'. If this is less than a window full,
+    # swap it to 'start+', which will list a window from the start point.
+    if ($subrange) {
+        if ( eval($subrange) < -$window ) {
+            $subrange =~ s/-.*/+/;
+        }
+
+        # Call self recursively to list the range.
+        return _cmd_l_main( $subrange );
+    } ## end if ($subrange)
+
+    # Couldn't find it.
+    else {
+        print {$OUT} "Subroutine $subname not found.\n";
+        return;
+    }
+}
+
+sub _cmd_l_empty {
+    # Compute new range to list.
+    $incr = $window - 1;
+
+    # Recurse to do it.
+    return _cmd_l_main( $start . '-' . ( $start + $incr ) );
+}
+
+sub _cmd_l_plus {
+    my ($new_start, $new_incr) = @_;
+
+    # Don't reset start for 'l +nnn'.
+    $start = $new_start if $new_start;
+
+    # Increment for list. Use window size if not specified.
+    # (Allows 'l +' to work.)
+    $incr = $new_incr || ($window - 1);
+
+    # Create a line range we'll understand, and recurse to do it.
+    return _cmd_l_main( $start . '-' . ( $start + $incr ) );
+}
+
+sub _cmd_l_calc_initial_end_and_i {
+    my ($spec, $start_match, $end_match) = @_;
+
+    # Determine end point; use end of file if not specified.
+    my $end = ( !defined $start_match ) ? $max :
+    ( $end_match ? $end_match : $start_match );
+
+    # Go on to the end, and then stop.
+    _minify_to_max(\$end);
+
+    # Determine start line.
+    my $i = $start_match;
+
+    if ($i eq '.') {
+        $i = $spec;
+    }
+
+    $i = _max($i, 1);
+
+    $incr = $end - $i;
+
+    return ($end, $i);
+}
+
+sub _cmd_l_range {
+    my ($spec, $current_line, $start_match, $end_match) = @_;
+
+    my ($end, $i) =
+        _cmd_l_calc_initial_end_and_i($spec, $start_match, $end_match);
+
+    # If we're running under a slave editor, force it to show the lines.
+    if ($slave_editor) {
+        print {$OUT} "\032\032$filename:$i:0\n";
+        $i = $end;
+    }
+    # We're doing it ourselves. We want to show the line and special
+    # markers for:
+    # - the current line in execution
+    # - whether a line is breakable or not
+    # - whether a line has a break or not
+    # - whether a line has an action or not
+    else {
+        I_TO_END:
+        for ( ; $i <= $end ; $i++ ) {
+
+            # Check for breakpoints and actions.
+            my ( $stop, $action );
+            if ($dbline{$i}) {
+                ( $stop, $action ) = split( /\0/, $dbline{$i} );
+            }
+
+            # ==> if this is the current line in execution,
+            # : if it's breakable.
+            my $arrow =
+            ( $i == $current_line and $filename eq $filename_ini )
+            ? '==>'
+            : ( $dbline[$i] + 0 ? ':' : ' ' );
+
+            # Add break and action indicators.
+            $arrow .= 'b' if $stop;
+            $arrow .= 'a' if $action;
+
+            # Print the line.
+            print {$OUT} "$i$arrow\t", $dbline[$i];
+
+            # Move on to the next line. Drop out on an interrupt.
+            if ($signal) {
+                $i++;
+                last I_TO_END;
+            }
+        } ## end for (; $i <= $end ; $i++)
+
+        # Line the prompt up; print a newline if the last line listed
+        # didn't have a newline.
+        if ($dbline[ $i - 1 ] !~ /\n\z/) {
+            print {$OUT} "\n";
+        }
+    } ## end else [ if ($slave_editor)
+
+    # Save the point we last listed to in case another relative 'l'
+    # command is desired. Don't let it run off the end.
+    $start = $i;
+    _minify_to_max(\$start);
+
+    return;
+}
+
+sub _cmd_l_main {
+    my $spec = shift;
+
+    # If this is '-something', delete any spaces after the dash.
+    $spec =~ s/\A-\s*\z/-/;
+
+    # If the line is '$something', assume this is a scalar containing a
+    # line number.
+    # Set up for DB::eval() - evaluate in *user* context.
+    if ( my ($var_name) = $spec =~ /\A(\$.*)/s ) {
+        return _cmd_l_handle_var_name($var_name);
+    }
+    # l name. Try to find a sub by that name.
+    elsif ( ($subname) = $spec =~ /\A([\':A-Za-z_][\':\w]*(?:\[.*\])?)/s ) {
+        return _cmd_l_handle_subname();
+    }
+    # Bare 'l' command.
+    elsif ( $spec !~ /\S/ ) {
+        return _cmd_l_empty();
+    }
+    # l [start]+number_of_lines
+    elsif ( my ($new_start, $new_incr) = $spec =~ /\A(\d*)\+(\d*)\z/ ) {
+        return _cmd_l_plus($new_start, $new_incr);
+    }
+    # l start-stop or l start,stop
+    elsif (my ($s, $e) = $spec =~ /^(?:(-?[\d\$\.]+)(?:[-,]([\d\$\.]+))?)?/ ) {
+        return _cmd_l_range($spec, $line, $s, $e);
+    }
+
+    return;
+} ## end sub cmd_l
+
+sub _DB__handle_l_command {
+    my $self = shift;
+
+    _cmd_l_main($self->cmd_args);
+    next CMD;
+}
+
+
 # 't' is type.
 # 'm' is method.
 # 'v' is the value (i.e: method name or subroutine ref).
@@ -2528,6 +2837,8 @@ BEGIN
     'W' => { t => 'm', v => '_handle_W_command', },
     'c' => { t => 's', v => \&_DB__handle_c_command, },
     'f' => { t => 's', v => \&_DB__handle_f_command, },
+    'i' => { t => 's', v => \&_DB__handle_i_command, },
+    'l' => { t => 's', v => \&_DB__handle_l_command, },
     'm' => { t => 's', v => \&_DB__handle_m_command, },
     'n' => { t => 'm', v => '_handle_n_command', },
     'p' => { t => 'm', v => '_handle_p_command', },
@@ -2548,7 +2859,7 @@ BEGIN
         { t => 's', v => \&_DB__handle_restart_and_rerun_commands, },
         } qw(R rerun)),
     (map { $_ => {t => 'm', v => '_handle_cmd_wrapper_commands' }, }
-        qw(a A b B e E h i l L M o O v w W)),
+        qw(a A b B e E h L M o O v w W)),
 );
 };
 
@@ -2708,6 +3019,7 @@ If there are any preprompt actions, execute those as well.
         # The &-call is here to ascertain the mutability of @_.
         &DB::eval;
     }
+    undef $action;
 
     # Are we nested another level (e.g., did we evaluate a function
     # that had a breakpoint in it at the debugger prompt)?
@@ -2820,7 +3132,7 @@ it up.
                 $cmd = $laststep;
             }
             chomp($cmd);    # get rid of the annoying extra newline
-            if (length($cmd) >= 2) {
+            if (length($cmd) >= option_val('HistItemMinLength', 2)) {
                 push( @hist, $cmd );
             }
             push( @truehist, $cmd );
@@ -3346,10 +3658,6 @@ use B<o> I<inhibit_exit> to avoid stopping after program termination,
 B<h q>, B<h R> or B<h o> to get additional info.
 EOP
 
-        # Set the DB::eval context appropriately.
-        # At program termination disable any user actions.
-        $DB::action = undef;
-
         $DB::package     = 'main';
         $DB::usercontext = DB::_calc_usercontext($DB::package);
     } ## end elsif ($package eq 'DB::fake')
@@ -3734,10 +4042,7 @@ sub _handle_H_command {
         my $i;
 
         for ( $i = $#hist ; $i > $end ; $i-- ) {
-
-            # Print the command  unless it has no arguments.
-            print $OUT "$i: ", $hist[$i], "\n"
-            unless $hist[$i] =~ /^.?$/;
+            print $OUT "$i: ", $hist[$i], "\n";
         }
 
         next CMD;
@@ -5471,309 +5776,6 @@ sub cmd_h {
     }
 } ## end sub cmd_h
 
-=head3 C<cmd_i> - inheritance display
-
-Display the (nested) parentage of the module or object given.
-
-=cut
-
-sub cmd_i {
-    my $cmd  = shift;
-    my $line = shift;
-
-    require mro;
-
-    foreach my $isa ( split( /\s+/, $line ) ) {
-        $evalarg = $isa;
-        # The &-call is here to ascertain the mutability of @_.
-        ($isa) = &DB::eval;
-        no strict 'refs';
-        print join(
-            ', ',
-            map {
-                "$_"
-                  . (
-                    defined( ${"$_\::VERSION"} )
-                    ? ' ' . ${"$_\::VERSION"}
-                    : undef )
-              } @{mro::get_linear_isa(ref($isa) || $isa)}
-        );
-        print "\n";
-    }
-} ## end sub cmd_i
-
-=head3 C<cmd_l> - list lines (command)
-
-Most of the command is taken up with transforming all the different line
-specification syntaxes into 'start-stop'. After that is done, the command
-runs a loop over C<@dbline> for the specified range of lines. It handles
-the printing of each line and any markers (C<==E<gt>> for current line,
-C<b> for break on this line, C<a> for action on this line, C<:> for this
-line breakable).
-
-We save the last line listed in the C<$start> global for further listing
-later.
-
-=cut
-
-sub _min {
-    my $min = shift;
-    foreach my $v (@_) {
-        if ($min > $v) {
-            $min = $v;
-        }
-    }
-    return $min;
-}
-
-sub _max {
-    my $max = shift;
-    foreach my $v (@_) {
-        if ($max < $v) {
-            $max = $v;
-        }
-    }
-    return $max;
-}
-
-sub _minify_to_max {
-    my $ref = shift;
-
-    $$ref = _min($$ref, $max);
-
-    return;
-}
-
-sub _cmd_l_handle_var_name {
-    my $var_name = shift;
-
-    $evalarg = $var_name;
-
-    my ($s) = DB::eval();
-
-    # Ooops. Bad scalar.
-    if ($@) {
-        print {$OUT} "Error: $@\n";
-        next CMD;
-    }
-
-    # Good scalar. If it's a reference, find what it points to.
-    $s = CvGV_name($s);
-    print {$OUT} "Interpreted as: $1 $s\n";
-    $line = "$1 $s";
-
-    # Call self recursively to really do the command.
-    return _cmd_l_main( $s );
-}
-
-sub _cmd_l_handle_subname {
-
-    my $s = $subname;
-
-    # De-Perl4.
-    $subname =~ s/\'/::/;
-
-    # Put it in this package unless it starts with ::.
-    $subname = $package . "::" . $subname unless $subname =~ /::/;
-
-    # Put it in CORE::GLOBAL if t doesn't start with :: and
-    # it doesn't live in this package and it lives in CORE::GLOBAL.
-    $subname = "CORE::GLOBAL::$s"
-    if not defined &$subname
-        and $s !~ /::/
-        and defined &{"CORE::GLOBAL::$s"};
-
-    # Put leading '::' names into 'main::'.
-    $subname = "main" . $subname if substr( $subname, 0, 2 ) eq "::";
-
-    # Get name:start-stop from find_sub, and break this up at
-    # colons.
-    my @pieces = split( /:/, find_sub($subname) || $sub{$subname} );
-
-    # Pull off start-stop.
-    my $subrange = pop @pieces;
-
-    # If the name contained colons, the split broke it up.
-    # Put it back together.
-    $file = join( ':', @pieces );
-
-    # If we're not in that file, switch over to it.
-    if ( $file ne $filename ) {
-        if (! $slave_editor) {
-            print {$OUT} "Switching to file '$file'.\n";
-        }
-
-        # Switch debugger's magic structures.
-        *dbline   = $main::{ '_<' . $file };
-        $max      = $#dbline;
-        $filename = $file;
-    } ## end if ($file ne $filename)
-
-    # Subrange is 'start-stop'. If this is less than a window full,
-    # swap it to 'start+', which will list a window from the start point.
-    if ($subrange) {
-        if ( eval($subrange) < -$window ) {
-            $subrange =~ s/-.*/+/;
-        }
-
-        # Call self recursively to list the range.
-        return _cmd_l_main( $subrange );
-    } ## end if ($subrange)
-
-    # Couldn't find it.
-    else {
-        print {$OUT} "Subroutine $subname not found.\n";
-        return;
-    }
-}
-
-sub _cmd_l_empty {
-    # Compute new range to list.
-    $incr = $window - 1;
-
-    # Recurse to do it.
-    return _cmd_l_main( $start . '-' . ( $start + $incr ) );
-}
-
-sub _cmd_l_plus {
-    my ($new_start, $new_incr) = @_;
-
-    # Don't reset start for 'l +nnn'.
-    $start = $new_start if $new_start;
-
-    # Increment for list. Use window size if not specified.
-    # (Allows 'l +' to work.)
-    $incr = $new_incr || ($window - 1);
-
-    # Create a line range we'll understand, and recurse to do it.
-    return _cmd_l_main( $start . '-' . ( $start + $incr ) );
-}
-
-sub _cmd_l_calc_initial_end_and_i {
-    my ($spec, $start_match, $end_match) = @_;
-
-    # Determine end point; use end of file if not specified.
-    my $end = ( !defined $start_match ) ? $max :
-    ( $end_match ? $end_match : $start_match );
-
-    # Go on to the end, and then stop.
-    _minify_to_max(\$end);
-
-    # Determine start line.
-    my $i = $start_match;
-
-    if ($i eq '.') {
-        $i = $spec;
-    }
-
-    $i = _max($i, 1);
-
-    $incr = $end - $i;
-
-    return ($end, $i);
-}
-
-sub _cmd_l_range {
-    my ($spec, $current_line, $start_match, $end_match) = @_;
-
-    my ($end, $i) =
-        _cmd_l_calc_initial_end_and_i($spec, $start_match, $end_match);
-
-    # If we're running under a slave editor, force it to show the lines.
-    if ($slave_editor) {
-        print {$OUT} "\032\032$filename:$i:0\n";
-        $i = $end;
-    }
-    # We're doing it ourselves. We want to show the line and special
-    # markers for:
-    # - the current line in execution
-    # - whether a line is breakable or not
-    # - whether a line has a break or not
-    # - whether a line has an action or not
-    else {
-        I_TO_END:
-        for ( ; $i <= $end ; $i++ ) {
-
-            # Check for breakpoints and actions.
-            my ( $stop, $action );
-            if ($dbline{$i}) {
-                ( $stop, $action ) = split( /\0/, $dbline{$i} );
-            }
-
-            # ==> if this is the current line in execution,
-            # : if it's breakable.
-            my $arrow =
-            ( $i == $current_line and $filename eq $filename_ini )
-            ? '==>'
-            : ( $dbline[$i] + 0 ? ':' : ' ' );
-
-            # Add break and action indicators.
-            $arrow .= 'b' if $stop;
-            $arrow .= 'a' if $action;
-
-            # Print the line.
-            print {$OUT} "$i$arrow\t", $dbline[$i];
-
-            # Move on to the next line. Drop out on an interrupt.
-            if ($signal) {
-                $i++;
-                last I_TO_END;
-            }
-        } ## end for (; $i <= $end ; $i++)
-
-        # Line the prompt up; print a newline if the last line listed
-        # didn't have a newline.
-        if ($dbline[ $i - 1 ] !~ /\n\z/) {
-            print {$OUT} "\n";
-        }
-    } ## end else [ if ($slave_editor)
-
-    # Save the point we last listed to in case another relative 'l'
-    # command is desired. Don't let it run off the end.
-    $start = $i;
-    _minify_to_max(\$start);
-
-    return;
-}
-
-sub _cmd_l_main {
-    my $spec = shift;
-
-    # If this is '-something', delete any spaces after the dash.
-    $spec =~ s/\A-\s*\z/-/;
-
-    # If the line is '$something', assume this is a scalar containing a
-    # line number.
-    # Set up for DB::eval() - evaluate in *user* context.
-    if ( my ($var_name) = $spec =~ /\A(\$.*)/s ) {
-        return _cmd_l_handle_var_name($var_name);
-    }
-    # l name. Try to find a sub by that name.
-    elsif ( ($subname) = $spec =~ /\A([\':A-Za-z_][\':\w]*(?:\[.*\])?)/s ) {
-        return _cmd_l_handle_subname();
-    }
-    # Bare 'l' command.
-    elsif ( $spec !~ /\S/ ) {
-        return _cmd_l_empty();
-    }
-    # l [start]+number_of_lines
-    elsif ( my ($new_start, $new_incr) = $spec =~ /\A(\d*)\+(\d*)\z/ ) {
-        return _cmd_l_plus($new_start, $new_incr);
-    }
-    # l start-stop or l start,stop
-    elsif (my ($s, $e) = $spec =~ /^(?:(-?[\d\$\.]+)(?:[-,]([\d\$\.]+))?)?/ ) {
-        return _cmd_l_range($spec, $line, $s, $e);
-    }
-
-    return;
-} ## end sub cmd_l
-
-sub cmd_l {
-    my (undef, $line) = @_;
-
-    return _cmd_l_main($line);
-}
-
 =head3 C<cmd_L> - list breakpoints, actions, and watch expressions (command)
 
 To list breakpoints, the command has to look determine where all of them are
@@ -7330,7 +7332,7 @@ sub readline {
 
         # Add it to the terminal history (if possible).
         $term->AddHistory($got)
-          if length($got) > 1
+          if length($got) >= option_val("HistItemMinLength", 2)
           and defined $term->Features->{addHistory};
         return $got;
     } ## end if (@typeahead)

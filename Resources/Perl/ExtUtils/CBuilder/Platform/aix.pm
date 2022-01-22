@@ -5,7 +5,7 @@ use strict;
 use ExtUtils::CBuilder::Platform::Unix;
 use File::Spec;
 
-our $VERSION = '0.280234'; # VERSION
+our $VERSION = '0.280236'; # VERSION
 our @ISA = qw(ExtUtils::CBuilder::Platform::Unix);
 
 sub need_prelink { 1 }

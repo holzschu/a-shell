@@ -4,8 +4,11 @@ require 5.002;
 require Exporter;
 
 use strict;
-our $hires;
+use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION
+            $def_timeout $def_proto $def_factor $def_family
+            $max_datasize $pingstring $hires $source_verify $syn_forking);
 use Fcntl qw( F_GETFL F_SETFL O_NONBLOCK );
+use Socket 2.007;
 use Socket qw( SOCK_DGRAM SOCK_STREAM SOCK_RAW AF_INET PF_INET IPPROTO_TCP
 	       SOL_SOCKET SO_ERROR SO_BROADCAST
                IPPROTO_IP IP_TOS IP_TTL
@@ -16,22 +19,22 @@ use FileHandle;
 use Carp;
 use Time::HiRes;
 
-our @ISA = qw(Exporter);
-our @EXPORT = qw(pingecho);
-our @EXPORT_OK = qw(wakeonlan);
-our $VERSION = "2.72";
+@ISA = qw(Exporter);
+@EXPORT = qw(pingecho);
+@EXPORT_OK = qw(wakeonlan);
+$VERSION = "2.74";
 
 # Globals
 
-our $def_timeout = 5;           # Default timeout to wait for a reply
-our $def_proto = "tcp";         # Default protocol to use for pinging
-our $def_factor = 1.2;          # Default exponential backoff rate.
-our $def_family = AF_INET;      # Default family.
-our $max_datasize = 65535;      # Maximum data bytes. recommended: 1472 (Ethernet MTU: 1500)
+$def_timeout = 5;           # Default timeout to wait for a reply
+$def_proto = "tcp";         # Default protocol to use for pinging
+$def_factor = 1.2;          # Default exponential backoff rate.
+$def_family = AF_INET;      # Default family.
+$max_datasize = 65535;      # Maximum data bytes. recommended: 1472 (Ethernet MTU: 1500)
 # The data we exchange with the server for the stream protocol
-our $pingstring = "pingschwingping!\n";
-our $source_verify = 1;         # Default is to verify source endpoint
-our $syn_forking = 0;
+$pingstring = "pingschwingping!\n";
+$source_verify = 1;         # Default is to verify source endpoint
+$syn_forking = 0;
 
 # Constants
 
@@ -44,7 +47,7 @@ my $NIx_NOSERV = eval { Socket::NIx_NOSERV() } || 2;
 #my $IPV6_HOPLIMIT  = eval { Socket::IPV6_HOPLIMIT() };  # ping6 -h 0-255
 my $qr_family = qr/^(?:(?:(:?ip)?v?(?:4|6))|${\AF_INET}|$AF_INET6)$/;
 my $qr_family4 = qr/^(?:(?:(:?ip)?v?4)|${\AF_INET})$/;
-my $Socket_VERSION = eval { $Socket::VERSION };
+my $Socket_VERSION = eval $Socket::VERSION;
 
 if ($^O =~ /Win32/i) {
   # Hack to avoid this Win32 spewage:
@@ -118,6 +121,13 @@ sub new
         # some are still globals
         if ($k eq 'pingstring') { $pingstring = $proto->{$k} }
         if ($k eq 'source_verify') { $source_verify = $proto->{$k} }
+        # and some are local
+        $timeout = $proto->{$k}   if ($k eq 'timeout');
+        $data_size = $proto->{$k} if ($k eq 'data_size');
+        $device = $proto->{$k}    if ($k eq 'device');
+        $tos = $proto->{$k}       if ($k eq 'tos');
+        $ttl = $proto->{$k}       if ($k eq 'ttl');
+        $family = $proto->{$k}    if ($k eq 'family');
         delete $proto->{$k};
       }
     }
@@ -143,7 +153,7 @@ sub new
 
   if ($self->{'host'}) {
     my $host = $self->{'host'};
-    my $ip = _resolv($host) or
+    my $ip = $self->_resolv($host) or
       carp("could not resolve host $host");
     $self->{host} = $ip;
     $self->{family} = $ip->{family};
@@ -151,7 +161,7 @@ sub new
 
   if ($self->{bind}) {
     my $addr = $self->{bind};
-    my $ip = _resolv($addr)
+    my $ip = $self->_resolv($addr)
       or carp("could not resolve local addr $addr");
     $self->{local_addr} = $ip;
   } else {
@@ -245,7 +255,7 @@ sub new
     $self->_setopts();
     if ($self->{'gateway'}) {
       my $g = $self->{gateway};
-      my $ip = _resolv($g)
+      my $ip = $self->_resolv($g)
         or croak("nonexistent gateway $g");
       $self->{family} eq $AF_INET6
         or croak("gateway requires the AF_INET6 family");
@@ -635,10 +645,11 @@ sub ping_external {
 # h2ph "asm/socket.h"
 # require "asm/socket.ph";
 use constant SO_BINDTODEVICE  => 25;
-use constant ICMP_ECHOREPLY   => 0; # ICMP packet types
+use constant ICMP_ECHOREPLY   => 0;   # ICMP packet types
 use constant ICMPv6_ECHOREPLY => 129; # ICMP packet types
-use constant ICMP_UNREACHABLE => 3; # ICMP packet types
+use constant ICMP_UNREACHABLE => 3;   # ICMP packet types
 use constant ICMPv6_UNREACHABLE => 1; # ICMP packet types
+use constant ICMPv6_NI_REPLY => 140;  # ICMP packet types
 use constant ICMP_ECHO        => 8;
 use constant ICMPv6_ECHO      => 128;
 use constant ICMP_TIME_EXCEEDED => 11; # ICMP packet types
@@ -687,6 +698,7 @@ sub ping_icmp
       $done,              # set to 1 when we are done
       $ret,               # Return value
       $recv_msg,          # Received message including IP header
+      $recv_msg_len,      # Length of recevied message, less any additional data
       $from_saddr,        # sockaddr_in of sender
       $from_port,         # Port packet was sent from
       $from_ip,           # Packed IP of sender
@@ -769,32 +781,27 @@ sub ping_icmp
       $from_pid = -1;
       $from_seq = -1;
       $from_saddr = recv($self->{fh}, $recv_msg, 1500, ICMP_FLAGS);
+      $recv_msg_len = length($recv_msg) - length($self->{data});
       ($from_port, $from_ip) = _unpack_sockaddr_in($from_saddr, $ip->{family});
-      ($from_type, $from_subcode) = unpack("C2", substr($recv_msg, 20, 2));
+      # ICMP echo includes the header and ICMPv6 doesn't.
+      # IPv4 length($recv_msg) is 28 (20 header + 8 payload)
+      # while IPv6 length is only 8 (sans header).
+      my $off = ($ip->{family} == AF_INET) ? 20 : 0; # payload offset
+      ($from_type, $from_subcode) = unpack("C2", substr($recv_msg, $off, 2));
       if ($from_type == ICMP_TIMESTAMP_REPLY) {
-        ($from_pid, $from_seq) = unpack("n3", substr($recv_msg, 24, 4))
-          if length $recv_msg >= 28;
-      } elsif ($from_type == ICMP_ECHOREPLY) {
+        ($from_pid, $from_seq) = unpack("n3", substr($recv_msg, $off + 4, 4))
+          if length $recv_msg >= $off + 8;
+      } elsif ($from_type == ICMP_ECHOREPLY || $from_type == ICMPv6_ECHOREPLY) {
         #warn "ICMP_ECHOREPLY: ", $ip->{family}, " ",$recv_msg, ":", length($recv_msg);
-        ($from_pid, $from_seq) = unpack("n2", substr($recv_msg, 24, 4))
-          if ($ip->{family} == AF_INET && length $recv_msg == 28);
+        ($from_pid, $from_seq) = unpack("n2", substr($recv_msg, $off + 4, 4))
+          if $recv_msg_len == $off + 8;
+      } elsif ($from_type == ICMPv6_NI_REPLY) {
         ($from_pid, $from_seq) = unpack("n2", substr($recv_msg, 4, 4))
           if ($ip->{family} == $AF_INET6 && length $recv_msg == 8);
-      } elsif ($from_type == ICMPv6_ECHOREPLY) {
-        #($from_pid, $from_seq) = unpack("n3", substr($recv_msg, 24, 4))
-        #  if length $recv_msg >= 28;
-        #($from_pid, $from_seq) = unpack("n2", substr($recv_msg, 24, 4))
-        #  if ($ip->{family} == AF_INET && length $recv_msg == 28);
-        #warn "ICMPv6_ECHOREPLY: ", $ip->{family}, " ",$recv_msg, ":", length($recv_msg);
-        ($from_pid, $from_seq) = unpack("n2", substr($recv_msg, 4, 4))
-          if ($ip->{family} == $AF_INET6 && length $recv_msg == 8);
-      #} elsif ($from_type == ICMPv6_NI_REPLY) {
-      #  ($from_pid, $from_seq) = unpack("n2", substr($recv_msg, 4, 4))
-      #    if ($ip->{family} == $AF_INET6 && length $recv_msg == 8);
       } else {
         #warn "ICMP: ", $from_type, " ",$ip->{family}, " ",$recv_msg, ":", length($recv_msg);
-        ($from_pid, $from_seq) = unpack("n2", substr($recv_msg, 52, 4))
-          if length $recv_msg >= 56;
+        ($from_pid, $from_seq) = unpack("n2", substr($recv_msg, $off + 32, 4))
+          if length $recv_msg >= $off + 36;
       }
       $self->{from_ip} = $from_ip;
       $self->{from_type} = $from_type;
@@ -2012,6 +2019,10 @@ Net::Ping - check a remote host for reachability
     }
     $p->close();
 
+    $p = Net::Ping->new("icmpv6");
+    $ip = "[fd00:dead:beef::4e]";
+    print "$ip is alive.\n" if $p->ping($ip);
+
     $p = Net::Ping->new("tcp", 2);
     # Try connecting to the www port instead of the echo port
     $p->port_number(scalar(getservbyname("http", "tcp")));
@@ -2357,7 +2368,7 @@ X<ping_icmp>
 
 The L</ping> method used with the icmp protocol.
 
-=item $p->ping_icmpv6([$host, $timeout, $family]) I<NYI>
+=item $p->ping_icmpv6([$host, $timeout, $family])
 X<ping_icmpv6>
 
 The L</ping> method used with the icmpv6 protocol.
@@ -2563,7 +2574,7 @@ L<https://github.com/rurban/Net-Ping/issues>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2017-2018, Reini Urban.  All rights reserved.
+Copyright (c) 2017-2020, Reini Urban.  All rights reserved.
 
 Copyright (c) 2016, cPanel Inc.  All rights reserved.
 

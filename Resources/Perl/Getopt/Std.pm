@@ -1,5 +1,8 @@
 package Getopt::Std;
-require 5.000;
+
+use strict;
+use warnings;
+
 require Exporter;
 
 =head1 NAME
@@ -79,9 +82,9 @@ and version_mess() with the switches string as an argument.
 
 =cut
 
-@ISA = qw(Exporter);
-@EXPORT = qw(getopt getopts);
-$VERSION = '1.12';
+our @ISA = qw(Exporter);
+our @EXPORT = qw(getopt getopts);
+our $VERSION = '1.13';
 # uncomment the next line to disable 1.03-backward compatibility paranoia
 # $STANDARD_HELP_VERSION = 1;
 
@@ -119,6 +122,7 @@ sub getopt (;$$) {
 	        $$hash{$first} = $rest;
 	    }
 	    else {
+            no strict 'refs';
 	        ${"opt_$first"} = $rest;
 	        push( @EXPORT, "\$opt_$first" );
 	    }
@@ -128,6 +132,7 @@ sub getopt (;$$) {
 	        $$hash{$first} = 1;
 	    }
 	    else {
+            no strict 'refs';
 	        ${"opt_$first"} = 1;
 	        push( @EXPORT, "\$opt_$first" );
 	    }
@@ -145,6 +150,7 @@ sub getopt (;$$) {
     }
 }
 
+our ($OUTPUT_HELP_VERSION, $STANDARD_HELP_VERSION);
 sub output_h () {
   return $OUTPUT_HELP_VERSION if defined $OUTPUT_HELP_VERSION;
   return \*STDOUT if $STANDARD_HELP_VERSION;
@@ -251,6 +257,7 @@ sub getopts ($;$) {
 		    $$hash{$first} = $rest;
 		}
 		else {
+            no strict 'refs';
 		    ${"opt_$first"} = $rest;
 		    push( @EXPORT, "\$opt_$first" );
 		}
@@ -260,6 +267,7 @@ sub getopts ($;$) {
 		    $$hash{$first} = 1;
 		}
 		else {
+            no strict 'refs';
 		    ${"opt_$first"} = 1;
 		    push( @EXPORT, "\$opt_$first" );
 		}

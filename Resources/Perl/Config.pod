@@ -582,6 +582,13 @@ This variable is used internally by Configure to determine the
 full pathname (if any) of the comm program.  After Configure runs,
 the value is reset to a plain C<comm> and is not useful.
 
+=item C<compiler_warning>
+
+From F<compiler_warning.U>:
+
+This variable holds the command to check if the file specified as a
+parameter contains a compiler warning
+
 =item C<compress>
 
 From F<Loc.U>:
@@ -864,6 +871,14 @@ From F<atoll.U>:
 
 This variable conditionally defines the C<HAS_ATOLL> symbol, which
 indicates to the C program that the atoll() routine is available.
+
+=item C<d_attribute_always_inline>
+
+From F<d_attribut.U>:
+
+This variable conditionally defines C<HASATTRIBUTE_ALWAYS_INLINE>,
+which indicates that the C compiler can know that certain
+functions should always be inlined.
 
 =item C<d_attribute_deprecated>
 
@@ -1876,6 +1891,14 @@ This variable conditionally defines the C<HAS_GETCWD> symbol, which
 indicates to the C program that the getcwd() routine is available
 to get the current working directory.
 
+=item C<d_getenv_preserves_other_thread>
+
+From F<d_getenv_thread.U>:
+
+This variable conditionally defines the C<GETENV_PRESERVES_OTHER_THREAD>
+symbol, which indicates to the C program that the getenv() system call
+does not zap the static buffer in a different thread.
+
 =item C<d_getespwnam>
 
 From F<d_getespwnam.U>:
@@ -2753,7 +2776,7 @@ From F<d_longdbl.U>:
 This variable conditionally defines C<LONG_DOUBLE_STYLE_IEEE_EXTENDED>
 if the long double is the 80-bit C<IEEE> 754 extended precision.
 Note that despite the C<extended> this is less than the C<std>,
-since thisis an extension of the double precision.
+since this is an extension of the double precision.
 
 =item C<d_long_double_style_ieee_std>
 
@@ -2854,13 +2877,20 @@ From F<d_malloc_size.U>:
 This symbol, if defined, indicates that the malloc_size
 routine is available for use.
 
+=item C<d_malloc_usable_size>
+
+From F<d_malloc_size.U>:
+
+This symbol, if defined, indicates that the malloc_usable_size
+routine is available for use.
+
 =item C<d_mblen>
 
 From F<d_mblen.U>:
 
 This variable conditionally defines the C<HAS_MBLEN> symbol, which
 indicates to the C program that the mblen() routine is available
-to find the number of bytes in a multibye character.
+to find the number of bytes in a multibyte character.
 
 =item C<d_mbrlen>
 
@@ -2900,7 +2930,7 @@ From F<d_memmem.U>:
 
 This variable conditionally defines the C<HAS_MEMMEM> symbol, which
 indicates to the C program that the memmem() routine is available
-to return a pointer to the start of the first occurance of a
+to return a pointer to the start of the first occurrence of a
 substring in a memory area (or C<NULL> if not found).
 
 =item C<d_memrchr>
@@ -4222,6 +4252,13 @@ This variable conditionally defines the C<HAS_SOCKADDR_SA_LEN> symbol,
 which indicates that a struct sockaddr structure has the sa_len
 member.
 
+=item C<d_sockaddr_storage>
+
+From F<d_socket.U>:
+
+This variable conditionally defines the C<HAS_SOCKADDR_STORAGE> symbol,
+which indicates the availability of a struct sockaddr_storage.
+
 =item C<d_sockatmark>
 
 From F<d_sockatmark.U>:
@@ -4908,6 +4945,14 @@ From F<d_waitpid.U>:
 
 This variable conditionally defines C<HAS_WAITPID> if waitpid() is
 available to wait for child process.
+
+=item C<d_wcrtomb>
+
+From F<d_wcrtomb.U>:
+
+This variable conditionally defines the C<HAS_WCRTOMB> symbol if the
+wcrtomb() routine is available to be used to convert a wide character
+into a multi-byte character.
 
 =item C<d_wcscmp>
 
@@ -9135,14 +9180,6 @@ This variable defines Uquad_t to be something like unsigned long,
 unsigned int, unsigned long long, uint64_t, or whatever type is
 used for 64-bit integers.
 
-=item C<use5005threads>
-
-From F<usethreads.U>:
-
-This variable conditionally defines the USE_5005THREADS symbol,
-and indicates that Perl should be built to use the 5.005-based
-threading implementation. Only valid up to 5.8.x.
-
 =item C<use64bitall>
 
 From F<use64bits.U>:
@@ -9180,6 +9217,14 @@ From F<Cross.U>:
 
 This variable conditionally defines the C<USE_CROSS_COMPILE> symbol,
 and indicates that Perl has been cross-compiled.
+
+=item C<usedefaultstrict>
+
+From F<usedefaultstrict.U>:
+
+This setting provides a mechanism for perl developers to enable
+strict by default. These defaults do not apply when perl is run
+via -e or -E.
 
 =item C<usedevel>
 

@@ -1,6 +1,7 @@
 package ExtUtils::MM_Cygwin;
 
 use strict;
+use warnings;
 
 use ExtUtils::MakeMaker::Config;
 use File::Spec;
@@ -9,7 +10,7 @@ require ExtUtils::MM_Unix;
 require ExtUtils::MM_Win32;
 our @ISA = qw( ExtUtils::MM_Unix );
 
-our $VERSION = '7.44';
+our $VERSION = '7.62';
 $VERSION =~ tr/_//d;
 
 
@@ -98,6 +99,16 @@ sub init_linker {
     $self->{PERL_ARCHIVEDEP} ||= '';
     $self->{PERL_ARCHIVE_AFTER} ||= '';
     $self->{EXPORT_LIST}  ||= '';
+}
+
+sub init_others {
+    my $self = shift;
+
+    $self->SUPER::init_others;
+
+    $self->{LDLOADLIBS} ||= $Config{perllibs};
+
+    return;
 }
 
 =item maybe_command

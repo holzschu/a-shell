@@ -10,7 +10,7 @@ package Pod::Checker;
 use strict;
 use warnings;
 
-our $VERSION = '1.73';  ## Current version of this package
+our $VERSION = '1.74';  ## Current version of this package
 
 =head1 NAME
 
@@ -197,10 +197,6 @@ The I<STRING> found cannot be interpreted as a character entity.
 
 There needs to be content inside E, L, and X formatting codes.
 
-=item * A non-empty ZE<lt>E<gt>
-
-The C<ZE<lt>E<gt>> sequence is supposed to be empty.
-
 =item * Spurious text after =pod / =cut
 
 The commands C<=pod> and C<=cut> do not take any arguments.
@@ -299,6 +295,12 @@ description of what the thing is good for.
 For example if there is a C<=head2> in the POD file prior to a
 C<=head1>.
 
+=item * A non-empty ZE<lt>E<gt>
+
+The C<ZE<lt>E<gt>> sequence is supposed to be empty. Caveat: this issue is
+detected in L<Pod::Simple> and will be flagged as an I<ERROR> by any client
+code; any contents of C<ZE<lt>...E<gt>> will be disregarded, anyway.
+
 =back
 
 =head2 Hyperlinks
@@ -361,10 +363,121 @@ B<podchecker> (the script). This allows users of B<Pod::Checker> to
 control completely the output behavior. Users of B<podchecker> (the script)
 get the well-known behavior.
 
-v1.45 inherits from Pod::Simple as opposed to all previous versions
+v1.45 inherits from L<Pod::Simple> as opposed to all previous versions
 inheriting from Pod::Parser. Do B<not> use Pod::Simple's interface when
 using Pod::Checker unless it is documented somewhere on this page. I
 repeat, DO B<NOT> USE POD::SIMPLE'S INTERFACE.
+
+The following list documents the overrides to Pod::Simple, primarily to
+make L<Pod::Coverage> happy:
+
+=over 4
+
+=item end_B
+
+=item end_C
+
+=item end_Document
+
+=item end_F
+
+=item end_I
+
+=item end_L
+
+=item end_Para
+
+=item end_S
+
+=item end_X
+
+=item end_fcode
+
+=item end_for
+
+=item end_head
+
+=item end_head1
+
+=item end_head2
+
+=item end_head3
+
+=item end_head4
+
+=item end_item
+
+=item end_item_bullet
+
+=item end_item_number
+
+=item end_item_text
+
+=item handle_pod_and_cut
+
+=item handle_text
+
+=item handle_whiteline
+
+=item hyperlink
+
+=item scream
+
+=item start_B
+
+=item start_C
+
+=item start_Data
+
+=item start_F
+
+=item start_I
+
+=item start_L
+
+=item start_Para
+
+=item start_S
+
+=item start_Verbatim
+
+=item start_X
+
+=item start_fcode
+
+=item start_for
+
+=item start_head
+
+=item start_head1
+
+=item start_head2
+
+=item start_head3
+
+=item start_head4
+
+=item start_item_bullet
+
+=item start_item_number
+
+=item start_item_text
+
+=item start_over
+
+=item start_over_block
+
+=item start_over_bullet
+
+=item start_over_empty
+
+=item start_over_number
+
+=item start_over_text
+
+=item whine
+
+=back
 
 =cut
 
@@ -662,6 +775,9 @@ sub whine {
           $complaint =~ /^You can't have =items \(as at line .+?\) unless the first thing after the =over is an =item$/ ||
           $complaint =~ /^You have '=item .+?' instead of the expected '=item .+?'$/;
     }
+
+    # rt.cpan.org #98326 - errors about Z<> ("non-empty")
+    $severity = 'WARNING' if $complaint =~ /\bZ\<\>/;
 
     $self->poderror({ -line => $line,
                       -severity => $severity,

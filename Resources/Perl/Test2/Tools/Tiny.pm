@@ -16,7 +16,7 @@ use Test2::API qw/context run_subtest test2_stack/;
 use Test2::Hub::Interceptor();
 use Test2::Hub::Interceptor::Terminator();
 
-our $VERSION = '1.302175';
+our $VERSION = '1.302183';
 
 BEGIN { require Exporter; our @ISA = qw(Exporter) }
 our @EXPORT = qw{
@@ -425,7 +425,7 @@ F<http://github.com/Test-More/test-more/>.
 
 =head1 COPYRIGHT
 
-Copyright 2019 Chad Granum E<lt>exodist@cpan.orgE<gt>.
+Copyright 2020 Chad Granum E<lt>exodist@cpan.orgE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

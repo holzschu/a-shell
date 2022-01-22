@@ -5,7 +5,7 @@ use warnings;
 use Carp;
 use base qw(Unicode::Collate);
 
-our $VERSION = '1.27';
+our $VERSION = '1.29';
 
 my $PL_EXT  = '.pl';
 
@@ -519,7 +519,7 @@ The order of any groups including scripts is not changed.
 
 The Unicode::Collate::Locale module for perl was written
 by SADAHIRO Tomoyuki, <SADAHIRO@cpan.org>.
-This module is Copyright(C) 2004-2018, SADAHIRO Tomoyuki. Japan.
+This module is Copyright(C) 2004-2020, SADAHIRO Tomoyuki. Japan.
 All rights reserved.
 
 This module is free software; you can redistribute it and/or

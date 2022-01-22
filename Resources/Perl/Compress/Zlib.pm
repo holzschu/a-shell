@@ -7,18 +7,18 @@ use Carp ;
 use IO::Handle ;
 use Scalar::Util qw(dualvar);
 
-use IO::Compress::Base::Common 2.093 ;
-use Compress::Raw::Zlib 2.093 ;
-use IO::Compress::Gzip 2.093 ;
-use IO::Uncompress::Gunzip 2.093 ;
+use IO::Compress::Base::Common 2.101 ;
+use Compress::Raw::Zlib 2.101 ;
+use IO::Compress::Gzip 2.101 ;
+use IO::Uncompress::Gunzip 2.101 ;
 
 use strict ;
 use warnings ;
 use bytes ;
 our ($VERSION, $XS_VERSION, @ISA, @EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 
-$VERSION = '2.093';
-$XS_VERSION = $VERSION; 
+$VERSION = '2.102';
+$XS_VERSION = $VERSION;
 $VERSION = eval $VERSION;
 
 @ISA = qw(Exporter);
@@ -126,7 +126,7 @@ sub gzopen($$)
     my @params = () ;
 
     croak "gzopen: file parameter is not a filehandle or filename"
-        unless isaFilehandle $file || isaFilename $file  || 
+        unless isaFilehandle $file || isaFilename $file  ||
                (ref $file && ref $file eq 'SCALAR');
 
     return undef unless $mode =~ /[rwa]/i ;
@@ -134,17 +134,17 @@ sub gzopen($$)
     _set_gzerr(0) ;
 
     if ($writing) {
-        $gz = new IO::Compress::Gzip($file, Minimal => 1, AutoClose => 1, 
-                                     %defOpts) 
+        $gz = IO::Compress::Gzip->new($file, Minimal => 1, AutoClose => 1,
+                                     %defOpts)
             or $Compress::Zlib::gzerrno = $IO::Compress::Gzip::GzipError;
     }
     else {
-        $gz = new IO::Uncompress::Gunzip($file, 
+        $gz = IO::Uncompress::Gunzip->new($file,
                                          Transparent => 1,
-                                         Append => 0, 
-                                         AutoClose => 1, 
+                                         Append => 0,
+                                         AutoClose => 1,
                                          MultiStream => 1,
-                                         Strict => 0) 
+                                         Strict => 0)
             or $Compress::Zlib::gzerrno = $IO::Uncompress::Gunzip::GunzipError;
     }
 
@@ -161,7 +161,7 @@ sub Compress::Zlib::gzFile::gzread
     return _set_gzerr(Z_STREAM_ERROR())
         if $self->[1] ne 'inflate';
 
-    my $len = defined $_[1] ? $_[1] : 4096 ; 
+    my $len = defined $_[1] ? $_[1] : 4096 ;
 
     my $gz = $self->[0] ;
     if ($self->gzeof() || $len == 0) {
@@ -171,7 +171,7 @@ sub Compress::Zlib::gzFile::gzread
         return 0 ;
     }
 
-    my $status = $gz->read($_[0], $len) ; 
+    my $status = $gz->read($_[0], $len) ;
     _save_gzerr($gz, 1);
     return $status ;
 }
@@ -185,7 +185,7 @@ sub Compress::Zlib::gzFile::gzreadline
         # Maintain backward compatibility with 1.x behaviour
         # It didn't support $/, so this can't either.
         local $/ = "\n" ;
-        $_[0] = $gz->getline() ; 
+        $_[0] = $gz->getline() ;
     }
     _save_gzerr($gz, 1);
     return defined $_[0] ? length $_[0] : 0 ;
@@ -199,7 +199,7 @@ sub Compress::Zlib::gzFile::gzwrite
     return _set_gzerr(Z_STREAM_ERROR())
         if $self->[1] ne 'deflate';
 
-    $] >= 5.008 and (utf8::downgrade($_[0], 1) 
+    $] >= 5.008 and (utf8::downgrade($_[0], 1)
         or croak "Wide character in gzwrite");
 
     my $status = $gz->write($_[0]) ;
@@ -282,8 +282,8 @@ sub Compress::Zlib::gzFile::gzsetparams
 
     return _set_gzerr(Z_STREAM_ERROR())
         if $self->[1] ne 'deflate';
- 
-    my $status = *$gz->{Compress}->deflateParams(-Level   => $level, 
+
+    my $status = *$gz->{Compress}->deflateParams(-Level   => $level,
                                                 -Strategy => $strategy);
     _save_gzerr($gz);
     return $status ;
@@ -293,7 +293,7 @@ sub Compress::Zlib::gzFile::gzerror
 {
     my $self = shift ;
     my $gz = $self->[0] ;
-    
+
     return $Compress::Zlib::gzerrno ;
 }
 
@@ -310,7 +310,7 @@ sub compress($;$)
         $in = \$_[0] ;
     }
 
-    $] >= 5.008 and (utf8::downgrade($$in, 1) 
+    $] >= 5.008 and (utf8::downgrade($$in, 1)
         or croak "Wide character in compress");
 
     my $level = (@_ == 2 ? $_[1] : Z_DEFAULT_COMPRESSION() );
@@ -322,7 +322,7 @@ sub compress($;$)
                                            MAX_MEM_LEVEL,
                                            Z_DEFAULT_STRATEGY,
                                            4096,
-                                           '') 
+                                           '')
             or return undef ;
 
     $err = $x->deflate($in, $output) ;
@@ -330,7 +330,7 @@ sub compress($;$)
 
     $err = $x->flush($output) ;
     return undef unless $err == Z_OK() ;
-    
+
     return $output ;
 }
 
@@ -346,21 +346,21 @@ sub uncompress($)
         $in = \$_[0] ;
     }
 
-    $] >= 5.008 and (utf8::downgrade($$in, 1) 
-        or croak "Wide character in uncompress");    
-        
+    $] >= 5.008 and (utf8::downgrade($$in, 1)
+        or croak "Wide character in uncompress");
+
     my ($obj, $status) = Compress::Raw::Zlib::_inflateInit(0,
-                                MAX_WBITS, 4096, "") ;   
-                                
-    $status == Z_OK 
+                                MAX_WBITS, 4096, "") ;
+
+    $status == Z_OK
         or return undef;
-    
-    $obj->inflate($in, $output) == Z_STREAM_END 
+
+    $obj->inflate($in, $output) == Z_STREAM_END
         or return undef;
-    
+
     return $output;
 }
- 
+
 sub deflateInit(@)
 {
     my ($got) = ParseParameters(0,
@@ -374,27 +374,27 @@ sub deflateInit(@)
                 'dictionary'    => [IO::Compress::Base::Common::Parse_any,      ""],
                 }, @_ ) ;
 
-    croak "Compress::Zlib::deflateInit: Bufsize must be >= 1, you specified " . 
+    croak "Compress::Zlib::deflateInit: Bufsize must be >= 1, you specified " .
             $got->getValue('bufsize')
         unless $got->getValue('bufsize') >= 1;
 
     my $obj ;
- 
+
     my $status = 0 ;
-    ($obj, $status) = 
+    ($obj, $status) =
       Compress::Raw::Zlib::_deflateInit(0,
-                $got->getValue('level'), 
-                $got->getValue('method'), 
-                $got->getValue('windowbits'), 
-                $got->getValue('memlevel'), 
-                $got->getValue('strategy'), 
+                $got->getValue('level'),
+                $got->getValue('method'),
+                $got->getValue('windowbits'),
+                $got->getValue('memlevel'),
+                $got->getValue('strategy'),
                 $got->getValue('bufsize'),
                 $got->getValue('dictionary')) ;
 
     my $x = ($status == Z_OK() ? bless $obj, "Zlib::OldDeflate"  : undef) ;
     return wantarray ? ($x, $status) : $x ;
 }
- 
+
 sub inflateInit(@)
 {
     my ($got) = ParseParameters(0,
@@ -405,15 +405,15 @@ sub inflateInit(@)
                 }, @_) ;
 
 
-    croak "Compress::Zlib::inflateInit: Bufsize must be >= 1, you specified " . 
+    croak "Compress::Zlib::inflateInit: Bufsize must be >= 1, you specified " .
             $got->getValue('bufsize')
         unless $got->getValue('bufsize') >= 1;
 
     my $status = 0 ;
     my $obj ;
     ($obj, $status) = Compress::Raw::Zlib::_inflateInit(FLAG_CONSUME_INPUT,
-                                $got->getValue('windowbits'), 
-                                $got->getValue('bufsize'), 
+                                $got->getValue('windowbits'),
+                                $got->getValue('bufsize'),
                                 $got->getValue('dictionary')) ;
 
     my $x = ($status == Z_OK() ? bless $obj, "Zlib::OldInflate"  : undef) ;
@@ -442,7 +442,7 @@ sub flush
     my $output ;
     my $flag = shift || Compress::Zlib::Z_FINISH();
     my $status = $self->SUPER::flush($output, $flag) ;
-    
+
     wantarray ? ($output, $status) : $output ;
 }
 
@@ -461,7 +461,7 @@ sub inflate
 
 package Compress::Zlib ;
 
-use IO::Compress::Gzip::Constants 2.093 ;
+use IO::Compress::Gzip::Constants 2.101 ;
 
 sub memGzip($)
 {
@@ -473,13 +473,13 @@ sub memGzip($)
                                            MAX_MEM_LEVEL,
                                            Z_DEFAULT_STRATEGY,
                                            4096,
-                                           '') 
+                                           '')
             or return undef ;
- 
+
     # if the deflation buffer isn't a reference, make it one
     my $string = (ref $_[0] ? $_[0] : \$_[0]) ;
 
-    $] >= 5.008 and (utf8::downgrade($$string, 1) 
+    $] >= 5.008 and (utf8::downgrade($$string, 1)
         or croak "Wide character in memGzip");
 
     my $out;
@@ -487,12 +487,12 @@ sub memGzip($)
 
     $x->deflate($string, $out) == Z_OK
         or return undef ;
- 
+
     $x->flush($out) == Z_OK
         or return undef ;
- 
-    return IO::Compress::Gzip::Constants::GZIP_MINIMUM_HEADER . 
-           $out . 
+
+    return IO::Compress::Gzip::Constants::GZIP_MINIMUM_HEADER .
+           $out .
            pack("V V", $x->crc32(), $x->total_in());
 }
 
@@ -501,10 +501,10 @@ sub _removeGzipHeader($)
 {
     my $string = shift ;
 
-    return Z_DATA_ERROR() 
+    return Z_DATA_ERROR()
         if length($$string) < GZIP_MIN_HEADER_SIZE ;
 
-    my ($magic1, $magic2, $method, $flags, $time, $xflags, $oscode) = 
+    my ($magic1, $magic2, $method, $flags, $time, $xflags, $oscode) =
         unpack ('CCCCVCC', $$string);
 
     return Z_DATA_ERROR()
@@ -551,7 +551,7 @@ sub _removeGzipHeader($)
             if length ($$string) < GZIP_FHCRC_SIZE ;
         substr($$string, 0, GZIP_FHCRC_SIZE) = '';
     }
-    
+
     return Z_OK();
 }
 
@@ -566,24 +566,24 @@ sub memGunzip($)
 {
     # if the buffer isn't a reference, make it one
     my $string = (ref $_[0] ? $_[0] : \$_[0]);
- 
-    $] >= 5.008 and (utf8::downgrade($$string, 1) 
+
+    $] >= 5.008 and (utf8::downgrade($$string, 1)
         or croak "Wide character in memGunzip");
 
     _set_gzerr(0);
 
     my $status = _removeGzipHeader($string) ;
-    $status == Z_OK() 
+    $status == Z_OK()
         or return _set_gzerr_undef($status);
-     
+
     my $bufsize = length $$string > 4096 ? length $$string : 4096 ;
     my $x = Compress::Raw::Zlib::_inflateInit(FLAG_CRC | FLAG_CONSUME_INPUT,
-                                -MAX_WBITS(), $bufsize, '') 
+                                -MAX_WBITS(), $bufsize, '')
               or return _ret_gun_error();
 
     my $output = '' ;
     $status = $x->inflate($string, $output);
-    
+
     if ( $status == Z_OK() )
     {
         _set_gzerr(Z_DATA_ERROR());
@@ -606,7 +606,7 @@ sub memGunzip($)
         $$string = '';
     }
 
-    return $output;   
+    return $output;
 }
 
 # Autoload methods go after __END__, and are processed by the autosplit program.
@@ -938,23 +938,23 @@ I<gzcat> function.
 
     use strict ;
     use warnings ;
-    
+
     use Compress::Zlib ;
-    
+
     # use stdin if no files supplied
     @ARGV = '-' unless @ARGV ;
-    
+
     foreach my $file (@ARGV) {
         my $buffer ;
-    
+
         my $gz = gzopen($file, "rb")
              or die "Cannot open $file: $gzerrno\n" ;
-    
+
         print $buffer while $gz->gzread($buffer) > 0 ;
-    
+
         die "Error reading from $file: $gzerrno" . ($gzerrno+0) . "\n"
             if $gzerrno != Z_STREAM_END ;
-        
+
         $gz->gzclose() ;
     }
 
@@ -963,28 +963,28 @@ very simple I<grep> like script.
 
     use strict ;
     use warnings ;
-    
+
     use Compress::Zlib ;
-    
+
     die "Usage: gzgrep pattern [file...]\n"
         unless @ARGV >= 1;
-    
+
     my $pattern = shift ;
-    
+
     # use stdin if no files supplied
     @ARGV = '-' unless @ARGV ;
-    
+
     foreach my $file (@ARGV) {
         my $gz = gzopen($file, "rb")
              or die "Cannot open $file: $gzerrno\n" ;
-    
+
         while ($gz->gzreadline($_) > 0) {
             print if /$pattern/ ;
         }
-    
+
         die "Error reading from $file: $gzerrno\n"
             if $gzerrno != Z_STREAM_END ;
-        
+
         $gz->gzclose() ;
     }
 
@@ -994,14 +994,14 @@ standard output.
 
     use strict ;
     use warnings ;
-    
+
     use Compress::Zlib ;
-    
+
     binmode STDOUT;  # gzopen only sets it on the fd
-    
+
     my $gz = gzopen(\*STDOUT, "wb")
           or die "Cannot open stdout: $gzerrno\n" ;
-    
+
     while (<>) {
         $gz->gzwrite($_)
           or die "error writing: $gzerrno\n" ;
@@ -1275,18 +1275,18 @@ input, deflates it and writes it to standard output.
     while (<>)
     {
         ($output, $status) = $x->deflate($_) ;
-    
+
         $status == Z_OK
             or die "deflation failed\n" ;
-    
+
         print $output ;
     }
-    
+
     ($output, $status) = $x->flush() ;
-    
+
     $status == Z_OK
         or die "deflation failed\n" ;
-    
+
     print $output ;
 
 =head1 Inflate Interface
@@ -1313,13 +1313,13 @@ I<zlib> error code.
 The function optionally takes a number of named options specified as
 C<< -Name=>value >> pairs. This allows individual options to be
 tailored without having to specify them all in the parameter list.
- 
+
 For backward compatibility, it is also possible to pass the parameters
 as a reference to a hash containing the name=>value pairs.
- 
+
 The function takes one optional parameter, a reference to a hash.  The
 contents of the hash allow the deflation interface to be tailored.
- 
+
 Here is a list of the valid options:
 
 =over 5
@@ -1409,27 +1409,27 @@ Here is an example of using C<inflate>.
 
     use strict ;
     use warnings ;
-    
+
     use Compress::Zlib ;
-    
+
     my $x = inflateInit()
        or die "Cannot create a inflation stream\n" ;
-    
+
     my $input = '' ;
     binmode STDIN;
     binmode STDOUT;
-    
+
     my ($output, $status) ;
     while (read(STDIN, $input, 4096))
     {
         ($output, $status) = $x->inflate(\$input) ;
-    
+
         print $output
             if $status == Z_OK or $status == Z_STREAM_END ;
-    
+
         last if $status != Z_OK ;
     }
-    
+
     die "inflation failed\n"
         unless $status == Z_STREAM_END ;
 
@@ -1469,7 +1469,7 @@ of I<Compress::Zlib>.
 
 =head1 SUPPORT
 
-General feedback/questions/bug reports should be sent to 
+General feedback/questions/bug reports should be sent to
 L<https://github.com/pmqs/IO-Compress/issues> (preferred) or
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=IO-Compress>.
 
@@ -1506,8 +1506,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 1995-2019 Paul Marquess. All rights reserved.
+Copyright (c) 1995-2021 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-

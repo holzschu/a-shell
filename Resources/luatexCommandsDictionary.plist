@@ -18,7 +18,7 @@
 	</array>
 	<key>lualatex</key>
 	<array>
-		<string>luatex.framework/luatex</string>
+		<string>luahbtex.framework/luahbtex</string>
 		<string>dllluatexmain</string>
 		<string></string>
 		<string>file</string>
@@ -30,16 +30,9 @@
 		<string></string>
 		<string>file</string>
 	</array>
-	<key>texlua</key>
+	<key>luahbtex</key>
 	<array>
-		<string>luatex.framework/luatex</string>
-		<string>dllluatexmain</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>texluac</key>
-	<array>
-		<string>luatex.framework/luatex</string>
+		<string>luahbtex.framework/luahbtex</string>
 		<string>dllluatexmain</string>
 		<string></string>
 		<string>file</string>

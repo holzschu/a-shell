@@ -2,12 +2,13 @@ package ExtUtils::Command;
 
 use 5.00503;
 use strict;
+use warnings;
 require Exporter;
 use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
 @ISA       = qw(Exporter);
 @EXPORT    = qw(cp rm_f rm_rf mv cat eqtime mkpath touch test_f test_d chmod
                 dos2unix);
-$VERSION = '7.44';
+$VERSION = '7.62';
 $VERSION =~ tr/_//d;
 
 my $Is_VMS   = $^O eq 'VMS';

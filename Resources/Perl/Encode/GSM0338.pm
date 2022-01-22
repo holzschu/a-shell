@@ -1,5 +1,5 @@
 #
-# $Id: GSM0338.pm,v 2.7 2017/06/10 17:23:50 dankogai Exp $
+# $Id: GSM0338.pm,v 2.9 2020/12/02 01:28:17 dankogai Exp dankogai $
 #
 package Encode::GSM0338;
 
@@ -8,19 +8,18 @@ use warnings;
 use Carp;
 
 use vars qw($VERSION);
-$VERSION = do { my @r = ( q$Revision: 2.7 $ =~ /\d+/g ); sprintf "%d." . "%02d" x $#r, @r };
+$VERSION = do { my @r = ( q$Revision: 2.9 $ =~ /\d+/g ); sprintf "%d." . "%02d" x $#r, @r };
 
 use Encode qw(:fallbacks);
 
 use parent qw(Encode::Encoding);
 __PACKAGE__->Define('gsm0338');
 
-sub needs_lines { 1 }
-sub perlio_ok   { 0 }
-
 use utf8;
+
+# Mapping table according to 3GPP TS 23.038 version 16.0.0 Release 16 and ETSI TS 123 038 V16.0.0 (2020-07)
+# https://www.etsi.org/deliver/etsi_ts/123000_123099/123038/16.00.00_60/ts_123038v160000p.pdf (page 20 and 22)
 our %UNI2GSM = (
-    "\x{0040}" => "\x00",        # COMMERCIAL AT
     "\x{000A}" => "\x0A",        # LINE FEED
     "\x{000C}" => "\x1B\x0A",    # FORM FEED
     "\x{000D}" => "\x0D",        # CARRIAGE RETURN
@@ -56,6 +55,7 @@ our %UNI2GSM = (
     "\x{003D}" => "\x3D",        # EQUALS SIGN
     "\x{003E}" => "\x3E",        # GREATER-THAN SIGN
     "\x{003F}" => "\x3F",        # QUESTION MARK
+    "\x{0040}" => "\x00",        # COMMERCIAL AT
     "\x{0041}" => "\x41",        # LATIN CAPITAL LETTER A
     "\x{0042}" => "\x42",        # LATIN CAPITAL LETTER B
     "\x{0043}" => "\x43",        # LATIN CAPITAL LETTER C
@@ -82,6 +82,10 @@ our %UNI2GSM = (
     "\x{0058}" => "\x58",        # LATIN CAPITAL LETTER X
     "\x{0059}" => "\x59",        # LATIN CAPITAL LETTER Y
     "\x{005A}" => "\x5A",        # LATIN CAPITAL LETTER Z
+    "\x{005B}" => "\x1B\x3C",    # LEFT SQUARE BRACKET
+    "\x{005C}" => "\x1B\x2F",    # REVERSE SOLIDUS
+    "\x{005D}" => "\x1B\x3E",    # RIGHT SQUARE BRACKET
+    "\x{005E}" => "\x1B\x14",    # CIRCUMFLEX ACCENT
     "\x{005F}" => "\x11",        # LOW LINE
     "\x{0061}" => "\x61",        # LATIN SMALL LETTER A
     "\x{0062}" => "\x62",        # LATIN SMALL LETTER B
@@ -109,16 +113,10 @@ our %UNI2GSM = (
     "\x{0078}" => "\x78",        # LATIN SMALL LETTER X
     "\x{0079}" => "\x79",        # LATIN SMALL LETTER Y
     "\x{007A}" => "\x7A",        # LATIN SMALL LETTER Z
-    "\x{000C}" => "\x1B\x0A",    # FORM FEED
-    "\x{005B}" => "\x1B\x3C",    # LEFT SQUARE BRACKET
-    "\x{005C}" => "\x1B\x2F",    # REVERSE SOLIDUS
-    "\x{005D}" => "\x1B\x3E",    # RIGHT SQUARE BRACKET
-    "\x{005E}" => "\x1B\x14",    # CIRCUMFLEX ACCENT
     "\x{007B}" => "\x1B\x28",    # LEFT CURLY BRACKET
     "\x{007C}" => "\x1B\x40",    # VERTICAL LINE
     "\x{007D}" => "\x1B\x29",    # RIGHT CURLY BRACKET
     "\x{007E}" => "\x1B\x3D",    # TILDE
-    "\x{00A0}" => "\x1B",        # NO-BREAK SPACE
     "\x{00A1}" => "\x40",        # INVERTED EXCLAMATION MARK
     "\x{00A3}" => "\x01",        # POUND SIGN
     "\x{00A4}" => "\x24",        # CURRENCY SIGN
@@ -128,6 +126,7 @@ our %UNI2GSM = (
     "\x{00C4}" => "\x5B",        # LATIN CAPITAL LETTER A WITH DIAERESIS
     "\x{00C5}" => "\x0E",        # LATIN CAPITAL LETTER A WITH RING ABOVE
     "\x{00C6}" => "\x1C",        # LATIN CAPITAL LETTER AE
+    "\x{00C7}" => "\x09",        # LATIN CAPITAL LETTER C WITH CEDILLA
     "\x{00C9}" => "\x1F",        # LATIN CAPITAL LETTER E WITH ACUTE
     "\x{00D1}" => "\x5D",        # LATIN CAPITAL LETTER N WITH TILDE
     "\x{00D6}" => "\x5C",        # LATIN CAPITAL LETTER O WITH DIAERESIS
@@ -138,8 +137,6 @@ our %UNI2GSM = (
     "\x{00E4}" => "\x7B",        # LATIN SMALL LETTER A WITH DIAERESIS
     "\x{00E5}" => "\x0F",        # LATIN SMALL LETTER A WITH RING ABOVE
     "\x{00E6}" => "\x1D",        # LATIN SMALL LETTER AE
-    #"\x{00E7}" => "\x09",        # LATIN SMALL LETTER C WITH CEDILLA
-    "\x{00C7}" => "\x09",        # LATIN CAPITAL LETTER C WITH CEDILLA
     "\x{00E8}" => "\x04",        # LATIN SMALL LETTER E WITH GRAVE
     "\x{00E9}" => "\x05",        # LATIN SMALL LETTER E WITH ACUTE
     "\x{00EC}" => "\x07",        # LATIN SMALL LETTER I WITH GRAVE
@@ -163,57 +160,41 @@ our %UNI2GSM = (
 );
 our %GSM2UNI = reverse %UNI2GSM;
 our $ESC    = "\x1b";
-our $ATMARK = "\x40";
-our $FBCHAR = "\x3F";
-our $NBSP   = "\x{00A0}";
-
-#define ERR_DECODE_NOMAP "%s \"\\x%02" UVXf "\" does not map to Unicode"
 
 sub decode ($$;$) {
     my ( $obj, $bytes, $chk ) = @_;
     return undef unless defined $bytes;
     my $str = substr($bytes, 0, 0); # to propagate taintedness;
     while ( length $bytes ) {
-        my $c = substr( $bytes, 0, 1, '' );
-        my $u;
-        if ( $c eq "\x00" ) {
-            my $c2 = substr( $bytes, 0, 1, '' );
-            $u =
-                !length $c2 ? $ATMARK
-              : $c2 eq "\x00" ? "\x{0000}"
-              : exists $GSM2UNI{$c2} ? $ATMARK . $GSM2UNI{$c2}
-              : $chk
-              ? croak sprintf( "\\x%02X\\x%02X does not map to Unicode",
-			       ord($c), ord($c2) )
-              : $ATMARK . $FBCHAR;
-
-        }
-        elsif ( $c eq $ESC ) {
-            my $c2 = substr( $bytes, 0, 1, '' );
-            $u =
-                exists $GSM2UNI{ $c . $c2 } ? $GSM2UNI{ $c . $c2 }
-              : exists $GSM2UNI{$c2}        ? $NBSP . $GSM2UNI{$c2}
-              : $chk
-              ? croak sprintf( "\\x%02X\\x%02X does not map to Unicode",
-			       ord($c), ord($c2) )
-              : $NBSP . $FBCHAR;
-        }
-        else {
-            $u =
-              exists $GSM2UNI{$c}
-              ? $GSM2UNI{$c}
-              : $chk ? ref $chk eq 'CODE'
-                  ? $chk->( ord $c )
-                  : croak sprintf( "\\x%02X does not map to Unicode", ord($c) )
-              : $FBCHAR;
+        my $seq = '';
+        my $c;
+        do {
+            $c = substr( $bytes, 0, 1, '' );
+            $seq .= $c;
+        } while ( length $bytes and $c eq $ESC );
+        my $u =
+            exists $GSM2UNI{$seq}
+            ? $GSM2UNI{$seq}
+            : ($chk && ref $chk eq 'CODE')
+            ? $chk->( unpack 'C*', $seq )
+            : "\x{FFFD}";
+        if ( not exists $GSM2UNI{$seq} and $chk and not ref $chk ) {
+            if ( substr($seq, 0, 1) eq $ESC and ($chk & Encode::STOP_AT_PARTIAL) ) {
+                $bytes .= $seq;
+                last;
+            }
+            croak join( '', map { sprintf "\\x%02X", $_ } unpack 'C*', $seq ) . ' does not map to Unicode' if $chk & Encode::DIE_ON_ERR;
+            carp join( '', map { sprintf "\\x%02X", $_ } unpack 'C*', $seq ) . ' does not map to Unicode' if $chk & Encode::WARN_ON_ERR;
+            if ($chk & Encode::RETURN_ON_ERR) {
+                $bytes .= $seq;
+                last;
+            }
         }
         $str .= $u;
     }
-    $_[1] = $bytes if $chk;
+    $_[1] = $bytes if not ref $chk and $chk and !($chk & Encode::LEAVE_SRC);
     return $str;
 }
-
-#define ERR_ENCODE_NOMAP "\"\\x{%04" UVxf "}\" does not map to %s"
 
 sub encode($$;$) {
     my ( $obj, $str, $chk ) = @_;
@@ -222,16 +203,23 @@ sub encode($$;$) {
     while ( length $str ) {
         my $u = substr( $str, 0, 1, '' );
         my $c;
-        $bytes .=
-          exists $UNI2GSM{$u}
-          ? $UNI2GSM{$u}
-          : $chk ? ref $chk eq 'CODE'
-              ? $chk->( ord($u) )
-              : croak sprintf( "\\x{%04x} does not map to %s", 
-			       ord($u), $obj->name )
-          : $FBCHAR;
+        my $seq =
+            exists $UNI2GSM{$u}
+            ? $UNI2GSM{$u}
+            : ($chk && ref $chk eq 'CODE')
+            ? $chk->( ord($u) )
+            : $UNI2GSM{'?'};
+        if ( not exists $UNI2GSM{$u} and $chk and not ref $chk ) {
+            croak sprintf( "\\x{%04x} does not map to %s", ord($u), $obj->name ) if $chk & Encode::DIE_ON_ERR;
+            carp sprintf( "\\x{%04x} does not map to %s", ord($u), $obj->name ) if $chk & Encode::WARN_ON_ERR;
+            if ($chk & Encode::RETURN_ON_ERR) {
+                $str .= $u;
+                last;
+            }
+        }
+        $bytes .= $seq;
     }
-    $_[1] = $str if $chk;
+    $_[1] = $str if not ref $chk and $chk and !($chk & Encode::LEAVE_SRC);
     return $bytes;
 }
 
@@ -240,13 +228,13 @@ __END__
 
 =head1 NAME
 
-Encode::GSM0338 -- ESTI GSM 03.38 Encoding
+Encode::GSM0338 -- ETSI GSM 03.38 Encoding
 
 =head1 SYNOPSIS
 
-  use Encode qw/encode decode/; 
-  $gsm0338 = encode("gsm0338", $utf8);    # loads Encode::GSM0338 implicitly
-  $utf8    = decode("gsm0338", $gsm0338); # ditto
+  use Encode qw/encode decode/;
+  $gsm0338 = encode("gsm0338", $unicode); # loads Encode::GSM0338 implicitly
+  $unicode = decode("gsm0338", $gsm0338); # ditto
 
 =head1 DESCRIPTION
 
@@ -259,35 +247,42 @@ This was once handled by L<Encode::Bytes> but because of all those
 unusual specifications, Encode 2.20 has relocated the support to
 this module.
 
-=head1 NOTES
+This module implements only I<GSM 7 bit Default Alphabet> and
+I<GSM 7 bit default alphabet extension table> according to standard
+3GPP TS 23.038 version 16. Therefore I<National Language Single Shift>
+and I<National Language Locking Shift> are not implemented nor supported.
 
-Unlike most other encodings,  the following always croaks on error
-for any $chk that evaluates to true.
+=head2 Septets
 
-  $gsm0338 = encode("gsm0338", $utf8      $chk);
-  $utf8    = decode("gsm0338", $gsm0338,  $chk);
+This modules operates with octets (like any other Encode module) and not
+with packed septets (unlike other GSM standards). Therefore for processing
+binary SMS or parts of GSM TPDU payload (3GPP TS 23.040) it is needed to do
+conversion between octets and packed septets. For this purpose perl's C<pack>
+and C<unpack> functions may be useful:
 
-So if you want to check the validity of the encoding, surround the
-expression with C<eval {}> block as follows;
+  $bytes = substr(pack('(b*)*', unpack '(A7)*', unpack 'b*', $septets), 0, $num_of_septets);
+  $unicode = decode('GSM0338', $bytes);
 
-  eval {
-    $utf8    = decode("gsm0338", $gsm0338,  $chk);
-  } or do {
-    # handle exception here
-  };
+  $bytes = encode('GSM0338', $unicode);
+  $septets = pack 'b*', join '', map { substr $_, 0, 7 } unpack '(A8)*', unpack 'b*', $bytes;
+  $num_of_septets = length $bytes;
+
+Please note that for correct decoding of packed septets it is required to
+know number of septets packed in binary buffer as binary buffer is always
+padded with zero bits and 7 zero bits represents character C<@>. Number
+of septets is also stored in TPDU payload when dealing with 3GPP TS 23.040.
 
 =head1 BUGS
 
-ESTI GSM 03.38 Encoding itself.
-
-Mapping \x00 to '@' causes too much pain everywhere.
-
-Its use of \x1b (escape) is also very questionable.  
-
-Because of those two, the code paging approach used use in ucm-based
-Encoding SOMETIMES fails so this module was written.
+Encode::GSM0338 2.7 and older versions (part of Encode 3.06) incorrectly
+handled zero bytes (character C<@>). This was fixed in Encode::GSM0338
+version 2.8 (part of Encode 3.07).
 
 =head1 SEE ALSO
+
+L<3GPP TS 23.038|https://www.3gpp.org/dynareport/23038.htm>
+
+L<ETSI TS 123 038 V16.0.0 (2020-07)|https://www.etsi.org/deliver/etsi_ts/123000_123099/123038/16.00.00_60/ts_123038v160000p.pdf>
 
 L<Encode>
 

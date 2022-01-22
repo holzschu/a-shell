@@ -14,7 +14,7 @@ use Exporter;
 use Errno;
 
 our @ISA = qw(IO::Socket);
-our $VERSION = "1.41";
+our $VERSION = "1.46";
 
 my $EINVAL = exists(&Errno::EINVAL) ? Errno::EINVAL() : 1;
 
@@ -79,7 +79,7 @@ sub _sock_info {
   if(defined $proto  && $proto =~ /\D/) {
     my $num = _get_proto_number($proto);
     unless (defined $num) {
-      $@ = "Bad protocol '$proto'";
+      $IO::Socket::errstr = $@ = "Bad protocol '$proto'";
       return;
     }
     $proto = $num;
@@ -94,7 +94,7 @@ sub _sock_info {
 
     $port = $serv[2] || $defport || $pnum;
     unless (defined $port) {
-	$@ = "Bad service '$origport'";
+	$IO::Socket::errstr = $@ = "Bad service '$origport'";
 	return;
     }
 
@@ -113,7 +113,7 @@ sub _error {
     {
       local($!);
       my $title = ref($sock).": ";
-      $@ = join("", $_[0] =~ /^$title/ ? "" : $title, @_);
+      $IO::Socket::errstr = $@ = join("", $_[0] =~ /^$title/ ? "" : $title, @_);
       $sock->close()
 	if(defined fileno($sock));
     }
@@ -404,14 +404,19 @@ Examples:
                            Proto     => udp,    
                            LocalAddr => 'localhost',
                            Broadcast => 1 ) 
-                       or die "Can't bind : $@\n";
+                       or die "Can't bind : $IO::Socket::errstr\n";
 
-B<NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE>
+If the constructor fails it will return C<undef> and set the
+C<$IO::Socket::errstr> package variable to contain an error message.
 
-As of VERSION 1.18 all IO::Socket objects have autoflush turned on
-by default. This was not the case with earlier releases.
+    $sock = IO::Socket::INET->new(...)
+        or die "Cannot create socket - $IO::Socket::errstr\n";
 
-B<NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE>
+For legacy reasons the error message is also set into the global C<$@>
+variable, and you may still find older code which looks here instead.
+
+    $sock = IO::Socket::INET->new(...)
+        or die "Cannot create socket - $@\n";
 
 =back
 

@@ -20,7 +20,7 @@ sub import {
 # walkoptree comes from B.xs
 
 BEGIN {
-    $B::VERSION = '1.80';
+    $B::VERSION = '1.82';
     @B::EXPORT_OK = ();
 
     # Our BOOT code needs $VERSION set, and will append to @EXPORT_OK.
@@ -559,9 +559,9 @@ The inheritance hierarchy mimics the underlying C "inheritance":
                 +------------+------------+
                 |            |            |
               B::PV        B::IV        B::NV
-                  \         /           /
-                   \       /           /
-                    B::PVIV           /
+               /  \         /           /
+              /    \       /           /
+        B::INVLIST  B::PVIV           /
                          \           /
                           \         /
                            \       /
@@ -732,6 +732,32 @@ Will die() if called on r-magic.
 
 Only valid on r-magic, returns the integer value of the REGEX stored
 in the MAGIC.
+
+=back
+
+=head2 B::INVLIST Methods
+
+=over 4
+
+=item prev_index
+
+Returns the cache result of previous invlist_search() (internal usage)
+
+=item is_offset
+
+Returns a boolean value (0 or 1) to know if the invlist is using an offset.
+When false the list begins with the code point U+0000.
+When true the list begins with the following elements.
+
+=item array_len
+
+Returns an integer with the size of the array used to define the invlist.
+
+=item get_invlist_array
+
+This method returns a list of integers representing the array used by the
+invlist.
+Note: this cannot be used while in middle of iterating on an invlist and croaks.
 
 =back
 

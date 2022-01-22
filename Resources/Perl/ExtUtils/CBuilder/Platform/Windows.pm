@@ -8,7 +8,7 @@ use File::Spec;
 use ExtUtils::CBuilder::Base;
 use IO::File;
 
-our $VERSION = '0.280234'; # VERSION
+our $VERSION = '0.280236'; # VERSION
 our @ISA = qw(ExtUtils::CBuilder::Base);
 
 =begin comment

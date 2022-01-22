@@ -2,7 +2,7 @@ package File::Spec::Epoc;
 
 use strict;
 
-our $VERSION = '3.78';
+our $VERSION = '3.80';
 $VERSION =~ tr/_//d;
 
 require File::Spec::Unix;

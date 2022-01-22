@@ -698,8 +698,8 @@ my $file_list = 'mktables.lst'; # File to store input and output file names.
                                # nothing on the list has changed since the
                                # previous build
 my $make_list = 1;             # ? Should we write $file_list.  Set to always
-                               # make a list so that when the pumpking is
-                               # preparing a release, s/he won't have to do
+                               # make a list so that when the release manager
+                               # is preparing a release, they won't have to do
                                # special things
 my $glob_list = 0;             # ? Should we try to include unknown .txt files
                                # in the input.

@@ -1,4 +1,4 @@
-package ExtUtils::Manifest; # git description: 1.71-18-g17b7919
+package ExtUtils::Manifest; # git description: 1.72-7-g54209ce
 
 require Exporter;
 use Config;
@@ -10,7 +10,7 @@ use Carp;
 use strict;
 use warnings;
 
-our $VERSION = '1.72';
+our $VERSION = '1.73';
 our @ISA = ('Exporter');
 our @EXPORT_OK = qw(mkmanifest
                 manicheck  filecheck  fullcheck  skipcheck
@@ -56,7 +56,7 @@ our $Verbose = defined $ENV{PERL_MM_MANIFEST_VERBOSE} ?
 our $Quiet = 0;
 our $MANIFEST = 'MANIFEST';
 
-our $DEFAULT_MSKIP = File::Spec->catfile( dirname(__FILE__), "$MANIFEST.SKIP" );
+our $DEFAULT_MSKIP = File::Spec->rel2abs(File::Spec->catfile( dirname(__FILE__), "$MANIFEST.SKIP" ));
 
 
 =head1 NAME
@@ -65,7 +65,7 @@ ExtUtils::Manifest - Utilities to write and check a MANIFEST file
 
 =head1 VERSION
 
-version 1.72
+version 1.73
 
 =head1 SYNOPSIS
 

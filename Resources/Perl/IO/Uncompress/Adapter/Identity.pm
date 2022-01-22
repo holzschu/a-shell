@@ -4,14 +4,14 @@ use warnings;
 use strict;
 use bytes;
 
-use IO::Compress::Base::Common  2.093 qw(:Status);
+use IO::Compress::Base::Common  2.101 qw(:Status);
 use IO::Compress::Zip::Constants ;
 
 our ($VERSION);
 
-$VERSION = '2.093';
+$VERSION = '2.102';
 
-use Compress::Raw::Zlib  2.093 ();
+use Compress::Raw::Zlib  2.101 ();
 
 sub mkUncompObject
 {
@@ -21,7 +21,7 @@ sub mkUncompObject
     my $crc32 = 1; #shift ;
     my $adler32 = shift;
 
-    bless { 'CompSize'   => new U64 , # 0,
+    bless { 'CompSize'   => U64->new(), # 0,
             'UnCompSize' => 0,
             'wantCRC32'  => $crc32,
             'CRC32'      => Compress::Raw::Zlib::crc32(''),
@@ -70,7 +70,7 @@ sub uncompr
                     $ind = $len - 1 ;
                 }
             }
-           
+
             if ($ind >= 0) {
                 $remainder = substr($$in, $ind) ;
                 substr($$in, $ind) = '' ;
@@ -94,7 +94,7 @@ sub uncompr
                     $l1 = U64::newUnpack_V32(substr($remainder, 8));
                     $l2 = U64::newUnpack_V32(substr($remainder, 12));
                 }
-                    
+
                 my $newLen = $self->{CompSize}->clone();
                 $newLen->add(length $$in);
                 if ($l1->equal($l2) && $l1->equal($newLen) ) {
@@ -142,7 +142,7 @@ sub reset
     $self->{CompSize}->reset();
     $self->{UnCompSize} = 0;
     $self->{CRC32}      = Compress::Raw::Zlib::crc32('');
-    $self->{ADLER32}    = Compress::Raw::Zlib::adler32('');      
+    $self->{ADLER32}    = Compress::Raw::Zlib::adler32('');
 
     return STATUS_OK ;
 }

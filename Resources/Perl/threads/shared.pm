@@ -8,7 +8,7 @@ use Config;
 
 use Scalar::Util qw(reftype refaddr blessed);
 
-our $VERSION = '1.61'; # Please update the pod, too.
+our $VERSION = '1.62'; # Please update the pod, too.
 my $XS_VERSION = $VERSION;
 $VERSION = eval $VERSION;
 
@@ -196,7 +196,7 @@ threads::shared - Perl extension for sharing data structures between threads
 
 =head1 VERSION
 
-This document describes threads::shared version 1.61
+This document describes threads::shared version 1.62
 
 =head1 SYNOPSIS
 

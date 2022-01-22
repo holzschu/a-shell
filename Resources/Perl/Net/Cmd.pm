@@ -1,7 +1,7 @@
 # Net::Cmd.pm
 #
 # Copyright (C) 1995-2006 Graham Barr.  All rights reserved.
-# Copyright (C) 2013-2016 Steve Hay.  All rights reserved.
+# Copyright (C) 2013-2016, 2020 Steve Hay.  All rights reserved.
 # This module is free software; you can redistribute it and/or modify it under
 # the same terms as Perl itself, i.e. under the terms of either the GNU General
 # Public License or the Artistic License, as specified in the F<LICENCE> file.
@@ -26,7 +26,7 @@ BEGIN {
   }
 }
 
-our $VERSION = "3.11";
+our $VERSION = "3.13";
 our @ISA     = qw(Exporter);
 our @EXPORT  = qw(CMD_INFO CMD_OK CMD_MORE CMD_REJECT CMD_ERROR CMD_PENDING);
 
@@ -100,7 +100,7 @@ sub _print_isa {
 
 
 sub debug {
-  @_ == 1 or @_ == 2 or croak 'usage: $obj->debug([LEVEL])';
+  @_ == 1 or @_ == 2 or croak 'usage: $obj->debug([$level])';
 
   my ($cmd, $level) = @_;
   my $pkg    = ref($cmd) || $cmd;
@@ -175,7 +175,7 @@ sub status {
 
 
 sub set_status {
-  @_ == 3 or croak 'usage: $obj->set_status(CODE, MESSAGE)';
+  @_ == 3 or croak 'usage: $obj->set_status($code, $resp)';
 
   my $cmd = shift;
   my ($code, $resp) = @_;
@@ -661,59 +661,59 @@ C<IO::Socket::IP>, C<IO::Socket::INET6> or C<IO::Socket::SSL>) then you must
 provide the following methods by other means yourself: C<close()> and
 C<timeout()>.
 
-=head1 USER METHODS
+=head2 Public Methods
 
 These methods provide a user interface to the C<Net::Cmd> object.
 
 =over 4
 
-=item debug ( VALUE )
+=item C<debug($level)>
 
-Set the level of debug information for this object. If C<VALUE> is not given
+Set the level of debug information for this object. If C<$level> is not given
 then the current state is returned. Otherwise the state is changed to 
-C<VALUE> and the previous state returned. 
+C<$level> and the previous state returned. 
 
 Different packages
 may implement different levels of debug but a non-zero value results in 
 copies of all commands and responses also being sent to STDERR.
 
-If C<VALUE> is C<undef> then the debug level will be set to the default
+If C<$level> is C<undef> then the debug level will be set to the default
 debug level for the class.
 
 This method can also be called as a I<static> method to set/get the default
 debug level for a given class.
 
-=item message ()
+=item C<message()>
 
 Returns the text message returned from the last command. In a scalar
 context it returns a single string, in a list context it will return
 each line as a separate element. (See L<PSEUDO RESPONSES> below.)
 
-=item code ()
+=item C<code()>
 
 Returns the 3-digit code from the last command. If a command is pending
 then the value 0 is returned. (See L<PSEUDO RESPONSES> below.)
 
-=item ok ()
+=item C<ok()>
 
 Returns non-zero if the last code value was greater than zero and
 less than 400. This holds true for most command servers. Servers
 where this does not hold may override this method.
 
-=item status ()
+=item C<status()>
 
 Returns the most significant digit of the current status code. If a command
 is pending then C<CMD_PENDING> is returned.
 
-=item datasend ( DATA )
+=item C<datasend($data)>
 
 Send data to the remote server, converting LF to CRLF. Any line starting
 with a '.' will be prefixed with another '.'.
-C<DATA> may be an array or a reference to an array.
-The C<DATA> passed in must be encoded by the caller to octets of whatever
+C<$data> may be an array or a reference to an array.
+The C<$data> passed in must be encoded by the caller to octets of whatever
 encoding is required, e.g. by using the Encode module's C<encode()> function.
 
-=item dataend ()
+=item C<dataend()>
 
 End the sending of data to the remote server. This is done by ensuring that
 the data already sent ends with CRLF then sending '.CRLF' to end the
@@ -722,28 +722,28 @@ returns true if C<response> returns CMD_OK.
 
 =back
 
-=head1 CLASS METHODS
+=head2 Protected Methods
 
 These methods are not intended to be called by the user, but used or 
 over-ridden by a sub-class of C<Net::Cmd>
 
 =over 4
 
-=item debug_print ( DIR, TEXT )
+=item C<debug_print($dir, $text)>
 
-Print debugging information. C<DIR> denotes the direction I<true> being
+Print debugging information. C<$dir> denotes the direction I<true> being
 data being sent to the server. Calls C<debug_text> before printing to
 STDERR.
 
-=item debug_text ( DIR, TEXT )
+=item C<debug_text($dir, $text)>
 
-This method is called to print debugging information. TEXT is
+This method is called to print debugging information. C<$text> is
 the text being sent. The method should return the text to be printed.
 
 This is primarily meant for the use of modules such as FTP where passwords
 are sent, but we do not want to display them in the debugging information.
 
-=item command ( CMD [, ARGS, ... ])
+=item C<command($cmd[, $args, ... ])>
 
 Send a command to the command server. All arguments are first joined with
 a space character and CRLF is appended, this string is then sent to the
@@ -751,24 +751,24 @@ command server.
 
 Returns undef upon failure.
 
-=item unsupported ()
+=item C<unsupported()>
 
 Sets the status code to 580 and the response text to 'Unsupported command'.
 Returns zero.
 
-=item response ()
+=item C<response()>
 
 Obtain a response from the server. Upon success the most significant digit
 of the status code is returned. Upon failure, timeout etc., I<CMD_ERROR> is
 returned.
 
-=item parse_response ( TEXT )
+=item C<parse_response($text)>
 
 This method is called by C<response> as a method with one argument. It should
 return an array of 2 values, the 3-digit status code and a flag which is true
 when this is part of a multi-line response and this line is not the last.
 
-=item getline ()
+=item C<getline()>
 
 Retrieve one line, delimited by CRLF, from the remote server. Returns I<undef>
 upon failure.
@@ -776,26 +776,26 @@ upon failure.
 B<NOTE>: If you do use this method for any reason, please remember to add
 some C<debug_print> calls into your method.
 
-=item ungetline ( TEXT )
+=item C<ungetline($text)>
 
 Unget a line of text from the server.
 
-=item rawdatasend ( DATA )
+=item C<rawdatasend($data)>
 
-Send data to the remote server without performing any conversions. C<DATA>
+Send data to the remote server without performing any conversions. C<$data>
 is a scalar.
-As with C<datasend()>, the C<DATA> passed in must be encoded by the caller
+As with C<datasend()>, the C<$data> passed in must be encoded by the caller
 to octets of whatever encoding is required, e.g. by using the Encode module's
 C<encode()> function.
 
-=item read_until_dot ()
+=item C<read_until_dot()>
 
 Read data from the remote server until a line consisting of a single '.'.
 Any lines starting with '..' will have one of the '.'s removed.
 
 Returns a reference to a list containing the lines, or I<undef> upon failure.
 
-=item tied_fh ()
+=item C<tied_fh()>
 
 Returns a filehandle tied to the Net::Cmd object.  After issuing a
 command, you may read from this filehandle using read() or <>.  The
@@ -807,7 +807,7 @@ See the Net::POP3 and Net::SMTP modules for examples of this.
 
 =back
 
-=head1 PSEUDO RESPONSES
+=head2 Pseudo Responses
 
 Normally the values returned by C<message()> and C<code()> are
 obtained from the remote server, but in a few circumstances, as
@@ -847,27 +847,64 @@ or otherwise trap this error.
 
 =head1 EXPORTS
 
-C<Net::Cmd> exports six subroutines, five of these, C<CMD_INFO>, C<CMD_OK>,
-C<CMD_MORE>, C<CMD_REJECT> and C<CMD_ERROR>, correspond to possible results
-of C<response> and C<status>. The sixth is C<CMD_PENDING>.
+The following symbols are, or can be, exported by this module:
+
+=over 4
+
+=item Default Exports
+
+C<CMD_INFO>,
+C<CMD_OK>,
+C<CMD_MORE>,
+C<CMD_REJECT>,
+C<CMD_ERROR>,
+C<CMD_PENDING>.
+
+(These correspond to possible results of C<response()> and C<status()>.)
+
+=item Optional Exports
+
+I<None>.
+
+=item Export Tags
+
+I<None>.
+
+=back
+
+=head1 KNOWN BUGS
+
+See L<https://rt.cpan.org/Dist/Display.html?Status=Active&Queue=libnet>.
 
 =head1 AUTHOR
 
-Graham Barr E<lt>F<gbarr@pobox.com>E<gt>.
+Graham Barr E<lt>L<gbarr@pobox.com|mailto:gbarr@pobox.com>E<gt>.
 
-Steve Hay E<lt>F<shay@cpan.org>E<gt> is now maintaining libnet as of version
-1.22_02.
+Steve Hay E<lt>L<shay@cpan.org|mailto:shay@cpan.org>E<gt> is now maintaining
+libnet as of version 1.22_02.
 
 =head1 COPYRIGHT
 
 Copyright (C) 1995-2006 Graham Barr.  All rights reserved.
 
-Copyright (C) 2013-2016 Steve Hay.  All rights reserved.
+Copyright (C) 2013-2016, 2020 Steve Hay.  All rights reserved.
 
 =head1 LICENCE
 
 This module is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself, i.e. under the terms of either the GNU General Public
 License or the Artistic License, as specified in the F<LICENCE> file.
+
+=head1 VERSION
+
+Version 3.13
+
+=head1 DATE
+
+23 Dec 2020
+
+=head1 HISTORY
+
+See the F<Changes> file.
 
 =cut

@@ -1,7 +1,7 @@
 # Net::SMTP.pm
 #
 # Copyright (C) 1995-2004 Graham Barr.  All rights reserved.
-# Copyright (C) 2013-2016 Steve Hay.  All rights reserved.
+# Copyright (C) 2013-2016, 2020 Steve Hay.  All rights reserved.
 # This module is free software; you can redistribute it and/or modify it under
 # the same terms as Perl itself, i.e. under the terms of either the GNU General
 # Public License or the Artistic License, as specified in the F<LICENCE> file.
@@ -19,7 +19,7 @@ use Net::Cmd;
 use Net::Config;
 use Socket;
 
-our $VERSION = "3.11";
+our $VERSION = "3.13";
 
 # Code for detecting if we can use SSL
 my $ssl_class = eval {
@@ -663,57 +663,23 @@ explicit TLS encryption, i.e. SMTPS or SMTP+STARTTLS.
 The Net::SMTP class is a subclass of Net::Cmd and (depending on avaibility) of
 IO::Socket::IP, IO::Socket::INET6 or IO::Socket::INET.
 
-=head1 EXAMPLES
-
-This example prints the mail domain name of the SMTP server known as mailhost:
-
-    #!/usr/local/bin/perl -w
-
-    use Net::SMTP;
-
-    $smtp = Net::SMTP->new('mailhost');
-    print $smtp->domain,"\n";
-    $smtp->quit;
-
-This example sends a small message to the postmaster at the SMTP server
-known as mailhost:
-
-    #!/usr/local/bin/perl -w
-
-    use Net::SMTP;
-
-    my $smtp = Net::SMTP->new('mailhost');
-
-    $smtp->mail($ENV{USER});
-    if ($smtp->to('postmaster')) {
-     $smtp->data();
-     $smtp->datasend("To: postmaster\n");
-     $smtp->datasend("\n");
-     $smtp->datasend("A simple test message\n");
-     $smtp->dataend();
-    } else {
-     print "Error: ", $smtp->message();
-    }
-
-    $smtp->quit;
-
-=head1 CONSTRUCTOR
+=head2 Class Methods
 
 =over 4
 
-=item new ( [ HOST ] [, OPTIONS ] )
+=item C<new([$host][, %options])>
 
-This is the constructor for a new Net::SMTP object. C<HOST> is the
+This is the constructor for a new Net::SMTP object. C<$host> is the
 name of the remote host to which an SMTP connection is required.
 
 On failure C<undef> will be returned and C<$@> will contain the reason
 for the failure.
 
-C<HOST> is optional. If C<HOST> is not given then it may instead be
+C<$host> is optional. If C<$host> is not given then it may instead be
 passed as the C<Host> option described below. If neither is given then
 the C<SMTP_Hosts> specified in C<Net::Config> will be used.
 
-C<OPTIONS> are passed in a hash like fashion, using key and value pairs.
+C<%options> are passed in a hash like fashion, using key and value pairs.
 Possible options are:
 
 B<Hello> - SMTP requires that you identify yourself. This option
@@ -748,15 +714,13 @@ class. Alternatively B<Family> can be used.
 B<Timeout> - Maximum time, in seconds, to wait for a response from the
 SMTP server (default: 120)
 
-B<ExactAddresses> - If true the all ADDRESS arguments must be as
+B<ExactAddresses> - If true then all C<$address> arguments must be as
 defined by C<addr-spec> in RFC2822. If not given, or false, then
 Net::SMTP will attempt to extract the address from the value passed.
 
 B<Debug> - Enable debugging information
 
-
 Example:
-
 
     $smtp = Net::SMTP->new('mailhost',
                            Hello => 'my.mail.domain',
@@ -788,7 +752,7 @@ Example:
 
 =back
 
-=head1 METHODS
+=head1 Object Methods
 
 Unless otherwise stated all methods return either a I<true> or I<false>
 value, with I<true> meaning that the operation was a success. When a method
@@ -801,60 +765,60 @@ documented here.
 
 =over 4
 
-=item banner ()
+=item C<banner()>
 
 Returns the banner message which the server replied with when the
 initial connection was made.
 
-=item domain ()
+=item C<domain()>
 
 Returns the domain that the remote SMTP server identified itself as during
 connection.
 
-=item hello ( DOMAIN )
+=item C<hello($domain)>
 
 Tell the remote server the mail domain which you are in using the EHLO
 command (or HELO if EHLO fails).  Since this method is invoked
 automatically when the Net::SMTP object is constructed the user should
 normally not have to call it manually.
 
-=item host ()
+=item C<host()>
 
 Returns the value used by the constructor, and passed to IO::Socket::INET,
 to connect to the host.
 
-=item etrn ( DOMAIN )
+=item C<etrn($domain)>
 
-Request a queue run for the DOMAIN given.
+Request a queue run for the C<$domain> given.
 
-=item starttls ( SSLARGS )
+=item C<starttls(%sslargs)>
 
 Upgrade existing plain connection to SSL.
 You can use SSL arguments as documented in L<IO::Socket::SSL>, but it will
 usually use the right arguments already.
 
-=item auth ( USERNAME, PASSWORD )
+=item C<auth($username, $password)>
 
-=item auth ( SASL )
+=item C<auth($sasl)>
 
 Attempt SASL authentication. Requires Authen::SASL module. The first form
 constructs a new Authen::SASL object using the given username and password;
 the second form uses the given Authen::SASL object.
 
-=item mail ( ADDRESS [, OPTIONS] )
+=item C<mail($address[, %options])>
 
-=item send ( ADDRESS )
+=item C<send($address)>
 
-=item send_or_mail ( ADDRESS )
+=item C<send_or_mail($address)>
 
-=item send_and_mail ( ADDRESS )
+=item C<send_and_mail($address)>
 
-Send the appropriate command to the server MAIL, SEND, SOML or SAML. C<ADDRESS>
+Send the appropriate command to the server MAIL, SEND, SOML or SAML. C<$address>
 is the address of the sender. This initiates the sending of a message. The
 method C<recipient> should be called for each address that the message is to
 be sent to.
 
-The C<mail> method can some additional ESMTP OPTIONS which is passed
+The C<mail> method can take some additional ESMTP C<%options> which is passed
 in hash like fashion, using key and value pairs.  Possible options are:
 
  Size        => <bytes>
@@ -872,13 +836,13 @@ Status Notification).
 The submitter address in C<AUTH> option is expected to be in a format as
 required by RFC 2554, in an RFC2821-quoted form and xtext-encoded, or <> .
 
-=item reset ()
+=item C<reset()>
 
 Reset the status of the server. This may be called after a message has been 
 initiated, but before any data has been sent, to cancel the sending of the
 message.
 
-=item recipient ( ADDRESS [, ADDRESS, [...]] [, OPTIONS ] )
+=item C<recipient($address[, $address[, ...]][, %options])>
 
 Notify the server that the current message should be sent to all of the
 addresses given. Each address is sent as a separate command to the server.
@@ -886,7 +850,7 @@ Should the sending of any address result in a failure then the process is
 aborted and a I<false> value is returned. It is up to the user to call
 C<reset> if they so desire.
 
-The C<recipient> method can also pass additional case-sensitive OPTIONS as an
+The C<recipient> method can also pass additional case-sensitive C<%options> as an
 anonymous hash using key and value pairs.  Possible options are:
 
   Notify  => ['NEVER'] or ['SUCCESS','FAILURE','DELAY']  (see below)
@@ -919,8 +883,9 @@ that a DSN not be returned to the sender under any conditions."
   $smtp->recipient(@recipients, { Notify => ['NEVER'], SkipBad => 1 });  # Good
 
 You may use any combination of these three values 'SUCCESS','FAILURE','DELAY' in
-the anonymous array reference as defined by RFC3461 (see http://www.ietf.org/rfc/rfc3461.txt
-for more information.  Note: quotations in this topic from same.).
+the anonymous array reference as defined by RFC3461 (see
+L<https://www.ietf.org/rfc/rfc3461.txt> for more information.  Note: quotations
+in this topic from same.).
 
 A Notify parameter of 'SUCCESS' or 'FAILURE' "requests that a DSN be issued on
 successful delivery or delivery failure, respectively."
@@ -943,67 +908,67 @@ sent to.  The machine that generates a DSN will use this address to inform
 the sender, because he can't know if recipients get rewritten by mail servers.
 It is expected to be in a format as required by RFC3461, xtext-encoded.
 
-=item to ( ADDRESS [, ADDRESS [...]] )
+=item C<to($address[, $address[, ...]])>
 
-=item cc ( ADDRESS [, ADDRESS [...]] )
+=item C<cc($address[, $address[, ...]])>
 
-=item bcc ( ADDRESS [, ADDRESS [...]] )
+=item C<bcc($address[, $address[, ...]])>
 
 Synonyms for C<recipient>.
 
-=item data ( [ DATA ] )
+=item C<data([$data])>
 
 Initiate the sending of the data from the current message. 
 
-C<DATA> may be a reference to a list or a list and must be encoded by the
+C<$data> may be a reference to a list or a list and must be encoded by the
 caller to octets of whatever encoding is required, e.g. by using the Encode
 module's C<encode()> function.
 
-If specified the contents of C<DATA> and a termination string C<".\r\n"> is
+If specified the contents of C<$data> and a termination string C<".\r\n"> is
 sent to the server. The result will be true if the data was accepted.
 
-If C<DATA> is not specified then the result will indicate that the server
+If C<$data> is not specified then the result will indicate that the server
 wishes the data to be sent. The data must then be sent using the C<datasend>
 and C<dataend> methods described in L<Net::Cmd>.
 
-=item bdat ( DATA )
+=item C<bdat($data)>
 
-=item bdatlast ( DATA )
+=item C<bdatlast($data)>
 
-Use the alternate DATA command "BDAT" of the data chunking service extension
+Use the alternate C<$data> command "BDAT" of the data chunking service extension
 defined in RFC1830 for efficiently sending large MIME messages.
 
-=item expand ( ADDRESS )
+=item C<expand($address)>
 
 Request the server to expand the given address Returns an array
 which contains the text read from the server.
 
-=item verify ( ADDRESS )
+=item C<verify($address)>
 
-Verify that C<ADDRESS> is a legitimate mailing address.
+Verify that C<$address> is a legitimate mailing address.
 
 Most sites usually disable this feature in their SMTP service configuration.
 Use "Debug => 1" option under new() to see if disabled.
 
-=item help ( [ $subject ] )
+=item C<help([$subject])>
 
 Request help text from the server. Returns the text or undef upon failure
 
-=item quit ()
+=item C<quit()>
 
 Send the QUIT command to the remote SMTP server and close the socket connection.
 
-=item can_inet6 ()
+=item C<can_inet6()>
 
 Returns whether we can use IPv6.
 
-=item can_ssl ()
+=item C<can_ssl()>
 
 Returns whether we can use SSL.
 
 =back
 
-=head1 ADDRESSES
+=head2 Addresses
 
 Net::SMTP attempts to DWIM with addresses that are passed. For
 example an application might extract The From: line from an email
@@ -1019,28 +984,82 @@ accept the address surrounded by angle brackets.
  "funny user"@domain    RIGHT, recommended
  <"funny user"@domain>  OK
 
+=head1 EXAMPLES
+
+This example prints the mail domain name of the SMTP server known as mailhost:
+
+    #!/usr/local/bin/perl -w
+
+    use Net::SMTP;
+
+    $smtp = Net::SMTP->new('mailhost');
+    print $smtp->domain,"\n";
+    $smtp->quit;
+
+This example sends a small message to the postmaster at the SMTP server
+known as mailhost:
+
+    #!/usr/local/bin/perl -w
+
+    use Net::SMTP;
+
+    my $smtp = Net::SMTP->new('mailhost');
+
+    $smtp->mail($ENV{USER});
+    if ($smtp->to('postmaster')) {
+     $smtp->data();
+     $smtp->datasend("To: postmaster\n");
+     $smtp->datasend("\n");
+     $smtp->datasend("A simple test message\n");
+     $smtp->dataend();
+    } else {
+     print "Error: ", $smtp->message();
+    }
+
+    $smtp->quit;
+
+=head1 EXPORTS
+
+I<None>.
+
+=head1 KNOWN BUGS
+
+See L<https://rt.cpan.org/Dist/Display.html?Status=Active&Queue=libnet>.
+
 =head1 SEE ALSO
 
 L<Net::Cmd>,
-L<IO::Socket::SSL>
+L<IO::Socket::SSL>.
 
 =head1 AUTHOR
 
-Graham Barr E<lt>F<gbarr@pobox.com>E<gt>.
+Graham Barr E<lt>L<gbarr@pobox.com|mailto:gbarr@pobox.com>E<gt>.
 
-Steve Hay E<lt>F<shay@cpan.org>E<gt> is now maintaining libnet as of version
-1.22_02.
+Steve Hay E<lt>L<shay@cpan.org|mailto:shay@cpan.org>E<gt> is now maintaining
+libnet as of version 1.22_02.
 
 =head1 COPYRIGHT
 
 Copyright (C) 1995-2004 Graham Barr.  All rights reserved.
 
-Copyright (C) 2013-2016 Steve Hay.  All rights reserved.
+Copyright (C) 2013-2016, 2020 Steve Hay.  All rights reserved.
 
 =head1 LICENCE
 
 This module is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself, i.e. under the terms of either the GNU General Public
 License or the Artistic License, as specified in the F<LICENCE> file.
+
+=head1 VERSION
+
+Version 3.13
+
+=head1 DATE
+
+23 Dec 2020
+
+=head1 HISTORY
+
+See the F<Changes> file.
 
 =cut

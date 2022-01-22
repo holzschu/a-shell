@@ -74,6 +74,8 @@ sub start_head1       { shift->_generic_start('=head1', @_); }
 sub start_head2       { shift->_generic_start('=head2', @_); }
 sub start_head3       { shift->_generic_start('=head3', @_); }
 sub start_head4       { shift->_generic_start('=head4', @_); }
+sub start_head5       { shift->_generic_start('=head5', @_); }
+sub start_head6       { shift->_generic_start('=head6', @_); }
 sub start_encoding    { shift->_generic_start('=encoding', @_); }
 # sub start_Para
 # sub start_Verbatim
@@ -175,6 +177,8 @@ sub _end_generic  {
 *end_head2    = *_end_generic;
 *end_head3    = *_end_generic;
 *end_head4    = *_end_generic;
+*end_head5    = *_end_generic;
+*end_head6    = *_end_generic;
 *end_encoding = *_end_generic;
 *end_Para     = *_end_generic;
 *end_Verbatim = *_end_generic;

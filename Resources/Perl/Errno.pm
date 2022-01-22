@@ -10,10 +10,10 @@ use strict;
 
 use Config;
 "$Config{'archname'}-$Config{'osvers'}" eq
-"darwin-2level-20.4.0" or
-	die "Errno architecture (darwin-2level-20.4.0) does not match executable architecture ($Config{'archname'}-$Config{'osvers'})";
+"darwin-2level-20.6.0" or
+	die "Errno architecture (darwin-2level-20.6.0) does not match executable architecture ($Config{'archname'}-$Config{'osvers'})";
 
-our $VERSION = "1.30";
+our $VERSION = "1.33";
 $VERSION = eval $VERSION;
 our @ISA = 'Exporter';
 

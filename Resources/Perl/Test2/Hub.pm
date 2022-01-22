@@ -2,7 +2,7 @@ package Test2::Hub;
 use strict;
 use warnings;
 
-our $VERSION = '1.302175';
+our $VERSION = '1.302183';
 
 
 use Carp qw/carp croak confess/;
@@ -351,7 +351,7 @@ sub process {
     $self->{+FAILED}++ if $fail && $f->{assert};
     $self->{+_PASSING} = 0 if $fail;
 
-    my $code = $f->{control}->{terminate};
+    my $code = $f->{control} ? $f->{control}->{terminate} : undef;
     my $count = $self->{+COUNT};
 
     if (my $plan = $f->{plan}) {
@@ -368,7 +368,7 @@ sub process {
         }
     }
 
-    $e->callback($self) if $f->{control}->{has_callback};
+    $e->callback($self) if $f->{control} && $f->{control}->{has_callback};
 
     $self->{+_FORMATTER}->write($e, $count, $f) if $self->{+_FORMATTER};
 
@@ -376,7 +376,7 @@ sub process {
         $_->{code}->($self, $e, $count, $f) for @{$self->{+_LISTENERS}};
     }
 
-    if ($f->{control}->{halt}) {
+    if ($f->{control} && $f->{control}->{halt}) {
         $code ||= 255;
         $self->set_bailed_out($e);
     }
@@ -899,7 +899,7 @@ F<http://github.com/Test-More/test-more/>.
 
 =head1 COPYRIGHT
 
-Copyright 2019 Chad Granum E<lt>exodist@cpan.orgE<gt>.
+Copyright 2020 Chad Granum E<lt>exodist@cpan.orgE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

@@ -3,7 +3,7 @@ require 5;
 package Pod::Simple::PullParserToken;
  # Base class for tokens gotten from Pod::Simple::PullParser's $parser->get_token
 @ISA = ();
-$VERSION = '3.40';
+$VERSION = '3.42';
 use strict;
 
 sub new {  # Class->new('type', stuff...);  ## Overridden in derived classes anyway

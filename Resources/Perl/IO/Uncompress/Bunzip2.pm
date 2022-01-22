@@ -4,15 +4,15 @@ use strict ;
 use warnings;
 use bytes;
 
-use IO::Compress::Base::Common 2.093 qw(:Status );
+use IO::Compress::Base::Common 2.101 qw(:Status );
 
-use IO::Uncompress::Base 2.093 ;
-use IO::Uncompress::Adapter::Bunzip2 2.093 ;
+use IO::Uncompress::Base 2.101 ;
+use IO::Uncompress::Adapter::Bunzip2 2.101 ;
 
 require Exporter ;
 our ($VERSION, @ISA, @EXPORT_OK, %EXPORT_TAGS, $Bunzip2Error);
 
-$VERSION = '2.093';
+$VERSION = '2.102';
 $Bunzip2Error = '';
 
 @ISA    = qw(IO::Uncompress::Base Exporter);
@@ -72,7 +72,7 @@ sub mkUncomp
 
     return $self->saveErrorString(undef, $errstr, $errno)
         if ! defined $obj;
-    
+
     *$self->{Uncomp} = $obj;
 
     return 1;
@@ -88,15 +88,15 @@ sub ckMagic
     $self->smartReadExact(\$magic, 4);
 
     *$self->{HeaderPending} = $magic ;
-    
-    return $self->HeaderError("Header size is " . 
-                                        4 . " bytes") 
+
+    return $self->HeaderError("Header size is " .
+                                        4 . " bytes")
         if length $magic != 4;
 
     return $self->HeaderError("Bad Magic.")
         if ! isBzip2Magic($magic) ;
-                      
-        
+
+
     *$self->{Type} = 'bzip2';
     return $magic;
 }
@@ -117,7 +117,7 @@ sub readHeader
         'TrailerLength'     => 0,
         'Header'            => '$magic'
         };
-    
+
 }
 
 sub chkTrailer
@@ -149,7 +149,7 @@ IO::Uncompress::Bunzip2 - Read bzip2 files/buffers
     my $status = bunzip2 $input => $output [,OPTS]
         or die "bunzip2 failed: $Bunzip2Error\n";
 
-    my $z = new IO::Uncompress::Bunzip2 $input [OPTS]
+    my $z = IO::Uncompress::Bunzip2->new( $input [OPTS] )
         or die "bunzip2 failed: $Bunzip2Error\n";
 
     $status = $z->read($buffer)
@@ -440,7 +440,7 @@ uncompressed data to a buffer, C<$buffer>.
     use IO::Uncompress::Bunzip2 qw(bunzip2 $Bunzip2Error) ;
     use IO::File ;
 
-    my $input = new IO::File "<file1.txt.bz2"
+    my $input = IO::File->new( "<file1.txt.bz2" )
         or die "Cannot open 'file1.txt.bz2': $!\n" ;
     my $buffer ;
     bunzip2 $input => \$buffer
@@ -475,7 +475,7 @@ and if you want to compress each file one at a time, this will do the trick
 
 The format of the constructor for IO::Uncompress::Bunzip2 is shown below
 
-    my $z = new IO::Uncompress::Bunzip2 $input [OPTS]
+    my $z = IO::Uncompress::Bunzip2->new( $input [OPTS] )
         or die "IO::Uncompress::Bunzip2 failed: $Bunzip2Error\n";
 
 Returns an C<IO::Uncompress::Bunzip2> object on success and undef on failure.
@@ -858,7 +858,7 @@ C<InputLength> option in the constructor.
 
 =head1 Importing
 
-No symbolic constants are required by this IO::Uncompress::Bunzip2 at present.
+No symbolic constants are required by IO::Uncompress::Bunzip2 at present.
 
 =over 5
 
@@ -879,7 +879,7 @@ See L<IO::Compress::FAQ|IO::Compress::FAQ/"Compressed files and Net::FTP">
 
 =head1 SUPPORT
 
-General feedback/questions/bug reports should be sent to 
+General feedback/questions/bug reports should be sent to
 L<https://github.com/pmqs/IO-Compress/issues> (preferred) or
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=IO-Compress>.
 
@@ -907,8 +907,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2019 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2021 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-

@@ -79,7 +79,7 @@ write a C<.tar.Z> file
     use Archive::Tar;
     use IO::File;
 
-    my $fh = new IO::File "| compress -c >$filename";
+    my $fh = IO::File->new( "| compress -c >$filename" );
     my $tar = Archive::Tar->new();
     ...
     $tar->write($fh);
@@ -101,7 +101,7 @@ recompression.
     my $gzipFile = "somefile.gz";
     my $bzipFile = "somefile.bz2";
 
-    my $gunzip = new IO::Uncompress::Gunzip $gzipFile
+    my $gunzip = IO::Uncompress::Gunzip->new( $gzipFile )
         or die "Cannot gunzip $gzipFile: $GunzipError\n" ;
 
     bzip2 $gunzip => $bzipFile
@@ -167,8 +167,8 @@ by including the C<Zip64> option.
 If you want to create a zip64 zip file with the OO interface you must
 specify the C<Zip64> option.
 
-    my $zip = new IO::Compress::Zip "whatever", Zip64 => 1;
-	
+    my $zip = IO::Compress::Zip->new( "whatever", Zip64 => 1 );
+
 When uncompressing with C<IO-Uncompress-Unzip>, it will automatically
 detect if the zip file is zip64.
 
@@ -300,14 +300,14 @@ L<http://perl.apache.org/docs/tutorials/tips/mod_perl_tricks/mod_perl_tricks.htm
 
   package Apache::GZip;
   #File: Apache::GZip.pm
-  
+
   use strict vars;
   use Apache::Constants ':common';
   use Compress::Zlib;
   use IO::File;
   use constant GZIP_MAGIC => 0x1f8b;
   use constant OS_MAGIC => 0x03;
-  
+
   sub handler {
       my $r = shift;
       my ($fh,$gz);
@@ -316,28 +316,28 @@ L<http://perl.apache.org/docs/tutorials/tips/mod_perl_tricks/mod_perl_tricks.htm
       $r->header_out('Content-Encoding'=>'gzip');
       $r->send_http_header;
       return OK if $r->header_only;
-  
+
       tie *STDOUT,'Apache::GZip',$r;
       print($_) while <$fh>;
       untie *STDOUT;
       return OK;
   }
-  
+
   sub TIEHANDLE {
       my($class,$r) = @_;
       # initialize a deflation stream
       my $d = deflateInit(-WindowBits=>-MAX_WBITS()) || return undef;
-  
+
       # gzip header -- don't ask how I found out
       $r->print(pack("nccVcc",GZIP_MAGIC,Z_DEFLATED,0,time(),0,OS_MAGIC));
-  
+
       return bless { r   => $r,
                      crc =>  crc32(undef),
                      d   => $d,
                      l   =>  0
                    },$class;
   }
-  
+
   sub PRINT {
       my $self = shift;
       foreach (@_) {
@@ -349,18 +349,18 @@ L<http://perl.apache.org/docs/tutorials/tips/mod_perl_tricks/mod_perl_tricks.htm
         $self->{crc} = crc32($_,$self->{crc});
       }
   }
-  
+
   sub DESTROY {
      my $self = shift;
-     
+
      # flush the output buffers
      my $data = $self->{d}->flush;
      $self->{r}->print($data);
-     
+
      # print the CRC and the total length (uncompressed)
      $self->{r}->print(pack("LL",@{$self}{qw/crc l/}));
   }
-   
+
   1;
 
 Here's the Apache configuration entry you'll need to make use of it.  Once
@@ -401,12 +401,12 @@ C<IO::Compress::Gzip> is used instead of C<Compress::Zlib> the whole tied
 filehandle code can be removed. Here is the rewritten code.
 
   package Apache::GZip;
-  
+
   use strict vars;
   use Apache::Constants ':common';
   use IO::Compress::Gzip;
   use IO::File;
-  
+
   sub handler {
       my $r = shift;
       my ($fh,$gz);
@@ -416,22 +416,22 @@ filehandle code can be removed. Here is the rewritten code.
       $r->send_http_header;
       return OK if $r->header_only;
 
-      my $gz = new IO::Compress::Gzip '-', Minimal => 1
+      my $gz = IO::Compress::Gzip->new( '-', Minimal => 1 )
           or return DECLINED ;
 
       print $gz $_ while <$fh>;
-  
+
       return OK;
   }
-  
+
 or even more succinctly, like this, using a one-shot gzip
 
   package Apache::GZip;
-  
+
   use strict vars;
   use Apache::Constants ':common';
   use IO::Compress::Gzip qw(gzip);
-  
+
   sub handler {
       my $r = shift;
       $r->header_out('Content-Encoding'=>'gzip');
@@ -443,7 +443,7 @@ or even more succinctly, like this, using a one-shot gzip
 
       return OK;
   }
-   
+
   1;
 
 The use of one-shot C<gzip> above just reads from C<< $r->filename >> and
@@ -468,7 +468,7 @@ read from the FTP Server.
     use Net::FTP;
     use IO::Uncompress::Gunzip qw(:all);
 
-    my $ftp = new Net::FTP ...
+    my $ftp = Net::FTP->new( ... )
 
     my $retr_fh = $ftp->retr($compressed_filename);
     gunzip $retr_fh => $outFilename, AutoClose => 1
@@ -518,7 +518,7 @@ the other C<IO::Uncompress::*> modules.
 
     my $file = $ARGV[0] ;
 
-    my $fh = new IO::File "<$file"
+    my $fh = IO::File->new( "<$file" )
                 or die "Cannot open '$file': $!\n";
 
     while (1)
@@ -566,9 +566,9 @@ the other C<IO::Uncompress::*> modules.
 
         # Done reading the Local Header
 
-        my $inf = new IO::Uncompress::RawInflate $fh,
+        my $inf = IO::Uncompress::RawInflate->new( $fh,
                             Transparent => 1,
-                            InputLength => $compressedLength
+                            InputLength => $compressedLength )
           or die "Cannot uncompress $file [$filename]: $RawInflateError\n"  ;
 
         my $line_count = 0;
@@ -585,14 +585,14 @@ The majority of the code above is concerned with reading the zip local
 header data. The code that I want to focus on is at the bottom.
 
     while (1) {
-    
+
         # read local zip header data
         # get $filename
         # get $compressedLength
 
-        my $inf = new IO::Uncompress::RawInflate $fh,
+        my $inf = IO::Uncompress::RawInflate->new( $fh,
                             Transparent => 1,
-                            InputLength => $compressedLength
+                            InputLength => $compressedLength )
           or die "Cannot uncompress $file [$filename]: $RawInflateError\n"  ;
 
         my $line_count = 0;
@@ -618,7 +618,7 @@ byte directly after the compressed data stream.
 Now consider what the code looks like without C<InputLength>
 
     while (1) {
-    
+
         # read local zip header data
         # get $filename
         # get $compressedLength
@@ -626,8 +626,8 @@ Now consider what the code looks like without C<InputLength>
         # read all the compressed data into $data
         read($fh, $data, $compressedLength);
 
-        my $inf = new IO::Uncompress::RawInflate \$data,
-                            Transparent => 1,
+        my $inf = IO::Uncompress::RawInflate->new( \$data,
+                            Transparent => 1 )
           or die "Cannot uncompress $file [$filename]: $RawInflateError\n"  ;
 
         my $line_count = 0;
@@ -658,7 +658,7 @@ file.
 
 =head1 SUPPORT
 
-General feedback/questions/bug reports should be sent to 
+General feedback/questions/bug reports should be sent to
 L<https://github.com/pmqs//issues> (preferred) or
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=>.
 
@@ -682,7 +682,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2019 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2021 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

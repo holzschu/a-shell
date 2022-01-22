@@ -5,7 +5,7 @@
 
 package warnings;
 
-our $VERSION = "1.47";
+our $VERSION = "1.51";
 
 # Verify that we're called correctly so that warnings will work.
 # Can't use Carp, since Carp uses us!
@@ -109,6 +109,9 @@ our %Offsets = (
 
     # Warnings Categories added in Perl 5.031
     'experimental::isa'			=> 146,
+
+    # Warnings Categories added in Perl 5.033
+    'experimental::try'			=> 148,
 );
 
 our %Bits = (
@@ -122,7 +125,7 @@ our %Bits = (
     'digit'				=> "\x00\x00\x00\x00\x00\x00\x00\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", # [31]
     'exec'				=> "\x00\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", # [7]
     'exiting'				=> "\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", # [3]
-    'experimental'			=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x40\x55\x51\x15\x50\x51\x05", # [51..56,58..62,66..68,70..73]
+    'experimental'			=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x40\x55\x51\x15\x50\x51\x15", # [51..56,58..62,66..68,70..74]
     'experimental::alpha_assertions'	=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x40\x00\x00", # [67]
     'experimental::bitwise'		=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10\x00\x00\x00\x00", # [58]
     'experimental::const_attr'		=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x40\x00\x00\x00\x00", # [59]
@@ -137,6 +140,7 @@ our %Bits = (
     'experimental::script_run'		=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00", # [68]
     'experimental::signatures'		=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00", # [56]
     'experimental::smartmatch'		=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10\x00\x00\x00\x00\x00", # [54]
+    'experimental::try'			=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10", # [74]
     'experimental::uniprop_wildcards'	=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x40\x00", # [71]
     'experimental::vlb'			=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01", # [72]
     'experimental::win32_perlio'	=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10\x00\x00\x00", # [62]
@@ -199,7 +203,7 @@ our %DeadBits = (
     'digit'				=> "\x00\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", # [31]
     'exec'				=> "\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", # [7]
     'exiting'				=> "\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", # [3]
-    'experimental'			=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\xaa\xa2\x2a\xa0\xa2\x0a", # [51..56,58..62,66..68,70..73]
+    'experimental'			=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\xaa\xa2\x2a\xa0\xa2\x2a", # [51..56,58..62,66..68,70..74]
     'experimental::alpha_assertions'	=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\x00\x00", # [67]
     'experimental::bitwise'		=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x20\x00\x00\x00\x00", # [58]
     'experimental::const_attr'		=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00", # [59]
@@ -214,6 +218,7 @@ our %DeadBits = (
     'experimental::script_run'		=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00", # [68]
     'experimental::signatures'		=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00", # [56]
     'experimental::smartmatch'		=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x20\x00\x00\x00\x00\x00", # [54]
+    'experimental::try'			=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x20", # [74]
     'experimental::uniprop_wildcards'	=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\x00", # [71]
     'experimental::vlb'			=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02", # [72]
     'experimental::win32_perlio'	=> "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x20\x00\x00\x00", # [62]
@@ -267,8 +272,8 @@ our %DeadBits = (
 
 # These are used by various things, including our own tests
 our $NONE				=  "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-our $DEFAULT				=  "\x10\x01\x00\x00\x00\x50\x04\x00\x00\x00\x00\x00\x00\x55\x51\x55\x50\x51\x05", # [2,4,22,23,25,52..56,58..63,66..68,70..73]
-our $LAST_BIT				=  148 ;
+our $DEFAULT				=  "\x10\x01\x00\x00\x00\x50\x04\x00\x00\x00\x00\x00\x00\x55\x51\x55\x50\x51\x15"; # [2,4,22,23,25,52..56,58..63,66..68,70..74]
+our $LAST_BIT				=  150 ;
 our $BYTES				=  19 ;
 
 sub Croaker
@@ -284,16 +289,16 @@ sub _expand_bits {
     my $want_len = ($LAST_BIT + 7) >> 3;
     my $len = length($bits);
     if ($len != $want_len) {
-	if ($bits eq "") {
-	    $bits = "\x00" x $want_len;
-	} elsif ($len > $want_len) {
-	    substr $bits, $want_len, $len-$want_len, "";
-	} else {
-	    my $a = vec($bits, $Offsets{all} >> 1, 2);
-	    $a |= $a << 2;
-	    $a |= $a << 4;
-	    $bits .= chr($a) x ($want_len - $len);
-	}
+        if ($bits eq "") {
+            $bits = "\x00" x $want_len;
+        } elsif ($len > $want_len) {
+            substr $bits, $want_len, $len-$want_len, "";
+        } else {
+            my $x = vec($bits, $Offsets{all} >> 1, 2);
+            $x |= $x << 2;
+            $x |= $x << 4;
+            $bits .= chr($x) x ($want_len - $len);
+        }
     }
     return $bits;
 }
@@ -306,21 +311,21 @@ sub _bits {
 
     $mask = _expand_bits($mask);
     foreach my $word ( @_ ) {
-	if ($word eq 'FATAL') {
-	    $fatal = 1;
-	    $no_fatal = 0;
-	}
-	elsif ($word eq 'NONFATAL') {
-	    $fatal = 0;
-	    $no_fatal = 1;
-	}
-	elsif ($catmask = $Bits{$word}) {
-	    $mask |= $catmask ;
-	    $mask |= $DeadBits{$word} if $fatal ;
-	    $mask = ~(~$mask | $DeadBits{$word}) if $no_fatal ;
-	}
-	else
-	  { Croaker("Unknown warnings category '$word'")}
+        if ($word eq 'FATAL') {
+            $fatal = 1;
+            $no_fatal = 0;
+        }
+        elsif ($word eq 'NONFATAL') {
+            $fatal = 0;
+            $no_fatal = 1;
+        }
+        elsif ($catmask = $Bits{$word}) {
+            $mask |= $catmask ;
+            $mask |= $DeadBits{$word} if $fatal ;
+            $mask = ~(~$mask | $DeadBits{$word}) if $no_fatal ;
+        }
+        else
+          { Croaker("Unknown warnings category '$word'")}
     }
 
     return $mask ;
@@ -335,16 +340,24 @@ sub bits
 
 sub import
 {
-    shift;
-
-    my $mask = ${^WARNING_BITS} // ($^W ? $Bits{all} : $DEFAULT) ;
+    my $invocant = shift;
 
     # append 'all' when implied (empty import list or after a lone
     # "FATAL" or "NONFATAL")
     push @_, 'all'
-	if !@_ || (@_==1 && ($_[0] eq 'FATAL' || $_[0] eq 'NONFATAL'));
+        if !@_ || (@_==1 && ($_[0] eq 'FATAL' || $_[0] eq 'NONFATAL'));
 
-    ${^WARNING_BITS} = _bits($mask, @_);
+    my @fatal = ();
+    foreach my $warning (@_) {
+        if($warning =~ /^(NON)?FATAL$/) {
+            @fatal = ($warning);
+        } elsif(substr($warning, 0, 1) ne '-') {
+            my $mask = ${^WARNING_BITS} // ($^W ? $Bits{all} : $DEFAULT) ;
+            ${^WARNING_BITS} = _bits($mask, @fatal, $warning);
+        } else {
+            $invocant->unimport(substr($warning, 1));
+        }
+    }
 }
 
 sub unimport
@@ -359,14 +372,14 @@ sub unimport
 
     $mask = _expand_bits($mask);
     foreach my $word ( @_ ) {
-	if ($word eq 'FATAL') {
-	    next;
-	}
-	elsif ($catmask = $Bits{$word}) {
-	    $mask = ~(~$mask | $catmask | $DeadBits{$word});
-	}
-	else
-	  { Croaker("Unknown warnings category '$word'")}
+        if ($word eq 'FATAL') {
+            next;
+        }
+        elsif ($catmask = $Bits{$word}) {
+            $mask = ~(~$mask | $catmask | $DeadBits{$word});
+        }
+        else
+          { Croaker("Unknown warnings category '$word'")}
     }
 
     ${^WARNING_BITS} = $mask ;
@@ -389,71 +402,71 @@ sub __chk
     my $has_level   = $wanted & LEVEL  ;
 
     if ($has_level) {
-	if (@_ != ($has_message ? 3 : 2)) {
-	    my $sub = (caller 1)[3];
-	    my $syntax = $has_message
-		? "category, level, 'message'"
-		: 'category, level';
-	    Croaker("Usage: $sub($syntax)");
+        if (@_ != ($has_message ? 3 : 2)) {
+            my $sub = (caller 1)[3];
+            my $syntax = $has_message
+                ? "category, level, 'message'"
+                : 'category, level';
+            Croaker("Usage: $sub($syntax)");
         }
     }
     elsif (not @_ == 1 || @_ == ($has_message ? 2 : 0)) {
-	my $sub = (caller 1)[3];
-	my $syntax = $has_message ? "[category,] 'message'" : '[category]';
-	Croaker("Usage: $sub($syntax)");
+        my $sub = (caller 1)[3];
+        my $syntax = $has_message ? "[category,] 'message'" : '[category]';
+        Croaker("Usage: $sub($syntax)");
     }
 
     my $message = pop if $has_message;
 
     if (@_) {
-	# check the category supplied.
-	$category = shift ;
-	if (my $type = ref $category) {
-	    Croaker("not an object")
-		if exists $builtin_type{$type};
-	    $category = $type;
-	    $isobj = 1 ;
-	}
-	$offset = $Offsets{$category};
-	Croaker("Unknown warnings category '$category'")
-	    unless defined $offset;
+        # check the category supplied.
+        $category = shift ;
+        if (my $type = ref $category) {
+            Croaker("not an object")
+                if exists $builtin_type{$type};
+            $category = $type;
+            $isobj = 1 ;
+        }
+        $offset = $Offsets{$category};
+        Croaker("Unknown warnings category '$category'")
+            unless defined $offset;
     }
     else {
-	$category = (caller(1))[0] ;
-	$offset = $Offsets{$category};
-	Croaker("package '$category' not registered for warnings")
-	    unless defined $offset ;
+        $category = (caller(1))[0] ;
+        $offset = $Offsets{$category};
+        Croaker("package '$category' not registered for warnings")
+            unless defined $offset ;
     }
 
     my $i;
 
     if ($isobj) {
-	my $pkg;
-	$i = 2;
-	while (do { { package DB; $pkg = (caller($i++))[0] } } ) {
-	    last unless @DB::args && $DB::args[0] =~ /^$category=/ ;
-	}
-	$i -= 2 ;
+        my $pkg;
+        $i = 2;
+        while (do { { package DB; $pkg = (caller($i++))[0] } } ) {
+            last unless @DB::args && $DB::args[0] =~ /^$category=/ ;
+        }
+        $i -= 2 ;
     }
     elsif ($has_level) {
-	$i = 2 + shift;
+        $i = 2 + shift;
     }
     else {
-	$i = _error_loc(); # see where Carp will allocate the error
+        $i = _error_loc(); # see where Carp will allocate the error
     }
 
     # Default to 0 if caller returns nothing.  Default to $DEFAULT if it
     # explicitly returns undef.
     my(@callers_bitmask) = (caller($i))[9] ;
     my $callers_bitmask =
-	 @callers_bitmask ? $callers_bitmask[0] // $DEFAULT : 0 ;
+         @callers_bitmask ? $callers_bitmask[0] // $DEFAULT : 0 ;
     length($callers_bitmask) > ($offset >> 3) or $offset = $Offsets{all};
 
     my @results;
     foreach my $type (FATAL, NORMAL) {
-	next unless $wanted & $type;
+        next unless $wanted & $type;
 
-	push @results, vec($callers_bitmask, $offset + $type - 1, 1);
+        push @results, vec($callers_bitmask, $offset + $type - 1, 1);
     }
 
     # &enabled and &fatal_enabled
@@ -461,19 +474,19 @@ sub __chk
 
     # &warnif, and the category is neither enabled as warning nor as fatal
     return if ($wanted & (NORMAL | FATAL | MESSAGE))
-		      == (NORMAL | FATAL | MESSAGE)
-	&& !($results[0] || $results[1]);
+                      == (NORMAL | FATAL | MESSAGE)
+        && !($results[0] || $results[1]);
 
     # If we have an explicit level, bypass Carp.
     if ($has_level and @callers_bitmask) {
-	# logic copied from util.c:mess_sv
-	my $stuff = " at " . join " line ", (caller $i)[1,2];
-	$stuff .= sprintf ", <%s> %s %d",
-			   *${^LAST_FH}{NAME},
-			   ($/ eq "\n" ? "line" : "chunk"), $.
-	    if $. && ${^LAST_FH};
-	die "$message$stuff.\n" if $results[0];
-	return warn "$message$stuff.\n";
+        # logic copied from util.c:mess_sv
+        my $stuff = " at " . join " line ", (caller $i)[1,2];
+        $stuff .= sprintf ", <%s> %s %d",
+                           *${^LAST_FH}{NAME},
+                           ($/ eq "\n" ? "line" : "chunk"), $.
+            if $. && ${^LAST_FH};
+        die "$message$stuff.\n" if $results[0];
+        return warn "$message$stuff.\n";
     }
 
     require Carp;
@@ -497,15 +510,15 @@ sub register_categories
     my @names = @_;
 
     for my $name (@names) {
-	if (! defined $Bits{$name}) {
-	    $Offsets{$name}  = $LAST_BIT;
-	    $Bits{$name}     = _mkMask($LAST_BIT++);
-	    $DeadBits{$name} = _mkMask($LAST_BIT++);
-	    if (length($Bits{$name}) > length($Bits{all})) {
-		$Bits{all} .= "\x55";
-		$DeadBits{all} .= "\xaa";
-	    }
-	}
+        if (! defined $Bits{$name}) {
+            $Offsets{$name}  = $LAST_BIT;
+            $Bits{$name}     = _mkMask($LAST_BIT++);
+            $DeadBits{$name} = _mkMask($LAST_BIT++);
+            if (length($Bits{$name}) > length($Bits{all})) {
+                $Bits{all} .= "\x55";
+                $DeadBits{all} .= "\xaa";
+            }
+        }
     }
 }
 
@@ -571,7 +584,10 @@ warnings - Perl pragma to control optional warnings
     no warnings;
 
     use warnings "all";
-    no warnings "all";
+    no warnings "uninitialized";
+
+    # or equivalent to those last two ...
+    use warnings qw(all -uninitialized);
 
     use warnings::register;
     if (warnings::enabled()) {
@@ -620,17 +636,17 @@ Similarly all warnings are disabled in a block by either of these:
 For example, consider the code below:
 
     use warnings;
-    my @a;
+    my @x;
     {
         no warnings;
-	my $b = @a[0];
+        my $y = @x[0];
     }
-    my $c = @a[0];
+    my $z = @x[0];
 
 The code in the enclosing block has warnings enabled, but the inner
 block has them disabled.  In this case that means the assignment to the
-scalar C<$c> will trip the C<"Scalar value @a[0] better written as $a[0]">
-warning, but the assignment to the scalar C<$b> will not.
+scalar C<$z> will trip the C<"Scalar value @x[0] better written as $x[0]">
+warning, but the assignment to the scalar C<$y> will not.
 
 =head2 Default Warnings and Optional Warnings
 
@@ -642,21 +658,56 @@ would get a warning whether you wanted it or not.
 For example, the code below would always produce an C<"isn't numeric">
 warning about the "2:".
 
-    my $a = "2:" + 3;
+    my $x = "2:" + 3;
 
 With the introduction of lexical warnings, mandatory warnings now become
 I<default> warnings.  The difference is that although the previously
 mandatory warnings are still enabled by default, they can then be
 subsequently enabled or disabled with the lexical warning pragma.  For
 example, in the code below, an C<"isn't numeric"> warning will only
-be reported for the C<$a> variable.
+be reported for the C<$x> variable.
 
-    my $a = "2:" + 3;
+    my $x = "2:" + 3;
     no warnings;
-    my $b = "2:" + 3;
+    my $y = "2:" + 3;
 
 Note that neither the B<-w> flag or the C<$^W> can be used to
 disable/enable default warnings.  They are still mandatory in this case.
+
+=head2 "Negative warnings"
+
+As a convenience, you can (as of Perl 5.34) pass arguments to the
+C<import()> method both positively and negatively. Negative warnings
+are those with a C<-> sign prepended to their names; positive warnings
+are anything else. This lets you turn on some warnings and turn off
+others in one command. So, assuming that you've already turned on a
+bunch of warnings but want to tweak them a bit in some block, you can
+do this:
+
+    {
+        use warnings qw(uninitialized -redefine);
+        ...
+    }
+
+which is equivalent to:
+
+    {
+        use warnings qw(uninitialized);
+        no warnings qw(redefine);
+        ...
+    }
+
+The argument list is processed in the order you specify. So, for example, if you
+don't want to be warned about use of experimental features, except for C<somefeature>
+that you really dislike, you can say this:
+
+    use warnings qw(all -experimental experimental::somefeature);
+
+which is equivalent to:
+
+    use warnings 'all';
+    no warnings  'experimental';
+    use warnings 'experimental::somefeature';
 
 =head2 What's wrong with B<-w> and C<$^W>
 
@@ -673,20 +724,20 @@ a block of code.  You might expect this to be enough to do the trick:
 
      {
          local ($^W) = 0;
-	 my $a =+ 2;
-	 my $b; chop $b;
+         my $x =+ 2;
+         my $y; chop $y;
      }
 
 When this code is run with the B<-w> flag, a warning will be produced
-for the C<$a> line:  C<"Reversed += operator">.
+for the C<$x> line:  C<"Reversed += operator">.
 
 The problem is that Perl has both compile-time and run-time warnings.  To
 disable compile-time warnings you need to rewrite the code like this:
 
      {
          BEGIN { $^W = 0 }
-	 my $a =+ 2;
-	 my $b; chop $b;
+         my $x =+ 2;
+         my $y; chop $y;
      }
 
 And note that unlike the first example, this will permanently set C<$^W>
@@ -701,7 +752,7 @@ the first will not.
 
     sub doit
     {
-        my $b; chop $b;
+        my $y; chop $y;
     }
 
     doit();
@@ -727,7 +778,7 @@ warnings are (or aren't) produced:
 X<-w>
 
 This is  the existing flag.  If the lexical warnings pragma is B<not>
-used in any of you code, or any of the modules that you use, this flag
+used in any of your code, or any of the modules that you use, this flag
 will enable warnings everywhere.  See L</Backward Compatibility> for
 details of how this flag interacts with lexical warnings.
 
@@ -841,6 +892,8 @@ The current hierarchy is:
          |                 +- experimental::signatures
          |                 |
          |                 +- experimental::smartmatch
+         |                 |
+         |                 +- experimental::try
          |                 |
          |                 +- experimental::uniprop_wildcards
          |                 |
@@ -1006,7 +1059,7 @@ The L<strictures|strictures/VERSION-2> module on CPAN offers one example of
 a warnings subset that the module's authors believe is relatively safe to
 fatalize.
 
-B<NOTE:> users of FATAL warnings, especially those using
+B<NOTE:> Users of FATAL warnings, especially those using
 C<< FATAL => 'all' >>, should be fully aware that they are risking future
 portability of their programs by doing so.  Perl makes absolutely no
 commitments to not introduce new warnings or warnings categories in the
@@ -1073,6 +1126,9 @@ use:
 
    use v5.20;       # Perl 5.20 or greater is required for the following
    use warnings 'FATAL';  # short form of "use warnings FATAL => 'all';"
+
+However, you should still heed the guidance earlier in this section against
+using C<use warnings FATAL => 'all';>.
 
 If you want your program to be compatible with versions of Perl before
 5.20, you must use C<< use warnings FATAL => 'all'; >> instead.  (In
@@ -1215,12 +1271,12 @@ C<Derived>.
     use Original;
     use Derived;
     use warnings 'Derived';
-    my $a = Original->new();
-    $a->doit(1);
-    my $b = Derived->new();
-    $a->doit(1);
+    my $x = Original->new();
+    $x->doit(1);
+    my $y = Derived->new();
+    $x->doit(1);
 
-When this code is run only the C<Derived> object, C<$b>, will generate
+When this code is run only the C<Derived> object, C<$y>, will generate
 a warning.
 
     Odd numbers are unsafe at main.pl line 7

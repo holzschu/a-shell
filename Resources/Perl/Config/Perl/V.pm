@@ -6,12 +6,12 @@ use warnings;
 use Config;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT_OK %EXPORT_TAGS);
-$VERSION     = "0.32";
+$VERSION     = "0.33";
 @ISA         = qw( Exporter );
 @EXPORT_OK   = qw( plv2hash summary myconfig signature );
 %EXPORT_TAGS = (
-    all => [ @EXPORT_OK  ],
-    sig => [ "signature" ],
+    'all' => [ @EXPORT_OK  ],
+    'sig' => [ "signature" ],
     );
 
 #  Characteristics of this binary (from libperl):
@@ -24,7 +24,7 @@ $VERSION     = "0.32";
 #     perl -ne'(/^S_Internals_V/../^}/)&&s/^\s+"( .*)"/$1/ and print' perl.c
 #   perl.h line 4566 PL_bincompat_options
 #     perl -ne'(/^\w.*PL_bincompat/../^\w}/)&&s/^\s+"( .*)"/$1/ and print' perl.h
-my %BTD = map { $_ => 0 } qw(
+my %BTD = map {( $_ => 0 )} qw(
 
     DEBUGGING
     NO_HASH_SEED
@@ -183,52 +183,52 @@ my @config_vars = qw(
     );
 
 my %empty_build = (
-    osname  => "",
-    stamp   => 0,
-    options => { %BTD },
-    patches => [],
+    'osname'  => "",
+    'stamp'   => 0,
+    'options' => { %BTD },
+    'patches' => [],
     );
 
 sub _make_derived {
     my $conf = shift;
 
-    for ( [ lseektype		=> "Off_t"	],
-	  [ myuname		=> "uname"	],
-	  [ perl_patchlevel	=> "patch"	],
+    for ( [ 'lseektype'		=> "Off_t"	],
+	  [ 'myuname'		=> "uname"	],
+	  [ 'perl_patchlevel'	=> "patch"	],
 	  ) {
-	my ($official, $derived) = @$_;
-	$conf->{config}{$derived}  ||= $conf->{config}{$official};
-	$conf->{config}{$official} ||= $conf->{config}{$derived};
-	$conf->{derived}{$derived} = delete $conf->{config}{$derived};
+	my ($official, $derived) = @{$_};
+	$conf->{'config'}{$derived}  ||= $conf->{'config'}{$official};
+	$conf->{'config'}{$official} ||= $conf->{'config'}{$derived};
+	$conf->{'derived'}{$derived} = delete $conf->{'config'}{$derived};
 	}
 
-    if (exists $conf->{config}{version_patchlevel_string} &&
-       !exists $conf->{config}{api_version}) {
-	my $vps = $conf->{config}{version_patchlevel_string};
+    if (exists $conf->{'config'}{'version_patchlevel_string'} &&
+       !exists $conf->{'config'}{'api_version'}) {
+	my $vps = $conf->{'config'}{'version_patchlevel_string'};
 	$vps =~ s{\b revision   \s+ (\S+) }{}x and
-	    $conf->{config}{revision}        ||= $1;
+	    $conf->{'config'}{'revision'}        ||= $1;
 
 	$vps =~ s{\b version    \s+ (\S+) }{}x and
-	    $conf->{config}{api_version}     ||= $1;
+	    $conf->{'config'}{'api_version'}     ||= $1;
 	$vps =~ s{\b subversion \s+ (\S+) }{}x and
-	    $conf->{config}{subversion}      ||= $1;
+	    $conf->{'config'}{'subversion'}      ||= $1;
 	$vps =~ s{\b patch      \s+ (\S+) }{}x and
-	    $conf->{config}{perl_patchlevel} ||= $1;
+	    $conf->{'config'}{'perl_patchlevel'} ||= $1;
 	}
 
-    ($conf->{config}{version_patchlevel_string} ||= join " ",
-	map  { ($_, $conf->{config}{$_} ) }
-	grep {      $conf->{config}{$_}   }
+    ($conf->{'config'}{'version_patchlevel_string'} ||= join " ",
+	map  { ($_, $conf->{'config'}{$_} ) }
+	grep {      $conf->{'config'}{$_}   }
 	qw( api_version subversion perl_patchlevel )) =~ s/\bperl_//; 
 
-    $conf->{config}{perl_patchlevel}  ||= "";	# 0 is not a valid patchlevel
+    $conf->{'config'}{'perl_patchlevel'}  ||= "";	# 0 is not a valid patchlevel
 
-    if ($conf->{config}{perl_patchlevel} =~ m{^git\w*-([^-]+)}i) {
-	$conf->{config}{git_branch}   ||= $1;
-	$conf->{config}{git_describe} ||= $conf->{config}{perl_patchlevel};
+    if ($conf->{'config'}{'perl_patchlevel'} =~ m{^git\w*-([^-]+)}i) {
+	$conf->{'config'}{'git_branch'}   ||= $1;
+	$conf->{'config'}{'git_describe'} ||= $conf->{'config'}{'perl_patchlevel'};
 	}
 
-    $conf->{config}{$_} ||= "undef" for grep m/^(?:use|def)/ => @config_vars;
+    $conf->{'config'}{$_} ||= "undef" for grep m{^(?:use|def)} => @config_vars;
 
     $conf;
     } # _make_derived
@@ -238,20 +238,20 @@ sub plv2hash {
 
     my $pv = join "\n" => @_;
 
-    if ($pv =~ m/^Summary of my\s+(\S+)\s+\(\s*(.*?)\s*\)/m) {
-	$config{"package"} = $1;
+    if ($pv =~ m{^Summary of my\s+(\S+)\s+\(\s*(.*?)\s*\)}m) {
+	$config{'package'} = $1;
 	my $rev = $2;
-	$rev =~ s/^ revision \s+ (\S+) \s*//x and $config{revision} = $1;
-	$rev and $config{version_patchlevel_string} = $rev;
-	my ($rel) = $config{"package"} =~ m{perl(\d)};
+	$rev =~ s/^ revision \s+ (\S+) \s*//x and $config{'revision'} = $1;
+	$rev and $config{'version_patchlevel_string'} = $rev;
+	my ($rel) = $config{'package'} =~ m{perl(\d)};
 	my ($vers, $subvers) = $rev =~ m{version\s+(\d+)\s+subversion\s+(\d+)};
 	defined $vers && defined $subvers && defined $rel and
-	    $config{version} = "$rel.$vers.$subvers";
+	    $config{'version'} = "$rel.$vers.$subvers";
 	}
 
-    if ($pv =~ m/^\s+(Snapshot of:)\s+(\S+)/) {
-	$config{git_commit_id_title} = $1;
-	$config{git_commit_id}       = $2;
+    if ($pv =~ m{^\s+(Snapshot of:)\s+(\S+)}) {
+	$config{'git_commit_id_title'} = $1;
+	$config{'git_commit_id'}       = $2;
 	}
 
     # these are always last on line and can have multiple quotation styles
@@ -275,11 +275,11 @@ sub plv2hash {
 	    }gx)) {		# between every kv pair
 
 	while (my ($k, $v) = each %kv) {
-	    $k =~ s/\s+$//;
-	    $v =~ s/\s*\n\z//;
-	    $v =~ s/,$//;
-	    $v =~ m/^'(.*)'$/ and $v = $1;
-	    $v =~ s/\s+$//;
+	    $k =~ s{\s+$}	{};
+	    $v =~ s{\s*\n\z}	{};
+	    $v =~ s{,$}		{};
+	    $v =~ m{^'(.*)'$} and $v = $1;
+	    $v =~ s{\s+$}	{};
 	    $config{$k} = $v;
 	    }
 	}
@@ -287,36 +287,36 @@ sub plv2hash {
     my $build = { %empty_build };
 
     $pv =~ m{^\s+Compiled at\s+(.*)}m
-	and $build->{stamp}   = $1;
+	and $build->{'stamp'}   = $1;
     $pv =~ m{^\s+Locally applied patches:(?:\s+|\n)(.*?)(?:[\s\n]+Buil[td] under)}ms
-	and $build->{patches} = [ split m/\n+\s*/, $1 ];
+	and $build->{'patches'} = [ split m{\n+\s*}, $1 ];
     $pv =~ m{^\s+Compile-time options:(?:\s+|\n)(.*?)(?:[\s\n]+(?:Locally applied|Buil[td] under))}ms
-	and map { $build->{options}{$_} = 1 } split m/\s+|\n/ => $1;
+	and map { $build->{'options'}{$_} = 1 } split m{\s+|\n} => $1;
 
-    $build->{osname} = $config{osname};
+    $build->{'osname'} = $config{'osname'};
     $pv =~ m{^\s+Built under\s+(.*)}m
-	and $build->{osname}  = $1;
-    $config{osname} ||= $build->{osname};
+	and $build->{'osname'}  = $1;
+    $config{'osname'} ||= $build->{'osname'};
 
     return _make_derived ({
-	build		=> $build,
-	environment	=> {},
-	config		=> \%config,
-	derived		=> {},
-	inc		=> [],
+	'build'		=> $build,
+	'environment'	=> {},
+	'config'	=> \%config,
+	'derived'	=> {},
+	'inc'		=> [],
 	});
     } # plv2hash
 
 sub summary {
     my $conf = shift || myconfig ();
     ref $conf eq "HASH"
-    && exists $conf->{config}
-    && exists $conf->{build}
-    && ref $conf->{config} eq "HASH"
-    && ref $conf->{build}  eq "HASH" or return;
+    && exists $conf->{'config'}
+    && exists $conf->{'build'}
+    && ref $conf->{'config'} eq "HASH"
+    && ref $conf->{'build'}  eq "HASH" or return;
 
     my %info = map {
-	exists $conf->{config}{$_} ? ( $_ => $conf->{config}{$_} ) : () }
+	exists $conf->{'config'}{$_} ? ( $_ => $conf->{'config'}{$_} ) : () }
 	qw( archname osname osvers revision patchlevel subversion version
 	    cc ccversion gccversion config_args inc_version_list
 	    d_longdbl d_longlong use64bitall use64bitint useithreads
@@ -324,7 +324,7 @@ sub summary {
 	    doublesize intsize ivsize nvsize longdblsize longlongsize lseeksize
 	    default_inc_excludes_dot
 	    );
-    $info{$_}++ for grep { $conf->{build}{options}{$_} } keys %{$conf->{build}{options}};
+    $info{$_}++ for grep { $conf->{'build'}{'options'}{$_} } keys %{$conf->{'build'}{'options'}};
 
     return \%info;
     } # summary
@@ -336,19 +336,19 @@ sub signature {
     eval { require Digest::MD5 };
     $@ and return $no_md5;
 
-    $conf->{cc} =~ s{.*\bccache\s+}{};
-    $conf->{cc} =~ s{.*[/\\]}{};
+    $conf->{'cc'} =~ s{.*\bccache\s+}{};
+    $conf->{'cc'} =~ s{.*[/\\]}{};
 
-    delete $conf->{config_args};
+    delete $conf->{'config_args'};
     return Digest::MD5::md5_hex (join "\xFF" => map {
 	"$_=".(defined $conf->{$_} ? $conf->{$_} : "\xFE");
-	} sort keys %$conf);
+	} sort keys %{$conf});
     } # signature
 
 sub myconfig {
     my $args = shift;
-    my %args = ref $args eq "HASH"  ? %$args :
-               ref $args eq "ARRAY" ? @$args : ();
+    my %args = ref $args eq "HASH"  ? %{$args} :
+               ref $args eq "ARRAY" ? @{$args} : ();
 
     my $build = { %empty_build };
 
@@ -356,33 +356,34 @@ sub myconfig {
     my $stamp = eval { Config::compile_date () };
     if (defined $stamp) {
 	$stamp =~ s/^Compiled at //;
-	$build->{osname}      = $^O;
-	$build->{stamp}       = $stamp;
-	$build->{patches}     =     [ Config::local_patches () ];
-	$build->{options}{$_} = 1 for Config::bincompat_options (),
-				      Config::non_bincompat_options ();
+	$build->{'osname'}      = $^O;
+	$build->{'stamp'}       = $stamp;
+	$build->{'patches'}     =     [ Config::local_patches () ];
+	$build->{'options'}{$_} = 1 for Config::bincompat_options (),
+					Config::non_bincompat_options ();
 	}
     else {
 	#y $pv = qx[$^X -e"sub Config::myconfig{};" -V];
 	my $cnf = plv2hash (qx[$^X -V]);
 
-	$build->{$_} = $cnf->{build}{$_} for qw( osname stamp patches options );
+	$build->{$_} = $cnf->{'build'}{$_} for qw( osname stamp patches options );
 	}
 
     my @KEYS = keys %ENV;
     my %env  =
-	map {      $_ => $ENV{$_} } grep m/^PERL/      => @KEYS;
-    $args{env} and
-	map { $env{$_} = $ENV{$_} } grep m{$args{env}} => @KEYS;
+	map {( $_ => $ENV{$_} )}  grep m{^PERL}        => @KEYS;
+    if ($args{'env'}) {
+	$env{$_}  =  $ENV{$_} for grep m{$args{'env'}} => @KEYS;
+	}
 
     my %config = map { $_ => $Config{$_} } @config_vars;
 
     return _make_derived ({
-	build		=> $build,
-	environment	=> \%env,
-	config		=> \%config,
-	derived		=> {},
-	inc		=> \@INC,
+	'build'		=> $build,
+	'environment'	=> \%env,
+	'config'	=> \%config,
+	'derived'	=> {},
+	'inc'		=> \@INC,
 	});
     } # myconfig
 
@@ -553,7 +554,7 @@ H.Merijn Brand <h.m.brand@xs4all.nl>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2009-2018 H.Merijn Brand
+Copyright (C) 2009-2020 H.Merijn Brand
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

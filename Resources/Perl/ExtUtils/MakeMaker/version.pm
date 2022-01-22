@@ -12,10 +12,11 @@ package ExtUtils::MakeMaker::version;
 
 use 5.006001;
 use strict;
+use warnings;
 
 use vars qw(@ISA $VERSION $CLASS $STRICT $LAX *declare *qv);
 
-$VERSION = '7.44';
+$VERSION = '7.62';
 $VERSION =~ tr/_//d;
 $CLASS = 'version';
 
@@ -25,7 +26,7 @@ $CLASS = 'version';
     if ( $@ ) { # don't have any version.pm installed
         eval "use ExtUtils::MakeMaker::version::vpp";
         die "$@" if ( $@ );
-        local $^W;
+        no warnings;
         delete $INC{'version.pm'};
         $INC{'version.pm'} = $INC{'ExtUtils/MakeMaker/version.pm'};
         push @version::ISA, "ExtUtils::MakeMaker::version::vpp";

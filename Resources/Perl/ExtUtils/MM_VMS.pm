@@ -1,6 +1,7 @@
 package ExtUtils::MM_VMS;
 
 use strict;
+use warnings;
 
 use ExtUtils::MakeMaker::Config;
 require Exporter;
@@ -15,7 +16,7 @@ BEGIN {
 
 use File::Basename;
 
-our $VERSION = '7.44';
+our $VERSION = '7.62';
 $VERSION =~ tr/_//d;
 
 require ExtUtils::MM_Any;

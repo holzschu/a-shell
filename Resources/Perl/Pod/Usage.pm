@@ -9,19 +9,19 @@
 #############################################################################
 
 package Pod::Usage;
-use strict;
 
-use vars qw($VERSION @ISA @EXPORT);
-$VERSION = '1.69';  ## Current version of this package
+use strict;
 require  5.006;    ## requires this Perl version or later
 
-#use diagnostics;
 use Carp;
 use Config;
 use Exporter;
 use File::Spec;
 
-@EXPORT = qw(&pod2usage);
+our $VERSION = '2.01';
+
+our @EXPORT = qw(&pod2usage);
+our @ISA;
 BEGIN {
     $Pod::Usage::Formatter ||= 'Pod::Text';
     eval "require $Pod::Usage::Formatter";
@@ -103,13 +103,13 @@ sub pod2usage {
 
         my @paths = (ref $pathspec) ? @$pathspec : split($pathsep, $pathspec);
         for my $dirname (@paths) {
-            $_ = File::Spec->catfile($dirname, $basename)  if length;
+            $_ = length($dirname) ? File::Spec->catfile($dirname, $basename) : $basename;
             last if (-e $_) && ($opts{'-input'} = $_);
         }
     }
 
     ## Now create a pod reader and constrain it to the desired sections.
-    my $parser = new Pod::Usage(USAGE_OPTIONS => \%opts);
+    my $parser = Pod::Usage->new(USAGE_OPTIONS => \%opts);
     if ($opts{'-verbose'} == 0) {
         $parser->select('(?:SYNOPSIS|USAGE)\s*');
     }
@@ -130,8 +130,8 @@ sub pod2usage {
 
     ## Check for perldoc
     my $progpath = $opts{'-perldoc'} ? $opts{'-perldoc'} :
-        File::Spec->catfile($Config{scriptdirexp} 
-	|| $Config{scriptdir}, 'perldoc');
+        File::Spec->catfile($Config{scriptdirexp} || $Config{scriptdir},
+            'perldoc');
 
     my $version = sprintf("%vd",$^V);
     if ($Config{versiononly} and $Config{startperl} =~ /\Q$version\E$/ ) {
@@ -159,9 +159,17 @@ sub pod2usage {
 	 push @perldoc_cmd, ('-F', $f);
          unshift @perldoc_cmd, $opts{'-perlcmd'} if $opts{'-perlcmd'};
          system(@perldoc_cmd);
+         # RT16091: fall back to more if perldoc failed
          if($?) {
-           # RT16091: fall back to more if perldoc failed
-           system(($Config{pager} || $ENV{PAGER} || '/bin/more'), $1);
+           # RT131844: prefer PAGER env
+           my $pager = $ENV{PAGER} || $Config{pager};
+           if(defined($pager) && length($pager)) {
+             my $cmd = $pager . ' ' . ($^O =~ /win/i ? qq("$f") : quotemeta($f));
+             system($cmd);
+           } else {
+             # the most humble fallback; should work (at least) on *nix and Win
+             system('more', $f);
+           }
          }
        } else {
          croak "Unspecified input file or insecure argument.\n";
@@ -275,7 +283,12 @@ sub select {
 sub seq_i { return $_[1] }
 # Override Pod::Text->cmd_i to return just "arg", not "*arg*".
 # newer version based on Pod::Simple
-sub cmd_i { return $_[2] }
+sub cmd_i {
+ my $self = shift;
+ # RT121489: highlighting should be there with Termcap
+ return $self->SUPER::cmd_i(@_) if $self->isa('Pod::Text::Termcap');
+ return $_[1];
+}
 
 # This overrides the Pod::Text method to do something very akin to what
 # Pod::Select did as well as the work done below by preprocess_paragraph.
@@ -373,13 +386,15 @@ sub preprocess_paragraph {
 
 __END__
 
+=for stopwords pod2usage verboseness downcased MSWin32 Marek Rouchal Christiansen ATOOMIC rjbs McDougall
+
 =head1 NAME
 
-Pod::Usage - print a usage message from embedded pod documentation
+Pod::Usage - extracts POD documentation and shows usage information
 
 =head1 SYNOPSIS
 
-  use Pod::Usage
+  use Pod::Usage;
 
   my $message_text  = "This text precedes the usage message.";
   my $exit_status   = 2;          ## The exit status to use
@@ -391,13 +406,13 @@ Pod::Usage - print a usage message from embedded pod documentation
   pod2usage($exit_status);
 
   pod2usage( { -message => $message_text ,
-               -exitval => $exit_status  ,  
-               -verbose => $verbose_level,  
+               -exitval => $exit_status  ,
+               -verbose => $verbose_level,
                -output  => $filehandle } );
 
   pod2usage(   -msg     => $message_text ,
-               -exitval => $exit_status  ,  
-               -verbose => $verbose_level,  
+               -exitval => $exit_status  ,
+               -verbose => $verbose_level,
                -output  => $filehandle );
 
   pod2usage(   -verbose => 2,
@@ -443,39 +458,39 @@ keys:
 =item C<-msg> I<string>
 
 The text of a message to print immediately prior to printing the
-program's usage message. 
+program's usage message.
 
 =item C<-exitval> I<value>
 
 The desired exit status to pass to the B<exit()> function.
-This should be an integer, or else the string "NOEXIT" to
+This should be an integer, or else the string C<NOEXIT> to
 indicate that control should simply be returned without
 terminating the invoking process.
 
 =item C<-verbose> I<value>
 
 The desired level of "verboseness" to use when printing the usage message.
-If the value is 0, then only the "SYNOPSIS" section of the pod documentation
-is printed. If the value is 1, then the "SYNOPSIS" section, along with any
-section entitled "OPTIONS", "ARGUMENTS", or "OPTIONS AND ARGUMENTS" is
-printed. If the corresponding value is 2 or more then the entire manpage is
-printed, using L<perldoc> if available; otherwise L<Pod::Text> is used for
-the formatting. For better readability, the all-capital headings are
-downcased, e.g. C<SYNOPSIS> =E<gt> C<Synopsis>.
+If the value is 0, then only the "SYNOPSIS" and/or "USAGE" sections of the
+pod documentation are printed. If the value is 1, then the "SYNOPSIS" and/or
+"USAGE" sections, along with any section entitled "OPTIONS", "ARGUMENTS", or
+"OPTIONS AND ARGUMENTS" is printed. If the corresponding value is 2 or more
+then the entire manpage is printed, using L<perldoc> if available; otherwise
+L<Pod::Text> is used for the formatting. For better readability, the
+all-capital headings are downcased, e.g. C<SYNOPSIS> =E<gt> C<Synopsis>.
 
 The special verbosity level 99 requires to also specify the -sections
 parameter; then these sections are extracted and printed.
 
 =item C<-sections> I<spec>
 
-There are two ways to specify the selection. Either a string (scalar) 
+There are two ways to specify the selection. Either a string (scalar)
 representing a selection regexp for sections to be printed when -verbose
 is set to 99, e.g.
 
   "NAME|SYNOPSIS|DESCRIPTION|VERSION"
 
 With the above regexp all content following (and including) any of the
-given C<=head1> headings will be shown. It is possible to restrict the 
+given C<=head1> headings will be shown. It is possible to restrict the
 output to particular subsections only, e.g.:
 
   "DESCRIPTION/Algorithm"
@@ -484,7 +499,7 @@ This will output only the C<=head2 Algorithm> heading and content within
 the C<=head1 DESCRIPTION> section. The regexp binding is stronger than the
 section separator, such that e.g.:
 
-  "DESCRIPTION|OPTIONS|ENVIORNMENT/Caveats"
+  "DESCRIPTION|OPTIONS|ENVIRONMENT/Caveats"
 
 will print any C<=head2 Caveats> section (only) within any of the three
 C<=head1> sections.
@@ -494,7 +509,7 @@ Alternatively, an array reference of section specifications can be used:
   pod2usage(-verbose => 99, -sections => [
     qw(DESCRIPTION DESCRIPTION/Introduction) ] );
 
-This will print only the content of C<=head1 DESCRIPTION> and the 
+This will print only the content of C<=head1 DESCRIPTION> and the
 C<=head2 Introduction> sections, but no other C<=head2>, and no other
 C<=head1> either.
 
@@ -528,17 +543,16 @@ MSWin32 and DOS).
 
 =item C<-noperldoc>
 
-By default, Pod::Usage will call L<perldoc> when -verbose >= 2 is
-specified. This does not work well e.g. if the script was packed
-with L<PAR>. The -noperldoc option suppresses the external call to
-L<perldoc> and uses the simple text formatter (L<Pod::Text>) to 
-output the POD.
+By default, Pod::Usage will call L<perldoc> when -verbose >= 2 is specified.
+This does not work well e.g. if the script was packed with L<PAR>. This option
+suppresses the external call to L<perldoc> and uses the simple text formatter
+(L<Pod::Text>) to output the POD.
 
 =item C<-perlcmd>
 
 By default, Pod::Usage will call L<perldoc> when -verbose >= 2 is
 specified. In case of special or unusual Perl installations,
-the -perlcmd option may be used to supply the path to a L<perl> executable
+this option may be used to supply the path to a L<perl> executable
 which should run L<perldoc>.
 
 =item C<-perldoc> I<path-to-perldoc>
@@ -551,7 +565,7 @@ the correct path to L<perldoc>.
 =item C<-perldocopt> I<string>
 
 By default, Pod::Usage will call L<perldoc> when -verbose >= 2 is specified.
-The -perldocopt option may be used to supply options to L<perldoc>. The
+This option may be used to supply options to L<perldoc>. The
 string may contain several, space-separated options.
 
 =back
@@ -659,7 +673,7 @@ more verbose description of program usage in this case.
 
 =back
 
-B<pod2usage> doesn't force the above conventions upon you, but it will
+B<pod2usage> does not force the above conventions upon you, but it will
 use them by default if you don't expressly tell it to do otherwise.  The
 ability of B<pod2usage()> to accept a single number or a string makes it
 convenient to use as an innocent looking error message handling function:
@@ -848,7 +862,7 @@ things:
 
 By default, B<pod2usage()> will use C<$0> as the path to the pod input
 file.  Unfortunately, not all systems on which Perl runs will set C<$0>
-properly (although if C<$0> isn't found, B<pod2usage()> will search
+properly (although if C<$0> is not found, B<pod2usage()> will search
 C<$ENV{PATH}> or else the list specified by the C<-pathlist> option).
 If this is the case for your system, you may need to explicitly specify
 the path to the pod docs for the invoking script using something
@@ -865,23 +879,45 @@ the script:
     use FindBin;
     pod2usage(-input => $FindBin::Bin . "/" . $FindBin::Script);
 
+=head1 SUPPORT
+
+This module is managed in a GitHub repository,
+L<https://github.com/Dual-Life/Pod-Usage> Feel free to fork and contribute, or
+to clone and send patches!
+
+Please use L<https://github.com/Dual-Life/Pod-Usage/issues/new> to file a bug
+report.  The previous ticketing system,
+L<https://rt.cpan.org/Dist/Display.html?Queue=Pod-Usage>, is deprecated for
+this package.
+
+More general questions or discussion about POD should be sent to the
+C<pod-people@perl.org> mail list. Send an empty email to
+C<pod-people-subscribe@perl.org> to subscribe.
+
 =head1 AUTHOR
 
-Please report bugs using L<http://rt.cpan.org>.
-
 Marek Rouchal E<lt>marekr@cpan.orgE<gt>
+
+Nicolas R E<lt>nicolas@atoomic.orgE<gt>
 
 Brad Appleton E<lt>bradapp@enteract.comE<gt>
 
 Based on code for B<Pod::Text::pod2text()> written by
 Tom Christiansen E<lt>tchrist@mox.perl.comE<gt>
 
+=head1 LICENSE
+
+Pod::Usage (the distribution) is licensed under the same terms as Perl.
+
 =head1 ACKNOWLEDGMENTS
+
+Nicolas R (ATOOMIC) for setting up the Github repo and modernizing this
+package.
 
 rjbs for refactoring Pod::Usage to not use Pod::Parser any more.
 
-Steven McDougall E<lt>swmcd@world.std.comE<gt> for his help and patience
-with re-writing this manpage.
+Steven McDougall E<lt>swmcd@world.std.comE<gt> for his help and patience with
+re-writing this manpage.
 
 =head1 SEE ALSO
 

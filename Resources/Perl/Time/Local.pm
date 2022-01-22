@@ -5,13 +5,19 @@ use strict;
 use Carp ();
 use Exporter;
 
-our $VERSION = '1.28';
+our $VERSION = '1.30';
 
 use parent 'Exporter';
 
-our @EXPORT = qw( timegm timelocal );
-our @EXPORT_OK
-    = qw( timegm_modern timelocal_modern timegm_nocheck timelocal_nocheck );
+our @EXPORT    = qw( timegm timelocal );
+our @EXPORT_OK = qw(
+    timegm_modern
+    timelocal_modern
+    timegm_nocheck
+    timelocal_nocheck
+    timegm_posix
+    timelocal_posix
+);
 
 my @MonthDays = ( 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 );
 
@@ -90,7 +96,7 @@ sub _daygm {
                     - int( $year / 100 )
                     + int( $year / 400 )
                     + int( ( ( $month * 306 ) + 5 ) / 10 ) ) - $Epoc;
-            }
+        }
     );
 }
 
@@ -109,7 +115,7 @@ sub timegm {
     if ( $Options{no_year_munging} ) {
         $year -= 1900;
     }
-    else {
+    elsif ( !$Options{posix_year} ) {
         if ( $year >= 1000 ) {
             $year -= 1900;
         }
@@ -175,6 +181,11 @@ sub timegm_modern {
     return &timegm;
 }
 
+sub timegm_posix {
+    local $Options{posix_year} = 1;
+    return &timegm;
+}
+
 sub timelocal {
     my $ref_t         = &timegm;
     my $loc_for_ref_t = _timegm( localtime($ref_t) );
@@ -204,8 +215,8 @@ sub timelocal {
 
     return $loc_t if $dst_off > 0;
 
-    # If the original date was a non-extent gap in a forward DST jump,
-    # we should now have the wrong answer - undo the DST adjustment
+    # If the original date was a non-existent gap in a forward DST jump, we
+    # should now have the wrong answer - undo the DST adjustment
     my ( $s, $m, $h ) = localtime($loc_t);
     $loc_t -= $dst_off if $s != $_[0] || $m != $_[1] || $h != $_[2];
 
@@ -219,6 +230,11 @@ sub timelocal_nocheck {
 
 sub timelocal_modern {
     local $Options{no_year_munging} = 1;
+    return &timelocal;
+}
+
+sub timelocal_posix {
+    local $Options{posix_year} = 1;
     return &timelocal;
 }
 
@@ -238,14 +254,14 @@ Time::Local - Efficiently compute time from local and GMT time
 
 =head1 VERSION
 
-version 1.28
+version 1.30
 
 =head1 SYNOPSIS
 
-    use Time::Local;
+    use Time::Local qw( timelocal_posix timegm_posix );
 
-    my $time = timelocal( $sec, $min, $hour, $mday, $mon, $year );
-    my $time = timegm( $sec, $min, $hour, $mday, $mon, $year );
+    my $time = timelocal_posix( $sec, $min, $hour, $mday, $mon, $year );
+    my $time = timegm_posix( $sec, $min, $hour, $mday, $mon, $year );
 
 =head1 DESCRIPTION
 
@@ -263,6 +279,32 @@ consistent with the values returned from C<localtime()> and C<gmtime()>.
 
 =head1 FUNCTIONS
 
+=head2 C<timelocal_posix()> and C<timegm_posix()>
+
+These functions are the exact inverse of Perl's built-in C<localtime> and
+C<gmtime> functions. That means that calling C<< timelocal_posix(
+localtime($value) ) >> will always give you the same C<$value> you started
+with. The same applies to C<< timegm_posix( gmtime($value) ) >>.
+
+The one exception is when the value returned from C<localtime()> represents an
+ambiguous local time because of a DST change. See the documentation below for
+more details.
+
+These functions expect the year value to be the number of years since 1900,
+which is what the C<localtime()> and C<gmtime()> built-ins returns.
+
+They perform range checking by default on the input C<$sec>, C<$min>,
+C<$hour>, C<$mday>, and C<$mon> values and will croak (using C<Carp::croak()>)
+if given a value outside the allowed ranges.
+
+While it would be nice to make this the default behavior, that would almost
+certainly break a lot of code, so you must explicitly import these functions
+and use them instead of the default C<timelocal()> and C<timegm()>.
+
+You are B<strongly> encouraged to use these functions in any new code which
+uses this module. It will almost certainly make your code's behavior less
+surprising.
+
 =head2 C<timelocal_modern()> and C<timegm_modern()>
 
 When C<Time::Local> was first written, it was a common practice to represent
@@ -274,41 +316,44 @@ The default exports of C<timelocal()> and C<timegm()> do a complicated
 calculation when given a year value less than 1000. This leads to surprising
 results in many cases. See L</Year Value Interpretation> for details.
 
-The C<time*_modern()> subs do not do this year munging and simply take the
-year value as provided.
+The C<time*_modern()> functions do not do this year munging and simply take
+the year value as provided.
 
-While it would be nice to make this the default behavior, that would almost
-certainly break a lot of code, so you must explicitly import these subs and
-use them instead of the default C<timelocal()> and C<timegm()>.
-
-You are B<strongly> encouraged to use these subs in any new code which uses
-this module. It will almost certainly make your code's behavior less
-surprising.
+They perform range checking by default on the input C<$sec>, C<$min>,
+C<$hour>, C<$mday>, and C<$mon> values and will croak (using C<Carp::croak()>)
+if given a value outside the allowed ranges.
 
 =head2 C<timelocal()> and C<timegm()>
 
 This module exports two functions by default, C<timelocal()> and C<timegm()>.
 
-The C<timelocal()> and C<timegm()> functions perform range checking on the
-input $sec, $min, $hour, $mday, and $mon values by default.
+They perform range checking by default on the input C<$sec>, C<$min>,
+C<$hour>, C<$mday>, and C<$mon> values and will croak (using C<Carp::croak()>)
+if given a value outside the allowed ranges.
+
+B<Warning: The year value interpretation that these functions and their
+nocheck variants use will almost certainly lead to bugs in your code, if not
+now, then in the future. You are strongly discouraged from using these in new
+code, and you should convert old code to using either the C<*_posix> or
+C<*_modern> functions if possible.>
 
 =head2 C<timelocal_nocheck()> and C<timegm_nocheck()>
 
-If you are working with data you know to be valid, you can speed your code up
-by using the "nocheck" variants, C<timelocal_nocheck()> and
-C<timegm_nocheck()>. These variants must be explicitly imported.
-
-    use Time::Local 'timelocal_nocheck';
-
-    # The 365th day of 1999
-    print scalar localtime timelocal_nocheck( 0, 0, 0, 365, 0, 99 );
+If you are working with data you know to be valid, you can use the "nocheck"
+variants, C<timelocal_nocheck()> and C<timegm_nocheck()>. These variants must
+be explicitly imported.
 
 If you supply data which is not valid (month 27, second 1,000) the results
 will be unpredictable (so don't do that).
 
+Note that my benchmarks show that this is just a 3% speed increase over the
+checked versions, so unless calling C<Time::Local> is the hottest spot in your
+application, using these nocheck variants is unlikely to have much impact on
+your application.
+
 =head2 Year Value Interpretation
 
-B<This does not apply to C<timelocal_modern> or C<timegm_modern>. Use those
+B<This does not apply to the C<*_posix> or C<*_modern> functions. Use those
 exports if you want to ensure consistent behavior as your code ages.>
 
 Strictly speaking, the year should be specified in a form consistent with
@@ -343,7 +388,9 @@ digit dates. Whenever possible, use an absolute four digit year instead.
 =back
 
 The scheme above allows interpretation of a wide range of dates, particularly
-if 4-digit years are used.
+if 4-digit years are used. But it also means that the behavior of your code
+changes as time passes, because the rolling "current century" changes each
+year.
 
 =head2 Limits of time_t
 
@@ -367,7 +414,7 @@ occurs for two different GMT times on the same day. For example, in the
 "Europe/Paris" time zone, the local time of 2001-10-28 02:30:00 can represent
 either 2001-10-28 00:30:00 GMT, B<or> 2001-10-28 01:30:00 GMT.
 
-When given an ambiguous local time, the timelocal() function should always
+When given an ambiguous local time, the timelocal() function will always
 return the epoch for the I<earlier> of the two possible GMT times.
 
 =head2 Non-Existent Local Times (DST)
@@ -457,7 +504,7 @@ Unknown <unknown@example.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 1997 - 2018 by Graham Barr & Dave Rolsky.
+This software is copyright (c) 1997 - 2020 by Graham Barr & Dave Rolsky.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

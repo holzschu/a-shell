@@ -2,7 +2,7 @@ package Carp::Heavy;
 
 use Carp ();
 
-our $VERSION = '1.50';
+our $VERSION = '1.52';
 $VERSION =~ tr/_//d;
 
 # Carp::Heavy was merged into Carp in version 1.12.  Any mismatched versions

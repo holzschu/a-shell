@@ -17,7 +17,7 @@ use File::Spec;
 
 no warnings 'utf8';
 
-our $VERSION = '1.27';
+our $VERSION = '1.29';
 our $PACKAGE = __PACKAGE__;
 
 ### begin XS only ###
@@ -88,9 +88,9 @@ my $DefaultRearrange = [ 0x0E40..0x0E44, 0x0EC0..0x0EC4 ];
 my $HighestVCE = pack(VCE_TEMPLATE, 0, 0xFFFE, 0x20, 0x5, 0xFFFF);
 my $minimalVCE = pack(VCE_TEMPLATE, 0,      1, 0x20, 0x5, 0xFFFE);
 
-sub UCA_Version { '36' }
+sub UCA_Version { '43' }
 
-sub Base_Unicode_Version { '10.0.0' }
+sub Base_Unicode_Version { '13.0.0' }
 
 ######
 
@@ -191,6 +191,10 @@ my %DerivCode = (
    32 => \&_derivCE_32,
    34 => \&_derivCE_34,
    36 => \&_derivCE_36,
+   38 => \&_derivCE_38,
+   40 => \&_derivCE_40,
+   41 => \&_derivCE_40, # 41 == 40
+   43 => \&_derivCE_43,
 );
 
 sub checkCollator {
@@ -1104,25 +1108,29 @@ If the revision (previously "tracking version") number of UCA is given,
 behavior of that revision is emulated on collating.
 If omitted, the return value of C<UCA_Version()> is used.
 
-The following revisions are supported.  The default is 36.
+The following revisions are supported.  The default is 43.
 
      UCA       Unicode Standard         DUCET (@version)
    -------------------------------------------------------
       8              3.1                3.0.1 (3.0.1d9)
-      9     3.1 with Corrigendum 3      3.1.1 (3.1.1)
-     11              4.0                4.0.0 (4.0.0)
-     14             4.1.0               4.1.0 (4.1.0)
-     16              5.0                5.0.0 (5.0.0)
-     18             5.1.0               5.1.0 (5.1.0)
-     20             5.2.0               5.2.0 (5.2.0)
-     22             6.0.0               6.0.0 (6.0.0)
-     24             6.1.0               6.1.0 (6.1.0)
-     26             6.2.0               6.2.0 (6.2.0)
-     28             6.3.0               6.3.0 (6.3.0)
-     30             7.0.0               7.0.0 (7.0.0)
-     32             8.0.0               8.0.0 (8.0.0)
-     34             9.0.0               9.0.0 (9.0.0)
-     36            10.0.0              10.0.0(10.0.0)
+      9     3.1 with Corrigendum 3      3.1.1
+     11             4.0.0
+     14             4.1.0
+     16             5.0.0
+     18             5.1.0
+     20             5.2.0
+     22             6.0.0
+     24             6.1.0
+     26             6.2.0
+     28             6.3.0
+     30             7.0.0
+     32             8.0.0
+     34             9.0.0
+     36            10.0.0
+     38            11.0.0
+     40            12.0.0
+     41            12.1.0
+     43            13.0.0
 
 * See below for C<long_contraction> with C<UCA_Version> 22 and 24.
 
@@ -1464,13 +1472,19 @@ those in the CJK Unified Ideographs Extension A etc.
     U+4E00..U+9FCC if UCA_Version is 24 to 30.
     U+4E00..U+9FD5 if UCA_Version is 32 or 34.
     U+4E00..U+9FEA if UCA_Version is 36.
+    U+4E00..U+9FEF if UCA_Version is 38, 40 or 41.
+    U+4E00..U+9FFC if UCA_Version is 43.
 
     In the CJK Unified Ideographs Extension blocks:
-    Ext.A (U+3400..U+4DB5) and Ext.B (U+20000..U+2A6D6) in any UCA_Version.
+    Ext.A (U+3400..U+4DB5)   if UCA_Version is  8 to 41.
+    Ext.A (U+3400..U+4DBF)   if UCA_Version is 43.
+    Ext.B (U+20000..U+2A6D6) if UCA_Version is  8 to 41.
+    Ext.B (U+20000..U+2A6DD) if UCA_Version is 43.
     Ext.C (U+2A700..U+2B734) if UCA_Version is 20 or later.
     Ext.D (U+2B740..U+2B81D) if UCA_Version is 22 or later.
     Ext.E (U+2B820..U+2CEA1) if UCA_Version is 32 or later.
-    Ext.F (U+2CEB0..U+2EBE0) if UCA_Version is 36.
+    Ext.F (U+2CEB0..U+2EBE0) if UCA_Version is 36 or later.
+    Ext.G (U+30000..U+3134A) if UCA_Version is 43.
 
 Through C<overrideCJK>, ordering of CJK unified ideographs (including
 extensions) can be overridden.
@@ -2092,15 +2106,15 @@ B<Unicode::Normalize is required to try The Conformance Test.>
 =head1 AUTHOR, COPYRIGHT AND LICENSE
 
 The Unicode::Collate module for perl was written by SADAHIRO Tomoyuki,
-<SADAHIRO@cpan.org>. This module is Copyright(C) 2001-2018,
+<SADAHIRO@cpan.org>. This module is Copyright(C) 2001-2020,
 SADAHIRO Tomoyuki. Japan. All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 The file Unicode/Collate/allkeys.txt was copied verbatim
-from L<http://www.unicode.org/Public/UCA/9.0.0/allkeys.txt>.
-For this file, Copyright (c) 2016 Unicode, Inc.; distributed
+from L<http://www.unicode.org/Public/UCA/13.0.0/allkeys.txt>.
+For this file, Copyright (c) 2020 Unicode, Inc.; distributed
 under the Terms of Use in L<http://www.unicode.org/terms_of_use.html>
 
 =head1 SEE ALSO

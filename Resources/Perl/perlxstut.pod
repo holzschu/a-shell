@@ -115,14 +115,15 @@ Mytest directory.
 The file Makefile.PL should look something like this:
 
     use ExtUtils::MakeMaker;
+
     # See lib/ExtUtils/MakeMaker.pm for details of how to influence
     # the contents of the Makefile that is written.
     WriteMakefile(
-	NAME         => 'Mytest',
-	VERSION_FROM => 'Mytest.pm', # finds $VERSION
-	LIBS         => [''],   # e.g., '-lm'
-	DEFINE       => '',     # e.g., '-DHAVE_SOMETHING'
-	INC          => '',     # e.g., '-I/usr/include/other'
+        NAME         => 'Mytest',
+        VERSION_FROM => 'Mytest.pm', # finds $VERSION
+        LIBS         => [''],        # e.g., '-lm'
+        DEFINE       => '',          # e.g., '-DHAVE_SOMETHING'
+        INC          => '-I',        # e.g., '-I. -I/usr/include/other'
     );
 
 The file Mytest.pm should start with something like this:
@@ -276,9 +277,9 @@ when the test is correct, "not ok" when it is not.
     # so read its man page ( perldoc Test::More ) for help writing this
     # test script.
 
-    is(&Mytest::is_even(0), 1);
-    is(&Mytest::is_even(1), 0);
-    is(&Mytest::is_even(2), 1);
+    is( Mytest::is_even(0), 1 );
+    is( Mytest::is_even(1), 0 );
+    is( Mytest::is_even(2), 1 );
 
 We will be calling the test script through the command "C<make test>".  You
 should see output that looks something like this:
@@ -390,16 +391,32 @@ Add the following to the end of Mytest.xs:
 
 Edit the Makefile.PL file so that the corresponding line looks like this:
 
-	'LIBS'      => ['-lm'],   # e.g., '-lm'
+	LIBS      => ['-lm'],   # e.g., '-lm'
 
 Generate the Makefile and run make.  Change the test number in Mytest.t to
 "9" and add the following tests:
 
-	$i = -1.5; &Mytest::round($i); is( $i, -2.0 );
-	$i = -1.1; &Mytest::round($i); is( $i, -1.0 );
-	$i = 0.0; &Mytest::round($i);  is( $i,  0.0 );
-	$i = 0.5; &Mytest::round($i);  is( $i,  1.0 );
-	$i = 1.2; &Mytest::round($i);  is( $i,  1.0 );
+	my $i;
+
+	$i = -1.5;
+	Mytest::round($i);
+	is( $i, -2.0, 'Rounding -1.5 to -2.0' );
+
+	$i = -1.1;
+	Mytest::round($i);
+	is( $i, -1.0, 'Rounding -1.1 to -1.0' );
+
+	$i = 0.0;
+	Mytest::round($i);
+	is( $i, 0.0, 'Rounding 0.0 to 0.0' );
+
+	$i = 0.5;
+	Mytest::round($i);
+	is( $i, 1.0, 'Rounding 0.5 to 1.0' );
+
+	$i = 1.2;
+	Mytest::round($i);
+	is( $i, 1.0, 'Rounding 1.2 to 1.0' );
 
 Running "C<make test>" should now print out that all nine tests are okay.
 
@@ -407,7 +424,7 @@ Notice that in these new test cases, the argument passed to round was a
 scalar variable.  You might be wondering if you can round a constant or
 literal.  To see what happens, temporarily add the following line to Mytest.t:
 
-	&Mytest::round(3);
+	Mytest::round(3);
 
 Run "C<make test>" and notice that Perl dies with a fatal error.  Perl won't
 let you change the value of constants!
@@ -534,7 +551,7 @@ In the mylib directory, create a file mylib.h that looks like this:
 Also create a file mylib.c that looks like this:
 
 	#include <stdlib.h>
-	#include "./mylib.h"
+	#include "mylib.h"
 
 	double
 	foo(int a, long b, const char *c)
@@ -547,9 +564,9 @@ And finally create a file Makefile.PL that looks like this:
 	use ExtUtils::MakeMaker;
 	$Verbose = 1;
 	WriteMakefile(
-	    NAME   => 'Mytest2::mylib',
-	    SKIP   => [qw(all static static_lib dynamic dynamic_lib)],
-	    clean  => {'FILES' => 'libmylib$(LIB_EXT)'},
+	    NAME  => 'Mytest2::mylib',
+	    SKIP  => [qw(all static static_lib dynamic dynamic_lib)],
+	    clean => {'FILES' => 'libmylib$(LIB_EXT)'},
 	);
 
 
@@ -576,7 +593,7 @@ on Win32 systems.
 We will now create the main top-level Mytest2 files.  Change to the directory
 above Mytest2 and run the following command:
 
-	% h2xs -O -n Mytest2 ./Mytest2/mylib/mylib.h
+	% h2xs -O -n Mytest2 Mytest2/mylib/mylib.h
 
 This will print out a warning about overwriting Mytest2, but that's okay.
 Our files are stored in Mytest2/mylib, and will be untouched.
@@ -587,12 +604,12 @@ will be generating a library in it.  Let's add the argument MYEXTLIB to
 the WriteMakefile call so that it looks like this:
 
 	WriteMakefile(
-	    'NAME'      => 'Mytest2',
-	    'VERSION_FROM' => 'Mytest2.pm', # finds $VERSION
-	    'LIBS'      => [''],   # e.g., '-lm'
-	    'DEFINE'    => '',     # e.g., '-DHAVE_SOMETHING'
-	    'INC'       => '',     # e.g., '-I/usr/include/other'
-	    'MYEXTLIB' => 'mylib/libmylib$(LIB_EXT)',
+	    NAME         => 'Mytest2',
+	    VERSION_FROM => 'Mytest2.pm', # finds $VERSION
+	    LIBS         => [''],   # e.g., '-lm'
+	    DEFINE       => '',     # e.g., '-DHAVE_SOMETHING'
+	    INC          => '',     # e.g., '-I/usr/include/other'
+	    MYEXTLIB     => 'mylib/libmylib$(LIB_EXT)',
 	);
 
 and then at the end add a subroutine (which will override the pre-existing
@@ -606,9 +623,7 @@ with "cd"!
 	';
 	}
 
-Let's also fix the MANIFEST file so that it accurately reflects the contents
-of our extension.  The single line that says "mylib" should be replaced by
-the following three lines:
+Let's also fix the MANIFEST file by appending the following three lines:
 
 	mylib/Makefile.PL
 	mylib/mylib.c
@@ -642,12 +657,12 @@ Now run perl on the top-level Makefile.PL.  Notice that it also created a
 Makefile in the mylib directory.  Run make and watch that it does cd into
 the mylib directory and run make in there as well.
 
-Now edit the Mytest2.t script and change the number of tests to "4",
+Now edit the Mytest2.t script and change the number of tests to "5",
 and add the following lines to the end of the script:
 
-	is( &Mytest2::foo(1, 2, "Hello, world!"), 7 );
-	is( &Mytest2::foo(1, 2, "0.0"), 7 );
-	ok( abs(&Mytest2::foo(0, 0, "-3.4") - 0.6) <= 0.01 );
+	is( Mytest2::foo( 1, 2, "Hello, world!" ), 7 );
+	is( Mytest2::foo( 1, 2, "0.0" ),           7 );
+	ok( abs( Mytest2::foo( 0, 0, "-3.4" ) - 0.6 ) <= 0.01 );
 
 (When dealing with floating-point comparisons, it is best to not check for
 equality, but rather that the difference between the expected and actual
@@ -1017,9 +1032,12 @@ after the include of "XSUB.h":
 Also add the following code segment to Mytest.t while incrementing the "9"
 tests to "11":
 
-	@a = &Mytest::statfs("/blech");
+    my @a;
+
+	@a = Mytest::statfs("/blech");
 	ok( scalar(@a) == 1 && $a[0] == 2 );
-	@a = &Mytest::statfs("/");
+
+	@a = Mytest::statfs("/");
 	is( scalar(@a), 7 );
 
 =head2 New Things in this Example
@@ -1125,7 +1143,8 @@ Mytest.xs:
 	    for (n = 0; n <= numpaths; n++) {
 		HV * rh;
 		STRLEN l;
-		char * fn = SvPV(*av_fetch((AV *)SvRV(paths), n, 0), l);
+		SV * path = *av_fetch((AV *)SvRV(paths), n, 0);
+		char * fn = SvPVbyte(path, l);
 
 		i = statfs(fn, &buf);
 		if (i != 0) {
@@ -1152,7 +1171,7 @@ Mytest.xs:
 And add the following code to Mytest.t, while incrementing the "11"
 tests to "13":
 
-	$results = Mytest::multi_statfs([ '/', '/blech' ]);
+	my $results = Mytest::multi_statfs([ '/', '/blech' ]);
 	ok( ref $results->[0] );
 	ok( ! ref $results->[1] );
 
@@ -1246,20 +1265,23 @@ typeglobs and stuff. Well, it isn't.
 Suppose that for some strange reason we need a wrapper around the
 standard C library function C<fputs()>. This is all we need:
 
-	#define PERLIO_NOT_STDIO 0
-	#define PERL_NO_GET_CONTEXT
-	#include "EXTERN.h"
-	#include "perl.h"
-	#include "XSUB.h"
+  #define PERLIO_NOT_STDIO 0  /* For co-existence with stdio only */
+  #define PERL_NO_GET_CONTEXT /* This is more efficient */
+  #include "EXTERN.h"
+  #include "perl.h"
+  #include "XSUB.h"
 
-	#include <stdio.h>
+  #include <stdio.h>
 
-	int
-	fputs(s, stream)
-		char *          s
-		FILE *	        stream
+  int
+  fputs(s, stream)
+    char *          s
+    FILE *          stream
 
 The real work is done in the standard typemap.
+
+For more details, see
+L<perlapio/"Co-existence with stdio">.
 
 B<But> you lose all the fine stuff done by the perlio layers. This
 calls the stdio function C<fputs()>, which knows nothing about them.
@@ -1382,7 +1404,7 @@ Some systems may have installed Perl version 5 as "perl5".
 =head1 See also
 
 For more information, consult L<perlguts>, L<perlapi>, L<perlxs>, L<perlmod>,
-and L<perlpod>.
+L<perlapio>, and L<perlpod>
 
 =head1 Author
 
@@ -1396,6 +1418,8 @@ by Nick Ing-Simmons.
 
 Changes for h2xs as of Perl 5.8.x by Renee Baecker
 
+This document is now maintained as part of Perl itself.
+
 =head2 Last Changed
 
-2012-01-20
+2020-10-05

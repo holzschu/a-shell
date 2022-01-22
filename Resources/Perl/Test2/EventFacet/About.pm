@@ -2,7 +2,7 @@ package Test2::EventFacet::About;
 use strict;
 use warnings;
 
-our $VERSION = '1.302175';
+our $VERSION = '1.302183';
 
 BEGIN { require Test2::EventFacet; our @ISA = qw(Test2::EventFacet) }
 use Test2::Util::HashBase qw{ -package -no_display -uuid -eid };
@@ -82,7 +82,7 @@ F<http://github.com/Test-More/test-more/>.
 
 =head1 COPYRIGHT
 
-Copyright 2019 Chad Granum E<lt>exodist@cpan.orgE<gt>.
+Copyright 2020 Chad Granum E<lt>exodist@cpan.orgE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

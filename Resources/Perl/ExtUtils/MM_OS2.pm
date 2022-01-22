@@ -1,11 +1,12 @@
 package ExtUtils::MM_OS2;
 
 use strict;
+use warnings;
 
 use ExtUtils::MakeMaker qw(neatvalue);
 use File::Spec;
 
-our $VERSION = '7.44';
+our $VERSION = '7.62';
 $VERSION =~ tr/_//d;
 
 require ExtUtils::MM_Any;

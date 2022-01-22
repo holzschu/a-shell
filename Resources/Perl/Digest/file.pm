@@ -1,26 +1,24 @@
 package Digest::file;
 
 use strict;
+use warnings;
 
 use Exporter ();
 use Carp qw(croak);
 use Digest ();
 
-use vars qw($VERSION @ISA @EXPORT_OK);
-
-$VERSION = "1.16";
-@ISA = qw(Exporter);
-@EXPORT_OK = qw(digest_file_ctx digest_file digest_file_hex digest_file_base64);
+our $VERSION   = "1.19";
+our @ISA       = qw(Exporter);
+our @EXPORT_OK = qw(digest_file_ctx digest_file digest_file_hex digest_file_base64);
 
 sub digest_file_ctx {
     my $file = shift;
     croak("No digest algorithm specified") unless @_;
-    local *F;
-    open(F, "<", $file) || croak("Can't open '$file': $!");
-    binmode(F);
+    open( my $fh, "<", $file ) || croak("Can't open '$file': $!");
+    binmode($fh);
     my $ctx = Digest->new(@_);
-    $ctx->addfile(*F);
-    close(F);
+    $ctx->addfile($fh);
+    close($fh);
     return $ctx;
 }
 

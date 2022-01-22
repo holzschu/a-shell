@@ -4,8 +4,8 @@
 # Author          : Johan Vromans
 # Created On      : Tue Sep 11 15:00:12 1990
 # Last Modified By: Johan Vromans
-# Last Modified On: Mon Aug 12 17:05:46 2019
-# Update Count    : 1728
+# Last Modified On: Tue Aug 18 14:48:05 2020
+# Update Count    : 1739
 # Status          : Released
 
 ################ Module Preamble ################
@@ -18,10 +18,10 @@ use warnings;
 package Getopt::Long;
 
 use vars qw($VERSION);
-$VERSION        =  2.51;
+$VERSION        =  2.52;
 # For testing versions only.
 use vars qw($VERSION_STRING);
-$VERSION_STRING = "2.51";
+$VERSION_STRING = "2.52";
 
 use Exporter;
 use vars qw(@ISA @EXPORT @EXPORT_OK);
@@ -538,6 +538,7 @@ sub GetOptionsFromArray(@) {
 	    while ( defined $arg ) {
 
 		# Get the canonical name.
+		my $given = $opt;
 		print STDERR ("=> cname for \"$opt\" is ") if $debug;
 		$opt = $ctl->[CTL_CNAME];
 		print STDERR ("\"$ctl->[CTL_CNAME]\"\n") if $debug;
@@ -606,6 +607,7 @@ sub GetOptionsFromArray(@) {
 				&{$linkage{$opt}}
 				  (Getopt::Long::CallBack->new
 				   (name    => $opt,
+				    given   => $given,
 				    ctl     => $ctl,
 				    opctl   => \%opctl,
 				    linkage => \%linkage,
@@ -1143,7 +1145,7 @@ sub FindOption ($$$$$) {
 	 : !(defined $rest || @$argv > 0) ) {
 	# Complain if this option needs an argument.
 #	if ( $mand && !($type eq 's' ? defined($optarg) : 0) ) {
-	if ( $mand ) {
+	if ( $mand || $ctl->[CTL_DEST] == CTL_DEST_HASH ) {
 	    return (0) if $passthrough;
 	    warn ("Option ", $opt, " requires an argument\n");
 	    $error++;
@@ -1561,6 +1563,11 @@ sub name {
     ''.$self->{name};
 }
 
+sub given {
+    my $self = shift;
+    $self->{given};
+}
+
 use overload
   # Treat this object as an ordinary string for legacy API.
   '""'	   => \&name,
@@ -1867,12 +1874,6 @@ it is interpreted specially by GetOptions(). There is currently one
 special command implemented: C<die("!FINISH")> will cause GetOptions()
 to stop processing options, as if it encountered a double dash C<-->.
 
-In version 2.37 the first argument to the callback function was
-changed from string to object. This was done to make room for
-extensions and more detailed control. The object stringifies to the
-option name so this change should not introduce compatibility
-problems.
-
 Here is an example of how to access the option name and value from within
 a subroutine:
 
@@ -2033,6 +2034,29 @@ Configuration options can be passed to the constructor:
     $p = new Getopt::Long::Parser
              config => [...configuration options...];
 
+=head2 Callback object
+
+In version 2.37 the first argument to the callback function was
+changed from string to object. This was done to make room for
+extensions and more detailed control. The object stringifies to the
+option name so this change should not introduce compatibility
+problems.
+
+The callback object has the following methods:
+
+=over
+
+=item name
+
+The name of the option, unabbreviated. For an option with multiple
+names it return the first (canonical) name.
+
+=item given
+
+The name of the option as actually used, unabbreveated.
+
+=back
+
 =head2 Thread Safety
 
 Getopt::Long is thread safe when using ithreads as of Perl 5.8.  It is
@@ -2138,7 +2162,7 @@ list context, a message will be given and C<GetOptionsFromString> will
 return failure.
 
 As with GetOptionsFromArray, a first argument hash reference now
-becomes the second argument.
+becomes the second argument. See the next section.
 
 =head2 Storing options values in a hash
 
@@ -2205,9 +2229,9 @@ The simplest style of bundling can be enabled with:
     Getopt::Long::Configure ("bundling");
 
 Configured this way, single-character options can be bundled but long
-options B<must> always start with a double dash C<--> to avoid
-ambiguity. For example, when C<vax>, C<a>, C<v> and C<x> are all valid
-options,
+options (and any of their auto-abbreviated shortened forms) B<must>
+always start with a double dash C<--> to avoid ambiguity. For example,
+when C<vax>, C<a>, C<v> and C<x> are all valid options,
 
     -vax
 
@@ -2298,8 +2322,9 @@ L<Configuring Getopt::Long>.
 Getopt::Long can be configured by calling subroutine
 Getopt::Long::Configure(). This subroutine takes a list of quoted
 strings, each specifying a configuration option to be enabled, e.g.
-C<ignore_case>, or disabled, e.g. C<no_ignore_case>. Case does not
-matter. Multiple calls to Configure() are possible.
+C<ignore_case>. To disable, prefix with C<no> or C<no_>, e.g.
+C<no_ignore_case>. Case does not matter. Multiple calls to Configure()
+are possible.
 
 Alternatively, as of version 2.24, the configuration options may be
 passed together with the C<use> statement:
@@ -2398,7 +2423,8 @@ first.
 
 Enabling this option will allow single-character options to be
 bundled. To distinguish bundles from long option names, long options
-I<must> be introduced with C<--> and bundles with C<->.
+(and any of their auto-abbreviated shortened forms) I<must> be
+introduced with C<--> and bundles with C<->.
 
 Note that, if you have options C<a>, C<l> and C<all>, and
 auto_abbrev enabled, possible arguments and option settings are:

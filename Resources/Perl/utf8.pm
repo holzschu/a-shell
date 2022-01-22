@@ -1,15 +1,19 @@
 package utf8;
 
-$utf8::hint_bits = 0x00800000;
+use strict;
+use warnings;
 
-our $VERSION = '1.22';
+our $hint_bits = 0x00800000;
+
+our $VERSION = '1.24';
+our $AUTOLOAD;
 
 sub import {
-    $^H |= $utf8::hint_bits;
+    $^H |= $hint_bits;
 }
 
 sub unimport {
-    $^H &= ~$utf8::hint_bits;
+    $^H &= ~$hint_bits;
 }
 
 sub AUTOLOAD {
@@ -199,6 +203,11 @@ otherwise returns true.
                      # with ord 0x100.   Since these bytes aren't
                      # legal UTF-EBCDIC, on EBCDIC platforms, $x is
                      # unchanged and the function returns FALSE.
+ my $y = "\xc3\x83\xc2\xab"; This has been encoded twice; this
+                     # example is only for ASCII platforms
+ utf8::decode($y);   # Converts $y to \xc3\xab, returns TRUE;
+ utf8::decode($y);   # Further converts to \xeb, returns TRUE;
+ utf8::decode($y);   # Returns FALSE, leaves $y unchanged
 
 B<Note that this function does not handle arbitrary encodings>;
 use L<Encode> instead.

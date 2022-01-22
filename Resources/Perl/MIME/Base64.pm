@@ -1,14 +1,14 @@
 package MIME::Base64;
 
 use strict;
-use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
+use warnings;
 
 require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw(encode_base64 decode_base64);
-@EXPORT_OK = qw(encode_base64url decode_base64url encoded_base64_length decoded_base64_length);
+our @ISA = qw(Exporter);
+our @EXPORT = qw(encode_base64 decode_base64);
+our @EXPORT_OK = qw(encode_base64url decode_base64url encoded_base64_length decoded_base64_length);
 
-$VERSION = '3.15';
+our $VERSION = '3.16';
 
 require XSLoader;
 XSLoader::load('MIME::Base64', $VERSION);

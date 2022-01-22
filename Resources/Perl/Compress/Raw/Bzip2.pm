@@ -11,8 +11,8 @@ use Carp ;
 use bytes ;
 our ($VERSION, $XS_VERSION, @ISA, @EXPORT, $AUTOLOAD);
 
-$VERSION = '2.093';
-$XS_VERSION = $VERSION; 
+$VERSION = '2.101';
+$XS_VERSION = $VERSION;
 $VERSION = eval $VERSION;
 
 @ISA = qw(Exporter);
@@ -61,11 +61,11 @@ eval {
     require XSLoader;
     XSLoader::load('Compress::Raw::Bzip2', $XS_VERSION);
     1;
-} 
+}
 or do {
     require DynaLoader;
     local @ISA = qw(DynaLoader);
-    bootstrap Compress::Raw::Bzip2 $XS_VERSION ; 
+    bootstrap Compress::Raw::Bzip2 $XS_VERSION ;
 };
 
 #sub Compress::Raw::Bzip2::new
@@ -132,14 +132,14 @@ Compress::Raw::Bzip2 - Low-Level Interface to bzip2 compression library
 
     my ($bz, $status) = new Compress::Raw::Bzip2 [OPTS]
         or die "Cannot create bzip2 object: $bzerno\n";
-    
+
     $status = $bz->bzdeflate($input, $output);
     $status = $bz->bzflush($output);
     $status = $bz->bzclose($output);
 
     my ($bz, $status) = new Compress::Raw::Bunzip2 [OPTS]
         or die "Cannot create bunzip2 object: $bzerno\n";
-    
+
     $status = $bz->bzinflate($input, $output);
 
     my $version = Compress::Raw::Bzip2::bzlibversion();
@@ -356,7 +356,7 @@ The following bzip2 constants are exported by this module
 
 =head1 SUPPORT
 
-General feedback/questions/bug reports should be sent to 
+General feedback/questions/bug reports should be sent to
 L<https://github.com/pmqs/Compress-Raw-Bzip2/issues> (preferred) or
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=Compress-Raw-Bzip2>.
 
@@ -384,8 +384,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2019 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2021 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-

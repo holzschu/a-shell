@@ -7,7 +7,7 @@ perlglossary - Perl Glossary
 
 =head1 VERSION
 
-version 5.20200523
+version 5.20210411
 
 =head1 DESCRIPTION
 
@@ -2642,7 +2642,7 @@ C<tr///>.
 Formerly, a reference X<pseudohashes>X<hashes, pseudohashes>to an array
 whose initial element happens to hold a reference to a hash. You used to be
 able to treat a pseudohash reference as either an array reference or a hash
-reference. Pseduohashes are no longer supported.
+reference. Pseudohashes are no longer supported.
 
 =item pseudoliteral
 

@@ -31,7 +31,7 @@ use vars qw[$DEBUG $error $VERSION $WARN $FOLLOW_SYMLINK $CHOWN $CHMOD
 $DEBUG                  = 0;
 $WARN                   = 1;
 $FOLLOW_SYMLINK         = 0;
-$VERSION                = "2.36";
+$VERSION                = "2.38";
 $CHOWN                  = 1;
 $CHMOD                  = 1;
 $SAME_PERMISSIONS       = $> == 0 ? 1 : 0;
@@ -48,7 +48,7 @@ BEGIN {
     ### switch between perlio and IO::String
     $HAS_IO_STRING = eval {
         require IO::String;
-        import IO::String;
+        IO::String->import;
         1;
     } || 0;
 }
@@ -918,7 +918,7 @@ sub _extract_file {
     }
 
     if( $CHOWN && CAN_CHOWN->() and not -l $full ) {
-        chown $entry->uid, $entry->gid, $full or
+        CORE::chown( $entry->uid, $entry->gid, $full ) or
             $self->_error( qq[Could not set uid/gid on '$full'] );
     }
 
@@ -929,7 +929,7 @@ sub _extract_file {
         unless ($SAME_PERMISSIONS) {
             $mode &= ~(oct(7000) | umask);
         }
-        chmod $mode, $full or
+        CORE::chmod( $mode, $full ) or
             $self->_error( qq[Could not chown '$full' to ] . $entry->mode );
     }
 
@@ -2284,7 +2284,7 @@ write a C<.tar.Z> file
     use Archive::Tar;
     use IO::File;
 
-    my $fh = new IO::File "| compress -c >$filename";
+    my $fh = IO::File->new( "| compress -c >$filename" );
     my $tar = Archive::Tar->new();
     ...
     $tar->write($fh);

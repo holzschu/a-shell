@@ -12,7 +12,7 @@ use warnings;
 
 # mro.pm versions < 1.00 reserved for MRO::Compat
 #  for partial back-compat to 5.[68].x
-our $VERSION = '1.23';
+our $VERSION = '1.25_001';
 
 require XSLoader;
 XSLoader::load('mro');
@@ -89,8 +89,7 @@ resolution order under multiple inheritance. It was first introduced in
 the language Dylan (see links in the L</"SEE ALSO"> section), and then
 later adopted as the preferred MRO (Method Resolution Order) for the
 new-style classes in Python 2.3. Most recently it has been adopted as the
-"canonical" MRO for Perl 6 classes, and the default MRO for Parrot objects
-as well.
+"canonical" MRO for Raku classes.
 
 =head2 How does C3 work
 

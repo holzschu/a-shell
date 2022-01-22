@@ -211,7 +211,7 @@ BEGIN {
 }
 
 
-our $VERSION = '1.50';
+our $VERSION = '1.52';
 $VERSION =~ tr/_//d;
 
 our $MaxEvalLen = 0;
@@ -284,7 +284,7 @@ sub shortmess {
     my $cgc = _cgc();
 
     # Icky backwards compatibility wrapper. :-(
-    local @CARP_NOT = $cgc ? $cgc->() : caller();
+    local @CARP_NOT = scalar( $cgc ? $cgc->() : caller() );
     shortmess_heavy(@_);
 }
 
@@ -944,10 +944,10 @@ This variable sets a general argument formatter to display references.
 Plain scalars and objects that implement C<CARP_TRACE> will not go through
 this formatter.  Calling C<Carp> from within this function is not supported.
 
-local $Carp::RefArgFormatter = sub {
-    require Data::Dumper;
-    Data::Dumper::Dump($_[0]); # not necessarily safe
-};
+    local $Carp::RefArgFormatter = sub {
+        require Data::Dumper;
+        Data::Dumper->Dump($_[0]); # not necessarily safe
+    };
 
 =head2 @CARP_NOT
 

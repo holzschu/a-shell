@@ -9,23 +9,25 @@ libnetFAQ - libnet Frequently Asked Questions
 This document is distributed with the libnet distribution, and is also
 available on the libnet web page at
 
-    http://search.cpan.org/dist/libnet/
+L<https://metacpan.org/release/libnet>
 
 =head2 How to contribute to this document
 
 You may report corrections, additions, and suggestions on the
 CPAN Request Tracker at
 
-    http://rt.cpan.org/Public/Bug/Report.html?Queue=libnet
+L<https://rt.cpan.org/Public/Bug/Report.html?Queue=libnet>
 
 =head1 Author and Copyright Information
 
 Copyright (C) 1997-1998 Graham Barr.  All rights reserved.
-This document is free; you can redistribute it and/or modify it
-under the terms of the Artistic License.
+This document is free; you can redistribute it and/or modify it under
+the same terms as Perl itself, i.e. under the terms of either the GNU
+General Public License or the Artistic License, as specified in the
+F<LICENCE> file.
 
-Steve Hay E<lt>F<shay@cpan.org>E<gt> is now maintaining libnet as of version
-1.22_02.
+Steve Hay E<lt>L<shay@cpan.org|mailto:shay@cpan.org>E<gt> is now maintaining
+libnet as of version 1.22_02.
 
 =head2 Disclaimer
 
@@ -70,7 +72,7 @@ on any machine that perl runs on.
 The latest libnet release is always on CPAN, you will find it
 in 
 
- http://search.cpan.org/dist/libnet/
+L<https://metacpan.org/release/libnet>
 
 =head1 Using Net::FTP
 

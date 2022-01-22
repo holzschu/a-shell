@@ -2,6 +2,7 @@
 package ExtUtils::MakeMaker;
 
 use strict;
+use warnings;
 
 BEGIN {require 5.006;}
 
@@ -24,7 +25,7 @@ my %Recognized_Att_Keys;
 our %macro_fsentity; # whether a macro is a filesystem name
 our %macro_dep; # whether a macro is a dependency
 
-our $VERSION = '7.44';
+our $VERSION = '7.62';
 $VERSION =~ tr/_//d;
 
 # Emulate something resembling CVS $Revision$
@@ -425,7 +426,10 @@ sub _has_cpan_meta_requirements {
     return eval {
       require CPAN::Meta::Requirements;
       CPAN::Meta::Requirements->VERSION(2.130);
-      require B; # CMR requires this, for core we have to too.
+      # Make sure vstrings can be handled. Some versions of CMR require B to
+      # do this, which won't be available in miniperl.
+      CPAN::Meta::Requirements->new->add_string_requirement('Module' => v1.2);
+      1;
     };
 }
 
@@ -510,50 +514,43 @@ sub new {
 
     check_hints($self);
 
-    if ( defined $self->{MIN_PERL_VERSION}
-          && $self->{MIN_PERL_VERSION} !~ /^v?[\d_\.]+$/ ) {
-      require version;
-      my $normal = eval {
-        local $SIG{__WARN__} = sub {
-            # simulate "use warnings FATAL => 'all'" for vintage perls
-            die @_;
-        };
-        version->new( $self->{MIN_PERL_VERSION} )
-      };
-      $self->{MIN_PERL_VERSION} = $normal if defined $normal && !$@;
-    }
+    if ( $self->{MIN_PERL_VERSION}) {
+        my $perl_version = $self->{MIN_PERL_VERSION};
+        if (ref $perl_version) {
+            # assume a version object
+        }
+        else {
+            $perl_version = eval {
+                local $SIG{__WARN__} = sub {
+                    # simulate "use warnings FATAL => 'all'" for vintage perls
+                    die @_;
+                };
+                version->new( $perl_version )->numify;
+            };
+            $perl_version =~ tr/_//d
+                if defined $perl_version;
+        }
 
-    # Translate X.Y.Z to X.00Y00Z
-    if( defined $self->{MIN_PERL_VERSION} ) {
-        $self->{MIN_PERL_VERSION} =~ s{ ^v? (\d+) \. (\d+) \. (\d+) $ }
-                                      {sprintf "%d.%03d%03d", $1, $2, $3}ex;
-    }
-
-    my $perl_version_ok = eval {
-        local $SIG{__WARN__} = sub {
-            # simulate "use warnings FATAL => 'all'" for vintage perls
-            die @_;
-        };
-        !$self->{MIN_PERL_VERSION} or $self->{MIN_PERL_VERSION} <= "$]"
-    };
-    if (!$perl_version_ok) {
-        if (!defined $perl_version_ok) {
-            die <<'END';
-Warning: MIN_PERL_VERSION is not in a recognized format.
+        if (!defined $perl_version) {
+            # should this be a warning?
+            die sprintf <<'END', $self->{MIN_PERL_VERSION};
+MakeMaker FATAL: MIN_PERL_VERSION (%s) is not in a recognized format.
 Recommended is a quoted numerical value like '5.005' or '5.008001'.
 END
         }
-        elsif ($self->{PREREQ_FATAL}) {
-            die sprintf <<"END", $self->{MIN_PERL_VERSION}, $];
-MakeMaker FATAL: perl version too low for this distribution.
-Required is %s. We run %s.
+        elsif ($perl_version > "$]") {
+            my $message = sprintf <<'END', $perl_version, $];
+Perl version %s or higher required. We run %s.
 END
+            if ($self->{PREREQ_FATAL}) {
+                die "MakeMaker FATAL: $message";
+            }
+            else {
+                warn "Warning: $message";
+            }
         }
-        else {
-            warn sprintf
-                "Warning: Perl version %s or higher required. We run %s.\n",
-                $self->{MIN_PERL_VERSION}, $];
-        }
+
+        $self->{MIN_PERL_VERSION} = $perl_version;
     }
 
     my %configure_att;         # record &{$self->{CONFIGURE}} attributes
@@ -1038,7 +1035,7 @@ sub _parse_line {
 }
 
 sub check_manifest {
-    print "Checking if your kit is complete...\n";
+    print STDOUT "Checking if your kit is complete...\n";
     require ExtUtils::Manifest;
     # avoid warning
     $ExtUtils::Manifest::Quiet = $ExtUtils::Manifest::Quiet = 1;
@@ -1154,20 +1151,19 @@ sub check_hints {
 }
 
 sub _run_hintfile {
-    our $self;
-    local($self) = shift;       # make $self available to the hint file.
-    my($hint_file) = shift;
+    my ($self, $hint_file) = @_;
 
     local($@, $!);
     print "Processing hints file $hint_file\n" if $Verbose;
 
-    # Just in case the ./ isn't on the hint file, which File::Spec can
-    # often strip off, we bung the curdir into @INC
-    local @INC = (File::Spec->curdir, @INC);
-    my $ret = do $hint_file;
-    if( !defined $ret ) {
-        my $error = $@ || $!;
-        warn $error;
+    if(open(my $fh, '<', $hint_file)) {
+        my $hints_content = do { local $/; <$fh> };
+        no strict;
+        eval $hints_content;
+        warn "Failed to run hint file $hint_file: $@" if $@;
+    }
+    else {
+        warn "Could not open $hint_file for read: $!";
     }
 }
 
@@ -1237,15 +1233,15 @@ sub flush {
     my $self = shift;
 
     my $finalname = $self->{MAKEFILE};
-    printf "Generating a %s %s\n", $self->make_type, $finalname if $Verbose || !$self->{PARENT};
-    print "Writing $finalname for $self->{NAME}\n" if $Verbose || !$self->{PARENT};
+    printf STDOUT "Generating a %s %s\n", $self->make_type, $finalname if $Verbose || !$self->{PARENT};
+    print STDOUT "Writing $finalname for $self->{NAME}\n" if $Verbose || !$self->{PARENT};
 
     unlink($finalname, "MakeMaker.tmp", $Is_VMS ? 'Descrip.MMS' : ());
 
     write_file_via_tmp($finalname, $self->{RESULT});
 
     # Write MYMETA.yml to communicate metadata up to the CPAN clients
-    print "Writing MYMETA.yml and MYMETA.json\n"
+    print STDOUT "Writing MYMETA.yml and MYMETA.json\n"
       if !$self->{NO_MYMETA} and $self->write_mymeta( $self->mymeta );
 
     # save memory
@@ -2976,7 +2972,7 @@ that purpose.
 
 =item XSPROTOARG
 
-May be set to C<-protoypes>, C<-noprototypes> or the empty string.  The
+May be set to C<-prototypes>, C<-noprototypes> or the empty string.  The
 empty string is equivalent to the xsubpp default, or C<-noprototypes>.
 See the xsubpp documentation for details.  MakeMaker
 defaults to the empty string.

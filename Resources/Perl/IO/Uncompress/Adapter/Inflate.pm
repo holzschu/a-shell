@@ -4,11 +4,11 @@ use strict;
 use warnings;
 use bytes;
 
-use IO::Compress::Base::Common  2.093 qw(:Status);
-use Compress::Raw::Zlib  2.093 qw(Z_OK Z_BUF_ERROR Z_STREAM_END Z_FINISH MAX_WBITS);
+use IO::Compress::Base::Common  2.101 qw(:Status);
+use Compress::Raw::Zlib  2.101 qw(Z_OK Z_BUF_ERROR Z_STREAM_END Z_FINISH MAX_WBITS);
 
 our ($VERSION);
-$VERSION = '2.093';
+$VERSION = '2.102';
 
 
 
@@ -23,23 +23,23 @@ sub mkUncompObject
 
     if ($scan)
     {
-        ($inflate, $status) = new Compress::Raw::Zlib::InflateScan
+        ($inflate, $status) = Compress::Raw::Zlib::InflateScan->new(
                                     #LimitOutput  => 1,
                                     CRC32        => $crc32,
                                     ADLER32      => $adler32,
-                                    WindowBits   => - MAX_WBITS ;
+                                    WindowBits   => - MAX_WBITS );
     }
     else
     {
-        ($inflate, $status) = new Compress::Raw::Zlib::Inflate
+        ($inflate, $status) = Compress::Raw::Zlib::Inflate->new(
                                     AppendOutput => 1,
                                     LimitOutput  => 1,
                                     CRC32        => $crc32,
                                     ADLER32      => $adler32,
-                                    WindowBits   => - MAX_WBITS ;
+                                    WindowBits   => - MAX_WBITS );
     }
 
-    return (undef, "Could not create Inflation object: $status", $status) 
+    return (undef, "Could not create Inflation object: $status", $status)
         if $status != Z_OK ;
 
     return bless {'Inf'        => $inflate,
@@ -47,8 +47,8 @@ sub mkUncompObject
                   'UnCompSize' => 0,
                   'Error'      => '',
                   'ConsumesInput' => 1,
-                 } ;     
-    
+                 } ;
+
 }
 
 sub uncompr
@@ -67,7 +67,7 @@ sub uncompr
         $self->{Error} = "Inflation Error: $status";
         return STATUS_ERROR;
     }
-            
+
     return STATUS_OK        if $status == Z_BUF_ERROR ; # ???
     return STATUS_OK        if $status == Z_OK ;
     return STATUS_ENDSTREAM if $status == Z_STREAM_END ;
@@ -115,8 +115,8 @@ sub adler32
 sub sync
 {
     my $self = shift ;
-    ( $self->{Inf}->inflateSync(@_) == Z_OK) 
-            ? STATUS_OK 
+    ( $self->{Inf}->inflateSync(@_) == Z_OK)
+            ? STATUS_OK
             : STATUS_ERROR ;
 }
 
@@ -154,4 +154,3 @@ sub createDeflateStream
 
 
 __END__
-

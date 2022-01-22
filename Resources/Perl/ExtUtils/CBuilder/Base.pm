@@ -9,7 +9,7 @@ use Text::ParseWords;
 use IPC::Cmd qw(can_run);
 use File::Temp qw(tempfile);
 
-our $VERSION = '0.280234'; # VERSION
+our $VERSION = '0.280236'; # VERSION
 
 # More details about C/C++ compilers:
 # http://developers.sun.com/sunstudio/documentation/product/compiler.jsp

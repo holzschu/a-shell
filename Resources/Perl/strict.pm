@@ -1,6 +1,6 @@
 package strict;
 
-$strict::VERSION = "1.11";
+$strict::VERSION = "1.12";
 
 my ( %bitmask, %explicit_bitmask );
 
@@ -154,8 +154,9 @@ exempted from this check.
 
 This disables the poetry optimization, generating a compile-time error if
 you try to use a bareword identifier that's not a subroutine, unless it
-is a simple identifier (no colons) and that it appears in curly braces or
-on the left hand side of the C<< => >> symbol.
+is a simple identifier (no colons) and that it appears in curly braces,
+on the left hand side of the C<< => >> symbol, or has the unary minus
+operator applied to it.
 
     use strict 'subs';
     $SIG{PIPE} = Plumber;   # blows up

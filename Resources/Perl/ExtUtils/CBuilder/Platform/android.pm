@@ -6,7 +6,7 @@ use File::Spec;
 use ExtUtils::CBuilder::Platform::Unix;
 use Config;
 
-our $VERSION = '0.280234'; # VERSION
+our $VERSION = '0.280236'; # VERSION
 our @ISA = qw(ExtUtils::CBuilder::Platform::Unix);
 
 # The Android linker will not recognize symbols from

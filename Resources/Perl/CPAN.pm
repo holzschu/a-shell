@@ -2,7 +2,7 @@
 # vim: ts=4 sts=4 sw=4:
 use strict;
 package CPAN;
-$CPAN::VERSION = '2.27';
+$CPAN::VERSION = '2.28';
 $CPAN::VERSION =~ s/_//;
 
 # we need to run chdir all over and we would get at wrong libraries
@@ -558,7 +558,9 @@ sub _yaml_loadfile {
         # 5.6.2 could not do the local() with the reference
         # so we do it manually instead
         my $old_loadcode = ${"$yaml_module\::LoadCode"};
+        my $old_loadblessed = ${"$yaml_module\::LoadBlessed"};
         ${ "$yaml_module\::LoadCode" } = $CPAN::Config->{yaml_load_code} || 0;
+        ${ "$yaml_module\::LoadBlessed" } = 1;
 
         my ($code, @yaml);
         if ($code = UNIVERSAL::can($yaml_module, "LoadFile")) {
@@ -569,19 +571,20 @@ sub _yaml_loadfile {
             }
         } elsif ($code = UNIVERSAL::can($yaml_module, "Load")) {
             local *FH;
-            unless (open FH, $local_file) {
+            if (open FH, $local_file) {
+                local $/;
+                my $ystream = <FH>;
+                eval { @yaml = $code->($ystream); };
+                if ($@) {
+                    # this shall not be done by the frontend
+                    die CPAN::Exception::yaml_process_error->new($yaml_module,$local_file,"parse",$@);
+                }
+            } else {
                 $CPAN::Frontend->mywarn("Could not open '$local_file': $!");
-                return +[];
-            }
-            local $/;
-            my $ystream = <FH>;
-            eval { @yaml = $code->($ystream); };
-            if ($@) {
-                # this shall not be done by the frontend
-                die CPAN::Exception::yaml_process_error->new($yaml_module,$local_file,"parse",$@);
             }
         }
         ${"$yaml_module\::LoadCode"} = $old_loadcode;
+        ${"$yaml_module\::LoadBlessed"} = $old_loadblessed;
         return \@yaml;
     } else {
         # this shall not be done by the frontend

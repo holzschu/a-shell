@@ -15,7 +15,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '2.07';
+$VERSION = '2.09';
 
 # Figure out if we have support for native sized types
 my $N = do { my $foo = eval { pack "L!", 0 }; $@ ? '' : '!' };

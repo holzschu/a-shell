@@ -9,7 +9,7 @@ require Exporter;
 our ($VERSION, @ISA, @EXPORT, %GZIP_OS_Names);
 our ($GZIP_FNAME_INVALID_CHAR_RE, $GZIP_FCOMMENT_INVALID_CHAR_RE);
 
-$VERSION = '2.093';
+$VERSION = '2.102';
 
 @ISA = qw(Exporter);
 
@@ -89,22 +89,22 @@ use constant GZIP_FEXTRA_SUBFIELD_ID_SIZE     => 2 ;
 use constant GZIP_FEXTRA_SUBFIELD_LEN_SIZE    => 2 ;
 use constant GZIP_FEXTRA_SUBFIELD_HEADER_SIZE => GZIP_FEXTRA_SUBFIELD_ID_SIZE +
                                                  GZIP_FEXTRA_SUBFIELD_LEN_SIZE;
-use constant GZIP_FEXTRA_SUBFIELD_MAX_SIZE    => GZIP_FEXTRA_MAX_SIZE - 
+use constant GZIP_FEXTRA_SUBFIELD_MAX_SIZE    => GZIP_FEXTRA_MAX_SIZE -
                                                  GZIP_FEXTRA_SUBFIELD_HEADER_SIZE ;
 
 
 if (ord('A') == 193)
 {
-    # EBCDIC 
+    # EBCDIC
     $GZIP_FNAME_INVALID_CHAR_RE = '[\x00-\x3f\xff]';
     $GZIP_FCOMMENT_INVALID_CHAR_RE = '[\x00-\x0a\x11-\x14\x16-\x3f\xff]';
-    
+
 }
 else
 {
     $GZIP_FNAME_INVALID_CHAR_RE       =  '[\x00-\x1F\x7F-\x9F]';
     $GZIP_FCOMMENT_INVALID_CHAR_RE    =  '[\x00-\x09\x11-\x1F\x7F-\x9F]';
-}            
+}
 
 use constant GZIP_FHCRC_SIZE        => 2 ; # aka CONTINUATION in gzip
 
@@ -140,7 +140,7 @@ use constant GZIP_OS_DEFAULT=> 0xFF ;
     GZIP_OS_DEFAULT()   => 'Unknown',
     ) ;
 
-use constant GZIP_MINIMUM_HEADER =>   pack("C4 V C C",  
+use constant GZIP_MINIMUM_HEADER =>   pack("C4 V C C",
         GZIP_ID1, GZIP_ID2, GZIP_CM_DEFLATED, GZIP_FLG_DEFAULT,
         GZIP_MTIME_DEFAULT, GZIP_XFL_DEFAULT, GZIP_OS_DEFAULT) ;
 

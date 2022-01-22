@@ -8,16 +8,16 @@ use bytes;
 
 require Exporter ;
 
-use IO::Compress::RawDeflate 2.093 ();
-use IO::Compress::Adapter::Deflate 2.093 ;
+use IO::Compress::RawDeflate 2.101 ();
+use IO::Compress::Adapter::Deflate 2.101 ;
 
-use IO::Compress::Zlib::Constants 2.093 ;
-use IO::Compress::Base::Common  2.093 qw();
+use IO::Compress::Zlib::Constants 2.101 ;
+use IO::Compress::Base::Common  2.101 qw();
 
 
 our ($VERSION, @ISA, @EXPORT_OK, %EXPORT_TAGS, %DEFLATE_CONSTANTS, $DeflateError);
 
-$VERSION = '2.093';
+$VERSION = '2.102';
 $DeflateError = '';
 
 @ISA    = qw(IO::Compress::RawDeflate Exporter);
@@ -80,7 +80,7 @@ sub mkDeflateHdr($$$;$)
     return $hdr;
 }
 
-sub mkHeader 
+sub mkHeader
 {
     my $self = shift ;
     my $param = shift ;
@@ -89,7 +89,7 @@ sub mkHeader
     my $strategy = $param->getValue('strategy');
 
     my $lflag ;
-    $level = 6 
+    $level = 6
         if $level == Z_DEFAULT_COMPRESSION ;
 
     if (ZLIB_VERNUM >= 0x1210)
@@ -118,7 +118,7 @@ sub ckParams
 {
     my $self = shift ;
     my $got = shift;
-    
+
     $got->setValue('adler32' => 1);
     return 1 ;
 }
@@ -149,6 +149,7 @@ sub getExtraParams
 
 sub getInverseClass
 {
+    no warnings 'once';
     return ('IO::Uncompress::Inflate',
                 \$IO::Uncompress::Inflate::InflateError);
 }
@@ -158,7 +159,7 @@ sub getFileInfo
     my $self = shift ;
     my $params = shift;
     my $file = shift ;
-    
+
 }
 
 
@@ -178,7 +179,7 @@ IO::Compress::Deflate - Write RFC 1950 files/buffers
     my $status = deflate $input => $output [,OPTS]
         or die "deflate failed: $DeflateError\n";
 
-    my $z = new IO::Compress::Deflate $output [,OPTS]
+    my $z = IO::Compress::Deflate->new( $output [,OPTS] )
         or die "deflate failed: $DeflateError\n";
 
     $z->print($string);
@@ -455,7 +456,7 @@ compressed data to a buffer, C<$buffer>.
     use IO::Compress::Deflate qw(deflate $DeflateError) ;
     use IO::File ;
 
-    my $input = new IO::File "<file1.txt"
+    my $input = IO::File->new( "<file1.txt" )
         or die "Cannot open 'file1.txt': $!\n" ;
     my $buffer ;
     deflate $input => \$buffer
@@ -492,7 +493,7 @@ and if you want to compress each file one at a time, this will do the trick
 
 The format of the constructor for C<IO::Compress::Deflate> is shown below
 
-    my $z = new IO::Compress::Deflate $output [,OPTS]
+    my $z = IO::Compress::Deflate->new( $output [,OPTS] )
         or die "IO::Compress::Deflate failed: $DeflateError\n";
 
 It returns an C<IO::Compress::Deflate> object on success and undef on failure.
@@ -914,7 +915,7 @@ See L<IO::Compress::FAQ|IO::Compress::FAQ/"Compressed files and Net::FTP">
 
 =head1 SUPPORT
 
-General feedback/questions/bug reports should be sent to 
+General feedback/questions/bug reports should be sent to
 L<https://github.com/pmqs/IO-Compress/issues> (preferred) or
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=IO-Compress>.
 
@@ -951,8 +952,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2019 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2021 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-

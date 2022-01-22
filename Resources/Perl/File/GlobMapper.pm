@@ -51,7 +51,7 @@ sub globmap ($$;)
     my $inputGlob = shift ;
     my $outputGlob = shift ;
 
-    my $obj = new File::GlobMapper($inputGlob, $outputGlob, @_)
+    my $obj = File::GlobMapper->new($inputGlob, $outputGlob, @_)
         or croak "globmap: $Error" ;
     return $obj->getFileMap();
 }
@@ -383,7 +383,7 @@ File::GlobMapper - Extend File Glob to Allow Input and Output Files
     my $aref = globmap $input => $output
         or die $File::GlobMapper::Error ;
 
-    my $gm = new File::GlobMapper $input => $output
+    my $gm = File::GlobMapper->new( $input => $output )
         or die $File::GlobMapper::Error ;
 
 
