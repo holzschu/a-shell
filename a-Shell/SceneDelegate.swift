@@ -281,6 +281,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     @objc func hideKeyboard() {
+        if (onScreenKeyboardVisible != nil) && (!onScreenKeyboardVisible!) { return }
         DispatchQueue.main.async {
             guard self.webView != nil else { return }
             self.webView!.endEditing(true)
@@ -288,30 +289,43 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    @objc func hideToolbar() {
+        DispatchQueue.main.async {
+            showToolbar = false
+            self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
+        }
+    }
+
+    @objc func showEditorToolbar() {
+        DispatchQueue.main.async {
+            showToolbar = true
+            self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
+        }
+    }
+    
     @objc func longPressAction(_ sender: UILongPressGestureRecognizer) {
         hideKeyboard()
     }
+    
+    public lazy var emptyToolbar: UIToolbar = {
+        var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
+        toolbar.tintColor = .label
+        toolbar.items = []
+        return toolbar
+    }()
+
 
     public lazy var editorToolbar: UIToolbar = {
-        if (toolbarVisible) {
-            showToolbar = true
-            var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
-            toolbar.tintColor = .label
-            toolbar.items = [tabButton, controlButton, escapeButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil), upButton, downButton, leftButton, rightButton]
-            // Long press gesture recognsizer:
-            let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
-            longPressGesture.minimumPressDuration = 1.0 // 1 second press
-            longPressGesture.allowableMovement = 15 // 15 points
-            longPressGesture.delegate = self
-            toolbar.addGestureRecognizer(longPressGesture)
-            return toolbar
-        } else {
-            showToolbar = false
-            var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
-            toolbar.tintColor = .label
-            toolbar.items = []
-            return toolbar
-        }
+        var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
+        toolbar.tintColor = .label
+        toolbar.items = [tabButton, controlButton, escapeButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil), upButton, downButton, leftButton, rightButton]
+        // Long press gesture recognsizer:
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
+        longPressGesture.minimumPressDuration = 1.0 // 1 second press
+        longPressGesture.allowableMovement = 15 // 15 points
+        longPressGesture.delegate = self
+        toolbar.addGestureRecognizer(longPressGesture)
+        return toolbar
     }()
     
     func printPrompt() {
@@ -1443,6 +1457,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let executablePath = String(cString: getenv("PATH"))
             // NSLog("\(executablePath)")
             for directory in executablePath.components(separatedBy: ":") {
+                if (directory == "") {
+                    continue
+                }
                 do {
                     // We don't check for exec status, because files inside $APPDIR have no x bit set.
                     for file in try FileManager().contentsOfDirectory(atPath: directory) {
@@ -1649,7 +1666,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             webView?.uiDelegate = self;
             webView?.isAccessibilityElement = false
             // toolbar for everyone because I can't change the aspect of inputAssistantItem buttons
-            webView?.addInputAccessoryView(toolbar: self.editorToolbar)
+            if (!toolbarShouldBeShown) {
+                showToolbar = false
+                self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
+            } else {
+                showToolbar = true
+                self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
+            }
             // We create a separate WkWebView for webAssembly:
             let config = WKWebViewConfiguration()
             config.preferences.javaScriptCanOpenWindowsAutomatically = true
@@ -1741,8 +1764,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             setenv("LC_CTYPE", "UTF-8", 1);
                             setlocale(LC_CTYPE, "UTF-8");
                             executeCommandAndWait(command: trimmedCommand)
-                            // NSLog("Done executing command from .profile: \(command)")
-                            // NSLog("Current directory: \(FileManager().currentDirectoryPath)")
+                            NSLog("Done executing command from .profile: \(command)")
+                            NSLog("Current directory: \(FileManager().currentDirectoryPath)")
                         }
                     }
                     catch {
@@ -2166,7 +2189,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         setEnvironmentFGBG(foregroundColor: foregroundColor, backgroundColor: backgroundColor)
-        NSLog("hideKeyboard: before webView!.keyboardDisplayRequiresUserAction; showKeyboardAtStartup= \(showKeyboardAtStartup)")
         if (showKeyboardAtStartup) {
             webView!.keyboardDisplayRequiresUserAction = false
         }
@@ -2190,8 +2212,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (userActivity?.activityType == "AsheKube.app.a-Shell.OpenDirectory") { return }
         // Otherwise, go for it:
         NSLog("sceneWillEnterForeground: \(self.persistentIdentifier). userActivity: \(userActivity)")
+        if (!toolbarShouldBeShown) {
+            showToolbar = false
+            self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
+        } else {
+            showToolbar = true
+            self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
+        }
         guard (scene.session.stateRestorationActivity != nil) else { return }
         guard let userInfo = scene.session.stateRestorationActivity!.userInfo else { return }
+        // If a command is already running, we don't restore directories, etc: they probably are still valid
+        if (currentCommand != "") { return }
         NSLog("Restoring history, previousDir, currentDir:")
         if let historyData = userInfo["history"] {
             history = historyData as! [String]
@@ -2227,11 +2258,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 NSLog("got currentDirectory as \(currentDirectory)")
                 if (!FileManager().fileExists(atPath: currentDirectory) || !FileManager().isReadableFile(atPath: currentDirectory)) {
                     // The directory does not exist anymore (often home directory, changes after reinstall)
-                    currentDirectory = try! FileManager().url(for: .documentDirectory,
-                                                              in: .userDomainMask,
-                                                              appropriateFor: nil,
-                                                              create: true).path
-                    NSLog("reset currentDirectory to \(currentDirectory)")
+                    do {
+                        currentDirectory = try FileManager().url(for: .documentDirectory,
+                                                                 in: .userDomainMask,
+                                                                 appropriateFor: nil,
+                                                                 create: true).path
+                        NSLog("reset currentDirectory to \(currentDirectory)")
+                    }
+                    catch {
+                        NSLog("Could not get currentDirectory from FileManager()")
+                    }
                 }
                 if (FileManager().fileExists(atPath: currentDirectory) && FileManager().isReadableFile(atPath: currentDirectory)) {
                     NSLog("set currentDirectory to \(currentDirectory)")
@@ -2239,6 +2275,43 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     ios_switchSession(self.persistentIdentifier?.toCString())
                     changeDirectory(path: currentDirectory) // call cd_main and checks secured bookmarked URLs
                 }
+            }
+        }
+        // We restore the environment variables to their previous values.
+        // Useful for virtual Python environments
+        // If the app was reinstalled, paths to files are not valid anymore, so we don't set them.
+        // We never touch system environment variables like HOME and APPDIR.
+        NSLog("Restoring environment")
+        if let environmentVariables = userInfo["environ"] as? [String] {
+            let path = String(utf8String: getenv( "PATH"))
+            var virtualEnvironmentGone = false
+            for variable in environmentVariables {
+                let components = variable.split(separator:"=")
+                let name = String(components[0])
+                let value = String(components[1])
+                if name == "HOME" { continue }
+                if name == "APPDIR" { continue }
+                if (value.hasPrefix("/") && (!value.contains(":"))) {
+                    // This variable might be a file or directory. Check it exists first:
+                    if (!FileManager().fileExists(atPath: value)) {
+                        // NSLog("Skipping \(name) = \(value) (not here)")
+                        if (name == "VIRTUAL_ENV") {
+                            // We had a virtual environment set, but pointing to a directory that no longer exists
+                            // Since PATH is usually before VIRTUAL_ENV in the list of variables, PATH has already been
+                            // overwritten by now. We set this boolean to reset it to its previous value.
+                            virtualEnvironmentGone = true
+                        }
+                        continue
+                    }
+                }
+                // NSLog("setenv \(components[0]) \(components[1])")
+                setenv(String(components[0]), String(components[1]), 1)
+            }
+            // The virtual environment is not in the right place anymore, get the PATH variable back to the correct value
+            if (virtualEnvironmentGone) {
+                // NSLog("Reset PATH to \(path)")
+                setenv("PATH", path, 1)
+                unsetenv("_OLD_VIRTUAL_PATH")
             }
         }
         // Window preferences, stored on a per-session basis:
@@ -2314,45 +2387,49 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let currentCommandData = userInfo["currentCommand"]
         if let storedCommand = currentCommandData as? String {
             if (storedCommand.count > 0) {
-                NSLog("Restarting session with \(storedCommand)")
                 // We only restart vim commands. Other commands are just creating issues, unless we could save their status.
                 // Safety check: is the vim session file still there?
                 // I could have been removed by the system, or by the user.
                 // TODO: also check that files are still available / no
                 if (storedCommand.hasPrefix("vim -S ")) {
+                    NSLog("Restarting session with \(storedCommand)")
                     var sessionFile = storedCommand
                     sessionFile.removeFirst("vim -S ".count)
                     if (sessionFile.hasPrefix("~")) {
                         sessionFile.removeFirst("~".count)
                         let documentsUrl = try! FileManager().url(for: .documentDirectory,
-                                                                  in: .userDomainMask,
-                                                                  appropriateFor: nil,
-                                                                  create: true)
+                                                                     in: .userDomainMask,
+                                                                     appropriateFor: nil,
+                                                                     create: true)
                         let homeUrl = documentsUrl.deletingLastPathComponent()
                         sessionFile = homeUrl.path + sessionFile
                     }
-                    if (!FileManager().fileExists(atPath: sessionFile)) {
+                    if (FileManager().fileExists(atPath: sessionFile)) {
+                        if (UserDefaults.standard.bool(forKey: "restart_vim")) {
+                            /* We only restart vim commands, and only if the user asks for it.
+                             Everything else is creating problems.
+                             Basically, we can only restart commands if we can save their status. */
+                            // The preference is set to false by default, to avoid beginners trapped in Vim
+                            NSLog("sceneWillEnterForeground, Restoring command: \(storedCommand)")
+                            let commandSent = storedCommand.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n")
+                            let restoreCommand = "window.webkit.messageHandlers.aShell.postMessage('shell:' + '\(commandSent)');\nwindow.commandRunning = '\(commandSent)';\n"
+                            currentCommand = commandSent
+                            NSLog("Calling command: \(restoreCommand)")
+                            self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
+                                if error != nil {
+                                    // print(error)
+                                }
+                                if (result != nil) {
+                                    // print(result)
+                                }
+                            }
+                        }
+                    } else {
                         NSLog("Could not find session file at \(sessionFile)")
-                        return
                     }
                 }
-                /* We only restart vim commands. Everything else is creating problems.
-                 Basically, we can only restart commands if we can save their status.
-                 NSLog("sceneWillEnterForeground, Restoring command: \(storedCommand)")
-                 let restoreCommand = "window.commandToExecute = '" + storedCommand.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n") + "';"
-                 NSLog("Calling command: \(restoreCommand)")
-                 self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
-                 if error != nil {
-                 // print(error)
-                 }
-                 if (result != nil) {
-                 // print(result)
-                 }
-                 }
-                 */
             }
         }
-        
         // Re-enable video tracks when application enters foreground:
         // https://stackoverflow.com/questions/64055966/ios-14-play-audio-from-video-in-background/64753248#64753248
         // But only if picture-in-picture has not started
@@ -2402,6 +2479,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             scene.session.stateRestorationActivity?.userInfo!["cursorColor"] = terminalCursorColor!.toHexString()
         }
         scene.session.stateRestorationActivity?.userInfo!["currentCommand"] = currentCommand
+        // save the environment variables:
+        var env = [String]()
+        var i = 0
+        while (environ[i] != nil) {
+            if let varValue = environ[i] {
+                let varValue2 = String(cString: varValue)
+                env.append(varValue2)
+            }
+            i += 1
+        }
+        scene.session.stateRestorationActivity?.userInfo!["environ"] = env
         // NSLog("storing currentCommand= \(currentCommand)")
         // Save all open editor windows
         // TODO: save context (Vim session)
@@ -2829,7 +2917,7 @@ extension SceneDelegate: WKUIDelegate {
                     errno = 0
                 }
                 return
-            } else if (arguments[1] == "re") {
+            } else if (arguments[1] == "readdir") {
                 do {
                     // Much more compact code than using readdir.
                     let items = try FileManager().contentsOfDirectory(atPath: arguments[2])

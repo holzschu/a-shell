@@ -1065,11 +1065,43 @@ public func downloadRemoteFile(fileURL: URL) -> Bool {
 // hide the on-screen keyboard
 @_cdecl("hideKeyboard")
 public func hideKeyboard(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
-    NSLog("Entered hideKeyboard at app level")
     showKeyboardAtStartup = false
     if let delegate = currentDelegate {
         delegate.hideKeyboard()
     }
+    return 0
+}
+
+// hide the toolbar above the keyboard
+@_cdecl("hideToolbar")
+public func hideToolbar(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    UserDefaults.standard.set(false, forKey: "show_toolbar")
+    fputs("hideToolbar will become effective after the next refocus event.\n", thread_stdout)
+    return 0
+}
+
+// show the toolbar above the keyboard
+@_cdecl("showToolbar")
+public func showToolbar(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    UserDefaults.standard.set(true, forKey: "show_toolbar")
+    fputs("showToolbar will become effective after the next refocus event.\n", thread_stdout)
+    return 0
+}
+
+// deactivate a Python virtual environment created with "source env/bin/activate":
+@_cdecl("deactivate")
+public func deactivate(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                            in: .userDomainMask,
+                                            appropriateFor: nil,
+                                            create: true)
+    setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path.toCString(), 1)
+    setenv("PYTHONUSERBASE", libraryURL.path.toCString(), 1)
+    if let oldPath = getenv("_OLD_VIRTUAL_PATH") {
+        setenv("PATH", String(utf8String: oldPath), 1)
+        unsetenv("_OLD_VIRTUAL_PATH")
+    }
+    unsetenv("VIRTUAL_ENV")
     return 0
 }
 
@@ -1282,6 +1314,7 @@ public func startInteractive() {
 }
 
 public func executeCommandAndWait(command: String) {
+    NSLog("executeCommandAndWait: \(command)")
     let pid = ios_fork()
     _ = ios_system(command)
     fflush(thread_stdout)

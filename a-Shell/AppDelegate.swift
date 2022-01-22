@@ -262,8 +262,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
         UserDefaults.standard.register(defaults: ["show_toolbar" : true])
-        // Only read at startup time:
-        toolbarVisible = UserDefaults.standard.bool(forKey: "show_toolbar")
+        UserDefaults.standard.register(defaults: ["restart_vim" : false])
+        toolbarShouldBeShown = UserDefaults.standard.bool(forKey: "show_toolbar")
         initializeEnvironment()
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
@@ -281,6 +281,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
         replaceCommand("hideKeyboard", "hideKeyboard", true)
+        replaceCommand("hideToolbar", "hideToolbar", true)
+        replaceCommand("showToolbar", "showToolbar", true)
+        replaceCommand("deactivate", "deactivate", true) // deactivate Python virtual environments
         // Add these two as commands so they appear on the command list, even though we treat them internally:
         if (UIDevice.current.model.hasPrefix("iPad")) {
             replaceCommand("newWindow", "clear", true)
@@ -472,39 +475,44 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
         // Delete Vim sessions here using sceneSessions.first.persistentIdentifier
-        let documentsUrl = try! FileManager().url(for: .documentDirectory,
-                                                  in: .userDomainMask,
-                                                  appropriateFor: nil,
-                                                  create: true)
-        for session in sceneSessions {
-            let persistentIdentifier = session.persistentIdentifier
-            var sessionFileUrl = documentsUrl.appendingPathComponent(".vim/sessions/" + persistentIdentifier + ".vim")
-            if (FileManager().fileExists(atPath: sessionFileUrl.path)) {
-                do {
-                    try FileManager().removeItem(at: sessionFileUrl)
+        do {
+            let documentsUrl = try FileManager().url(for: .documentDirectory,
+                                                     in: .userDomainMask,
+                                                     appropriateFor: nil,
+                                                     create: true)
+            for session in sceneSessions {
+                let persistentIdentifier = session.persistentIdentifier
+                var sessionFileUrl = documentsUrl.appendingPathComponent(".vim/sessions/" + persistentIdentifier + ".vim")
+                if (FileManager().fileExists(atPath: sessionFileUrl.path)) {
+                    do {
+                        try FileManager().removeItem(at: sessionFileUrl)
+                    }
+                    catch {
+                        NSLog("Unable to remove file: \(sessionFileUrl.path)")
+                    }
                 }
-                catch {
-                    NSLog("Unable to remove file: \(sessionFileUrl.path)")
+                sessionFileUrl = documentsUrl.appendingPathComponent(".vim/sessions/" + persistentIdentifier + ".vim.lock")
+                if (FileManager().fileExists(atPath: sessionFileUrl.path)) {
+                    do {
+                        try FileManager().removeItem(at: sessionFileUrl)
+                    }
+                    catch {
+                        NSLog("Unable to remove file: \(sessionFileUrl.path)")
+                    }
+                }
+                sessionFileUrl = documentsUrl.appendingPathComponent(".vim/sessions/" + persistentIdentifier + ".vim.lock.tmp")
+                if (FileManager().fileExists(atPath: sessionFileUrl.path)) {
+                    do {
+                        try FileManager().removeItem(at: sessionFileUrl)
+                    }
+                    catch {
+                        NSLog("Unable to remove file: \(sessionFileUrl.path)")
+                    }
                 }
             }
-            sessionFileUrl = documentsUrl.appendingPathComponent(".vim/sessions/" + persistentIdentifier + ".vim.lock")
-            if (FileManager().fileExists(atPath: sessionFileUrl.path)) {
-                do {
-                    try FileManager().removeItem(at: sessionFileUrl)
-                }
-                catch {
-                    NSLog("Unable to remove file: \(sessionFileUrl.path)")
-                }
-            }
-            sessionFileUrl = documentsUrl.appendingPathComponent(".vim/sessions/" + persistentIdentifier + ".vim.lock.tmp")
-            if (FileManager().fileExists(atPath: sessionFileUrl.path)) {
-                do {
-                    try FileManager().removeItem(at: sessionFileUrl)
-                }
-                catch {
-                    NSLog("Unable to remove file: \(sessionFileUrl.path)")
-                }
-            }
+        }
+        catch {
+            NSLog("Could not get documentURL")
         }
         NSLog("application didDiscardSceneSessions sceneSessions \(sceneSessions)")
     }
@@ -580,6 +588,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("d", "deletemark", true) // delete bookmark (might be dangerous)
             replaceCommand("r", "renamemark", true) // rename bookmark
         }
+        let toolbarSettings = UserDefaults.standard.bool(forKey: "show_toolbar")
+        if (toolbarShouldBeShown && !toolbarSettings) {
+            NSLog("Received call to hide the toolbar through preferences")
+            // User has just requested we hide the toolbar
+            // Send the value to all the SceneDelegate connected to this application
+            toolbarShouldBeShown = false
+            // Remove the toolbar on all connected scenes (usually none since the app is in the background):
+            for scene in UIApplication.shared.connectedScenes {
+                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                    delegate.hideToolbar()
+                }
+            }
+        } else if (!toolbarShouldBeShown && toolbarSettings) {
+            NSLog("Received call to show the toolbar through preferences")
+            // User has just requested we show the toolbar
+            // Send the value to all the SceneDelegate connected to this application
+            toolbarShouldBeShown = false
+            // Remove the toolbar on all connected scenes (usually none since the app is in the background):
+            for scene in UIApplication.shared.connectedScenes {
+                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                    delegate.showEditorToolbar()
+                }
+            }
+        }
+        toolbarShouldBeShown = toolbarSettings
     }
     
     // MARK: Shortcuts / Intents handling
