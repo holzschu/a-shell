@@ -44,7 +44,8 @@ function isInteractive(commandString) {
 	// Commands that call CPR (Cursor Position Request) are not in the list because we detect them separately
 	// (vim, ipython, ptpython, jupyter-console...) (see hterm.VT.CSI['n'])
 	// ssh and ssh-keygen (new version) are both interactive. So is scp. sftp is interactive until connected.
-	let interactiveRegexp = /^less|^more|^ssh|^scp|^sftp|\|&? *less|\|&? *more|^man/;
+	// vim is back on the list because it can be called by the Files app, and we have initialization issues.
+	let interactiveRegexp = /^less|^more|^vim|^ssh|^scp|^sftp|\|&? *less|\|&? *more|^man/;
 	return interactiveRegexp.test(commandString) 
 	// It's easier to match a regexp, then take the negation than to test a regexp that does not contain a pattern:
 	// This is disabled for now, but kept in case it can become useful again.
@@ -478,12 +479,13 @@ function setupHterm() {
 			} else if ((window.commandRunning != '') && ((string.charCodeAt(0) == 3) || (string.charCodeAt(0) == 4))) {
 				// Send control messages back to command:
 				// first, flush existing input:
-				if (io.currencCommand != '') {
+				if (io.currentCommand != '') {
 					window.webkit.messageHandlers.aShell.postMessage('input:' + io.currentCommand);
 					io.currentCommand = '';
 				}
 				window.webkit.messageHandlers.aShell.postMessage('input:' + string);
 			} else { 
+				// window.webkit.messageHandlers.aShell.postMessage('Received character: ' + string); // for debugging
 				if (io.currentCommand === '') { 
 					// new line, reset things: (required for commands inside commands)
 					updatePromptPosition(); 
@@ -1009,12 +1011,9 @@ function setupHterm() {
 		printPrompt(); // first prompt
 	}
 	updatePromptPosition();
-	if ((window.commandToExecute != undefined) && (window.commandToExecute != "")) {
-		window.webkit.messageHandlers.aShell.postMessage('shell:' + window.commandToExecute);
-		window.commandRunning = window.commandToExecute;
-		window.commandToExecute = "";
-	}
 	window.duringResize = false;
+	// If a command was started while we were starting the terminal, we might not know about it:
+	window.webkit.messageHandlers.aShell.postMessage('resendCommand:');
 
 	initializeTerminalGestures();
 };
@@ -1028,7 +1027,6 @@ window.onload = async function() {
 
 // Modifications and additions to hterm_all.js:
 hterm.Terminal.IO.prototype.onTerminalResize = function(width, height) {
-  // Override this.
   window.webkit.messageHandlers.aShell.postMessage('width:'  + width); 
   window.webkit.messageHandlers.aShell.postMessage('height:'  + height); 
 };
