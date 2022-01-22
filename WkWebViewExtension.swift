@@ -13,6 +13,7 @@ typealias OldClosureType =  @convention(c) (Any, Selector, UnsafeRawPointer, Boo
 typealias NewClosureType =  @convention(c) (Any, Selector, UnsafeRawPointer, Bool, Bool, Bool, Any?) -> Void
 
 extension WKWebView {
+    
     func addInputAccessoryView(toolbar: UIView?) {
         guard let toolbar = toolbar else { return }
         objc_setAssociatedObject(self, &ToolbarHandle, toolbar, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
@@ -63,12 +64,23 @@ extension WKWebView {
         return nil
     }
 
+    var keyboardDisplayRequiresUserAction: Bool? {
+        get {
+            return self.keyboardDisplayRequiresUserAction
+        }
+        set {
+            self.setKeyboardRequiresUserInteraction(newValue ?? true)
+        }
+    }
+
+    
     // Second extension, keyboardDisplayRequiresUserAction
     // solution from https://stackoverflow.com/questions/32449870/programmatically-focus-on-a-form-in-a-webview-wkwebview/48623286#48623286
     // First solution from @alexstaravoitau
-    func allowDisplayingKeyboardWithoutUserAction() {
+    func setKeyboardRequiresUserInteraction( _ value: Bool) {
+        NSLog("hideKeyboard: entered setKeyboardRequiresUserInteraction; value= \(value)")
         guard let WKContentView: AnyClass = NSClassFromString("WKContentView") else {
-            print("allowDisplayingKeyboardWithoutUserAction extension: Cannot find the WKContentView class")
+            print("setKeyboardRequiresUserInteraction extension: Cannot find the WKContentView class")
             return
         }
         var selector: Selector = sel_getUid("_elementDidFocus:userIsInteracting:blurPreviousNode:activityStateChanges:userObject:")
@@ -76,14 +88,14 @@ extension WKWebView {
             let originalImp: IMP = method_getImplementation(method)
             let original: NewClosureType = unsafeBitCast(originalImp, to: NewClosureType.self)
             let block : @convention(block) (Any, UnsafeRawPointer, Bool, Bool, Bool, Any?) -> Void = { (me, arg0, arg1, arg2, arg3, arg4) in
-                original(me, selector, arg0, true, arg2, arg3, arg4)
+                original(me, selector, arg0, !value, arg2, arg3, arg4)
             }
             let override: IMP = imp_implementationWithBlock(block)
 
             method_setImplementation(method, override);
         }
         guard let WKContentViewAgain: AnyClass = NSClassFromString("WKApplicationStateTrackingView_CustomInputAccessoryView") else {
-            print("allowDisplayingKeyboardWithoutUserAction extension: Cannot find the WKApplicationStateTrackingView_CustomInputAccessoryView class")
+            print("setKeyboardRequiresUserInteraction extension: Cannot find the WKApplicationStateTrackingView_CustomInputAccessoryView class")
             return
         }
         selector = sel_getUid("_elementDidFocus:userIsInteracting:blurPreviousNode:activityStateChanges:userObject:")
@@ -91,7 +103,7 @@ extension WKWebView {
             let originalImp: IMP = method_getImplementation(method)
             let original: NewClosureType = unsafeBitCast(originalImp, to: NewClosureType.self)
             let block : @convention(block) (Any, UnsafeRawPointer, Bool, Bool, Bool, Any?) -> Void = { (me, arg0, arg1, arg2, arg3, arg4) in
-                original(me, selector, arg0, true, arg2, arg3, arg4)
+                original(me, selector, arg0, !value, arg2, arg3, arg4)
             }
             let override: IMP = imp_implementationWithBlock(block)
             
@@ -100,18 +112,26 @@ extension WKWebView {
     }
 
     func focus() {
+        NSLog("Received focus event")
+        if (toolbarShouldBeShown) {
+            showToolbar = true
+        }
         let command = "window.term_.onFocusChange_(true); window.term_.scrollPort_.isScrolledEnd = true;"
         self.evaluateJavaScript(command) { result, error in
             if let error = error {
-                print(error)
+                // print("webView focus error: \(error)")
             }
             if let result = result {
-                // print(result)
+                // print("webView focus: \(result)")
             }
         }
     }
-
+    
     func blur() {
+        NSLog("Received blur event")
+        if (toolbarShouldBeShown) {
+            showToolbar = false
+        }
         let command = "window.term_.onFocusChange_(false)"
         self.evaluateJavaScript(command) { result, error in
             if let error = error {
