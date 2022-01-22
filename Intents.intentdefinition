@@ -63,11 +63,11 @@
 	<key>INIntentDefinitionNamespace</key>
 	<string>iwbZ8l</string>
 	<key>INIntentDefinitionSystemVersion</key>
-	<string>20E241</string>
+	<string>20G95</string>
 	<key>INIntentDefinitionToolsBuildVersion</key>
-	<string>12E262</string>
+	<string>13A233</string>
 	<key>INIntentDefinitionToolsVersion</key>
-	<string>12.5</string>
+	<string>13.0</string>
 	<key>INIntents</key>
 	<array>
 		<dict>
@@ -84,7 +84,7 @@
 			<key>INIntentKeyParameter</key>
 			<string>command</string>
 			<key>INIntentLastParameterTag</key>
-			<integer>9</integer>
+			<integer>21</integer>
 			<key>INIntentManagedParameterCombinations</key>
 			<dict>
 				<key>command,openWindow,keepGoing</key>
@@ -131,6 +131,8 @@
 				<dict>
 					<key>INIntentParameterConfigurable</key>
 					<true/>
+					<key>INIntentParameterCustomDisambiguation</key>
+					<true/>
 					<key>INIntentParameterDisplayName</key>
 					<string>Command(s)</string>
 					<key>INIntentParameterDisplayNameID</key>
@@ -141,6 +143,8 @@
 					<dict>
 						<key>INIntentParameterMetadataCapitalization</key>
 						<string>None</string>
+						<key>INIntentParameterMetadataDefaultValue</key>
+						<string> </string>
 						<key>INIntentParameterMetadataDisableAutocorrect</key>
 						<true/>
 						<key>INIntentParameterMetadataDisableSmartDashes</key>
@@ -170,7 +174,7 @@
 					<key>INIntentParameterSupportsResolution</key>
 					<true/>
 					<key>INIntentParameterTag</key>
-					<integer>7</integer>
+					<integer>21</integer>
 					<key>INIntentParameterType</key>
 					<string>String</string>
 				</dict>

@@ -62,7 +62,27 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
-			<string>Enable TeX (844 MB)</string>
+			<string>Show toolbar (Esc, Ctrl, Tab, arrows)</string>
+			<key>Key</key>
+			<string>show_toolbar</string>
+			<key>DefaultValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>Restart Vim after closing a-Shell</string>
+			<key>Key</key>
+			<string>restart_vim</string>
+			<key>DefaultValue</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>Enable TeX (1.3 GB)</string>
 			<key>Key</key>
 			<string>TeXEnabled</string>
 			<key>DefaultValue</key>
@@ -72,7 +92,7 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
-			<string>Enable LuaTeX (+257 MB)</string>
+			<string>Enable LuaTeX (+330 MB)</string>
 			<key>Key</key>
 			<string>TeXOpenType</string>
 			<key>DefaultValue</key>

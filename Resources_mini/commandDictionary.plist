@@ -765,5 +765,26 @@
 		<string></string>
 		<string>directory</string>
 	</array>
+	<key>ffmpeg</key>
+	<array>
+		<string>ffmpeg.framework/ffmpeg</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>ffprobe</key>
+	<array>
+		<string>ffprobe.framework/ffprobe</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>unrar</key>
+	<array>
+		<string>unrar.framework/unrar</string>
+		<string>main</string>
+		<string></string>
+		<string>directory</string>
+	</array>
 </dict>
 </plist>
