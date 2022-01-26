@@ -802,16 +802,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.sync {
             rootVC?.present(fontPicker, animated: true, completion: nil)
         }
-        while (!fontPicker.isBeingDismissed) { } // Wait until fontPicker is dismissed.
-        // Once the fontPicker is dismissed, wait to decide whether a font has been selected:
+        // Wait until fontPicker is dismissed or a font has been selected:
+        while (!fontPicker.isBeingDismissed && (selectedFont == "")) { }
         // NSLog("Dismissed. selectedFont= \(selectedFont)")
-        var timerDone = false
-        let seconds = 0.7 // roughly 2x slower observed time
-        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
-            timerDone = true
+        DispatchQueue.main.sync {
+            fontPicker.dismiss(animated:true)
         }
-        while (selectedFont == "") && !timerDone { }
-        // NSLog("Done. selectedFont= \(selectedFont)")
         if (selectedFont != "cancel") && (selectedFont != "") {
             return selectedFont
         }
