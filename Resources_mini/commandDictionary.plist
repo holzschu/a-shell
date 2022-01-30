@@ -450,6 +450,13 @@
 		<string>bcCdfghik:Mmno:RrsS:t:T:uVz</string>
 		<string>file</string>
 	</array>
+	<key>source</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>source</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>stat</key>
 	<array>
 		<string>files.framework/files</string>
