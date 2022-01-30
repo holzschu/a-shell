@@ -19,6 +19,7 @@ var downloadingOpentype = false
 var percentOpentypeDownloadComplete = 0.0
 let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
 // Need SDK install to be over before starting commands.
+var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 
 @objcMembers
 @UIApplicationMain
@@ -347,6 +348,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("DISABLE_SQLALCHEMY_CEXT", "1", 1)
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
+        appDependentPath = String(utf8String: getenv("PATH")) ?? ""
         if (appVersion != "a-Shell-mini") {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
@@ -364,7 +366,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             setenv("PERL_MM_OPT", "'INSTALL_BASE=" + documentsUrl.appendingPathComponent("perl5").path + "'", 1)
             setenv("PERL_MB_OPT", "--install_base \"" + documentsUrl.appendingPathComponent("perl5").path + "\"", 1)
             setenv("CPAN_OPTS", "-T", 1) // Do not test CPAN modules when installing, because tests tend to fork, and then hang.
-            setenv("PATH", documentsUrl.appendingPathComponent("perl5").appendingPathComponent("bin").path + ":" + String(utf8String: getenv("PATH"))!, 1)
+            appDependentPath = documentsUrl.appendingPathComponent("perl5").appendingPathComponent("bin").path + ":" + appDependentPath
+            setenv("PATH", appDependentPath, 1)
             setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man:" + documentsUrl.appendingPathComponent("perl5").appendingPathComponent("man").path, 1)
             if (!versionUpToDate || needToUpdateCFiles()) {
                 createCSDK()

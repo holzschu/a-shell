@@ -2278,8 +2278,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // If the app was reinstalled, paths to files are not valid anymore, so we don't set them.
         // We never touch system environment variables like HOME and APPDIR.
         NSLog("Restoring environment")
+        var path = String(utf8String: getenv( "PATH"))
+        var pathChanged = false
         if let environmentVariables = userInfo["environ"] as? [String] {
-            let path = String(utf8String: getenv( "PATH"))
             var virtualEnvironmentGone = false
             for variable in environmentVariables {
                 let components = variable.split(separator:"=")
@@ -2287,14 +2288,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 let value = String(components[1])
                 if name == "HOME" { continue }
                 if name == "APPDIR" { continue }
+                if name == "PATH" { continue }
+                if name == "MANPATH" { continue }
                 if (value.hasPrefix("/") && (!value.contains(":"))) {
                     // This variable might be a file or directory. Check it exists first:
                     if (!FileManager().fileExists(atPath: value)) {
                         // NSLog("Skipping \(name) = \(value) (not here)")
                         if (name == "VIRTUAL_ENV") {
                             // We had a virtual environment set, but pointing to a directory that no longer exists
-                            // Since PATH is usually before VIRTUAL_ENV in the list of variables, PATH has already been
-                            // overwritten by now. We set this boolean to reset it to its previous value.
+                            // Since _OLD_VIRTUAL_PATH is usually before VIRTUAL_ENV in the list of variables,
+                            // it has already been set by now. We set this boolean to erase it.
                             virtualEnvironmentGone = true
                         }
                         continue
@@ -2305,10 +2308,50 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // The virtual environment is not in the right place anymore, get the PATH variable back to the correct value
             if (virtualEnvironmentGone) {
-                // NSLog("Reset PATH to \(path)")
-                setenv("PATH", path, 1)
                 unsetenv("_OLD_VIRTUAL_PATH")
             }
+        }
+        // Only restore the parts of PATH that are not the main path (before and after),
+        // and make sure that each directory exists.
+        if let beforePath = userInfo["beforePath"] as? String {
+            let components = beforePath.components(separatedBy: ":")
+            var prefix:String = ""
+            for dir in components {
+                if (FileManager().fileExists(atPath: dir)) {
+                    prefix = prefix + dir + ":"
+                }
+            }
+            if (prefix.count > 0) {
+                if (path == nil) {
+                    path = prefix
+                } else {
+                    path = prefix + path!
+                }
+                pathChanged = true
+            }
+        }
+        if let afterPath = userInfo["afterPath"] as? String {
+            let components = afterPath.components(separatedBy: ":")
+            var suffix:String = ""
+            for dir in components {
+                if (FileManager().fileExists(atPath: dir)) {
+                    suffix = suffix + ":" + dir
+                }
+            }
+            if (suffix.count > 0) {
+                if (path == nil) {
+                    path = suffix
+                } else {
+                    if (!path!.hasSuffix(":")) {
+                        path = path! + ":"
+                    }
+                    path = path! + suffix
+                }
+                pathChanged = true
+            }
+        }
+        if (pathChanged) {
+            setenv("PATH", path, 1)
         }
         // Window preferences, stored on a per-session basis:
         if let fontSize = userInfo["fontSize"] as? Float {
@@ -2477,15 +2520,33 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         scene.session.stateRestorationActivity?.userInfo!["currentCommand"] = currentCommand
         // save the environment variables:
         var env = [String]()
+        var currentPath: String = ""
         var i = 0
         while (environ[i] != nil) {
             if let varValue = environ[i] {
                 let varValue2 = String(cString: varValue)
                 env.append(varValue2)
+                if (varValue2.hasPrefix("PATH=")) {
+                    currentPath = varValue2
+                }
             }
             i += 1
         }
         scene.session.stateRestorationActivity?.userInfo!["environ"] = env
+        //
+        if (currentPath.count > "PATH=".count) {
+            currentPath.removeFirst("PATH=".count)
+            NSLog("Path: \(currentPath)")
+            let components = currentPath.components(separatedBy: appDependentPath)
+            NSLog("Components of Path: \(components)")
+            if (components.count > 0) {
+                scene.session.stateRestorationActivity?.userInfo!["beforePath"] = components[0]
+            }
+            if (components.count > 1) {
+                scene.session.stateRestorationActivity?.userInfo!["afterPath"] = components[1]
+            }
+        }
+        
         // NSLog("storing currentCommand= \(currentCommand)")
         // Save all open editor windows
         // TODO: save context (Vim session)

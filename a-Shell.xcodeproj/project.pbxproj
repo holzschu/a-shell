@@ -85,8 +85,8 @@
 		22372B722448E85D0033FE07 /* usr in Resources */ = {isa = PBXBuildFile; fileRef = 22372B712448E85C0033FE07 /* usr */; };
 		223E61AB250A5CEA002BF41F /* python3_ios-_cffi_backend.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61A9250A5320002BF41F /* python3_ios-_cffi_backend.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223E61AC250A5CF1002BF41F /* pythonA-_cffi_backend.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61AA250A5338002BF41F /* pythonA-_cffi_backend.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		223E61B3250F9DBE002BF41F /* python3_ios-argon2._ffi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61B2250F9954002BF41F /* python3_ios-argon2._ffi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		223E61B4250F9DD4002BF41F /* pythonA-argon2._ffi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61B1250F9944002BF41F /* pythonA-argon2._ffi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		223E61B3250F9DBE002BF41F /* python3_ios-_argon2_cffi_bindings._ffi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61B2250F9954002BF41F /* python3_ios-_argon2_cffi_bindings._ffi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		223E61B4250F9DD4002BF41F /* pythonA-_argon2_cffi_bindings._ffi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E61B1250F9944002BF41F /* pythonA-_argon2_cffi_bindings._ffi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223FB59F272FE8140090A885 /* pythonA-PIL_all.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223FB59E272FE7C90090A885 /* pythonA-PIL_all.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223FB5A0272FE8180090A885 /* python3_ios-PIL_all.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223FB59D272FE7C00090A885 /* python3_ios-PIL_all.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223FB5A3272FE8670090A885 /* python3_ios-lxml_all.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223FB5A2272FE8620090A885 /* python3_ios-lxml_all.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -584,7 +584,7 @@
 				22E9F585255846A600673D11 /* lua_ios.xcframework in Embed Frameworks */,
 				22239C2C250293850069E539 /* pythonA-syslog.xcframework in Embed Frameworks */,
 				22239C2F250293850069E539 /* pythonA-xxlimited.xcframework in Embed Frameworks */,
-				223E61B4250F9DD4002BF41F /* pythonA-argon2._ffi.xcframework in Embed Frameworks */,
+				223E61B4250F9DD4002BF41F /* pythonA-_argon2_cffi_bindings._ffi.xcframework in Embed Frameworks */,
 				2294A9D0254C1A38008C1490 /* pythonA-kiwisolver.xcframework in Embed Frameworks */,
 				2294AA29254DA389008C1490 /* pythonA-matplotlib._c_internal_utils.xcframework in Embed Frameworks */,
 				2294AA2A254DA389008C1490 /* pythonA-matplotlib._contour.xcframework in Embed Frameworks */,
@@ -623,7 +623,7 @@
 				22239C6E250293980069E539 /* python3_ios-syslog.xcframework in Embed Frameworks */,
 				22239C71250293980069E539 /* python3_ios-xxlimited.xcframework in Embed Frameworks */,
 				223E61AB250A5CEA002BF41F /* python3_ios-_cffi_backend.xcframework in Embed Frameworks */,
-				223E61B3250F9DBE002BF41F /* python3_ios-argon2._ffi.xcframework in Embed Frameworks */,
+				223E61B3250F9DBE002BF41F /* python3_ios-_argon2_cffi_bindings._ffi.xcframework in Embed Frameworks */,
 				2294A9D7254C1A60008C1490 /* python3_ios-kiwisolver.xcframework in Embed Frameworks */,
 				2294AA14254DA363008C1490 /* python3_ios-matplotlib._c_internal_utils.xcframework in Embed Frameworks */,
 				2294AA15254DA363008C1490 /* python3_ios-matplotlib._contour.xcframework in Embed Frameworks */,
@@ -741,8 +741,8 @@
 		22372B712448E85C0033FE07 /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources/usr; sourceTree = "<group>"; };
 		223E61A9250A5320002BF41F /* python3_ios-_cffi_backend.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-_cffi_backend.xcframework"; path = "cpython/XcFrameworks/python3_ios-_cffi_backend.xcframework"; sourceTree = SOURCE_ROOT; };
 		223E61AA250A5338002BF41F /* pythonA-_cffi_backend.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_cffi_backend.xcframework"; path = "cpython/XcFrameworks/pythonA-_cffi_backend.xcframework"; sourceTree = SOURCE_ROOT; };
-		223E61B1250F9944002BF41F /* pythonA-argon2._ffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-argon2._ffi.xcframework"; path = "cpython/XcFrameworks/pythonA-argon2._ffi.xcframework"; sourceTree = SOURCE_ROOT; };
-		223E61B2250F9954002BF41F /* python3_ios-argon2._ffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-argon2._ffi.xcframework"; path = "cpython/XcFrameworks/python3_ios-argon2._ffi.xcframework"; sourceTree = SOURCE_ROOT; };
+		223E61B1250F9944002BF41F /* pythonA-_argon2_cffi_bindings._ffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_argon2_cffi_bindings._ffi.xcframework"; path = "cpython/XcFrameworks/pythonA-_argon2_cffi_bindings._ffi.xcframework"; sourceTree = SOURCE_ROOT; };
+		223E61B2250F9954002BF41F /* python3_ios-_argon2_cffi_bindings._ffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-_argon2_cffi_bindings._ffi.xcframework"; path = "cpython/XcFrameworks/python3_ios-_argon2_cffi_bindings._ffi.xcframework"; sourceTree = SOURCE_ROOT; };
 		223FB59D272FE7C00090A885 /* python3_ios-PIL_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-PIL_all.xcframework"; path = "cpython/XcFrameworks/python3_ios-PIL_all.xcframework"; sourceTree = "<group>"; };
 		223FB59E272FE7C90090A885 /* pythonA-PIL_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-PIL_all.xcframework"; path = "cpython/XcFrameworks/pythonA-PIL_all.xcframework"; sourceTree = "<group>"; };
 		223FB5A1272FE8490090A885 /* pythonA-lxml_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-lxml_all.xcframework"; path = "cpython/XcFrameworks/pythonA-lxml_all.xcframework"; sourceTree = "<group>"; };
@@ -1030,7 +1030,7 @@
 				22239B86250293580069E539 /* python3_ios-syslog.xcframework */,
 				22239B962502935A0069E539 /* python3_ios-xxlimited.xcframework */,
 				223E61A9250A5320002BF41F /* python3_ios-_cffi_backend.xcframework */,
-				223E61B2250F9954002BF41F /* python3_ios-argon2._ffi.xcframework */,
+				223E61B2250F9954002BF41F /* python3_ios-_argon2_cffi_bindings._ffi.xcframework */,
 				2299F0E2271DDE8B007A32C1 /* python3_ios-numpy_all.xcframework */,
 				226ED97C27254515005976B4 /* python3_ios-pandas_all.xcframework */,
 				223FB59D272FE7C00090A885 /* python3_ios-PIL_all.xcframework */,
@@ -1171,7 +1171,7 @@
 				22239BBF250293710069E539 /* pythonA-syslog.xcframework */,
 				22239BEE250293740069E539 /* pythonA-xxlimited.xcframework */,
 				223E61AA250A5338002BF41F /* pythonA-_cffi_backend.xcframework */,
-				223E61B1250F9944002BF41F /* pythonA-argon2._ffi.xcframework */,
+				223E61B1250F9944002BF41F /* pythonA-_argon2_cffi_bindings._ffi.xcframework */,
 				2299F0E3271DDE95007A32C1 /* pythonA-numpy_all.xcframework */,
 				226ED97D2725452A005976B4 /* pythonA-pandas_all.xcframework */,
 				223FB59E272FE7C90090A885 /* pythonA-PIL_all.xcframework */,
@@ -1793,7 +1793,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-IntentsUI/a-Shell-mini-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -1816,7 +1816,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-IntentsUI/a-Shell-mini-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -1839,7 +1839,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-Intents/a-Shell-mini-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -1862,7 +1862,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-Intents/a-Shell-mini-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2010,7 +2010,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2055,7 +2055,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2099,7 +2099,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2144,7 +2144,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -2187,7 +2187,7 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2216,7 +2216,7 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2244,7 +2244,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -2267,7 +2267,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 213;
+				CURRENT_PROJECT_VERSION = 215;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
