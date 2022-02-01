@@ -1,10 +1,8 @@
-from __future__ import unicode_literals
 import re
-import six
 
 from bleach import callbacks as linkify_callbacks
 from bleach import html5lib_shim
-from bleach.utils import alphabetize_attributes, force_unicode
+from bleach.utils import alphabetize_attributes
 
 
 #: List of default callbacks
@@ -92,7 +90,7 @@ def build_email_re(tlds=TLDS):
 EMAIL_RE = build_email_re()
 
 
-class Linker(object):
+class Linker:
     """Convert URL-like strings in an HTML fragment to links
 
     This function converts strings that look like URLs, domain names and email
@@ -171,10 +169,8 @@ class Linker(object):
         :raises TypeError: if ``text`` is not a text type
 
         """
-        if not isinstance(text, six.string_types):
+        if not isinstance(text, str):
             raise TypeError("argument must be of text type")
-
-        text = force_unicode(text)
 
         if not text:
             return ""
@@ -324,7 +320,7 @@ class LinkifyFilter(html5lib_shim.Filter):
                         new_tokens.extend(
                             [
                                 {"type": "StartTag", "name": "a", "data": attrs},
-                                {"type": "Characters", "data": force_unicode(_text)},
+                                {"type": "Characters", "data": str(_text)},
                                 {"type": "EndTag", "name": "a"},
                             ]
                         )
@@ -448,7 +444,7 @@ class LinkifyFilter(html5lib_shim.Filter):
                         new_tokens.extend(
                             [
                                 {"type": "StartTag", "name": "a", "data": attrs},
-                                {"type": "Characters", "data": force_unicode(_text)},
+                                {"type": "Characters", "data": str(_text)},
                                 {"type": "EndTag", "name": "a"},
                             ]
                         )
@@ -511,7 +507,7 @@ class LinkifyFilter(html5lib_shim.Filter):
                 # all the tokens between the start and end "a" tags and replace
                 # it with the new text
                 yield a_token
-                yield {"type": "Characters", "data": force_unicode(new_text)}
+                yield {"type": "Characters", "data": str(new_text)}
                 yield token_buffer[-1]
 
     def __iter__(self):

@@ -156,7 +156,7 @@ class Test_Csv(unittest.TestCase):
         self._write_error_test(OSError, BadIterable())
         class BadList:
             def __len__(self):
-                return 10;
+                return 10
             def __getitem__(self, i):
                 if i > 2:
                     raise OSError
@@ -442,9 +442,15 @@ class TestDialectRegistry(unittest.TestCase):
         class testUni(csv.excel):
             delimiter = "\u039B"
 
+        class unspecified():
+            # A class to pass as dialect but with no dialect attributes.
+            pass
+
         csv.register_dialect('testC', testC)
         try:
             self.compare_dialect_123("1,2,3\r\n")
+            self.compare_dialect_123("1,2,3\r\n", dialect=None)
+            self.compare_dialect_123("1,2,3\r\n", dialect=unspecified)
             self.compare_dialect_123("1\t2\t3\r\n", testA)
             self.compare_dialect_123("1:2:3\r\n", dialect=testB())
             self.compare_dialect_123("1|2|3\r\n", dialect='testC')
@@ -875,7 +881,7 @@ class TestDialectValidity(unittest.TestCase):
         with self.assertRaises(csv.Error) as cm:
             mydialect()
         self.assertEqual(str(cm.exception),
-                         '"quotechar" must be string, not int')
+                         '"quotechar" must be string or None, not int')
 
     def test_delimiter(self):
         class mydialect(csv.Dialect):
@@ -911,6 +917,35 @@ class TestDialectValidity(unittest.TestCase):
             mydialect()
         self.assertEqual(str(cm.exception),
                          '"delimiter" must be string, not int')
+
+        mydialect.delimiter = None
+        with self.assertRaises(csv.Error) as cm:
+            mydialect()
+        self.assertEqual(str(cm.exception),
+                         '"delimiter" must be string, not NoneType')
+
+    def test_escapechar(self):
+        class mydialect(csv.Dialect):
+            delimiter = ";"
+            escapechar = '\\'
+            doublequote = False
+            skipinitialspace = True
+            lineterminator = '\r\n'
+            quoting = csv.QUOTE_NONE
+        d = mydialect()
+        self.assertEqual(d.escapechar, "\\")
+
+        mydialect.escapechar = "**"
+        with self.assertRaisesRegex(csv.Error, '"escapechar" must be a 1-character string'):
+            mydialect()
+
+        mydialect.escapechar = b"*"
+        with self.assertRaisesRegex(csv.Error, '"escapechar" must be string or None, not bytes'):
+            mydialect()
+
+        mydialect.escapechar = 4
+        with self.assertRaisesRegex(csv.Error, '"escapechar" must be string or None, not int'):
+            mydialect()
 
     def test_lineterminator(self):
         class mydialect(csv.Dialect):

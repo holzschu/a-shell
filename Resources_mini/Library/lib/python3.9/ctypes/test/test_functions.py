@@ -35,34 +35,24 @@ class FunctionTestCase(unittest.TestCase):
         # wasn't checked, and it even crashed Python.
         # Found by Greg Chapman.
 
-        try:
+        with self.assertRaises(TypeError):
             class X(object, Array):
                 _length_ = 5
                 _type_ = "i"
-        except TypeError:
-            pass
-
 
         from _ctypes import _Pointer
-        try:
+        with self.assertRaises(TypeError):
             class X(object, _Pointer):
                 pass
-        except TypeError:
-            pass
 
         from _ctypes import _SimpleCData
-        try:
+        with self.assertRaises(TypeError):
             class X(object, _SimpleCData):
                 _type_ = "i"
-        except TypeError:
-            pass
 
-        try:
+        with self.assertRaises(TypeError):
             class X(object, Structure):
                 _fields_ = []
-        except TypeError:
-            pass
-
 
     @need_symbol('c_wchar')
     def test_wchar_parm(self):
@@ -389,7 +379,7 @@ class FunctionTestCase(unittest.TestCase):
                 (9*2, 8*3, 7*4, 6*5, 5*6, 4*7, 3*8, 2*9))
 
     def test_sf1651235(self):
-        # see http://www.python.org/sf/1651235
+        # see https://www.python.org/sf/1651235
 
         proto = CFUNCTYPE(c_int, RECT, POINT)
         def callback(*args):

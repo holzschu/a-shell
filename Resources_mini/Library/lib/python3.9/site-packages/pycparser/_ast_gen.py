@@ -10,7 +10,6 @@
 # Eli Bendersky [https://eli.thegreenplace.net/]
 # License: BSD
 #-----------------------------------------------------------------
-import pprint
 from string import Template
 
 
@@ -86,7 +85,6 @@ class NodeCfg(object):
         src = self._gen_init()
         src += '\n' + self._gen_children()
         src += '\n' + self._gen_iter()
-
         src += '\n' + self._gen_attr_names()
         return src
 
@@ -196,7 +194,7 @@ def _repr(obj):
     if isinstance(obj, list):
         return '[' + (',\n '.join((_repr(e).replace('\n', '\n ') for e in obj))) + '\n]'
     else:
-        return repr(obj) 
+        return repr(obj)
 
 class Node(object):
     __slots__ = ()
@@ -206,19 +204,19 @@ class Node(object):
         """ Generates a python representation of the current node
         """
         result = self.__class__.__name__ + '('
-        
+
         indent = ''
         separator = ''
         for name in self.__slots__[:-2]:
             result += separator
             result += indent
             result += name + '=' + (_repr(getattr(self, name)).replace('\n', '\n  ' + (' ' * (len(name) + len(self.__class__.__name__)))))
-            
+
             separator = ','
             indent = '\n ' + (' ' * len(self.__class__.__name__))
-        
+
         result += indent + ')'
-        
+
         return result
 
     def children(self):

@@ -10,6 +10,7 @@ import threading
 import warnings
 
 import unittest
+from unittest import mock
 TestCase = unittest.TestCase
 
 from test import support
@@ -1004,6 +1005,19 @@ class BasicTest(TestCase):
         resp = client.HTTPResponse(FakeSocket(body))
         self.assertRaises(client.LineTooLong, resp.begin)
 
+    def test_overflowing_header_limit_after_100(self):
+        body = (
+            'HTTP/1.1 100 OK\r\n'
+            'r\n' * 32768
+        )
+        resp = client.HTTPResponse(FakeSocket(body))
+        with self.assertRaises(client.HTTPException) as cm:
+            resp.begin()
+        # We must assert more because other reasonable errors that we
+        # do not want can also be HTTPException derived.
+        self.assertIn('got more than ', str(cm.exception))
+        self.assertIn('headers', str(cm.exception))
+
     def test_overflowing_chunked_line(self):
         body = (
             'HTTP/1.1 200 OK\r\n'
@@ -1405,7 +1419,7 @@ class Readliner:
 class OfflineTest(TestCase):
     def test_all(self):
         # Documented objects defined in the module should be in __all__
-        expected = {"responses"}  # White-list documented dict() object
+        expected = {"responses"}  # Allowlist documented dict() object
         # HTTPMessage, parse_headers(), and the HTTP status code constants are
         # intentionally omitted for simplicity
         blacklist = {"HTTPMessage", "parse_headers"}
@@ -2020,6 +2034,23 @@ class TunnelTests(TestCase):
 
         # This test should be removed when CONNECT gets the HTTP/1.1 blessing
         self.assertNotIn(b'Host: proxy.com', self.conn.sock.data)
+
+    def test_tunnel_connect_single_send_connection_setup(self):
+        """Regresstion test for https://bugs.python.org/issue43332."""
+        with mock.patch.object(self.conn, 'send') as mock_send:
+            self.conn.set_tunnel('destination.com')
+            self.conn.connect()
+            self.conn.request('GET', '/')
+        mock_send.assert_called()
+        # Likely 2, but this test only cares about the first.
+        self.assertGreater(
+                len(mock_send.mock_calls), 1,
+                msg=f'unexpected number of send calls: {mock_send.mock_calls}')
+        proxy_setup_data_sent = mock_send.mock_calls[0][1][0]
+        self.assertIn(b'CONNECT destination.com', proxy_setup_data_sent)
+        self.assertTrue(
+                proxy_setup_data_sent.endswith(b'\r\n\r\n'),
+                msg=f'unexpected proxy data sent {proxy_setup_data_sent!r}')
 
     def test_connect_put_request(self):
         self.conn.set_tunnel('destination.com')

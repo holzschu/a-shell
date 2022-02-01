@@ -527,7 +527,7 @@ class MSVCCompiler(CCompiler) :
             return
         warnings.warn(
             "Fallback spawn triggered. Please update distutils monkeypatch.")
-        with unittest.mock.patch('os.environ', env):
+        with unittest.mock.patch.dict('os.environ', env):
             bag.value = super().spawn(cmd)
 
     # -- Miscellaneous methods -----------------------------------------

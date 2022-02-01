@@ -1,8 +1,8 @@
 /* Minimal style sheet for the HTML output of Docutils.                    */
 /*                                                                         */
 /* :Author: Günter Milde, based on html4css1.css by David Goodger          */
-/* :Id: $Id: minimal.css 8642 2021-03-26 13:51:14Z milde $               */
-/* :Copyright: © 2015 Günter Milde.                                        */
+/* :Id: $Id: minimal.css 8783 2021-06-30 07:47:46Z milde $                                                               */
+/* :Copyright: © 2015, 2021 Günter Milde.                                  */
 /* :License: Released under the terms of the `2-Clause BSD license`_,      */
 /*    in short:                                                            */
 /*                                                                         */
@@ -14,11 +14,10 @@
 /*                                                                         */
 /* .. _2-Clause BSD license: http://www.spdx.org/licenses/BSD-2-Clause     */
 
-/* This CSS2.1_ stylesheet defines rules for Docutils elements without    */
-/* HTML equivalent. It is required to make the document semantic visible. */
-/*                                                                        */
-/* .. _CSS2.1: http://www.w3.org/TR/CSS2                                  */
-/* .. _validates: http://jigsaw.w3.org/css-validator/validator$link       */
+/* This CSS3 stylesheet defines rules for Docutils elements without        */
+/* HTML equivalent. It is required to make the document semantics visible. */
+/*                                                                         */
+/* .. _validates: http://jigsaw.w3.org/css-validator/validator$link        */
 
 /* titles */
 p.topic-title,
@@ -43,8 +42,8 @@ p.sidebar-subtitle {
 h1 + p.subtitle {
   font-size: 1.6em;
 }
-h2 + p.section-subtitle, a.toc-backref {
-  color: black;
+a.toc-backref {
+  color: inherit;
   text-decoration: none;
 }
 
@@ -76,13 +75,11 @@ span.problematic {
 /* Nested Paragraphs */
 p:first-child { margin-top: 0; }
 p:last-child { margin-bottom: 0; }
-td > p, th > p { margin-bottom: 0; }
+details > p:last-child { margin-bottom: 1em; }
 
 /* Table of Contents */
-.topic.contents { margin: 0.5em 0; }
-.topic.contents ul.auto-toc {
+.contents ul.auto-toc { /* section numbers present */
   list-style-type: none;
-  padding-left: 1.5em;
 }
 
 /* Enumerated Lists */
@@ -101,23 +98,32 @@ dt .classifier:before {
 }
 /* Field Lists and similar */
 /* bold field name, content starts on the same line */
+dl.field-list,
+dl.option-list,
+dl.docinfo {
+  display: flow-root;
+}
 dl.field-list > dt,
 dl.option-list > dt,
-dl.docinfo > dt,
-dl.footnote > dt,
-dl.citation > dt {
+dl.docinfo > dt {
   font-weight: bold;
   clear: left;
   float: left;
   margin: 0;
   padding: 0;
-  padding-right: 0.5em;
+  padding-right: 0.2em;
 }
 /* Offset for field content (corresponds to the --field-name-limit option) */
 dl.field-list > dd,
 dl.option-list > dd,
 dl.docinfo > dd {
   margin-left:  9em; /* ca. 14 chars in the test examples, fit all Docinfo fields */
+}
+/* start nested lists on new line */
+dd > dl:first-child,
+dd > ul:first-child,
+dd > ol:first-child {
+  clear: left;
 }
 /* start field-body on a new line after long field names */
 dl.field-list > dd > *:first-child,
@@ -126,11 +132,6 @@ dl.option-list > dd > *:first-child
   display: inline-block;
   width: 100%;
   margin: 0;
-}
-/* field names followed by a colon */
-dl.field-list > dt:after,
-dl.docinfo > dt:after {
-  content: ":";
 }
 
 /* Bibliographic Fields (docinfo) */
@@ -145,23 +146,53 @@ dl.option-list > dt { font-weight: normal; }
 span.option { white-space: nowrap; }
 
 /* Footnotes and Citations  */
-dl.footnote.superscript > dd { margin-left: 1em; }
-dl.footnote.brackets > dd { margin-left: 2em; }
-dl.footnote > dt { font-weight: normal; }
-a.footnote-reference.brackets:before,
-dt.label > span.brackets:before { content: "["; }
-a.footnote-reference.brackets:after,
-dt.label > span.brackets:after { content: "]"; }
-a.footnote-reference.superscript,
-dl.footnote.superscript > dt.label {
+
+.footnote, .citation { margin: 1em 0; } /* default paragraph skip (Firefox) */
+/* hanging indent */
+.citation { padding-left: 2em; }
+.footnote { padding-left: 1.7em; }
+.footnote.superscript { padding-left: 0.9em; }
+.citation > .label { margin-left: -2em; }
+.footnote > .label { margin-left: -1.7em; }
+.footnote.superscript > .label { margin-left: -0.9em; }
+
+.footnote > .label + *,
+.citation > .label + * {
+  display: inline-block;
+  margin-top: 0;
+  vertical-align: top;
+}
+.footnote > .backrefs + *,
+.citation > .backrefs + * {
+  margin-top: 0;
+}
+.footnote > .label + p, .footnote > .backrefs + p,
+.citation > .label + p, .citation > .backrefs + p {
+  display: inline;
+  vertical-align: inherit;
+}
+
+.backrefs > a { font-style: italic; }
+
+/* superscript footnotes */
+a[role="doc-noteref"].superscript,
+.footnote.superscript > .label,
+.footnote.superscript > .backrefs {
   vertical-align: super;
-  font-size: small;
+  font-size: smaller;
+  line-height: 1;
 }
-dt.label > span.fn-backref {
-  margin-left: 0.2em;
-  font-weight: normal;
+a[role="doc-noteref"].superscript > .fn-bracket,
+.footnote.superscript > .label > .fn-bracket {
+  /* hide brackets in display but leave for copy/paste */
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
 }
-dt.label > span.fn-backref > a { font-style: italic; }
+[role="doc-noteref"].superscript + [role="doc-noteref"].superscript {
+  padding-left: 0.15em; /* separate consecutive footnote references */
+  /* TODO: unfortunately, "+" also selects with text between the references. */
+}
 
 /* Alignment */
 .align-left   {
@@ -169,7 +200,6 @@ dt.label > span.fn-backref > a { font-style: italic; }
   margin-right: auto;
 }
 .align-center {
-  clear: both;
   text-align: center;
   margin-left: auto;
   margin-right: auto;
@@ -189,23 +219,13 @@ table.align-left, table.align-center, table.align-right {
 }
 
 /* Text Blocks */
-blockquote,
-div.topic,
-aside.topic {
-  margin: 1em 2em;
-}
+.topic { margin: 1em 2em; }
 .sidebar,
 .admonition,
 .system-message {
-  border: thin solid;
   margin: 1em 2em;
+  border: thin solid;
   padding: 0.5em 1em;
-}
-.sidebar {
-  width: 30%;
-  max-width: 26em;
-  float: right;
-  clear: right;
 }
 div.line-block { display: block; }
 div.line-block div.line-block, pre { margin-left: 2em; }
@@ -246,7 +266,7 @@ footer { border-top: 1px solid black; }
 
 /* Images are block-level by default in Docutils */
 /* New HTML5 block elements: set display for older browsers */
-img, header, section, footer, aside, nav, main, article, figure, video {
+img, header, footer, main, aside, nav, section, figure, video, details {
   display: block;
 }
 /* inline images */

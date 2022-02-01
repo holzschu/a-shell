@@ -1,4 +1,4 @@
-# $Id: tables.py 8377 2019-08-27 19:49:45Z milde $
+# $Id: tables.py 8860 2021-10-22 16:39:59Z milde $
 # Authors: David Goodger <goodger@python.org>; David Priest
 # Copyright: This module has been placed in the public domain.
 
@@ -103,17 +103,18 @@ class Table(Directive):
     def widths(self):
         return self.options.get('widths', '')
 
-    def get_column_widths(self, max_cols):
+    def get_column_widths(self, n_cols):
         if isinstance(self.widths, list):
-            if len(self.widths) != max_cols:
+            if len(self.widths) != n_cols:
+                # TODO: use last value for missing columns?
                 error = self.state_machine.reporter.error(
                     '"%s" widths do not match the number of columns in table '
-                    '(%s).' % (self.name, max_cols), nodes.literal_block(
+                    '(%s).' % (self.name, n_cols), nodes.literal_block(
                     self.block_text, self.block_text), line=self.lineno)
                 raise SystemMessagePropagation(error)
             col_widths = self.widths
-        elif max_cols:
-            col_widths = [100 // max_cols] * max_cols
+        elif n_cols:
+            col_widths = [100 // n_cols] * n_cols
         else:
             error = self.state_machine.reporter.error(
                 'No table data detected in CSV file.', nodes.literal_block(
@@ -151,15 +152,16 @@ class RSTTable(Table):
         self.set_table_width(table_node)
         if 'align' in self.options:
             table_node['align'] = self.options.get('align')
-        tgroup = table_node[0]
         if isinstance(self.widths, list):
+            tgroup = table_node[0]
+            try:
+                col_widths = self.get_column_widths(tgroup["cols"])
+            except SystemMessagePropagation as detail:
+                return [detail.args[0]]
             colspecs = [child for child in tgroup.children
                         if child.tagname == 'colspec']
-            for colspec, col_width in zip(colspecs, self.widths):
+            for colspec, col_width in zip(colspecs, col_widths):
                 colspec['colwidth'] = col_width
-        # @@@ the colwidths argument for <tgroup> is not part of the
-        # XML Exchange Table spec (https://www.oasis-open.org/specs/tm9901.htm)
-        # and hence violates the docutils.dtd.
         if self.widths == 'auto':
             table_node['classes'] += ['colwidths-auto']
         elif self.widths: # "grid" or list of integers
@@ -483,7 +485,7 @@ class ListTable(Table):
         table = nodes.table()
         if self.widths == 'auto':
             table['classes'] += ['colwidths-auto']
-        elif self.widths: # "grid" or list of integers
+        elif self.widths: # explicitly set column widths
             table['classes'] += ['colwidths-given']
         tgroup = nodes.tgroup(cols=len(col_widths))
         table += tgroup

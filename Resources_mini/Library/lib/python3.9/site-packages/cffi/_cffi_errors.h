@@ -54,6 +54,8 @@ static PyObject *_cffi_start_error_capture(void)
         "      of.write(x)\n"
         "    except: pass\n"
         "    self.buf += x\n"
+        "  def flush(self):\n"
+        "    pass\n"
         "fl = FileLike()\n"
         "fl.buf = ''\n"
         "of = sys.stderr\n"

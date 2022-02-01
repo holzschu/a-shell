@@ -1,4 +1,4 @@
-# $Id: pseudoxml.py 8592 2020-12-15 23:06:26Z milde $
+# $Id: pseudoxml.py 8859 2021-10-21 22:59:24Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -21,7 +21,7 @@ class Writer(writers.Writer):
         '"Docutils pseudo-XML" Writer Options',
         None,
         (('Pretty-print <#text> nodes.',
-          ['--detailled'],
+          ['--detailed'],
           {'action': 'store_true', 'validator': frontend.validate_boolean}),
         ))
 

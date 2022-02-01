@@ -24,7 +24,7 @@ try:
 except ImportError:
     ThreadPoolExecutor = None
 
-from test.support import run_unittest, TESTFN, DirsOnSysPath, cpython_only
+from test.support import TESTFN, DirsOnSysPath, cpython_only
 from test.support import MISSING_C_DOCSTRINGS, ALWAYS_EQ
 from test.support.script_helper import assert_python_ok, assert_python_failure
 from test import inspect_fodder as mod
@@ -127,8 +127,8 @@ class TestPredicates(IsTestBase):
         self.istest(inspect.iscode, 'mod.spam.__code__')
         try:
             1/0
-        except:
-            tb = sys.exc_info()[2]
+        except Exception as e:
+            tb = e.__traceback__
             self.istest(inspect.isframe, 'tb.tb_frame')
             self.istest(inspect.istraceback, 'tb')
             if hasattr(types, 'GetSetDescriptorType'):
@@ -487,6 +487,15 @@ class TestRetrievingSourceCode(GetSourceBase):
         self.assertEqual(inspect.getmodule(str), sys.modules["builtins"])
         # Check filename override
         self.assertEqual(inspect.getmodule(None, modfile), mod)
+
+    def test_getmodule_file_not_found(self):
+        # See bpo-45406
+        def _getabsfile(obj, _filename):
+            raise FileNotFoundError('bad file')
+        with unittest.mock.patch('inspect.getabsfile', _getabsfile):
+            f = inspect.currentframe()
+            self.assertIsNone(inspect.getmodule(f))
+            inspect.getouterframes(f)  # smoke test
 
     def test_getframeinfo_get_first_line(self):
         frame_info = inspect.getframeinfo(self.fodderModule.fr, 50)
@@ -2958,6 +2967,47 @@ class TestSignatureObject(unittest.TestCase):
                            ('bar', 2, ..., "keyword_only")),
                           ...))
 
+    def test_signature_on_subclass(self):
+        class A:
+            def __new__(cls, a=1, *args, **kwargs):
+                return object.__new__(cls)
+        class B(A):
+            def __init__(self, b):
+                pass
+        class C(A):
+            def __new__(cls, a=1, b=2, *args, **kwargs):
+                return object.__new__(cls)
+        class D(A):
+            pass
+
+        self.assertEqual(self.signature(B),
+                         ((('b', ..., ..., "positional_or_keyword"),),
+                          ...))
+        self.assertEqual(self.signature(C),
+                         ((('a', 1, ..., 'positional_or_keyword'),
+                           ('b', 2, ..., 'positional_or_keyword'),
+                           ('args', ..., ..., 'var_positional'),
+                           ('kwargs', ..., ..., 'var_keyword')),
+                          ...))
+        self.assertEqual(self.signature(D),
+                         ((('a', 1, ..., 'positional_or_keyword'),
+                           ('args', ..., ..., 'var_positional'),
+                           ('kwargs', ..., ..., 'var_keyword')),
+                          ...))
+
+    def test_signature_on_generic_subclass(self):
+        from typing import Generic, TypeVar
+
+        T = TypeVar('T')
+
+        class A(Generic[T]):
+            def __init__(self, *, a: int) -> None:
+                pass
+
+        self.assertEqual(self.signature(A),
+                         ((('a', ..., int, 'keyword_only'),),
+                          None))
+
     @unittest.skipIf(MISSING_C_DOCSTRINGS,
                      "Signature information for builtins requires docstrings")
     def test_signature_on_class_without_init(self):
@@ -3158,6 +3208,17 @@ class TestSignatureObject(unittest.TestCase):
         def foo():
             pass
         self.assertEqual(str(inspect.signature(foo)), '()')
+
+        def foo(a: list[str]) -> tuple[str, float]:
+            pass
+        self.assertEqual(str(inspect.signature(foo)),
+                         '(a: list[str]) -> tuple[str, float]')
+
+        from typing import Tuple
+        def foo(a: list[str]) -> Tuple[str, float]:
+            pass
+        self.assertEqual(str(inspect.signature(foo)),
+                         '(a: list[str]) -> Tuple[str, float]')
 
     def test_signature_str_positional_only(self):
         P = inspect.Parameter
@@ -3888,6 +3949,17 @@ class TestSignatureDefinitions(unittest.TestCase):
         sig = inspect.signature(func)
         self.assertEqual(str(sig), '(self, a, b=1, /, *args, c, d=2, **kwargs)')
 
+    def test_base_class_have_text_signature(self):
+        # see issue 43118
+        from test.ann_module7 import BufferedReader
+        class MyBufferedReader(BufferedReader):
+            """buffer reader class."""
+
+        text_signature = BufferedReader.__text_signature__
+        self.assertEqual(text_signature, '(raw, buffer_size=DEFAULT_BUFFER_SIZE)')
+        sig = inspect.signature(MyBufferedReader)
+        self.assertEqual(str(sig), '(raw, buffer_size=8192)')
+
 
 class NTimesUnwrappable:
     def __init__(self, n):
@@ -4040,18 +4112,5 @@ def foo():
             self.assertInspectEqual(path, module)
 
 
-def test_main():
-    run_unittest(
-        TestDecorators, TestRetrievingSourceCode, TestOneliners, TestBlockComments,
-        TestBuggyCases, TestInterpreterStack, TestClassesAndFunctions, TestPredicates,
-        TestGetcallargsFunctions, TestGetcallargsMethods,
-        TestGetcallargsUnboundMethods, TestGetattrStatic, TestGetGeneratorState,
-        TestNoEOL, TestSignatureObject, TestSignatureBind, TestParameterObject,
-        TestBoundArguments, TestSignaturePrivateHelpers,
-        TestSignatureDefinitions, TestIsDataDescriptor,
-        TestGetClosureVars, TestUnwrap, TestMain, TestReload,
-        TestGetCoroutineState, TestGettingSourceOfToplevelFrames
-    )
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

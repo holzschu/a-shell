@@ -46,7 +46,7 @@ class PRecord(PMap, CheckedType, metaclass=_PRecordMeta):
                                   for k, v in cls._precord_initial_values.items())
             initial_values.update(kwargs)
 
-        e = _PRecordEvolver(cls, pmap(), _factory_fields=factory_fields, _ignore_extra=ignore_extra)
+        e = _PRecordEvolver(cls, pmap(pre_size=len(cls._precord_fields)), _factory_fields=factory_fields, _ignore_extra=ignore_extra)
         for k, v in initial_values.items():
             e[k] = v
 

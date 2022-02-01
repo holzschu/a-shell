@@ -8,6 +8,8 @@ import warnings
 import re
 import builtins
 import typing
+from pathlib import Path
+from typing import Optional
 
 from jedi.inference.compiled.getattr_static import getattr_static
 
@@ -179,9 +181,9 @@ class DirectObjectAccess:
     def py__bool__(self):
         return bool(self._obj)
 
-    def py__file__(self):
+    def py__file__(self) -> Optional[Path]:
         try:
-            return self._obj.__file__
+            return Path(self._obj.__file__)
         except AttributeError:
             return None
 
@@ -211,7 +213,22 @@ class DirectObjectAccess:
     def py__getitem__all_values(self):
         if isinstance(self._obj, dict):
             return [self._create_access_path(v) for v in self._obj.values()]
-        return self.py__iter__list()
+        if isinstance(self._obj, (list, tuple)):
+            return [self._create_access_path(v) for v in self._obj]
+
+        if self.is_instance():
+            cls = DirectObjectAccess(self._inference_state, self._obj.__class__)
+            return cls.py__getitem__all_values()
+
+        try:
+            getitem = self._obj.__getitem__
+        except AttributeError:
+            pass
+        else:
+            annotation = DirectObjectAccess(self._inference_state, getitem).get_return_annotation()
+            if annotation is not None:
+                return [annotation]
+        return None
 
     def py__simple_getitem__(self, index):
         if type(self._obj) not in ALLOWED_GETITEM_TYPES:
@@ -221,8 +238,14 @@ class DirectObjectAccess:
         return self._create_access_path(self._obj[index])
 
     def py__iter__list(self):
-        if not hasattr(self._obj, '__getitem__'):
+        try:
+            iter_method = self._obj.__iter__
+        except AttributeError:
             return None
+        else:
+            p = DirectObjectAccess(self._inference_state, iter_method).get_return_annotation()
+            if p is not None:
+                return [p]
 
         if type(self._obj) not in ALLOWED_GETITEM_TYPES:
             # Get rid of side effects, we won't call custom `__getitem__`s.
@@ -306,9 +329,9 @@ class DirectObjectAccess:
         except TypeError:
             return False
 
-    def is_allowed_getattr(self, name, unsafe=False):
+    def is_allowed_getattr(self, name, safe=True):
         # TODO this API is ugly.
-        if unsafe:
+        if not safe:
             # Unsafe is mostly used to check for __getattr__/__getattribute__.
             # getattr_static works for properties, but the underscore methods
             # are just ignored (because it's safer and avoids more code
@@ -361,7 +384,7 @@ class DirectObjectAccess:
         except AttributeError:
             pass
         else:
-            if module is not None:
+            if module is not None and isinstance(module, str):
                 try:
                     __import__(module)
                     # For some modules like _sqlite3, the __module__ for classes is

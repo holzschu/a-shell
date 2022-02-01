@@ -1,4 +1,4 @@
-# $Id: body.py 8596 2020-12-16 10:41:03Z milde $
+# $Id: body.py 8860 2021-10-22 16:39:59Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -159,7 +159,7 @@ class CodeBlock(Directive):
                            self.state.document.settings.syntax_highlight)
         except LexerError as error:
             if self.state.document.settings.report_level > 2:
-                # don't report warnings -> insert without syntax highligt
+                # don't report warnings -> insert without syntax highlight
                 tokens = Lexer(u'\n'.join(self.content), language, 'none')
             else:
                 raise self.warning(error)

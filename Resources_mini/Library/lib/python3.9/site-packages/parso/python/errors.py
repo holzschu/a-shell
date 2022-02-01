@@ -5,7 +5,6 @@ import re
 from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue, Rule
-from parso.python.tree import search_ancestor
 from parso.python.tokenize import _get_token_collection
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
@@ -147,8 +146,20 @@ def _remove_parens(atom):
     return atom
 
 
+def _skip_parens_bottom_up(node):
+    """
+    Returns an ancestor node of an expression, skipping all levels of parens
+    bottom-up.
+    """
+    while node.parent is not None:
+        node = node.parent
+        if node.type != 'atom' or node.children[0] != '(':
+            return node
+    return None
+
+
 def _iter_params(parent_node):
-    return (n for n in parent_node.children if n.type == 'param')
+    return (n for n in parent_node.children if n.type == 'param' or n.type == 'operator')
 
 
 def _is_future_import_first(import_from):
@@ -219,7 +230,7 @@ def _any_fstring_error(version, node):
     elif node.type == "fstring":
         return True
     else:
-        return search_ancestor(node, "fstring")
+        return node.search_ancestor("fstring")
 
 
 class _Context:
@@ -229,6 +240,7 @@ class _Context:
         self.parent_context = parent_context
         self._used_name_dict = {}
         self._global_names = []
+        self._local_params_names = []
         self._nonlocal_names = []
         self._nonlocal_names_in_subscopes = []
         self._add_syntax_error = add_syntax_error
@@ -252,6 +264,10 @@ class _Context:
             self._global_names.append(name)
         elif parent_type == 'nonlocal_stmt':
             self._nonlocal_names.append(name)
+        elif parent_type == 'funcdef':
+            self._local_params_names.extend(
+                [param.name.value for param in name.parent.get_params()]
+            )
         else:
             self._used_name_dict.setdefault(name.value, []).append(name)
 
@@ -279,6 +295,8 @@ class _Context:
         nonlocals_not_handled = []
         for nonlocal_name in self._nonlocal_names_in_subscopes:
             search = nonlocal_name.value
+            if search in self._local_params_names:
+                continue
             if search in global_name_strs or self.parent_context is None:
                 message = "no binding for nonlocal '%s' found" % nonlocal_name.value
                 self._add_syntax_error(nonlocal_name, message)
@@ -730,9 +748,34 @@ class _FutureImportRule(SyntaxRule):
 @ErrorFinder.register_rule(type='star_expr')
 class _StarExprRule(SyntaxRule):
     message_iterable_unpacking = "iterable unpacking cannot be used in comprehension"
-    message_assignment = "can use starred expression only as assignment target"
 
     def is_issue(self, node):
+        def check_delete_starred(node):
+            while node.parent is not None:
+                node = node.parent
+                if node.type == 'del_stmt':
+                    return True
+                if node.type not in (*_STAR_EXPR_PARENTS, 'atom'):
+                    return False
+            return False
+
+        if self._normalizer.version >= (3, 9):
+            ancestor = node.parent
+        else:
+            ancestor = _skip_parens_bottom_up(node)
+        # starred expression not in tuple/list/set
+        if ancestor.type not in (*_STAR_EXPR_PARENTS, 'dictorsetmaker') \
+                and not (ancestor.type == 'atom' and ancestor.children[0] != '('):
+            self.add_issue(node, message="can't use starred expression here")
+            return
+
+        if check_delete_starred(node):
+            if self._normalizer.version >= (3, 9):
+                self.add_issue(node, message="cannot delete starred")
+            else:
+                self.add_issue(node, message="can't use starred expression here")
+            return
+
         if node.parent.type == 'testlist_comp':
             # [*[] for a in [1]]
             if node.parent.children[1].type in _COMP_FOR_TYPES:
@@ -742,39 +785,33 @@ class _StarExprRule(SyntaxRule):
 @ErrorFinder.register_rule(types=_STAR_EXPR_PARENTS)
 class _StarExprParentRule(SyntaxRule):
     def is_issue(self, node):
-        if node.parent.type == 'del_stmt':
-            if self._normalizer.version >= (3, 9):
-                self.add_issue(node.parent, message="cannot delete starred")
-            else:
-                self.add_issue(node.parent, message="can't use starred expression here")
-        else:
-            def is_definition(node, ancestor):
-                if ancestor is None:
-                    return False
+        def is_definition(node, ancestor):
+            if ancestor is None:
+                return False
 
-                type_ = ancestor.type
-                if type_ == 'trailer':
-                    return False
+            type_ = ancestor.type
+            if type_ == 'trailer':
+                return False
 
-                if type_ == 'expr_stmt':
-                    return node.start_pos < ancestor.children[-1].start_pos
+            if type_ == 'expr_stmt':
+                return node.start_pos < ancestor.children[-1].start_pos
 
-                return is_definition(node, ancestor.parent)
+            return is_definition(node, ancestor.parent)
 
-            if is_definition(node, node.parent):
-                args = [c for c in node.children if c != ',']
-                starred = [c for c in args if c.type == 'star_expr']
-                if len(starred) > 1:
-                    if self._normalizer.version < (3, 9):
-                        message = "two starred expressions in assignment"
-                    else:
-                        message = "multiple starred expressions in assignment"
-                    self.add_issue(starred[1], message=message)
-                elif starred:
-                    count = args.index(starred[0])
-                    if count >= 256:
-                        message = "too many expressions in star-unpacking assignment"
-                        self.add_issue(starred[0], message=message)
+        if is_definition(node, node.parent):
+            args = [c for c in node.children if c != ',']
+            starred = [c for c in args if c.type == 'star_expr']
+            if len(starred) > 1:
+                if self._normalizer.version < (3, 9):
+                    message = "two starred expressions in assignment"
+                else:
+                    message = "multiple starred expressions in assignment"
+                self.add_issue(starred[1], message=message)
+            elif starred:
+                count = args.index(starred[0])
+                if count >= 256:
+                    message = "too many expressions in star-unpacking assignment"
+                    self.add_issue(starred[0], message=message)
 
 
 @ErrorFinder.register_rule(type='annassign')
@@ -911,17 +948,28 @@ class _ParameterRule(SyntaxRule):
     def is_issue(self, node):
         param_names = set()
         default_only = False
+        star_seen = False
         for p in _iter_params(node):
+            if p.type == 'operator':
+                if p.value == '*':
+                    star_seen = True
+                    default_only = False
+                continue
+
             if p.name.value in param_names:
                 message = "duplicate argument '%s' in function definition"
                 self.add_issue(p.name, message=message % p.name.value)
             param_names.add(p.name.value)
 
-            if p.default is None and not p.star_count:
-                if default_only:
-                    return True
-            else:
-                default_only = True
+            if not star_seen:
+                if p.default is None and not p.star_count:
+                    if default_only:
+                        return True
+                elif p.star_count:
+                    star_seen = True
+                    default_only = False
+                else:
+                    default_only = True
 
 
 @ErrorFinder.register_rule(type='try_stmt')
@@ -1079,8 +1127,15 @@ class _CheckAssignmentRule(SyntaxRule):
                     error = "starred"
                 else:
                     self.add_issue(node, message="can't use starred expression here")
-            elif not search_ancestor(node, *_STAR_EXPR_PARENTS) and not is_aug_assign:
-                self.add_issue(node, message="starred assignment target must be in a list or tuple")
+            else:
+                if self._normalizer.version >= (3, 9):
+                    ancestor = node.parent
+                else:
+                    ancestor = _skip_parens_bottom_up(node)
+                if ancestor.type not in _STAR_EXPR_PARENTS and not is_aug_assign \
+                        and not (ancestor.type == 'atom' and ancestor.children[0] == '['):
+                    message = "starred assignment target must be in a list or tuple"
+                    self.add_issue(node, message=message)
 
             self._check_assignment(node.children[1])
 
@@ -1209,7 +1264,7 @@ class _NamedExprRule(_CheckAssignmentRule):
         def search_all_comp_ancestors(node):
             has_ancestors = False
             while True:
-                node = search_ancestor(node, 'testlist_comp', 'dictorsetmaker')
+                node = node.search_ancestor('testlist_comp', 'dictorsetmaker')
                 if node is None:
                     break
                 for child in node.children:

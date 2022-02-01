@@ -104,3 +104,61 @@ def _extract_nested_case(case_node, stmts_list):
         stmts_list.append(case_node.stmts.pop())
         _extract_nested_case(stmts_list[-1], stmts_list)
 
+
+def fix_atomic_specifiers(decl):
+    """ Atomic specifiers like _Atomic(type) are unusually structured,
+        conferring a qualifier upon the contained type.
+
+        This function fixes a decl with atomic specifiers to have a sane AST
+        structure, by removing spurious Typename->TypeDecl pairs and attaching
+        the _Atomic qualifier in the right place.
+    """
+    # There can be multiple levels of _Atomic in a decl; fix them until a
+    # fixed point is reached.
+    while True:
+        decl, found = _fix_atomic_specifiers_once(decl)
+        if not found:
+            break
+
+    # Make sure to add an _Atomic qual on the topmost decl if needed. Also
+    # restore the declname on the innermost TypeDecl (it gets placed in the
+    # wrong place during construction).
+    typ = decl
+    while not isinstance(typ, c_ast.TypeDecl):
+        try:
+            typ = typ.type
+        except AttributeError:
+            return decl
+    if '_Atomic' in typ.quals and '_Atomic' not in decl.quals:
+        decl.quals.append('_Atomic')
+    if typ.declname is None:
+        typ.declname = decl.name
+
+    return decl
+
+
+def _fix_atomic_specifiers_once(decl):
+    """ Performs one 'fix' round of atomic specifiers.
+        Returns (modified_decl, found) where found is True iff a fix was made.
+    """
+    parent = decl
+    grandparent = None
+    node = decl.type
+    while node is not None:
+        if isinstance(node, c_ast.Typename) and '_Atomic' in node.quals:
+            break
+        try:
+            grandparent = parent
+            parent = node
+            node = node.type
+        except AttributeError:
+            # If we've reached a node without a `type` field, it means we won't
+            # find what we're looking for at this point; give up the search
+            # and return the original decl unmodified.
+            return decl, False
+
+    assert isinstance(parent, c_ast.TypeDecl)
+    grandparent.type = node.type
+    if '_Atomic' not in node.type.quals:
+        node.type.quals.append('_Atomic')
+    return decl, True

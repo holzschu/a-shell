@@ -4,9 +4,8 @@ Tests for the parts of jsonschema related to the :validator:`format` property.
 
 from unittest import TestCase
 
-from jsonschema import FormatError, ValidationError, FormatChecker
+from jsonschema import FormatChecker, FormatError, ValidationError
 from jsonschema.validators import Draft4Validator
-
 
 BOOM = ValueError("Boom!")
 BANG = ZeroDivisionError("Bang!")
@@ -41,7 +40,7 @@ class TestFormatChecker(TestCase):
         checker.checks("boom")(boom)
         self.assertEqual(
             checker.checkers,
-            dict(FormatChecker.checkers, boom=(boom, ()))
+            dict(FormatChecker.checkers, boom=(boom, ())),
         )
 
     def test_it_catches_registered_errors(self):
@@ -80,10 +79,29 @@ class TestFormatChecker(TestCase):
 
     def test_repr(self):
         checker = FormatChecker(formats=())
-        checker.checks("foo")(lambda thing: True)
-        checker.checks("bar")(lambda thing: True)
-        checker.checks("baz")(lambda thing: True)
+        checker.checks("foo")(lambda thing: True)  # pragma: no cover
+        checker.checks("bar")(lambda thing: True)  # pragma: no cover
+        checker.checks("baz")(lambda thing: True)  # pragma: no cover
         self.assertEqual(
             repr(checker),
             "<FormatChecker checkers=['bar', 'baz', 'foo']>",
         )
+
+    def test_duration_format(self):
+        try:
+            from jsonschema._format import is_duration  # noqa: F401
+        except ImportError:  # pragma: no cover
+            pass
+        else:
+            checker = FormatChecker()
+            self.assertTrue(checker.conforms(1, "duration"))
+            self.assertTrue(checker.conforms("P4Y", "duration"))
+            self.assertFalse(checker.conforms("test", "duration"))
+
+    def test_uuid_format(self):
+        checker = FormatChecker()
+        self.assertTrue(checker.conforms(1, "uuid"))
+        self.assertTrue(
+            checker.conforms("6e6659ec-4503-4428-9f03-2e2ea4d6c278", "uuid"),
+        )
+        self.assertFalse(checker.conforms("test", "uuid"))

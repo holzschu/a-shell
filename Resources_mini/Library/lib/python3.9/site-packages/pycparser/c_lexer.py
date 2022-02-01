@@ -7,7 +7,6 @@
 # License: BSD
 #------------------------------------------------------------------------------
 import re
-import sys
 
 from .ply import lex
 from .ply.lex import TOKEN
@@ -100,7 +99,7 @@ class CLexer(object):
     ## Reserved keywords
     ##
     keywords = (
-        '_BOOL', '_COMPLEX', 'AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST',
+        'AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST',
         'CONTINUE', 'DEFAULT', 'DO', 'DOUBLE', 'ELSE', 'ENUM', 'EXTERN',
         'FLOAT', 'FOR', 'GOTO', 'IF', 'INLINE', 'INT', 'LONG',
         'REGISTER', 'OFFSETOF',
@@ -109,19 +108,24 @@ class CLexer(object):
         'VOLATILE', 'WHILE', '__INT128',
     )
 
+    keywords_new = (
+        '_BOOL', '_COMPLEX',
+        '_NORETURN', '_THREAD_LOCAL', '_STATIC_ASSERT',
+        '_ATOMIC', '_ALIGNOF', '_ALIGNAS',
+        )
+
     keyword_map = {}
+
     for keyword in keywords:
-        if keyword == '_BOOL':
-            keyword_map['_Bool'] = keyword
-        elif keyword == '_COMPLEX':
-            keyword_map['_Complex'] = keyword
-        else:
-            keyword_map[keyword.lower()] = keyword
+        keyword_map[keyword.lower()] = keyword
+
+    for keyword in keywords_new:
+        keyword_map[keyword[:2].upper() + keyword[2:].lower()] = keyword
 
     ##
     ## All the tokens recognized by the lexer
     ##
-    tokens = keywords + (
+    tokens = keywords + keywords_new + (
         # Identifiers
         'ID',
 
@@ -134,10 +138,16 @@ class CLexer(object):
         'FLOAT_CONST', 'HEX_FLOAT_CONST',
         'CHAR_CONST',
         'WCHAR_CONST',
+        'U8CHAR_CONST',
+        'U16CHAR_CONST',
+        'U32CHAR_CONST',
 
         # String literals
         'STRING_LITERAL',
         'WSTRING_LITERAL',
+        'U8STRING_LITERAL',
+        'U16STRING_LITERAL',
+        'U32STRING_LITERAL',
 
         # Operators
         'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MOD',
@@ -160,7 +170,7 @@ class CLexer(object):
         # Conditional operator (?)
         'CONDOP',
 
-        # Delimeters
+        # Delimiters
         'LPAREN', 'RPAREN',         # ( )
         'LBRACKET', 'RBRACKET',     # [ ]
         'LBRACE', 'RBRACE',         # { }
@@ -239,6 +249,9 @@ class CLexer(object):
     cconst_char = r"""([^'\\\n]|"""+escape_sequence+')'
     char_const = "'"+cconst_char+"'"
     wchar_const = 'L'+char_const
+    u8char_const = 'u8'+char_const
+    u16char_const = 'u'+char_const
+    u32char_const = 'U'+char_const
     multicharacter_constant = "'"+cconst_char+"{2,4}'"
     unmatched_quote = "('"+cconst_char+"*\\n)|('"+cconst_char+"*$)"
     bad_char_const = r"""('"""+cconst_char+"""[^'\n]+')|('')|('"""+bad_escape+r"""[^'\n]*')"""
@@ -247,6 +260,9 @@ class CLexer(object):
     string_char = r"""([^"\\\n]|"""+escape_sequence_start_in_string+')'
     string_literal = '"'+string_char+'*"'
     wstring_literal = 'L'+string_literal
+    u8string_literal = 'u8'+string_literal
+    u16string_literal = 'u'+string_literal
+    u32string_literal = 'U'+string_literal
     bad_string_literal = '"'+string_char+'*'+bad_escape+string_char+'*"'
 
     # floating constants (K&R2: A.2.5.3)
@@ -398,7 +414,7 @@ class CLexer(object):
     # ?
     t_CONDOP            = r'\?'
 
-    # Delimeters
+    # Delimiters
     t_LPAREN            = r'\('
     t_RPAREN            = r'\)'
     t_LBRACKET          = r'\['
@@ -481,6 +497,18 @@ class CLexer(object):
     def t_WCHAR_CONST(self, t):
         return t
 
+    @TOKEN(u8char_const)
+    def t_U8CHAR_CONST(self, t):
+        return t
+
+    @TOKEN(u16char_const)
+    def t_U16CHAR_CONST(self, t):
+        return t
+
+    @TOKEN(u32char_const)
+    def t_U32CHAR_CONST(self, t):
+        return t
+
     @TOKEN(unmatched_quote)
     def t_UNMATCHED_QUOTE(self, t):
         msg = "Unmatched '"
@@ -493,6 +521,18 @@ class CLexer(object):
 
     @TOKEN(wstring_literal)
     def t_WSTRING_LITERAL(self, t):
+        return t
+
+    @TOKEN(u8string_literal)
+    def t_U8STRING_LITERAL(self, t):
+        return t
+
+    @TOKEN(u16string_literal)
+    def t_U16STRING_LITERAL(self, t):
+        return t
+
+    @TOKEN(u32string_literal)
+    def t_U32STRING_LITERAL(self, t):
         return t
 
     # unmatched string literals are caught by the preprocessor

@@ -7,9 +7,10 @@ from dataclasses import *
 import pickle
 import inspect
 import builtins
+import types
 import unittest
 from unittest.mock import Mock
-from typing import ClassVar, Any, List, Union, Tuple, Dict, Generic, TypeVar, Optional
+from typing import ClassVar, Any, List, Union, Tuple, Dict, Generic, TypeVar, Optional, Protocol
 from typing import get_type_hints
 from collections import deque, OrderedDict, namedtuple
 from functools import total_ordering
@@ -1124,6 +1125,8 @@ class TestCase(unittest.TestCase):
         self.assertEqual(repr(InitVar[int]), 'dataclasses.InitVar[int]')
         self.assertEqual(repr(InitVar[List[int]]),
                          'dataclasses.InitVar[typing.List[int]]')
+        self.assertEqual(repr(InitVar[list[int]]),
+                         'dataclasses.InitVar[list[int]]')
 
     def test_init_var_inheritance(self):
         # Note that this deliberately tests that a dataclass need not
@@ -1347,6 +1350,17 @@ class TestCase(unittest.TestCase):
                     astuple(obj)
                 with self.assertRaisesRegex(TypeError, 'should be called on dataclass instances'):
                     replace(obj, x=0)
+
+    def test_is_dataclass_genericalias(self):
+        @dataclass
+        class A(types.GenericAlias):
+            origin: type
+            args: type
+        self.assertTrue(is_dataclass(A))
+        a = A(list, int)
+        self.assertTrue(is_dataclass(type(a)))
+        self.assertTrue(is_dataclass(a))
+
 
     def test_helper_fields_with_class_instance(self):
         # Check that we can call fields() on either a class or instance,
@@ -2124,6 +2138,26 @@ class TestInit(unittest.TestCase):
                 self.x = 2 * x
         self.assertEqual(C(5).x, 10)
 
+    def test_inherit_from_protocol(self):
+        # Dataclasses inheriting from protocol should preserve their own `__init__`.
+        # See bpo-45081.
+
+        class P(Protocol):
+            a: int
+
+        @dataclass
+        class C(P):
+            a: int
+
+        self.assertEqual(C(5).a, 5)
+
+        @dataclass
+        class D(P):
+            def __init__(self, a):
+                self.a = a * 2
+
+        self.assertEqual(D(5).a, 10)
+
 
 class TestRepr(unittest.TestCase):
     def test_repr(self):
@@ -2567,6 +2601,30 @@ class TestFrozen(unittest.TestCase):
             d.j = 6
         self.assertEqual(d.i, 0)
         self.assertEqual(d.j, 10)
+
+    def test_inherit_nonfrozen_from_empty_frozen(self):
+        @dataclass(frozen=True)
+        class C:
+            pass
+
+        with self.assertRaisesRegex(TypeError,
+                                    'cannot inherit non-frozen dataclass from a frozen one'):
+            @dataclass
+            class D(C):
+                j: int
+
+    def test_inherit_nonfrozen_from_empty(self):
+        @dataclass
+        class C:
+            pass
+
+        @dataclass
+        class D(C):
+            j: int
+
+        d = D(3)
+        self.assertEqual(d.j, 3)
+        self.assertIsInstance(d, C)
 
     # Test both ways: with an intermediate normal (non-dataclass)
     #  class and without an intermediate class.
@@ -3244,6 +3302,24 @@ class TestReplace(unittest.TestCase):
             replace(c, x=3)
         c = replace(c, x=3, y=5)
         self.assertEqual(c.x, 15)
+
+    def test_initvar_with_default_value(self):
+        @dataclass
+        class C:
+            x: int
+            y: InitVar[int] = None
+            z: InitVar[int] = 42
+
+            def __post_init__(self, y, z):
+                if y is not None:
+                    self.x += y
+                if z is not None:
+                    self.x += z
+
+        c = C(x=1, y=10, z=1)
+        self.assertEqual(replace(c), C(x=12))
+        self.assertEqual(replace(c, y=4), C(x=12, y=4, z=42))
+        self.assertEqual(replace(c, y=4, z=1), C(x=12, y=4, z=1))
 
     def test_recursive_repr(self):
         @dataclass

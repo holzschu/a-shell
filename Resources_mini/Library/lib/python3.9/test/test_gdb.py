@@ -145,7 +145,8 @@ class DebuggerTests(unittest.TestCase):
     def get_stack_trace(self, source=None, script=None,
                         breakpoint=BREAKPOINT_FN,
                         cmds_after_breakpoint=None,
-                        import_site=False):
+                        import_site=False,
+                        ignore_stderr=False):
         '''
         Run 'python -c SOURCE' under gdb with a breakpoint.
 
@@ -224,8 +225,9 @@ class DebuggerTests(unittest.TestCase):
         # Use "args" to invoke gdb, capturing stdout, stderr:
         out, err = run_gdb(*args, PYTHONHASHSEED=PYTHONHASHSEED)
 
-        for line in err.splitlines():
-            print(line, file=sys.stderr)
+        if not ignore_stderr:
+            for line in err.splitlines():
+                print(line, file=sys.stderr)
 
         # bpo-34007: Sometimes some versions of the shared libraries that
         # are part of the traceback are compiled in optimised mode and the
@@ -908,6 +910,9 @@ id(42)
                         cmd,
                         breakpoint=func_name,
                         cmds_after_breakpoint=['bt', 'py-bt'],
+                        # bpo-45207: Ignore 'Function "meth_varargs" not
+                        # defined.' message in stderr.
+                        ignore_stderr=True,
                     )
                     self.assertIn(f'<built-in method {func_name}', gdb_output)
 
@@ -916,6 +921,9 @@ id(42)
                         cmd,
                         breakpoint=func_name,
                         cmds_after_breakpoint=['py-bt-full'],
+                        # bpo-45207: Ignore 'Function "meth_varargs" not
+                        # defined.' message in stderr.
+                        ignore_stderr=True,
                     )
                     self.assertIn(
                         f'#{expected_frame} <built-in method {func_name}',
@@ -946,6 +954,31 @@ id(42)
                                           cmds_after_breakpoint=cmds_after_breakpoint)
         self.assertRegex(gdb_output,
                          r"<method-wrapper u?'__init__' of MyList object at ")
+
+    @unittest.skipIf(python_is_optimized(),
+                     "Python was compiled with optimizations")
+    def test_try_finally_lineno(self):
+        cmd = textwrap.dedent('''
+            def foo(x):
+                try:
+                    raise RuntimeError("error")
+                    return x
+                except:
+                    id("break point")
+                finally:
+                    x += 2
+                return x
+            r = foo(3)
+        ''')
+        gdb_output = self.get_stack_trace(cmd,
+                                          cmds_after_breakpoint=["py-bt"])
+        self.assertMultilineMatches(gdb_output,
+                                    r'''^.*
+Traceback \(most recent call first\):
+  <built-in method id of module object .*>
+  File "<string>", line 7, in foo
+  File "<string>", line 11, in <module>
+''')
 
 
 class PyPrintTests(DebuggerTests):

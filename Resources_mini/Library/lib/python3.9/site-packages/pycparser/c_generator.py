@@ -14,11 +14,16 @@ class CGenerator(object):
         return a value from each visit method, using string accumulation in
         generic_visit.
     """
-    def __init__(self):
+    def __init__(self, reduce_parentheses=False):
+        """ Constructs C-code generator
+
+            reduce_parentheses:
+                if True, eliminates needless parentheses on binary operators
+        """
         # Statements start with indentation of self.indent_level spaces, using
-        # the _make_indent method
-        #
+        # the _make_indent method.
         self.indent_level = 0
+        self.reduce_parentheses = reduce_parentheses
 
     def _make_indent(self):
         return ' ' * self.indent_level
@@ -28,7 +33,6 @@ class CGenerator(object):
         return getattr(self, method, self.generic_visit)(node)
 
     def generic_visit(self, node):
-        #~ print('generic:', type(node))
         if node is None:
             return ''
         else:
@@ -59,23 +63,62 @@ class CGenerator(object):
         return fref + '(' + self.visit(n.args) + ')'
 
     def visit_UnaryOp(self, n):
-        operand = self._parenthesize_unless_simple(n.expr)
-        if n.op == 'p++':
-            return '%s++' % operand
-        elif n.op == 'p--':
-            return '%s--' % operand
-        elif n.op == 'sizeof':
+        if n.op == 'sizeof':
             # Always parenthesize the argument of sizeof since it can be
             # a name.
             return 'sizeof(%s)' % self.visit(n.expr)
         else:
-            return '%s%s' % (n.op, operand)
+            operand = self._parenthesize_unless_simple(n.expr)
+            if n.op == 'p++':
+                return '%s++' % operand
+            elif n.op == 'p--':
+                return '%s--' % operand
+            else:
+                return '%s%s' % (n.op, operand)
+
+    # Precedence map of binary operators:
+    precedence_map = {
+        # Should be in sync with c_parser.CParser.precedence
+        # Higher numbers are stronger binding
+        '||': 0,  # weakest binding
+        '&&': 1,
+        '|': 2,
+        '^': 3,
+        '&': 4,
+        '==': 5, '!=': 5,
+        '>': 6, '>=': 6, '<': 6, '<=': 6,
+        '>>': 7, '<<': 7,
+        '+': 8, '-': 8,
+        '*': 9, '/': 9, '%': 9  # strongest binding
+    }
 
     def visit_BinaryOp(self, n):
-        lval_str = self._parenthesize_if(n.left,
-                            lambda d: not self._is_simple_node(d))
-        rval_str = self._parenthesize_if(n.right,
-                            lambda d: not self._is_simple_node(d))
+        # Note: all binary operators are left-to-right associative
+        #
+        # If `n.left.op` has a stronger or equally binding precedence in
+        # comparison to `n.op`, no parenthesis are needed for the left:
+        # e.g., `(a*b) + c` is equivalent to `a*b + c`, as well as
+        #       `(a+b) - c` is equivalent to `a+b - c` (same precedence).
+        # If the left operator is weaker binding than the current, then
+        # parentheses are necessary:
+        # e.g., `(a+b) * c` is NOT equivalent to `a+b * c`.
+        lval_str = self._parenthesize_if(
+            n.left,
+            lambda d: not (self._is_simple_node(d) or
+                      self.reduce_parentheses and isinstance(d, c_ast.BinaryOp) and
+                      self.precedence_map[d.op] >= self.precedence_map[n.op]))
+        # If `n.right.op` has a stronger -but not equal- binding precedence,
+        # parenthesis can be omitted on the right:
+        # e.g., `a + (b*c)` is equivalent to `a + b*c`.
+        # If the right operator is weaker or equally binding, then parentheses
+        # are necessary:
+        # e.g., `a * (b+c)` is NOT equivalent to `a * b+c` and
+        #       `a - (b+c)` is NOT equivalent to `a - b+c` (same precedence).
+        rval_str = self._parenthesize_if(
+            n.right,
+            lambda d: not (self._is_simple_node(d) or
+                      self.reduce_parentheses and isinstance(d, c_ast.BinaryOp) and
+                      self.precedence_map[d.op] > self.precedence_map[n.op]))
         return '%s %s %s' % (lval_str, n.op, rval_str)
 
     def visit_Assignment(self, n):
@@ -136,6 +179,9 @@ class CGenerator(object):
 
     def visit_Enum(self, n):
         return self._generate_struct_union_enum(n, name='enum')
+
+    def visit_Alignas(self, n):
+        return '_Alignas({})'.format(self.visit(n.alignment))
 
     def visit_Enumerator(self, n):
         if not n.value:
@@ -241,6 +287,15 @@ class CGenerator(object):
         s += self._make_indent() + 'while ('
         if n.cond: s += self.visit(n.cond)
         s += ');'
+        return s
+
+    def visit_StaticAssert(self, n):
+        s = '_Static_assert('
+        s += self.visit(n.cond)
+        if n.message:
+            s += ','
+            s += self.visit(n.message)
+        s += ')'
         return s
 
     def visit_Switch(self, n):
@@ -356,6 +411,8 @@ class CGenerator(object):
             # compute its own indentation.
             #
             return self.visit(n)
+        elif typ in (c_ast.If,):
+            return indent + self.visit(n)
         else:
             return indent + self.visit(n) + '\n'
 
@@ -365,6 +422,7 @@ class CGenerator(object):
         s = ''
         if n.funcspec: s = ' '.join(n.funcspec) + ' '
         if n.storage: s += ' '.join(n.storage) + ' '
+        if n.align: s += self.visit(n.align[0]) + ' '
         s += self._generate_type(n.type)
         return s
 

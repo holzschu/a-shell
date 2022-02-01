@@ -136,13 +136,13 @@ class Wheel:
         def raw_req(req):
             req.marker = None
             return str(req)
-        install_requires = list(sorted(map(raw_req, dist.requires())))
+        install_requires = list(map(raw_req, dist.requires()))
         extras_require = {
-            extra: sorted(
+            extra: [
                 req
                 for req in map(raw_req, dist.requires((extra,)))
                 if req not in install_requires
-            )
+            ]
             for extra in dist.extras
         }
         os.rename(dist_info, egg_info)

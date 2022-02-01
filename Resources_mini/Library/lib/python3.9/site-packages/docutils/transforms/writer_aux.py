@@ -1,4 +1,4 @@
-# $Id: writer_aux.py 7808 2015-02-27 17:03:32Z milde $
+# $Id: writer_aux.py 8885 2021-11-11 16:29:16Z milde $
 # Author: Lea Wiemann <LeWiemann@gmail.com>
 # Copyright: This module has been placed in the public domain.
 
@@ -38,7 +38,7 @@ class Compound(Transform):
     default_priority = 910
 
     def apply(self):
-        for compound in self.document.traverse(nodes.compound):
+        for compound in self.document.findall(nodes.compound):
             first_child = True
             for child in compound:
                 if first_child:
@@ -75,7 +75,7 @@ class Admonitions(Transform):
     def apply(self):
         language = languages.get_language(self.document.settings.language_code,
                                           self.document.reporter)
-        for node in self.document.traverse(nodes.Admonition):
+        for node in self.document.findall(nodes.Admonition):
             node_name = node.__class__.__name__
             # Set class, so that we know what node this admonition came from.
             node['classes'].append(node_name)

@@ -1,4 +1,4 @@
-# $Id: standalone.py 4802 2006-11-12 18:02:17Z goodger $
+# $Id: standalone.py 8722 2021-05-17 20:28:42Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -23,7 +23,7 @@ class Reader(readers.Reader):
     """A single document tree."""
 
     settings_spec = (
-        'Standalone Reader',
+        'Standalone Reader Options',
         None,
         (('Disable the promotion of a lone top-level section title to '
           'document title (and subsequent section title to document '

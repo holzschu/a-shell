@@ -1,5 +1,5 @@
 # .. coding: utf-8
-# $Id: __init__.py 8639 2021-03-20 23:47:29Z milde $
+# $Id: __init__.py 8881 2021-11-09 23:54:33Z milde $
 # :Author: Günter Milde <milde@users.sf.net>
 #          Based on the html4css1 writer by David Goodger.
 # :Maintainer: docutils-develop@lists.sourceforge.net
@@ -34,121 +34,76 @@ import docutils
 from docutils import frontend, nodes, writers, io
 from docutils.transforms import writer_aux
 from docutils.writers import _html_base
-from docutils.writers._html_base import PIL, url2pathname
 
 class Writer(writers._html_base.Writer):
 
-    supported = ('html', 'html5', 'html4', 'xhtml', 'xhtml10')
+    supported = ('html', 'html5', 'xhtml')
     """Formats this writer supports."""
 
     default_stylesheets = ['minimal.css', 'plain.css']
     default_stylesheet_dirs = ['.', os.path.abspath(os.path.dirname(__file__))]
+    default_template = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'template.txt')
 
-    default_template = 'template.txt'
-    default_template_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), default_template)
-
-    settings_spec = (
-        'HTML-Specific Options',
-        None,
-        (('Specify the template file (UTF-8 encoded).  Default is "%s".'
-          % default_template_path,
+    settings_spec = frontend.filter_settings_spec(
+        writers._html_base.Writer.settings_spec,
+        # update specs with changed defaults or help string
+        template =
+         ('Template file. (UTF-8 encoded, default: "%s")' % default_template,
           ['--template'],
-          {'default': default_template_path, 'metavar': '<file>'}),
-         ('Comma separated list of stylesheet URLs. '
-          'Overrides previous --stylesheet and --stylesheet-path settings.',
-          ['--stylesheet'],
-          {'metavar': '<URL[,URL,...]>', 'overrides': 'stylesheet_path',
-           'validator': frontend.validate_comma_separated_list}),
+          {'default': default_template, 'metavar': '<file>'}),
+        stylesheet_path =
          ('Comma separated list of stylesheet paths. '
           'Relative paths are expanded if a matching file is found in '
           'the --stylesheet-dirs. With --link-stylesheet, '
           'the path is rewritten relative to the output HTML file. '
-          'Default: "%s"' % ','.join(default_stylesheets),
+          '(default: "%s")' % ','.join(default_stylesheets),
           ['--stylesheet-path'],
           {'metavar': '<file[,file,...]>', 'overrides': 'stylesheet',
            'validator': frontend.validate_comma_separated_list,
            'default': default_stylesheets}),
-         ('Embed the stylesheet(s) in the output HTML file.  The stylesheet '
-          'files must be accessible during processing. This is the default.',
-          ['--embed-stylesheet'],
-          {'default': 1, 'action': 'store_true',
-           'validator': frontend.validate_boolean}),
-         ('Link to the stylesheet(s) in the output HTML file. '
-          'Default: embed stylesheets.',
-          ['--link-stylesheet'],
-          {'dest': 'embed_stylesheet', 'action': 'store_false'}),
+       stylesheet_dirs =
          ('Comma-separated list of directories where stylesheets are found. '
           'Used by --stylesheet-path when expanding relative path arguments. '
-          'Default: "%s"' % default_stylesheet_dirs,
+          '(default: "%s")' % ','.join(default_stylesheet_dirs),
           ['--stylesheet-dirs'],
           {'metavar': '<dir[,dir,...]>',
            'validator': frontend.validate_comma_separated_list,
            'default': default_stylesheet_dirs}),
-         ('Specify the initial header level.  Default is 2 for "<h2>".  '
-          'Does not affect document title & subtitle (see --no-doc-title).',
+       initial_header_level =
+         ('Specify the initial header level. Does not affect document '
+          'title & subtitle (see --no-doc-title). (default: 2 for "<h2>")',
           ['--initial-header-level'],
           {'choices': '1 2 3 4 5 6'.split(), 'default': '2',
            'metavar': '<level>'}),
-         ('Format for footnote references: one of "superscript" or '
-          '"brackets".  Default is "brackets".',
-          ['--footnote-references'],
-          {'choices': ['superscript', 'brackets'], 'default': 'brackets',
-           'metavar': '<format>',
-           'overrides': 'trim_footnote_reference_space'}),
-         ('Format for block quote attributions: one of "dash" (em-dash '
-          'prefix), "parentheses"/"parens", or "none".  Default is "dash".',
-          ['--attribution'],
-          {'choices': ['dash', 'parentheses', 'parens', 'none'],
-           'default': 'dash', 'metavar': '<format>'}),
-         ('Remove extra vertical whitespace between items of "simple" bullet '
-          'lists and enumerated lists.  Default: enabled.',
-          ['--compact-lists'],
-          {'default': True, 'action': 'store_true',
-           'validator': frontend.validate_boolean}),
-         ('Disable compact simple bullet and enumerated lists.',
-          ['--no-compact-lists'],
-          {'dest': 'compact_lists', 'action': 'store_false'}),
-         ('Remove extra vertical whitespace between items of simple field '
-          'lists.  Default: enabled.',
-          ['--compact-field-lists'],
-          {'default': True, 'action': 'store_true',
-           'validator': frontend.validate_boolean}),
-         ('Disable compact simple field lists.',
-          ['--no-compact-field-lists'],
-          {'dest': 'compact_field_lists', 'action': 'store_false'}),
-         ('Embed images in the output HTML file, if the image '
-          'files are accessible during processing.',
-          ['--embed-images'],
-          {'default': 0, 'action': 'store_true',
-           'validator': frontend.validate_boolean}),
-         ('Link to images in the output HTML file. '
-          'This is the default.',
-          ['--link-images'],
-          {'dest': 'embed_images', 'action': 'store_false'}),
-         ('Added to standard table classes. '
-          'Defined styles: borderless, booktabs, '
-          'align-left, align-center, align-right, colwidths-auto. '
-          'Default: ""',
-          ['--table-style'],
-          {'default': ''}),
-         ('Math output format (one of "MathML", "HTML", "MathJax", '
-          'or "LaTeX") and option(s). '
-          'Default: "HTML math.css"',
-          ['--math-output'],
-          {'default': 'HTML math.css'}),
-         ('Prepend an XML declaration. (Thwarts HTML5 conformance.) '
-          'Default: False',
-          ['--xml-declaration'],
-          {'default': False, 'action': 'store_true',
-           'validator': frontend.validate_boolean}),
+       no_xml_declaration =
          ('Omit the XML declaration.',
           ['--no-xml-declaration'],
           {'dest': 'xml_declaration', 'action': 'store_false'}),
-         ('Obfuscate email addresses to confuse harvesters while still '
-          'keeping email links usable with standards-compliant browsers.',
-          ['--cloak-email-addresses'],
-          {'action': 'store_true', 'validator': frontend.validate_boolean}),))
+        )
+    settings_spec = settings_spec + (
+        'HTML5 Writer Options',
+        '',
+        (('Obsoleted by "--image-loading".',
+          ['--embed-images'],
+          {'action': 'store_true',
+           'validator': frontend.validate_boolean}),
+         ('Obsoleted by "--image-loading".',
+          ['--link-images'],
+          {'dest': 'embed_images', 'action': 'store_false'}),
+         ('Suggest at which point images should be loaded: '
+          '"embed", "link" (default), or "lazy".',
+          ['--image-loading'],
+          {'choices': ('embed', 'link', 'lazy'),
+           # 'default': 'link' # default set in _html_base.py
+          }),
+         ('Append a self-link to section headings.',
+          ['--section-self-link'],
+          {'default': 0, 'action': 'store_true'}),
+         ('Do not append a self-link to section headings. (default)',
+          ['--no-section-self-link'],
+          {'dest': 'section_self_link', 'action': 'store_false'}),
+        ))
 
     config_section = 'html5 writer'
 
@@ -205,7 +160,7 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
     def visit_container(self, node):
         # If there is exactly one of the "supported block tags" in
         # the list of class values, use it as tag name:
-        classes = node.get('classes', [])
+        classes = node['classes']
         tags = [cls for cls in classes
                 if cls in self.supported_block_tags]
         if len(tags) == 1:
@@ -310,7 +265,7 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
         self.body_prefix.extend(header)
         self.header.extend(header)
         del self.body[start:]
-        
+
     # MIME types supported by the HTML5 <video> element
     videotypes = ('video/mp4', 'video/webm', 'video/ogg')
 
@@ -327,10 +282,11 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
             atts['height'] = node['height'].replace('px', '')
         if 'align' in node:
             atts['class'] = 'align-%s' % node['align']
-        if 'controls' in node.get('classes', []):
+        if 'controls' in node['classes']:
             atts['controls'] = 'controls'
         atts['title'] = node.get('alt', uri)
-        
+        if getattr(self.settings, 'image_loading', None) == 'lazy':
+            atts['loading'] = 'lazy'
         # No newline in inline context or if surrounded by <a>...</a>.
         if (isinstance(node.parent, nodes.TextElement) or
             (isinstance(node.parent, nodes.reference) and
@@ -351,7 +307,7 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
                                  'b', 'i', 'q', 's', 'u'))
     def visit_inline(self, node):
         # Use `supported_inline_tags` if found in class values
-        classes = node.get('classes', [])
+        classes = node['classes']
         tags = [cls for cls in self.supported_inline_tags
                 if cls in classes]
         if len(tags):
@@ -387,7 +343,7 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
 
     # use HTML text-level tags if matching class value found
     def visit_literal(self, node):
-        classes = node.get('classes', [])
+        classes = node['classes']
         tags = [cls for cls in self.supported_inline_tags
                 if cls in classes]
         if len(tags):
@@ -456,16 +412,39 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
         self.body.append('</aside>\n')
         self.in_sidebar = False
 
+    # Use new HTML5 element <aside> or <nav>
     # Add class value to <body>, if there is a ToC in the document
-    # (see responsive.css how this is used for sidebar navigation).
-    # TODO: use the new HTML5 element <aside>?
+    # (see responsive.css how this is used for a navigation sidebar).
     def visit_topic(self, node):
-        if ('contents' in node['classes']
-            and isinstance(node.parent, nodes.document)):
-            self.body_prefix[0] = '</head>\n<body class="with-toc">\n'
-        self.body.append(self.starttag(node, 'div', CLASS='topic'))
-        self.topic_classes = node['classes'] # TODO: remove?
+        atts = {'classes': ['topic']}
+        if 'contents' in node['classes']:
+            node.html_tagname = 'nav'
+            del(atts['classes'])
+            if isinstance(node.parent, nodes.document):
+                atts['role'] = 'doc-toc'
+                self.body_prefix[0] = '</head>\n<body class="with-toc">\n'
+        elif 'abstract' in node['classes']:
+            node.html_tagname = 'div'
+            atts['role'] = 'doc-abstract'
+        elif 'dedication' in node['classes']:
+            node.html_tagname = 'div'
+            atts['role'] = 'doc-dedication'
+        else:
+            node.html_tagname = 'aside'
+        self.body.append(self.starttag(node, node.html_tagname, **atts))
 
     def depart_topic(self, node):
-        self.body.append('</div>\n')
-        self.topic_classes = []
+        self.body.append('</%s>\n'%node.html_tagname)
+        del(node.html_tagname)
+
+    # append self-link
+    def section_title_tags(self, node):
+        start_tag, close_tag = super(HTMLTranslator,
+                                     self).section_title_tags(node)
+        ids = node.parent['ids']
+        if (ids and getattr(self.settings, 'section_self_link', None)
+            and not isinstance(node.parent, nodes.document)):
+            self_link = ('<a class="self-link" title="link to this section"'
+                        ' href="#%s"></a>' % ids[0])
+            close_tag = close_tag.replace('</h', self_link + '</h')
+        return start_tag, close_tag

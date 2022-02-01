@@ -69,7 +69,9 @@ class Context(object):
     #  language_level        int     currently 2 or 3 for Python 2/3
 
     cython_scope = None
-    language_level = None  # warn when not set but default to Py2
+    # language_level = None  # warn when not set but default to Py2
+    # iOS change: make sure we're on 3.
+    language_level = 3  # iOS
 
     def __init__(self, include_directories, compiler_directives, cpp=False,
                  language_level=None, options=None):
@@ -891,7 +893,8 @@ default_options = dict(
     emit_linenums = False,
     relative_path_in_code_position_comments = True,
     c_line_in_traceback = True,
-    language_level = None,  # warn but default to 2
+    # language_level = None,  # warn but default to 2
+    language_level = 3,  # iOS change
     formal_grammar = False,
     gdb_debug = False,
     compile_time_env = None,

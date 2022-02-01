@@ -1,4 +1,4 @@
-# $Id: misc.py 8595 2020-12-15 23:06:58Z milde $
+# $Id: misc.py 8851 2021-10-12 17:33:24Z milde $
 # Authors: David Goodger <goodger@python.org>; Dethe Elza
 # Copyright: This module has been placed in the public domain.
 
@@ -52,7 +52,11 @@ class Include(Directive):
                                          'include')
 
     def run(self):
-        """Include a file as part of the content of this reST file."""
+        """Include a file as part of the content of this reST file.
+
+        Depending on the options, the file (or a clipping) is
+        converted to nodes and returned or inserted into the input stream.
+        """
         if not self.state.document.settings.file_insertion_enabled:
             raise self.warning('"%s" directive disabled.' % self.name)
         source = self.state_machine.input_lines.source(
@@ -167,36 +171,33 @@ class Include(Directive):
                                   self.state_machine)
             return codeblock.run()
 
+        # Prevent circular inclusion:
+        clip_options = (startline, endline, before_text, after_text)
+        include_log = self.state.document.include_log
+        # log entries are tuples (<source>, <clip-options>)
+        if not include_log: # new document
+            include_log.append((utils.relative_path(None, source),
+                                (None, None, None, None)))
+        if (path, clip_options) in include_log:
+            raise self.warning('circular inclusion in "%s" directive: %s'
+                % (self.name, ' < '.join([path] + [pth for (pth, opt)
+                                                   in include_log[::-1]])))
+
         if 'parser' in self.options:
+            # parse into a dummy document and return created nodes
             parser = self.options['parser']()
-            # parse into a new (dummy) document
             document = utils.new_document(path, self.state.document.settings)
+            document.include_log = include_log + [(path, clip_options)]
             parser.parse('\n'.join(include_lines), document)
             return document.children
 
-        # include as rST source
+        # Include as rST source:
         #
-        # Prevent circular inclusion:
-        source = utils.relative_path(None, source)
-        clip_options = (startline, endline, before_text, after_text)
-        include_log = self.state.document.include_log
-        if not include_log: # new document:
-            # log entries: (<source>, <clip-options>, <insertion end index>)
-            include_log = [(source, (None,None,None,None), sys.maxsize/2)]
-        # cleanup: we may have passed the last inclusion(s):
-        include_log = [entry for entry in include_log
-                       if entry[2] >= self.lineno]
-        if (path, clip_options) in [(pth, opt)
-                                    for (pth, opt, e) in include_log]:
-            raise self.warning('circular inclusion in "%s" directive: %s'
-                % (self.name, ' < '.join([path] + [pth for (pth, opt, e)
-                                                   in include_log[::-1]])))
-        # include as input
+        # mark end (cf. parsers.rst.states.Body.comment())
+        include_lines += ['', '.. end of inclusion from "%s"' % path]
         self.state_machine.insert_input(include_lines, path)
         # update include-log
-        include_log.append((path, clip_options, self.lineno))
-        self.state.document.include_log = [(pth, opt, e+len(include_lines)+2)
-                                           for (pth, opt, e) in include_log]
+        include_log.append((path, clip_options))
         return []
 
 
@@ -216,7 +217,8 @@ class Raw(Directive):
     final_argument_whitespace = True
     option_spec = {'file': directives.path,
                    'url': directives.uri,
-                   'encoding': directives.encoding}
+                   'encoding': directives.encoding,
+                   'class': directives.class_option}
     has_content = True
 
     def run(self):
@@ -288,7 +290,8 @@ class Raw(Directive):
         else:
             # This will always fail because there is no content.
             self.assert_has_content()
-        raw_node = nodes.raw('', text, **attributes)
+        raw_node = nodes.raw('', text, classes=self.options.get('class', []),
+                             **attributes)
         (raw_node.source,
         raw_node.line) = self.state_machine.get_source_and_line(self.lineno)
         return [raw_node]
@@ -503,6 +506,74 @@ class Title(Directive):
 
     def run(self):
         self.state_machine.document['title'] = self.arguments[0]
+        return []
+
+
+class MetaBody(states.SpecializedBody):
+
+    def field_marker(self, match, context, next_state):
+        """Meta element."""
+        node, blank_finish = self.parsemeta(match)
+        self.parent += node
+        return [], next_state, []
+
+    def parsemeta(self, match):
+        name = self.parse_field_marker(match)
+        name = utils.unescape(utils.escape2null(name))
+        indented, indent, line_offset, blank_finish = \
+              self.state_machine.get_first_known_indented(match.end())
+        node = nodes.meta()
+        node['content'] = utils.unescape(utils.escape2null(
+                                            ' '.join(indented)))
+        if not indented:
+            line = self.state_machine.line
+            msg = self.reporter.info(
+                  'No content for meta tag "%s".' % name,
+                  nodes.literal_block(line, line))
+            return msg, blank_finish
+        tokens = name.split()
+        try:
+            attname, val = utils.extract_name_value(tokens[0])[0]
+            node[attname.lower()] = val
+        except utils.NameValueError:
+            node['name'] = tokens[0]
+        for token in tokens[1:]:
+            try:
+                attname, val = utils.extract_name_value(token)[0]
+                node[attname.lower()] = val
+            except utils.NameValueError as detail:
+                line = self.state_machine.line
+                msg = self.reporter.error(
+                      'Error parsing meta tag attribute "%s": %s.'
+                      % (token, detail), nodes.literal_block(line, line))
+                return msg, blank_finish
+        return node, blank_finish
+
+
+class Meta(Directive):
+
+    has_content = True
+
+    SMkwargs = {'state_classes': (MetaBody,)}
+
+    def run(self):
+        self.assert_has_content()
+        node = nodes.Element()
+        new_line_offset, blank_finish = self.state.nested_list_parse(
+            self.content, self.content_offset, node,
+            initial_state='MetaBody', blank_finish=True,
+            state_machine_kwargs=self.SMkwargs)
+        if (new_line_offset - self.content_offset) != len(self.content):
+            # incomplete parse of block?
+            error = self.state_machine.reporter.error(
+                'Invalid meta directive.',
+                nodes.literal_block(self.block_text, self.block_text),
+                line=self.lineno)
+            node += error
+        # insert at begin of document
+        index = self.state.document.first_child_not_matching_class(
+                                        (nodes.Titular, nodes.meta)) or 0
+        self.state.document[index:index] = node.children
         return []
 
 

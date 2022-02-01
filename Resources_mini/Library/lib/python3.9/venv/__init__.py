@@ -16,6 +16,9 @@ import types
 CORE_VENV_DEPS = ('pip', 'setuptools')
 logger = logging.getLogger(__name__)
 
+ios = ((sys.platform == 'darwin') and os.uname().machine.startswith('iP'))
+
+
 
 class EnvBuilder:
     """
@@ -70,7 +73,8 @@ class EnvBuilder:
         true_system_site_packages = self.system_site_packages
         self.system_site_packages = False
         self.create_configuration(context)
-        self.setup_python(context)
+        if not ios:
+            self.setup_python(context)
         if self.with_pip:
             self._setup_pip(context)
         if not self.upgrade:
@@ -142,6 +146,20 @@ class EnvBuilder:
         context.bin_name = binname
         context.env_exe = os.path.join(binpath, exename)
         create_if_needed(binpath)
+        # Assign and update the command to use when launching the newly created
+        # environment, in case it isn't simply the executable script (e.g. bpo-45337)
+        context.env_exec_cmd = context.env_exe
+        if sys.platform == 'win32':
+            # bpo-45337: Fix up env_exec_cmd to account for file system redirections.
+            # Some redirects only apply to CreateFile and not CreateProcess
+            real_env_exe = os.path.realpath(context.env_exe)
+            if os.path.normcase(real_env_exe) != os.path.normcase(context.env_exe):
+                logger.warning('Actual environment location may have moved due to '
+                               'redirects, links or junctions.\n'
+                               '  Requested location: "%s"\n'
+                               '  Actual location:    "%s"',
+                               context.env_exe, real_env_exe)
+                context.env_exec_cmd = real_env_exe
         return context
 
     def create_configuration(self, context):
@@ -267,8 +285,9 @@ class EnvBuilder:
                         os.path.normcase(f).startswith(('python', 'vcruntime'))
                     ]
             else:
-                suffixes = ['python.exe', 'python_d.exe', 'pythonw.exe',
-                            'pythonw_d.exe']
+                suffixes = {'python.exe', 'python_d.exe', 'pythonw.exe', 'pythonw_d.exe'}
+                base_exe = os.path.basename(context.env_exe)
+                suffixes.add(base_exe)
 
             for suffix in suffixes:
                 src = os.path.join(dirname, suffix)
@@ -293,8 +312,8 @@ class EnvBuilder:
         # We run ensurepip in isolated mode to avoid side effects from
         # environment vars, the current directory and anything else
         # intended for the global Python environment
-        cmd = [context.env_exe, '-Im', 'ensurepip', '--upgrade',
-                                                    '--default-pip']
+        cmd = [context.env_exec_cmd, '-Im', 'ensurepip', '--upgrade',
+                                                         '--default-pip']
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
     def setup_scripts(self, context):
@@ -338,6 +357,10 @@ class EnvBuilder:
         text = text.replace('__VENV_PROMPT__', context.prompt)
         text = text.replace('__VENV_BIN_NAME__', context.bin_name)
         text = text.replace('__VENV_PYTHON__', context.env_exe)
+        # on iOS, HOME can change at each new install:
+        if ios:
+            homeDir = os.getenv('HOME')
+            text = text.replace(homeDir, '$HOME')
         return text
 
     def install_scripts(self, context, path):
@@ -355,6 +378,28 @@ class EnvBuilder:
         """
         binpath = context.bin_path
         plen = len(path)
+        # iOS version: simplified script
+        if ios: 
+            srcfile = os.path.join(path, 'ios/activate')
+            dstdir = binpath
+            dstfile = os.path.join(dstdir, 'activate')
+            with open(srcfile, 'rb') as f:
+                data = f.read()
+                try:
+                    data = data.decode('utf-8')
+                    data = self.replace_variables(data, context)
+                    data = data.encode('utf-8')
+                except UnicodeError as e:
+                    data = None
+                    logger.warning('unable to copy script %r, '
+                                   'may be binary: %s', srcfile, e)
+            if data is not None:
+                with open(dstfile, 'wb') as f:
+                    f.write(data)
+                shutil.copymode(srcfile, dstfile)
+            return
+        # Not iOS version:
+
         for root, dirs, files in os.walk(path):
             if root == path: # at top-level, remove irrelevant dirs
                 for d in dirs[:]:
@@ -394,11 +439,7 @@ class EnvBuilder:
         logger.debug(
             f'Upgrading {CORE_VENV_DEPS} packages in {context.bin_path}'
         )
-        if sys.platform == 'win32':
-            python_exe = os.path.join(context.bin_path, 'python.exe')
-        else:
-            python_exe = os.path.join(context.bin_path, 'python')
-        cmd = [python_exe, '-m', 'pip', 'install', '--upgrade']
+        cmd = [context.env_exec_cmd, '-m', 'pip', 'install', '--upgrade']
         cmd.extend(CORE_VENV_DEPS)
         subprocess.check_call(cmd)
 
@@ -422,6 +463,44 @@ def main(args=None):
     else:
         import argparse
 
+        # iOS/a-Shell: reduced set of options. Very reduced:
+        if ios:
+            parser = argparse.ArgumentParser(prog=__name__,
+                                             description='Creates virtual Python '
+                                                         'environments in one or '
+                                                         'more target '
+                                                         'directories.'
+                                                         ' On iOS, virtual '
+                                                         'environments are only '
+                                                         'for user-installed '
+                                                         'packages. System '
+                                                         'packages are shared '
+                                                         'between all virtual '
+                                                         'environments',
+                                             epilog='Once an environment has been '
+                                                    'created, you may wish to '
+                                                    'activate it by '
+                                                    'sourcing the activate script '
+                                                    'in its bin directory.')
+            parser.add_argument('dirs', metavar='ENV_DIR', nargs='+',
+                                help='A directory to create the environment in.')
+            parser.add_argument('--clear', default=False, action='store_true',
+                                dest='clear', help='Delete the contents of the '
+                                                   'environment directory if it '
+                                                   'already exists, before '
+                                                   'environment creation.')
+            options = parser.parse_args(args)
+            builder = EnvBuilder(system_site_packages=False,
+                    clear=options.clear,
+                    symlinks=False,
+                    upgrade=False,
+                    with_pip=False,
+                    prompt='',
+                    upgrade_deps=False)
+            for d in options.dirs:
+                builder.create(d)
+            return
+        # End iOS
         parser = argparse.ArgumentParser(prog=__name__,
                                          description='Creates virtual Python '
                                                      'environments in one or '

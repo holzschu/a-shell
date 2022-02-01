@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# :Id: $Id: tex2mathml_extern.py 8554 2020-09-04 16:52:11Z milde $
+# :Id: $Id: tex2mathml_extern.py 8883 2021-11-09 23:54:54Z milde $
 # :Copyright: © 2015 Günter Milde.
 # :License: Released under the terms of the `2-Clause BSD license`_, in short:
 #
@@ -12,8 +12,11 @@
 #
 # .. _2-Clause BSD license: https://opensource.org/licenses/BSD-2-Clause
 
-# Wrappers for TeX->MathML conversion by external tools
-# =====================================================
+"""Wrappers for TeX->MathML conversion by external tools
+
+This module is provisional:
+the API is not settled and may change with any minor Docutils version.
+"""
 
 from __future__ import print_function
 import subprocess

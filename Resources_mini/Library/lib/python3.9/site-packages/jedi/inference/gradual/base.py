@@ -146,6 +146,9 @@ class DefineGenericBaseClass(LazyValueWrapper):
             ) for class_set1, class_set2 in zip(given_params1, given_params2)
         )
 
+    def get_signatures(self):
+        return []
+
     def __repr__(self):
         return '<%s: %s%s>' % (
             self.__class__.__name__,
@@ -379,6 +382,9 @@ class BaseTypingValue(LazyValueWrapper):
 
     def _get_wrapped_value(self):
         return _PseudoTreeNameClass(self.parent_context, self._tree_name)
+
+    def get_signatures(self):
+        return self._wrapped_value.get_signatures()
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, self._tree_name.value)

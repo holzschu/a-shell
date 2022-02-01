@@ -1,4 +1,4 @@
-# $Id: __init__.py 8705 2021-04-17 12:41:26Z grubert $
+# $Id: __init__.py 8900 2021-11-23 17:44:14Z grubert $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -56,7 +56,7 @@ from collections import namedtuple
 
 __docformat__ = 'reStructuredText'
 
-__version__ = '0.17.1'
+__version__ = '0.18.1'
 """Docutils version identifier (complies with PEP 440)::
 
     major.minor[.micro][releaselevel[serial]][.dev]
@@ -111,7 +111,7 @@ class VersionInfo(namedtuple('VersionInfo',
 
 __version_info__ = VersionInfo(
     major=0,
-    minor=17,
+    minor=18,
     micro=1,
     releaselevel='final', # one of 'alpha', 'beta', 'candidate', 'final'
     # pre-release serial number (0 for final releases and active development):
@@ -217,7 +217,8 @@ class TransformSpec:
         """Transforms required by this class.  Override in subclasses."""
         if self.default_transforms != ():
             import warnings
-            warnings.warn('default_transforms attribute deprecated.\n'
+            warnings.warn('TransformSpec: the "default_transforms" attribute '
+                          'will be removed in Docutils 1.1.\n'
                           'Use get_transforms() method instead.',
                           DeprecationWarning)
             return list(self.default_transforms)
@@ -230,7 +231,7 @@ class TransformSpec:
     """List of functions to try to resolve unknown references.  Unknown
     references have a 'refname' attribute which doesn't correspond to any
     target in the document.  Called when the transforms in
-    `docutils.tranforms.references` are unable to find a correct target.  The
+    `docutils.transforms.references` are unable to find a correct target.  The
     list should contain functions which will try to resolve unknown
     references, with the following signature::
 

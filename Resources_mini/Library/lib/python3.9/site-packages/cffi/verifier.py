@@ -50,7 +50,8 @@ class Verifier(object):
             if tag:
                 raise TypeError("can't specify both 'modulename' and 'tag'")
         else:
-            key = '\x00'.join([sys.version[:3], __version_verifier_modules__,
+            key = '\x00'.join(['%d.%d' % sys.version_info[:2],
+                               __version_verifier_modules__,
                                preamble, flattened_kwds] +
                               ffi._cdefsources)
             if sys.version_info >= (3,):

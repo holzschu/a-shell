@@ -1,4 +1,4 @@
-# $Id: __init__.py 8638 2021-03-20 23:47:07Z milde $
+# $Id: __init__.py 8860 2021-10-22 16:39:59Z milde $
 # Author: David Goodger
 # Maintainer: docutils-develop@lists.sourceforge.net
 # Copyright: This module has been placed in the public domain.
@@ -30,59 +30,55 @@ class Writer(writers._html_base.Writer):
 
     default_stylesheets = ['html4css1.css']
     default_stylesheet_dirs = ['.',
-        os.path.abspath(os.path.dirname(__file__)),
-        # for math.css
-        os.path.abspath(os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), 'html5_polyglot'))
-       ]
+                               os.path.abspath(os.path.dirname(__file__)),
+                               os.path.abspath(os.path.join(
+                                   os.path.dirname(os.path.dirname(__file__)),
+                                   'html5_polyglot')) # for math.css
+                              ]
+    default_template = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'template.txt')
 
-    default_template = 'template.txt'
-    default_template_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), default_template)
-
-    settings_spec = (
-        'HTML-Specific Options',
-        None,
-        (('Specify the template file (UTF-8 encoded).  Default is "%s".'
-          % default_template_path,
+    settings_spec = frontend.filter_settings_spec(
+        writers._html_base.Writer.settings_spec,
+        # update specs with changed defaults or help string
+        template =
+         ('Template file. (UTF-8 encoded, default: "%s")' % default_template,
           ['--template'],
-          {'default': default_template_path, 'metavar': '<file>'}),
-         ('Comma separated list of stylesheet URLs. '
-          'Overrides previous --stylesheet and --stylesheet-path settings.',
-          ['--stylesheet'],
-          {'metavar': '<URL[,URL,...]>', 'overrides': 'stylesheet_path',
-           'validator': frontend.validate_comma_separated_list}),
+          {'default': default_template, 'metavar': '<file>'}),
+        stylesheet_path =
          ('Comma separated list of stylesheet paths. '
           'Relative paths are expanded if a matching file is found in '
           'the --stylesheet-dirs. With --link-stylesheet, '
           'the path is rewritten relative to the output HTML file. '
-          'Default: "%s"' % ','.join(default_stylesheets),
+          '(default: "%s")' % ','.join(default_stylesheets),
           ['--stylesheet-path'],
           {'metavar': '<file[,file,...]>', 'overrides': 'stylesheet',
            'validator': frontend.validate_comma_separated_list,
            'default': default_stylesheets}),
-         ('Embed the stylesheet(s) in the output HTML file.  The stylesheet '
-          'files must be accessible during processing. This is the default.',
-          ['--embed-stylesheet'],
-          {'default': 1, 'action': 'store_true',
-           'validator': frontend.validate_boolean}),
-         ('Link to the stylesheet(s) in the output HTML file. '
-          'Default: embed stylesheets.',
-          ['--link-stylesheet'],
-          {'dest': 'embed_stylesheet', 'action': 'store_false'}),
+       stylesheet_dirs =
          ('Comma-separated list of directories where stylesheets are found. '
           'Used by --stylesheet-path when expanding relative path arguments. '
-          'Default: "%s"' % default_stylesheet_dirs,
+          '(default: "%s")' % ','.join(default_stylesheet_dirs),
           ['--stylesheet-dirs'],
           {'metavar': '<dir[,dir,...]>',
            'validator': frontend.validate_comma_separated_list,
            'default': default_stylesheet_dirs}),
-         ('Specify the initial header level.  Default is 1 for "<h1>".  '
-          'Does not affect document title & subtitle (see --no-doc-title).',
+       initial_header_level =
+         ('Specify the initial header level. Does not affect document '
+          'title & subtitle (see --no-doc-title). (default: 1 for "<h1>")',
           ['--initial-header-level'],
           {'choices': '1 2 3 4 5 6'.split(), 'default': '1',
            'metavar': '<level>'}),
-         ('Specify the maximum width (in characters) for one-column field '
+       xml_declaration =
+         ('Prepend an XML declaration (default). ',
+          ['--xml-declaration'],
+          {'default': True, 'action': 'store_true',
+           'validator': frontend.validate_boolean}),
+        )
+    settings_spec = settings_spec + (
+        'HTML4 Writer Options',
+        '',
+        (('Specify the maximum width (in characters) for one-column field '
           'names.  Longer field names will span an entire row of the table '
           'used to render the field list.  Default is 14 characters.  '
           'Use 0 for "no limit".',
@@ -96,60 +92,10 @@ class Writer(writers._html_base.Writer):
           ['--option-limit'],
           {'default': 14, 'metavar': '<level>',
            'validator': frontend.validate_nonnegative_int}),
-         ('Format for footnote references: one of "superscript" or '
-          '"brackets".  Default is "brackets".',
-          ['--footnote-references'],
-          {'choices': ['superscript', 'brackets'], 'default': 'brackets',
-           'metavar': '<format>',
-           'overrides': 'trim_footnote_reference_space'}),
-         ('Format for block quote attributions: one of "dash" (em-dash '
-          'prefix), "parentheses"/"parens", or "none".  Default is "dash".',
-          ['--attribution'],
-          {'choices': ['dash', 'parentheses', 'parens', 'none'],
-           'default': 'dash', 'metavar': '<format>'}),
-         ('Remove extra vertical whitespace between items of "simple" bullet '
-          'lists and enumerated lists.  Default: enabled.',
-          ['--compact-lists'],
-          {'default': 1, 'action': 'store_true',
-           'validator': frontend.validate_boolean}),
-         ('Disable compact simple bullet and enumerated lists.',
-          ['--no-compact-lists'],
-          {'dest': 'compact_lists', 'action': 'store_false'}),
-         ('Remove extra vertical whitespace between items of simple field '
-          'lists.  Default: enabled.',
-          ['--compact-field-lists'],
-          {'default': 1, 'action': 'store_true',
-           'validator': frontend.validate_boolean}),
-         ('Disable compact simple field lists.',
-          ['--no-compact-field-lists'],
-          {'dest': 'compact_field_lists', 'action': 'store_false'}),
-         ('Embed images in the output HTML file, if the image '
-          'files are accessible during processing.',
-          ['--embed-images'],
-          {'default': 0, 'action': 'store_true',
-           'validator': frontend.validate_boolean}),
-         ('Link to images in the output HTML file. '
-          'This is the default.',
-          ['--link-images'],
-          {'dest': 'embed_images', 'action': 'store_false'}),
-         ('Added to standard table classes. '
-          'Defined styles: "borderless". Default: ""',
-          ['--table-style'],
-          {'default': ''}),
-         ('Math output format, one of "MathML", "HTML", "MathJax" '
-          'or "LaTeX". Default: "HTML math.css"',
-          ['--math-output'],
-          {'default': 'HTML math.css'}),
-         ('Omit the XML declaration.  Use with caution.',
-          ['--no-xml-declaration'],
-          {'dest': 'xml_declaration', 'default': 1, 'action': 'store_false',
-           'validator': frontend.validate_boolean}),
-         ('Obfuscate email addresses to confuse harvesters while still '
-          'keeping email links usable with standards-compliant browsers.',
-          ['--cloak-email-addresses'],
-          {'action': 'store_true', 'validator': frontend.validate_boolean}),))
+        ))
 
     config_section = 'html4css1 writer'
+    config_section_dependencies = ('writers', 'html writers')
 
     def __init__(self):
         self.parts = {}
@@ -231,12 +177,18 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
         self.visit_docinfo_item(node, 'address', meta=False)
         self.body.append(self.starttag(node, 'pre', CLASS='address'))
 
+    def depart_address(self, node):
+        self.body.append('\n</pre>\n')
+        self.depart_docinfo_item()
 
     # ersatz for first/last pseudo-classes
     def visit_admonition(self, node):
         node['classes'].insert(0, 'admonition')
         self.body.append(self.starttag(node, 'div'))
         self.set_first_last(node)
+
+    def depart_admonition(self, node=None):
+        self.body.append('</div>\n')
 
     # author, authors: use <br> instead of paragraphs
     def visit_author(self, node):
@@ -259,7 +211,7 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
     def depart_authors(self, node):
         self.depart_docinfo_item()
 
-    # use "width" argument insted of "style: 'width'":
+    # use "width" argument instead of "style: 'width'":
     def visit_colspec(self, node):
         self.colspecs.append(node)
         # "stubs" list is an attribute of the tgroup element:
@@ -290,7 +242,7 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
                 or (self.settings.compact_lists
                     and 'open' not in node['classes']
                     and (self.compact_simple
-                         or self.topic_classes == ['contents']
+                         or 'contents' in node.parent['classes']
                          # TODO: self.in_contents
                          or self.check_simple_list(node))))
 
@@ -308,20 +260,60 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
         self.body.append('</td></tr>\n'
                          '</tbody>\n</table>\n')
 
+    def visit_citation_reference(self, node):
+        href = '#'
+        if 'refid' in node:
+            href += node['refid']
+        elif 'refname' in node:
+            href += self.document.nameids[node['refname']]
+        self.body.append(self.starttag(node, 'a', suffix='[', href=href,
+                                       classes=['citation-reference']))
+
+    def depart_citation_reference(self, node):
+        self.body.append(']</a>')
+
     # insert classifier-delimiter (not required with CSS2)
     def visit_classifier(self, node):
         self.body.append(' <span class="classifier-delimiter">:</span> ')
         self.body.append(self.starttag(node, 'span', '', CLASS='classifier'))
 
+    def depart_classifier(self, node):
+        self.body.append('</span>')
+
     # ersatz for first/last pseudo-classes
+    def visit_compound(self, node):
+        self.body.append(self.starttag(node, 'div', CLASS='compound'))
+        if len(node) > 1:
+            node[0]['classes'].append('compound-first')
+            node[-1]['classes'].append('compound-last')
+            for child in node[1:-1]:
+                child['classes'].append('compound-middle')
+
+    def depart_compound(self, node):
+        self.body.append('</div>\n')
+
+    # ersatz for first/last pseudo-classes, no special handling of "details"
     def visit_definition(self, node):
         self.body.append('</dt>\n')
         self.body.append(self.starttag(node, 'dd', ''))
         self.set_first_last(node)
 
+    def depart_definition(self, node):
+        self.body.append('</dd>\n')
+
     # don't add "simple" class value
     def visit_definition_list(self, node):
         self.body.append(self.starttag(node, 'dl', CLASS='docutils'))
+
+    def depart_definition_list(self, node):
+        self.body.append('</dl>\n')
+
+    # no special handling of "details"
+    def visit_definition_list_item(self, node):
+        pass
+
+    def depart_definition_list_item(self, node):
+        pass
 
     # use a table for description lists
     def visit_description(self, node):
@@ -370,12 +362,18 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
     def visit_doctest_block(self, node):
         self.body.append(self.starttag(node, 'pre', CLASS='doctest-block'))
 
+    def depart_doctest_block(self, node):
+        self.body.append('\n</pre>\n')
+
     # insert an NBSP into empty cells, ersatz for first/last
     def visit_entry(self, node):
         writers._html_base.HTMLTranslator.visit_entry(self, node)
         if len(node) == 0:              # empty cell
             self.body.append('&nbsp;')
         self.set_first_last(node)
+
+    def depart_entry(self, node):
+        self.body.append(self.context.pop())
 
     # ersatz for first/last pseudo-classes
     def visit_enumerated_list(self, node):
@@ -516,7 +514,7 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
         self.body.append('</td></tr>\n'
                          '</tbody>\n</table>\n')
 
-    # insert markers in text as pseudo-classes are not supported in CSS1:
+    # insert markers in text (pseudo-classes are not supported in CSS1):
     def visit_footnote_reference(self, node):
         href = '#' + node['refid']
         format = self.settings.footnote_references
@@ -629,11 +627,14 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
         if len(node):
             node[0]['classes'].append('first')
 
+    def depart_list_item(self, node):
+        self.body.append('</li>\n')
+
     # use <tt> (not supported by HTML5),
     # cater for limited styling options in CSS1 using hard-coded NBSPs
     def visit_literal(self, node):
         # special case: "code" role
-        classes = node.get('classes', [])
+        classes = node['classes']
         if 'code' in classes:
             # filter 'code' from class arguments
             node['classes'] = [cls for cls in classes if cls != 'code']
@@ -661,11 +662,14 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
         # Content already processed:
         raise nodes.SkipNode
 
-    # add newline after opening tag, don't use <code> for code
+    def depart_literal(self, node):
+        # skipped unless literal element is from "code" role:
+        self.body.append('</code>')
+
+    # add newline after wrapper tags, don't use <code> for code
     def visit_literal_block(self, node):
         self.body.append(self.starttag(node, 'pre', CLASS='literal-block'))
 
-    # add newline
     def depart_literal_block(self, node):
         self.body.append('\n</pre>\n')
 
@@ -754,6 +758,10 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
         self.set_first_last(node)
         self.in_sidebar = True
 
+    def depart_sidebar(self, node):
+        self.body.append('</div>\n')
+        self.in_sidebar = False
+
     # <sub> not allowed in <pre>
     def visit_subscript(self, node):
         if isinstance(node.parent, nodes.literal_block):
@@ -835,6 +843,9 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
                          % (node['type'], node['level'],
                             self.encode(node['source']), line, backref_text))
 
+    def depart_system_message(self, node):
+        self.body.append('</div>\n')
+
     # "hard coded" border setting
     def visit_table(self, node):
         self.context.append(self.compact_p)
@@ -859,12 +870,43 @@ class HTMLTranslator(writers._html_base.HTMLTranslator):
     def depart_tbody(self, node):
         self.body.append('</tbody>\n')
 
+    # no special handling of "details" in definition list
+    def visit_term(self, node):
+        self.body.append(self.starttag(node, 'dt', '',
+                                       classes=node.parent['classes'],
+                                       ids=node.parent['ids']))
+
+    def depart_term(self, node):
+        pass
+
     # hard-coded vertical alignment
     def visit_thead(self, node):
         self.body.append(self.starttag(node, 'thead', valign='bottom'))
     #
     def depart_thead(self, node):
         self.body.append('</thead>\n')
+
+    # auxiliary method, called by visit_title()
+    # "with-subtitle" class, no ARIA roles
+    def section_title_tags(self, node):
+        classes = []
+        h_level = self.section_level + self.initial_header_level - 1
+        if (len(node.parent) >= 2
+            and isinstance(node.parent[1], nodes.subtitle)):
+            classes.append('with-subtitle')
+        if h_level > 6:
+            classes.append('h%i' % h_level)
+        tagname = 'h%i' % min(h_level, 6)
+        start_tag = self.starttag(node, tagname, '', classes=classes)
+        if node.hasattr('refid'):
+            atts = {}
+            atts['class'] = 'toc-backref'
+            atts['href'] = '#' + node['refid']
+            start_tag += self.starttag({}, 'a', '', **atts)
+            close_tag = '</a></%s>\n' % tagname
+        else:
+            close_tag = '</%s>\n' % tagname
+        return start_tag, close_tag
 
 
 class SimpleListChecker(writers._html_base.SimpleListChecker):

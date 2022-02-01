@@ -1,4 +1,4 @@
-# $Id: misc.py 6314 2010-04-26 10:04:17Z milde $
+# $Id: misc.py 8885 2021-11-11 16:29:16Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -94,7 +94,7 @@ class Transitions(Transform):
     default_priority = 830
 
     def apply(self):
-        for node in self.document.traverse(nodes.transition):
+        for node in self.document.findall(nodes.transition):
             self.visit_transition(node)
 
     def visit_transition(self, node):

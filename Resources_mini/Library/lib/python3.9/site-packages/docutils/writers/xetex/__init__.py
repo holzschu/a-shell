@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 
 # :Author: Günter Milde <milde@users.sourceforge.net>
-# :Revision: $Revision: 8672 $
-# :Date: $Date: 2021-04-07 14:10:06 +0200 (Mi, 07. Apr 2021) $
+# :Revision: $Revision: 8722 $
+# :Date: $Date: 2021-05-17 22:28:42 +0200 (Mo, 17. Mai 2021) $
 # :Copyright: © 2010 Günter Milde.
 # :License: Released under the terms of the `2-Clause BSD license`_, in short:
-# 
+#
 #    Copying and distribution of this file, with or without modification,
 #    are permitted in any medium without royalty provided the copyright
 #    notice and this notice are preserved.
 #    This file is offered as-is, without any warranty.
-# 
+#
 # .. _2-Clause BSD license: https://opensource.org/licenses/BSD-2-Clause
 
 """
@@ -40,25 +40,27 @@ class Writer(latex2e.Writer):
 
     default_template = 'xelatex.tex'
     default_preamble = '\n'.join([
-        r'% Linux Libertine (free, wide coverage, not only for Linux)',
-        r'\setmainfont{Linux Libertine O}',
-        r'\setsansfont{Linux Biolinum O}',
-        r'\setmonofont[HyphenChar=None,Scale=MatchLowercase]{DejaVu Sans Mono}',
+      r'% Linux Libertine (free, wide coverage, not only for Linux)',
+      r'\setmainfont{Linux Libertine O}',
+      r'\setsansfont{Linux Biolinum O}',
+      r'\setmonofont[HyphenChar=None,Scale=MatchLowercase]{DejaVu Sans Mono}',
     ])
 
     config_section = 'xetex writer'
     config_section_dependencies = ('writers', 'latex writers',
-                                   'latex2e writer') # TODO: remove dependency on `latex2e writer`.
+            'latex2e writer') # TODO: remove dependency on `latex2e writer`.
 
     settings_spec = frontend.filter_settings_spec(
         latex2e.Writer.settings_spec,
-        'font_encoding',
+        'font_encoding', # removed settings
+        # changed settings:
         template=('Template file. Default: "%s".' % default_template,
-          ['--template'], {'default': default_template, 'metavar': '<file>'}),
+                  ['--template'],
+                  {'default': default_template, 'metavar': '<file>'}),
         latex_preamble=('Customization by LaTeX code in the preamble. '
-          'Default: select "Linux Libertine" fonts.',
-          ['--latex-preamble'],
-          {'default': default_preamble}),
+                        'Default: select "Linux Libertine" fonts.',
+                        ['--latex-preamble'],
+                        {'default': default_preamble}),
         )
 
     def __init__(self):

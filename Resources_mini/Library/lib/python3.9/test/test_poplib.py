@@ -11,6 +11,7 @@ import os
 import errno
 import threading
 
+import unittest
 from unittest import TestCase, skipUnless
 from test import support as test_support
 from test.support import hashlib_helper
@@ -312,11 +313,11 @@ class TestPOP3Class(TestCase):
     def test_rpop(self):
         self.assertOK(self.client.rpop('foo'))
 
-    @hashlib_helper.requires_hashdigest('md5')
+    @hashlib_helper.requires_hashdigest('md5', openssl=True)
     def test_apop_normal(self):
         self.assertOK(self.client.apop('foo', 'dummypassword'))
 
-    @hashlib_helper.requires_hashdigest('md5')
+    @hashlib_helper.requires_hashdigest('md5', openssl=True)
     def test_apop_REDOS(self):
         # Replace welcome with very long evil welcome.
         # NB The upper bound on welcome length is currently 2048.
@@ -533,15 +534,10 @@ class TestTimeouts(TestCase):
             poplib.POP3(HOST, self.port, timeout=0)
 
 
-def test_main():
-    tests = [TestPOP3Class, TestTimeouts,
-             TestPOP3_SSLClass, TestPOP3_TLSClass]
+def setUpModule():
     thread_info = test_support.threading_setup()
-    try:
-        test_support.run_unittest(*tests)
-    finally:
-        test_support.threading_cleanup(*thread_info)
+    unittest.addModuleCleanup(test_support.threading_cleanup, *thread_info)
 
 
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

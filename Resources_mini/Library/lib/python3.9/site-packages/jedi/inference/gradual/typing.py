@@ -10,7 +10,7 @@ import itertools
 from jedi import debug
 from jedi.inference.compiled import builtin_from_name, create_simple_object
 from jedi.inference.base_value import ValueSet, NO_VALUES, Value, \
-    LazyValueWrapper
+    LazyValueWrapper, ValueWrapper
 from jedi.inference.lazy_value import LazyKnownValues
 from jedi.inference.arguments import repack_with_argument_clinic
 from jedi.inference.filters import FilterWrapper
@@ -63,8 +63,8 @@ class TypingModuleName(NameWrapper):
             # have any effects there (because it's never executed).
             return
         elif name == 'TypeVar':
-            yield TypeVarClass.create_cached(
-                inference_state, self.parent_context, self.tree_name)
+            cls, = self._wrapped_name.infer()
+            yield TypeVarClass.create_cached(inference_state, cls)
         elif name == 'Any':
             yield AnyClass.create_cached(
                 inference_state, self.parent_context, self.tree_name)
@@ -76,21 +76,20 @@ class TypingModuleName(NameWrapper):
             yield OverloadFunction.create_cached(
                 inference_state, self.parent_context, self.tree_name)
         elif name == 'NewType':
-            yield NewTypeFunction.create_cached(
-                inference_state, self.parent_context, self.tree_name)
+            v, = self._wrapped_name.infer()
+            yield NewTypeFunction.create_cached(inference_state, v)
         elif name == 'cast':
-            yield CastFunction.create_cached(
-                inference_state, self.parent_context, self.tree_name)
+            cast_fn, = self._wrapped_name.infer()
+            yield CastFunction.create_cached(inference_state, cast_fn)
         elif name == 'TypedDict':
             # TODO doesn't even exist in typeshed/typing.py, yet. But will be
             # added soon.
             yield TypedDictClass.create_cached(
                 inference_state, self.parent_context, self.tree_name)
-        elif name in ('no_type_check', 'no_type_check_decorator'):
-            # This is not necessary, as long as we are not doing type checking.
-            yield from self._wrapped_name.infer()
         else:
-            # Everything else shouldn't be relevant for type checking.
+            # Not necessary, as long as we are not doing type checking:
+            # no_type_check & no_type_check_decorator
+            # Everything else shouldn't be relevant...
             yield from self._wrapped_name.infer()
 
 
@@ -275,6 +274,9 @@ class TypeAlias(LazyValueWrapper):
     def gather_annotation_classes(self):
         return ValueSet([self._get_wrapped_value()])
 
+    def get_signatures(self):
+        return []
+
 
 class Callable(BaseTypingInstance):
     def py__call__(self, arguments):
@@ -395,7 +397,7 @@ class OverloadFunction(BaseTypingValue):
         return func_value_set
 
 
-class NewTypeFunction(BaseTypingValue):
+class NewTypeFunction(ValueWrapper):
     def py__call__(self, arguments):
         ordered_args = arguments.unpack()
         next(ordered_args, (None, None))
@@ -429,8 +431,11 @@ class NewType(Value):
         from jedi.inference.compiled.value import CompiledValueName
         return CompiledValueName(self, 'NewType')
 
+    def __repr__(self) -> str:
+        return '<NewType: %s>%s' % (self.tree_node, self._type_value_set)
 
-class CastFunction(BaseTypingValue):
+
+class CastFunction(ValueWrapper):
     @repack_with_argument_clinic('type, object, /')
     def py__call__(self, type_value_set, object_value_set):
         return type_value_set.execute_annotation()

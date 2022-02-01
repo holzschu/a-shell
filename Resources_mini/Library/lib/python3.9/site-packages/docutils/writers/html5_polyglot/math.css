@@ -2,6 +2,7 @@
 *   math2html: convert LaTeX equations to HTML output.
 *
 *   Copyright (C) 2009,2010 Alex Fernández
+*                 2021      Günter Milde
 *
 *   Released under the terms of the `2-Clause BSD license'_, in short:
 *   Copying and distribution of this file, with or without modification,
@@ -13,16 +14,19 @@
 *
 *   Based on eLyXer: convert LyX source files to HTML output.
 *   http://elyxer.nongnu.org/
-*/
-/* --end--
+*
+*
 * CSS file for LaTeX formulas.
+*
+* References: http://www.zipcon.net/~swhite/docs/math/math.html
+*             http://www.cs.tut.fi/~jkorpela/math/
 */
 
 /* Formulas */
 .formula {
 	text-align: center;
-	font-family: "Droid Serif", "DejaVu Serif", "STIX", serif;
 	margin: 1.2em 0;
+	line-height: 1.4;
 }
 span.formula {
 	white-space: nowrap;
@@ -46,6 +50,9 @@ span.unknown {
 span.ignored, span.arraydef {
 	display: none;
 }
+.phantom {
+	visibility: hidden;
+}
 .formula i {
 	letter-spacing: 0.1ex;
 }
@@ -62,33 +69,48 @@ span.ignored, span.arraydef {
 }
 
 /* Structures */
+span.hspace {
+	display: inline-block;
+}
 span.overline, span.bar {
 	text-decoration: overline;
 }
-.fraction, .fullfraction {
+.fraction, .fullfraction, .textfraction {
 	display: inline-block;
 	vertical-align: middle;
 	text-align: center;
 }
-.fraction .fraction {
+span.formula .fraction,
+.textfraction,
+span.smallmatrix {
 	font-size: 80%;
-	line-height: 100%;
+	line-height: 1;
 }
 span.numerator {
 	display: block;
+	line-height: 1;
 }
 span.denominator {
 	display: block;
+	line-height: 1;
 	padding: 0ex;
 	border-top: thin solid;
 }
+.formula sub, .formula sup {
+	font-size: 80%;
+}
 sup.numerator, sup.unit {
-	font-size: 70%;
 	vertical-align: 80%;
 }
 sub.denominator, sub.unit {
-	font-size: 70%;
 	vertical-align: -20%;
+}
+span.smallsymbol {
+	font-size: 75%;
+	line-height: 75%;
+}
+span.boldsymbol {
+	font-weight: bold;
 }
 span.sqrt {
 	display: inline-block;
@@ -96,39 +118,62 @@ span.sqrt {
 	padding: 0.1ex;
 }
 sup.root {
-	font-size: 70%;
 	position: relative;
 	left: 1.4ex;
 }
 span.radical {
 	display: inline-block;
 	padding: 0ex;
-	font-size: 150%;
+	/* font-size: 160%; for DejaVu, not required with STIX */
+	line-height: 100%;
 	vertical-align: top;
+	vertical-align: middle;
 }
+
 span.root {
 	display: inline-block;
 	border-top: thin solid;
 	padding: 0ex;
 	vertical-align: middle;
 }
-span.symbol {
-	line-height: 125%;
-	font-size: 125%;
+div.formula .bigoperator,
+.displaystyle .bigoperator,
+.displaystyle .bigoperator {
+	line-height: 120%;
+	font-size: 140%;
+	padding-right: 0.2ex;
 }
-span.bigsymbol {
-	line-height: 150%;
-	font-size: 150%;
+span.fraction .bigoperator,
+span.scriptstyle .bigoperator {
+	line-height: inherit;
+	font-size: inherit;
+	padding-right: 0;
 }
-span.largesymbol {
-	font-size: 175%;
+span.bigdelimiter {
+	display: inline-block;
 }
-span.hugesymbol {
-	font-size: 200%;
+span.bigdelimiter.size1 {
+	transform: scale(1, 1.2);
+	line-height: 1.2;
 }
+span.bigdelimiter.size2 {
+	transform: scale(1, 1.62);
+	line-height: 1.62%;
+
+}
+span.bigdelimiter.size3 {
+	transform: scale(1, 2.05);
+	line-height: 2.05%;
+}
+span.bigdelimiter.size4 {
+	transform: scale(1, 2.47);
+	line-height: 2.47%;
+}
+/* vertically stacked sub and superscript */
 span.scripts {
 	display: inline-table;
 	vertical-align: middle;
+	padding-right: 0.2ex;
 }
 .script {
 	display: table-row;
@@ -146,51 +191,42 @@ span.limits {
 sup.limit, sub.limit {
 	line-height: 100%;
 }
-span.symbolover {
-	display: inline-block;
-	text-align: center;
-	position: relative;
-	float: right;
-	right: 100%;
-	bottom: 0.5em;
-	width: 0px;
-}
-span.withsymbol {
+span.embellished,
+span.embellished > .base {
 	display: inline-block;
 }
-span.symbolunder {
+span.embellished > sup,
+span.embellished > sub {
 	display: inline-block;
-	text-align: center;
+	font-size: 100%;
 	position: relative;
-	float: right;
-	right: 80%;
-	top: 0.3em;
+	bottom: 0.3em;
 	width: 0px;
+}
+span.embellished > sub {
+	top: 0.4em;
 }
 
 /* Environments */
 span.array, span.bracketcases, span.binomial, span.environment {
 	display: inline-table;
 	text-align: center;
-	border-collapse: collapse;
-	margin: 0em;
 	vertical-align: middle;
 }
 span.arrayrow, span.binomrow {
 	display: table-row;
-	padding: 0ex;
-	border: 0ex;
+	padding: 0;
+	border: 0;
 }
 span.arraycell, span.bracket, span.case, span.binomcell, span.environmentcell {
 	display: table-cell;
 	padding: 0ex 0.2ex;
-	line-height: 99%;
+	line-height: 1; /* 99%; */
 	border: 0ex;
 }
-/*
-* CSS file for LaTeX formulas, extra stuff:
-* binomials, vertical braces, stackrel, fonts and colors.
-*/
+.environment.align > .arrayrow > .arraycell.align-l {
+	padding-right: 2em;
+}
 
 /* Inline binomials */
 span.binom {
@@ -233,19 +269,30 @@ span.downstackrel {
 }
 
 /* Fonts */
+.formula {
+	font-family: STIX, "DejaVu Serif", "DejaVu Math TeX Gyre", serif;
+}
+span.radical,   /* ensure correct size of square-root sign */
+span.integral { /* upright integral signs for better alignment of indices */
+	font-family: "STIXIntegralsUp", STIX;
+	/* font-size: 115%; match apparent size with DejaVu */
+}
+span.bracket {
+  /* some "STIX" and "DejaVu Math TeX Gyre" bracket pieces don't fit */
+	font-family: "DejaVu Serif", serif;
+}
 span.mathsf, span.textsf {
-	font-style: normal;
 	font-family: sans-serif;
 }
 span.mathrm, span.textrm {
-	font-style: normal;
-	font-family: serif;
+	font-family: STIX, "DejaVu Serif", "DejaVu Math TeX Gyre", serif;
 }
-span.text, span.textnormal {
-	font-style: normal;
+span.mathtt, span.texttt {
+	font-family: monospace;
 }
-span.textipa {
-	color: #008080;
+span.text, span.textnormal,
+span.mathsf, span.mathtt, span.mathrm {
+	font-style: normal;
 }
 span.fraktur {
 	font-family: "Lucida Blackletter", eufm10, blackletter;
@@ -256,6 +303,16 @@ span.blackboard {
 span.scriptfont {
 	font-family: "Monotype Corsiva", "Apple Chancery", "URW Chancery L", cursive;
 	font-style: italic;
+}
+span.mathscr {
+  font-family: MathJax_Script, rsfs10,  cursive;
+  font-style: italic;
+}
+span.textsc {
+	font-variant: small-caps;
+}
+span.textsl {
+	font-style: oblique;
 }
 
 /* Colors */
@@ -273,4 +330,3 @@ span.boxed, span.framebox {
 	border: thin solid black;
 	padding: 5px;
 }
-

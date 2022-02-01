@@ -1,5 +1,6 @@
 from enum import Enum
 
+from abc import abstractmethod, ABCMeta
 from collections.abc import Iterable
 
 from pyrsistent._pmap import PMap, pmap
@@ -14,9 +15,11 @@ class CheckedType(object):
     __slots__ = ()
 
     @classmethod
+    @abstractmethod
     def create(cls, source_data, _factory_fields=None):
         raise NotImplementedError()
 
+    @abstractmethod
     def serialize(self, format=None):
         raise NotImplementedError()
 
@@ -159,7 +162,7 @@ def store_invariants(dct, bases, destination_name, source_name):
     dct[destination_name] = tuple(wrap_invariant(inv) for inv in invariants)
 
 
-class _CheckedTypeMeta(type):
+class _CheckedTypeMeta(ABCMeta):
     def __new__(mcs, name, bases, dct):
         _store_types(dct, bases, '_checked_types', '__type__')
         store_invariants(dct, bases, '_checked_invariants', '__invariant__')

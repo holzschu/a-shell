@@ -291,8 +291,6 @@ def query_vcvarsall(version, arch="x86"):
 
 # More globals
 VERSION = get_build_version()
-if VERSION < 8.0:
-    raise DistutilsPlatformError("VC %0.1f is not supported by this module" % VERSION)
 # MACROS = MacroExpander(VERSION)
 
 class MSVCCompiler(CCompiler) :
@@ -339,6 +337,8 @@ class MSVCCompiler(CCompiler) :
     def initialize(self, plat_name=None):
         # multi-init means we would need to check platform same each time...
         assert not self.initialized, "don't init multiple times"
+        if self.__version < 8.0:
+            raise DistutilsPlatformError("VC %0.1f is not supported by this module" % self.__version)
         if plat_name is None:
             plat_name = get_platform()
         # sanity check for platforms to prevent obscure errors later.

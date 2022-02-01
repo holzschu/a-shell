@@ -6,14 +6,12 @@
 # Eli Bendersky [https://eli.thegreenplace.net/]
 # License: BSD
 #------------------------------------------------------------------------------
-import re
-
 from .ply import yacc
 
 from . import c_ast
 from .c_lexer import CLexer
-from .plyparser import PLYParser, Coord, ParseError, parameterized, template
-from .ast_transforms import fix_switch_cases
+from .plyparser import PLYParser, ParseError, parameterized, template
+from .ast_transforms import fix_switch_cases, fix_atomic_specifiers
 
 
 @template
@@ -129,7 +127,7 @@ class CParser(PLYParser):
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
 
-    def parse(self, text, filename='', debuglevel=0):
+    def parse(self, text, filename='', debug=False):
         """ Parses C code and returns an AST.
 
             text:
@@ -139,8 +137,8 @@ class CParser(PLYParser):
                 Name of the file being parsed (for meaningful
                 error messages)
 
-            debuglevel:
-                Debug level to yacc
+            debug:
+                Debug flag to YACC
         """
         self.clex.filename = filename
         self.clex.reset_lineno()
@@ -149,7 +147,7 @@ class CParser(PLYParser):
         return self.cparser.parse(
                 input=text,
                 lexer=self.clex,
-                debug=debuglevel)
+                debug=debug)
 
     ######################--   PRIVATE   --######################
 
@@ -263,13 +261,10 @@ class CParser(PLYParser):
         modifier_tail = modifier
 
         # The modifier may be a nested list. Reach its tail.
-        #
         while modifier_tail.type:
             modifier_tail = modifier_tail.type
 
-        # If the decl is a basic type, just tack the modifier onto
-        # it
-        #
+        # If the decl is a basic type, just tack the modifier onto it.
         if isinstance(decl, c_ast.TypeDecl):
             modifier_tail.type = decl
             return modifier
@@ -277,7 +272,6 @@ class CParser(PLYParser):
             # Otherwise, the decl is a list of modifiers. Reach
             # its tail and splice the modifier onto the tail,
             # pointing to the underlying basic type.
-            #
             decl_tail = decl
 
             while not isinstance(decl_tail.type, c_ast.TypeDecl):
@@ -302,7 +296,6 @@ class CParser(PLYParser):
     #   and structs.
     #
     # This method fixes these problems.
-    #
     def _fix_decl_name_type(self, decl, typename):
         """ Fixes a declaration. Modifies decl.
         """
@@ -313,14 +306,13 @@ class CParser(PLYParser):
             type = type.type
 
         decl.name = type.declname
-        type.quals = decl.quals
+        type.quals = decl.quals[:]
 
         # The typename is a list of types. If any type in this
         # list isn't an IdentifierType, it must be the only
         # type in the list (it's illegal to declare "int enum ..")
         # If all the types are basic, they're collected in the
         # IdentifierType holder.
-        #
         for tn in typename:
             if not isinstance(tn, c_ast.IdentifierType):
                 if len(typename) > 1:
@@ -355,6 +347,7 @@ class CParser(PLYParser):
             * storage: a list of storage type qualifiers
             * type: a list of type specifiers
             * function: a list of function specifiers
+            * alignment: a list of alignment specifiers
 
             This method is given a declaration specifier, and a
             new specifier of a given kind.
@@ -363,7 +356,7 @@ class CParser(PLYParser):
             Returns the declaration specifier, with the new
             specifier incorporated.
         """
-        spec = declspec or dict(qual=[], storage=[], type=[], function=[])
+        spec = declspec or dict(qual=[], storage=[], type=[], function=[], alignment=[])
 
         if append:
             spec[kind].append(newspec)
@@ -382,7 +375,6 @@ class CParser(PLYParser):
         declarations = []
 
         # Bit-fields are allowed to be unnamed.
-        #
         if decls[0].get('bitsize') is not None:
             pass
 
@@ -390,7 +382,6 @@ class CParser(PLYParser):
         # problem can occur where the identifier gets grouped into
         # spec['type'], leaving decl as None.  This can only occur for the
         # first declarator.
-        #
         elif decls[0]['decl'] is None:
             if len(spec['type']) < 2 or len(spec['type'][-1].names) != 1 or \
                     not self._is_type_in_scope(spec['type'][-1].names[0]):
@@ -406,15 +397,15 @@ class CParser(PLYParser):
                 declname=spec['type'][-1].names[0],
                 type=None,
                 quals=None,
+                align=spec['alignment'],
                 coord=spec['type'][-1].coord)
             # Remove the "new" type's name from the end of spec['type']
             del spec['type'][-1]
 
         # A similar problem can occur where the declaration ends up looking
         # like an abstract declarator.  Give it a name if this is the case.
-        #
-        elif not isinstance(decls[0]['decl'],
-                (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
+        elif not isinstance(decls[0]['decl'], (
+                c_ast.Enum, c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
             decls_0_tail = decls[0]['decl']
             while not isinstance(decls_0_tail, c_ast.TypeDecl):
                 decls_0_tail = decls_0_tail.type
@@ -435,6 +426,7 @@ class CParser(PLYParser):
                 declaration = c_ast.Decl(
                     name=None,
                     quals=spec['qual'],
+                    align=spec['alignment'],
                     storage=spec['storage'],
                     funcspec=spec['function'],
                     type=decl['decl'],
@@ -442,21 +434,22 @@ class CParser(PLYParser):
                     bitsize=decl.get('bitsize'),
                     coord=decl['decl'].coord)
 
-            if isinstance(declaration.type,
-                    (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
+            if isinstance(declaration.type, (
+                    c_ast.Enum, c_ast.Struct, c_ast.Union,
+                    c_ast.IdentifierType)):
                 fixed_decl = declaration
             else:
                 fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
 
             # Add the type name defined by typedef to a
             # symbol table (for usage in the lexer)
-            #
             if typedef_namespace:
                 if is_typedef:
                     self._add_typedef_name(fixed_decl.name, fixed_decl.coord)
                 else:
                     self._add_identifier(fixed_decl.name, fixed_decl.coord)
 
+            fixed_decl = fix_atomic_specifiers(fixed_decl)
             declarations.append(fixed_decl)
 
         return declarations
@@ -464,7 +457,8 @@ class CParser(PLYParser):
     def _build_function_definition(self, spec, decl, param_decls, body):
         """ Builds a function definition.
         """
-        assert 'typedef' not in spec['storage']
+        if 'typedef' in spec['storage']:
+            self._parse_error("Invalid typedef", decl.coord)
 
         declaration = self._build_declarations(
             spec=spec,
@@ -489,6 +483,8 @@ class CParser(PLYParser):
     ##
     ## Precedence and associativity of operators
     ##
+    # If this changes, c_generator.CGenerator.precedence_map needs to change as
+    # well
     precedence = (
         ('left', 'LOR'),
         ('left', 'LAND'),
@@ -509,7 +505,6 @@ class CParser(PLYParser):
 
     # Wrapper around a translation unit, to allow for empty input.
     # Not strictly part of the C99 Grammar, but useful in practice.
-    #
     def p_translation_unit_or_empty(self, p):
         """ translation_unit_or_empty   : translation_unit
                                         | empty
@@ -523,7 +518,6 @@ class CParser(PLYParser):
         """ translation_unit    : external_declaration
         """
         # Note: external_declaration is already a list
-        #
         p[0] = p[1]
 
     def p_translation_unit_2(self, p):
@@ -535,8 +529,7 @@ class CParser(PLYParser):
     # Declarations always come as lists (because they can be
     # several in one line), so we wrap the function definition
     # into a list as well, to make the return value of
-    # external_declaration homogenous.
-    #
+    # external_declaration homogeneous.
     def p_external_declaration_1(self, p):
         """ external_declaration    : function_definition
         """
@@ -558,6 +551,20 @@ class CParser(PLYParser):
         """
         p[0] = []
 
+    def p_external_declaration_5(self, p):
+        """ external_declaration    : static_assert
+        """
+        p[0] = p[1]
+
+    def p_static_assert_declaration(self, p):
+        """ static_assert           : _STATIC_ASSERT LPAREN constant_expression COMMA unified_string_literal RPAREN
+                                    | _STATIC_ASSERT LPAREN constant_expression RPAREN
+        """
+        if len(p) == 5:
+            p[0] = [c_ast.StaticAssert(p[3], None, self._token_coord(p, 1))]
+        else:
+            p[0] = [c_ast.StaticAssert(p[3], p[5], self._token_coord(p, 1))]
+
     def p_pp_directive(self, p):
         """ pp_directive  : PPHASH
         """
@@ -575,13 +582,13 @@ class CParser(PLYParser):
 
     # In function definitions, the declarator can be followed by
     # a declaration list, for old "K&R style" function definitios.
-    #
     def p_function_definition_1(self, p):
         """ function_definition : id_declarator declaration_list_opt compound_statement
         """
         # no declaration specifiers - 'int' becomes the default type
         spec = dict(
             qual=[],
+            alignment=[],
             storage=[],
             type=[c_ast.IdentifierType(['int'],
                                        coord=self._token_coord(p, 1))],
@@ -604,6 +611,10 @@ class CParser(PLYParser):
             param_decls=p[3],
             body=p[4])
 
+    # Note, according to C18 A.2.2 6.7.10 static_assert-declaration _Static_assert
+    # is a declaration, not a statement. We additionally recognise it as a statement
+    # to fix parsing of _Static_assert inside the functions.
+    #
     def p_statement(self, p):
         """ statement   : labeled_statement
                         | expression_statement
@@ -612,22 +623,24 @@ class CParser(PLYParser):
                         | iteration_statement
                         | jump_statement
                         | pppragma_directive
+                        | static_assert
         """
         p[0] = p[1]
 
-    # A pragma is generally considered a decorator rather than an actual statement.
-    # Still, for the purposes of analyzing an abstract syntax tree of C code,
-    # pragma's should not be ignored and were previously treated as a statement.
-    # This presents a problem for constructs that take a statement such as labeled_statements,
-    # selection_statements, and iteration_statements, causing a misleading structure
-    # in the AST. For example, consider the following C code.
+    # A pragma is generally considered a decorator rather than an actual
+    # statement. Still, for the purposes of analyzing an abstract syntax tree of
+    # C code, pragma's should not be ignored and were previously treated as a
+    # statement. This presents a problem for constructs that take a statement
+    # such as labeled_statements, selection_statements, and
+    # iteration_statements, causing a misleading structure in the AST. For
+    # example, consider the following C code.
     #
     #   for (int i = 0; i < 3; i++)
     #       #pragma omp critical
     #       sum += 1;
     #
-    # This code will compile and execute "sum += 1;" as the body of the for loop.
-    # Previous implementations of PyCParser would render the AST for this
+    # This code will compile and execute "sum += 1;" as the body of the for
+    # loop. Previous implementations of PyCParser would render the AST for this
     # block of code as follows:
     #
     #   For:
@@ -696,6 +709,7 @@ class CParser(PLYParser):
                 decls = [c_ast.Decl(
                     name=None,
                     quals=spec['qual'],
+                    align=spec['alignment'],
                     storage=spec['storage'],
                     funcspec=spec['function'],
                     type=ty[0],
@@ -772,6 +786,17 @@ class CParser(PLYParser):
         """
         p[0] = self._add_declaration_specifier(p[2], p[1], 'function')
 
+    # Without this, `typedef _Atomic(T) U` will parse incorrectly because the
+    # _Atomic qualifier will match, instead of the specifier.
+    def p_declaration_specifiers_no_type_4(self, p):
+        """ declaration_specifiers_no_type  : atomic_specifier declaration_specifiers_no_type_opt
+        """
+        p[0] = self._add_declaration_specifier(p[2], p[1], 'type')
+
+    def p_declaration_specifiers_no_type_5(self, p):
+        """ declaration_specifiers_no_type  : alignment_specifier declaration_specifiers_no_type_opt
+        """
+        p[0] = self._add_declaration_specifier(p[2], p[1], 'alignment')
 
     def p_declaration_specifiers_1(self, p):
         """ declaration_specifiers  : declaration_specifiers type_qualifier
@@ -803,6 +828,10 @@ class CParser(PLYParser):
         """
         p[0] = self._add_declaration_specifier(p[1], p[2], 'type', append=True)
 
+    def p_declaration_specifiers_7(self, p):
+        """ declaration_specifiers  : declaration_specifiers alignment_specifier
+        """
+        p[0] = self._add_declaration_specifier(p[1], p[2], 'alignment', append=True)
 
     def p_storage_class_specifier(self, p):
         """ storage_class_specifier : AUTO
@@ -810,11 +839,13 @@ class CParser(PLYParser):
                                     | STATIC
                                     | EXTERN
                                     | TYPEDEF
+                                    | _THREAD_LOCAL
         """
         p[0] = p[1]
 
     def p_function_specifier(self, p):
         """ function_specifier  : INLINE
+                                | _NORETURN
         """
         p[0] = p[1]
 
@@ -839,13 +870,23 @@ class CParser(PLYParser):
                             | enum_specifier
                             | struct_or_union_specifier
                             | type_specifier_no_typeid
+                            | atomic_specifier
         """
         p[0] = p[1]
+
+    # See section 6.7.2.4 of the C11 standard.
+    def p_atomic_specifier(self, p):
+        """ atomic_specifier  : _ATOMIC LPAREN type_name RPAREN
+        """
+        typ = p[3]
+        typ.quals.append('_Atomic')
+        p[0] = typ
 
     def p_type_qualifier(self, p):
         """ type_qualifier  : CONST
                             | RESTRICT
                             | VOLATILE
+                            | _ATOMIC
         """
         p[0] = p[1]
 
@@ -896,8 +937,17 @@ class CParser(PLYParser):
     def p_specifier_qualifier_list_4(self, p):
         """ specifier_qualifier_list  : type_qualifier_list type_specifier
         """
-        spec = dict(qual=p[1], storage=[], type=[], function=[])
-        p[0] = self._add_declaration_specifier(spec, p[2], 'type', append=True)
+        p[0] = dict(qual=p[1], alignment=[], storage=[], type=[p[2]], function=[])
+
+    def p_specifier_qualifier_list_5(self, p):
+        """ specifier_qualifier_list  : alignment_specifier
+        """
+        p[0] = dict(qual=[], alignment=[p[1]], storage=[], type=[], function=[])
+
+    def p_specifier_qualifier_list_6(self, p):
+        """ specifier_qualifier_list  : specifier_qualifier_list alignment_specifier
+        """
+        p[0] = self._add_declaration_specifier(p[1], p[2], 'alignment')
 
     # TYPEID is allowed here (and in other struct/enum related tag names), because
     # struct/enum tags reside in their own namespace and can be named the same as types
@@ -1036,7 +1086,7 @@ class CParser(PLYParser):
         if len(p) > 3:
             p[0] = {'decl': p[1], 'bitsize': p[3]}
         else:
-            p[0] = {'decl': c_ast.TypeDecl(None, None, None), 'bitsize': p[2]}
+            p[0] = {'decl': c_ast.TypeDecl(None, None, None, None), 'bitsize': p[2]}
 
     def p_enum_specifier_1(self, p):
         """ enum_specifier  : ENUM ID
@@ -1067,6 +1117,12 @@ class CParser(PLYParser):
         else:
             p[1].enumerators.append(p[3])
             p[0] = p[1]
+
+    def p_alignment_specifier(self, p):
+        """ alignment_specifier  : _ALIGNAS LPAREN type_name RPAREN
+                                 | _ALIGNAS LPAREN constant_expression RPAREN
+        """
+        p[0] = c_ast.Alignas(p[3], self._token_coord(p, 1))
 
     def p_enumerator(self, p):
         """ enumerator  : ID
@@ -1110,6 +1166,7 @@ class CParser(PLYParser):
             declname=p[1],
             type=None,
             quals=None,
+            align=None,
             coord=self._token_coord(p, 1))
 
     @parameterized(('id', 'ID'), ('typeid', 'TYPEID'))
@@ -1162,7 +1219,7 @@ class CParser(PLYParser):
         arr = c_ast.ArrayDecl(
             type=None,
             dim=c_ast.ID(p[4], self._token_coord(p, 4)),
-            dim_quals=p[3] if p[3] != None else [],
+            dim_quals=p[3] if p[3] is not None else [],
             coord=p[1].coord)
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
@@ -1297,7 +1354,8 @@ class CParser(PLYParser):
             decl = c_ast.Typename(
                 name='',
                 quals=spec['qual'],
-                type=p[2] or c_ast.TypeDecl(None, None, None),
+                align=None,
+                type=p[2] or c_ast.TypeDecl(None, None, None, None),
                 coord=self._token_coord(p, 2))
             typename = spec['type']
             decl = self._fix_decl_name_type(decl, typename)
@@ -1365,8 +1423,9 @@ class CParser(PLYParser):
         """
         typename = c_ast.Typename(
             name='',
-            quals=p[1]['qual'],
-            type=p[2] or c_ast.TypeDecl(None, None, None),
+            quals=p[1]['qual'][:],
+            align=None,
+            type=p[2] or c_ast.TypeDecl(None, None, None, None),
             coord=self._token_coord(p, 2))
 
         p[0] = self._fix_decl_name_type(typename, p[1]['type'])
@@ -1374,7 +1433,7 @@ class CParser(PLYParser):
     def p_abstract_declarator_1(self, p):
         """ abstract_declarator     : pointer
         """
-        dummytype = c_ast.TypeDecl(None, None, None)
+        dummytype = c_ast.TypeDecl(None, None, None, None)
         p[0] = self._type_modify_decl(
             decl=dummytype,
             modifier=p[1])
@@ -1414,7 +1473,7 @@ class CParser(PLYParser):
         """
         quals = (p[2] if len(p) > 4 else []) or []
         p[0] = c_ast.ArrayDecl(
-            type=c_ast.TypeDecl(None, None, None),
+            type=c_ast.TypeDecl(None, None, None, None),
             dim=p[3] if len(p) > 4 else p[2],
             dim_quals=quals,
             coord=self._token_coord(p, 1))
@@ -1434,7 +1493,7 @@ class CParser(PLYParser):
         """ direct_abstract_declarator  : LBRACKET TIMES RBRACKET
         """
         p[0] = c_ast.ArrayDecl(
-            type=c_ast.TypeDecl(None, None, None),
+            type=c_ast.TypeDecl(None, None, None, None),
             dim=c_ast.ID(p[3], self._token_coord(p, 3)),
             dim_quals=[],
             coord=self._token_coord(p, 1))
@@ -1454,7 +1513,7 @@ class CParser(PLYParser):
         """
         p[0] = c_ast.FuncDecl(
             args=p[2],
-            type=c_ast.TypeDecl(None, None, None),
+            type=c_ast.TypeDecl(None, None, None, None),
             coord=self._token_coord(p, 1))
 
     # declaration is a list, statement isn't. To make it consistent, block_item
@@ -1561,6 +1620,10 @@ class CParser(PLYParser):
             p[1].exprs.append(p[3])
             p[0] = p[1]
 
+    def p_parenthesized_compound_expression(self, p):
+        """ assignment_expression : LPAREN compound_statement RPAREN """
+        p[0] = p[2]
+
     def p_typedef_name(self, p):
         """ typedef_name : TYPEID """
         p[0] = c_ast.IdentifierType([p[1]], coord=self._token_coord(p, 1))
@@ -1655,6 +1718,7 @@ class CParser(PLYParser):
     def p_unary_expression_3(self, p):
         """ unary_expression    : SIZEOF unary_expression
                                 | SIZEOF LPAREN type_name RPAREN
+                                | _ALIGNOF LPAREN type_name RPAREN
         """
         p[0] = c_ast.UnaryOp(
             p[1],
@@ -1803,6 +1867,9 @@ class CParser(PLYParser):
     def p_constant_3(self, p):
         """ constant    : CHAR_CONST
                         | WCHAR_CONST
+                        | U8CHAR_CONST
+                        | U16CHAR_CONST
+                        | U32CHAR_CONST
         """
         p[0] = c_ast.Constant(
             'char', p[1], self._token_coord(p, 1))
@@ -1825,7 +1892,13 @@ class CParser(PLYParser):
 
     def p_unified_wstring_literal(self, p):
         """ unified_wstring_literal : WSTRING_LITERAL
+                                    | U8STRING_LITERAL
+                                    | U16STRING_LITERAL
+                                    | U32STRING_LITERAL
                                     | unified_wstring_literal WSTRING_LITERAL
+                                    | unified_wstring_literal U8STRING_LITERAL
+                                    | unified_wstring_literal U16STRING_LITERAL
+                                    | unified_wstring_literal U32STRING_LITERAL
         """
         if len(p) == 2: # single literal
             p[0] = c_ast.Constant(

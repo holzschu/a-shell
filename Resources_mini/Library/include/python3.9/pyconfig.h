@@ -282,6 +282,9 @@
 /* Define to 1 if you have the `dup3' function. */
 /* #undef HAVE_DUP3 */
 
+/* Define if you have the '_dyld_shared_cache_contains_path' function. */
+#define HAVE_DYLD_SHARED_CACHE_CONTAINS_PATH 1
+
 /* Defined when any dynamic module loading is enabled. */
 #define HAVE_DYNAMIC_LOADING 1
 
@@ -611,6 +614,9 @@
 /* Define to 1 if you have the <libutil.h> header file. */
 /* #undef HAVE_LIBUTIL_H */
 
+/* Define to 1 if you have the `uuid' library (-luuid). */
+/* #undef HAVE_LIBUUID */
+
 /* Define if you have the 'link' function. */
 #define HAVE_LINK 1
 
@@ -731,6 +737,10 @@
 /* Define to 1 if you have the `nice' function. */
 #define HAVE_NICE 1
 
+/* Define if the internal form of wchar_t in non-Unicode locales is not
+   Unicode. */
+/* #undef HAVE_NON_UNICODE_WCHAR_T_REPRESENTATION */
+
 /* Define to 1 if you have the `openat' function. */
 #define HAVE_OPENAT 1
 
@@ -778,9 +788,6 @@
 
 /* Define if you have the 'prlimit' functions. */
 /* #undef HAVE_PRLIMIT */
-
-/* Define if you have the '_dyld_shared_cache_contains_path' function. */
-#define HAVE_DYLD_SHARED_CACHE_CONTAINS_PATH 1
 
 /* Define to 1 if you have the <process.h> header file. */
 /* #undef HAVE_PROCESS_H */
@@ -883,6 +890,9 @@
 
 /* Define to 1 if you have the `sched_setscheduler' function. */
 /* #undef HAVE_SCHED_SETSCHEDULER */
+
+/* Define to 1 if you have the `sem_clockwait' function. */
+/* #undef HAVE_SEM_CLOCKWAIT */
 
 /* Define to 1 if you have the `sem_getvalue' function. */
 #define HAVE_SEM_GETVALUE 1
@@ -1622,11 +1632,6 @@
 
 /* Define on FreeBSD to activate all library features */
 #define __BSD_VISIBLE 1
-
-/* Define to 1 if type `char' is unsigned and you are not using gcc.  */
-#ifndef __CHAR_UNSIGNED__
-/* # undef __CHAR_UNSIGNED__ */
-#endif
 
 /* Define to 'long' if <time.h> doesn't define. */
 /* #undef clock_t */

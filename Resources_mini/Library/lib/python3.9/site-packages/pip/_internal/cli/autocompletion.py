@@ -9,11 +9,10 @@ from typing import Any, Iterable, List, Optional
 
 from pip._internal.cli.main_parser import create_main_parser
 from pip._internal.commands import commands_dict, create_command
-from pip._internal.utils.misc import get_installed_distributions
+from pip._internal.metadata import get_default_environment
 
 
-def autocomplete():
-    # type: () -> None
+def autocomplete() -> None:
     """Entry Point for completion of main and subcommand options."""
     # Don't complete if user hasn't sourced bash_completion file.
     if "PIP_AUTO_COMPLETE" not in os.environ:
@@ -30,7 +29,7 @@ def autocomplete():
     options = []
 
     # subcommand
-    subcommand_name = None  # type: Optional[str]
+    subcommand_name: Optional[str] = None
     for word in cwords:
         if word in subcommands:
             subcommand_name = word
@@ -46,11 +45,13 @@ def autocomplete():
             "uninstall",
         ]
         if should_list_installed:
+            env = get_default_environment()
             lc = current.lower()
             installed = [
-                dist.key
-                for dist in get_installed_distributions(local_only=True)
-                if dist.key.startswith(lc) and dist.key not in cwords[1:]
+                dist.canonical_name
+                for dist in env.iter_installed_distributions(local_only=True)
+                if dist.canonical_name.startswith(lc)
+                and dist.canonical_name not in cwords[1:]
             ]
             # if there are no dists installed, fall back to option completion
             if installed:
@@ -107,8 +108,9 @@ def autocomplete():
     sys.exit(1)
 
 
-def get_path_completion_type(cwords, cword, opts):
-    # type: (List[str], int, Iterable[Any]) -> Optional[str]
+def get_path_completion_type(
+    cwords: List[str], cword: int, opts: Iterable[Any]
+) -> Optional[str]:
     """Get the type of path completion (``file``, ``dir``, ``path`` or None)
 
     :param cwords: same as the environmental variable ``COMP_WORDS``
@@ -130,8 +132,7 @@ def get_path_completion_type(cwords, cword, opts):
     return None
 
 
-def auto_complete_paths(current, completion_type):
-    # type: (str, str) -> Iterable[str]
+def auto_complete_paths(current: str, completion_type: str) -> Iterable[str]:
     """If ``completion_type`` is ``file`` or ``path``, list all regular files
     and directories starting with ``current``; otherwise only list directories
     starting with ``current``.

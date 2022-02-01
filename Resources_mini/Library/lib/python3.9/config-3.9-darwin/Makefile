@@ -21,9 +21,9 @@
 
 # === Variables set by makesetup ===
 
-MODBUILT_NAMES=      posix  errno  pwd  _sre  _codecs  _weakref  _functools  _operator  _collections  _abc  itertools  atexit  _signal  _stat  time  _thread  _locale  _io  faulthandler  _tracemalloc  _peg_parser  _symtable  xxsubtype
+MODBUILT_NAMES=      posix  errno  pwd  _sre  _codecs  _weakref  _functools  _operator  _collections  _abc  itertools  atexit  _signal  _stat  time  _thread  _locale  _io  faulthandler  _tracemalloc  _peg_parser  _symtable  array  cmath  math  _contextvars  _struct  _random  _elementtree  _pickle  _datetime  _zoneinfo  _bisect  _heapq  _asyncio  _json  _statistics  unicodedata  fcntl  grp  select  mmap  _csv  _socket  termios  resource  _posixsubprocess  audioop  _md5  _sha1  _sha256  _sha512  _sha3  _blake2  binascii  parser  zlib  pyexpat  _multibytecodec  _codecs_cn  _codecs_hk  _codecs_iso2022  _codecs_jp  _codecs_kr  _codecs_tw  xxsubtype
 MODDISABLED_NAMES= 
-MODOBJS=             Modules/posixmodule.o  Modules/errnomodule.o  Modules/pwdmodule.o  Modules/_sre.o  Modules/_codecsmodule.o  Modules/_weakref.o  Modules/_functoolsmodule.o  Modules/_operator.o  Modules/_collectionsmodule.o  Modules/_abc.o  Modules/itertoolsmodule.o  Modules/atexitmodule.o  Modules/signalmodule.o  Modules/_stat.o  Modules/timemodule.o  Modules/_threadmodule.o  Modules/_localemodule.o  Modules/_iomodule.o Modules/iobase.o Modules/fileio.o Modules/bytesio.o Modules/bufferedio.o Modules/textio.o Modules/stringio.o  Modules/faulthandler.o  Modules/_tracemalloc.o  Modules/_peg_parser.o  Modules/symtablemodule.o  Modules/xxsubtype.o
+MODOBJS=             Modules/posixmodule.o  Modules/errnomodule.o  Modules/pwdmodule.o  Modules/_sre.o  Modules/_codecsmodule.o  Modules/_weakref.o  Modules/_functoolsmodule.o  Modules/_operator.o  Modules/_collectionsmodule.o  Modules/_abc.o  Modules/itertoolsmodule.o  Modules/atexitmodule.o  Modules/signalmodule.o  Modules/_stat.o  Modules/timemodule.o  Modules/_threadmodule.o  Modules/_localemodule.o  Modules/_iomodule.o Modules/iobase.o Modules/fileio.o Modules/bytesio.o Modules/bufferedio.o Modules/textio.o Modules/stringio.o  Modules/faulthandler.o  Modules/_tracemalloc.o  Modules/_peg_parser.o  Modules/symtablemodule.o  Modules/arraymodule.o  Modules/cmathmodule.o Modules/_math.o  Modules/mathmodule.o  Modules/_contextvarsmodule.o  Modules/_struct.o  Modules/_randommodule.o  Modules/_elementtree.o  Modules/_pickle.o  Modules/_datetimemodule.o  Modules/_zoneinfo.o  Modules/_bisectmodule.o  Modules/_heapqmodule.o  Modules/_asynciomodule.o  Modules/_json.o  Modules/_statisticsmodule.o  Modules/unicodedata.o  Modules/fcntlmodule.o  Modules/grpmodule.o  Modules/selectmodule.o  Modules/mmapmodule.o  Modules/_csv.o  Modules/socketmodule.o  Modules/termios.o  Modules/resource.o  Modules/_posixsubprocess.o  Modules/audioop.o  Modules/md5module.o  Modules/sha1module.o  Modules/sha256module.o  Modules/sha512module.o  Modules/sha3module.o  Modules/blake2module.o Modules/blake2b_impl.o Modules/blake2s_impl.o  Modules/binascii.o  Modules/parsermodule.o  Modules/zlibmodule.o  Modules/xmlparse.o Modules/xmlrole.o Modules/xmltok.o Modules/pyexpat.o  Modules/multibytecodec.o  Modules/_codecs_cn.o  Modules/_codecs_hk.o  Modules/_codecs_iso2022.o  Modules/_codecs_jp.o  Modules/_codecs_kr.o  Modules/_codecs_tw.o  Modules/xxsubtype.o
 MODLIBS=           $(LOCALMODLIBS) $(BASEMODLIBS)
 
 # === Variables set by configure
@@ -81,7 +81,7 @@ MAKESETUP=      $(srcdir)/Modules/makesetup
 OPT=		-DNDEBUG -O3 -Wall
 BASECFLAGS=	 -Wno-unused-result -Wsign-compare -Wunreachable-code
 BASECPPFLAGS=	
-CONFIGURE_CFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk
+CONFIGURE_CFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk
 # CFLAGS_NODIST is used for building the interpreter and stdlib C extensions.
 # Use it when a compiler flag should _not_ be part of the distutils CFLAGS
 # once Python is installed (Issue #21121).
@@ -90,8 +90,8 @@ CONFIGURE_CFLAGS_NODIST= -std=c99 -Wextra -Wno-unused-result -Wno-unused-paramet
 # Use it when a linker flag should _not_ be part of the distutils LDFLAGS
 # once Python is installed (bpo-35257)
 CONFIGURE_LDFLAGS_NODIST=
-CONFIGURE_CPPFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk
-CONFIGURE_LDFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk
+CONFIGURE_CPPFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk
+CONFIGURE_LDFLAGS=	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -lz
 # Avoid assigning CFLAGS, LDFLAGS, etc. so users can use them on the
 # command line to append to these values without stomping the pre-set
 # values.
@@ -104,7 +104,6 @@ PY_CPPFLAGS=	$(BASECPPFLAGS) -I. -I$(srcdir)/Include $(CONFIGURE_CPPFLAGS) $(CPP
 PY_LDFLAGS=	$(CONFIGURE_LDFLAGS) $(LDFLAGS)
 PY_LDFLAGS_NODIST=$(CONFIGURE_LDFLAGS_NODIST) $(LDFLAGS_NODIST)
 NO_AS_NEEDED=	
-SGI_ABI=	@SGI_ABI@
 CCSHARED=	
 # LINKFORSHARED are the flags passed to the $(CC) command that links
 # the python executable -- this is only needed for a few systems
@@ -157,9 +156,9 @@ CONFINCLUDEPY=	$(CONFINCLUDEDIR)/python$(LDVERSION)
 # Symbols used for using shared libraries
 SHLIB_SUFFIX=	.so
 EXT_SUFFIX=	.cpython-39-darwin.so
-LDSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk -lz -L. -lpython3.9 $(PY_LDFLAGS)
-BLDSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk -lz -L. -lpython3.9 $(PY_CORE_LDFLAGS)
-LDCXXSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk -lz -L. -lpython3.9
+LDSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -lz -L. -lpython3.9 $(PY_LDFLAGS)
+BLDSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -lz -L. -lpython3.9 $(PY_CORE_LDFLAGS)
+LDCXXSHARED=	clang -v -undefined error -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -lz -L. -lpython3.9
 DESTSHARED=	$(BINLIBDEST)/lib-dynload
 
 # List of exported symbols for AIX
@@ -179,7 +178,7 @@ PYTHONFRAMEWORKINSTALLDIR=
 # Deployment target selected during configure, to be checked
 # by distutils. The export statement is needed to ensure that the
 # deployment target is active during build.
-MACOSX_DEPLOYMENT_TARGET=11.3
+MACOSX_DEPLOYMENT_TARGET=11.6
 export MACOSX_DEPLOYMENT_TARGET
 
 # Option to install to strip binaries
@@ -187,6 +186,9 @@ STRIPFLAG=-s
 
 # Flags to lipo to produce a 32-bit-only universal executable
 LIPO_32BIT_FLAGS=
+
+# Flags to lipo to produce an intel-64-only universal executable
+LIPO_INTEL64_FLAGS=
 
 # Options to enable prebinding (for fast startup prior to Mac OS X 10.3)
 OTHER_LIBTOOL_OPT=
@@ -212,7 +214,7 @@ EXEMODE=	755
 FILEMODE=	644
 
 # configure script arguments
-CONFIG_ARGS=	 '--prefix=/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library' '--with-system-ffi' '--enable-shared' '--without-computed-gotos' 'ac_cv_file__dev_ptmx=no' 'ac_cv_file__dev_ptc=no' 'ac_cv_func_getentropy=no' 'ac_cv_func_sendfile=no' 'ac_cv_func_setregid=no' 'ac_cv_func_setreuid=no' 'ac_cv_func_setsid=no' 'ac_cv_func_setpgid=no' 'ac_cv_func_setpgrp=no' 'ac_cv_func_setuid=no' 'ac_cv_func_forkpty=no ' 'ac_cv_func_openpty=no' 'ac_cv_func_clock_settime=no' 'CC=clang' 'CFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk' 'LDFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk' 'CPPFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk'
+CONFIG_ARGS=	 '--prefix=/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library' '--with-system-ffi' '--enable-shared' '--without-computed-gotos' 'ac_cv_file__dev_ptmx=no' 'ac_cv_file__dev_ptc=no' 'ac_cv_func_getentropy=no' 'ac_cv_func_sendfile=no' 'ac_cv_func_setregid=no' 'ac_cv_func_setreuid=no' 'ac_cv_func_setsid=no' 'ac_cv_func_setpgid=no' 'ac_cv_func_setpgrp=no' 'ac_cv_func_setuid=no' 'ac_cv_func_forkpty=no ' 'ac_cv_func_openpty=no' 'ac_cv_func_clock_settime=no' 'CC=clang' 'CFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk' 'LDFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -lz' 'CPPFLAGS=-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk'
 
 
 # Subdirectories with code
@@ -252,12 +254,12 @@ LIBOBJS=
 PYTHON=		python$(EXE)
 BUILDPYTHON=	python$(BUILDEXE)
 
-PYTHON_FOR_REGEN?=python3
-UPDATE_FILE=python3 $(srcdir)/Tools/scripts/update_file.py
+PYTHON_FOR_REGEN?=python3.9
+UPDATE_FILE=python3.9 $(srcdir)/Tools/scripts/update_file.py
 PYTHON_FOR_BUILD=./$(BUILDPYTHON) -E
 _PYTHON_HOST_PLATFORM=
-BUILD_GNU_TYPE=	x86_64-apple-darwin20.4.0
-HOST_GNU_TYPE=	x86_64-apple-darwin20.4.0
+BUILD_GNU_TYPE=	x86_64-apple-darwin20.6.0
+HOST_GNU_TYPE=	x86_64-apple-darwin20.6.0
 
 # Tcl and Tk config info from --with-tcltk-includes and -libs options
 TCLTK_INCLUDES=	
@@ -277,7 +279,7 @@ COVERAGE_REPORT_OPTIONS=--no-branch-coverage --title "CPython lcov report"
 
 # === Definitions added by makesetup ===
 
-LOCALMODLIBS=                       
+LOCALMODLIBS=                                                                  
 BASEMODLIBS=
 PYTHONPATH=$(COREPYTHONPATH)
 COREPYTHONPATH=$(DESTPATH)$(SITEPATH)$(TESTPATH)
@@ -765,6 +767,13 @@ regen-importlib: Programs/_freeze_importlib
 	    $(srcdir)/Python/importlib_zipimport.h.new
 	$(UPDATE_FILE) $(srcdir)/Python/importlib_zipimport.h $(srcdir)/Python/importlib_zipimport.h.new
 
+regen-abidump: all
+	@$(MKDIR_P) $(srcdir)/Doc/data/
+	abidw "libpython$(LDVERSION).so" --no-architecture --out-file $(srcdir)/Doc/data/python$(LDVERSION).abi.new
+	@$(UPDATE_FILE) $(srcdir)/Doc/data/python$(LDVERSION).abi $(srcdir)/Doc/data/python$(LDVERSION).abi.new
+
+check-abidump: all
+		abidiff $(srcdir)/Doc/data/python$(LDVERSION).abi "libpython$(LDVERSION).so" --drop-private-types --no-architecture --no-added-syms
 
 ############################################################################
 # Regenerate all generated files
@@ -1339,6 +1348,12 @@ altbininstall: $(BUILDPYTHON)
 			-output $(DESTDIR)$(BINDIR)/python$(VERSION)-32$(EXE) \
 			$(DESTDIR)$(BINDIR)/python$(VERSION)$(EXE); \
 	fi
+	if test "x$(LIPO_INTEL64_FLAGS)" != "x" ; then \
+		rm -f $(DESTDIR)$(BINDIR)python$(VERSION)-intel64$(EXE); \
+		lipo $(LIPO_INTEL64_FLAGS) \
+			-output $(DESTDIR)$(BINDIR)/python$(VERSION)-intel64$(EXE) \
+			$(DESTDIR)$(BINDIR)/python$(VERSION)$(EXE); \
+	fi
 
 bininstall: altbininstall
 	if test ! -d $(DESTDIR)$(LIBPC); then \
@@ -1373,6 +1388,10 @@ bininstall: altbininstall
 	if test "x$(LIPO_32BIT_FLAGS)" != "x" ; then \
 		rm -f $(DESTDIR)$(BINDIR)/python3-32$(EXE); \
 		(cd $(DESTDIR)$(BINDIR); $(LN) -s python$(VERSION)-32$(EXE) python3-32$(EXE)) \
+	fi
+	if test "x$(LIPO_INTEL64_FLAGS)" != "x" ; then \
+		rm -f $(DESTDIR)$(BINDIR)/python3-intel64$(EXE); \
+		(cd $(DESTDIR)$(BINDIR); $(LN) -s python$(VERSION)-intel64$(EXE) python3-intel64$(EXE)) \
 	fi
 
 # Install the versioned manual page
@@ -1451,6 +1470,7 @@ LIBSUBDIRS=	tkinter tkinter/test tkinter/test/test_tkinter \
 		test/test_importlib/namespace_pkgs/project3 \
 		test/test_importlib/namespace_pkgs/project3/parent \
 		test/test_importlib/namespace_pkgs/project3/parent/child \
+		test/test_importlib/partial \
 		test/test_importlib/source \
 		test/test_importlib/zipdata01 \
 		test/test_importlib/zipdata02 \
@@ -1635,7 +1655,7 @@ LIBPL=		$(prefix)/lib/python3.9/config-$(VERSION)$(ABIFLAGS)-darwin
 LIBPC=		$(LIBDIR)/pkgconfig
 
 libainstall:	all python-config
-	@for i in $(LIBDIR) $(LIBPL) $(LIBPC); \
+	@for i in $(LIBDIR) $(LIBPL) $(LIBPC) $(BINDIR); \
 	do \
 		if test ! -d $(DESTDIR)$$i; then \
 			echo "Creating directory $$i"; \
@@ -1938,6 +1958,12 @@ funny:
 patchcheck: all
 	$(RUNSHARED) ./$(BUILDPYTHON) $(srcdir)/Tools/scripts/patchcheck.py
 
+.PHONY: update-config
+update-config:
+	curl -sL -o config.guess 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'
+	curl -sL -o config.sub 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'
+	chmod +x config.guess config.sub
+
 # Dependencies
 
 Python/thread.o:  $(srcdir)/Python/thread_nt.h $(srcdir)/Python/thread_pthread.h $(srcdir)/Python/condvar.h
@@ -2011,5 +2037,97 @@ Modules/_peg_parser.o: $(srcdir)/Modules/_peg_parser.c; $(CC) $(PY_BUILTIN_MODUL
 Modules/_peg_parser$(EXT_SUFFIX):  Modules/_peg_parser.o; $(BLDSHARED)  Modules/_peg_parser.o   -o Modules/_peg_parser$(EXT_SUFFIX)
 Modules/symtablemodule.o: $(srcdir)/Modules/symtablemodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/symtablemodule.c -o Modules/symtablemodule.o
 Modules/_symtable$(EXT_SUFFIX):  Modules/symtablemodule.o; $(BLDSHARED)  Modules/symtablemodule.o   -o Modules/_symtable$(EXT_SUFFIX)
+Modules/arraymodule.o: $(srcdir)/Modules/arraymodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/arraymodule.c -o Modules/arraymodule.o
+Modules/array$(EXT_SUFFIX):  Modules/arraymodule.o; $(BLDSHARED)  Modules/arraymodule.o   -o Modules/array$(EXT_SUFFIX)
+Modules/cmathmodule.o: $(srcdir)/Modules/cmathmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -DPy_BUILD_CORE_MODULE -c $(srcdir)/Modules/cmathmodule.c -o Modules/cmathmodule.o
+Modules/_math.o: $(srcdir)/Modules/_math.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -DPy_BUILD_CORE_MODULE -c $(srcdir)/Modules/_math.c -o Modules/_math.o
+Modules/cmath$(EXT_SUFFIX):  Modules/cmathmodule.o Modules/_math.o; $(BLDSHARED)  Modules/cmathmodule.o Modules/_math.o   -o Modules/cmath$(EXT_SUFFIX)
+Modules/mathmodule.o: $(srcdir)/Modules/mathmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -DPy_BUILD_CORE_MODULE -c $(srcdir)/Modules/mathmodule.c -o Modules/mathmodule.o
+Modules/math$(EXT_SUFFIX):  Modules/mathmodule.o; $(BLDSHARED)  Modules/mathmodule.o   -o Modules/math$(EXT_SUFFIX)
+Modules/_contextvarsmodule.o: $(srcdir)/Modules/_contextvarsmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_contextvarsmodule.c -o Modules/_contextvarsmodule.o
+Modules/_contextvars$(EXT_SUFFIX):  Modules/_contextvarsmodule.o; $(BLDSHARED)  Modules/_contextvarsmodule.o   -o Modules/_contextvars$(EXT_SUFFIX)
+Modules/_struct.o: $(srcdir)/Modules/_struct.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_struct.c -o Modules/_struct.o
+Modules/_struct$(EXT_SUFFIX):  Modules/_struct.o; $(BLDSHARED)  Modules/_struct.o   -o Modules/_struct$(EXT_SUFFIX)
+Modules/_randommodule.o: $(srcdir)/Modules/_randommodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -DPy_BUILD_CORE_MODULE -c $(srcdir)/Modules/_randommodule.c -o Modules/_randommodule.o
+Modules/_random$(EXT_SUFFIX):  Modules/_randommodule.o; $(BLDSHARED)  Modules/_randommodule.o   -o Modules/_random$(EXT_SUFFIX)
+Modules/_elementtree.o: $(srcdir)/Modules/_elementtree.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI -c $(srcdir)/Modules/_elementtree.c -o Modules/_elementtree.o
+Modules/_elementtree$(EXT_SUFFIX):  Modules/_elementtree.o; $(BLDSHARED)  Modules/_elementtree.o   -o Modules/_elementtree$(EXT_SUFFIX)
+Modules/_pickle.o: $(srcdir)/Modules/_pickle.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_pickle.c -o Modules/_pickle.o
+Modules/_pickle$(EXT_SUFFIX):  Modules/_pickle.o; $(BLDSHARED)  Modules/_pickle.o   -o Modules/_pickle$(EXT_SUFFIX)
+Modules/_datetimemodule.o: $(srcdir)/Modules/_datetimemodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_datetimemodule.c -o Modules/_datetimemodule.o
+Modules/_datetime$(EXT_SUFFIX):  Modules/_datetimemodule.o; $(BLDSHARED)  Modules/_datetimemodule.o   -o Modules/_datetime$(EXT_SUFFIX)
+Modules/_zoneinfo.o: $(srcdir)/Modules/_zoneinfo.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_zoneinfo.c -o Modules/_zoneinfo.o
+Modules/_zoneinfo$(EXT_SUFFIX):  Modules/_zoneinfo.o; $(BLDSHARED)  Modules/_zoneinfo.o   -o Modules/_zoneinfo$(EXT_SUFFIX)
+Modules/_bisectmodule.o: $(srcdir)/Modules/_bisectmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_bisectmodule.c -o Modules/_bisectmodule.o
+Modules/_bisect$(EXT_SUFFIX):  Modules/_bisectmodule.o; $(BLDSHARED)  Modules/_bisectmodule.o   -o Modules/_bisect$(EXT_SUFFIX)
+Modules/_heapqmodule.o: $(srcdir)/Modules/_heapqmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_heapqmodule.c -o Modules/_heapqmodule.o
+Modules/_heapq$(EXT_SUFFIX):  Modules/_heapqmodule.o; $(BLDSHARED)  Modules/_heapqmodule.o   -o Modules/_heapq$(EXT_SUFFIX)
+Modules/_asynciomodule.o: $(srcdir)/Modules/_asynciomodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_asynciomodule.c -o Modules/_asynciomodule.o
+Modules/_asyncio$(EXT_SUFFIX):  Modules/_asynciomodule.o; $(BLDSHARED)  Modules/_asynciomodule.o   -o Modules/_asyncio$(EXT_SUFFIX)
+Modules/_json.o: $(srcdir)/Modules/_json.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -I$(srcdir)/Include/internal -DPy_BUILD_CORE_BUILTIN -c $(srcdir)/Modules/_json.c -o Modules/_json.o
+Modules/_json$(EXT_SUFFIX):  Modules/_json.o; $(BLDSHARED)  Modules/_json.o   -o Modules/_json$(EXT_SUFFIX)
+Modules/_statisticsmodule.o: $(srcdir)/Modules/_statisticsmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_statisticsmodule.c -o Modules/_statisticsmodule.o
+Modules/_statistics$(EXT_SUFFIX):  Modules/_statisticsmodule.o; $(BLDSHARED)  Modules/_statisticsmodule.o   -o Modules/_statistics$(EXT_SUFFIX)
+Modules/unicodedata.o: $(srcdir)/Modules/unicodedata.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/unicodedata.c -o Modules/unicodedata.o
+Modules/unicodedata$(EXT_SUFFIX):  Modules/unicodedata.o; $(BLDSHARED)  Modules/unicodedata.o   -o Modules/unicodedata$(EXT_SUFFIX)
+Modules/fcntlmodule.o: $(srcdir)/Modules/fcntlmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/fcntlmodule.c -o Modules/fcntlmodule.o
+Modules/fcntl$(EXT_SUFFIX):  Modules/fcntlmodule.o; $(BLDSHARED)  Modules/fcntlmodule.o   -o Modules/fcntl$(EXT_SUFFIX)
+Modules/grpmodule.o: $(srcdir)/Modules/grpmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/grpmodule.c -o Modules/grpmodule.o
+Modules/grp$(EXT_SUFFIX):  Modules/grpmodule.o; $(BLDSHARED)  Modules/grpmodule.o   -o Modules/grp$(EXT_SUFFIX)
+Modules/selectmodule.o: $(srcdir)/Modules/selectmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/selectmodule.c -o Modules/selectmodule.o
+Modules/select$(EXT_SUFFIX):  Modules/selectmodule.o; $(BLDSHARED)  Modules/selectmodule.o   -o Modules/select$(EXT_SUFFIX)
+Modules/mmapmodule.o: $(srcdir)/Modules/mmapmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/mmapmodule.c -o Modules/mmapmodule.o
+Modules/mmap$(EXT_SUFFIX):  Modules/mmapmodule.o; $(BLDSHARED)  Modules/mmapmodule.o   -o Modules/mmap$(EXT_SUFFIX)
+Modules/_csv.o: $(srcdir)/Modules/_csv.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_csv.c -o Modules/_csv.o
+Modules/_csv$(EXT_SUFFIX):  Modules/_csv.o; $(BLDSHARED)  Modules/_csv.o   -o Modules/_csv$(EXT_SUFFIX)
+Modules/socketmodule.o: $(srcdir)/Modules/socketmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/socketmodule.c -o Modules/socketmodule.o
+Modules/_socket$(EXT_SUFFIX):  Modules/socketmodule.o; $(BLDSHARED)  Modules/socketmodule.o   -o Modules/_socket$(EXT_SUFFIX)
+Modules/termios.o: $(srcdir)/Modules/termios.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/termios.c -o Modules/termios.o
+Modules/termios$(EXT_SUFFIX):  Modules/termios.o; $(BLDSHARED)  Modules/termios.o   -o Modules/termios$(EXT_SUFFIX)
+Modules/resource.o: $(srcdir)/Modules/resource.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/resource.c -o Modules/resource.o
+Modules/resource$(EXT_SUFFIX):  Modules/resource.o; $(BLDSHARED)  Modules/resource.o   -o Modules/resource$(EXT_SUFFIX)
+Modules/_posixsubprocess.o: $(srcdir)/Modules/_posixsubprocess.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_posixsubprocess.c -o Modules/_posixsubprocess.o
+Modules/_posixsubprocess$(EXT_SUFFIX):  Modules/_posixsubprocess.o; $(BLDSHARED)  Modules/_posixsubprocess.o   -o Modules/_posixsubprocess$(EXT_SUFFIX)
+Modules/audioop.o: $(srcdir)/Modules/audioop.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/audioop.c -o Modules/audioop.o
+Modules/audioop$(EXT_SUFFIX):  Modules/audioop.o; $(BLDSHARED)  Modules/audioop.o   -o Modules/audioop$(EXT_SUFFIX)
+Modules/md5module.o: $(srcdir)/Modules/md5module.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/md5module.c -o Modules/md5module.o
+Modules/_md5$(EXT_SUFFIX):  Modules/md5module.o; $(BLDSHARED)  Modules/md5module.o   -o Modules/_md5$(EXT_SUFFIX)
+Modules/sha1module.o: $(srcdir)/Modules/sha1module.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/sha1module.c -o Modules/sha1module.o
+Modules/_sha1$(EXT_SUFFIX):  Modules/sha1module.o; $(BLDSHARED)  Modules/sha1module.o   -o Modules/_sha1$(EXT_SUFFIX)
+Modules/sha256module.o: $(srcdir)/Modules/sha256module.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -DPy_BUILD_CORE_BUILTIN -c $(srcdir)/Modules/sha256module.c -o Modules/sha256module.o
+Modules/_sha256$(EXT_SUFFIX):  Modules/sha256module.o; $(BLDSHARED)  Modules/sha256module.o   -o Modules/_sha256$(EXT_SUFFIX)
+Modules/sha512module.o: $(srcdir)/Modules/sha512module.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -DPy_BUILD_CORE_BUILTIN -c $(srcdir)/Modules/sha512module.c -o Modules/sha512module.o
+Modules/_sha512$(EXT_SUFFIX):  Modules/sha512module.o; $(BLDSHARED)  Modules/sha512module.o   -o Modules/_sha512$(EXT_SUFFIX)
+Modules/sha3module.o: $(srcdir)/Modules/_sha3/sha3module.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_sha3/sha3module.c -o Modules/sha3module.o
+Modules/_sha3$(EXT_SUFFIX):  Modules/sha3module.o; $(BLDSHARED)  Modules/sha3module.o   -o Modules/_sha3$(EXT_SUFFIX)
+Modules/blake2module.o: $(srcdir)/Modules/_blake2/blake2module.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_blake2/blake2module.c -o Modules/blake2module.o
+Modules/blake2b_impl.o: $(srcdir)/Modules/_blake2/blake2b_impl.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_blake2/blake2b_impl.c -o Modules/blake2b_impl.o
+Modules/blake2s_impl.o: $(srcdir)/Modules/_blake2/blake2s_impl.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/_blake2/blake2s_impl.c -o Modules/blake2s_impl.o
+Modules/_blake2$(EXT_SUFFIX):  Modules/blake2module.o Modules/blake2b_impl.o Modules/blake2s_impl.o; $(BLDSHARED)  Modules/blake2module.o Modules/blake2b_impl.o Modules/blake2s_impl.o   -o Modules/_blake2$(EXT_SUFFIX)
+Modules/binascii.o: $(srcdir)/Modules/binascii.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/binascii.c -o Modules/binascii.o
+Modules/binascii$(EXT_SUFFIX):  Modules/binascii.o; $(BLDSHARED)  Modules/binascii.o   -o Modules/binascii$(EXT_SUFFIX)
+Modules/parsermodule.o: $(srcdir)/Modules/parsermodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/parsermodule.c -o Modules/parsermodule.o
+Modules/parser$(EXT_SUFFIX):  Modules/parsermodule.o; $(BLDSHARED)  Modules/parsermodule.o   -o Modules/parser$(EXT_SUFFIX)
+Modules/zlibmodule.o: $(srcdir)/Modules/zlibmodule.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/zlibmodule.c -o Modules/zlibmodule.o
+Modules/zlib$(EXT_SUFFIX):  Modules/zlibmodule.o; $(BLDSHARED)  Modules/zlibmodule.o   -o Modules/zlib$(EXT_SUFFIX)
+Modules/xmlparse.o: $(srcdir)/Modules/expat/xmlparse.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DXML_POOR_ENTROPY -DUSE_PYEXPAT_CAPI -c $(srcdir)/Modules/expat/xmlparse.c -o Modules/xmlparse.o
+Modules/xmlrole.o: $(srcdir)/Modules/expat/xmlrole.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DXML_POOR_ENTROPY -DUSE_PYEXPAT_CAPI -c $(srcdir)/Modules/expat/xmlrole.c -o Modules/xmlrole.o
+Modules/xmltok.o: $(srcdir)/Modules/expat/xmltok.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DXML_POOR_ENTROPY -DUSE_PYEXPAT_CAPI -c $(srcdir)/Modules/expat/xmltok.c -o Modules/xmltok.o
+Modules/pyexpat.o: $(srcdir)/Modules/pyexpat.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DXML_POOR_ENTROPY -DUSE_PYEXPAT_CAPI -c $(srcdir)/Modules/pyexpat.c -o Modules/pyexpat.o
+Modules/pyexpat$(EXT_SUFFIX):  Modules/xmlparse.o Modules/xmlrole.o Modules/xmltok.o Modules/pyexpat.o; $(BLDSHARED)  Modules/xmlparse.o Modules/xmlrole.o Modules/xmltok.o Modules/pyexpat.o   -o Modules/pyexpat$(EXT_SUFFIX)
+Modules/multibytecodec.o: $(srcdir)/Modules/cjkcodecs/multibytecodec.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/cjkcodecs/multibytecodec.c -o Modules/multibytecodec.o
+Modules/_multibytecodec$(EXT_SUFFIX):  Modules/multibytecodec.o; $(BLDSHARED)  Modules/multibytecodec.o   -o Modules/_multibytecodec$(EXT_SUFFIX)
+Modules/_codecs_cn.o: $(srcdir)/Modules/cjkcodecs/_codecs_cn.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/cjkcodecs/_codecs_cn.c -o Modules/_codecs_cn.o
+Modules/_codecs_cn$(EXT_SUFFIX):  Modules/_codecs_cn.o; $(BLDSHARED)  Modules/_codecs_cn.o   -o Modules/_codecs_cn$(EXT_SUFFIX)
+Modules/_codecs_hk.o: $(srcdir)/Modules/cjkcodecs/_codecs_hk.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/cjkcodecs/_codecs_hk.c -o Modules/_codecs_hk.o
+Modules/_codecs_hk$(EXT_SUFFIX):  Modules/_codecs_hk.o; $(BLDSHARED)  Modules/_codecs_hk.o   -o Modules/_codecs_hk$(EXT_SUFFIX)
+Modules/_codecs_iso2022.o: $(srcdir)/Modules/cjkcodecs/_codecs_iso2022.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/cjkcodecs/_codecs_iso2022.c -o Modules/_codecs_iso2022.o
+Modules/_codecs_iso2022$(EXT_SUFFIX):  Modules/_codecs_iso2022.o; $(BLDSHARED)  Modules/_codecs_iso2022.o   -o Modules/_codecs_iso2022$(EXT_SUFFIX)
+Modules/_codecs_jp.o: $(srcdir)/Modules/cjkcodecs/_codecs_jp.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/cjkcodecs/_codecs_jp.c -o Modules/_codecs_jp.o
+Modules/_codecs_jp$(EXT_SUFFIX):  Modules/_codecs_jp.o; $(BLDSHARED)  Modules/_codecs_jp.o   -o Modules/_codecs_jp$(EXT_SUFFIX)
+Modules/_codecs_kr.o: $(srcdir)/Modules/cjkcodecs/_codecs_kr.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/cjkcodecs/_codecs_kr.c -o Modules/_codecs_kr.o
+Modules/_codecs_kr$(EXT_SUFFIX):  Modules/_codecs_kr.o; $(BLDSHARED)  Modules/_codecs_kr.o   -o Modules/_codecs_kr$(EXT_SUFFIX)
+Modules/_codecs_tw.o: $(srcdir)/Modules/cjkcodecs/_codecs_tw.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/cjkcodecs/_codecs_tw.c -o Modules/_codecs_tw.o
+Modules/_codecs_tw$(EXT_SUFFIX):  Modules/_codecs_tw.o; $(BLDSHARED)  Modules/_codecs_tw.o   -o Modules/_codecs_tw$(EXT_SUFFIX)
 Modules/xxsubtype.o: $(srcdir)/Modules/xxsubtype.c; $(CC) $(PY_BUILTIN_MODULE_CFLAGS)  -c $(srcdir)/Modules/xxsubtype.c -o Modules/xxsubtype.o
 Modules/xxsubtype$(EXT_SUFFIX):  Modules/xxsubtype.o; $(BLDSHARED)  Modules/xxsubtype.o   -o Modules/xxsubtype$(EXT_SUFFIX)

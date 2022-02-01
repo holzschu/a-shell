@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Optional
+
 from jedi.inference.cache import inference_state_method_cache
 from jedi.inference.filters import DictFilter
 from jedi.inference.names import ValueNameMixin, AbstractNameDefinition
@@ -20,10 +23,7 @@ class ImplicitNamespaceValue(Value, SubModuleDictMixin):
     """
     Provides support for implicit namespace packages
     """
-    # Is a module like every other module, because if you import an empty
-    # folder foobar it will be available as an object:
-    # <module 'foobar' (namespace)>.
-    api_type = 'module'
+    api_type = 'namespace'
     parent_context = None
 
     def __init__(self, inference_state, string_names, paths):
@@ -44,7 +44,7 @@ class ImplicitNamespaceValue(Value, SubModuleDictMixin):
         string_name = self.py__package__()[-1]
         return ImplicitNSName(self, string_name)
 
-    def py__file__(self):
+    def py__file__(self) -> Optional[Path]:
         return None
 
     def py__package__(self):

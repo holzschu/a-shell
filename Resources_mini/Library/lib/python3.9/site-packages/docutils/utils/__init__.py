@@ -1,5 +1,5 @@
 # coding: utf-8
-# $Id: __init__.py 8672 2021-04-07 12:10:06Z milde $
+# $Id: __init__.py 8892 2021-11-18 10:12:49Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -130,8 +130,8 @@ class Reporter(object):
 
     def set_conditions(self, category, report_level, halt_level,
                        stream=None, debug=False):
-        warnings.warn('docutils.utils.Reporter.set_conditions deprecated; '
-                      'set attributes via configuration settings or directly',
+        warnings.warn('docutils.utils.Reporter.set_conditions() deprecated; '
+                      'set attributes via configuration settings or directly.',
                       DeprecationWarning, stacklevel=2)
         self.report_level = report_level
         self.halt_level = halt_level
@@ -342,7 +342,7 @@ def decode_path(path):
     """
     Ensure `path` is Unicode. Return `nodes.reprunicode` object.
 
-    Decode file/path string in a failsave manner if not already done.
+    Decode file/path string in a failsafe manner if not already done.
     """
     # see also http://article.gmane.org/gmane.text.docutils.user/2905
     if isinstance(path, unicode):
@@ -492,6 +492,10 @@ def get_stylesheet_reference(settings, relative_to=None):
     enable specification of multiple stylesheets as a comma-separated
     list.
     """
+    warnings.warn('utils.get_stylesheet_reference()'
+                  ' is obsoleted by utils.get_stylesheet_list()'
+                  ' and will be removed in Docutils 1.2.',
+                  DeprecationWarning, stacklevel=2)
     if settings.stylesheet_path:
         assert not settings.stylesheet, (
             'stylesheet and stylesheet_path are mutually exclusive.')
@@ -518,12 +522,16 @@ def get_stylesheet_list(settings):
     assert not (settings.stylesheet and settings.stylesheet_path), (
             'stylesheet and stylesheet_path are mutually exclusive.')
     stylesheets = settings.stylesheet_path or settings.stylesheet or []
-    # programmatically set default can be string or unicode:
+    # programmatically set default may be string with comma separated list:
     if not isinstance(stylesheets, list):
         stylesheets = [path.strip() for path in stylesheets.split(',')]
-    # expand relative paths if found in stylesheet-dirs:
-    return [find_file_in_dirs(path, settings.stylesheet_dirs)
-            for path in stylesheets]
+    if settings.stylesheet_path:
+        # expand relative paths if found in stylesheet-dirs:
+        stylesheets = [find_file_in_dirs(path, settings.stylesheet_dirs)
+                       for path in stylesheets]
+        if os.sep != '/': # for URLs, we need POSIX paths
+            stylesheets = [path.replace(os.sep, '/') for path in stylesheets]
+    return stylesheets
 
 def find_file_in_dirs(path, dirs):
     """
@@ -641,7 +649,7 @@ def column_width(text):
     Correct ``len(text)`` for wide East Asian and combining Unicode chars.
     """
     if isinstance(text, str) and sys.version_info < (3, 0):
-        return len(text)
+        return len(text) # shortcut for binary strings
     width = sum([east_asian_widths[unicodedata.east_asian_width(c)]
                  for c in text])
     # correction for combining chars:
@@ -654,13 +662,6 @@ def uniq(L):
          if not item in r:
              r.append(item)
      return r
-
-def unique_combinations(items, n):
-    """Return `itertools.combinations`."""
-    warnings.warn('docutils.utils.unique_combinations is deprecated; '
-                  'use itertools.combinations directly.',
-                      DeprecationWarning, stacklevel=2)
-    return itertools.combinations(items, n)
 
 def normalize_language_tag(tag):
     """Return a list of normalized combinations for a `BCP 47` language tag.

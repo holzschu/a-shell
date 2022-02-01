@@ -7,7 +7,7 @@ import sys
 import threading
 import unittest
 from unittest import mock
-
+from types import GenericAlias
 import asyncio
 from asyncio import futures
 from test.test_asyncio import utils as test_utils
@@ -108,6 +108,11 @@ class BaseFutureTests:
         super().setUp()
         self.loop = self.new_test_loop()
         self.addCleanup(self.loop.close)
+
+    def test_generic_alias(self):
+        future = self.cls[str]
+        self.assertEqual(future.__args__, (str,))
+        self.assertIsInstance(future, GenericAlias)
 
     def test_isfuture(self):
         class MyFuture:
@@ -876,6 +881,8 @@ class PyFutureInheritanceTests(BaseFutureInheritanceTests,
         return futures._PyFuture
 
 
+@unittest.skipUnless(hasattr(futures, '_CFuture'),
+                     'requires the C _asyncio module')
 class CFutureInheritanceTests(BaseFutureInheritanceTests,
                               test_utils.TestCase):
     def _get_future_cls(self):

@@ -1,4 +1,4 @@
-# $Id: parts.py 8671 2021-04-07 12:09:51Z milde $
+# $Id: parts.py 8826 2021-09-11 11:18:39Z milde $
 # Authors: David Goodger <goodger@python.org>; Ueli Schlaepfer; Dmitry Jemerov
 # Copyright: This module has been placed in the public domain.
 
@@ -141,8 +141,8 @@ class Contents(Transform):
             entries.append(item)
         if entries:
             contents = nodes.bullet_list('', *entries)
-            if auto:
-                contents['classes'].append('auto-toc')
+            if auto: # auto-numbered sections
+                contents['classes'].append('auto-toc') # auto-numbered sections
             return contents
         else:
             return []

@@ -1,4 +1,4 @@
-# $Id: frontend.py 8676 2021-04-08 16:36:09Z milde $
+# $Id: frontend.py 8880 2021-11-05 11:11:18Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -332,7 +332,7 @@ class Values(optparse.Values):
     def copy(self):
         """Return a shallow copy of `self`."""
         return self.__class__(defaults=self.__dict__)
-    
+
     def setdefault(self, name, default):
         """V.setdefault(n[,d]) -> getattr(V,n,d), also set D.n=d if n not in D or None.
         """
@@ -556,7 +556,7 @@ class OptionParser(optparse.OptionParser, docutils.SettingsSpec):
           ['--help', '-h'], {'action': 'help'}),
          # Typically not useful for non-programmatical use:
          (SUPPRESS_HELP, ['--id-prefix'], {'default': ''}),
-         (SUPPRESS_HELP, ['--auto-id-prefix'], {'default': 'id'}),
+         (SUPPRESS_HELP, ['--auto-id-prefix'], {'default': '%'}),
          # Hidden options, for development use only:
          (SUPPRESS_HELP, ['--dump-settings'], {'action': 'store_true'}),
          (SUPPRESS_HELP, ['--dump-internals'], {'action': 'store_true'}),
@@ -683,7 +683,7 @@ class OptionParser(optparse.OptionParser, docutils.SettingsSpec):
         parser.read(config_file, self)
         self.config_files.extend(parser._files)
         base_path = os.path.dirname(config_file)
-        applied = {}
+        applied = set()
         settings = Values()
         for component in self.components:
             if not component:
@@ -692,7 +692,7 @@ class OptionParser(optparse.OptionParser, docutils.SettingsSpec):
                             + (component.config_section,)):
                 if section in applied:
                     continue
-                applied[section] = 1
+                applied.add(section)
                 settings.update(parser.get_section(section), self)
         make_paths_absolute(
             settings.__dict__, self.relative_path_settings, base_path)
@@ -759,7 +759,7 @@ class ConfigParser(RawConfigParser):
 
     old_warning = """
 The "[option]" section is deprecated.  Support for old-format configuration
-files may be removed in a future Docutils release.  Please revise your
+files will be removed in a future Docutils release.  Please revise your
 configuration files.  See <http://docutils.sf.net/docs/user/config.html>,
 section "Old-Format Configuration Files".
 """
@@ -866,5 +866,5 @@ Skipping "%s" configuration file.
         return section_dict
 
 
-class ConfigDeprecationWarning(DeprecationWarning):
+class ConfigDeprecationWarning(FutureWarning):
     """Warning for deprecated configuration file features."""

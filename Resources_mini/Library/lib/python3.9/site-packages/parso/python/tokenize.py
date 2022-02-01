@@ -110,10 +110,11 @@ def _get_token_collection(version_info):
             _create_token_collection(version_info)
         return result
 
+
 unicode_character_name = r'[A-Za-z0-9\-]+(?: [A-Za-z0-9\-]+)*'
 fstring_string_single_line = _compile(
-    r'(?:\{\{|\}\}|\\N\{' + unicode_character_name +
-    r'\}|\\(?:\r\n?|\n)|\\[^\r\nN]|[^{}\r\n\\])+'
+    r'(?:\{\{|\}\}|\\N\{' + unicode_character_name
+    + r'\}|\\(?:\r\n?|\n)|\\[^\r\nN]|[^{}\r\n\\])+'
 )
 fstring_string_multi_line = _compile(
     r'(?:\{\{|\}\}|\\N\{' + unicode_character_name + r'\}|\\[^N]|[^{}\\])+'
@@ -547,7 +548,7 @@ def tokenize_lines(
                     additional_prefix = prefix + token
                 new_line = True
             elif initial == '#':  # Comments
-                assert not token.endswith("\n")
+                assert not token.endswith("\n") and not token.endswith("\r")
                 if fstring_stack and fstring_stack[-1].is_in_expr():
                     # `#` is not allowed in f-string expressions
                     yield PythonToken(ERRORTOKEN, initial, spos, prefix)

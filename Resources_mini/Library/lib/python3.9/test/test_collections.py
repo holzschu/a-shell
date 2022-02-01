@@ -663,6 +663,7 @@ class TestNamedTuple(unittest.TestCase):
         a.w = 5
         self.assertEqual(a.__dict__, {'w': 5})
 
+    @support.cpython_only
     def test_field_descriptor(self):
         Point = namedtuple('Point', 'x y')
         p = Point(11, 22)
@@ -1502,8 +1503,12 @@ class TestCollectionABCs(ABCTestCase):
                 return result
             def __repr__(self):
                 return "MySet(%s)" % repr(list(self))
-        s = MySet([5,43,2,1])
-        self.assertEqual(s.pop(), 1)
+        items = [5,43,2,1]
+        s = MySet(items)
+        r = s.pop()
+        self.assertEquals(len(s), len(items) - 1)
+        self.assertNotIn(r, s)
+        self.assertIn(r, items)
 
     def test_issue8750(self):
         empty = WithSet()
@@ -1580,7 +1585,7 @@ class TestCollectionABCs(ABCTestCase):
         self.assertSetEqual(set(s1), set(s2))
 
     def test_Set_from_iterable(self):
-        """Verify _from_iterable overriden to an instance method works."""
+        """Verify _from_iterable overridden to an instance method works."""
         class SetUsingInstanceFromIterable(MutableSet):
             def __init__(self, values, created_by):
                 if not created_by:
@@ -1786,6 +1791,18 @@ class TestCollectionABCs(ABCTestCase):
         self.assertTrue(f1 != l3)
         self.assertTrue(f1 != l1)
         self.assertTrue(f1 != l2)
+
+    def test_Set_hash_matches_frozenset(self):
+        sets = [
+            {}, {1}, {None}, {-1}, {0.0}, {"abc"}, {1, 2, 3},
+            {10**100, 10**101}, {"a", "b", "ab", ""}, {False, True},
+            {object(), object(), object()}, {float("nan")},  {frozenset()},
+            {*range(1000)}, {*range(1000)} - {100, 200, 300},
+            {*range(sys.maxsize - 10, sys.maxsize + 10)},
+        ]
+        for s in sets:
+            fs = frozenset(s)
+            self.assertEqual(hash(fs), Set._hash(fs), msg=s)
 
     def test_Mapping(self):
         for sample in [dict]:

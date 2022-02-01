@@ -5,10 +5,10 @@ import re
 from functools import partial
 from inspect import Parameter
 from pathlib import Path
+from typing import Optional
 
 from jedi import debug
 from jedi.inference.utils import to_list
-from jedi._compatibility import cast_path
 from jedi.cache import memoize_method
 from jedi.inference.filters import AbstractFilter
 from jedi.inference.names import AbstractNameDefinition, ValueNameMixin, \
@@ -167,7 +167,7 @@ class CompiledValue(Value):
             except AttributeError:
                 return super().py__simple_getitem__(index)
         if access is None:
-            return NO_VALUES
+            return super().py__simple_getitem__(index)
 
         return ValueSet([create_from_access_path(self.inference_state, access)])
 
@@ -293,10 +293,7 @@ class CompiledModule(CompiledValue):
         return CompiledModuleContext(self)
 
     def py__path__(self):
-        paths = self.access_handle.py__path__()
-        if paths is None:
-            return None
-        return map(cast_path, paths)
+        return self.access_handle.py__path__()
 
     def is_package(self):
         return self.py__path__() is not None
@@ -309,11 +306,8 @@ class CompiledModule(CompiledValue):
             return ()
         return tuple(name.split('.'))
 
-    def py__file__(self):
-        path = cast_path(self.access_handle.py__file__())
-        if path is None:
-            return None
-        return Path(path)
+    def py__file__(self) -> Optional[Path]:
+        return self.access_handle.py__file__()  # type: ignore[no-any-return]
 
 
 class CompiledName(AbstractNameDefinition):
@@ -440,7 +434,7 @@ class CompiledValueFilter(AbstractFilter):
         access_handle = self.compiled_value.access_handle
         return self._get(
             name,
-            lambda name, unsafe: access_handle.is_allowed_getattr(name, unsafe),
+            lambda name, safe: access_handle.is_allowed_getattr(name, safe=safe),
             lambda name: name in access_handle.dir(),
             check_has_attribute=True
         )
@@ -454,7 +448,7 @@ class CompiledValueFilter(AbstractFilter):
 
         has_attribute, is_descriptor = allowed_getattr_callback(
             name,
-            unsafe=self._inference_state.allow_descriptor_getattr
+            safe=not self._inference_state.allow_descriptor_getattr
         )
         if check_has_attribute and not has_attribute:
             return []
@@ -478,7 +472,7 @@ class CompiledValueFilter(AbstractFilter):
         from jedi.inference.compiled import builtin_from_name
         names = []
         needs_type_completions, dir_infos = self.compiled_value.access_handle.get_dir_infos()
-        # We could use `unsafe` here as well, especially as a parameter to
+        # We could use `safe=False` here as well, especially as a parameter to
         # get_dir_infos. But this would lead to a lot of property executions
         # that are probably not wanted. The drawback for this is that we
         # have a different name for `get` and `values`. For `get` we always
@@ -486,7 +480,7 @@ class CompiledValueFilter(AbstractFilter):
         for name in dir_infos:
             names += self._get(
                 name,
-                lambda name, unsafe: dir_infos[name],
+                lambda name, safe: dir_infos[name],
                 lambda name: name in dir_infos,
             )
 

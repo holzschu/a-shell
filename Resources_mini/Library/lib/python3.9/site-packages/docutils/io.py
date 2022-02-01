@@ -1,4 +1,4 @@
-# $Id: io.py 8676 2021-04-08 16:36:09Z milde $
+# $Id: io.py 8880 2021-11-05 11:11:18Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -10,16 +10,17 @@ from __future__ import print_function
 
 __docformat__ = 'reStructuredText'
 
-import sys
+import codecs
 import os
 import re
-import codecs
+import sys
+import warnings
+
 from docutils import TransformSpec
 from docutils.utils.error_reporting import locale_encoding, ErrorString, ErrorOutput
 
 if sys.version_info >= (3, 0):
     unicode = str  # noqa
-
 
 class InputError(IOError): pass
 class OutputError(IOError): pass
@@ -325,6 +326,10 @@ class FileOutput(Output):
                         encoding, error_handler)
         self.opened = True
         self.autoclose = autoclose
+        if handle_io_errors is not None:
+            warnings.warn('io.FileOutput: initialization argument '
+                '"handle_io_errors" is ignored and will be removed in '
+                'Docutils 1.2.', DeprecationWarning, stacklevel=2)
         if mode is not None:
             self.mode = mode
         self._stderr = ErrorOutput()

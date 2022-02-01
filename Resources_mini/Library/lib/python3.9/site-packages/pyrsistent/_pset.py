@@ -96,7 +96,7 @@ class PSet(object):
         if element in self._map:
             return self.evolver().remove(element).persistent()
 
-        raise KeyError("Element '%s' not present in PSet" % element)
+        raise KeyError("Element '%s' not present in PSet" % repr(element))
 
     def discard(self, element):
         """

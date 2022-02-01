@@ -1,4 +1,4 @@
-# $Id: nodes.py 8592 2020-12-15 23:06:26Z milde $
+# $Id: nodes.py 8890 2021-11-16 22:20:43Z milde $
 # Author: David Goodger <goodger@python.org>
 # Maintainer: docutils-develop@lists.sourceforge.net
 # Copyright: This module has been placed in the public domain.
@@ -29,37 +29,11 @@ import os
 import re
 import warnings
 import unicodedata
+# import xml.dom.minidom as dom # -> conditional import in Node.asdom()
 
 if sys.version_info >= (3, 0):
     unicode = str  # noqa
     basestring = str  # noqa
-
-class _traversal_list(list):
-    # auxiliary class to report a FutureWarning
-    done = False
-    def _warning_decorator(fun):
-        msg = ("\n   The iterable returned by Node.traverse()"
-               "\n   will become an iterator instead of a list in "
-               "Docutils > 0.16.")
-        def wrapper(self, *args, **kwargs):
-            if not self.done:
-                warnings.warn(msg, FutureWarning, stacklevel=2)
-            self.done = True
-            return fun(self, *args, **kwargs)
-        return wrapper
-
-    __add__ = _warning_decorator(list.__add__)
-    __contains__ = _warning_decorator(list.__contains__)
-    __getitem__ = _warning_decorator(list.__getitem__)
-    __reversed__ = _warning_decorator(list.__reversed__)
-    __setitem__ = _warning_decorator(list.__setitem__)
-    append = _warning_decorator(list.append)
-    count = _warning_decorator(list.count)
-    extend = _warning_decorator(list.extend)
-    index = _warning_decorator(list.index)
-    insert = _warning_decorator(list.insert)
-    pop = _warning_decorator(list.pop)
-    reverse = _warning_decorator(list.reverse)
 
 
 # ==============================
@@ -67,7 +41,6 @@ class _traversal_list(list):
 # ==============================
 
 class Node(object):
-
     """Abstract base class of nodes in a document tree."""
 
     parent = None
@@ -101,8 +74,7 @@ class Node(object):
         than a simple container.  Its boolean "truth" does not depend on
         having one or more subnodes in the doctree.
 
-        Use `len()` to check node length.  Use `None` to represent a boolean
-        false value.
+        Use `len()` to check node length.
         """
         return True
 
@@ -240,39 +212,57 @@ class Node(object):
             visitor.dispatch_departure(self)
         return stop
 
-    def _fast_traverse(self, cls):
+    def _fast_findall(self, cls):
         """Return iterator that only supports instance checks."""
         if isinstance(self, cls):
             yield self
         for child in self.children:
-            for subnode in child._fast_traverse(cls):
+            for subnode in child._fast_findall(cls):
                 yield subnode
 
-    def _all_traverse(self):
+    def _superfast_findall(self):
         """Return iterator that doesn't check for a condition."""
+        # This is different from ``iter(self)`` implemented via
+        # __getitem__() and __len__() in the Element subclass,
+        # which yields only the direct children.
         yield self
         for child in self.children:
-            for subnode in child._all_traverse():
+            for subnode in child._superfast_findall():
                 yield subnode
 
     def traverse(self, condition=None, include_self=True, descend=True,
                  siblings=False, ascend=False):
+        """Return list of nodes following `self`.
+
+        For looping, Node.findall() is faster and more memory efficient.
         """
-        Return an iterable containing
+        # traverse() may be eventually removed:
+        warnings.warn('nodes.Node.traverse() is obsoleted by Node.findall().',
+                      PendingDeprecationWarning, stacklevel=2)
+        return list(self.findall(condition, include_self, descend,
+                                 siblings, ascend))
 
-        * self (if include_self is true)
-        * all descendants in tree traversal order (if descend is true)
-        * all siblings (if siblings is true) and their descendants (if
-          also descend is true)
-        * the siblings of the parent (if ascend is true) and their
-          descendants (if also descend is true), and so on
+    def findall(self, condition=None, include_self=True, descend=True,
+                siblings=False, ascend=False):
+        """
+        Return an iterator yielding nodes following `self`:
 
-        If `condition` is not None, the iterable contains only nodes
+        * self (if `include_self` is true)
+        * all descendants in tree traversal order (if `descend` is true)
+        * the following siblings (if `siblings` is true) and their
+          descendants (if also `descend` is true)
+        * the following siblings of the parent (if `ascend` is true) and
+          their descendants (if also `descend` is true), and so on.
+
+        If `condition` is not None, the iterator yields only nodes
         for which ``condition(node)`` is true.  If `condition` is a
         node class ``cls``, it is equivalent to a function consisting
         of ``return isinstance(node, cls)``.
 
-        If ascend is true, assume siblings to be true as well.
+        If `ascend` is true, assume `siblings` to be true as well.
+
+        If the tree structure is modified during iteration, the result
+        is undefined.
 
         For example, given the following tree::
 
@@ -284,35 +274,25 @@ class Node(object):
                 <reference name="Baz" refid="baz">
                     Baz
 
-        Then list(emphasis.traverse()) equals ::
+        Then tuple(emphasis.traverse()) equals ::
 
-            [<emphasis>, <strong>, <#text: Foo>, <#text: Bar>]
+            (<emphasis>, <strong>, <#text: Foo>, <#text: Bar>)
 
-        and list(strong.traverse(ascend=True)) equals ::
+        and list(strong.traverse(ascend=True) equals ::
 
             [<strong>, <#text: Foo>, <#text: Bar>, <reference>, <#text: Baz>]
         """
-        # Although the documented API only promises an "iterable" as return
-        # value, the implementation returned a list up to v. 0.15. Some 3rd
-        # party code still relies on this (e.g. Sphinx as of 2019-09-07).
-        # Therefore, let's return a list until this is sorted out:
-        return _traversal_list(self._traverse(condition, include_self,
-                                   descend, siblings, ascend))
-
-    def _traverse(self, condition=None, include_self=True, descend=True,
-                  siblings=False, ascend=False):
-        """Return iterator over nodes following `self`. See `traverse()`."""
         if ascend:
             siblings=True
         # Check for special argument combinations that allow using an
         # optimized version of traverse()
         if include_self and descend and not siblings:
             if condition is None:
-                for subnode in self._all_traverse():
+                for subnode in self._superfast_findall():
                     yield subnode
                 return
             elif isinstance(condition, type):
-                for subnode in self._fast_traverse(condition):
+                for subnode in self._fast_findall(condition):
                     yield subnode
                 return
         # Check if `condition` is a class (check for TypeType for Python
@@ -327,7 +307,7 @@ class Node(object):
             yield self
         if descend and len(self.children):
             for child in self:
-                for subnode in child._traverse(condition=condition,
+                for subnode in child.findall(condition=condition,
                                     include_self=True, descend=True,
                                     siblings=False, ascend=False):
                     yield subnode
@@ -336,7 +316,7 @@ class Node(object):
             while node.parent:
                 index = node.parent.index(node)
                 for sibling in node.parent[index+1:]:
-                    for subnode in sibling._traverse(condition=condition,
+                    for subnode in sibling.findall(condition=condition,
                                         include_self=True, descend=descend,
                                         siblings=False, ascend=False):
                         yield subnode
@@ -348,17 +328,23 @@ class Node(object):
     def next_node(self, condition=None, include_self=False, descend=True,
                   siblings=False, ascend=False):
         """
-        Return the first node in the iterable returned by traverse(),
+        Return the first node in the iterator returned by findall(),
         or None if the iterable is empty.
 
-        Parameter list is the same as of traverse.  Note that
-        include_self defaults to False, though.
+        Parameter list is the same as of traverse.  Note that `include_self`
+        defaults to False, though.
         """
-        node_iterator = self._traverse(condition, include_self,
-                                      descend, siblings, ascend)
         try:
-            return next(node_iterator)
+            return next(self.findall(condition, include_self,
+                                     descend, siblings, ascend))
         except StopIteration:
+            return None
+
+    def previous_sibling(self):
+        """Return preceding sibling node or ``None``."""
+        try:
+            return self.parent[self.parent.index(self)-1]
+        except (AttributeError, IndexError):
             return None
 
 if sys.version_info < (3, 0):
@@ -375,7 +361,7 @@ else:
 
 def ensure_str(s):
     """
-    Failsave conversion of `unicode` to `str`.
+    Failsafe conversion of `unicode` to `str`.
     """
     if sys.version_info < (3, 0) and isinstance(s, unicode):
         return s.encode('ascii', 'backslashreplace')
@@ -411,18 +397,20 @@ class Text(Node, reprunicode):
 
     if sys.version_info > (3, 0):
         def __new__(cls, data, rawsource=None):
-            """Prevent the rawsource argument from propagating to str."""
+            """Assert that `data` is not an array of bytes."""
             if isinstance(data, bytes):
                 raise TypeError('expecting str data, not bytes')
             return reprunicode.__new__(cls, data)
     else:
         def __new__(cls, data, rawsource=None):
-            """Prevent the rawsource argument from propagating to str."""
             return reprunicode.__new__(cls, data)
 
-    def __init__(self, data, rawsource=''):
-        self.rawsource = rawsource
-        """The raw text from which this element was constructed."""
+    def __init__(self, data, rawsource=None):
+        """The `rawsource` argument is ignored and deprecated."""
+        if rawsource is not None:
+            warnings.warn('nodes.Text: initialization argument "rawsource" '
+                          'is ignored and will be removed in Docutils 1.3.',
+                          DeprecationWarning, stacklevel=2)
 
     def shortrepr(self, maxlen=18):
         data = self
@@ -449,17 +437,17 @@ class Text(Node, reprunicode):
     # an infinite loop
 
     def copy(self):
-        return self.__class__(reprunicode(self), rawsource=self.rawsource)
+        return self.__class__(reprunicode(self))
 
     def deepcopy(self):
         return self.copy()
 
     def pformat(self, indent='    ', level=0):
         try:
-            if self.document.settings.detailled:
-                lines = ['%s%s' % (indent * level, '<#text>')
-                        ] + [indent*(level+1) + repr(line)
-                             for line in self.splitlines(keepends=True)]
+            if self.document.settings.detailed:
+                lines = ['%s%s' % (indent*level, '<#text>')
+                        ] + [indent*(level+1) + repr(reprunicode(line))
+                             for line in self.splitlines(True)]
                 return '\n'.join(lines) + '\n'
         except AttributeError:
             pass
@@ -474,32 +462,44 @@ class Text(Node, reprunicode):
     # taken care of by UserString.
 
     def rstrip(self, chars=None):
-        return self.__class__(reprunicode.rstrip(self, chars), self.rawsource)
+        return self.__class__(reprunicode.rstrip(self, chars))
 
     def lstrip(self, chars=None):
-        return self.__class__(reprunicode.lstrip(self, chars), self.rawsource)
+        return self.__class__(reprunicode.lstrip(self, chars))
 
 class Element(Node):
 
     """
     `Element` is the superclass to all specific elements.
 
-    Elements contain attributes and child nodes.  Elements emulate
-    dictionaries for attributes, indexing by attribute name (a string).  To
-    set the attribute 'att' to 'value', do::
+    Elements contain attributes and child nodes.
+    They can be described as a cross between a list and a dictionary.
+
+    Elements emulate dictionaries for external [#]_ attributes, indexing by
+    attribute name (a string). To set the attribute 'att' to 'value', do::
 
         element['att'] = 'value'
 
-    There are two special attributes: 'ids' and 'names'.  Both are
-    lists of unique identifiers, and names serve as human interfaces
-    to IDs.  Names are case- and whitespace-normalized (see the
-    fully_normalize_name() function), and IDs conform to the regular
-    expression ``[a-z](-?[a-z0-9]+)*`` (see the make_id() function).
+    .. [#] External attributes correspond to the XML element attributes.
+       From its `Node` superclass, Element also inherits "internal"
+       class attributes that are accessed using the standard syntax, e.g.
+       ``element.parent``.
 
-    Elements also emulate lists for child nodes (element nodes and/or text
+    There are two special attributes: 'ids' and 'names'.  Both are
+    lists of unique identifiers: 'ids' conform to the regular expression
+    ``[a-z](-?[a-z0-9]+)*`` (see the make_id() function for rationale and
+    details). 'names' serve as user-friendly interfaces to IDs; they are
+    case- and whitespace-normalized (see the fully_normalize_name() function).
+
+    Elements emulate lists for child nodes (element nodes and/or text
     nodes), indexing by integer.  To get the first child node, use::
 
         element[0]
+
+    to iterate over the child nodes (without descending), use::
+
+        for child in element:
+            ...
 
     Elements may be constructed using the ``+=`` operator.  To add one new
     child node to element, do::
@@ -517,22 +517,22 @@ class Element(Node):
     """
 
     basic_attributes = ('ids', 'classes', 'names', 'dupnames')
-    """List attributes which are defined for every Element-derived class
+    """Tuple of attributes which are defined for every Element-derived class
     instance and can be safely transferred to a different node."""
 
     local_attributes = ('backrefs',)
-    """A list of class-specific attributes that should not be copied with the
+    """Tuple of class-specific attributes that should not be copied with the
     standard attributes when replacing a node.
 
     NOTE: Derived classes should override this value to prevent any of its
     attributes being copied by adding to the value in its parent class."""
 
     list_attributes = basic_attributes + local_attributes
-    """List attributes, automatically initialized to empty lists for
-    all nodes."""
+    """Tuple of attributes that are automatically initialized to empty lists
+    for all nodes."""
 
-    known_attributes = list_attributes + ('source', 'rawsource')
-    """List attributes that are known to the Element base class."""
+    known_attributes = list_attributes + ('source',)
+    """Tuple of attributes that are known to the Element base class."""
 
     tagname = None
     """The element generic identifier. If None, it is set as an instance
@@ -1095,7 +1095,7 @@ class Element(Node):
 
     def set_class(self, name):
         """Add a new class to the "classes" attribute."""
-        warnings.warn('docutils.nodes.Element.set_class deprecated; '
+        warnings.warn('docutils.nodes.Element.set_class() is deprecated; '
                       "append to Element['classes'] list attribute directly",
                       DeprecationWarning, stacklevel=2)
         assert ' ' not in name
@@ -1400,10 +1400,13 @@ class document(Root, Structural, Element):
         base_id = ''
         id = ''
         for name in node['names']:
-            base_id = make_id(name)
+            if id_prefix:
+                # allow names starting with numbers if `id_prefix`
+                base_id = make_id('x'+name)[1:]
+            else:
+                base_id = make_id(name)
+            # TODO: normalize id-prefix? (would make code simpler)
             id = id_prefix + base_id
-            # TODO: allow names starting with numbers if `id_prefix`
-            # is non-empty:  id = make_id(id_prefix + name)
             if base_id and id not in self.ids:
                 break
         else:
@@ -1431,25 +1434,26 @@ class document(Root, Structural, Element):
         booleans representing hyperlink type (True==explicit,
         False==implicit).  This method updates the mappings.
 
-        The following state transition table shows how `self.nameids` ("ids")
-        and `self.nametypes` ("types") change with new input (a call to this
-        method), and what actions are performed ("implicit"-type system
-        messages are INFO/1, and "explicit"-type system messages are ERROR/3):
+        The following state transition table shows how `self.nameids` items
+        ("id") and `self.nametypes` items ("type") change with new input
+        (a call to this method), and what actions are performed
+        ("implicit"-type system messages are INFO/1, and
+        "explicit"-type system messages are ERROR/3):
 
         ====  =====  ========  ========  =======  ====  =====  =====
          Old State    Input          Action        New State   Notes
         -----------  --------  -----------------  -----------  -----
-        ids   types  new type  sys.msg.  dupname  ids   types
+        id    type   new type  sys.msg.  dupname  id    type
         ====  =====  ========  ========  =======  ====  =====  =====
         -     -      explicit  -         -        new   True
         -     -      implicit  -         -        new   False
-        None  False  explicit  -         -        new   True
+        -     False  explicit  -         -        new   True
         old   False  explicit  implicit  old      new   True
-        None  True   explicit  explicit  new      None  True
-        old   True   explicit  explicit  new,old  None  True   [#]_
-        None  False  implicit  implicit  new      None  False
-        old   False  implicit  implicit  new,old  None  False
-        None  True   implicit  implicit  new      None  True
+        -     True   explicit  explicit  new      -     True
+        old   True   explicit  explicit  new,old  -     True   [#]_
+        -     False  implicit  implicit  new      -     False
+        old   False  implicit  implicit  new,old  -     False
+        -     True   implicit  implicit  new      -     True
         old   True   implicit  implicit  new      old   True
         ====  =====  ========  ========  =======  ====  =====  =====
 
@@ -1457,9 +1461,10 @@ class document(Root, Structural, Element):
            both old and new targets are external and refer to identical URIs.
            The new target is invalidated regardless.
         """
-        for name in node['names']:
+        for name in tuple(node['names']):
             if name in self.nameids:
                 self.set_duplicate_name_id(node, id, name, msgnode, explicit)
+                # attention: modifies node['names']
             else:
                 self.nameids[name] = id
                 self.nametypes[name] = explicit
@@ -1512,7 +1517,7 @@ class document(Root, Structural, Element):
     # "note" here is an imperative verb: "take note of".
     def note_implicit_target(self, target, msgnode=None):
         id = self.set_id(target, msgnode)
-        self.set_name_id_map(target, id, msgnode, explicit=None)
+        self.set_name_id_map(target, id, msgnode, explicit=False)
 
     def note_explicit_target(self, target, msgnode=None):
         id = self.set_id(target, msgnode)
@@ -1609,7 +1614,7 @@ class document(Root, Structural, Element):
     def get_decoration(self):
         if not self.decoration:
             self.decoration = decoration()
-            index = self.first_child_not_matching_class(Titular)
+            index = self.first_child_not_matching_class((Titular, meta))
             if index is None:
                 self.append(self.decoration)
             else:
@@ -1625,6 +1630,13 @@ class title(Titular, PreBibliographic, TextElement): pass
 class subtitle(Titular, PreBibliographic, TextElement): pass
 class rubric(Titular, TextElement): pass
 
+
+# ==================
+#  Meta-Data Element
+# ==================
+
+class meta(PreBibliographic, Element):
+    """Container for "invisible" bibliographic data, or meta-data."""
 
 # ========================
 #  Bibliographic Elements
@@ -1950,7 +1962,7 @@ node_class_names = """
     header hint
     image important inline
     label legend line line_block list_item literal literal_block
-    math math_block
+    math math_block meta
     note
     option option_argument option_group option_list option_list_item
         option_string organization
@@ -1981,9 +1993,9 @@ class NodeVisitor(object):
     "``depart_`` + node class name", resp.
 
     This is a base class for visitors whose ``visit_...`` & ``depart_...``
-    methods should be implemented for *all* node types encountered (such as
-    for `docutils.writers.Writer` subclasses).  Unimplemented methods will
-    raise exceptions.
+    methods must be implemented for *all* compulsory node types encountered
+    (such as for `docutils.writers.Writer` subclasses).
+    Unimplemented methods will raise exceptions (except for optional nodes).
 
     For sparse traversals, where only certain node types are of interest, use
     subclass `SparseNodeVisitor` instead.  When (mostly or entirely) uniform
@@ -1994,7 +2006,7 @@ class NodeVisitor(object):
        1995.
     """
 
-    optional = ()
+    optional = ('meta',)
     """
     Tuple containing node class names (as strings).
 
@@ -2207,7 +2219,7 @@ class NodeFound(TreePruningException):
 class StopTraversal(TreePruningException):
 
     """
-    Stop the traversal alltogether.  The current node's ``depart_...`` method
+    Stop the traversal altogether.  The current node's ``depart_...`` method
     is not affected.  The parent nodes ``depart_...`` methods are also called
     as usual.  No other nodes are visited.  This is an alternative to
     NodeFound that does not cause exception handling to trickle up to the

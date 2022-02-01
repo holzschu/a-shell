@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# :Id: $Id: error_reporting.py 8554 2020-09-04 16:52:11Z milde $
+# :Id: $Id: error_reporting.py 8880 2021-11-05 11:11:18Z milde $
 # :Copyright: © 2011 Günter Milde.
 # :License: Released under the terms of the `2-Clause BSD license`_, in short:
 #
@@ -13,6 +13,11 @@
 # .. _2-Clause BSD license: https://opensource.org/licenses/BSD-2-Clause
 
 """
+Provisional module to handle Exceptions across Python versions.
+
+This module will be deprecated with the end of support for Python 2.7
+and be removed in Docutils 1.2.
+
 Error reporting should be safe from encoding/decoding errors.
 However, implicit conversions of strings and exceptions like
 
@@ -149,7 +154,7 @@ class ErrorString(SafeString):
 class ErrorOutput(object):
     """
     Wrapper class for file-like error streams with
-    failsave de- and encoding of `str`, `bytes`, `unicode` and
+    failsafe de- and encoding of `str`, `bytes`, `unicode` and
     `Exception` instances.
     """
 

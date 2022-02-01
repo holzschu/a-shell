@@ -1785,7 +1785,7 @@ class TarFile(object):
            than once in the archive, its last occurrence is assumed to be the
            most up-to-date version.
         """
-        tarinfo = self._getmember(name)
+        tarinfo = self._getmember(name.rstrip('/'))
         if tarinfo is None:
             raise KeyError("filename %r not found" % name)
         return tarinfo
@@ -2345,6 +2345,15 @@ class TarFile(object):
                     raise ReadError(str(e))
             except SubsequentHeaderError as e:
                 raise ReadError(str(e))
+            except Exception as e:
+                try:
+                    import zlib
+                    if isinstance(e, zlib.error):
+                        raise ReadError(f'zlib error: {e}')
+                    else:
+                        raise e
+                except ImportError:
+                    raise e
             break
 
         if tarinfo is not None:

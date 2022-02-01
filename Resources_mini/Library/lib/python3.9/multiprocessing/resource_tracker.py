@@ -72,6 +72,9 @@ class ResourceTracker(object):
 
         This can be run from any process.  Usually a child process will use
         the resource created by its parent.'''
+        # iOS: better not to start the resource_tracker, as it causes errors.
+        # if (sys.platform == 'darwin' and os.uname().machine.startswith('iP')):
+        #     raise OSError
         with self._lock:
             if self._fd is not None:
                 # resource tracker was launched before, is it still running?
@@ -129,7 +132,8 @@ class ResourceTracker(object):
                 self._fd = w
                 self._pid = pid
             finally:
-                os.close(r)
+                if (sys.platform != 'darwin' or not os.uname().machine.startswith('iP')):
+                    os.close(r)
 
     def _check_alive(self):
         '''Check that the pipe has not been closed by sending a probe.'''

@@ -1,4 +1,4 @@
-# :Id: $Id: __init__.py 8554 2020-09-04 16:52:11Z milde $
+# :Id: $Id: __init__.py 8760 2021-06-17 09:58:31Z milde $
 # :Author: Guenter Milde.
 # :License: Released under the terms of the `2-Clause BSD license`_, in short:
 #
@@ -19,11 +19,17 @@ It contains various modules for conversion between different math formats
 :latex2mathml: LaTeX math -> presentational MathML
 :unichar2tex:  Unicode character to LaTeX math translation table
 :tex2unichar:  LaTeX math to Unicode character translation dictionaries
-:tex2mathml_extern: Wrapper for TeX -> MathML command line converters
+:tex2mathml_extern: Wrapper for 3rd party TeX -> MathML converters
 """
 
 # helpers for Docutils math support
 # =================================
+
+def toplevel_code(code):
+    """Return string (LaTeX math) `code` with environments stripped out."""
+    chunks = code.split(r'\begin{')
+    return r'\begin{'.join([chunk.split(r'\end{')[-1]
+                            for chunk in chunks])
 
 def pick_math_environment(code, numbered=False):
     """Return the right math environment to display `code`.
@@ -35,11 +41,7 @@ def pick_math_environment(code, numbered=False):
     If `numbered` evaluates to ``False``, the "starred" versions are used
     to suppress numbering.
     """
-    # cut out environment content:
-    chunks = code.split(r'\begin{')
-    toplevel_code = ''.join([chunk.split(r'\end{')[-1]
-                             for chunk in chunks])
-    if toplevel_code.find(r'\\') >= 0:
+    if toplevel_code(code).find(r'\\') >= 0:
         env = 'align'
     else:
         env = 'equation'

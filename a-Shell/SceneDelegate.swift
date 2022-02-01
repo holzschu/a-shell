@@ -2288,8 +2288,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 let value = String(components[1])
                 if name == "HOME" { continue }
                 if name == "APPDIR" { continue }
-                if name == "PATH" { continue }
-                if name == "MANPATH" { continue }
+                // Don't override PATH, MANPATH, PERL5LIB...
+                // PATH itself will be dealt with separately
+                if (value.hasPrefix("/") && (value.contains(":"))) { continue }
+                // Don't override PERL_MB_OPT either:
+                if name == "PERL_MB_OPT" { continue }
+                // Env vars that are files: 
                 if (value.hasPrefix("/") && (!value.contains(":"))) {
                     // This variable might be a file or directory. Check it exists first:
                     if (!FileManager().fileExists(atPath: value)) {
@@ -2317,6 +2321,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let components = beforePath.components(separatedBy: ":")
             var prefix:String = ""
             for dir in components {
+                if (dir.count == 0) { continue } // empty string, can happen.
+                if (prefix.contains(dir + ":")) { continue } // Don't add a directory more than once.
                 if (FileManager().fileExists(atPath: dir)) {
                     prefix = prefix + dir + ":"
                 }
@@ -2334,6 +2340,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let components = afterPath.components(separatedBy: ":")
             var suffix:String = ""
             for dir in components {
+                // Don't add a string more than once:
+                if (dir.count == 0) { continue } // empty string, can happen.
+                if (suffix.isEqual(":" + dir)) { continue }
+                if (suffix.contains(":" + dir + ":")) { continue }
+                if (path != nil) {
+                    if (path!.contains(dir + ":")) { continue } // Don't add a string that is already in path
+                }
                 if (FileManager().fileExists(atPath: dir)) {
                     suffix = suffix + ":" + dir
                 }
@@ -2342,10 +2355,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if (path == nil) {
                     path = suffix
                 } else {
-                    if (!path!.hasSuffix(":")) {
-                        path = path! + ":"
+                    if (!path!.hasSuffix(":") && !suffix.hasPrefix(":")) {
+                        path = path! + ":" + suffix
+                    } else {
+                        if (path!.hasSuffix(":") && suffix.hasPrefix(":")) {
+                            path!.removeLast()
+                        }
+                        path = path! + suffix
                     }
-                    path = path! + suffix
                 }
                 pathChanged = true
             }

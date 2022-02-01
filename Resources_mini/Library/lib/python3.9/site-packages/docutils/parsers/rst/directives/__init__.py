@@ -1,4 +1,4 @@
-# $Id: __init__.py 8595 2020-12-15 23:06:58Z milde $
+# $Id: __init__.py 8860 2021-10-22 16:39:59Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -57,7 +57,7 @@ _directive_registry = {
       #'footnotes': ('parts', 'footnotes'),
       #'citations': ('parts', 'citations'),
       'target-notes': ('references', 'TargetNotes'),
-      'meta': ('html', 'Meta'),
+      'meta': ('misc', 'Meta'),
       #'imagemap': ('html', 'imagemap'),
       'raw': ('misc', 'Raw'),
       'include': ('misc', 'Include'),
@@ -369,7 +369,7 @@ def positive_int_list(argument):
 
 def encoding(argument):
     """
-    Verfies the encoding argument by lookup.
+    Verifies the encoding argument by lookup.
     (Directive option conversion function.)
 
     Raises ValueError for unknown encodings.

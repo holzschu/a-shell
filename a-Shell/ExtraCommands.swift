@@ -94,13 +94,13 @@ You can download more commands at: https://github.com/holzschu/a-Shell-commands/
             let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
             let bashmarks = UserDefaults.standard.bool(forKey: "bashmarks")
             if (zshmarks && bashmarks) {
-                delegate.printText(string: "\n- bookmark the current directory with \"bookmark <name>\" or \"s <name>\", and access it later with \"jump <name>\" or \"g <name>\".\n- showmarks, l or p: show current list of bookmarks\n- renamemark or r, deletemark or d: change list of bookmarks\n")
+                delegate.printText(string: "\n- bookmark the current directory with \"bookmark <name>\" or \"s <name>\", and access it later with \"cd ~name\", \"jump <name>\" or \"g <name>\".\n- showmarks, l or p: show current list of bookmarks\n- renamemark or r, deletemark or d: change list of bookmarks\n")
             } else if (zshmarks) {
-                delegate.printText(string: "\n- bookmark the current directory with \"bookmark <name>\" and access it later with \"jump <name>\".\n- showmarks: show current list of bookmarks\n- renamemark, deletemark: change list of bookmarks\n")
+                delegate.printText(string: "\n- bookmark the current directory with \"bookmark <name>\" and access it later with \"cd ~name\" or \"jump <name>\".\n- showmarks: show current list of bookmarks\n- renamemark, deletemark: change list of bookmarks\n")
             } else if (bashmarks) {
-                delegate.printText(string: "\n- bookmark the current directory with \"s <name>\", and access it later with \"g <name>\".\n- l or p: show current list of bookmarks\n- r <name1> <name2>: rename a bookmark.\n- d <name>: delete a bookmark\n")
+                delegate.printText(string: "\n- bookmark the current directory with \"s <name>\", and access it later with \"cd ~name\" or \"g <name>\".\n- l or p: show current list of bookmarks\n- r <name1> <name2>: rename a bookmark.\n- d <name>: delete a bookmark\n")
             }
-            delegate.printText(string: "\nSupport: e-mail (another_shell@icloud.com), Twitter (@a_Shell_iOS) and github (https://github.com/holzschu/a-shell/issues).\n")
+            delegate.printText(string: "\nSupport: e-mail (another_shell@icloud.com), Twitter (@a_Shell_iOS), github (https://github.com/holzschu/a-shell/issues) and Discord (https://discord.gg/fskuN9dW).\n")
             delegate.printText(string: "\nFor a full list of commands, type help -l\n")
         } else {
             guard let argV = argv?[1] else {
@@ -113,6 +113,7 @@ You can download more commands at: https://github.com/holzschu/a-Shell-commands/
                 // Also scan PATH for executable files:
                 let executablePath = String(cString: getenv("PATH"))
                 for directory in executablePath.components(separatedBy: ":") {
+                    if (directory.count == 0) { continue } // Empty directory (::), don't read it.
                     do {
                         // We don't check for exec status, because files inside $APPDIR have no x bit set.
                         for file in try FileManager().contentsOfDirectory(atPath: directory) {

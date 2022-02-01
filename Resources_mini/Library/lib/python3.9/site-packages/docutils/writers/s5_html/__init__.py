@@ -1,4 +1,4 @@
-# $Id: __init__.py 8412 2019-11-06 18:15:21Z milde $
+# $Id: __init__.py 8729 2021-05-18 21:33:58Z milde $
 # Authors: Chris Liechti <cliechti@gmx.net>;
 #          David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
@@ -143,7 +143,7 @@ class S5HTMLTranslator(html4css1.HTMLTranslator):
     """Names of theme files directly linked to in the output HTML"""
 
     indirect_theme_files = (
-        's5-core.css', 'framing.css', 'pretty.css', 'blank.gif', 'iepngfix.htc')
+        's5-core.css', 'framing.css', 'pretty.css')
     """Names of files used indirectly; imported or used by files in
     `direct_theme_files`."""
 

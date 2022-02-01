@@ -24,7 +24,7 @@ import weakref
 from functools import partial
 from itertools import product, islice
 from test import support
-from test.support import TESTFN, findfile, import_fresh_module, gc_collect, swap_attr
+from test.support import TESTFN, findfile, import_fresh_module, gc_collect, swap_attr, swap_item
 
 # pyET is the pure-Python implementation.
 #
@@ -149,12 +149,11 @@ class ElementTestCase:
         cls.modules = {pyET, ET}
 
     def pickleRoundTrip(self, obj, name, dumper, loader, proto):
-        save_m = sys.modules[name]
         try:
-            sys.modules[name] = dumper
-            temp = pickle.dumps(obj, proto)
-            sys.modules[name] = loader
-            result = pickle.loads(temp)
+            with swap_item(sys.modules, name, dumper):
+                temp = pickle.dumps(obj, proto)
+            with swap_item(sys.modules, name, loader):
+                result = pickle.loads(temp)
         except pickle.PicklingError as pe:
             # pyET must be second, because pyET may be (equal to) ET.
             human = dict([(ET, "cET"), (pyET, "pyET")])
@@ -162,8 +161,6 @@ class ElementTestCase:
                                      % (obj,
                                         human.get(dumper, dumper),
                                         human.get(loader, loader))) from pe
-        finally:
-            sys.modules[name] = save_m
         return result
 
     def assertEqualElements(self, alice, bob):
@@ -310,6 +307,9 @@ class ElementTreeTest(unittest.TestCase):
         self.serialize_check(elem, '<body><tag2 /><tag /></body>')
         elem.remove(e)
         elem.extend([e])
+        self.serialize_check(elem, '<body><tag /><tag2 /></body>')
+        elem.remove(e)
+        elem.extend(iter([e]))
         self.serialize_check(elem, '<body><tag /><tag2 /></body>')
         elem.remove(e)
 
@@ -2453,6 +2453,7 @@ class BasicElementTest(ElementTestCase, unittest.TestCase):
         wref = weakref.ref(e, wref_cb)
         self.assertEqual(wref().tag, 'e')
         del e
+        gc_collect()  # For PyPy or other GCs.
         self.assertEqual(flag, True)
         self.assertEqual(wref(), None)
 
@@ -3271,7 +3272,7 @@ class TreeBuilderTest(unittest.TestCase):
         self._check_element_factory_class(MyElement)
 
     def test_element_factory_pure_python_subclass(self):
-        # Mimick SimpleTAL's behaviour (issue #16089): both versions of
+        # Mimic SimpleTAL's behaviour (issue #16089): both versions of
         # TreeBuilder should be able to cope with a subclass of the
         # pure Python Element class.
         base = ET._Element_Py

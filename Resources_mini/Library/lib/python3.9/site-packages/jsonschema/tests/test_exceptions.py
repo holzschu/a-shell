@@ -2,7 +2,6 @@ from unittest import TestCase
 import textwrap
 
 from jsonschema import Draft4Validator, exceptions
-from jsonschema.compat import PY3
 
 
 class TestBestMatch(TestCase):
@@ -42,7 +41,7 @@ class TestBestMatch(TestCase):
                 "minProperties": 2,
                 "anyOf": [{"type": "string"}, {"type": "number"}],
                 "oneOf": [{"type": "string"}, {"type": "number"}],
-            }
+            },
         )
         best = self.best_match(validator.iter_errors({}))
         self.assertEqual(best.validator, "minProperties")
@@ -285,22 +284,36 @@ class TestErrorTree(TestCase):
         tree = exceptions.ErrorTree([error])
         self.assertIsInstance(tree["foo"], exceptions.ErrorTree)
 
+    def test_repr(self):
+        e1, e2 = (
+            exceptions.ValidationError(
+                "1",
+                validator="foo",
+                path=["bar", "bar2"],
+                instance="i1"),
+            exceptions.ValidationError(
+                "2",
+                validator="quux",
+                path=["foobar", 2],
+                instance="i2"),
+        )
+        tree = exceptions.ErrorTree([e1, e2])
+        self.assertEqual(repr(tree), "<ErrorTree (2 total errors)>")
+
 
 class TestErrorInitReprStr(TestCase):
     def make_error(self, **kwargs):
         defaults = dict(
-            message=u"hello",
-            validator=u"type",
-            validator_value=u"string",
+            message="hello",
+            validator="type",
+            validator_value="string",
             instance=5,
-            schema={u"type": u"string"},
+            schema={"type": "string"},
         )
         defaults.update(kwargs)
         return exceptions.ValidationError(**defaults)
 
     def assertShows(self, expected, **kwargs):
-        if PY3:  # pragma: no cover
-            expected = expected.replace("u'", "'")
         expected = textwrap.dedent(expected).rstrip("\n")
 
         error = self.make_error(**kwargs)
@@ -315,7 +328,7 @@ class TestErrorInitReprStr(TestCase):
     def test_repr(self):
         self.assertEqual(
             repr(exceptions.ValidationError(message="Hello!")),
-            "<ValidationError: %r>" % "Hello!",
+            "<ValidationError: 'Hello!'>",
         )
 
     def test_unset_error(self):
@@ -338,8 +351,8 @@ class TestErrorInitReprStr(TestCase):
     def test_empty_paths(self):
         self.assertShows(
             """
-            Failed validating u'type' in schema:
-                {u'type': u'string'}
+            Failed validating 'type' in schema:
+                {'type': 'string'}
 
             On instance:
                 5
@@ -351,8 +364,8 @@ class TestErrorInitReprStr(TestCase):
     def test_one_item_paths(self):
         self.assertShows(
             """
-            Failed validating u'type' in schema:
-                {u'type': u'string'}
+            Failed validating 'type' in schema:
+                {'type': 'string'}
 
             On instance[0]:
                 5
@@ -364,20 +377,20 @@ class TestErrorInitReprStr(TestCase):
     def test_multiple_item_paths(self):
         self.assertShows(
             """
-            Failed validating u'type' in schema[u'items'][0]:
-                {u'type': u'string'}
+            Failed validating 'type' in schema['items'][0]:
+                {'type': 'string'}
 
-            On instance[0][u'a']:
+            On instance[0]['a']:
                 5
             """,
-            path=[0, u"a"],
-            schema_path=[u"items", 0, 1],
+            path=[0, "a"],
+            schema_path=["items", 0, 1],
         )
 
     def test_uses_pprint(self):
         self.assertShows(
             """
-            Failed validating u'maxLength' in schema:
+            Failed validating 'maxLength' in schema:
                 {0: 0,
                  1: 1,
                  2: 2,
@@ -428,7 +441,7 @@ class TestErrorInitReprStr(TestCase):
             """,
             instance=list(range(25)),
             schema=dict(zip(range(20), range(20))),
-            validator=u"maxLength",
+            validator="maxLength",
         )
 
     def test_str_works_with_instances_having_overriden_eq_operator(self):

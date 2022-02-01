@@ -4,7 +4,7 @@
 """Lexical analysis of formal languages (i.e. code) using Pygments."""
 
 # :Author: Georg Brandl; Felix Wiemann; Günter Milde
-# :Date: $Date: 2021-01-03 22:05:13 +0100 (So, 03. Jän 2021) $
+# :Date: $Date: 2021-10-22 18:39:59 +0200 (Fr, 22. Okt 2021) $
 # :Copyright: This module has been placed in the public domain.
 
 from docutils import ApplicationError
@@ -117,7 +117,7 @@ class NumberLines(object):
 
     Iterating over an instance yields the tokens with a
     ``(['ln'], '<the line number>')`` token added for every code line.
-    Multi-line tokens are splitted."""
+    Multi-line tokens are split."""
 
     def __init__(self, tokens, startline, endline):
         self.tokens = tokens

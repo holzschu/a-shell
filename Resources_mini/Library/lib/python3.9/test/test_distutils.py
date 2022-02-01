@@ -7,18 +7,16 @@ be run.
 
 import distutils.tests
 import test.support
-
-
-def test_main():
-    # used by regrtest
-    test.support.run_unittest(distutils.tests.test_suite())
-    test.support.reap_children()
-
+import unittest
 
 def load_tests(*_):
     # used by unittest
     return distutils.tests.test_suite()
 
 
+def tearDownModule():
+    test.support.reap_children()
+
+
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

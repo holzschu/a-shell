@@ -1,4 +1,4 @@
-# $Id: __init__.py 8412 2019-11-06 18:15:21Z milde $
+# $Id: __init__.py 8722 2021-05-17 20:28:42Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -33,10 +33,10 @@ class Writer(html4css1.Writer):
         os.path.join(os.path.dirname(__file__), default_template))
 
     settings_spec = html4css1.Writer.settings_spec + (
-        'PEP/HTML-Specific Options',
+        'PEP/HTML Writer Options',
         'For the PEP/HTML writer, the default value for the --stylesheet-path '
         'option is "%s", and the default value for --template is "%s". '
-        'See HTML-Specific Options above.'
+        'See HTML Writer Options above.'
         % (default_stylesheet_path, default_template_path),
         (('Python\'s home URL.  Default is "http://www.python.org".',
           ['--python-home'],

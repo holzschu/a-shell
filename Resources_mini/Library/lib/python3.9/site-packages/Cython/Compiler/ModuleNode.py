@@ -634,7 +634,10 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
             code.putln(json.dumps(metadata, indent=4, sort_keys=True))
             code.putln("END: Cython Metadata */")
             code.putln("")
+
+        code.putln("#ifndef PY_SSIZE_T_CLEAN")
         code.putln("#define PY_SSIZE_T_CLEAN")
+        code.putln("#endif /* PY_SSIZE_T_CLEAN */")
 
         for inc in sorted(env.c_includes.values(), key=IncludeCode.sortkey):
             if inc.location == inc.INITIAL:
@@ -2421,10 +2424,9 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
             code.put_error_if_neg(self.pos, "_import_array()")
 
         code.putln("/*--- Threads initialization code ---*/")
-        code.putln("#if defined(__PYX_FORCE_INIT_THREADS) && __PYX_FORCE_INIT_THREADS")
-        code.putln("#ifdef WITH_THREAD /* Python build with threading support? */")
+        code.putln("#if defined(WITH_THREAD) && PY_VERSION_HEX < 0x030700F0 "
+                   "&& defined(__PYX_FORCE_INIT_THREADS) && __PYX_FORCE_INIT_THREADS")
         code.putln("PyEval_InitThreads();")
-        code.putln("#endif")
         code.putln("#endif")
 
         code.putln("/*--- Module creation code ---*/")

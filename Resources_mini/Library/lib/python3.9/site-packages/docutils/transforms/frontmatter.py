@@ -1,4 +1,4 @@
-# $Id: frontmatter.py 8671 2021-04-07 12:09:51Z milde $
+# $Id: frontmatter.py 8885 2021-11-11 16:29:16Z milde $
 # Author: David Goodger, Ueli Schlaepfer <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -281,10 +281,10 @@ class SectionSubTitle(TitlePromoter):
     def apply(self):
         if not self.document.settings.setdefault('sectsubtitle_xform', True):
             return
-        for section in self.document._traverse(nodes.section):
+        for section in self.document.findall(nodes.section):
             # On our way through the node tree, we are modifying it
             # but only the not-yet-visited part, so that the iterator
-            # returned by _traverse() is not corrupted.
+            # returned by findall() is not corrupted.
             self.promote_subtitle(section)
 
 
@@ -393,7 +393,7 @@ class DocInfo(Transform):
         candidate = document[index]
         if isinstance(candidate, nodes.field_list):
             biblioindex = document.first_child_not_matching_class(
-                  (nodes.Titular, nodes.Decorative))
+                  (nodes.Titular, nodes.Decorative, nodes.meta))
             nodelist = self.extract_bibliographic(candidate)
             del document[index]         # untransformed field list (candidate)
             document[biblioindex:biblioindex] = nodelist
@@ -513,7 +513,7 @@ class DocInfo(Transform):
         """
         # @@ keep original formatting? (e.g. ``:authors: A. Test, *et-al*``)
         text = ''.join(unicode(node)
-                       for node in field[1].traverse(nodes.Text))
+                       for node in field[1].findall(nodes.Text))
         if not text:
             raise TransformError
         for authorsep in self.language.author_separators:
@@ -523,8 +523,7 @@ class DocInfo(Transform):
             if len(authornames) > 1:
                 break
         authornames = (name.strip() for name in authornames)
-        authors = [[nodes.Text(name, utils.unescape(name, True))]
-                   for name in authornames if name]
+        authors = [[nodes.Text(name)] for name in authornames if name]
         return authors
 
     def authors_from_bullet_list(self, field):

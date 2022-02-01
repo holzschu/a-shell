@@ -187,7 +187,7 @@ def try_to_save_module(hashed_grammar, file_io, module, lines, pickling=True, ca
             # file system. It's still in RAM in that case. However we should
             # still warn the user that this is happening.
             warnings.warn(
-                'Tried to save a file to %s, but got permission denied.',
+                'Tried to save a file to %s, but got permission denied.' % path,
                 Warning
             )
         else:

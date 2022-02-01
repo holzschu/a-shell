@@ -51,6 +51,11 @@ class AuditTest(unittest.TestCase):
     def test_block_add_hook_baseexception(self):
         self.do_test("test_block_add_hook_baseexception")
 
+    def test_marshal(self):
+        support.import_module("marshal")
+
+        self.do_test("test_marshal")
+
     def test_pickle(self):
         support.import_module("pickle")
 
@@ -114,6 +119,19 @@ class AuditTest(unittest.TestCase):
         self.assertEqual(events[1][0], "socket.__new__")
         self.assertEqual(events[2][0], "socket.bind")
         self.assertTrue(events[2][2].endswith("('127.0.0.1', 8080)"))
+
+    def test_gc(self):
+        returncode, events, stderr = self.run_python("test_gc")
+        if returncode:
+            self.fail(stderr)
+
+        if support.verbose:
+            print(*events, sep='\n')
+        self.assertEqual(
+            [event[0] for event in events],
+            ["gc.get_objects", "gc.get_referrers", "gc.get_referents"]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

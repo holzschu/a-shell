@@ -19,6 +19,34 @@ work. One should use importlib as the public-facing version of this module.
 # reference any injected objects! This includes not only global code but also
 # anything specified at the class level.
 
+# Import builtin modules
+import _imp
+import _io
+import sys
+import _warnings
+import marshal
+
+
+_MS_WINDOWS = (sys.platform == 'win32')
+if _MS_WINDOWS:
+    import nt as _os
+    import winreg
+else:
+    import posix as _os
+
+
+if _MS_WINDOWS:
+    path_separators = ['\\', '/']
+else:
+    path_separators = ['/']
+# Assumption made in _path_join()
+assert all(len(sep) == 1 for sep in path_separators)
+path_sep = path_separators[0]
+path_sep_tuple = tuple(path_separators)
+path_separators = ''.join(path_separators)
+_pathseps_with_colon = {f':{s}' for s in path_separators}
+
+
 # Bootstrap-related code ######################################################
 _CASE_INSENSITIVE_PLATFORMS_STR_KEY = 'win',
 _CASE_INSENSITIVE_PLATFORMS_BYTES_KEY = 'cygwin', 'darwin'
@@ -59,22 +87,49 @@ def _unpack_uint16(data):
     return int.from_bytes(data, 'little')
 
 
-def _path_join(*path_parts):
-    """Replacement for os.path.join()."""
-    return path_sep.join([part.rstrip(path_separators)
-                          for part in path_parts if part])
+if _MS_WINDOWS:
+    def _path_join(*path_parts):
+        """Replacement for os.path.join()."""
+        if not path_parts:
+            return ""
+        if len(path_parts) == 1:
+            return path_parts[0]
+        root = ""
+        path = []
+        for new_root, tail in map(_os._path_splitroot, path_parts):
+            if new_root.startswith(path_sep_tuple) or new_root.endswith(path_sep_tuple):
+                root = new_root.rstrip(path_separators) or root
+                path = [path_sep + tail]
+            elif new_root.endswith(':'):
+                if root.casefold() != new_root.casefold():
+                    # Drive relative paths have to be resolved by the OS, so we reset the
+                    # tail but do not add a path_sep prefix.
+                    root = new_root
+                    path = [tail]
+                else:
+                    path.append(tail)
+            else:
+                root = new_root or root
+                path.append(tail)
+        path = [p.rstrip(path_separators) for p in path if p]
+        if len(path) == 1 and not path[0]:
+            # Avoid losing the root's trailing separator when joining with nothing
+            return root + path_sep
+        return root + path_sep.join(path)
+
+else:
+    def _path_join(*path_parts):
+        """Replacement for os.path.join()."""
+        return path_sep.join([part.rstrip(path_separators)
+                              for part in path_parts if part])
 
 
 def _path_split(path):
     """Replacement for os.path.split()."""
-    if len(path_separators) == 1:
-        front, _, tail = path.rpartition(path_sep)
-        return front, tail
-    for x in reversed(path):
-        if x in path_separators:
-            front, tail = path.rsplit(x, maxsplit=1)
-            return front, tail
-    return '', path
+    i = max(path.rfind(p) for p in path_separators)
+    if i < 0:
+        return '', path
+    return path[:i], path[i + 1:]
 
 
 def _path_stat(path):
@@ -108,13 +163,18 @@ def _path_isdir(path):
     return _path_is_mode_type(path, 0o040000)
 
 
-def _path_isabs(path):
-    """Replacement for os.path.isabs.
+if _MS_WINDOWS:
+    def _path_isabs(path):
+        """Replacement for os.path.isabs."""
+        if not path:
+            return False
+        root = _os._path_splitroot(path)[0].replace('/', '\\')
+        return len(root) > 1 and (root.startswith('\\\\') or root.endswith('\\'))
 
-    Considers a Windows drive-relative path (no drive, but starts with slash) to
-    still be "absolute".
-    """
-    return path.startswith(path_separators) or path[1:3] in _pathseps_with_colon
+else:
+    def _path_isabs(path):
+        """Replacement for os.path.isabs."""
+        return path.startswith(path_separators)
 
 
 def _write_atomic(path, data, mode=0o666):
@@ -1094,6 +1154,11 @@ class ExtensionFileLoader(FileLoader, _LoaderBasics):
 
     def __init__(self, name, path):
         self.name = name
+        if not _path_isabs(path):
+            try:
+                path = _path_join(_os.getcwd(), path)
+            except OSError:
+                pass
         self.path = path
 
     def __eq__(self, other):
@@ -1408,6 +1473,8 @@ class FileFinder:
         self._loaders = loaders
         # Base (directory) path
         self.path = path or '.'
+        if not _path_isabs(self.path):
+            self.path = _path_join(_os.getcwd(), self.path)
         self._path_mtime = -1
         self._path_cache = set()
         self._relaxed_path_cache = set()
@@ -1470,7 +1537,10 @@ class FileFinder:
                 is_namespace = _path_isdir(base_path)
         # Check for a file w/ a proper suffix exists.
         for suffix, loader_class in self._loaders:
-            full_path = _path_join(self.path, tail_module + suffix)
+            try:
+                full_path = _path_join(self.path, tail_module + suffix)
+            except ValueError:
+                return None
             _bootstrap._verbose_message('trying {}', full_path, verbosity=2)
             if cache_module + suffix in cache:
                 if _path_isfile(full_path):
@@ -1479,9 +1549,226 @@ class FileFinder:
             # iOS: check if a framework with proper name exists:
             # Numpy modules don't use the lib-dynload path.
             if sys.platform == 'darwin' and _os.uname().machine.startswith('iP'): 
+                _bootstrap._verbose_message('searching for {}', fullname, verbosity=2)
                 if self.path.startswith(sys.prefix) and suffix.endswith('.so'):
                     pythonName = sys._base_executable # set in pathconfig.c
-                    frameworkName = pythonName + "-" + fullname
+                    # Merged numpy, pandas and astropy modules into a single framework:
+                    if fullname in ["numpy.core._operand_flag_tests", 
+                    "numpy.core._multiarray_umath", 
+                    "numpy.core._multiarray_tests", 
+                    "numpy.core._simd", 
+                    "numpy.linalg.lapack_lite", 
+                    "numpy.linalg._umath_linalg", 
+                    "numpy.fft._pocketfft_internal", 
+                    "numpy.random.bit_generator", 
+                    "numpy.random.mtrand", 
+                    "numpy.random._generator", 
+                    "numpy.random._pcg64", 
+                    "numpy.random._sfc64", 
+                    "numpy.random._mt19937", 
+                    "numpy.random._philox", 
+                    "numpy.random._bounded_integers", 
+                    "numpy.random._common"]:
+                        frameworkName = pythonName + "-" + "numpy_all"
+                    elif fullname in ["pandas.io.sas._sas",
+                            "pandas._libs.index",
+                            "pandas._libs.join",
+                            "pandas._libs.parsers",
+                            "pandas._libs.reduction",
+                            "pandas._libs.tslib",
+                            "pandas._libs.sparse",
+                            "pandas._libs.properties",
+                            "pandas._libs.internals",
+                            "pandas._libs.reshape",
+                            "pandas._libs.ops",
+                            "pandas._libs.indexing",
+                            "pandas._libs.hashing",
+                            "pandas._libs.lib",
+                            "pandas._libs.hashtable",
+                            "pandas._libs.algos",
+                            "pandas._libs.json",
+                            "pandas._libs.arrays",
+                            "pandas._libs.window.indexers",
+                            "pandas._libs.window.aggregations",
+                            "pandas._libs.writers",
+                            "pandas._libs.ops_dispatch",
+                            "pandas._libs.groupby",
+                            "pandas._libs.interval",
+                            "pandas._libs.tslibs.dtypes",
+                            "pandas._libs.tslibs.period",
+                            "pandas._libs.tslibs.conversion",
+                            "pandas._libs.tslibs.ccalendar",
+                            "pandas._libs.tslibs.timedeltas",
+                            "pandas._libs.tslibs.strptime",
+                            "pandas._libs.tslibs.vectorized",
+                            "pandas._libs.tslibs.nattype",
+                            "pandas._libs.tslibs.base",
+                            "pandas._libs.tslibs.timezones",
+                            "pandas._libs.tslibs.timestamps",
+                            "pandas._libs.tslibs.offsets",
+                            "pandas._libs.tslibs.fields",
+                            "pandas._libs.tslibs.np_datetime",
+                            "pandas._libs.tslibs.parsing",
+                            "pandas._libs.tslibs.tzconversion",
+                            "pandas._libs.testing",
+                            "pandas._libs.missing"]:
+                        frameworkName = pythonName + "-" + "pandas_all"
+                    elif fullname in ["astropy.compiler_version",
+                            "astropy.timeseries.periodograms.bls._impl",
+                            "astropy.timeseries.periodograms.lombscargle.implementations.cython_impl",
+                            "astropy.wcs._wcs",
+                            "astropy.io.ascii.cparser",
+                            "astropy.io.fits.compression",
+                            "astropy.io.fits._utils",
+                            "astropy.io.votable.tablewriter",
+                            "astropy.utils._compiler",
+                            "astropy.utils.xml._iterparser",
+                            "astropy.modeling._projections",
+                            "astropy.time._parse_times",
+                            "astropy.table._np_utils",
+                            "astropy.table._column_mixins",
+                            "astropy.cosmology.scalar_inv_efuncs",
+                            "astropy.convolution._convolve",
+                            "astropy.stats._fast_sigma_clip", 
+                            "astropy.stats._stats"]:
+                        frameworkName = pythonName + "-" + "astropy_all"
+                    elif fullname in ["qutip.cy.checks",
+                            "qutip.cy.piqs",
+                            "qutip.cy.ptrace",
+                            "qutip.cy.cqobjevo",
+                            "qutip.cy.mcsolve",
+                            "qutip.cy.spmatfuncs",
+                            "qutip.cy.spconvert",
+                            "qutip.cy.brtools",
+                            "qutip.cy.stochastic",
+                            "qutip.cy.heom",
+                            "qutip.cy.br_tensor",
+                            "qutip.cy.interpolate",
+                            "qutip.cy.brtools_checks",
+                            "qutip.cy.sparse_utils",
+                            "qutip.cy.inter",
+                            "qutip.cy.cqobjevo_factor",
+                            "qutip.cy.graph_utils",
+                            "qutip.cy.math",
+                            "qutip.cy.spmath",
+                            "qutip.control.cy_grape"]:
+                        frameworkName = pythonName + "-" + "qutip_all"
+                    elif fullname in ["scipy._lib._uarray._uarray",
+                            "scipy._lib._test_ccallback",
+                            "scipy._lib._ccallback_c",
+                            "scipy._lib._test_deprecation_call",
+                            "scipy._lib._fpumode",
+                            "scipy._lib.messagestream",
+                            "scipy._lib._test_deprecation_def",
+                            "scipy.cluster._hierarchy",
+                            "scipy.cluster._optimal_leaf_ordering",
+                            "scipy.cluster._vq",
+                            "scipy.fft._pocketfft.pypocketfft",
+                            "scipy.fftpack.convolve",
+                            "scipy.integrate._test_multivariate",
+                            "scipy.interpolate._fitpack",
+                            "scipy.interpolate._bspl",
+                            "scipy.interpolate.interpnd",
+                            "scipy.interpolate._ppoly",
+                            "scipy.io.matlab.mio_utils",
+                            "scipy.io.matlab.streams",
+                            "scipy.io.matlab.mio5_utils",
+                            "scipy.linalg._solve_toeplitz",
+                            "scipy.linalg._matfuncs_sqrtm_triu",
+                            "scipy.linalg._decomp_update",
+                            "scipy.ndimage._ni_label",
+                            "scipy.ndimage._nd_image",
+                            "scipy.ndimage._ctest",
+                            "scipy.ndimage._cytest",
+                            "scipy.optimize.moduleTNC",
+                            "scipy.optimize._lsap_module",
+                            "scipy.optimize._bglu_dense",
+                            "scipy.optimize._highs._highs_constants",
+                            "scipy.optimize._highs._highs_wrapper",
+                            "scipy.optimize._lsq.givens_elimination",
+                            "scipy.optimize.cython_optimize._zeros",
+                            "scipy.optimize._group_columns",
+                            "scipy.signal._spectral",
+                            "scipy.signal._sosfilt",
+                            "scipy.signal.spline",
+                            "scipy.signal._peak_finding_utils",
+                            "scipy.signal.sigtools",
+                            "scipy.signal._max_len_seq_inner",
+                            "scipy.signal._upfirdn_apply",
+                            "scipy.sparse.csgraph._min_spanning_tree",
+                            "scipy.sparse.csgraph._traversal",
+                            "scipy.sparse.csgraph._tools",
+                            "scipy.sparse.csgraph._matching",
+                            "scipy.sparse.csgraph._reordering",
+                            "scipy.sparse.csgraph._flow",
+                            "scipy.sparse.csgraph._shortest_path",
+                            "scipy.sparse._sparsetools",
+                            "scipy.sparse._csparsetools",
+                            "scipy.spatial.ckdtree",
+                            "scipy.spatial._hausdorff",
+                            "scipy.spatial._voronoi",
+                            "scipy.spatial._distance_wrap",
+                            "scipy.spatial._distance_pybind",
+                            "scipy.spatial.transform.rotation",
+                            "scipy.special.cython_special",
+                            "scipy.special._comb",
+                            "scipy.special._test_round",
+                            "scipy.special.specfun",
+                            "scipy.stats._qmc_cy",
+                            "scipy.stats._boost.binom_ufunc",
+                            "scipy.stats._boost.nbinom_ufunc",
+                            "scipy.stats._boost.beta_ufunc",
+                            "scipy.stats._sobol",
+                            "scipy.stats.biasedurn",
+                            "scipy.stats._stats"]:
+                        frameworkName = pythonName + "-" + "scipy_all"
+                    elif fullname in ["PIL._imagingft",
+                            "PIL._imagingmath",
+                            "PIL._imagingtk",
+                            "PIL._imagingmorph",
+                            "PIL._imaging"]:
+                        frameworkName = pythonName + "-" + "PIL_all"
+                    elif fullname in ["lxml.etree",
+                            "lxml.objectify",
+                            "lxml.sax",
+                            "lxml.html.diff",
+                            "lxml.html.clean",
+                            "lxml._elementpath",
+                            "lxml.builder"]:
+                        frameworkName = pythonName + "-" + "lxml_all"
+                    elif fullname in ["fiona.schema",
+                            "fiona.ogrext",
+                            "fiona._crs",
+                            "fiona._err",
+                            "fiona._transform",
+                            "fiona._shim",
+                            "fiona._geometry",
+                            "fiona._env"]:
+                        frameworkName = pythonName + "-" + "fiona_all"
+                    elif fullname in ["pyproj._transformer",
+                            "pyproj._datadir",
+                            "pyproj.list",
+                            "pyproj._compat",
+                            "pyproj._crs",
+                            "pyproj._network",
+                            "pyproj._geod",
+                            "pyproj.database",
+                            "pyproj._sync"]:
+                        frameworkName = pythonName + "-" + "pyproj_all"
+                    elif fullname in ["rasterio._fill",
+                            "rasterio._crs",
+                            "rasterio._err",
+                            "rasterio._warp",
+                            "rasterio._transform",
+                            "rasterio._example",
+                            "rasterio._io",
+                            "rasterio._base",
+                            "rasterio.shutil",
+                            "rasterio._env",
+                            "rasterio._features"]:
+                        frameworkName = pythonName + "-" + "rasterio_all"
+                    else:
+                        frameworkName = pythonName + "-" + fullname
                     home, tail = _path_split(sys.prefix)
                     full_path = _path_join(home, "Frameworks", frameworkName + ".framework", frameworkName)
                     _bootstrap._verbose_message('trying {}', full_path, verbosity=2)

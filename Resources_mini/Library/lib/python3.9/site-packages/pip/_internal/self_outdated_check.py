@@ -23,17 +23,15 @@ SELFCHECK_DATE_FMT = "%Y-%m-%dT%H:%M:%SZ"
 logger = logging.getLogger(__name__)
 
 
-def _get_statefile_name(key):
-    # type: (str) -> str
+def _get_statefile_name(key: str) -> str:
     key_bytes = key.encode()
     name = hashlib.sha224(key_bytes).hexdigest()
     return name
 
 
 class SelfCheckState:
-    def __init__(self, cache_dir):
-        # type: (str) -> None
-        self.state = {}  # type: Dict[str, Any]
+    def __init__(self, cache_dir: str) -> None:
+        self.state: Dict[str, Any] = {}
         self.statefile_path = None
 
         # Try to load the existing state
@@ -50,12 +48,10 @@ class SelfCheckState:
                 pass
 
     @property
-    def key(self):
-        # type: () -> str
+    def key(self) -> str:
         return sys.prefix
 
-    def save(self, pypi_version, current_time):
-        # type: (str, datetime.datetime) -> None
+    def save(self, pypi_version: str, current_time: datetime.datetime) -> None:
         # If we do not have a path to cache in, don't bother saving.
         if not self.statefile_path:
             return
@@ -90,8 +86,7 @@ class SelfCheckState:
             pass
 
 
-def was_installed_by_pip(pkg):
-    # type: (str) -> bool
+def was_installed_by_pip(pkg: str) -> bool:
     """Checks whether pkg was installed by pip
 
     This is used not to display the upgrade message when pip is in fact
@@ -101,8 +96,7 @@ def was_installed_by_pip(pkg):
     return dist is not None and "pip" == dist.installer
 
 
-def pip_self_version_check(session, options):
-    # type: (PipSession, optparse.Values) -> None
+def pip_self_version_check(session: PipSession, options: optparse.Values) -> None:
     """Check for an update for pip.
 
     Limit the frequency of checks to once per week. State is stored either in
@@ -123,8 +117,7 @@ def pip_self_version_check(session, options):
         # Determine if we need to refresh the state
         if "last_check" in state.state and "pypi_version" in state.state:
             last_check = datetime.datetime.strptime(
-                state.state["last_check"],
-                SELFCHECK_DATE_FMT
+                state.state["last_check"], SELFCHECK_DATE_FMT
             )
             if (current_time - last_check).total_seconds() < 7 * 24 * 60 * 60:
                 pypi_version = state.state["pypi_version"]
@@ -160,9 +153,9 @@ def pip_self_version_check(session, options):
         remote_version = parse_version(pypi_version)
 
         local_version_is_older = (
-            pip_version < remote_version and
-            pip_version.base_version != remote_version.base_version and
-            was_installed_by_pip('pip')
+            pip_version < remote_version
+            and pip_version.base_version != remote_version.base_version
+            and was_installed_by_pip("pip")
         )
 
         # Determine if our pypi_version is older
@@ -178,7 +171,9 @@ def pip_self_version_check(session, options):
             "You are using pip version %s; however, version %s is "
             "available.\nYou should consider upgrading via the "
             "'%s install --upgrade pip' command.",
-            pip_version, pypi_version, pip_cmd
+            pip_version,
+            pypi_version,
+            pip_cmd,
         )
     except Exception:
         logger.debug(

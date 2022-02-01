@@ -1,4 +1,4 @@
-# $Id: components.py 8603 2021-01-08 15:24:32Z milde $
+# $Id: components.py 8766 2021-06-17 14:33:09Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -32,13 +32,18 @@ class Filter(Transform):
     ``details['nodes']`` (a list of nodes); otherwise, the "pending" element
     is removed.
 
-    For example, the reStructuredText "meta" directive creates a "pending"
-    element containing a "meta" element (in ``pending.details['nodes']``).
-    Only writers (``pending.details['component'] == 'writer'``) supporting the
-    "html", latex, or "odf" formats 
-    (``pending.details['format'] == 'html,latex,odf'``) will include the
-    "meta" element; it will be deleted from the output of all other writers.
+    For example, up to version 0.17, the reStructuredText "meta"
+    directive created a "pending" element containing a "meta" element
+    (in ``pending.details['nodes']``).
+    Only writers (``pending.details['component'] == 'writer'``)
+    supporting the "html", "latex", or "odf" formats 
+    (``pending.details['format'] == 'html,latex,odf'``) included the
+    "meta" element; it was deleted from the output of all other writers.
+    
+    This transform is no longer used by Docutils, it may be removed in future.
     """
+    # TODO: clean up or keep this for 3rd party (or possible future) use?
+    # (GM 2021-05-18)
 
     default_priority = 780
 

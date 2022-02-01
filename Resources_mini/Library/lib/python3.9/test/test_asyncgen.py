@@ -3,6 +3,7 @@ import types
 import unittest
 
 from test.support import import_module
+from test.support import gc_collect
 asyncio = import_module("asyncio")
 
 
@@ -659,6 +660,7 @@ class AsyncGenAsyncioTest(unittest.TestCase):
             await g.__anext__()
             await g.__anext__()
             del g
+            gc_collect()  # For PyPy or other GCs.
 
             await asyncio.sleep(0.1)
 
@@ -1074,6 +1076,84 @@ class AsyncGenAsyncioTest(unittest.TestCase):
         self.loop.run_until_complete(self.loop.shutdown_asyncgens())
 
         self.assertEqual(finalized, 2)
+
+    def test_async_gen_asyncio_shutdown_02(self):
+        messages = []
+
+        def exception_handler(loop, context):
+            messages.append(context)
+
+        async def async_iterate():
+            yield 1
+            yield 2
+
+        it = async_iterate()
+        async def main():
+            loop = asyncio.get_running_loop()
+            loop.set_exception_handler(exception_handler)
+
+            async for i in it:
+                break
+
+        asyncio.run(main())
+
+        self.assertEqual(messages, [])
+
+    def test_async_gen_asyncio_shutdown_exception_01(self):
+        messages = []
+
+        def exception_handler(loop, context):
+            messages.append(context)
+
+        async def async_iterate():
+            try:
+                yield 1
+                yield 2
+            finally:
+                1/0
+
+        it = async_iterate()
+        async def main():
+            loop = asyncio.get_running_loop()
+            loop.set_exception_handler(exception_handler)
+
+            async for i in it:
+                break
+
+        asyncio.run(main())
+
+        message, = messages
+        self.assertEqual(message['asyncgen'], it)
+        self.assertIsInstance(message['exception'], ZeroDivisionError)
+        self.assertIn('an error occurred during closing of asynchronous generator',
+                      message['message'])
+
+    def test_async_gen_asyncio_shutdown_exception_02(self):
+        messages = []
+
+        def exception_handler(loop, context):
+            messages.append(context)
+
+        async def async_iterate():
+            try:
+                yield 1
+                yield 2
+            finally:
+                1/0
+
+        async def main():
+            loop = asyncio.get_running_loop()
+            loop.set_exception_handler(exception_handler)
+
+            async for i in async_iterate():
+                break
+
+        asyncio.run(main())
+
+        message, = messages
+        self.assertIsInstance(message['exception'], ZeroDivisionError)
+        self.assertIn('unhandled exception during asyncio.run() shutdown',
+                      message['message'])
 
     def test_async_gen_expression_01(self):
         async def arange(n):

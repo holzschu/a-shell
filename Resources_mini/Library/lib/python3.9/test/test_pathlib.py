@@ -323,7 +323,7 @@ class _BasePurePathTest(object):
         self.assertFalse(P('b/py').match('b.py'))
         self.assertFalse(P('/a.py').match('b.py'))
         self.assertFalse(P('b.py/c').match('b.py'))
-        # Wilcard relative pattern.
+        # Wildcard relative pattern.
         self.assertTrue(P('b.py').match('*.py'))
         self.assertTrue(P('a/b.py').match('*.py'))
         self.assertTrue(P('/a/b.py').match('*.py'))
@@ -1248,19 +1248,35 @@ class PureWindowsPathTest(_BasePurePathTest, unittest.TestCase):
         self.assertIs(False, P('').is_reserved())
         self.assertIs(False, P('/').is_reserved())
         self.assertIs(False, P('/foo/bar').is_reserved())
-        self.assertIs(True, P('con').is_reserved())
-        self.assertIs(True, P('NUL').is_reserved())
-        self.assertIs(True, P('NUL.txt').is_reserved())
-        self.assertIs(True, P('com1').is_reserved())
-        self.assertIs(True, P('com9.bar').is_reserved())
-        self.assertIs(False, P('bar.com9').is_reserved())
-        self.assertIs(True, P('lpt1').is_reserved())
-        self.assertIs(True, P('lpt9.bar').is_reserved())
-        self.assertIs(False, P('bar.lpt9').is_reserved())
-        # Only the last component matters.
-        self.assertIs(False, P('c:/NUL/con/baz').is_reserved())
         # UNC paths are never reserved.
         self.assertIs(False, P('//my/share/nul/con/aux').is_reserved())
+        # Case-insensitive DOS-device names are reserved.
+        self.assertIs(True, P('nul').is_reserved())
+        self.assertIs(True, P('aux').is_reserved())
+        self.assertIs(True, P('prn').is_reserved())
+        self.assertIs(True, P('con').is_reserved())
+        self.assertIs(True, P('conin$').is_reserved())
+        self.assertIs(True, P('conout$').is_reserved())
+        # COM/LPT + 1-9 or + superscript 1-3 are reserved.
+        self.assertIs(True, P('COM1').is_reserved())
+        self.assertIs(True, P('LPT9').is_reserved())
+        self.assertIs(True, P('com\xb9').is_reserved())
+        self.assertIs(True, P('com\xb2').is_reserved())
+        self.assertIs(True, P('lpt\xb3').is_reserved())
+        # DOS-device name mataching ignores characters after a dot or
+        # a colon and also ignores trailing spaces.
+        self.assertIs(True, P('NUL.txt').is_reserved())
+        self.assertIs(True, P('PRN  ').is_reserved())
+        self.assertIs(True, P('AUX  .txt').is_reserved())
+        self.assertIs(True, P('COM1:bar').is_reserved())
+        self.assertIs(True, P('LPT9   :bar').is_reserved())
+        # DOS-device names are only matched at the beginning
+        # of a path component.
+        self.assertIs(False, P('bar.com9').is_reserved())
+        self.assertIs(False, P('bar.lpt9').is_reserved())
+        # Only the last path component matters.
+        self.assertIs(True, P('c:/baz/con/NUL').is_reserved())
+        self.assertIs(False, P('c:/NUL/con/baz').is_reserved())
 
 class PurePathTest(_BasePurePathTest, unittest.TestCase):
     cls = pathlib.PurePath
@@ -2427,13 +2443,21 @@ class PosixPathTest(_BasePathTest, unittest.TestCase):
             othername = username
             otherhome = userhome
 
+        fakename = 'fakeuser'
+        # This user can theoretically exist on a test runner. Create unique name:
+        try:
+            while pwd.getpwnam(fakename):
+                fakename += '1'
+        except KeyError:
+            pass  # Non-existent name found
+
         p1 = P('~/Documents')
-        p2 = P('~' + username + '/Documents')
-        p3 = P('~' + othername + '/Documents')
-        p4 = P('../~' + username + '/Documents')
-        p5 = P('/~' + username + '/Documents')
+        p2 = P(f'~{username}/Documents')
+        p3 = P(f'~{othername}/Documents')
+        p4 = P(f'../~{username}/Documents')
+        p5 = P(f'/~{username}/Documents')
         p6 = P('')
-        p7 = P('~fakeuser/Documents')
+        p7 = P(f'~{fakename}/Documents')
 
         with support.EnvironmentVarGuard() as env:
             env.pop('HOME', None)

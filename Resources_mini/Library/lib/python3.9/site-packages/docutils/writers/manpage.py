@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# $Id: manpage.py 8664 2021-04-04 18:48:10Z grubert $
+# $Id: manpage.py 8893 2021-11-18 19:09:57Z grubert $
 # Author: Engelbert Gruber <grubert@users.sourceforge.net>
 # Copyright: This module is put into the public domain.
 
@@ -216,7 +216,7 @@ class Translator(nodes.NodeVisitor):
         # Hopefully ``C`` courier too.
         self.defs = {
                 'indent': ('.INDENT %.1f\n', '.UNINDENT\n'),
-                'definition_list_item': ('.TP', ''),
+                'definition_list_item': ('.TP', ''), # paragraph with hanging tag
                 'field_name': ('.TP\n.B ', '\n'),
                 'literal': ('\\fB', '\\fP'),
                 'literal_block': ('.sp\n.nf\n.ft C\n', '\n.ft P\n.fi\n'),
@@ -290,6 +290,7 @@ class Translator(nodes.NodeVisitor):
             (u'\'', u'\\(aq'),
             (u'´', u"\\'"),
             (u'`', u'\\(ga'),
+            (u'"', u'\\(dq'),  # double quotes are a problem on macro lines
             ]
         for (in_char, out_markup) in replace_pairs:
             text = text.replace(in_char, out_markup)
@@ -450,7 +451,7 @@ class Translator(nodes.NodeVisitor):
         pass
 
     def visit_block_quote(self, node):
-        # BUG/HACK: indent always uses the _last_ indention,
+        # BUG/HACK: indent always uses the _last_ indentation,
         # thus we need two of them.
         self.indent(BLOCKQOUTE_INDENT)
         self.indent(0)
@@ -832,7 +833,7 @@ class Translator(nodes.NodeVisitor):
         self.body.append(self.defs['literal'][1])
 
     def visit_literal_block(self, node):
-        # BUG/HACK: indent always uses the _last_ indention,
+        # BUG/HACK: indent always uses the _last_ indentation,
         # thus we need two of them.
         self.indent(LITERAL_BLOCK_INDENT)
         self.indent(0)
@@ -902,7 +903,7 @@ class Translator(nodes.NodeVisitor):
         # options with parameter bold italic, .BI, -f file
         #
         # we do not know if .B or .BI
-        self.context.append('.B ')          # blind guess. Add blank for spinx see docutils/bugs/380
+        self.context.append('.B ')          # blind guess. Add blank for sphinx see docutils/bugs/380
         self.context.append(len(self.body)) # to be able to insert later
         self.context.append(0)              # option counter
 
@@ -997,6 +998,8 @@ class Translator(nodes.NodeVisitor):
         self.body.append(self.defs['reference'][0])
 
     def depart_reference(self, node):
+        # TODO check node text is different from refuri
+        #self.body.append("\n'UR " + node['refuri'] + "\n'UE\n")
         self.body.append(self.defs['reference'][1])
 
     def visit_revision(self, node):

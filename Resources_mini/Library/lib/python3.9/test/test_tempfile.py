@@ -60,6 +60,25 @@ class TestLowLevelInternals(unittest.TestCase):
     def test_infer_return_type_pathlib(self):
         self.assertIs(str, tempfile._infer_return_type(pathlib.Path('/')))
 
+    def test_infer_return_type_pathlike(self):
+        class Path:
+            def __init__(self, path):
+                self.path = path
+
+            def __fspath__(self):
+                return self.path
+
+        self.assertIs(str, tempfile._infer_return_type(Path('/')))
+        self.assertIs(bytes, tempfile._infer_return_type(Path(b'/')))
+        self.assertIs(str, tempfile._infer_return_type('', Path('')))
+        self.assertIs(bytes, tempfile._infer_return_type(b'', Path(b'')))
+        self.assertIs(bytes, tempfile._infer_return_type(None, Path(b'')))
+        self.assertIs(str, tempfile._infer_return_type(None, Path('')))
+
+        with self.assertRaises(TypeError):
+            tempfile._infer_return_type('', Path(b''))
+        with self.assertRaises(TypeError):
+            tempfile._infer_return_type(b'', Path(''))
 
 # Common functionality.
 
@@ -428,6 +447,7 @@ class TestMkstempInner(TestBadTempdir, BaseTestCase):
             self.do_create(dir=dir).write(b"blat")
             self.do_create(dir=pathlib.Path(dir)).write(b"blat")
         finally:
+            support.gc_collect()  # For PyPy or other GCs.
             os.rmdir(dir)
 
     def test_file_mode(self):
@@ -821,6 +841,8 @@ class TestMktemp(BaseTestCase):
         extant = list(range(TEST_FILES))
         for i in extant:
             extant[i] = self.do_create(pre="aa")
+        del extant
+        support.gc_collect()  # For PyPy or other GCs.
 
 ##     def test_warning(self):
 ##         # mktemp issues a warning when used

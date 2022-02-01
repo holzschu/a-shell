@@ -537,6 +537,26 @@ class CAPITest(unittest.TestCase):
         self.assertRaises(TypeError, pynumber_tobase, '123', 10)
         self.assertRaises(SystemError, pynumber_tobase, 123, 0)
 
+    def test_pyobject_repr_from_null(self):
+        s = _testcapi.pyobject_repr_from_null()
+        self.assertEqual(s, '<NULL>')
+
+    def test_pyobject_str_from_null(self):
+        s = _testcapi.pyobject_str_from_null()
+        self.assertEqual(s, '<NULL>')
+
+    def test_pyobject_bytes_from_null(self):
+        s = _testcapi.pyobject_bytes_from_null()
+        self.assertEqual(s, b'<NULL>')
+
+    def test_Py_CompileString(self):
+        # Check that Py_CompileString respects the coding cookie
+        _compile = _testcapi.Py_CompileString
+        code = b"# -*- coding: latin1 -*-\nprint('\xc2\xa4')\n"
+        result = _compile(code)
+        expected = compile(code, "<string>", "exec")
+        self.assertEqual(result.co_consts, expected.co_consts)
+
 
 class TestPendingCalls(unittest.TestCase):
 
@@ -553,11 +573,11 @@ class TestPendingCalls(unittest.TestCase):
             #unsuccessful.
             while True:
                 if _testcapi._pending_threadfunc(callback):
-                    break;
+                    break
 
     def pendingcalls_wait(self, l, n, context = None):
         #now, stick around until l[0] has grown to 10
-        count = 0;
+        count = 0
         while len(l) != n:
             #this busy loop is where we expect to be interrupted to
             #run our callbacks.  Note that callbacks are only run on the
@@ -668,6 +688,37 @@ class SubinterpreterTest(unittest.TestCase):
 
         self.assertFalse(hasattr(binascii.Error, "foobar"))
 
+    def test_module_state_shared_in_global(self):
+        """
+        bpo-44050: Extension module state should be shared between interpreters
+        when it doesn't support sub-interpreters.
+        """
+        r, w = os.pipe()
+        self.addCleanup(os.close, r)
+        self.addCleanup(os.close, w)
+
+        script = textwrap.dedent(f"""
+            import importlib.machinery
+            import importlib.util
+            import os
+
+            fullname = '_test_module_state_shared'
+            origin = importlib.util.find_spec('_testmultiphase').origin
+            loader = importlib.machinery.ExtensionFileLoader(fullname, origin)
+            spec = importlib.util.spec_from_loader(fullname, loader)
+            module = importlib.util.module_from_spec(spec)
+            attr_id = str(id(module.Error)).encode()
+
+            os.write({w}, attr_id)
+            """)
+        exec(script)
+        main_attr_id = os.read(r, 100)
+
+        ret = support.run_in_subinterp(script)
+        self.assertEqual(ret, 0)
+        subinterp_attr_id = os.read(r, 100)
+        self.assertEqual(main_attr_id, subinterp_attr_id)
+
 
 class TestThreadState(unittest.TestCase):
 
@@ -712,8 +763,13 @@ class PyMemDebugTests(unittest.TestCase):
 
     def check(self, code):
         with support.SuppressCrashReport():
-            out = assert_python_failure('-c', code,
-                                        PYTHONMALLOC=self.PYTHONMALLOC)
+            out = assert_python_failure(
+                '-c', code,
+                PYTHONMALLOC=self.PYTHONMALLOC,
+                # FreeBSD: instruct jemalloc to not fill freed() memory
+                # with junk byte 0x5a, see JEMALLOC(3)
+                MALLOC_CONF="junk:false",
+            )
         stderr = out.err
         return stderr.decode('ascii', 'replace')
 
@@ -783,7 +839,11 @@ class PyMemDebugTests(unittest.TestCase):
             except _testcapi.error:
                 os._exit(1)
         ''')
-        assert_python_ok('-c', code, PYTHONMALLOC=self.PYTHONMALLOC)
+        assert_python_ok(
+            '-c', code,
+            PYTHONMALLOC=self.PYTHONMALLOC,
+            MALLOC_CONF="junk:false",
+        )
 
     def test_pyobject_null_is_freed(self):
         self.check_pyobject_is_freed('check_pyobject_null_is_freed')

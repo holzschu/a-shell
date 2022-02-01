@@ -1,5 +1,7 @@
 from abc import abstractmethod
 from contextlib import contextmanager
+from pathlib import Path
+from typing import Optional
 
 from parso.tree import search_ancestor
 from parso.python.tree import Name
@@ -255,8 +257,7 @@ class TreeContextMixin:
             if scope_node.type in ('funcdef', 'lambdef', 'classdef'):
                 return self.create_value(scope_node).as_context()
             elif scope_node.type in ('comp_for', 'sync_comp_for'):
-                parent_scope = parser_utils.get_parent_scope(scope_node)
-                parent_context = from_scope_node(parent_scope)
+                parent_context = from_scope_node(parent_scope(scope_node.parent))
                 if node.start_pos >= scope_node.children[-1].start_pos:
                     return parent_context
                 return CompForContext(parent_context, scope_node)
@@ -308,8 +309,8 @@ class FunctionContext(TreeContextMixin, ValueContext):
 
 
 class ModuleContext(TreeContextMixin, ValueContext):
-    def py__file__(self):
-        return self._value.py__file__()
+    def py__file__(self) -> Optional[Path]:
+        return self._value.py__file__()  # type: ignore[no-any-return]
 
     def get_filters(self, until_position=None, origin_scope=None):
         filters = self._value.get_filters(origin_scope)
@@ -326,7 +327,7 @@ class ModuleContext(TreeContextMixin, ValueContext):
         yield from filters
 
     def get_global_filter(self):
-        return GlobalNameFilter(self, self.tree_node)
+        return GlobalNameFilter(self)
 
     @property
     def string_names(self):
@@ -356,8 +357,8 @@ class NamespaceContext(TreeContextMixin, ValueContext):
     def string_names(self):
         return self._value.string_names
 
-    def py__file__(self):
-        return self._value.py__file__()
+    def py__file__(self) -> Optional[Path]:
+        return self._value.py__file__()  # type: ignore[no-any-return]
 
 
 class ClassContext(TreeContextMixin, ValueContext):
@@ -406,8 +407,8 @@ class CompiledModuleContext(CompiledContext):
     def string_names(self):
         return self._value.string_names
 
-    def py__file__(self):
-        return self._value.py__file__()
+    def py__file__(self) -> Optional[Path]:
+        return self._value.py__file__()  # type: ignore[no-any-return]
 
 
 def _get_global_filters_for_name(context, name_or_none, position):

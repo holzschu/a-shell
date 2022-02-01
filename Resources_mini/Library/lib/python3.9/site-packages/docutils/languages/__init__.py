@@ -1,4 +1,4 @@
-# $Id: __init__.py 8467 2020-01-26 21:23:42Z milde $
+# $Id: __init__.py 8860 2021-10-22 16:39:59Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -30,7 +30,7 @@ class LanguageImporter(object):
     warn_msg = ('Language "%s" not supported: '
                 'Docutils-generated text will be in English.')
     fallback = 'en'
-    # TODO: use a dummy module returning emtpy strings?, configurable?
+    # TODO: use a dummy module returning empty strings?, configurable?
 
     def __init__(self):
         self.cache = {}

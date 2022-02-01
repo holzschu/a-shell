@@ -207,7 +207,18 @@ class AsyncContextManagerTestCase(unittest.TestCase):
         async def woohoo():
             yield
 
-        for stop_exc in (StopIteration('spam'), StopAsyncIteration('ham')):
+        class StopIterationSubclass(StopIteration):
+            pass
+
+        class StopAsyncIterationSubclass(StopAsyncIteration):
+            pass
+
+        for stop_exc in (
+            StopIteration('spam'),
+            StopAsyncIteration('ham'),
+            StopIterationSubclass('spam'),
+            StopAsyncIterationSubclass('spam')
+        ):
             with self.subTest(type=type(stop_exc)):
                 try:
                     async with woohoo():
@@ -451,6 +462,41 @@ class TestAsyncExitStack(TestBaseExitStack, unittest.TestCase):
         inner_exc = saved_details[1]
         self.assertIsInstance(inner_exc, ValueError)
         self.assertIsInstance(inner_exc.__context__, ZeroDivisionError)
+
+    @_async_test
+    async def test_async_exit_exception_explicit_none_context(self):
+        # Ensure AsyncExitStack chaining matches actual nested `with` statements
+        # regarding explicit __context__ = None.
+
+        class MyException(Exception):
+            pass
+
+        @asynccontextmanager
+        async def my_cm():
+            try:
+                yield
+            except BaseException:
+                exc = MyException()
+                try:
+                    raise exc
+                finally:
+                    exc.__context__ = None
+
+        @asynccontextmanager
+        async def my_cm_with_exit_stack():
+            async with self.exit_stack() as stack:
+                await stack.enter_async_context(my_cm())
+                yield stack
+
+        for cm in (my_cm, my_cm_with_exit_stack):
+            with self.subTest():
+                try:
+                    async with cm():
+                        raise IndexError()
+                except MyException as exc:
+                    self.assertIsNone(exc.__context__)
+                else:
+                    self.fail("Expected IndexError, but no exception was raised")
 
 
 if __name__ == '__main__':

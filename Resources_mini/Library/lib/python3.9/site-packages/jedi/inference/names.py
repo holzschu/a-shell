@@ -340,7 +340,13 @@ class TreeNameDefinition(AbstractTreeName):
     @inference_state_method_cache(default='')
     def py__doc__(self):
         api_type = self.api_type
-        if api_type in ('function', 'class'):
+        if api_type in ('function', 'class', 'property'):
+            if self.parent_context.get_root_context().is_stub():
+                from jedi.inference.gradual.conversion import convert_names
+                names = convert_names([self], prefer_stub_to_compiled=False)
+                if self not in names:
+                    return _merge_name_docs(names)
+
             # Make sure the names are not TreeNameDefinitions anymore.
             return clean_scope_docstring(self.tree_name.get_definition())
 
@@ -407,6 +413,9 @@ class ParamNameInterface(_ParamMixin):
         if kind == Parameter.VAR_KEYWORD:
             return 2
         return 0
+
+    def infer_default(self):
+        return NO_VALUES
 
 
 class BaseTreeParamName(ParamNameInterface, AbstractTreeName):

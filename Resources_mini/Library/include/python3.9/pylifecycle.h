@@ -10,6 +10,9 @@ extern "C" {
 
 /* Initialization and finalization */
 PyAPI_FUNC(void) Py_Initialize(void);
+#if TARGET_OS_IPHONE
+PyAPI_FUNC(void) Py_InitializeWithName(char*);
+#endif
 PyAPI_FUNC(void) Py_InitializeEx(int);
 PyAPI_FUNC(void) Py_Finalize(void);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03060000

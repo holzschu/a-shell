@@ -1,5 +1,4 @@
 """A set of basic callbacks for bleach.linkify."""
-from __future__ import unicode_literals
 
 
 def nofollow(attrs, new=False):

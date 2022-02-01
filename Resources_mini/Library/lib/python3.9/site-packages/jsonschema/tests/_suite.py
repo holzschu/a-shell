@@ -3,6 +3,7 @@ Python representations of the JSON Schema Test Suite tests.
 """
 
 from functools import partial
+from pathlib import Path
 import json
 import os
 import re
@@ -10,21 +11,19 @@ import subprocess
 import sys
 import unittest
 
-from twisted.python.filepath import FilePath
 import attr
 
-from jsonschema.compat import PY3
-from jsonschema.validators import validators
+from jsonschema.validators import _VALIDATORS
 import jsonschema
 
 
 def _find_suite():
     root = os.environ.get("JSON_SCHEMA_TEST_SUITE")
     if root is not None:
-        return FilePath(root)
+        return Path(root)
 
-    root = FilePath(jsonschema.__file__).parent().sibling("json")
-    if not root.isdir():  # pragma: no cover
+    root = Path(jsonschema.__file__).parent.parent / "json"
+    if not root.is_dir():  # pragma: no cover
         raise ValueError(
             (
                 "Can't find the JSON-Schema-Test-Suite directory. "
@@ -42,23 +41,26 @@ class Suite(object):
     _root = attr.ib(default=attr.Factory(_find_suite))
 
     def _remotes(self):
-        jsonschema_suite = self._root.descendant(["bin", "jsonschema_suite"])
+        jsonschema_suite = self._root.joinpath("bin", "jsonschema_suite")
         remotes = subprocess.check_output(
-            [sys.executable, jsonschema_suite.path, "remotes"],
+            [sys.executable, str(jsonschema_suite), "remotes"],
         )
         return {
-            "http://localhost:1234/" + name: schema
+            "http://localhost:1234/" + name.replace("\\", "/"): schema
             for name, schema in json.loads(remotes.decode("utf-8")).items()
         }
 
     def benchmark(self, runner):  # pragma: no cover
-        for name in validators:
-            self.version(name=name).benchmark(runner=runner)
+        for name, Validator in _VALIDATORS.items():
+            self.version(name=name).benchmark(
+                runner=runner,
+                Validator=Validator,
+            )
 
     def version(self, name):
         return Version(
             name=name,
-            path=self._root.descendant(["tests", name]),
+            path=self._root.joinpath("tests", name),
             remotes=self._remotes(),
         )
 
@@ -82,38 +84,32 @@ class Version(object):
     def tests(self):
         return (
             test
-            for child in self._path.globChildren("*.json")
+            for child in self._path.glob("*.json")
             for test in self._tests_in(
-                subject=child.basename()[:-5],
+                subject=child.name[:-5],
                 path=child,
             )
         )
 
     def format_tests(self):
-        path = self._path.descendant(["optional", "format"])
+        path = self._path.joinpath("optional", "format")
         return (
             test
-            for child in path.globChildren("*.json")
+            for child in path.glob("*.json")
             for test in self._tests_in(
-                subject=child.basename()[:-5],
+                subject=child.name[:-5],
                 path=child,
             )
-        )
-
-    def tests_of(self, name):
-        return self._tests_in(
-            subject=name,
-            path=self._path.child(name + ".json"),
         )
 
     def optional_tests_of(self, name):
         return self._tests_in(
             subject=name,
-            path=self._path.descendant(["optional", name + ".json"]),
+            path=self._path.joinpath("optional", name + ".json"),
         )
 
     def to_unittest_testcase(self, *suites, **kwargs):
-        name = kwargs.pop("name", "Test" + self.name.title())
+        name = kwargs.pop("name", "Test" + self.name.title().replace("-", ""))
         methods = {
             test.method_name: test.to_unittest_method(**kwargs)
             for suite in suites
@@ -133,7 +129,7 @@ class Version(object):
         return cls
 
     def _tests_in(self, subject, path):
-        for each in json.loads(path.getContent().decode("utf-8")):
+        for each in json.loads(path.read_text(encoding="utf-8")):
             yield (
                 _Test(
                     version=self,
@@ -141,7 +137,7 @@ class Version(object):
                     case_description=each["description"],
                     schema=each["schema"],
                     remotes=self._remotes,
-                    **test
+                    **test,
                 ) for test in each["tests"]
             )
 
@@ -162,6 +158,8 @@ class _Test(object):
 
     _remotes = attr.ib()
 
+    comment = attr.ib(default=None)
+
     def __repr__(self):  # pragma: no cover
         return "<Test {}>".format(self.fully_qualified_name)
 
@@ -173,21 +171,17 @@ class _Test(object):
                 self.subject,
                 self.case_description,
                 self.description,
-            ]
+            ],
         )
 
     @property
     def method_name(self):
         delimiters = r"[\W\- ]+"
-        name = "test_%s_%s_%s" % (
+        return "test_{}_{}_{}".format(
             re.sub(delimiters, "_", self.subject),
             re.sub(delimiters, "_", self.case_description),
             re.sub(delimiters, "_", self.description),
         )
-
-        if not PY3:  # pragma: no cover
-            name = name.encode("utf-8")
-        return name
 
     def to_unittest_method(self, skip=lambda test: None, **kwargs):
         if self.valid:
@@ -208,13 +202,8 @@ class _Test(object):
             store=self._remotes,
             id_of=Validator.ID_OF,
         )
-        jsonschema.validate(
-            instance=self.data,
-            schema=self.schema,
-            cls=Validator,
-            resolver=resolver,
-            **kwargs
-        )
+        validator = Validator(schema=self.schema, resolver=resolver, **kwargs)
+        validator.validate(instance=self.data)
 
     def validate_ignoring_errors(self, Validator):  # pragma: no cover
         try:

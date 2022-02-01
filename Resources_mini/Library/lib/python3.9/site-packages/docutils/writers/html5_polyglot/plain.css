@@ -2,7 +2,7 @@
 /* Rules for easy reading and pre-defined style variants.                  */
 /*                                                                         */
 /* :Author: Günter Milde, based on html4css1.css by David Goodger          */
-/* :Id: $Id: plain.css 8636 2021-03-19 00:23:33Z milde $                                                               */
+/* :Id: $Id: plain.css 8805 2021-08-10 14:13:35Z milde $                                                               */
 /* :Copyright: © 2015 Günter Milde.                                        */
 /* :License: Released under the terms of the `2-Clause BSD license`_,      */
 /*    in short:                                                            */
@@ -24,9 +24,10 @@
 body {
   margin: 0;
   background-color: #dbdbdb;
+  --field-indent: 9em; /* default indent of fields in field lists */
 }
 main, footer, header {
-  line-height:1.3;
+  line-height:1.6;
   /* avoid long lines --> better reading */
   /* optimum is 45…75 characters/line <http://webtypography.net/2.1.2> */
   /* OTOH: lines should not be too short because of missing hyphenation, */
@@ -44,6 +45,21 @@ footer, header {
   border: none;
 }
 
+/* Table of Contents */
+ul.auto-toc > li > p {
+  padding-left: 1em;
+  text-indent: -1em;
+}
+nav.contents ul {
+  padding-left: 1em;
+}
+main > nav.contents ul ul ul ul:not(.auto-toc) {
+  list-style-type: '\2B29\ ';
+}
+main > nav.contents ul ul ul ul ul:not(.auto-toc) {
+  list-style-type: '\2B1D\ ';
+}
+
 /* Transitions */
 hr.docutils {
   width: 80%;
@@ -55,49 +71,56 @@ hr.docutils {
 /* Paragraphs */
 
 /* vertical space (parskip) */
-p, ol, ul, dl, li, dd,
+p, ol, ul, dl, li,
 div.line-block,
-div.topic,
+.footnote, .citation,
+div > math,
 table {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
 }
-p:first-child { margin-top: 0; }
-/* (:last-child is new in CSS 3) */
-p:last-child  { margin-bottom: 0; }
 
 h1, h2, h3, h4, h5, h6,
-dl > dd {
+dd, details > p:last-child {
   margin-bottom: 0.5em;
 }
 
 /* Lists */
 /* ===== */
 
-/* Separate list entries in compound lists */
-dl > dd, ol > li,
-
 /* Definition Lists */
 /* Indent lists nested in definition lists */
-/* (:only-child is new in CSS 3)           */
 dd > ul:only-child, dd > ol:only-child { padding-left: 1em; }
 
 /* Description Lists */
 /* styled like in most dictionaries, encyclopedias etc. */
+dl.description {
+  display: flow-root;
+}
 dl.description > dt {
   font-weight: bold;
   clear: left;
   float: left;
   margin: 0;
   padding: 0;
-  padding-right: 0.5em;
+  padding-right: 0.3em;
+}
+dl.description > dd:after {
+  display: table;
+  content: "";
+  clear: left; /* clearfix for empty descriptions */
 }
 
 /* Field Lists */
 
+dl.field-list > dd,
+dl.docinfo > dd {
+  margin-left: var(--field-indent); /* adapted in media queries or HTML */
+}
+
 /* example for custom field-name width */
 dl.field-list.narrow > dd {
-  margin-left: 5em;
+  --field-indent: 5em;
 }
 /* run-in: start field-body on same line after long field names */
 dl.field-list.run-in > dd p {
@@ -106,8 +129,8 @@ dl.field-list.run-in > dd p {
 
 /* Bibliographic Fields */
 
-/* generally, bibliographic fields use special definition list dl.docinfo */
-/* but dedication and abstract are placed into "topic" divs */
+/* generally, bibliographic fields use dl.docinfo */
+/* but dedication and abstract are placed into divs */
 div.abstract p.topic-title {
   text-align: center;
 }
@@ -120,6 +143,10 @@ div.dedication p.topic-title {
   font-style: normal;
 }
 
+/* disclosures */
+details { padding-left: 1em; }
+summary { margin-left: -1em; }
+
 /* Text Blocks */
 /* =========== */
 
@@ -129,14 +156,10 @@ pre.math, pre.code {
   font-family: monospace;
 }
 
-/* Block Quotes */
-blockquote > table,
-div.topic > table {
-  margin-top: 0;
-  margin-bottom: 0;
-}
+/* Block Quotes and Topics */
+bockquote { margin: 1em 2em; }
 blockquote p.attribution,
-div.topic p.attribution {
+.topic p.attribution {
   text-align: right;
   margin-left: 20%;
 }
@@ -176,10 +199,17 @@ table.numbered > caption:before {
 /* ----------------------- */
 
 /* line on the left */
-dl.footnote {
-  padding-left: 1ex;
-  border-left: solid;
-  border-left-width: thin;
+.footnote {
+  border-left: solid thin;
+  padding-left: 2.1em;
+  margin-bottom: 0;
+}
+.footnote + .footnote {
+  padding-top: 0.5em;
+  margin-top: 0;
+}
+.footnote.superscript {
+  padding-left: 1.2em;
 }
 
 /* Directives */
@@ -233,10 +263,13 @@ div.error {
 aside.sidebar {
   width: 30%;
   max-width: 26em;
+  float: right;
+  clear: right;
   margin-left: 1em;
-  margin-right: -2%;
-  background-color: #ffffee;
+  margin-right: -1%;
+  background-color: #fffffa;
 }
+
 
 /* Code */
 pre.code { padding: 0.7ex }
@@ -251,7 +284,13 @@ pre.code .deleted, code .deleted { background-color: #DEB0A1}
 pre.code .inserted, code .inserted { background-color: #A3D289}
 
 /* Math */
-/* styled separately (see math.css for math-output=HTML) */
+/* for math-output=MathML (for math-output=HTML, see math.css) */
+math .boldsymbol {
+  font-weight: bold;
+}
+mstyle.mathscr, mi.mathscr {
+  font-family: STIX;
+}
 
 /* Epigraph           */
 /* Highlights         */
@@ -261,6 +300,8 @@ pre.code .inserted, code .inserted { background-color: #A3D289}
 
 /* Inline Markup */
 /* ============= */
+
+sup, sub { line-height: 0.8; } /* do not add leading for lines with sup/sub */
 
 /* Inline Literals                                          */
 /* possible values: normal, nowrap, pre, pre-wrap, pre-line */
@@ -274,6 +315,6 @@ a { text-decoration: none; }
 /* Internal Targets       */
 /*   span.target.internal */
 /* Footnote References    */
-/*   a.footnote-reference */
+/*   a[role="doc-noteref"] */
 /* Citation References    */
 /*   a.citation-reference */

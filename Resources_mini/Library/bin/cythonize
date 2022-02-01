@@ -1,10 +1,10 @@
 #!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.9
-# EASY-INSTALL-ENTRY-SCRIPT: 'Cython==0.29.21','console_scripts','cythonize'
+# EASY-INSTALL-ENTRY-SCRIPT: 'Cython==0.29.24','console_scripts','cythonize'
 import re
 import sys
 
 # for compatibility with easy_install; see #2198
-__requires__ = 'Cython==0.29.21'
+__requires__ = 'Cython==0.29.24'
 
 try:
     from importlib.metadata import distribution
@@ -30,4 +30,4 @@ globals().setdefault('load_entry_point', importlib_load_entry_point)
 
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
-    sys.exit(load_entry_point('Cython==0.29.21', 'console_scripts', 'cythonize')())
+    sys.exit(load_entry_point('Cython==0.29.24', 'console_scripts', 'cythonize')())

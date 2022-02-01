@@ -1,4 +1,4 @@
-# $Id: states.py 8587 2020-12-09 15:33:58Z milde $
+# $Id: states.py 8885 2021-11-11 16:29:16Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -328,7 +328,7 @@ class RSTState(StateWS):
 
     def check_subsection(self, source, style, lineno):
         """
-        Check for a valid subsection header.  Return 1 (true) or None (false).
+        Check for a valid subsection header.  Return True or False.
 
         When a new section is reached that isn't a subsection of the current
         section, back up the line count (use ``previous_line(-x)``), then
@@ -350,10 +350,10 @@ class RSTState(StateWS):
         except ValueError:              # new title style
             if len(title_styles) == memo.section_level: # new subsection
                 title_styles.append(style)
-                return 1
+                return True
             else:                       # not at lowest level
                 self.parent += self.title_inconsistent(source, lineno)
-                return None
+                return False
         if level <= mylevel:            # sibling or supersection
             memo.section_level = level   # bubble up to parent section
             if len(style) == 2:
@@ -362,10 +362,10 @@ class RSTState(StateWS):
             self.state_machine.previous_line(len(style) + 1)
             raise EOFError              # let parent section re-evaluate
         if level == mylevel + 1:        # immediate subsection
-            return 1
+            return True
         else:                           # invalid subsection
             self.parent += self.title_inconsistent(source, lineno)
-            return None
+            return False
 
     def title_inconsistent(self, sourcetext, lineno):
         error = self.reporter.severe(
@@ -626,6 +626,9 @@ class Inliner(object):
         check it for validity.  If not found or invalid, generate a warning
         and ignore the start-string.  Implicit inline markup (e.g. standalone
         URIs) is found last.
+
+        :text: source string
+        :lineno: absolute line number (cf. statemachine.get_source_and_line())
         """
         self.reporter = memo.reporter
         self.document = memo.document
@@ -1043,7 +1046,7 @@ class Inliner(object):
                             self.implicit_inline(text[match.end():], lineno))
                 except MarkupMismatch:
                     pass
-        return [nodes.Text(text, unescape(text, True))]
+        return [nodes.Text(text)]
 
     dispatch = {'*': emphasis,
                 '**': strong,
@@ -1171,17 +1174,19 @@ class Body(RSTState):
     def block_quote(self, indented, line_offset):
         elements = []
         while indented:
+            blockquote = nodes.block_quote(rawsource='\n'.join(indented))
+            (blockquote.source, blockquote.line) = \
+              self.state_machine.get_source_and_line(line_offset+1)
             (blockquote_lines,
              attribution_lines,
              attribution_offset,
              indented,
              new_line_offset) = self.split_attribution(indented, line_offset)
-            blockquote = nodes.block_quote()
             self.nested_parse(blockquote_lines, line_offset, blockquote)
             elements.append(blockquote)
             if attribution_lines:
                 attribution, messages = self.parse_attribution(
-                    attribution_lines, attribution_offset)
+                    attribution_lines, line_offset+attribution_offset)
                 blockquote += attribution
                 elements += messages
             line_offset = new_line_offset
@@ -1203,8 +1208,8 @@ class Body(RSTState):
         * Every line after that must have consistent indentation.
         * Attributions must be preceded by block quote content.
 
-        Return a tuple of: (block quote content lines, content offset,
-        attribution lines, attribution offset, remaining indented lines).
+        Return a tuple of: (block quote content lines, attribution lines,
+        attribution offset, remaining indented lines, remaining lines offset).
         """
         blank = None
         nonblank_seen = False
@@ -1251,7 +1256,7 @@ class Body(RSTState):
 
     def parse_attribution(self, indented, line_offset):
         text = '\n'.join(indented).rstrip()
-        lineno = self.state_machine.abs_line_number() + line_offset
+        lineno = 1 + line_offset # line_offset is zero-based
         textnodes, messages = self.inline_text(text, lineno)
         node = nodes.attribution(text, '', *textnodes)
         node.source, node.line = self.state_machine.get_source_and_line(lineno)
@@ -2059,7 +2064,7 @@ class Body(RSTState):
                 del substitution_node[i]
             else:
                 i += 1
-        for node in substitution_node.traverse(nodes.Element):
+        for node in substitution_node.findall(nodes.Element):
             if self.disallowed_inside_substitution_definitions(node):
                 pformat = nodes.literal_block('', node.pformat().rstrip())
                 msg = self.reporter.error(
@@ -2283,9 +2288,14 @@ class Body(RSTState):
         return [error], blank_finish
 
     def comment(self, match):
-        if not match.string[match.end():].strip() \
-              and self.state_machine.is_next_line_blank(): # an empty comment?
-            return [nodes.comment()], 1 # "A tiny but practical wart."
+        if self.state_machine.is_next_line_blank():
+            first_comment_line = match.string[match.end():]
+            if not first_comment_line.strip(): # empty comment
+                return [nodes.comment()], True # "A tiny but practical wart."
+            if first_comment_line.startswith('end of inclusion from "'):
+                # cf. parsers.rst.directives.misc.Include
+                self.document.include_log.pop()
+                return [], True
         indented, indent, offset, blank_finish = \
               self.state_machine.get_first_known_indented(match.end())
         while indented and not indented[-1].strip():
@@ -2699,7 +2709,7 @@ class Text(RSTState):
 
     def blank(self, match, context, next_state):
         """End of paragraph."""
-        # NOTE: self.paragraph returns [ node, system_message(s) ], literalnext
+        # NOTE: self.paragraph returns [node, system_message(s)], literalnext
         paragraph, literalnext = self.paragraph(
               context, self.state_machine.abs_line_number() - 1)
         self.parent += paragraph

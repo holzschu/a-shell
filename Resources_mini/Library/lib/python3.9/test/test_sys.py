@@ -219,7 +219,7 @@ class SysModuleTest(unittest.TestCase):
         def f():
             f()
         try:
-            for depth in (50, 75, 100, 250, 1000):
+            for depth in (10, 25, 50, 75, 100, 250, 1000):
                 try:
                     sys.setrecursionlimit(depth)
                 except RecursionError:
@@ -229,17 +229,17 @@ class SysModuleTest(unittest.TestCase):
 
                 # Issue #5392: test stack overflow after hitting recursion
                 # limit twice
-                with self.assertRaises(RecursionError):
-                    f()
-                with self.assertRaises(RecursionError):
-                    f()
+                self.assertRaises(RecursionError, f)
+                self.assertRaises(RecursionError, f)
         finally:
             sys.setrecursionlimit(oldlimit)
 
     @test.support.cpython_only
     def test_setrecursionlimit_recursion_depth(self):
         # Issue #25274: Setting a low recursion limit must be blocked if the
-        # current recursion depth is already higher than limit.
+        # current recursion depth is already higher than the "lower-water
+        # mark". Otherwise, it may not be possible anymore to
+        # reset the overflowed flag to 0.
 
         from _testinternalcapi import get_recursion_depth
 
@@ -377,7 +377,7 @@ class SysModuleTest(unittest.TestCase):
         self.assertTrue(frame is sys._getframe())
 
         # Verify that the captured thread frame is blocked in g456, called
-        # from f123.  This is a litte tricky, since various bits of
+        # from f123.  This is a little tricky, since various bits of
         # threading.py are also in the thread's call stack.
         frame = d.pop(thread_id)
         stack = traceback.extract_stack(frame)
@@ -973,6 +973,20 @@ class UnraisableHookTest(unittest.TestCase):
                     self.assertIn("del is broken", report)
                 self.assertTrue(report.endswith("\n"))
 
+    def test_original_unraisablehook_exception_qualname(self):
+        class A:
+            class B:
+                class X(Exception):
+                    pass
+
+        with test.support.captured_stderr() as stderr, \
+             test.support.swap_attr(sys, 'unraisablehook',
+                                    sys.__unraisablehook__):
+                 expected = self.write_unraisable_exc(
+                     A.B.X(), "msg", "obj");
+        report = stderr.getvalue()
+        testName = 'test_original_unraisablehook_exception_qualname'
+        self.assertIn(f"{testName}.<locals>.A.B.X", report)
 
     def test_original_unraisablehook_wrong_type(self):
         exc = ValueError(42)
@@ -1417,6 +1431,21 @@ class SizeofTest(unittest.TestCase):
         self.assertIsNone(cur.firstiter)
         self.assertIsNone(cur.finalizer)
 
+    def test_changing_sys_stderr_and_removing_reference(self):
+        # If the default displayhook doesn't take a strong reference
+        # to sys.stderr the following code can crash. See bpo-43660
+        # for more details.
+        code = textwrap.dedent('''
+            import sys
+            class MyStderr:
+                def write(self, s):
+                    sys.stderr = None
+            sys.stderr = MyStderr()
+            1/0
+        ''')
+        rc, out, err = assert_python_failure('-c', code)
+        self.assertEqual(out, b"")
+        self.assertEqual(err, b"")
 
 if __name__ == "__main__":
     unittest.main()

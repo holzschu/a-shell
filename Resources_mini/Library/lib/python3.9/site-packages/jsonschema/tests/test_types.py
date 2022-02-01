@@ -1,15 +1,17 @@
 """
-Tests on the new type interface. The actual correctness of the type checking
-is handled in test_jsonschema_test_suite; these tests check that TypeChecker
-functions correctly and can facilitate extensions to type checking
+Tests for the `TypeChecker`-based type interface.
+
+The actual correctness of the type checking is handled in
+`test_jsonschema_test_suite`; these tests check that TypeChecker
+functions correctly at a more granular level.
 """
 from collections import namedtuple
 from unittest import TestCase
 
 from jsonschema import ValidationError, _validators
 from jsonschema._types import TypeChecker
-from jsonschema.exceptions import UndefinedTypeCheck
-from jsonschema.validators import Draft4Validator, extend
+from jsonschema.exceptions import UndefinedTypeCheck, UnknownType
+from jsonschema.validators import Draft202012Validator, extend
 
 
 def equals_2(checker, instance):
@@ -21,21 +23,9 @@ def is_namedtuple(instance):
 
 
 def is_object_or_named_tuple(checker, instance):
-    if Draft4Validator.TYPE_CHECKER.is_type(instance, "object"):
+    if Draft202012Validator.TYPE_CHECKER.is_type(instance, "object"):
         return True
     return is_namedtuple(instance)
-
-
-def coerce_named_tuple(fn):
-    def coerced(validator, value, instance, schema):
-        if is_namedtuple(instance):
-            instance = instance._asdict()
-        return fn(validator, value, instance, schema)
-    return coerced
-
-
-required = coerce_named_tuple(_validators.required)
-properties = coerce_named_tuple(_validators.properties)
 
 
 class TestTypeChecker(TestCase):
@@ -50,9 +40,16 @@ class TestTypeChecker(TestCase):
         )
 
     def test_is_unknown_type(self):
-        with self.assertRaises(UndefinedTypeCheck) as context:
+        with self.assertRaises(UndefinedTypeCheck) as e:
             TypeChecker().is_type(4, "foobar")
-        self.assertIn("foobar", str(context.exception))
+        self.assertIn(
+            "'foobar' is unknown to this type checker",
+            str(e.exception),
+        )
+        self.assertTrue(
+            e.exception.__suppress_context__,
+            msg="Expected the internal KeyError to be hidden.",
+        )
 
     def test_checks_can_be_added_at_init(self):
         checker = TypeChecker({"two": equals_2})
@@ -121,8 +118,8 @@ class TestCustomTypes(TestCase):
             return True
 
         CustomValidator = extend(
-            Draft4Validator,
-            type_checker=Draft4Validator.TYPE_CHECKER.redefine(
+            Draft202012Validator,
+            type_checker=Draft202012Validator.TYPE_CHECKER.redefine(
                 "integer", int_or_str_int,
             ),
         )
@@ -134,16 +131,22 @@ class TestCustomTypes(TestCase):
         with self.assertRaises(ValidationError):
             validator.validate(4.4)
 
+        with self.assertRaises(ValidationError):
+            validator.validate("foo")
+
     def test_object_can_be_extended(self):
         schema = {"type": "object"}
 
         Point = namedtuple("Point", ["x", "y"])
 
-        type_checker = Draft4Validator.TYPE_CHECKER.redefine(
-            u"object", is_object_or_named_tuple,
+        type_checker = Draft202012Validator.TYPE_CHECKER.redefine(
+            "object", is_object_or_named_tuple,
         )
 
-        CustomValidator = extend(Draft4Validator, type_checker=type_checker)
+        CustomValidator = extend(
+            Draft202012Validator,
+            type_checker=type_checker,
+        )
         validator = CustomValidator(schema)
 
         validator.validate(Point(x=4, y=5))
@@ -151,11 +154,14 @@ class TestCustomTypes(TestCase):
     def test_object_extensions_require_custom_validators(self):
         schema = {"type": "object", "required": ["x"]}
 
-        type_checker = Draft4Validator.TYPE_CHECKER.redefine(
-            u"object", is_object_or_named_tuple,
+        type_checker = Draft202012Validator.TYPE_CHECKER.redefine(
+            "object", is_object_or_named_tuple,
         )
 
-        CustomValidator = extend(Draft4Validator, type_checker=type_checker)
+        CustomValidator = extend(
+            Draft202012Validator,
+            type_checker=type_checker,
+        )
         validator = CustomValidator(schema)
 
         Point = namedtuple("Point", ["x", "y"])
@@ -170,12 +176,22 @@ class TestCustomTypes(TestCase):
             "properties": {"x": {"type": "integer"}},
         }
 
-        type_checker = Draft4Validator.TYPE_CHECKER.redefine(
-            u"object", is_object_or_named_tuple,
+        type_checker = Draft202012Validator.TYPE_CHECKER.redefine(
+            "object", is_object_or_named_tuple,
         )
 
+        def coerce_named_tuple(fn):
+            def coerced(validator, value, instance, schema):
+                if is_namedtuple(instance):
+                    instance = instance._asdict()
+                return fn(validator, value, instance, schema)
+            return coerced
+
+        required = coerce_named_tuple(_validators.required)
+        properties = coerce_named_tuple(_validators.properties)
+
         CustomValidator = extend(
-            Draft4Validator,
+            Draft202012Validator,
             type_checker=type_checker,
             validators={"required": required, "properties": properties},
         )
@@ -188,3 +204,14 @@ class TestCustomTypes(TestCase):
 
         with self.assertRaises(ValidationError):
             validator.validate(Point(x="not an integer", y=5))
+
+        # As well as still handle objects.
+        validator.validate({"x": 4, "y": 5})
+
+        with self.assertRaises(ValidationError):
+            validator.validate({"x": "not an integer", "y": 5})
+
+    def test_unknown_type(self):
+        with self.assertRaises(UnknownType) as e:
+            Draft202012Validator({}).is_type(12, "some unknown type")
+        self.assertIn("'some unknown type'", str(e.exception))

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# :Id: $Id: smartquotes.py 8679 2021-04-09 11:58:10Z grubert $
+# :Id: $Id: smartquotes.py 8860 2021-10-22 16:39:59Z milde $
 # :Copyright: © 2010 Günter Milde,
 #             original `SmartyPants`_: © 2003 John Gruber
 #             smartypants.py:          © 2004, 2007 Chad Miller
@@ -571,7 +571,7 @@ def educate_tokens(text_tokens, attr=default_smartypants_attr, language='en'):
 
     for (ttype, text) in text_tokens:
 
-        # skip HTML and/or XML tags as well as emtpy text tokens
+        # skip HTML and/or XML tags as well as empty text tokens
         # without updating the last character
         if ttype == 'tag' or not text:
             yield text
@@ -608,7 +608,7 @@ def educate_tokens(text_tokens, attr=default_smartypants_attr, language='en'):
             text = educateSingleBackticks(text, language)
 
         if do_quotes:
-            # Replace plain quotes in context to prevent converstion to
+            # Replace plain quotes in context to prevent conversion to
             # 2-character sequence in French.
             context = prev_token_last_char.replace('"', ';').replace("'", ';')
             text = educateQuotes(context+text, language)[1:]

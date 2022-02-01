@@ -18,7 +18,8 @@ from jedi.inference import imports
 from jedi.inference.base_value import ValueSet
 from jedi.inference.helpers import infer_call_of_leaf, parse_dotted_names
 from jedi.inference.context import get_global_filters
-from jedi.inference.value import TreeInstance, ModuleValue
+from jedi.inference.value import TreeInstance
+from jedi.inference.docstring_utils import DocstringModule
 from jedi.inference.names import ParamNameWrapper, SubModuleName
 from jedi.inference.gradual.conversion import convert_values, convert_names
 from jedi.parser_utils import cut_value_at_position
@@ -194,7 +195,6 @@ class Completion:
         - In args: */**: no completion
         - In params (also lambda): no completion before =
         """
-
         grammar = self._inference_state.grammar
         self.stack = stack = None
         self._position = (
@@ -277,6 +277,10 @@ class Completion:
                 )
             elif nonterminals[-1] in ('trailer', 'dotted_name') and nodes[-1] == '.':
                 dot = self._module_node.get_leaf_for_position(self._position)
+                if dot.type == "endmarker":
+                    # This is a bit of a weird edge case, maybe we can somehow
+                    # generalize this.
+                    dot = leaf.get_previous_leaf()
                 cached_name, n = self._complete_trailer(dot.get_previous_leaf())
                 completion_names += n
             elif self._is_parameter_completion():
@@ -462,12 +466,12 @@ class Completion:
 
     def _complete_code_lines(self, code_lines):
         module_node = self._inference_state.grammar.parse(''.join(code_lines))
-        module_value = ModuleValue(
-            self._inference_state,
-            module_node,
+        module_value = DocstringModule(
+            in_module_context=self._module_context,
+            inference_state=self._inference_state,
+            module_node=module_node,
             code_lines=code_lines,
         )
-        module_value.parent_context = self._module_context
         return Completion(
             self._inference_state,
             module_value.as_context(),
@@ -627,7 +631,7 @@ def search_in_module(inference_state, module_context, names, wanted_names,
         new_names = []
         for n in names:
             if s == n.string_name:
-                if n.tree_name is not None and n.api_type == 'module' \
+                if n.tree_name is not None and n.api_type in ('module', 'namespace') \
                         and ignore_imports:
                     continue
                 new_names += complete_trailer(

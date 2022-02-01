@@ -6,8 +6,6 @@
 extern "C" {
 #endif
 
-#include "cpython/initconfig.h"
-
 PyAPI_FUNC(int) _PyInterpreterState_RequiresIDRef(PyInterpreterState *);
 PyAPI_FUNC(void) _PyInterpreterState_RequireIDRef(PyInterpreterState *, int);
 
@@ -58,7 +56,8 @@ struct _ts {
     /* Borrowed reference to the current frame (it can be NULL) */
     PyFrameObject *frame;
     int recursion_depth;
-    int recursion_headroom; /* Allow 50 more calls to handle any errors. */
+    char overflowed; /* The stack has overflowed. Allow 50 more calls
+                        to handle the runtime error. */
     char recursion_critical; /* The current calls must not cause
                                 a stack overflow. */
     int stackcheck_counter;

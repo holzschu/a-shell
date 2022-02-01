@@ -15,6 +15,6 @@ if PY3:
         # environb will be unset under Windows, but then again we're not supposed to use it.
         environb = os.environb
 else:
-    text_type = unicode
+    text_type = unicode  # noqa: F821
     binary_type = str
     environb = os.environ
