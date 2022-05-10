@@ -1,12 +1,13 @@
-# $Id: TLConfig.pm 59225 2021-05-16 17:41:12Z karl $
+# $Id: TLConfig.pm 62232 2022-02-27 17:33:30Z karl $
 # TeXLive::TLConfig.pm - module exporting configuration values
-# Copyright 2007-2021 Norbert Preining
+# Copyright 2007-2022 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
+use strict; use warnings;
 package TeXLive::TLConfig;
 
-my $svnrev = '$Revision: 59225 $';
+my $svnrev = '$Revision: 62232 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -40,6 +41,7 @@ BEGIN {
     $TeXLiveURL
     @CriticalPackagesList
     $CriticalPackagesRegexp
+    @InstallExtraRequiredPackages
     $WindowsMainMenuName
     $RelocPrefix
     $RelocTree
@@ -60,12 +62,12 @@ BEGIN {
 
 # the year of our release, will be used in the location of the
 # network packages, and in menu names, and other places.
-$ReleaseYear = 2021;
+our $ReleaseYear = 2022;
 
 # users can upgrade from this year to the current year; might be the
 # same as the release year, or any number of releases earlier.
 # Generally not tested, but should be.
-$MinRelease = 2016;
+our $MinRelease = 2016;
 
 # Meta Categories do not ship files, but only call for other packages.
 our @MetaCategories = qw/Collection Scheme/;
@@ -119,6 +121,16 @@ our $CriticalPackagesRegexp = '^(texlive\.infra)';
 if ($^O =~ /^MSWin/i) {
   push (@CriticalPackagesList, "tlperl.win32");
   $CriticalPackagesRegexp = '^(texlive\.infra|tlperl\.win32$)';
+}
+
+
+# Extra package that are required for installation and installed
+# during the first run of the installer.
+# texlive-scripts are necessary for mktexlsr, updmap, fmtutil, ...
+# the installation cannot continue without those
+our @InstallExtraRequiredPackages = qw/texlive-scripts kpathsea hyphen-base/;
+if ($^O =~ /^MSWin/i) {
+  push @InstallExtraRequiredPackages, "luatex";
 }
 
 #
@@ -356,6 +368,12 @@ C<systems/texlive/tlnet/>.
 
 A list of all those packages which we do not update regularly since they
 are too central, currently texlive.infra and (for Windows) tlperl.win32.
+
+=item C<@TeXLive::TLConfig::InstallExtraRequiredPackages>
+
+A list of packages that are required in addition to those from
+C<@CriticalPackagesList> for the installer to be able to conclude
+installation.
 
 =item C<$TeXLive::TLConfig::RelocTree>
 

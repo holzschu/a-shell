@@ -2100,6 +2100,7 @@ sub read_map_files {
   #
   # read in the three basic fonts definition maps
   for my $m (qw/dvips35.map pdftex35.map ps2pk35.map/) {
+      my $fontname = $alldata->{'maps'}{$m}{'fullpath'};
     my $ret = read_map_file($alldata->{'maps'}{$m}{'fullpath'});
     my @ff = ();
     for my $font (keys %$ret) {
@@ -2165,7 +2166,7 @@ sub read_map_file {
     return;
   }
   @lines = <MF>;
-  close(MF);
+  close(MF); 
   chomp(@lines);
   my %data;
   for (@lines) {

@@ -1,4 +1,4 @@
-# $Id: TLWinGoo.pm 59225 2021-05-16 17:41:12Z karl $
+# $Id: TLWinGoo.pm 61372 2021-12-21 22:46:16Z karl $
 # TeXLive::TLWinGoo.pm - Windows goop.
 # Copyright 2008-2021 Siep Kroonenberg, Norbert Preining
 # This file is licensed under the GNU General Public License version 2
@@ -9,9 +9,11 @@
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
+#use strict; use warnings; notyet
+
 package TeXLive::TLWinGoo;
 
-my $svnrev = '$Revision: 59225 $';
+my $svnrev = '$Revision: 61372 $';
 my $_modulerevision;
 if ($svnrev =~ m/: ([0-9]+) /) {
   $_modulerevision = $1;
@@ -86,7 +88,7 @@ All exported functions return forward slashes.
 
 BEGIN {
   use Exporter;
-  use vars qw( @ISA @EXPORT $Registry);
+  use vars qw( @ISA @EXPORT @EXPORT_OK $Registry);
   @ISA = qw( Exporter );
   @EXPORT = qw(
     &is_ten
@@ -343,7 +345,7 @@ sub is_a_texdir {
   $sr =~ s/\\/\//g;
   $sr = $sr . '/' unless $sr =~ m!/$!;
   return 0 if index($d, $sr)==0;
-  foreach $p (qw(luatex.exe mktexlsr.exe pdftex.exe tex.exe xetex.exe)) {
+  foreach my $p (qw(luatex.exe mktexlsr.exe pdftex.exe tex.exe xetex.exe)) {
     return 1 if (-e $d.$p);
   }
   return 0;

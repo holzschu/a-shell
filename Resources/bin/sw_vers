@@ -1,4 +1,0 @@
-#! lua
--- Small script to make tlmgr happy
--- tlmgr calls "sw_vers -productVersion". We return the latest OSX version, for simplicity
-print("11.5.2")

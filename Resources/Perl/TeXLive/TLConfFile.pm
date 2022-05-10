@@ -1,14 +1,17 @@
-# $Id: TLConfFile.pm 59226 2021-05-16 18:22:05Z karl $
+# $Id: TLConfFile.pm 61253 2021-12-08 22:35:23Z karl $
 # TeXLive::TLConfFile.pm - reading and writing conf files
 # Copyright 2010-2021 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
+use strict;
+use warnings;
+
 package TeXLive::TLConfFile;
 
 use TeXLive::TLUtils;
 
-my $svnrev = '$Revision: 59226 $';
+my $svnrev = '$Revision: 61253 $';
 my $_modulerevision;
 if ($svnrev =~ m/: ([0-9]+) /) {
   $_modulerevision = $1;
@@ -23,13 +26,13 @@ sub new
 {
   my $class = shift;
   my ($fn, $cc, $sep, $typ) = @_;
-  my $self = {} ;
-  $self{'file'} = $fn;
-  $self{'cc'} = $cc;
-  $self{'sep'} = $sep;
+  my $self = () ;
+  $self->{'file'} = $fn;
+  $self->{'cc'} = $cc;
+  $self->{'sep'} = $sep;
   if (defined($typ)) {
     if ($typ eq 'last-win' || $typ eq 'first-win' || $typ eq 'multiple') {
-      $self{'type'} = $typ;
+      $self->{'type'} = $typ;
     } else {
       printf STDERR "Unknown type of conffile: $typ\n";
       printf STDERR "Should be one of: last-win first-win multiple\n";
@@ -37,7 +40,7 @@ sub new
     }
   } else {
     # default type for backward compatibility is last-win
-    $self{'type'} = 'last-win';
+    $self->{'type'} = 'last-win';
   }
   bless $self, $class;
   return $self->reparse;
@@ -49,20 +52,20 @@ sub reparse
   my %config = parse_config_file($self->file, $self->cc, $self->sep);
   my $lastkey = undef;
   my $lastkeyline = undef;
-  $self{'keyvalue'} = ();
-  $self{'confdata'} = \%config;
-  $self{'changed'} = 0;
+  $self->{'keyvalue'} = ();
+  $self->{'confdata'} = \%config;
+  $self->{'changed'} = 0;
   my $in_postcomment = 0;
   for my $i (0..$config{'lines'}) {
     if ($config{$i}{'type'} eq 'comment') {
       $lastkey = undef;
       $lastkeyline = undef;
-      $is_postcomment = 0;
+      $in_postcomment = 0;
     } elsif ($config{$i}{'type'} eq 'data') {
       $lastkey = $config{$i}{'key'};
       $lastkeyline = $i;
-      $self{'keyvalue'}{$lastkey}{$i}{'value'} = $config{$i}{'value'};
-      $self{'keyvalue'}{$lastkey}{$i}{'status'} = 'unchanged';
+      $self->{'keyvalue'}{$lastkey}{$i}{'value'} = $config{$i}{'value'};
+      $self->{'keyvalue'}{$lastkey}{$i}{'status'} = 'unchanged';
       if (defined($config{$i}{'postcomment'})) {
         $in_postcomment = 1;
       } else {
@@ -71,11 +74,11 @@ sub reparse
     } elsif ($config{$i}{'type'} eq 'empty') {
       $lastkey = undef;
       $lastkeyline = undef;
-      $is_postcomment = 0;
+      $in_postcomment = 0;
     } elsif ($config{$i}{'type'} eq 'continuation') {
       if (defined($lastkey)) {
         if (!$in_postcomment) {
-          $self{'keyvalue'}{$lastkey}{$lastkeyline}{'value'} .= 
+          $self->{'keyvalue'}{$lastkey}{$lastkeyline}{'value'} .= 
             $config{$i}{'value'};
         }
       }
@@ -90,45 +93,45 @@ sub reparse
 sub file
 {
   my $self = shift;
-  return($self{'file'});
+  return($self->{'file'});
 }
 sub cc
 {
   my $self = shift;
-  return($self{'cc'});
+  return($self->{'cc'});
 }
 sub sep
 {
   my $self = shift;
-  return($self{'sep'});
+  return($self->{'sep'});
 }
 sub type
 {
   my $self = shift;
-  return($self{'type'});
+  return($self->{'type'});
 }
 
 sub key_present
 {
   my ($self, $key) = @_;
-  return defined($self{'keyvalue'}{$key});
+  return defined($self->{'keyvalue'}{$key});
 }
 
 sub keys
 {
   my $self = shift;
-  return keys(%{$self{'keyvalue'}});
+  return keys(%{$self->{'keyvalue'}});
 }
 
 sub keyvaluehash
 {
   my $self = shift;
-  return \%{$self{'keyvalue'}};
+  return \%{$self->{'keyvalue'}};
 }
 sub confdatahash
 {
   my $self = shift;
-  return $self{'confdata'};
+  return $self->{'confdata'};
 }
 
 sub by_lnr
@@ -147,8 +150,8 @@ sub value
   my ($self, $key, $value, @restvals) = @_;
   my $t = $self->type;
   if (defined($value)) {
-    if (defined($self{'keyvalue'}{$key})) {
-      my @key_lines = sort by_lnr CORE::keys %{$self{'keyvalue'}{$key}};
+    if (defined($self->{'keyvalue'}{$key})) {
+      my @key_lines = sort by_lnr CORE::keys %{$self->{'keyvalue'}{$key}};
       if ($t eq 'multiple') {
         my @newval = ( $value, @restvals );
         my $newlen = $#newval;
@@ -156,7 +159,7 @@ sub value
         # we assign to the first n elements, delete superficial
         # or add new ones if necessary
         # $value should be a reference to an array of values
-        my $listp = $self{'keyvalue'}{$key};
+        my $listp = $self->{'keyvalue'}{$key};
         my $oldlen = $#key_lines;
         my $minlen = ($newlen < $oldlen ? $newlen : $oldlen);
         for my $i (0..$minlen) {
@@ -165,7 +168,7 @@ sub value
             if ($listp->{$key_lines[$i]}{'status'} ne 'new') {
               $listp->{$key_lines[$i]}{'status'} = 'changed';
             }
-            $self{'changed'} = 1;
+            $self->{'changed'} = 1;
           }
         }
         if ($minlen < $oldlen) {
@@ -174,7 +177,7 @@ sub value
           for my $i (($minlen+1)..$oldlen) {
             $listp->{$key_lines[$i]}{'status'} = 'deleted';
           }
-          $self{'changed'} = 1;
+          $self->{'changed'} = 1;
         }
         if ($minlen < $newlen) {
           # we have new values
@@ -188,41 +191,41 @@ sub value
             $listp->{$ll}{'value'} = $newval[$i];
             $ll--;
           }
-          $self{'changed'} = 1;
+          $self->{'changed'} = 1;
         }
       } else {
         # select element based on first-win or last-win type
         my $ll = $key_lines[($t eq 'first-win' ? 0 : $#key_lines)];
         #print "lastwin = $ll\n";
-        if ($self{'keyvalue'}{$key}{$ll}{'value'} ne $value) {
-          $self{'keyvalue'}{$key}{$ll}{'value'} = $value;
+        if ($self->{'keyvalue'}{$key}{$ll}{'value'} ne $value) {
+          $self->{'keyvalue'}{$key}{$ll}{'value'} = $value;
           # as long as the key/value pair is not new,
           # we set its status to changed
-          if ($self{'keyvalue'}{$key}{$ll}{'status'} ne 'new') {
-            $self{'keyvalue'}{$key}{$ll}{'status'} = 'changed';
+          if ($self->{'keyvalue'}{$key}{$ll}{'status'} ne 'new') {
+            $self->{'keyvalue'}{$key}{$ll}{'status'} = 'changed';
           }
-          $self{'changed'} = 1;
+          $self->{'changed'} = 1;
         }
       }
     } else { # all new key
       my @newval = ( $value, @restvals );
       my $newlen = $#newval;
       for my $i (0..$newlen) {
-        $self{'keyvalue'}{$key}{-($i+1)}{'value'} = $value;
-        $self{'keyvalue'}{$key}{-($i+1)}{'status'} = 'new';
+        $self->{'keyvalue'}{$key}{-($i+1)}{'value'} = $value;
+        $self->{'keyvalue'}{$key}{-($i+1)}{'status'} = 'new';
       }
-      $self{'changed'} = 1;
+      $self->{'changed'} = 1;
     }
   }
   # $self->dump_myself();
-  if (defined($self{'keyvalue'}{$key})) {
-    my @key_lines = sort by_lnr CORE::keys %{$self{'keyvalue'}{$key}};
+  if (defined($self->{'keyvalue'}{$key})) {
+    my @key_lines = sort by_lnr CORE::keys %{$self->{'keyvalue'}{$key}};
     if ($t eq 'first-win') {
-      return $self{'keyvalue'}{$key}{$key_lines[0]}{'value'};
+      return $self->{'keyvalue'}{$key}{$key_lines[0]}{'value'};
     } elsif ($t eq 'last-win') {
-      return $self{'keyvalue'}{$key}{$key_lines[$#key_lines]}{'value'};
+      return $self->{'keyvalue'}{$key}{$key_lines[$#key_lines]}{'value'};
     } elsif ($t eq 'multiple') {
-      return map { $self{'keyvalue'}{$key}{$_}{'value'} } @key_lines;
+      return map { $self->{'keyvalue'}{$key}{$_}{'value'} } @key_lines;
     } else {
       die "That should not happen: wrong type: $!";
     }
@@ -233,38 +236,38 @@ sub value
 sub delete_key
 {
   my ($self, $key) = @_;
-  %config = %{$self{'confdata'}};
-  if (defined($self{'keyvalue'}{$key})) {
-    for my $l (CORE::keys %{$self{'keyvalue'}{$key}}) {
-      $self{'keyvalue'}{$key}{$l}{'status'} = 'deleted';
+  my %config = %{$self->{'confdata'}};
+  if (defined($self->{'keyvalue'}{$key})) {
+    for my $l (CORE::keys %{$self->{'keyvalue'}{$key}}) {
+      $self->{'keyvalue'}{$key}{$l}{'status'} = 'deleted';
     }
-    $self{'changed'} = 1;
+    $self->{'changed'} = 1;
   }
 }
 
 sub rename_key
 {
   my ($self, $oldkey, $newkey) = @_;
-  %config = %{$self{'confdata'}};
+  my %config = %{$self->{'confdata'}};
   for my $i (0..$config{'lines'}) {
     if (($config{$i}{'type'} eq 'data') &&
         ($config{$i}{'key'} eq $oldkey)) {
       $config{$i}{'key'} = $newkey;
-      $self{'changed'} = 1;
+      $self->{'changed'} = 1;
     }
   }
-  if (defined($self{'keyvalue'}{$oldkey})) {
-    $self{'keyvalue'}{$newkey} = $self{'keyvalue'}{$oldkey};
-    delete $self{'keyvalue'}{$oldkey};
-    $self{'keyvalue'}{$newkey}{'status'} = 'changed';
-    $self{'changed'} = 1;
+  if (defined($self->{'keyvalue'}{$oldkey})) {
+    $self->{'keyvalue'}{$newkey} = $self->{'keyvalue'}{$oldkey};
+    delete $self->{'keyvalue'}{$oldkey};
+    $self->{'keyvalue'}{$newkey}{'status'} = 'changed';
+    $self->{'changed'} = 1;
   }
 }
 
 sub is_changed
 {
   my $self = shift;
-  return $self{'changed'};
+  return $self->{'changed'};
 }
 
 sub save
@@ -275,7 +278,7 @@ sub save
   # unless $outarg is defined or we are changed, return immediately
   return if (! ( defined($outarg) || $self->is_changed));
   #
-  %config = %{$self{'confdata'}};
+  my %config = %{$self->{'confdata'}};
   #
   # determine where to write to
   my $out = $outarg;
@@ -324,16 +327,16 @@ sub save
     } elsif ($config{$i}{'type'} eq 'data') {
       $current_key_value_is_changed = 0;
       # we have to check whether the original data has been changed!!
-      if ($self{'keyvalue'}{$config{$i}{'key'}}{$i}{'status'} eq 'changed') {
+      if ($self->{'keyvalue'}{$config{$i}{'key'}}{$i}{'status'} eq 'changed') {
         $current_key_value_is_changed = 1;
-        print $fhout "$config{$i}{'key'} $config{'sep'} $self{'keyvalue'}{$config{$i}{'key'}}{$i}{'value'}";
+        print $fhout "$config{$i}{'key'} $config{'sep'} $self->{'keyvalue'}{$config{$i}{'key'}}{$i}{'value'}";
         if (defined($config{$i}{'postcomment'})) {
           print $fhout $config{$i}{'postcomment'};
         }
         # if a value is changed, we do not print out multiline stuff
         # as keys are not split
         print $fhout "\n";
-      } elsif ($self{'keyvalue'}{$config{$i}{'key'}}{$i}{'status'} eq 'deleted') {
+      } elsif ($self->{'keyvalue'}{$config{$i}{'key'}}{$i}{'status'} eq 'deleted') {
         $current_key_value_is_changed = 1;
       } else {
         $current_key_value_is_changed = 0;
@@ -351,10 +354,10 @@ sub save
   }
   #
   # save new keys
-  for my $k (CORE::keys %{$self{'keyvalue'}}) {
-    for my $l (CORE::keys %{$self{'keyvalue'}{$k}}) {
-      if ($self{'keyvalue'}{$k}{$l}{'status'} eq 'new') {
-        print $fhout "$k $config{'sep'} $self{'keyvalue'}{$k}{$l}{'value'}\n";
+  for my $k (CORE::keys %{$self->{'keyvalue'}}) {
+    for my $l (CORE::keys %{$self->{'keyvalue'}{$k}}) {
+      if ($self->{'keyvalue'}{$k}{$l}{'status'} eq 'new') {
+        print $fhout "$k $config{'sep'} $self->{'keyvalue'}{$k}{$l}{'value'}\n";
       }
     }
   }
@@ -470,11 +473,10 @@ sub parse_config_file {
     # if we are still here, that means we cannot evaluate the config file
     # give a BIG FAT WARNING but save the line as comment and continue 
     # anyway
-    warn("WARNING WARNING WARNING\n");
-    warn("Cannot parse config file $file ($cc, $sep)\n");
-    warn("The following line (l.$l) seems to be wrong:\n");
+    my $userlineno = $l + 1; # one-based
+    warn("$0: WARNING: Cannot parse tlmgr config file ($cc, $sep)\n");
+    warn("$0: $file:$userlineno: treating this line as comment:\n");
     warn(">>> $data[$l]\n");
-    warn("We will treat this line as a comment!\n");
     $config{$l}{'type'} = 'comment';
     $config{$l}{'value'} = $data[$l];
   }
@@ -491,12 +493,12 @@ sub parse_config_file {
 sub dump_myself {
   my $self = shift;
   print "======== DUMPING SELF =============\n";
-  dump_config_data($self{'confdata'});
+  dump_config_data($self->{'confdata'});
   print "DUMPING KEY VALUES\n";
-  for my $k (CORE::keys %{$self{'keyvalue'}}) {
+  for my $k (CORE::keys %{$self->{'keyvalue'}}) {
     print "key = $k\n";
-    for my $l (sort CORE::keys %{$self{'keyvalue'}{$k}}) {
-      print "  line =$l= value =", $self{'keyvalue'}{$k}{$l}{'value'}, "= status =", $self{'keyvalue'}{$k}{$l}{'status'}, "=\n";
+    for my $l (sort CORE::keys %{$self->{'keyvalue'}{$k}}) {
+      print "  line =$l= value =", $self->{'keyvalue'}{$k}{$l}{'value'}, "= status =", $self->{'keyvalue'}{$k}{$l}{'status'}, "=\n";
     }
   }
   print "=========== END DUMP ==============\n";

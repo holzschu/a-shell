@@ -1,12 +1,14 @@
-# $Id: TLPaper.pm 59224 2021-05-16 16:50:31Z karl $
+# $Id: TLPaper.pm 61372 2021-12-21 22:46:16Z karl $
 # TeXLive::TLPaper.pm - query/modify paper sizes for our various programs
 # Copyright 2008-2021 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
+use strict; use warnings;
+
 package TeXLive::TLPaper;
 
-my $svnrev = '$Revision: 59224 $';
+my $svnrev = '$Revision: 61372 $';
 my $_modulerevision;
 if ($svnrev =~ m/: ([0-9]+) /) {
   $_modulerevision = $1;

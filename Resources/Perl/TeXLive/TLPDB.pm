@@ -1,12 +1,13 @@
-# $Id: TLPDB.pm 59225 2021-05-16 17:41:12Z karl $
+# $Id: TLPDB.pm 61372 2021-12-21 22:46:16Z karl $
 # TeXLive::TLPDB.pm - tlpdb plain text database files.
 # Copyright 2007-2021 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
+use strict; use warnings;
 package TeXLive::TLPDB;
 
-my $svnrev = '$Revision: 59225 $';
+my $svnrev = '$Revision: 61372 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -281,6 +282,7 @@ sub from_file {
   my $is_verified = 0;
   # do media detection
   my $rootpath = $self->root;
+  my $media;
   if ($rootpath =~ m,https?://|ftp://,) {
     $media = 'NET';
   } elsif ($rootpath =~ m,$TeXLive::TLUtils::SshURIRegex,) {
@@ -423,7 +425,7 @@ sub writeout {
     tlwarn("TLPDB: cannot writeout a virtual tlpdb\n");
     return 0;
   }
-  my $fd = (@_ ? $_[0] : STDOUT);
+  my $fd = (@_ ? $_[0] : *STDOUT);
   foreach (sort keys %{$self->{'tlps'}}) {
     TeXLive::TLUtils::dddebug("writeout: tlpname=$_  ",
                               $self->{'tlps'}{$_}->name, "\n");
@@ -990,7 +992,7 @@ available architectures as packages with revision number -1.
 
 sub generate_packagelist {
   my $self = shift;
-  my $fd = (@_ ? $_[0] : STDOUT);
+  my $fd = (@_ ? $_[0] : *STDOUT);
   foreach (sort $self->list_packages) {
     print $fd $self->get_package($_)->name, " ",
               $self->get_package($_)->revision, "\n";
@@ -1017,7 +1019,7 @@ sub generate_listfiles {
     $destdir = TeXLive::TLPDB->listdir;
   }
   foreach (sort $self->list_package) {
-    $tlp = $self->get_package($_);
+    my $tlp = $self->get_package($_);
     $self->_generate_listfile($tlp, $destdir);
   }
 }
@@ -1465,7 +1467,7 @@ sub sizes_of_packages_with_deps {
 sub _sizes_of_packages {
   my ($self, $with_deps, $opt_src, $opt_doc, $arch_list_ref, @packs) = @_;
   @packs || ( @packs = $self->list_packages() );
-  my @expacks;
+  my @exppacks;
   if ($with_deps) {
     # don't expand collection->collection dependencies
     #@exppacks = $self->expand_dependencies('-no-collections', $self, @packs);
@@ -1623,7 +1625,8 @@ sub install_package_files {
     my ($tlpobjfile, $anotherfile) = <$tmpdir/tlpkg/tlpobj/*.tlpobj>;
     if (defined($anotherfile)) {
       # we found several tlpobj files, that is not allowed, stop
-      tlwarn("TLPDB::install_package_files: several tlpobj files in $what in tlpkg/tlpobj/, stopping!\n");
+      tlwarn("TLPDB::install_package_files: several tlpobj files "
+             . "($tlpobjfile, $anotherfile) in tlpkg/tlpobj/, stopping!\n");
       next;
     }
     # - read the tlpobj from there
@@ -1651,8 +1654,10 @@ sub install_package_files {
     @installfiles = map { s!^$RelocPrefix/!!; $_; } @installfiles;
     # if the first argument of _install_data is scalar, it is the
     # place from where files should be installed
-    if (!_install_data ($tmpdir, \@installfiles, $reloc, \@installfiles, $self)) {
-      tlwarn("TLPDB::install_package_files: couldn't install $what!\n"); 
+    if (!_install_data ($tmpdir, \@installfiles, $reloc, \@installfiles,
+                        $self)) {
+      tlwarn("TLPDB::install_package_files: couldn't install_data files: "
+             . "@installfiles\n"); 
       next;
     }
     if ($reloc) {

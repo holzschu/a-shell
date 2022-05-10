@@ -79,6 +79,13 @@
 		<string>2346aAbBcCdDeEfgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwxXYyz#</string>
 		<string>file</string>
 	</array>
+	<key>dash</key>
+	<array>
+		<string>dash.framework/dash</string>
+		<string>main</string>
+		<string>efIimnsxvVECabu</string>
+		<string>file</string>
+	</array>
 	<key>date</key>
 	<array>
 		<string>shell.framework/shell</string>
@@ -953,6 +960,20 @@
 		<string>main</string>
 		<string></string>
 		<string>none</string>
+	</array>
+	<key>xcode-select</key>
+	<array>
+		<string>SELF</string>
+		<string>xcode_select</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>sw_vers</key>
+	<array>
+		<string>SELF</string>
+		<string>sw_vers</string>
+		<string></string>
+		<string>no</string>
 	</array>
 </dict>
 </plist>

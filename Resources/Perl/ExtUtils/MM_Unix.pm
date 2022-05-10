@@ -2106,6 +2106,9 @@ sub init_PERL {
     # XXX This logic is flawed.  If "miniperl" is anywhere in the path
     # it will get confused.  It should be fixed to work only on the filename.
     # Define 'FULLPERL' to be a non-miniperl (used in test: target)
+	# iOS: for some reason, we get "undefined" below. Make sure we store PERL as perl:
+	$self->{FULLPERL} = "perl";
+	$self->{PERL} = "perl";
     unless ($self->{FULLPERL}) {
       ($self->{FULLPERL} = $self->{PERL}) =~ s/\Q$miniperl\E$/$perl_name$Config{exe_ext}/i;
       $self->{FULLPERL} = qq{"$self->{FULLPERL}"}.$perlflags;

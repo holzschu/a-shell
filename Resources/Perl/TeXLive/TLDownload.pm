@@ -1,15 +1,17 @@
-# $Id: TLDownload.pm 59224 2021-05-16 16:50:31Z karl $
+# $Id: TLDownload.pm 61372 2021-12-21 22:46:16Z karl $
 # TeXLive::TLDownload.pm - module for abstracting the download modes
 # Copyright 2009-2021 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
+
+use strict; use warnings;
 
 package TeXLive::TLDownload;
 
 use TeXLive::TLUtils;
 use TeXLive::TLConfig;
 
-my $svnrev = '$Revision: 59224 $';
+my $svnrev = '$Revision: 61372 $';
 my $_modulerevision;
 if ($svnrev =~ m/: ([0-9]+) /) {
   $_modulerevision = $1;

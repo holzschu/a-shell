@@ -169,7 +169,8 @@ use overload '""' => "STRINGIFY", '0+' => "NUMIFY",
   fallback => 1;
 
 our $DEBUG = 0;
-our $KEEP_ALL = 0;
+# iOS, debug:
+our $KEEP_ALL = 1; 
 
 # We are exporting functions
 

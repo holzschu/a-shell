@@ -1,12 +1,14 @@
-# $Id: TLTREE.pm 59226 2021-05-16 18:22:05Z karl $
+# $Id: TLTREE.pm 61372 2021-12-21 22:46:16Z karl $
 # TeXLive::TLTREE.pm - work with the tree of all files
 # Copyright 2007-2021 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
+use strict; use warnings;
+
 package TeXLive::TLTREE;
 
-my $svnrev = '$Revision: 59226 $';
+my $svnrev = '$Revision: 61372 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 

@@ -1,10 +1,12 @@
-# $Id: TeXCatalogue.pm 59226 2021-05-16 18:22:05Z karl $
+# $Id: TeXCatalogue.pm 61372 2021-12-21 22:46:16Z karl $
 # TeXLive::TeXCatalogue - module for accessing the TeX Catalogue
 # Copyright 2007-2021 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 # 
 # Loads of code adapted from the catalogue checking script of Robin Fairbairns.
+
+use strict; use warnings;
 
 use XML::Parser;
 use XML::XPath;
@@ -13,7 +15,7 @@ use Text::Unidecode;
 
 package TeXLive::TeXCatalogue::Entry;
 
-my $svnrev = '$Revision: 59226 $';
+my $svnrev = '$Revision: 61372 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 

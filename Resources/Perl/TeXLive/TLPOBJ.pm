@@ -1,12 +1,14 @@
-# $Id: TLPOBJ.pm 59226 2021-05-16 18:22:05Z karl $
+# $Id: TLPOBJ.pm 61372 2021-12-21 22:46:16Z karl $
 # TeXLive::TLPOBJ.pm - module for using tlpobj files
 # Copyright 2007-2021 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
+use strict; use warnings;
+
 package TeXLive::TLPOBJ;
 
-my $svnrev = '$Revision: 59226 $';
+my $svnrev = '$Revision: 61372 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -249,7 +251,7 @@ sub _recompute_size {
   if ($type eq "bin") {
     my %binfiles = %{$self->{'binfiles'}};
     if (defined($binfiles{$arch})) {
-      foreach $f (@{$binfiles{$arch}}) {
+      foreach my $f (@{$binfiles{$arch}}) {
         my $s = $tltree->size_of($f);
         $nrivblocks += int($s/$TeXLive::TLConfig::BlockSize);
         $nrivblocks++ if (($s%$TeXLive::TLConfig::BlockSize) > 0);
@@ -257,7 +259,7 @@ sub _recompute_size {
     }
   } else {
     if (defined($self->{"${type}files"}) && (@{$self->{"${type}files"}})) {
-      foreach $f (@{$self->{"${type}files"}}) {
+      foreach my $f (@{$self->{"${type}files"}}) {
         my $s = $tltree->size_of($f);
         if (defined($s)) {
           $nrivblocks += int($s/$TeXLive::TLConfig::BlockSize);
@@ -273,7 +275,7 @@ sub _recompute_size {
 
 sub writeout {
   my $self = shift;
-  my $fd = (@_ ? $_[0] : STDOUT);
+  my $fd = (@_ ? $_[0] : *STDOUT);
   print $fd "name ", $self->name, "\n";
   print $fd "category ", $self->category, "\n";
   defined($self->{'revision'}) && print $fd "revision $self->{'revision'}\n";
@@ -377,7 +379,7 @@ sub writeout {
 
 sub writeout_simple {
   my $self = shift;
-  my $fd = (@_ ? $_[0] : STDOUT);
+  my $fd = (@_ ? $_[0] : *STDOUT);
   print $fd "name ", $self->name, "\n";
   print $fd "category ", $self->category, "\n";
   if (defined($self->{'depends'})) {
@@ -633,9 +635,8 @@ sub make_container {
   $selfcopy->writeout(\*TMP);
   close(TMP);
   push(@files, "$tlpobjdir/$self->{'name'}.tlpobj");
-  # Switch to versioned containers
-  # $tarname = "$containername.tar";
-  $tarname = "$containername.r" . $self->revision . ".tar";
+  # versioned containers
+  my $tarname = "$containername.r" . $self->revision . ".tar";
   my $unversionedtar;
   $unversionedtar = "$containername.tar" if (! $user);
 
@@ -1133,6 +1134,8 @@ sub updmap_cfg_lines {
   return(@updmaplines);
 }
 
+
+our @disabled; # global, should handle differently ...
 
 sub language_dat_lines {
   my $self = shift;

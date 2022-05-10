@@ -1,8 +1,10 @@
-# $Id: TLPSRC.pm 59226 2021-05-16 18:22:05Z karl $
+# $Id: TLPSRC.pm 61372 2021-12-21 22:46:16Z karl $
 # TeXLive::TLPSRC.pm - module for handling tlpsrc files
 # Copyright 2007-2021 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
+
+use strict; use warnings;
 
 package TeXLive::TLPSRC;
 
@@ -12,7 +14,7 @@ use TeXLive::TLUtils;
 use TeXLive::TLPOBJ;
 use TeXLive::TLTREE;
 
-my $svnrev = '$Revision: 59226 $';
+my $svnrev = '$Revision: 61372 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -263,7 +265,7 @@ sub from_file {
 
 sub writeout {
   my $self = shift;
-  my $fd = (@_ ? $_[0] : STDOUT);
+  my $fd = (@_ ? $_[0] : *STDOUT);
   format_name $fd "multilineformat";  # format defined in TLPOBJ, and $:
   $fd->format_lines_per_page (99999); # no pages in this format
   print $fd "name ", $self->name, "\n";
