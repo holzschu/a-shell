@@ -108,7 +108,7 @@ class CygwinCCompiler(UnixCCompiler):
 
     def __init__(self, verbose=0, dry_run=0, force=0):
 
-        UnixCCompiler.__init__(self, verbose, dry_run, force)
+        super().__init__(verbose, dry_run, force)
 
         status, details = check_config_h()
         self.debug_print("Python's GCC status: %s (details: %s)" %
@@ -268,7 +268,7 @@ class Mingw32CCompiler(CygwinCCompiler):
 
     def __init__(self, verbose=0, dry_run=0, force=0):
 
-        CygwinCCompiler.__init__ (self, verbose, dry_run, force)
+        super().__init__ (verbose, dry_run, force)
 
         shared_option = "-shared"
 

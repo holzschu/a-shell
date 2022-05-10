@@ -10,7 +10,7 @@ import sys
 import os
 import subprocess
 
-from distutils.errors import DistutilsPlatformError, DistutilsExecError
+from distutils.errors import DistutilsExecError
 from distutils.debug import DEBUG
 from distutils import log
 

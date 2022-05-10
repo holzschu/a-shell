@@ -28,7 +28,9 @@ from distutils.util import rfc822_escape
 
 from setuptools.extern import packaging
 from setuptools.extern import ordered_set
-from setuptools.extern.more_itertools import unique_everseen
+from setuptools.extern.more_itertools import unique_everseen, always_iterable
+
+from ._importlib import metadata
 
 from . import SetuptoolsDeprecationWarning
 
@@ -38,7 +40,9 @@ from setuptools import windows_support
 from setuptools.monkey import get_unpatched
 from setuptools.config import parse_configuration
 import pkg_resources
-from setuptools.extern.packaging import version
+from setuptools.extern.packaging import version, requirements
+from . import _reqs
+from . import _entry_points
 
 if TYPE_CHECKING:
     from email.message import Message
@@ -113,12 +117,8 @@ def read_pkg_file(self, file):
     self.author_email = _read_field_from_msg(msg, 'author-email')
     self.maintainer_email = None
     self.url = _read_field_from_msg(msg, 'home-page')
+    self.download_url = _read_field_from_msg(msg, 'download-url')
     self.license = _read_field_unescaped_from_msg(msg, 'license')
-
-    if 'download-url' in msg:
-        self.download_url = _read_field_from_msg(msg, 'download-url')
-    else:
-        self.download_url = None
 
     self.long_description = _read_field_unescaped_from_msg(msg, 'description')
     if (
@@ -171,9 +171,10 @@ def write_pkg_file(self, file):  # noqa: C901  # is too complex (14)  # FIXME
     write_field('Name', self.get_name())
     write_field('Version', self.get_version())
     write_field('Summary', single_line(self.get_description()))
-    write_field('Home-page', self.get_url())
 
     optional_fields = (
+        ('Home-page', 'url'),
+        ('Download-URL', 'download_url'),
         ('Author', 'author'),
         ('Author-email', 'author_email'),
         ('Maintainer', 'maintainer'),
@@ -187,8 +188,6 @@ def write_pkg_file(self, file):  # noqa: C901  # is too complex (14)  # FIXME
 
     license = rfc822_escape(self.get_license())
     write_field('License', license)
-    if self.download_url:
-        write_field('Download-URL', self.download_url)
     for project_url in self.project_urls.items():
         write_field('Project-URL', '%s, %s' % project_url)
 
@@ -227,7 +226,7 @@ sequence = tuple, list
 
 def check_importable(dist, attr, value):
     try:
-        ep = pkg_resources.EntryPoint.parse('x=' + value)
+        ep = metadata.EntryPoint(value=value, name=None, group=None)
         assert not ep.extras
     except (TypeError, ValueError, AttributeError, AssertionError) as e:
         raise DistutilsSetupError(
@@ -285,7 +284,7 @@ def _check_extra(extra, reqs):
     name, sep, marker = extra.partition(':')
     if marker and pkg_resources.invalid_marker(marker):
         raise DistutilsSetupError("Invalid environment marker: " + marker)
-    list(pkg_resources.parse_requirements(reqs))
+    list(_reqs.parse(reqs))
 
 
 def assert_bool(dist, attr, value):
@@ -305,7 +304,7 @@ def invalid_unless_false(dist, attr, value):
 def check_requirements(dist, attr, value):
     """Verify that install_requires is a valid requirements list"""
     try:
-        list(pkg_resources.parse_requirements(value))
+        list(_reqs.parse(value))
         if isinstance(value, (dict, set)):
             raise TypeError("Unordered types are not allowed")
     except (TypeError, ValueError) as error:
@@ -330,8 +329,8 @@ def check_specifier(dist, attr, value):
 def check_entry_points(dist, attr, value):
     """Verify that entry_points map is parseable"""
     try:
-        pkg_resources.EntryPoint.parse_map(value)
-    except ValueError as e:
+        _entry_points.load(value)
+    except Exception as e:
         raise DistutilsSetupError(e) from e
 
 
@@ -454,7 +453,7 @@ class Distribution(_Distribution):
         self.patch_missing_pkg_info(attrs)
         self.dependency_links = attrs.pop('dependency_links', [])
         self.setup_requires = attrs.pop('setup_requires', [])
-        for ep in pkg_resources.iter_entry_points('distutils.setup_keywords'):
+        for ep in metadata.entry_points(group='distutils.setup_keywords'):
             vars(self).setdefault(ep.name, None)
         _Distribution.__init__(
             self,
@@ -471,6 +470,19 @@ class Distribution(_Distribution):
             self._validate_version(self.metadata.version)
         )
         self._finalize_requires()
+
+    def _validate_metadata(self):
+        required = {"name"}
+        provided = {
+            key
+            for key in vars(self.metadata)
+            if getattr(self.metadata, key, None) is not None
+        }
+        missing = required - provided
+
+        if missing:
+            msg = f"Required package metadata is missing: {missing}"
+            raise DistutilsSetupError(msg)
 
     def _set_metadata_defaults(self, attrs):
         """
@@ -544,7 +556,7 @@ class Distribution(_Distribution):
         for section, v in spec_ext_reqs.items():
             # Do not strip empty sections.
             self._tmp_extras_require[section]
-            for r in pkg_resources.parse_requirements(v):
+            for r in _reqs.parse(v):
                 suffix = self._suffix_for(r)
                 self._tmp_extras_require[section + suffix].append(r)
 
@@ -570,7 +582,7 @@ class Distribution(_Distribution):
             return not req.marker
 
         spec_inst_reqs = getattr(self, 'install_requires', None) or ()
-        inst_reqs = list(pkg_resources.parse_requirements(spec_inst_reqs))
+        inst_reqs = list(_reqs.parse(spec_inst_reqs))
         simple_reqs = filter(is_simple_req, inst_reqs)
         complex_reqs = itertools.filterfalse(is_simple_req, inst_reqs)
         self.install_requires = list(map(str, simple_reqs))
@@ -711,7 +723,10 @@ class Distribution(_Distribution):
             return opt
 
         underscore_opt = opt.replace('-', '_')
-        commands = distutils.command.__all__ + self._setuptools_commands()
+        commands = list(itertools.chain(
+            distutils.command.__all__,
+            self._setuptools_commands(),
+        ))
         if (
             not section.startswith('options')
             and section != 'metadata'
@@ -729,9 +744,8 @@ class Distribution(_Distribution):
 
     def _setuptools_commands(self):
         try:
-            dist = pkg_resources.get_distribution('setuptools')
-            return list(dist.get_entry_map('distutils.commands'))
-        except pkg_resources.DistributionNotFound:
+            return metadata.distribution('setuptools').entry_points.names
+        except metadata.PackageNotFoundError:
             # during bootstrapping, distribution doesn't exist
             return []
 
@@ -810,7 +824,7 @@ class Distribution(_Distribution):
     def fetch_build_eggs(self, requires):
         """Resolve pre-setup requirements"""
         resolved_dists = pkg_resources.working_set.resolve(
-            pkg_resources.parse_requirements(requires),
+            _reqs.parse(requires),
             installer=self.fetch_build_egg,
             replace_conflicting=True,
         )
@@ -830,7 +844,7 @@ class Distribution(_Distribution):
         def by_order(hook):
             return getattr(hook, 'order', 0)
 
-        defined = pkg_resources.iter_entry_points(group)
+        defined = metadata.entry_points(group=group)
         filtered = itertools.filterfalse(self._removed, defined)
         loaded = map(lambda e: e.load(), filtered)
         for ep in sorted(loaded, key=by_order):
@@ -851,11 +865,35 @@ class Distribution(_Distribution):
         return ep.name in removed
 
     def _finalize_setup_keywords(self):
-        for ep in pkg_resources.iter_entry_points('distutils.setup_keywords'):
+        for ep in metadata.entry_points(group='distutils.setup_keywords'):
             value = getattr(self, ep.name, None)
             if value is not None:
-                ep.require(installer=self.fetch_build_egg)
+                self._install_dependencies(ep)
                 ep.load()(self, ep.name, value)
+
+    def _install_dependencies(self, ep):
+        """
+        Given an entry point, ensure that any declared extras for
+        its distribution are installed.
+        """
+        reqs = {
+            req
+            for req in map(requirements.Requirement, always_iterable(ep.dist.requires))
+            for extra in ep.extras
+            if extra in req.extras
+        }
+        missing = itertools.filterfalse(self._is_installed, reqs)
+        for req in missing:
+            # fetch_build_egg expects pkg_resources.Requirement
+            self.fetch_build_egg(pkg_resources.Requirement(str(req)))
+
+    def _is_installed(self, req):
+        try:
+            dist = metadata.distribution(req.name)
+        except metadata.PackageNotFoundError:
+            return False
+        found_ver = packaging.version.Version(dist.version())
+        return found_ver in req.specifier
 
     def get_egg_cache_dir(self):
         egg_cache_dir = os.path.join(os.curdir, '.eggs')
@@ -887,27 +925,25 @@ class Distribution(_Distribution):
         if command in self.cmdclass:
             return self.cmdclass[command]
 
-        eps = pkg_resources.iter_entry_points('distutils.commands', command)
+        eps = metadata.entry_points(group='distutils.commands', name=command)
         for ep in eps:
-            ep.require(installer=self.fetch_build_egg)
+            self._install_dependencies(ep)
             self.cmdclass[command] = cmdclass = ep.load()
             return cmdclass
         else:
             return _Distribution.get_command_class(self, command)
 
     def print_commands(self):
-        for ep in pkg_resources.iter_entry_points('distutils.commands'):
+        for ep in metadata.entry_points(group='distutils.commands'):
             if ep.name not in self.cmdclass:
-                # don't require extras as the commands won't be invoked
-                cmdclass = ep.resolve()
+                cmdclass = ep.load()
                 self.cmdclass[ep.name] = cmdclass
         return _Distribution.print_commands(self)
 
     def get_command_list(self):
-        for ep in pkg_resources.iter_entry_points('distutils.commands'):
+        for ep in metadata.entry_points(group='distutils.commands'):
             if ep.name not in self.cmdclass:
-                # don't require extras as the commands won't be invoked
-                cmdclass = ep.resolve()
+                cmdclass = ep.load()
                 self.cmdclass[ep.name] = cmdclass
         return _Distribution.get_command_list(self)
 

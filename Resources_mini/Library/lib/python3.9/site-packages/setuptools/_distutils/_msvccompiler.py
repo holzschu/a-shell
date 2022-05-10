@@ -203,7 +203,7 @@ class MSVCCompiler(CCompiler) :
 
 
     def __init__(self, verbose=0, dry_run=0, force=0):
-        CCompiler.__init__ (self, verbose, dry_run, force)
+        super().__init__(verbose, dry_run, force)
         # target platform (.plat_name is consistent with 'bdist')
         self.plat_name = None
         self.initialized = False

@@ -39,9 +39,10 @@ import subprocess
 import shlex
 import io
 import configparser
+import sysconfig
 
 
-from sysconfig import get_config_vars, get_path
+from sysconfig import get_path
 
 from setuptools import SetuptoolsDeprecationWarning
 
@@ -55,12 +56,15 @@ from setuptools.package_index import (
 from setuptools.command import bdist_egg, egg_info
 from setuptools.wheel import Wheel
 from pkg_resources import (
-    yield_lines, normalize_path, resource_string, ensure_directory,
+    normalize_path, resource_string,
     get_distribution, find_distributions, Environment, Requirement,
     Distribution, PathMetadata, EggMetadata, WorkingSet, DistributionNotFound,
     VersionConflict, DEVELOP_DIST,
 )
 import pkg_resources
+from .._path import ensure_directory
+from ..extern.jaraco.text import yield_lines
+
 
 # Turn on PEP440Warnings
 warnings.filterwarnings("default", category=pkg_resources.PEP440Warning)
@@ -236,29 +240,34 @@ class easy_install(Command):
         self.version and self._render_version()
 
         py_version = sys.version.split()[0]
-        prefix, exec_prefix = get_config_vars('prefix', 'exec_prefix')
 
-        self.config_vars = {
+        self.config_vars = dict(sysconfig.get_config_vars())
+
+        self.config_vars.update({
             'dist_name': self.distribution.get_name(),
             'dist_version': self.distribution.get_version(),
             'dist_fullname': self.distribution.get_fullname(),
             'py_version': py_version,
             'py_version_short': f'{sys.version_info.major}.{sys.version_info.minor}',
             'py_version_nodot': f'{sys.version_info.major}{sys.version_info.minor}',
-            'sys_prefix': prefix,
-            'prefix': prefix,
-            'sys_exec_prefix': exec_prefix,
-            'exec_prefix': exec_prefix,
+            'sys_prefix': self.config_vars['prefix'],
+            'sys_exec_prefix': self.config_vars['exec_prefix'],
             # Only python 3.2+ has abiflags
             'abiflags': getattr(sys, 'abiflags', ''),
             'platlibdir': getattr(sys, 'platlibdir', 'lib'),
-        }
+        })
         with contextlib.suppress(AttributeError):
             # only for distutils outside stdlib
             self.config_vars.update({
                 'implementation_lower': install._get_implementation().lower(),
                 'implementation': install._get_implementation(),
             })
+
+        # pypa/distutils#113 Python 3.9 compat
+        self.config_vars.setdefault(
+            'py_version_nodot_plat',
+            getattr(sys, 'windir', '').replace('.', ''),
+        )
 
         if site.ENABLE_USER_SITE:
             self.config_vars['userbase'] = self.install_userbase
@@ -1328,7 +1337,7 @@ class easy_install(Command):
         if not self.user:
             return
         home = convert_path(os.path.expanduser("~"))
-        for name, path in self.config_vars.items():
+        for path in only_strs(self.config_vars.values()):
             if path.startswith(home) and not os.path.isdir(path):
                 self.debug_print("os.makedirs('%s', 0o700)" % path)
                 os.makedirs(path, 0o700)
@@ -1577,7 +1586,7 @@ class PthDistributions(Environment):
         self.sitedirs = list(map(normalize_path, sitedirs))
         self.basedir = normalize_path(os.path.dirname(self.filename))
         self._load()
-        Environment.__init__(self, [], None, None)
+        super().__init__([], None, None)
         for path in yield_lines(self.paths):
             list(map(self.add, find_distributions(path, True)))
 
@@ -2296,6 +2305,13 @@ def current_umask():
     tmp = os.umask(0o022)
     os.umask(tmp)
     return tmp
+
+
+def only_strs(values):
+    """
+    Exclude non-str values. Ref #3063.
+    """
+    return filter(lambda val: isinstance(val, str), values)
 
 
 class EasyInstallDeprecationWarning(SetuptoolsDeprecationWarning):

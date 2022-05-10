@@ -27,7 +27,7 @@ class PyDialog(Dialog):
     def __init__(self, *args, **kw):
         """Dialog(database, name, x, y, w, h, attributes, title, first,
         default, cancel, bitmap=true)"""
-        Dialog.__init__(self, *args)
+        super().__init__(*args)
         ruler = self.h - 36
         bmwidth = 152*ruler/328
         #if kw.get("bitmap", True):

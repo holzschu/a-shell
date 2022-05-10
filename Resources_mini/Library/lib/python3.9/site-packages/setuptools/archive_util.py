@@ -8,7 +8,7 @@ import posixpath
 import contextlib
 from distutils.errors import DistutilsError
 
-from pkg_resources import ensure_directory
+from ._path import ensure_directory
 
 __all__ = [
     "unpack_archive", "unpack_zipfile", "unpack_tarfile", "default_filter",

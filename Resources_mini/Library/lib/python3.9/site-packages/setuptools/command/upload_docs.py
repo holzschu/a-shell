@@ -18,7 +18,8 @@ import functools
 import http.client
 import urllib.parse
 
-from pkg_resources import iter_entry_points
+from .._importlib import metadata
+
 from .upload import upload
 
 
@@ -43,9 +44,10 @@ class upload_docs(upload):
     boolean_options = upload.boolean_options
 
     def has_sphinx(self):
-        if self.upload_dir is None:
-            for ep in iter_entry_points('distutils.commands', 'build_sphinx'):
-                return True
+        return bool(
+            self.upload_dir is None
+            and metadata.entry_points(group='distutils.commands', name='build_sphinx')
+        )
 
     sub_commands = [('build_sphinx', has_sphinx)]
 

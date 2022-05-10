@@ -17,7 +17,7 @@ try:
         def __init__(self, source, report_level, halt_level, stream=None,
                      debug=0, encoding='ascii', error_handler='replace'):
             self.messages = []
-            Reporter.__init__(self, source, report_level, halt_level, stream,
+            super().__init__(source, report_level, halt_level, stream,
                               debug, encoding, error_handler)
 
         def system_message(self, level, message, *children, **kwargs):

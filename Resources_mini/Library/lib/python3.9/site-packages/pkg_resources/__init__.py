@@ -71,6 +71,12 @@ try:
 except ImportError:
     importlib_machinery = None
 
+from pkg_resources.extern.jaraco.text import (
+    yield_lines,
+    drop_comment,
+    join_continuation,
+)
+
 from pkg_resources.extern import appdirs
 from pkg_resources.extern import packaging
 __import__('pkg_resources.extern.packaging.version')
@@ -1581,7 +1587,7 @@ class EggProvider(NullProvider):
     """Provider based on a virtual filesystem"""
 
     def __init__(self, module):
-        NullProvider.__init__(self, module)
+        super().__init__(module)
         self._setup_prefix()
 
     def _setup_prefix(self):
@@ -1701,7 +1707,7 @@ class ZipProvider(EggProvider):
     _zip_manifests = MemoizedZipManifests()
 
     def __init__(self, module):
-        EggProvider.__init__(self, module)
+        super().__init__(module)
         self.zip_pre = self.loader.archive + os.sep
 
     def _zipinfo_name(self, fspath):
@@ -2205,12 +2211,14 @@ def _handle_ns(packageName, path_item):
 
     # use find_spec (PEP 451) and fall-back to find_module (PEP 302)
     try:
-        loader = importer.find_spec(packageName).loader
+        spec = importer.find_spec(packageName)
     except AttributeError:
         # capture warnings due to #1111
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             loader = importer.find_module(packageName)
+    else:
+        loader = spec.loader if spec else None
 
     if loader is None:
         return None
@@ -2394,21 +2402,6 @@ def _set_parent_ns(packageName):
     if parts:
         parent = '.'.join(parts)
         setattr(sys.modules[parent], name, sys.modules[packageName])
-
-
-def _nonblank(str):
-    return str and not str.startswith('#')
-
-
-@functools.singledispatch
-def yield_lines(iterable):
-    """Yield valid lines of a string or iterable"""
-    return itertools.chain.from_iterable(map(yield_lines, iterable))
-
-
-@yield_lines.register(str)
-def _(text):
-    return filter(_nonblank, map(str.strip, text.splitlines()))
 
 
 MODULE = re.compile(r"\w+(\.\w+)*$").match
@@ -3078,25 +3071,12 @@ def issue_warning(*args, **kw):
 
 
 def parse_requirements(strs):
-    """Yield ``Requirement`` objects for each specification in `strs`
+    """
+    Yield ``Requirement`` objects for each specification in `strs`.
 
     `strs` must be a string, or a (possibly-nested) iterable thereof.
     """
-    # create a steppable iterator, so we can handle \-continuations
-    lines = iter(yield_lines(strs))
-
-    for line in lines:
-        # Drop comments -- a hash without a space may be in a URL.
-        if ' #' in line:
-            line = line[:line.find(' #')]
-        # If there is a line continuation, drop it, and append the next line.
-        if line.endswith('\\'):
-            line = line[:-2].strip()
-            try:
-                line += next(lines)
-            except StopIteration:
-                return
-        yield Requirement(line)
+    return map(Requirement, join_continuation(map(drop_comment, yield_lines(strs))))
 
 
 class RequirementParseError(packaging.requirements.InvalidRequirement):
