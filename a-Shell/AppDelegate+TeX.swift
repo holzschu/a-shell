@@ -59,10 +59,10 @@ extension AppDelegate {
     
     override func observeValue(forKeyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         let texmf_dist_fonts_type1Size = 354116.0
-        let texmf_dist_fontsSize = 345076.0
+        let texmf_dist_fontsSize = 344776.0
         let texmf_dist_fonts_vf_Size = 255004.0
-        let texmf_distSize = 490052.0
-        let texmf_varSize = 106468.0
+        let texmf_distSize = 478968.0
+        let texmf_varSize = 107112.0
 
         percentTeXDownloadComplete = 100.0 * (texmf_dist_fontsSize * texmf_dist_fontsResource.progress.fractionCompleted +
             texmf_dist_fonts_type1Size * texmf_dist_fonts_type1Resource.progress.fractionCompleted +
