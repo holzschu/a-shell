@@ -58,6 +58,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var resetDirectoryAfterCommandTerminates = ""
     var currentCommand = ""
     var shortcutCommandReceived: String? = nil
+    var windowPrintedContent = ""
+    var windowHistory = ""
     var pid: pid_t = 0
     private var selectedDirectory = ""
     private var selectedFont = ""
@@ -128,12 +130,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     @objc private func tabAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + "\u{0009}" + "\");") { (result, error) in
-            if error != nil {
-                // print(error)
-            }
-            if (result != nil) {
-                // print(result)
-            }
+            // if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
     
@@ -143,81 +141,50 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (controlOn) {
             editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration)
             webView?.evaluateJavaScript("window.controlOn = true;") { (result, error) in
-                if error != nil {
-                    // print(error)
-                }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let error = error { print(error) }
+                // if let result = result { print(result) }
             }
         } else {
             editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
             webView?.evaluateJavaScript("window.controlOn = false;") { (result, error) in
-                if error != nil {
-                    // print(error)
-                }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let error = error { print(error) }
+                // if let result = result { print(result) }
             }
         }
     }
     
     @objc private func escapeAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "\");") { (result, error) in
-            if error != nil {
-                // print(error)
-            }
-            if (result != nil) {
-                // print(result)
-            }
+            // if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
     
     @objc private func upAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[A' : '\\x1bOA');") { (result, error) in
-            if error != nil {
-                // print(error)
-            }
-            if (result != nil) {
-                // print(result)
-            }
+            // if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
     
     @objc private func downAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[B' : '\\x1bOB');") { (result, error) in
-            if error != nil {
-                // print(error)
-            }
-            if (result != nil) {
-                // print(result)
-            }
-            
+            // if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
     
     @objc private func leftAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[D' : '\\x1bOD');") { (result, error) in
-            if error != nil {
-                // print(error)
-            }
-            if (result != nil) {
-                // print(result)
-            }
-            
+            // if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
     
     @objc private func rightAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[C' : '\\x1bOC');") { (result, error) in
-            if error != nil {
-                // print(error)
-            }
-            if (result != nil) {
-                // print(result)
-            }
-            
+            // if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
     
@@ -328,13 +295,160 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return toolbar
     }()
     
+    func parsePrompt() -> String {
+        // Documentation from: https://www.cyberciti.biz/tips/howto-linux-unix-bash-shell-setup-prompt.html
+        // Not implemented: \nnn (octal char), \[ \] (non-printing characters)
+        // - get PS1 from environment:
+        guard let promptC = getenv("PS1") else {
+            return "$ "
+        }
+        guard let prompt = String(utf8String: promptC) else {
+            return "$ "
+        }
+        // - parse PS1 (bash syntax) using a regexp:
+        do {
+            let regex = try NSRegularExpression(pattern: #"\\[adDehHjlnrstT@AuvVwW!#$]"#, options: [])
+            let matches = regex.matches(in: prompt, range: NSRange(prompt.startIndex..<prompt.endIndex, in: prompt))
+            var offset = 0
+            var newPrompt = ""
+            for match in matches {
+                let range = match.range
+                newPrompt += prompt[prompt.index(prompt.startIndex, offsetBy:offset)..<prompt.index(prompt.startIndex, offsetBy: range.lowerBound)]
+                let subString = prompt[prompt.index(prompt.startIndex, offsetBy:range.lowerBound)..<prompt.index(prompt.startIndex, offsetBy: range.upperBound)]
+                switch (subString) {
+                    //aAdDehHjlnrstTuvVwW@! # $
+                case "\\a": // ASCII bell character (07)
+                    newPrompt += "\u{0007}"
+                    break
+                case "\\A": // current time in 24-hour HH:MM format
+                    let format = DateFormatter()
+                    format.dateFormat = "HH:mm"
+                    newPrompt += format.string(from: Date())
+                    break
+                case "\\d": // the date in “Weekday Month Date” format (e.g., “Tue May 26”)
+                    let format = DateFormatter()
+                    format.dateFormat = "E MMM d"
+                    newPrompt += format.string(from: Date())
+                    break
+                case "\\D": // \D{format} : the format is passed to strftime(3) and the result is inserted into the prompt string; an empty format results in a locale-specific time representation. The braces are required
+                    var formatStringParse = prompt[prompt.index(prompt.startIndex, offsetBy:offset + subString.count)..<prompt.index(prompt.startIndex, offsetBy: range.lowerBound)]
+                    if (formatStringParse.hasPrefix("{")) {
+                        formatStringParse.removeFirst()
+                        if let formatString = formatStringParse.split(separator: "}").first {
+                            let maxSize: UInt = 256
+                            var buffer: [CChar] = [CChar](repeating: 0, count: Int(maxSize))
+                            var time: time_t = Int(NSDate().timeIntervalSince1970)
+                            _ = strftime(&buffer, Int(maxSize), String(formatString).toCString(), localtime(&time))
+                            newPrompt += String(cString: buffer)
+                        }
+                    }
+                    break
+                case "\\e": // escape character
+                    newPrompt += escape
+                    break
+                    // hHjlnrstTuvVwW@! # $
+                case "\\h", "\\H": // the hostname up to the first ‘.’ or the hostname
+                    // No easy access to hostname, we print the device name:
+                    newPrompt += UIDevice.current.name
+                    break
+                case "\\j": // the number of jobs currently managed by the shell
+                    newPrompt += "0" // no job management
+                    break
+                case "\\l": // the basename of the shell's terminal device name
+                    newPrompt += UIDevice.current.localizedModel
+                    break
+                case "\\n", "\\r": // newline, carriage return
+                    newPrompt += subString
+                    break
+                case "\\s": // the name of the shell, the basename of $0 (the portion following the final slash)
+                    if let appName = Bundle.main.infoDictionary?["CFBundleName"] as? String {
+                        newPrompt += appName
+                    } else {
+                        newPrompt += "a-Shell"
+                    }
+                    break
+                case "\\t": // the current time in 24-hour HH:MM:SS format
+                    let format = DateFormatter()
+                    format.dateFormat = "HH:mm:ss"
+                    newPrompt += format.string(from: Date())
+                    break
+                case "\\T": // the current time in 12-hour HH:MM:SS format
+                    let format = DateFormatter()
+                    format.dateFormat = "h:mm:ss"
+                    newPrompt += format.string(from: Date())
+                    break
+                case "\\u": // username
+                    if let pw = getpwuid((getuid())) {
+                        if let username = pw.pointee.pw_name {
+                            newPrompt += String(utf8String: username) ?? "mobile"
+                            break;
+                        }
+                    }
+                    newPrompt += "mobile"
+                    break;
+                case "\\v": //  the version of bash (e.g., 2.00)
+                    if let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                        newPrompt += currentVersion
+                    }
+                    break
+                case "\\V": // the release of bash, version + patch level (e.g., 2.00.0)
+                    if let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                        newPrompt += currentVersion
+                        if let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+                            newPrompt += " " + currentBuild
+                        }
+                    }
+                    break
+                case "\\w": // the current working directory, with $HOME abbreviated with a tilde
+                    let currentDirectory = FileManager().currentDirectoryPath
+                    let path = String(cString: ios_getBookmarkedVersion(currentDirectory.utf8CString))
+                    newPrompt += path
+                    break
+                case "\\W": // the basename of the current working directory, with $HOME abbreviated with a tilde
+                    let currentDirectory = FileManager().currentDirectoryPath
+                    let path = String(cString: ios_getBookmarkedVersion(currentDirectory.utf8CString))
+                    let pathComponents = path.split(separator: "/")
+                    if (pathComponents.count > 1) {
+                        newPrompt += pathComponents[pathComponents.endIndex - 1]
+                    } else {
+                        newPrompt += path
+                    }
+                    break
+                case "\\@": // the current time in 12-hour am/pm format
+                    let format = DateFormatter()
+                    format.dateFormat = "h:mm a"
+                    newPrompt += format.string(from: Date())
+                    break
+                case "\\!", "\\#": //  the history number of this command or the command number of this command
+                    newPrompt += String(history.count)
+                    break
+                case "\\$": // if the effective UID is 0, a #, otherwise a $
+                    newPrompt += "$"
+                    break
+                default:
+                    newPrompt += subString
+                }
+                offset = range.upperBound
+                // NSLog("Edited prompt: \(newPrompt) offset: \(offset)")
+            }
+            newPrompt += prompt[prompt.index(prompt.startIndex, offsetBy:offset)..<prompt.index(prompt.endIndex, offsetBy: 0)]
+            return newPrompt
+        }
+        catch {
+            NSLog("Failed regexp creation")
+        }
+        return "$ "
+    }
+    
     func printPrompt() {
+        // - set promptstring in JS
+        // - have window.printPrompt() use promptString
         DispatchQueue.main.async {
-            self.webView?.evaluateJavaScript("window.commandRunning = ''; window.printPrompt(); window.updatePromptPosition();") { (result, error) in
-                if error != nil {
+            self.webView?.evaluateJavaScript("window.commandRunning = ''; window.promptMessage='\(self.parsePrompt())'; window.printPrompt(); window.updatePromptPosition();") { (result, error) in
+                if let error = error {
                     NSLog("Error in executing window.commandRunning = ''; = \(error)")
                 }
-                if (result != nil) {
+                if let result = result {
                     NSLog("Result of executing window.commandRunning = ''; = \(result)")
                 }
             }
@@ -375,12 +489,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // clear entire display: ^[[2J
             // position cursor on top line: ^[[1;1H 
             self.webView?.evaluateJavaScript("window.term_.io.print('" + self.escape + "[2J'); window.term_.io.print('" + self.escape + "[1;1H'); ") { (result, error) in
-                if error != nil {
-                    // print(error)
-                }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let error = error { print(error) }
+                // if let result = result { print(result) }
             }
             // self.webView?.accessibilityLabel = ""
         }
@@ -408,10 +518,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             fputs("wasm: file \(command) not found\n", thread_stderr)
             return -1
         }
-        let localEnvironment = environmentAsArray()
         var environmentAsJSDictionary = "{"
-        if localEnvironment != nil {
-            for variable in localEnvironment! {
+        if let localEnvironment = environmentAsArray() {
+            for variable in localEnvironment {
                 if let envVar = variable as? String {
                     // Let's not carry environment variables with quotes:
                     if (envVar.contains("\"")) {
@@ -442,8 +551,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         thread_stderr_copy = thread_stderr
         DispatchQueue.main.async {
             self.wasmWebView?.evaluateJavaScript(javascript) { (result, error) in
-                if error != nil {
-                    let userInfo = (error! as NSError).userInfo
+                if let error = error {
+                    let userInfo = (error as NSError).userInfo
                     fputs("wasm: Error ", self.thread_stderr_copy)
                     // WKJavaScriptExceptionSourceURL is hterm.html, of course.
                     if let file = userInfo["WKJavaScriptExceptionSourceURL"] as? String {
@@ -463,9 +572,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     fflush(self.thread_stderr_copy)
                     // print(error)
                 }
-                if (result != nil) {
+                if let result = result {
                     // executeWebAssembly sends back stdout and stderr as two Strings:
-                    if let array = result! as? NSMutableArray {
+                    if let array = result as? NSMutableArray {
                         if let code = array[0] as? Int32 {
                             // return value from program
                             errorCode = code
@@ -474,7 +583,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             // webAssembly compile error:
                             fputs(errorMessage, self.thread_stderr_copy);
                         }
-                    } else if let string = result! as? String {
+                    } else if let string = result as? String {
                         fputs(string, self.thread_stdout_copy);
                     }
                 }
@@ -489,12 +598,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (thread_stdin_copy == nil) {
             // Strangely, the letters typed after ^D do not appear on screen. We force two carriage return to get the prompt visible:
             webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"\\n\\n\"); window.term_.io.currentCommand = '';") { (result, error) in
-                if error != nil {
-                    // print(error)
-                }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let error = error { print(error) }
+                // if let result = result { print(result) }
             }
         }
         thread_stdin_copy = nil
@@ -541,9 +646,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let javascript = try String(contentsOf: URL(fileURLWithPath: fileName), encoding: String.Encoding.utf8)
             DispatchQueue.main.async {
                 jscWebView?.evaluateJavaScript(javascript) { (result, error) in
-                    if error != nil {
+                    if let error = error {
                         // Extract information about *where* the error is, etc.
-                        let userInfo = (error! as NSError).userInfo
+                        let userInfo = (error as NSError).userInfo
                         fputs("jsc: Error ", self.thread_stderr_copy)
                         // WKJavaScriptExceptionSourceURL is hterm.html, of course.
                         fputs("in file " + command + " ", self.thread_stderr_copy)
@@ -560,18 +665,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                         fflush(self.thread_stderr_copy)
                     }
-                    if (result != nil) {
-                        if let string = result! as? String {
+                    if let result = result {
+                        if let string = result as? String {
                             fputs(string, self.thread_stdout_copy)
                             fputs("\n", self.thread_stdout_copy)
-                        }  else if let number = result! as? Int32 {
+                        }  else if let number = result as? Int32 {
                             fputs("\(number)", self.thread_stdout_copy)
                             fputs("\n", self.thread_stdout_copy)
-                        } else if let number = result! as? Float {
+                        } else if let number = result as? Float {
                             fputs("\(number)", self.thread_stdout_copy)
                             fputs("\n", self.thread_stdout_copy)
                         } else {
-                            fputs("\(result!)", self.thread_stdout_copy)
+                            fputs("\(result)", self.thread_stdout_copy)
                             fputs("\n", self.thread_stdout_copy)
                         }
                         fflush(self.thread_stdout_copy)
@@ -659,19 +764,19 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         var command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript(command) { (result, error) in
-                if error != nil {
+                if let error = error {
                     print(error)
                 }
-                if (result != nil) {
+                if let result = result {
                     print(result)
                 }
             }
             command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');"
             self.webView?.evaluateJavaScript(command) { (result, error) in
-                if error != nil {
+                if let error = error {
                     print(error)
                 }
-                if (result != nil) {
+                if let result = result {
                     print(result)
                 }
             }
@@ -684,12 +789,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let fontSizeCommand = "window.term_.setFontSize(\(fontSize!));"
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(fontSizeCommand) { (result, error) in
-                    if error != nil {
-                        print(error)
-                    }
-                    if (result != nil) {
-                        // print(result)
-                    }
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
                 }
             }
         }
@@ -700,12 +801,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 let fontNameCommand = "window.term_.setFontFamily(\"\(fontName!)\");"
                 DispatchQueue.main.async {
                     self.webView?.evaluateJavaScript(fontNameCommand) { (result, error) in
-                        if error != nil {
-                            print(error)
-                        }
-                        if (result != nil) {
-                            print(result)
-                        }
+                        // if let error = error { print(error) }
+                        // if let result = result { print(result) }
                     }
                 }
             } else {
@@ -719,12 +816,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     let fontNameCommand = "var newStyle = document.createElement('style'); newStyle.appendChild(document.createTextNode(\"@font-face { font-family: '\(localFontName)' ; src: url('\(localFontURL.path)') format('truetype'); }\")); document.head.appendChild(newStyle); window.term_.setFontFamily(\"\(localFontName)\");"
                     // NSLog(fontNameCommand)
                     self.webView?.evaluateJavaScript(fontNameCommand) { (result, error) in
-                        if error != nil {
-                            print(error)
-                        }
-                        if (result != nil) {
-                            print(result)
-                        }
+                        // if let error = error { print(error) }
+                        // if let result = result { print(result) }
                     }
                 }
             }
@@ -735,12 +828,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let terminalColorCommand = "window.term_.setBackgroundColor(\"\(backgroundColor!.toHexString())\");"
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(terminalColorCommand) { (result, error) in
-                    if error != nil {
-                        print(error)
-                    }
-                    if (result != nil) {
-                        print(result)
-                    }
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
                 }
             }
         }
@@ -750,12 +839,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let terminalColorCommand = "window.term_.setForegroundColor(\"\(foregroundColor!.toHexString())\");"
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(terminalColorCommand) { (result, error) in
-                    if error != nil {
-                        print(error)
-                    }
-                    if (result != nil) {
-                        print(result)
-                    }
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
                 }
             }
         }
@@ -764,12 +849,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let terminalColorCommand = "window.term_.setCursorColor(\"\(cursorColor!.toHexString())\");"
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(terminalColorCommand) { (result, error) in
-                    if error != nil {
-                        print(error)
-                    }
-                    if (result != nil) {
-                        print(result)
-                    }
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
                 }
             }
         }
@@ -990,12 +1071,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // This function only gets called if we are in a notebook, in edit_mode:
         // Only remap the keys if we are in a notebook, editing cell:
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + sender.input! + "\");") { (result, error) in
-            if error != nil {
-                print(error)
-            }
-            if (result != nil) {
-                // print(result)
-            }
+            // if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
     
@@ -1013,10 +1090,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Calling "exit(0)" here results in a major crash (I tried).
             let infoCommand = "window.term_.wipeContents() ; window.printedContent = ''; window.term_.io.print('" + self.escape + "[2J'); window.term_.io.print('" + self.escape + "[1;1H'); window.commandArray = []; window.commandIndex = 0; window.maxCommandIndex = 0;"
             self.webView?.evaluateJavaScript(infoCommand) { (result, error) in
-                if error != nil {
+                if let error = error {
                     print(error)
                 }
-                if (result != nil) {
+                if let result = result {
                     print(result)
                 }
             }
@@ -1273,6 +1350,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else if (cmd.hasPrefix("inputTTY:")) {
             var command = cmd
             command.removeFirst("inputTTY:".count)
+            // NSLog("Received (inputTTY) \(command)")
             guard let data = command.data(using: .utf8) else { return }
             guard tty_file_input != nil else { return }
             ios_switchSession(self.persistentIdentifier?.toCString())
@@ -1282,12 +1360,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // Remove the string that we just sent from the command input
                 // Sync issues: it could be executed before the string has been added to io.currentCommand
                 webView?.evaluateJavaScript("window.term_.io.currentCommand = window.term_.io.currentCommand.substr(\(command.count));") { (result, error) in
-                    if error != nil {
-                        print(error)
-                    }
-                    if (result != nil) {
-                        // print(result)
-                    }
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
                 }
                 tty_file_input?.write(data)
             }
@@ -1305,11 +1379,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // print(javascriptCommand)
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
-                    if error != nil {
+                    if let error = error {
                         print(error)
                     }
-                    if (result != nil) {
-                        NSLog(result! as! String)
+                    if let result = result {
+                        print(result)
                     }
                 }
             }
@@ -1340,10 +1414,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     directoryForListing = homeUrl.path + "/" + directoryForListing
                 } else if (name.hasPrefix("$")) {
                     name.removeFirst(1) // without the '$'
-                    let value = ios_getenv(name)
-                    if (value != nil) {
+                    if let value = ios_getenv(name) {
                         directoryForListing.removeFirst(name.count + 1)
-                        directoryForListing = String(cString: value!) + "/" + directoryForListing
+                        directoryForListing = String(cString: value) + "/" + directoryForListing
                     }
                 }
                 // NSLog("after parsing: \(directoryForListing)")
@@ -1369,12 +1442,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // print(javascriptCommand)
                 DispatchQueue.main.async {
                     self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
-                        if error != nil {
-                            print(error)
-                        }
-                        if (result != nil) {
-                            // print(result)
-                        }
+                        if let error = error { print(error) }
+                        // if let result = result { print(result) }
                     }
                 }
                 // print("Found files: \(fileURLs)")
@@ -1416,33 +1485,33 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             var command = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
             // NSLog("resendConfiguration, command=\(command)")
             self.webView!.evaluateJavaScript(command) { (result, error) in
-                if error != nil {
+                if let error = error {
                     NSLog("Error in resendConfiguration, line = \(command)")
                     print(error)
                 }
-                if (result != nil) {
+                if result != nil {
                     // NSLog("Return from resendConfiguration, line = \(command)")
                     // print(result)
                 }
             }
             command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
             self.webView!.evaluateJavaScript(command) { (result, error) in
-                if error != nil {
+                if let error = error {
                     NSLog("Error in resendConfiguration, line = \(command)")
                     print(error)
                 }
-                if (result != nil) {
+                if result != nil {
                     // NSLog("Return from resendConfiguration, line = \(command)")
                     // print(result)
                 }
             }
             command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');  window.term_.scrollPort_.isScrolledEnd = true;"
             self.webView!.evaluateJavaScript(command) { (result, error) in
-                if error != nil {
+                if let error = error {
                     NSLog("Error in resendConfiguration, line = \(command)")
                     print(error)
                 }
-                if (result != nil) {
+                if result != nil {
                     // NSLog("Return from resendConfiguration, line = \(command)")
                     // print(result)
                 }
@@ -1477,13 +1546,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             javascriptCommand += "];"
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
-                if error != nil {
+                if let error = error {
                     NSLog("Error in creating command list, line = \(javascriptCommand)")
                     print(error)
                 }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let result = result { print(result) }
             }
         } else if (cmd.hasPrefix("resendCommand:")) {
             if (shortcutCommandReceived != nil) {
@@ -1491,14 +1558,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 executeCommand(command: shortcutCommandReceived!)
                 shortcutCommandReceived = nil
             } else {
-                var command = "window.commandRunning = '\(currentCommand)'; window.interactiveCommandRunning = isInteractive(window.commandRunning);"
+                // Q: need to wait until configuration files are loaded?
+                // window.printedContent = '\(windowPrintedContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r"))';
+                print("PrintedContent to be restored: \(windowPrintedContent.count)")
+                print(windowPrintedContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r"))
+                let command = "window.promptMessage = '\(self.parsePrompt())'; \(windowHistory)  window.printedContent = \"\(windowPrintedContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r"))\"; window.commandRunning = '\(currentCommand)'; window.interactiveCommandRunning = isInteractive(window.commandRunning); if (window.commandRunning == '') { if (window.printedContent != '') { window.term_.io.print(window.printedContent); } else { window.printPrompt(); } updatePromptPosition(); } else { window.printedContent= ''; }"
                 NSLog("resendCommand, command=\(command)")
                 self.webView!.evaluateJavaScript(command) { (result, error) in
-                    if error != nil {
+                    if let error = error {
                         NSLog("Error in resendCommand, line = \(command)")
                         print(error)
                     }
-                    if (result != nil) {
+                    if let result = result {
                         NSLog("Return from resendCommand, line = \(command)")
                         print(result)
                     }
@@ -1592,7 +1663,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
         NSLog("Scene, continue: userActivity.activityType = \(userActivity.activityType)")
         if userActivity.activityType == "AsheKube.app.a-Shell.ExecuteCommand" {
-            NSLog("scene/continue, userActivity.userInfo = \(userActivity.userInfo)")
+            // NSLog("scene/continue, userActivity.userInfo = \(userActivity.userInfo)")
             if (currentCommand != "") {
                 // a command is already running in this window. Open a new one:
                 UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil)
@@ -1621,10 +1692,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     commandSent = commandSent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n")
                     let restoreCommand = "window.term_.io.println(\"Executing Shortcut: \(commandSent.replacingOccurrences(of: "\\n", with: "\\n\\r"))\");\nwindow.webkit.messageHandlers.aShell.postMessage('shell:' + '\(commandSent)');\nwindow.commandRunning = '\(commandSent)';\n"
                     self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
-                        if error != nil {
+                        if let error = error {
                             print(error)
                         }
-                        if (result != nil) {
+                        if let result = result {
                             print(result)
                         }
                     }
@@ -1730,42 +1801,45 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // NSLog("Error in creating command list, line = \(javascriptCommand)")
                     // print(error)
                 }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let result = result { print(result) }
             }
-            // If .profile exists, load it:
-            var dotProfileUrl = try! FileManager().url(for: .documentDirectory,
-                                                       in: .userDomainMask,
-                                                       appropriateFor: nil,
-                                                       create: true)
-            dotProfileUrl = dotProfileUrl.appendingPathComponent(".profile")
-            // A big issue is that, at this point, the window does not exist yet. So stdin, stdout, stderr also do not exist.
-            if (FileManager().fileExists(atPath: dotProfileUrl.path)) {
-                // Avoid interference with C SDK creation by interpreting .profile in installQueue:
-                installQueue.async {
-                    do {
-                        let contentOfFile = try String(contentsOf: dotProfileUrl, encoding: String.Encoding.utf8)
-                        let commands = contentOfFile.split(separator: "\n")
-                        ios_switchSession(self.persistentIdentifier?.toCString())
-                        ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
-                        thread_stdin  = stdin
-                        thread_stdout = stdout
-                        thread_stderr = stderr
-                        for command in commands {
-                            let trimmedCommand = command.trimmingCharacters(in: .whitespacesAndNewlines)
-                            if (trimmedCommand.count == 0) { continue } // skip white lines
-                            if (trimmedCommand.hasPrefix("#")) { continue } // skip comments
-                            // reset the LC_CTYPE (some commands (luatex) can change it):
-                            setenv("LC_CTYPE", "UTF-8", 1);
-                            setlocale(LC_CTYPE, "UTF-8");
-                            executeCommandAndWait(command: trimmedCommand)
-                            NSLog("Done executing command from .profile: \(command)")
-                            NSLog("Current directory: \(FileManager().currentDirectoryPath)")
+            // If .profile or .bashrc exist, load them:
+            for configFileName in [".profile", ".bashrc"] {
+                var configFileUrl = try! FileManager().url(for: .documentDirectory,
+                                                           in: .userDomainMask,
+                                                           appropriateFor: nil,
+                                                           create: true)
+                configFileUrl = configFileUrl.appendingPathComponent(configFileName)
+                // A big issue is that, at this point, the window does not exist yet. So stdin, stdout, stderr also do not exist.
+                if (FileManager().fileExists(atPath: configFileUrl.path)) {
+                    // Avoid interference with C SDK creation by interpreting .profile in installQueue:
+                    installQueue.async {
+                        do {
+                            let contentOfFile = try String(contentsOf: configFileUrl, encoding: String.Encoding.utf8)
+                            let commands = contentOfFile.split(separator: "\n")
+                            ios_switchSession(self.persistentIdentifier?.toCString())
+                            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+                            thread_stdin  = stdin
+                            thread_stdout = stdout
+                            thread_stderr = stderr
+                            for command in commands {
+                                let trimmedCommand = command.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if (trimmedCommand.count == 0) { continue } // skip white lines
+                                if (trimmedCommand.hasPrefix("#")) { continue } // skip comments
+                                // reset the LC_CTYPE (some commands (luatex) can change it):
+                                setenv("LC_CTYPE", "UTF-8", 1);
+                                setlocale(LC_CTYPE, "UTF-8");
+                                executeCommandAndWait(command: trimmedCommand)
+                                NSLog("Done executing command from .profile: \(command)")
+                                NSLog("Current directory: \(FileManager().currentDirectoryPath)")
+                                // If the .profile modified PATH, we respect its value:
+                                appDependentPath = String(utf8String: getenv("PATH")) ?? ""
+                                NSLog("new default path: \(appDependentPath)")
+                            }
                         }
-                    }
-                    catch {
-                        NSLog("Could not load .profile: \(error.localizedDescription)")
+                        catch {
+                            NSLog("Could not load .profile: \(error.localizedDescription)")
+                        }
                     }
                 }
             }
@@ -1798,13 +1872,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     storeName(fileURL: fileURL, name: fileURL.lastPathComponent)
                     if (fileURL.isDirectory) {
                         // it's a directory.
-                        if let userInfo = scene.session.stateRestorationActivity?.userInfo {
+                        if var userInfo = scene.session.stateRestorationActivity?.userInfo {
                             NSLog("Passing the directory to sceneWillEnterForeground: \(fileURL.path)")
                             if (currentDirectory == "") {
                                 currentDirectory = FileManager().currentDirectoryPath
                             }
-                            scene.session.stateRestorationActivity?.userInfo?["prev_wd"] = currentDirectory
-                            scene.session.stateRestorationActivity?.userInfo?["cwd"] = fileURL.path
+                            userInfo["prev_wd"] = currentDirectory
+                            userInfo["cwd"] = fileURL.path
                         } else {
                             NSLog("Calling changeDirectory: \(fileURL.path)")  // seldom called
                             installQueue.async {
@@ -1872,7 +1946,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // This can be either from open URL (ashell:command) or from Shortcuts
                     // Set working directory to a safer place (also used by shortcuts):
                     // But do not reset afterwards, since this is a new window
-                    NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
+                    // NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
                     if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
                         changeDirectory(path: groupUrl.path)
                     }
@@ -1981,13 +2055,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     UIApplication.shared.requestSceneSessionActivation(nil, userActivity: activity, options: nil)
                 } else {
                     // sceneWillEnterForeground will be called soon, will call cwd.
-                    if let userInfo = scene.session.stateRestorationActivity?.userInfo {
+                    if var userInfo = scene.session.stateRestorationActivity?.userInfo {
                         NSLog("Passing the directory to sceneWillEnterForeground: \(fileURL.path)")
                         if (currentDirectory == "") {
                             currentDirectory = FileManager().currentDirectoryPath
                         }
-                        scene.session.stateRestorationActivity?.userInfo?["prev_wd"] = currentDirectory
-                        scene.session.stateRestorationActivity?.userInfo?["cwd"] = fileURL.path
+                        userInfo["prev_wd"] = currentDirectory
+                        userInfo["cwd"] = fileURL.path
                     } else {
                         NSLog("Calling changeDirectory: \(fileURL.path)")
                         installQueue.async {
@@ -2013,13 +2087,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         command += ":e "
                     }
                     command += fileURL.path.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ ") + "\n"
-                    let data = command.data(using: .utf8)
-                    if (data != nil) {
+                    if let data = command.data(using: .utf8) {
                         ios_switchSession(self.persistentIdentifier?.toCString())
                         ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
                         ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                         if (stdin_file_input != nil) {
-                            stdin_file_input?.write(data!)
+                            stdin_file_input?.write(data)
                             return
                         }
                     }
@@ -2031,12 +2104,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     let openFileCommand = "window.commandRunning = 'vim'; window.interactiveCommandRunning = true; "
                     NSLog("About to execute \(openFileCommand), webview: \(self.webView)")
                     self.webView?.evaluateJavaScript(openFileCommand) { (result, error) in
-                        if error != nil {
-                            // print(error)
-                        }
-                        if (result != nil) {
-                            // print(result)
-                        }
+                        // if let error = error { print(error) }
+                        // if let result = result { print(result) }
                     }
                     installQueue.async {
                         self.executeCommand(command: "vim " + (fileURL.path.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ ")))
@@ -2076,13 +2145,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             if (exitCommand != "") {
                 exitCommand += "\n"
-                let data = exitCommand.data(using: .utf8)
-                if (data != nil) {
+                if let data = exitCommand.data(using: .utf8) {
                     ios_switchSession(self.persistentIdentifier?.toCString())
                     ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
                     ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                     if (stdin_file_input != nil) {
-                        stdin_file_input?.write(data!)
+                        stdin_file_input?.write(data)
                         return
                     }
                 }
@@ -2145,7 +2213,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // NSLog("Error in sceneDidBecomeActive, line = \(command)")
                 // print(error)
             }
-            if (result != nil) {
+            if result != nil {
                 // NSLog("Return from sceneDidBecomeActive, line = \(command)")
                 // print(result)
             }
@@ -2153,9 +2221,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Current status: window.term_ is undefined here in iOS 15b1.
         command = "(window.term_ != undefined)"
         webView!.evaluateJavaScript(command) { (result, error) in
-            if error != nil {
-                // print(error)
-            }
+            // if let error = error { print(error) }
             if let resultN = result as? Int {
                 if (resultN == 1) {
                     // window.term_ exists, let's send commands:
@@ -2165,7 +2231,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             // NSLog("Error in sceneDidBecomeActive, line = \(command)")
                             // print(error)
                         }
-                        if (result != nil) {
+                        if result != nil {
                             // NSLog("Return from sceneDidBecomeActive, line = \(command)")
                             // print(result)
                         }
@@ -2176,7 +2242,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             // NSLog("Error in sceneDidBecomeActive, line = \(command)")
                             // print(error)
                         }
-                        if (result != nil) {
+                        if result != nil {
                             // NSLog("Return from sceneDidBecomeActive, line = \(command)")
                             // print(result)
                         }
@@ -2215,6 +2281,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             showToolbar = true
             self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
         }
+        // If there is no userInfo and no stateRestorationActivity
         guard (scene.session.stateRestorationActivity != nil) else { return }
         guard let userInfo = scene.session.stateRestorationActivity!.userInfo else { return }
         // If a command is already running, we don't restore directories, etc: they probably are still valid
@@ -2223,20 +2290,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if let historyData = userInfo["history"] {
             history = historyData as! [String]
             // NSLog("set history to \(history)")
-            var javascriptCommand = "window.commandArray = ["
+            windowHistory = "window.commandArray = ["
             for command in history {
-                javascriptCommand += "\"" + command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\", "
+                windowHistory += "\"" + command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\", "
             }
-            javascriptCommand += "]; window.commandIndex = \(history.count); window.maxCommandIndex = \(history.count)"
-            webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
-                if error != nil {
-                    // NSLog("Error in recreating history, line = \(javascriptCommand)")
-                    // print(error)
-                }
-                if (result != nil) {
-                    // print(result)x
-                }
-            }
+            windowHistory += "]; window.commandIndex = \(history.count); window.maxCommandIndex = \(history.count); "
+            // webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
+            //     if error != nil {
+            //         NSLog("Error in recreating history, line = \(javascriptCommand)")
+            //         print(error)
+            //     }
+            //     if let result = result { print("Recreating history: \(result), line= \(javascriptCommand)") }
+            // }
         }
         if let previousDirectoryData = userInfo["prev_wd"] {
             if let previousDirectory = previousDirectoryData as? String {
@@ -2283,7 +2348,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if let environmentVariables = userInfo["environ"] as? [String] {
             var virtualEnvironmentGone = false
             for variable in environmentVariables {
-                let components = variable.split(separator:"=")
+                let components = variable.split(separator:"=", maxSplits: 1)
                 let name = String(components[0])
                 let value = String(components[1])
                 if name == "HOME" { continue }
@@ -2291,9 +2356,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // Don't override PATH, MANPATH, PERL5LIB...
                 // PATH itself will be dealt with separately
                 if (value.hasPrefix("/") && (value.contains(":"))) { continue }
-                // Don't override PERL_MB_OPT either:
+                // Don't override PERL_MB_OPT, PERL_MM_OPT, TERMINFO, PS1 (for now) either:
                 if name == "PERL_MB_OPT" { continue }
-                // Env vars that are files: 
+                if name == "PERL_MM_OPT" { continue }
+                if name == "TERMINFO" { continue }
+                if name == "PS1" { continue }
+                // Env vars that are files:
                 if (value.hasPrefix("/") && (!value.contains(":"))) {
                     // This variable might be a file or directory. Check it exists first:
                     if (!FileManager().fileExists(atPath: value)) {
@@ -2313,6 +2381,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // The virtual environment is not in the right place anymore, get the PATH variable back to the correct value
             if (virtualEnvironmentGone) {
                 unsetenv("_OLD_VIRTUAL_PATH")
+            }
+        }
+        // Fix a specific bug introduced in 1.8.3:
+        if let compileOptionsC = getenv("CCC_OVERRIDE_OPTIONS") {
+            if let compileOptions = String(utf8String: compileOptionsC) {
+                if (compileOptions.isEqual("#^--target")) {
+                    setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1)
+                }
             }
         }
         // Only restore the parts of PATH that are not the main path (before and after),
@@ -2404,38 +2480,31 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                         completionHandler: { (function: Any?, error: Error?) in
                                             if (error != nil) || (function == nil) {
                                                 NSLog("function does not exist, set window.printedContent")
-                                                // the function is undefined, we are here before JS initialization:
-                                                let javascriptCommand = "window.printedContent = \"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\"; "
-                                                self.webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
-                                                    if error != nil {
-                                                        // NSLog("Error in setting window.printedContent, line = \(javascriptCommand)")
-                                                        // print(error)
-                                                    }
-                                                    // if (result != nil) { print(result) }
-                                                }
+                                                // resendCommend will print this on screen
+                                                self.windowPrintedContent = terminalData
                                             } else {
                                                 // The function is defined, we are here *after* JS initialization:
                                                 NSLog("function does exist, calling window.setWindowContent")
-                                                let javascriptCommand = "window.setWindowContent(\"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\"); "
+                                                let javascriptCommand = "window.promptMessage='\(self.parsePrompt())'; window.setWindowContent(\"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\");"
                                                 self.webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                                                     if error != nil {
-                                                        // NSLog("Error in resetting terminal w setWindowContent, line = \(javascriptCommand)")
-                                                        // print(error)
+                                                        NSLog("Error in resetting terminal w setWindowContent, line = \(javascriptCommand)")
+                                                        print(error)
                                                     }
-                                                    // if (result != nil) { print(result) }
+                                                    if let result = result { print(result) }
                                                 }
                                             }
                                         })
         } else {
-            let javascriptCommand = "window.printedContent = \"\";"
+            let javascriptCommand = "window.promptMessage='\(self.parsePrompt())'; window.printedContent = '';"
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
-                    // NSLog("Error in setting terminal to empty, line = \(javascriptCommand)")
-                    // print(error)
+                    NSLog("Error in setting terminal to empty, line = \(javascriptCommand)")
+                    print(error)
                 }
-                if (result != nil) {
-                    // NSLog("Result in setting terminal to empty, line = \(javascriptCommand)")
-                    // print(result)
+                if result != nil {
+                    NSLog("Result in setting terminal to empty, line = \(javascriptCommand)")
+                    print(result)
                 }
             }
         }
@@ -2472,12 +2541,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             currentCommand = commandSent
                             NSLog("Calling command: \(restoreCommand)")
                             self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
-                                if error != nil {
-                                    // print(error)
-                                }
-                                if (result != nil) {
-                                    // print(result)
-                                }
+                                // if let error = error { print(error) }
+                                // if let result = result { print(result) }
                             }
                         }
                     } else {
@@ -2553,9 +2618,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         //
         if (currentPath.count > "PATH=".count) {
             currentPath.removeFirst("PATH=".count)
-            NSLog("Path: \(currentPath)")
+            // NSLog("Path: \(currentPath)")
             let components = currentPath.components(separatedBy: appDependentPath)
-            NSLog("Components of Path: \(components)")
+            // NSLog("Components of Path: \(components)")
             if (components.count > 0) {
                 scene.session.stateRestorationActivity?.userInfo!["beforePath"] = components[0]
             }
@@ -2584,13 +2649,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             if (saveCommand != "") {
                 // NSLog("Sending save command: \(saveCommand)")
-                let data = saveCommand.data(using: .utf8)
-                if (data != nil) {
+                if let data = saveCommand.data(using: .utf8) {
                     ios_switchSession(self.persistentIdentifier?.toCString())
                     ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
                     ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                     if (stdin_file_input != nil) {
-                        stdin_file_input?.write(data!)
+                        stdin_file_input?.write(data)
                         return
                     }
                 }
@@ -2603,13 +2667,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // webView!.evaluateJavaScript("window.printedContent.substring(window.printedContent.length - 25000)",
         webView!.evaluateJavaScript("window.printedContent",
                                     completionHandler: { (printedContent: Any?, error: Error?) in
-                                        if error != nil {
-                                            NSLog("Error in capturing terminal content: \(error!.localizedDescription)")
+                                        if let error = error {
+                                            NSLog("Error in capturing terminal content: \(error.localizedDescription)")
                                             print(error)
                                         }
                                         if (printedContent != nil) {
                                             scene.session.stateRestorationActivity?.userInfo!["terminal"] = printedContent
-                                            // print("printedContent saved.")
+                                            // print("printedContent saved: \(printedContent).")
                                         }
                                     })
         // Keep sound going when going in background, by disabling video tracks:
@@ -2639,26 +2703,22 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // NSLog(command)
         DispatchQueue.main.async {
             self.webView!.evaluateJavaScript(command) { (result, error) in
-                if error != nil {
+                if let error = error {
                     NSLog("Error in activateVoiceOver.")
                     print(error)
                 }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let result = result { print(result) }
             }
         }
         let command2 = "if (window.term_ != undefined) { window.term_.setAccessibilityEnabled(window.voiceOver); }"
         // NSLog(command2)
         DispatchQueue.main.async {
             self.webView!.evaluateJavaScript(command2) { (result, error) in
-                if error != nil {
+                if let error = error {
                     NSLog("Error in activateVoiceOver.")
                     print(error)
                 }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let result = result { print(result) }
             }
         }
     }
@@ -2672,13 +2732,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let command = "window.term_.io.print(\"" + parsedString + "\");"
         DispatchQueue.main.async {
             self.webView!.evaluateJavaScript(command) { (result, error) in
-                if error != nil {
+                if let error = error {
                     NSLog("Error in print; offending line = \(parsedString), error = \(error)")
                     // print(error)
                 }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let result = result { print(result) }
             }
         }
     }
@@ -2690,19 +2748,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return
         }
         if let string = String(data: data, encoding: String.Encoding.utf8) {
-            // NSLog(string)
             outputToWebView(string: string)
             if (string.contains(endOfTransmission)) {
                 stdout_active = false
             }
         } else if let string = String(data: data, encoding: String.Encoding.ascii) {
-            // NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII: \(string)")
+            NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII: \(string)")
             outputToWebView(string: string)
             if (string.contains(endOfTransmission)) {
                 stdout_active = false
             }
         } else {
-            // NSLog("Couldn't convert data in stdout: \(data)")
+            NSLog("Couldn't convert data in stdout: \(data)")
         }
     }
 }
@@ -3143,9 +3200,8 @@ extension SceneDelegate: WKUIDelegate {
                 completionHandler("\(result)")
                 return
             } else if (arguments[1] == "getenv") {
-                let result = ios_getenv(arguments[2])
-                if (result != nil) {
-                    completionHandler(String(cString: result!))
+                if let result = ios_getenv(arguments[2]) {
+                    completionHandler(String(cString: result))
                 } else {
                     completionHandler("0")
                 }

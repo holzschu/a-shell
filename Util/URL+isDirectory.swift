@@ -48,16 +48,12 @@ extension URL {
         if (!self.isFileURL) { return false }
         // same path? OK
         if (self.path == path) { return true }
-        // Do they both begin with "/private/"?
-        if (self.path.hasPrefix("/private/") && path!.hasPrefix("/private/")) { return false }
-        // Do they both begin with "/var/"?
-        if (self.path.hasPrefix("/var/") && path!.hasPrefix("/var/")) { return false }
-        // One begins with /var, the other with /private
-        if (self.path.hasPrefix("/private/")) {
+        // Maybe one begins with /var, the other with /private/var:
+        if (self.path.hasPrefix("/private/") && path!.hasPrefix("/var/")) {
             var shorterPath = self.path
             shorterPath.removeFirst("/private".count)
             if (shorterPath == path) { return true }
-        } else {
+        } else if (self.path.hasPrefix("/var/") && path!.hasPrefix("/private/")) {
             var shorterPath = path!
             shorterPath.removeFirst("/private".count)
             if (self.path == shorterPath) { return true }

@@ -128,8 +128,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 NSLog("Error in creating C SDK directory \(localURL): \(error)")
                 return
             }
-            // usr/lib/clang/13.0.0/lib/wasi/
-            localURL = libraryURL.appendingPathComponent("usr/lib/clang/13.0.0/lib/wasi/") // $HOME/Library/usr/lib/clang/13.0.0/lib/wasi/
+            // usr/lib/clang/14.0.0/lib/wasi/
+            localURL = libraryURL.appendingPathComponent("usr/lib/clang/14.0.0/lib/wasi/") // $HOME/Library/usr/lib/clang/14.0.0/lib/wasi/
             do {
                 if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
                     try FileManager().removeItem(at: localURL)
@@ -145,7 +145,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                       "usr/share",
                                       "usr/lib/wasm32-wasi/crt1.o",
                                       "usr/lib/wasm32-wasi/libc.imports",
-                                      "usr/lib/clang/13.0.0/include",
+                                      "usr/lib/clang/14.0.0/include",
             ]
             let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!)
             
@@ -206,7 +206,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             }
             // One of the libraries is in a different folder:
-            let libraryFileURL = libraryURL.appendingPathComponent("/usr/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a")
+            let libraryFileURL = libraryURL.appendingPathComponent("/usr/lib/clang/14.0.0/lib/wasi/libclang_rt.builtins-wasm32.a")
             if (FileManager().fileExists(atPath: libraryFileURL.path)) {
                 try! FileManager().removeItem(at: libraryFileURL)
             }
@@ -293,9 +293,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // for debugging TeX issues:
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
+        let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                in: .userDomainMask,
+                                                appropriateFor: nil,
+                                                create: true)
         if (appVersion != "a-Shell-mini") {
             if let installedTexVersion = UserDefaults.standard.string(forKey: "TeXVersion") {
-                if (installedTexVersion >= "2021") {
+                if (installedTexVersion == "2021") {
+                    // texlive 2021 already installed, move it to 2022 so the user can start using TeX immediately:
+                    let localURL = libraryURL.appendingPathComponent("texlive") // $HOME/Library/texlive
+                    let tl2021 = localURL.appendingPathComponent("2021")
+                    let tl2022 = localURL.appendingPathComponent("2022")
+                    do {
+                        try FileManager().moveItem(at: tl2021, to: tl2022)
+                    }
+                    catch {
+                        NSLog("Error in copying texlive 2021 to texlive 2022: \(error)")
+                    }
+                    TeXEnabled = true
+                    downloadTeX()
+                    addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
+                    if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
+                        if (installedLuatexVersion == "2021") {
+                            OpentypeEnabled = true;
+                            downloadOpentype();
+                            addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
+                        }
+                    }
+                } else if (installedTexVersion >= "2022") {
                     // We have TeX files already installed. Activate commands:
                     TeXEnabled = true;
                     addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
@@ -303,7 +328,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
             if (TeXEnabled) {
                 if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
-                    if (installedLuatexVersion >= "2021") {
+                    if (installedLuatexVersion >= "2022") {
                         // We have LuaTeX files already installed. Activate commands:
                         OpentypeEnabled = true;
                         addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
@@ -325,22 +350,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("MAGIC", Bundle.main.resourcePath! +  "/usr/share/magic.mgc", 1); // magic file for file command
         setenv("SHORTCUTS", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
         setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
-        let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                in: .userDomainMask,
-                                                appropriateFor: nil,
-                                                create: true)
         setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
         setenv("PAGER", "less", 1) // send control sequences directly to terminal
         setenv("MAGICK_HOME", Bundle.main.resourcePath! +  "/ImageMagick-7", 1)
         setenv("MAGICK_CONFIGURE_PATH", Bundle.main.resourcePath! +  "/ImageMagick-7/config", 1)
+        if (UIDevice.current.model.hasPrefix("iPad")) {
+            setenv("PS1", "[\\w]\\$ ", 1) // iPad default prompt: path name
+        } else {
+            setenv("PS1", "[\\W]\\$ ", 1) // iPhone default prompt: last path component
+        }
+        setenv("TERMINFO", Bundle.main.resourcePath! +  "/terminfo/", 1) // Provide terminfo so termcap has a database
         setenv("TZ", TimeZone.current.identifier, 1) // TimeZone information, since "systemsetup -gettimezone" won't work.
         let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                   in: .userDomainMask,
                                                   appropriateFor: nil,
                                                   create: true)
+        FileManager().changeCurrentDirectoryPath(documentsUrl.path)
         // Make sure aws (Python package) can work:
         setenv("AWS_SHARED_CREDENTIALS_FILE", documentsUrl.appendingPathComponent(".aws/credentials").path, 1)
         setenv("AWS_CONFIG_FILE", documentsUrl.appendingPathComponent(".aws/config").path, 1)
+        setenv("JUPYTER_CONFIG_DIR", documentsUrl.appendingPathComponent(".jupyter").path, 1)
         // Help aiohttp install itself:
         setenv("YARL_NO_EXTENSIONS", "1", 1)
         setenv("MULTIDICT_NO_EXTENSIONS", "1", 1)
@@ -365,7 +394,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             setenv("PERL_CPANM_HOME", documentsUrl.appendingPathComponent(".cpanm").path, 1)
             setenv("PERL_MM_OPT", "'INSTALL_BASE=" + documentsUrl.appendingPathComponent("perl5").path + "'", 1)
             setenv("PERL_MB_OPT", "--install_base \"" + documentsUrl.appendingPathComponent("perl5").path + "\"", 1)
-            setenv("CPAN_OPTS", "-T", 1) // Do not test CPAN modules when installing, because tests tend to fork, and then hang.
+            // setenv("CPAN_OPTS", "-T", 1) // Do not test CPAN modules when installing, because tests tend to fork, and then hang.
             appDependentPath = documentsUrl.appendingPathComponent("perl5").appendingPathComponent("bin").path + ":" + appDependentPath
             setenv("PATH", appDependentPath, 1)
             setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man:" + documentsUrl.appendingPathComponent("perl5").appendingPathComponent("man").path, 1)
@@ -387,7 +416,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (!versionUpToDate) {
             installQueue.async{
                 // The version number changed, so the App has been re-installed. Clean all pre-compiled Python files:
-                NSLog("Cleaning __pycache__")
+                NSLog("Cleaning __pycache__ and .cpan/build")
                 ios_switchSession("wasiSDKLibrariesCreation")
                 executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/__pycache__/*")
                 // Also clean all CPAN build directories (they aren't valid anymore)    :
@@ -410,20 +439,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
         let currentiCloudToken = FileManager().ubiquityIdentityToken
-        let iCloudDocumentsURL = FileManager().url(forUbiquityContainerIdentifier: nil)
-        if (iCloudDocumentsURL != nil) {
+        if let iCloudDocumentsURL = FileManager().url(forUbiquityContainerIdentifier: nil) {
             // Create a document in the iCloud folder to make it visible.
             NSLog("iCloudContainer = \(iCloudDocumentsURL)")
-            let iCloudDirectory = iCloudDocumentsURL?.appendingPathComponent("Documents")
-            if let iCloudDirectoryWelcome = iCloudDirectory?.appendingPathComponent(".Trash") {
-                if (!FileManager().fileExists(atPath: iCloudDirectoryWelcome.path)) {
-                    NSLog("Creating iCloud welcome directory")
-                    do {
-                        try FileManager().createDirectory(atPath: iCloudDirectoryWelcome.path, withIntermediateDirectories: true)
-                    }
-                    catch {
-                        NSLog("Error in creating folder")
-                    }
+            let iCloudDirectory = iCloudDocumentsURL.appendingPathComponent("Documents")
+            let iCloudDirectoryWelcome = iCloudDirectory.appendingPathComponent(".Trash")
+            if (!FileManager().fileExists(atPath: iCloudDirectoryWelcome.path)) {
+                NSLog("Creating iCloud .trash directory")
+                do {
+                    try FileManager().createDirectory(atPath: iCloudDirectoryWelcome.path, withIntermediateDirectories: true)
+                }
+                catch {
+                    NSLog("Error in creating folder")
                 }
             }
         }

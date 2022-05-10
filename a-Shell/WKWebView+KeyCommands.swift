@@ -16,33 +16,29 @@ extension WKWebView {
     
     @objc private func escapeAction(_ sender: UIBarButtonItem) {
         evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "\");") { (result, error) in
-            if error != nil {
-                print(error)
-            }
-            if (result != nil) {
-                print(result)
-            }
+            // if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
     
     /*
     @objc private func upAction(_ sender: UIBarButtonItem) {
         evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[A\");") { (result, error) in
-            if error != nil {
-                print(error)
-            }
-            if (result != nil) {
-                print(result)
-            }
+          if let error = error {
+              print(error)
+          }
+          if let result = result {
+              print(result)
+          }
         }
     }
     
     @objc private func downAction(_ sender: UIBarButtonItem) {
         evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[B\");") { (result, error) in
-            if error != nil {
+            if let error = error {
                 print(error)
             }
-            if (result != nil) {
+            if let result = result {
                 print(result)
             }
             
@@ -51,10 +47,10 @@ extension WKWebView {
 
     @objc private func leftAction(_ sender: UIBarButtonItem) {
         evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[D\");") { (result, error) in
-            if error != nil {
+            if let error = error {
                 print(error)
             }
-            if (result != nil) {
+            if let result = result {
                 print(result)
             }
             
@@ -63,10 +59,10 @@ extension WKWebView {
 
     @objc private func rightAction(_ sender: UIBarButtonItem) {
         evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[C\");") { (result, error) in
-            if error != nil {
+            if let error = error {
                 print(error)
             }
-            if (result != nil) {
+            if let result = result {
                 print(result)
             }
             
@@ -107,12 +103,8 @@ extension WKWebView {
         }
         """#
         evaluateJavaScript(javascriptCommand) { (result, error) in
-            if error != nil {
-               // print(error)
-            }
-            if (result != nil) {
-              //  print(result)
-            }
+            // if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
 
@@ -131,10 +123,16 @@ extension WKWebView {
             UIKeyCommand(input: "n", modifierFlags:.command, action: #selector(newWindow), discoverabilityTitle: "New window"),
             UIKeyCommand(input: "w", modifierFlags:.command, action: #selector(closeWindow), discoverabilityTitle: "Close window"),
             UIKeyCommand(input: "x", modifierFlags:.command, action: #selector(cutText), discoverabilityTitle: "Cut"),
-            // Still required with external keyboards as of May 26, 2020: control-C maps to control-C (and same with control-D)
-            UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC)),
-            UIKeyCommand(input: "d", modifierFlags:.control, action: #selector(insertD)),
-        ]
+            // Still required with external keyboards as of May 26, 2020: control-C maps to control-C
+            UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC))
+            ]
+        if #available(iOS 15.0, *) {
+            let dKey = UIKeyCommand(input: "d", modifierFlags:.control, action: #selector(insertD))
+            dKey.wantsPriorityOverSystemBehavior = true
+            basicKeyCommands.append(dKey)
+        } else {
+            basicKeyCommands.append(UIKeyCommand(input: "d", modifierFlags:.control, action: #selector(insertD)))
+        }
         /* Caps Lock remapped to escape: */
         if (UserDefaults.standard.bool(forKey: "escape_preference")) {
             // If we remapped caps-lock to escape, we need to disable caps-lock, at least with certain keyboards.
@@ -156,10 +154,8 @@ extension WKWebView {
     @objc func cutText(_ sender: UIKeyCommand) {
         let commandString = "window.term_.onCut('null');"
         evaluateJavaScript(commandString) { (result, error) in
-            if error != nil {
-               print(error)
-               print(result)
-            }
+            if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
 
@@ -172,14 +168,12 @@ extension WKWebView {
         }
         let commandString = "window.term_.io.onVTKeystroke(\'\(string)');"
         evaluateJavaScript(commandString) { (result, error) in
-            if error != nil {
-               // print(error)
-               // print(result)
-            }
+            if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
     @objc func insertD(_ sender: UIKeyCommand) {
-        // Make sure we send control-C from external KB:
+        // Make sure we send control-D from external KB:
         guard (sender.input != nil) else { return }
         var string = sender.input!
         if (sender.modifierFlags.contains(.control)) {
@@ -187,10 +181,8 @@ extension WKWebView {
         }
         let commandString = "window.term_.io.onVTKeystroke(\'\(string)');"
         evaluateJavaScript(commandString) { (result, error) in
-            if error != nil {
-               // print(error)
-               // print(result)
-            }
+            if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
 
@@ -199,10 +191,8 @@ extension WKWebView {
         guard (sender.input != nil) else { return }
         let commandString = "window.term_.io.onVTKeystroke(\'\(sender.input!)');"
         evaluateJavaScript(commandString) { (result, error) in
-            if error != nil {
-                print(error)
-                print(result)
-            }
+            if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
 

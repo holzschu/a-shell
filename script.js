@@ -94,6 +94,7 @@ function printPrompt() {
 	if (window.commandRunning == '') {
 		window.term_.io.print(window.promptMessage); 
 		window.commandRunning = '';
+		window.term_.io.currentCommand = '';
 		window.interactiveCommandRunning = false;
 	} else {
 		// let the running command print its own prompt:
@@ -561,6 +562,7 @@ function setupHterm() {
 						io.currentCommand = '';
 						break;
 					case String.fromCharCode(127): // delete key from iOS keyboard
+					case String.fromCharCode(8):   // Ctrl+H
 						if (currentCommandCursorPosition > 0) { 
 							if (this.document_.getSelection().type == 'Range') {
 								term.onCut(null); // remove the selection without copying it
@@ -576,7 +578,14 @@ function setupHterm() {
 					case String.fromCharCode(27) + "[A":  // Up arrow
 					case String.fromCharCode(27) + "[1;3A":  // Alt-Up arrow
 					case String.fromCharCode(16):  // Ctrl+P
-						if (window.commandRunning != '') {
+						// popup menu being displayed, change it:
+						if (autocompleteOn) {
+							if (autocompleteIndex > 0) {
+								autocompleteIndex -= 1; 
+								printAutocompleteString(autocompleteList[autocompleteIndex]);
+							}													
+							break;
+						} else if (window.commandRunning != '') {
 							if (window.commandInsideCommandIndex > 0) {
 								if (window.commandInsideCommandIndex === window.maxCommandInsideCommandIndex) {
 									// Store current command: 
@@ -600,14 +609,6 @@ function setupHterm() {
 								currentCommandCursorPosition = io.currentCommand.length;
 							}
 						} else {
-							// popup menu being displayed, change it:
-							if (autocompleteOn) {
-								if (autocompleteIndex > 0) {
-									autocompleteIndex -= 1; 
-									printAutocompleteString(autocompleteList[autocompleteIndex]);
-								}													
-								break;
-							}
 							if (window.commandIndex > 0) {
 								if (window.commandIndex === window.maxCommandIndex) {
 									// Store current command: 
@@ -633,7 +634,14 @@ function setupHterm() {
 					case String.fromCharCode(27) + "[B":  // Down arrow
 					case String.fromCharCode(27) + "[1;3B":  // Alt-Down arrow
 					case String.fromCharCode(14):  // Ctrl+N
-						if (window.commandRunning != '') {
+						// popup menu being displayed, change it:
+						if (autocompleteOn) {
+							if (autocompleteIndex < autocompleteList.length - 1) {
+								autocompleteIndex += 1; 
+								printAutocompleteString(autocompleteList[autocompleteIndex]);
+							}													
+							break;
+						} else if (window.commandRunning != '') {
 							if (window.commandInsideCommandIndex < window.maxCommandInsideCommandIndex) {
 								io.print('\x1b[' + (window.promptLine + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
 								io.print('\x1b[0J'); // delete display after cursor
@@ -650,14 +658,6 @@ function setupHterm() {
 								currentCommandCursorPosition = io.currentCommand.length;
 							}
 						} else {
-							// popup menu being displayed, change it:
-							if (autocompleteOn) {
-								if (autocompleteIndex < autocompleteList.length - 1) {
-									autocompleteIndex += 1; 
-									printAutocompleteString(autocompleteList[autocompleteIndex]);
-								}													
-								break;
-							}
 							if (window.commandIndex < window.maxCommandIndex) {
 								var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
 								io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
@@ -756,7 +756,7 @@ function setupHterm() {
 						}
 						break;
 					case String.fromCharCode(9):  // Tab, so autocomplete
-						if (window.commandRunning == '') {
+						if ((window.commandRunning == '') || window.commandRunning.startsWith('dash')) {
 							if (autocompleteOn) {
 								// hit tab when menu already visible = select current
 								pickCurrentValue();
@@ -786,6 +786,9 @@ function setupHterm() {
 						disableAutocompleteMenu();
 						// Before *not*-executing command, move to end of line if not already there:
 						// Compute how many lines should we move downward:
+						if (io.currentCommand == '') {
+							break;
+						}
 						var beginCommand = io.currentCommand.slice(0, currentCommandCursorPosition); 
 						var lineCursor = Math.floor((lib.wc.strWidth(beginCommand) + window.promptEnd)/ term.screenSize.width);
 						var lineEndCommand = Math.floor((lib.wc.strWidth(io.currentCommand) + window.promptEnd)/ term.screenSize.width);
@@ -803,7 +806,8 @@ function setupHterm() {
 							window.commandIndex = window.maxCommandIndex
 						}
 						break;
-					case String.fromCharCode(4):  // Ctrl-D: deleter character after cursor TODO: test
+					case String.fromCharCode(27) + "[3~":  // Delete key
+					case String.fromCharCode(4):  // Ctrl-D: deleter character after cursor 
 						disableAutocompleteMenu();
 						if (currentCommandCursorPosition < io.currentCommand.length) {
 							var currentChar = io.currentCommand[currentCommandCursorPosition];
@@ -884,9 +888,9 @@ function setupHterm() {
 					case String.fromCharCode(32): // Space: end auto-complete
 						disableAutocompleteMenu(); 
 					default:
+						// TODO: Ctrl-H
 						// window.webkit.messageHandlers.aShell.postMessage('onVTKeyStroke received ' + string);
 						// insert character at cursor position:
-						// DID NOT CUT?? What is my selection? 
 						if (this.document_.getSelection().type == 'Range') {
 							term.onCut(null); // remove the selection without copying it
 						}
@@ -997,22 +1001,21 @@ function setupHterm() {
 	window.commandInsideCommandArray = new Array();
 	window.commandInsideCommandIndex = 0;
 	window.maxCommandInsideCommandIndex = 0;
-	window.promptMessage = "$ "; // prompt for commands, configurable
+	if (window.promptMessage === undefined) {
+		window.promptMessage = "$ ";
+	}
 	window.promptEnd = 2; // prompt for commands, configurable
 	window.promptLine = 0; // term line on which the prompt started
 	window.promptScroll = 0; // scroll line on which the scrollPort was when the prompt started
 	if (window.voiceOver != undefined) {
 		window.term_.setAccessibilityEnabled(window.voiceOver);
 	}
-	if (window.printedContent === undefined) {
-		window.printedContent = '';
-	}
-	if (window.printedContent == '') {
-		printPrompt(); // first prompt
-	}
-	updatePromptPosition();
+	// if (window.printedContent === undefined) {
+	// 	window.printedContent = '';
+	// }
 	window.duringResize = false;
 	// If a command was started while we were starting the terminal, we might not know about it:
+	// This also prints the first prompt, after updating the prompt message.
 	window.webkit.messageHandlers.aShell.postMessage('resendCommand:');
 
 	initializeTerminalGestures();

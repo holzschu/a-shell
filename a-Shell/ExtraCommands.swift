@@ -100,7 +100,7 @@ You can download more commands at: https://github.com/holzschu/a-Shell-commands/
             } else if (bashmarks) {
                 delegate.printText(string: "\n- bookmark the current directory with \"s <name>\", and access it later with \"cd ~name\" or \"g <name>\".\n- l or p: show current list of bookmarks\n- r <name1> <name2>: rename a bookmark.\n- d <name>: delete a bookmark\n")
             }
-            delegate.printText(string: "\nSupport: e-mail (another_shell@icloud.com), Twitter (@a_Shell_iOS), github (https://github.com/holzschu/a-shell/issues) and Discord (https://discord.gg/fskuN9dW).\n")
+            delegate.printText(string: "\nSupport: e-mail (another_shell@icloud.com), Twitter (@a_Shell_iOS), github (https://github.com/holzschu/a-shell/issues) and Discord (https://discord.gg/cvYnZm69Gy).\n")
             delegate.printText(string: "\nFor a full list of commands, type help -l\n")
         } else {
             guard let argV = argv?[1] else {
@@ -157,6 +157,7 @@ Most terminal commands are from the BSD distribution, mainly through the Apple O
 bc: Gavin Howard BSD port of bc, https://github.com/gavinhoward/bc
 curl: Daniel Stenberg and contributors, https://github.com/curl/curl
 ctags: https://github.com/universal-ctags/ctags/
+dash: Almquist Shell, ported by Herbert Xu: http://gondor.apana.org.au/~herbert/dash/
 file: https://github.com/file/file/
 jsi: Henry Heino, https://github.com/personalizedrefrigerator
 ImageMagick: ImageMagick Studio LLC, https://imagemagick.org
@@ -171,7 +172,7 @@ Python3: Python Software Foundation, https://www.python.org/about/
 ssh, scp, sftp: OpenSSH, https://www.openssh.com
 tar: https://libarchive.org
 tree: http://mama.indstate.edu/users/ice/tree/
-TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2019.
+TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2022.
 Vim: Bram Moolenaar and the Vim community, https://www.vim.org
 Vim-session: Peter Odding, http://peterodding.com/code/vim/session
 webAssembly: wasmer.io and the wasi SDK https://github.com/WebAssembly/wasi-sdk
@@ -288,7 +289,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     -n | --name: set font name. Nothing or "picker" to get the system font picker.
     -b | --background: set background color
     -f | --foreground: set foreground color
-    -c | --cursor: set cursor and hilight color
+    -c | --cursor: set cursor and highlight color
     -g | --global: extend settings to all windows currently open
     -p | --permanent: store settings as default values
     -d | --default: reset all settings to default values
@@ -676,8 +677,7 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
                 return 0
             }
             let key = String(cString: argC)
-            let urlPath = storedNamesDictionary[key]
-            if (urlPath != nil) {
+            if let urlPath = storedNamesDictionary[key] {
                 let path = (urlPath as! String)
                 let bookmark = storedBookmarksDictionary[path]
                 if (bookmark == nil) {
@@ -725,8 +725,7 @@ public func checkBookmarks() {
     var mustUpdateDictionaries = false
     for (key, urlPath) in storedNamesDictionary {
         let path = (urlPath as! String)
-        let bookmark = storedBookmarksDictionary[path]
-        if (bookmark != nil) {
+        if let bookmark = storedBookmarksDictionary[path] {
             var stale = false
             do {
                 let previousURL = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
@@ -828,9 +827,8 @@ public func bookmark(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointe
         fputs(usage, thread_stderr)
         return 0
     }
-    let firstArgC = argv?[1]
-    if (firstArgC != nil) {
-        if (String(cString: firstArgC!).hasPrefix("-h")) {
+    if let firstArgC = argv?[1] {
+        if (String(cString: firstArgC).hasPrefix("-h")) {
             fputs(usage, thread_stderr)
             return 0
         }
@@ -1286,12 +1284,8 @@ public func stopInteractive() {
         if let delegate = currentDelegate {
             delegate.resignFirstResponder()
             delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = false;") { (result, error) in
-                if error != nil {
-                    // print(error)
-                }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let error = error { print(error) }
+                // if let result = result { print(result) }
             }
         }
     }
@@ -1303,12 +1297,10 @@ public func startInteractive() {
         if let delegate = currentDelegate {
             delegate.resignFirstResponder()
             delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = true;") { (result, error) in
-                if error != nil {
-                    // print(error)
+                if let error = error {
+                    print(error)
                 }
-                if (result != nil) {
-                    // print(result)
-                }
+                // if let result = result { print(result) }
             }
         }
     }
