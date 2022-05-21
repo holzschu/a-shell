@@ -61,11 +61,6 @@ _ = Package(
             url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/text.xcframework.zip",
             checksum: "c832c4e6b234c297526f2e16cfbf197da5be332dc69a3bdf452e135f8c33a77c"
         ),
-        .binaryTarget(
-            name: "mandoc",
-            url: "https://github.com/holzschu/ios_system/releases/download/2.7/mandoc.xcframework.zip",
-            checksum: "02b952191ec311fe04df0001e85e8812f68473b6616eaed4a03c045aed111a43"
-        ),
         // network_ios
         .binaryTarget(
             name: "network_ios",
@@ -234,28 +229,70 @@ _ = Package(
             url: "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/pdftexA.xcframework.zip",
             checksum: "16130dd0486e8fb352be4bc461f382733436576a5ad5c0ecccec847f3db8c506"
         ),
+        // freetype and harfbuzz:
+        .binaryTarget(
+            name: "freetype",
+            url: "https://github.com/holzschu/Python-aux/releases/download/1.0/freetype.xcframework.zip",
+            checksum: "f547dd4944465e889e944cf809662af66109bc35fe09b88f231f0e2228e8aba4"
+        ),
+        .binaryTarget(
+            name: "harfbuzz",
+            url: "https://github.com/holzschu/Python-aux/releases/download/1.0/harfbuzz.xcframework.zip",
+            checksum: "d28dc80e57df750f1ae62f48785297c031874e33328888ccba96b1496b39a031"
+        ),
         // Perl and make (single-architecture xcframeworks... for now)
         .binaryTarget(
             name: "perl",
-            url: "https://github.com/holzschu/ios_system/releases/download/2.7/perl.xcframework.zip",
-            checksum: "7f470ea838139a4aaa4dee8f3f0505c3a5d8769a54fcda9336b5d60b60abec62"
+            url: "https://github.com/holzschu/perl5/releases/download/iOS_1.0/perl.xcframework.zip",
+            checksum: "98a680b9cd2411e1133a55eaac7f7429b0d3d184a25b9a7b9c4c047dbe0626d4"
         ),
         .binaryTarget(
             name: "perlA",
-            url: "https://github.com/holzschu/ios_system/releases/download/2.7/perlA.xcframework.zip",
-            checksum: "8015a11ab6fa15aeb16c417b229d10b28e28e756c533b7f3faf3b6029b83dc49"
+            url: "https://github.com/holzschu/perl5/releases/download/iOS_1.0/perlA.xcframework.zip",
+            checksum: "20a18a5aa496dc54af7a3a11161a1ef2b7bbf3bd037d527673f371f800e72665"
         ),
         .binaryTarget(
             name: "perlB",
-            url: "https://github.com/holzschu/ios_system/releases/download/2.7/perlB.xcframework.zip",
+            url: "https://github.com/holzschu/perl5/releases/download/iOS_1.0/perlB.xcframework.zip",
             checksum: "fd2ca9fb3853aba1d6744c03db6cc88783d170ed0c119bd97e8ebe6fa3ec30b3"
         ),
         .binaryTarget(
-            name: "make",
-            url: "https://github.com/holzschu/ios_system/releases/download/2.7/make.xcframework.zip",
-            checksum: "942a05e1cd165c4fb955b274e08a1069e388ae6706770e617e47ce55927b2b2f"
+            name: "lg2",
+            url: "https://github.com/holzschu/libgit2/releases/download/ios_1.0/lg2.xcframework.zip",
+            checksum: "7d205a771be8d120a80d2f7281135dfffd21a3713c86eb4f1957638f6b4b365e"
         ),
-        // TODO: update perl/make/man binaries, add dash binary.
+        // Packages that don't have their own repository: 
+        .binaryTarget(
+            name: "mandoc",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/mandoc.xcframework.zip",
+            checksum: "86428238cb357ece2da6b813fe493dfcee1f4efc91ec535d73b3e581d9b8e21b"
+        ),
+        .binaryTarget(
+            name: "make",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/make.xcframework.zip",
+            checksum: "6f9dca82bfdee1be8ad0ec1e52870bee6b3e309ac29f0995a6d5a41003c26d4f"
+        ),
+        .binaryTarget(
+            name: "dash",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dash.xcframework.zip",
+            checksum: "c019c30377247a4244dd34464f1a71f6730717b0ec779114241ca68729a173d1"
+        ),
+        .binaryTarget(
+            name: "unrar",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/unrar.xcframework.zip",
+            checksum: "b1c2318db3b89a668abd66f69036ec9c3c5d474b2d75a0b1ffbaf2ac47b02782"
+        ),
+        .binaryTarget(
+            name: "ffmpeg",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/ffmpeg.xcframework.zip",
+            checksum: "627a9392a8d4704e4e04636692e3baeacb7af4f273e61fe676270aa16b1ef371"
+        ),
+        .binaryTarget(
+            name: "ffprobe",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/ffprobe.xcframework.zip",
+            checksum: "c66df5198becb1e0432c27c8f0df628fa185224c9f0bcff2039e3bd21246b130"
+        ),
+        // TODO: update make/mandoc binaries, add dash, lg2, unrar binary.
         .target(
             name: "build",
             dependencies: ["FMake"]
