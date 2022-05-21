@@ -23,43 +23,43 @@ _ = Package(
         // ios_system:
         .binaryTarget(
             name: "ios_system",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.0/ios_system.xcframework.zip",
-            checksum: "66f4a5e696e29f3c70e8bab3a3e8c5f5a0bda48ab102e9db98a90db93b0981ea"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/ios_system.xcframework.zip",
+            checksum: "635fc346304416f05f94a61ded08a2a5792f5072081eca7c142834326366d4d0"
         ),
         .binaryTarget(
             name: "awk",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.0/awk.xcframework.zip",
-            checksum: "d0ac9d6d98b8129c8b392a337c7d5e8289cdbdf9be3d5e6a5376891489c520a1"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/awk.xcframework.zip",
+            checksum: "d8fc59849698f9b0b43b5fa77d7d38410ec95482965e3a11afe03e6bebd06b88"
         ),
         .binaryTarget(
             name: "curl_ios",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.0/curl_ios.xcframework.zip",
-            checksum: "8281e5b74ce6c4f6132415172cc806d097ba283048eb0882d14e1485ec49dade"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/curl_ios.xcframework.zip",
+            checksum: "c07f2fca448a1cc23ba98bd979962a44587b4017508e101e1f7dcb4d0ca27b60"
         ),
         .binaryTarget(
             name: "files",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.0/files.xcframework.zip",
-            checksum: "8296849e51ee9ddbb3796a1a87bb3a411cfdabd827d48bd5713fbfb3333d9862"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/files.xcframework.zip",
+            checksum: "c24641cf21f710d6db0832399e261c01b3504caf86ff6d13dcf0dcbaa1dd1172"
         ),
         .binaryTarget(
             name: "shell",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.0/shell.xcframework.zip",
-            checksum: "846651a205e9d781f1f71d3124b5cfca3edfa7722a6c11977ab9c6c73049a810"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/shell.xcframework.zip",
+            checksum: "cbd1a7675990777cef0d19c85295915f9d5af4430d1c7c631322d6e19495b148"
         ),
         .binaryTarget(
             name: "ssh_cmd",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.0/ssh_cmd.xcframework.zip",
-            checksum: "9b57b07d4e552f30f7127843860defe4e8edbad8c0b5f2e4c7e99399713b87e6"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/ssh_cmd.xcframework.zip",
+            checksum: "67174120060604888ee15c7b5f71686b671d80224f1cd9576f8d24381ed96759"
         ),
         .binaryTarget(
             name: "tar",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.0/tar.xcframework.zip",
-            checksum: "f5769e81aa15730cc041a7d95a8a8b549888633b2649b4f0adc20b437c25fb4d"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/tar.xcframework.zip",
+            checksum: "e5e1ca866576d291a75b9f8ae18cdf215a6b70efde3144e7a0905488b0d42dc5"
         ),
         .binaryTarget(
             name: "text",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.0/text.xcframework.zip",
-            checksum: "bd594ed4bbc67cf9c9393e360a35a35dd9674a4be0d460622221935ea7c76eb2"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/text.xcframework.zip",
+            checksum: "c832c4e6b234c297526f2e16cfbf197da5be332dc69a3bdf452e135f8c33a77c"
         ),
         .binaryTarget(
             name: "mandoc",
@@ -120,53 +120,53 @@ _ = Package(
         // LLVM:
         .binaryTarget(
             name: "ar",
-            url: "https://github.com/holzschu/llvm-project/releases/download/13.0.0/ar.xcframework.zip",
-            checksum: "b64e6430fafa6353734229cf3f36efac3b3bb00cfa271ba83b95992a479f3704"
+            url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/ar.xcframework.zip",
+            checksum: "69727d7f851ad5b0a77732e7cff70112a0cf8ec12d8e8fc869f6470a1880c1c5"
         ),
         .binaryTarget(
             name: "lld",
-            url: "https://github.com/holzschu/llvm-project/releases/download/13.0.0/lld.xcframework.zip",
-            checksum: "f49af64fcef79629277473d159db802f4772cc0fce4b76a30d77fc7177e572d1"
+            url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/lld.xcframework.zip",
+            checksum: "240c1cd5cfc7557dd859af9b9d20aa9623f935dc92746a8be21edba8dbd11f34"
         ),
         .binaryTarget(
             name: "llc",
-            url: "https://github.com/holzschu/llvm-project/releases/download/13.0.0/llc.xcframework.zip",
-            checksum: "93952531fb43d799b0a0ffb6cc9cc351e71245edb133ee2e0ed4592df7b3f0c9"
+            url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/llc.xcframework.zip",
+            checksum: "bfd1cf1e42a5af03716bdd0d3d5404cde7d56f86c52cfebcc69a7ecbd2d5127b"
         ),
         .binaryTarget(
             name: "clang",
-            url: "https://github.com/holzschu/llvm-project/releases/download/13.0.0/clang.xcframework.zip",
-            checksum: "d0f45645bca98f49a3acd926a34b80a9403586fde28ffbba5b766980d24776a8"
+            url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/clang.xcframework.zip",
+            checksum: "9de9f72334c99f27d3ac5844b8d3feffcaed3086997e7c2538f887667e8ca179"
         ),
         .binaryTarget(
             name: "dis",
-            url: "https://github.com/holzschu/llvm-project/releases/download/13.0.0/dis.xcframework.zip",
-            checksum: "fc8c0aca29e0a8653aea5343b6585e94b3d550a40b35477d18549a0434df1b3a"
+            url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/dis.xcframework.zip",
+            checksum: "6613ee063331e39fdea044cc119511ef61df8eb247e6db2e376240af224623c7"
         ),
         .binaryTarget(
             name: "libLLVM",
-            url: "https://github.com/holzschu/llvm-project/releases/download/13.0.0/libLLVM.xcframework.zip",
-            checksum: "2e5f05afd237b79ed264759b602c31af0907cab5bc45af2851d971358f412d4f"
+            url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/libLLVM.xcframework.zip",
+            checksum: "bbae5b3a7952b2f1e89fb93b25b41931a53b6d8c99d24dfe6a893e615b177428"
         ),
         .binaryTarget(
             name: "link",
-            url: "https://github.com/holzschu/llvm-project/releases/download/13.0.0/link.xcframework.zip",
-            checksum: "e4b3531bd3ca702ddf5c1f652da8c83b956ab6d8b19107de0972b4da3151e781"
+            url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/link.xcframework.zip",
+            checksum: "3bf79972c961f418c9964df04dec81794dd6beae88f07702e8b51e074ed2085f"
         ),
         .binaryTarget(
             name: "lli",
-            url: "https://github.com/holzschu/llvm-project/releases/download/13.0.0/lli.xcframework.zip",
-            checksum: "469fa5fae7dc51c5195661505c5a32f3023a2136ed3057c79baae27b19eff220"
+            url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/lli.xcframework.zip",
+            checksum: "a7976820f7349daf1c136ae513d506c954502ff10b92a92dbd3538bd625e0719"
         ),
         .binaryTarget(
             name: "nm",
-            url: "https://github.com/holzschu/llvm-project/releases/download/13.0.0/nm.xcframework.zip",
-            checksum: "ddb50953b2b6b2e9331a992b7f861ad0f2581788b2520b526ec4c8ca86bada3b"
+            url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/nm.xcframework.zip",
+            checksum: "3c004f6d5345bde727bb34d2daa252c46a9cf5ee3e053c7a18b2933cf0df16c0"
         ),
         .binaryTarget(
             name: "opt",
-            url: "https://github.com/holzschu/llvm-project/releases/download/13.0.0/opt.xcframework.zip",
-            checksum: "13c5748e2f5280879b7c28711c99648d850b75147c961e5031e0dabb8efd8cb9"
+            url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/opt.xcframework.zip",
+            checksum: "616d858d3bfd3f2782baedda34ba1fb6c449704faeae0db59e742d27169710ab"
         ),
         // texlive: 
         .binaryTarget(
@@ -215,7 +215,7 @@ _ = Package(
             url: "https://github.com/holzschu/ios_system/releases/download/2.7/make.xcframework.zip",
             checksum: "942a05e1cd165c4fb955b274e08a1069e388ae6706770e617e47ce55927b2b2f"
         ),
-        //
+        // TODO: update TeX binaries, update perl/make/man binaries, add dash binary.
         .target(
             name: "build",
             dependencies: ["FMake"]
