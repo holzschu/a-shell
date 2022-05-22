@@ -23,15 +23,13 @@ a-Shell is now <a href="https://holzschu.github.io/a-Shell_iOS/">available on th
 
 If you want to compile the project yourself, you will need the following steps: 
 * download the entire project and its sub-modules: `git submodule update --init --recursive`
-* download all the xcFrameworks: `swift run --package-path xcfs` (or `downloadFrameworks.sh`)
-* create the Python xcFrameworks (or remove them from the project, if you don't need Python):
-    * You'll need the Xcode command line tools, if you don't already have them: `sudo xcode-select --install` 
-    * You also need the OpenSSL libraries (libssl and libcrypto), XQuartz (freetype), and Node.js (npm) for macOS (we provide the versions for iOS and simulator).
-    * change directory to `cpython`: `cd cpython`
-    * build Python 3.9 and all the associated libraries / frameworks: `sh ./downloadAndCompile.sh` (this step takes more than 30 mn on a 2GHz i5 MBP, YMMV). 
-* get back to the main directory, open the Xcode project and click "Build", then "Run" as you like.
-
-I am looking for ways to make the process more automatic. Then again, unless you change things in Python, you won't need to re-run through steps 2 and 3. 
+* download all the xcFrameworks: `downloadFrameworks.sh`
+    * this will download both the standard Apple frameworks (in `xcfs/.build/artefacts/xcfs`, with checksum control) and the Python frameworks and modules (in `cpython/XcFrameworsk` and `cpython/Library`). 
+    * If you're *very* motivated, you can recompile the Python frameworks: 
+        * You'll need the Xcode command line tools, if you don't already have them: `sudo xcode-select --install` 
+        * You also need the OpenSSL libraries (libssl and libcrypto), XQuartz (freetype), and Node.js (npm) for macOS (we provide the versions for iOS and simulator).
+        * change directory to `cpython`: `cd cpython`
+        * build Python 3.9 and all the associated libraries / frameworks: `sh ./downloadAndCompile.sh` (this step takes more than 30 mn on a 2GHz i5 MBP, YMMV). 
 
 a-Shell now runs on the devices and on the simulator, as you wish. 
 
