@@ -254,7 +254,7 @@ _ = Package(
         .binaryTarget(
             name: "perlB",
             url: "https://github.com/holzschu/perl5/releases/download/iOS_1.0/perlB.xcframework.zip",
-            checksum: "fd2ca9fb3853aba1d6744c03db6cc88783d170ed0c119bd97e8ebe6fa3ec30b3"
+            checksum: "593ba4f8f734d669040f9d9be63092e275d5dba72f1b1826c6806f3c4cec7604"
         ),
         .binaryTarget(
             name: "lg2",
