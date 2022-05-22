@@ -347,6 +347,9 @@ Show available sample formats.
 .IP "\fB\-layouts\fR" 4
 .IX Item "-layouts"
 Show channel names and standard channel layouts.
+.IP "\fB\-dispositions\fR" 4
+.IX Item "-dispositions"
+Show stream dispositions.
 .IP "\fB\-colors\fR" 4
 .IX Item "-colors"
 Show recognized color names.
@@ -2161,6 +2164,9 @@ following identifiers:
 .IP "\fBdownmix\fR" 4
 .IX Item "downmix"
 \&\s-1DL+DR\s0
+.IP "\fB22.2\fR" 4
+.IX Item "22.2"
+\&\s-1FL+FR+FC+LFE+BL+BR+FLC+FRC+BC+SL+SR+TC+TFL+TFC+TFR+TBL+TBC+TBR+LFE2+TSL+TSR+BFC+BFL+BFR\s0
 .PP
 A custom channel layout can be specified as a sequence of terms, separated by
 \&'+' or '|'. Each term can be:
@@ -3973,13 +3979,19 @@ The following options are supported by the libdav1d wrapper.
 .IP "\fBframethreads\fR" 4
 .IX Item "framethreads"
 Set amount of frame threads to use during decoding. The default value is 0 (autodetect).
+This option is deprecated for libdav1d >= 1.0 and will be removed in the future. Use the
+global option \f(CW\*(C`threads\*(C'\fR instead.
 .IP "\fBtilethreads\fR" 4
 .IX Item "tilethreads"
 Set amount of tile threads to use during decoding. The default value is 0 (autodetect).
+This option is deprecated for libdav1d >= 1.0 and will be removed in the future. Use the
+global option \f(CW\*(C`threads\*(C'\fR instead.
 .IP "\fBfilmgrain\fR" 4
 .IX Item "filmgrain"
 Apply film grain to the decoded video if present in the bitstream. Defaults to the
 internal default of the library.
+This option is deprecated and will be removed in the future. See the global option
+\&\f(CW\*(C`export_side_data\*(C'\fR to export Film Grain parameters instead of applying it.
 .IP "\fBoppoint\fR" 4
 .IX Item "oppoint"
 Select an operating point of a scalable \s-1AV1\s0 bitstream (0 \- 31). Defaults to the
@@ -4368,7 +4380,7 @@ Top-left position.
 .RE
 .IP "\fBtick_rate\fR" 4
 .IX Item "tick_rate"
-Set the tick rate (\fInum_units_in_display_tick / time_scale\fR) in
+Set the tick rate (\fItime_scale / num_units_in_display_tick\fR) in
 the timing info in the sequence header.
 .IP "\fBnum_ticks_per_picture\fR" 4
 .IX Item "num_ticks_per_picture"
@@ -4543,7 +4555,7 @@ Set the chroma sample location in the stream (see H.264 section
 E.2.1 and figure E\-1).
 .IP "\fBtick_rate\fR" 4
 .IX Item "tick_rate"
-Set the tick rate (num_units_in_tick / time_scale) in the \s-1VUI\s0
+Set the tick rate (time_scale / num_units_in_tick) in the \s-1VUI\s0
 parameters.  This is the smallest time unit representable in the
 stream, and in many cases represents the field rate of the stream
 (double the frame rate).
@@ -4664,8 +4676,8 @@ Set the chroma sample location in the stream (see H.265 section
 E.3.1 and figure E.1).
 .IP "\fBtick_rate\fR" 4
 .IX Item "tick_rate"
-Set the tick rate in the \s-1VPS\s0 and \s-1VUI\s0 parameters (num_units_in_tick /
-time_scale).  Combined with \fBnum_ticks_poc_diff_one\fR, this can
+Set the tick rate in the \s-1VPS\s0 and \s-1VUI\s0 parameters (time_scale /
+num_units_in_tick). Combined with \fBnum_ticks_poc_diff_one\fR, this can
 set a constant framerate in the stream.  Note that it is likely to be
 overridden by container parameters when the stream is in a container.
 .IP "\fBnum_ticks_poc_diff_one\fR" 4
@@ -5532,6 +5544,12 @@ The description of some of the currently available demuxers follows.
 Audible Format 2, 3, and 4 demuxer.
 .PP
 This demuxer is used to demux Audible Format 2, 3, and 4 (.aa) files.
+.SS "aac"
+.IX Subsection "aac"
+Raw Audio Data Transport Stream \s-1AAC\s0 demuxer.
+.PP
+This demuxer is used to demux an \s-1ADTS\s0 input containing a single \s-1AAC\s0 stream
+alongwith any ID3v1/2 or \s-1APE\s0 tags in it.
 .SS "apng"
 .IX Subsection "apng"
 Animated Portable Network Graphics demuxer.
@@ -5596,8 +5614,7 @@ All subsequent file-related directives apply to that file.
 .ie n .IP "\fB\f(CB""ffconcat version 1.0""\fB\fR" 4
 .el .IP "\fB\f(CBffconcat version 1.0\fB\fR" 4
 .IX Item "ffconcat version 1.0"
-Identify the script type and version. It also sets the \fBsafe\fR option
-to 1 if it was \-1.
+Identify the script type and version.
 .Sp
 To make FFmpeg recognize the format automatically, this directive must
 appear exactly as is (no extra space or byte-order-mark) on the very first
@@ -5655,6 +5672,18 @@ directive) will be reduced based on their specified Out point.
 Metadata of the packets of the file. The specified metadata will be set for
 each file packet. You can specify this directive multiple times to add multiple
 metadata entries.
+This directive is deprecated, use \f(CW\*(C`file_packet_meta\*(C'\fR instead.
+.ie n .IP "\fB\f(CB""file_packet_meta \f(CBkey\f(CB \f(CBvalue\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBfile_packet_meta \f(CBkey\f(CB \f(CBvalue\f(CB\fB\fR" 4
+.IX Item "file_packet_meta key value"
+Metadata of the packets of the file. The specified metadata will be set for
+each file packet. You can specify this directive multiple times to add multiple
+metadata entries.
+.ie n .IP "\fB\f(CB""option \f(CBkey\f(CB \f(CBvalue\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBoption \f(CBkey\f(CB \f(CBvalue\f(CB\fB\fR" 4
+.IX Item "option key value"
+Option to access, open and probe the file.
+Can be present multiple times.
 .ie n .IP "\fB\f(CB""stream""\fB\fR" 4
 .el .IP "\fB\f(CBstream\fB\fR" 4
 .IX Item "stream"
@@ -5673,6 +5702,24 @@ If this directive is given, the string with the corresponding id in the
 subfiles will be used.
 This is especially useful for MPEG-PS (\s-1VOB\s0) files, where the order of the
 streams is not reliable.
+.ie n .IP "\fB\f(CB""stream_meta \f(CBkey\f(CB \f(CBvalue\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBstream_meta \f(CBkey\f(CB \f(CBvalue\f(CB\fB\fR" 4
+.IX Item "stream_meta key value"
+Metadata for the stream.
+Can be present multiple times.
+.ie n .IP "\fB\f(CB""stream_codec \f(CBvalue\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBstream_codec \f(CBvalue\f(CB\fB\fR" 4
+.IX Item "stream_codec value"
+Codec for the stream.
+.ie n .IP "\fB\f(CB""stream_extradata \f(CBhex_string\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBstream_extradata \f(CBhex_string\f(CB\fB\fR" 4
+.IX Item "stream_extradata hex_string"
+Extradata for the string, encoded in hexadecimal.
+.ie n .IP "\fB\f(CB""chapter \f(CBid\f(CB \f(CBstart\f(CB \f(CBend\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBchapter \f(CBid\f(CB \f(CBstart\f(CB \f(CBend\f(CB\fB\fR" 4
+.IX Item "chapter id start end"
+Add a chapter. \fIid\fR is an unique identifier, possibly small and
+consecutive.
 .PP
 \fIOptions\fR
 .IX Subsection "Options"
@@ -5680,7 +5727,8 @@ streams is not reliable.
 This demuxer accepts the following option:
 .IP "\fBsafe\fR" 4
 .IX Item "safe"
-If set to 1, reject unsafe file paths. A file path is considered safe if it
+If set to 1, reject unsafe file paths and directives.
+A file path is considered safe if it
 does not contain a protocol specification and is relative and all components
 only contain characters from the portable character set (letters, digits,
 period, underscore and hyphen) and have no period at the beginning of a
@@ -5689,9 +5737,6 @@ component.
 If set to 0, any file name is accepted.
 .Sp
 The default is 1.
-.Sp
-\&\-1 is equivalent to 1 if the format was automatically
-probed and 0 otherwise.
 .IP "\fBauto_convert\fR" 4
 .IX Item "auto_convert"
 If set to 1, try to perform automatic conversions on packet data to make the
@@ -5744,6 +5789,11 @@ By setting the discard flags on AVStreams the caller can decide
 which streams to actually receive.
 Each stream mirrors the \f(CW\*(C`id\*(C'\fR and \f(CW\*(C`bandwidth\*(C'\fR properties from the
 \&\f(CW\*(C`<Representation>\*(C'\fR as metadata keys named \*(L"id\*(R" and \*(L"variant_bitrate\*(R" respectively.
+.SS "imf"
+.IX Subsection "imf"
+Interoperable Master Format demuxer.
+.PP
+This demuxer presents audio and video streams found in an \s-1IMF\s0 Composition.
 .SS "flv, live_flv, kux"
 .IX Subsection "flv, live_flv, kux"
 Adobe Flash Video Format demuxer.
@@ -6164,7 +6214,7 @@ Don't use mfra box to set timestamps
 .IP "\fBuse_tfdt\fR" 4
 .IX Item "use_tfdt"
 For fragmented input, set fragment's starting timestamp to \f(CW\*(C`baseMediaDecodeTime\*(C'\fR from the \f(CW\*(C`tfdt\*(C'\fR box.
-Default is disabled, which will preferentially use the \f(CW\*(C`earliest_presentation_time\*(C'\fR from the \f(CW\*(C`sidx\*(C'\fR box.
+Default is enabled, which will prefer to use the \f(CW\*(C`tfdt\*(C'\fR box to set \s-1DTS.\s0 Disable to use the \f(CW\*(C`earliest_presentation_time\*(C'\fR from the \f(CW\*(C`sidx\*(C'\fR box.
 In either case, the timestamp from the \f(CW\*(C`mfra\*(C'\fR box will be used if it's available and \f(CW\*(C`use_mfra_for\*(C'\fR is
 set to pts or dts.
 .IP "\fBexport_all\fR" 4
@@ -6186,6 +6236,15 @@ specify.
 .IP "\fBdecryption_key\fR" 4
 .IX Item "decryption_key"
 16\-byte key, in hex, to decrypt files encrypted using \s-1ISO\s0 Common Encryption (\s-1CENC/AES\-128 CTR\s0; \s-1ISO/IEC 23001\-7\s0).
+.IP "\fBmax_stts_delta\fR" 4
+.IX Item "max_stts_delta"
+Very high sample deltas written in a trak's stts box may occasionally be intended but usually they are written in
+error or used to store a negative value for dts correction when treated as signed 32\-bit integers. This option lets
+the user set an upper limit, beyond which the delta is clamped to 1. Values greater than the limit if negative when
+cast to int32 are used to adjust onward dts.
+.Sp
+Unit is the track time scale. Range is 0 to \s-1UINT_MAX.\s0 Default is \f(CW\*(C`UINT_MAX \- 48000*10\*(C'\fR which allows upto
+a 10 second dts correction for 48 kHz audio streams while accommodating 99.9% of \f(CW\*(C`uint32\*(C'\fR range.
 .PP
 \fIAudible \s-1AAX\s0\fR
 .IX Subsection "Audible AAX"
@@ -7455,6 +7514,10 @@ set to 1) or to a default remote address (if set to 0).
 .IP "\fBlocalport=\fR\fIn\fR" 4
 .IX Item "localport=n"
 Set the local \s-1RTP\s0 port to \fIn\fR.
+.IP "\fBlocaladdr=\fR\fIaddr\fR" 4
+.IX Item "localaddr=addr"
+Local \s-1IP\s0 address of a network interface used for sending packets or joining
+multicast groups.
 .IP "\fBtimeout=\fR\fIn\fR" 4
 .IX Item "timeout=n"
 Set timeout (in microseconds) of socket I/O operations to \fIn\fR.
@@ -7866,6 +7929,12 @@ subsequent interval between when switchover occurs and
 when the old encryption key is decommissioned. Default is \-1.
 \&\-1 means auto (0x1000 in srt library). The range for
 this option is integers in the 0 \- \f(CW\*(C`INT_MAX\*(C'\fR.
+.IP "\fBsnddropdelay=\fR\fImicroseconds\fR" 4
+.IX Item "snddropdelay=microseconds"
+The sender's extra delay before dropping packets. This delay is
+added to the default drop delay time interval value.
+.Sp
+Special value \-1: Do not drop packets on the sender at all.
 .IP "\fBpayload_size=\fR\fIbytes\fR" 4
 .IX Item "payload_size=bytes"
 Sets the maximum declared size of a packet transferred
@@ -9000,6 +9069,12 @@ be anything even fake one.
 Save the currently used video capture filter device and its
 parameters (if the filter supports it) to a file.
 If a file with the same name exists it will be overwritten.
+.IP "\fBuse_video_device_timestamps\fR" 4
+.IX Item "use_video_device_timestamps"
+If set to \fBfalse\fR, the timestamp for video frames will be
+derived from the wallclock instead of the timestamp provided by
+the capture device. This allows working around devices that
+provide unreliable timestamps.
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
@@ -11101,6 +11176,18 @@ Select overlap-save method. Not interpolated samples remain unchanged.
 .Sp
 Default value is \f(CW\*(C`a\*(C'\fR.
 .RE
+.SS "adecorrelate"
+.IX Subsection "adecorrelate"
+Apply decorrelation to input audio stream.
+.PP
+The filter accepts the following options:
+.IP "\fBstages\fR" 4
+.IX Item "stages"
+Set decorrelation stages of filtering. Allowed
+range is from 1 to 16. Default value is 6.
+.IP "\fBseed\fR" 4
+.IX Item "seed"
+Set random seed used for setting delay in samples across channels.
 .SS "adelay"
 .IX Subsection "adelay"
 Delay one or more audio channels.
@@ -11184,6 +11271,103 @@ This filter supports the all above options as \fBcommands\fR.
 Compute derivative/integral of audio stream.
 .PP
 Applying both filters one after another produces original audio.
+.SS "adynamicequalizer"
+.IX Subsection "adynamicequalizer"
+Apply dynamic equalization to input audio stream.
+.PP
+A description of the accepted options follows.
+.IP "\fBthreshold\fR" 4
+.IX Item "threshold"
+Set the detection threshold used to trigger equalization.
+Threshold detection is using bandpass filter.
+Default value is 0. Allowed range is from 0 to 100.
+.IP "\fBdfrequency\fR" 4
+.IX Item "dfrequency"
+Set the detection frequency in Hz used for bandpass filter used to trigger equalization.
+Default value is 1000 Hz. Allowed range is between 2 and 1000000 Hz.
+.IP "\fBdqfactor\fR" 4
+.IX Item "dqfactor"
+Set the detection resonance factor for bandpass filter used to trigger equalization.
+Default value is 1. Allowed range is from 0.001 to 1000.
+.IP "\fBtfrequency\fR" 4
+.IX Item "tfrequency"
+Set the target frequency of equalization filter.
+Default value is 1000 Hz. Allowed range is between 2 and 1000000 Hz.
+.IP "\fBtqfactor\fR" 4
+.IX Item "tqfactor"
+Set the target resonance factor for target equalization filter.
+Default value is 1. Allowed range is from 0.001 to 1000.
+.IP "\fBattack\fR" 4
+.IX Item "attack"
+Set the amount of milliseconds the signal from detection has to rise above
+the detection threshold before equalization starts.
+Default is 20. Allowed range is between 1 and 2000.
+.IP "\fBrelease\fR" 4
+.IX Item "release"
+Set the amount of milliseconds the signal from detection has to fall below the
+detection threshold before equalization ends.
+Default is 200. Allowed range is between 1 and 2000.
+.IP "\fBknee\fR" 4
+.IX Item "knee"
+Curve the sharp knee around the detection threshold to calculate
+equalization gain more softly.
+Default is 1. Allowed range is between 0 and 8.
+.IP "\fBratio\fR" 4
+.IX Item "ratio"
+Set the ratio by which the equalization gain is raised.
+Default is 1. Allowed range is between 1 and 20.
+.IP "\fBmakeup\fR" 4
+.IX Item "makeup"
+Set the makeup offset in dB by which the equalization gain is raised.
+Default is 0. Allowed range is between 0 and 30.
+.IP "\fBrange\fR" 4
+.IX Item "range"
+Set the max allowed cut/boost amount in dB. Default is 0.
+Allowed range is from 0 to 200.
+.IP "\fBslew\fR" 4
+.IX Item "slew"
+Set the slew factor. Default is 1. Allowed range is from 1 to 200.
+.IP "\fBmode\fR" 4
+.IX Item "mode"
+Set the mode of filter operation, can be one of the following:
+.RS 4
+.IP "\fBlisten\fR" 4
+.IX Item "listen"
+Output only isolated bandpass signal.
+.IP "\fBcut\fR" 4
+.IX Item "cut"
+Cut frequencies above detection threshold.
+.IP "\fBboost\fR" 4
+.IX Item "boost"
+Boost frequencies bellow detection threshold.
+.RE
+.RS 4
+.Sp
+Default mode is \fBcut\fR.
+.RE
+.PP
+\fICommands\fR
+.IX Subsection "Commands"
+.PP
+This filter supports the all above options as \fBcommands\fR.
+.SS "adynamicsmooth"
+.IX Subsection "adynamicsmooth"
+Apply dynamic smoothing to input audio stream.
+.PP
+A description of the accepted options follows.
+.IP "\fBsensitivity\fR" 4
+.IX Item "sensitivity"
+Set an amount of sensitivity to frequency fluctations. Default is 2.
+Allowed range is from 0 to 1e+06.
+.IP "\fBbasefreq\fR" 4
+.IX Item "basefreq"
+Set a base frequency for smoothing. Default value is 22050.
+Allowed range is from 2 to 1e+06.
+.PP
+\fICommands\fR
+.IX Subsection "Commands"
+.PP
+This filter supports the all above options as \fBcommands\fR.
 .SS "aecho"
 .IX Subsection "aecho"
 Apply echoing to the input audio.
@@ -11690,7 +11874,57 @@ Set window size. Allowed range is from 16 to 131072.
 Default is \f(CW4096\fR
 .IP "\fBwin_func\fR" 4
 .IX Item "win_func"
-Set window function. Default is \f(CW\*(C`hann\*(C'\fR.
+Set window function.
+.Sp
+It accepts the following values:
+.RS 4
+.IP "\fBrect\fR" 4
+.IX Item "rect"
+.PD 0
+.IP "\fBbartlett\fR" 4
+.IX Item "bartlett"
+.IP "\fBhann, hanning\fR" 4
+.IX Item "hann, hanning"
+.IP "\fBhamming\fR" 4
+.IX Item "hamming"
+.IP "\fBblackman\fR" 4
+.IX Item "blackman"
+.IP "\fBwelch\fR" 4
+.IX Item "welch"
+.IP "\fBflattop\fR" 4
+.IX Item "flattop"
+.IP "\fBbharris\fR" 4
+.IX Item "bharris"
+.IP "\fBbnuttall\fR" 4
+.IX Item "bnuttall"
+.IP "\fBbhann\fR" 4
+.IX Item "bhann"
+.IP "\fBsine\fR" 4
+.IX Item "sine"
+.IP "\fBnuttall\fR" 4
+.IX Item "nuttall"
+.IP "\fBlanczos\fR" 4
+.IX Item "lanczos"
+.IP "\fBgauss\fR" 4
+.IX Item "gauss"
+.IP "\fBtukey\fR" 4
+.IX Item "tukey"
+.IP "\fBdolph\fR" 4
+.IX Item "dolph"
+.IP "\fBcauchy\fR" 4
+.IX Item "cauchy"
+.IP "\fBparzen\fR" 4
+.IX Item "parzen"
+.IP "\fBpoisson\fR" 4
+.IX Item "poisson"
+.IP "\fBbohman\fR" 4
+.IX Item "bohman"
+.RE
+.RS 4
+.PD
+.Sp
+Default is \f(CW\*(C`hann\*(C'\fR.
+.RE
 .IP "\fBoverlap\fR" 4
 .IX Item "overlap"
 Set window overlap. If set to 1, the recommended overlap for selected
@@ -11857,6 +12091,10 @@ Default value is 0.0.
 .IX Item "level"
 Set output gain applied to final output. Allowed range is from 0.0 to 1.0.
 Default value is 1.0.
+.IP "\fBorder\fR" 4
+.IX Item "order"
+Set filter order used for filtering. Allowed range is from 1 to 16.
+Default value is 8.
 .PP
 \fICommands\fR
 .IX Subsection "Commands"
@@ -12239,6 +12477,8 @@ Set transform type of \s-1IIR\s0 filter.
 .IX Item "tdii"
 .IP "\fBlatt\fR" 4
 .IX Item "latt"
+.IP "\fBsvf\fR" 4
+.IX Item "svf"
 .RE
 .RS 4
 .RE
@@ -12559,9 +12799,9 @@ Set smooth factor. Default value is \fI11\fR. Allowed range is from \fI1\fR to \
 .IX Subsection "Commands"
 .PP
 This filter supports the all above options as \fBcommands\fR.
-.SS "anlms"
-.IX Subsection "anlms"
-Apply Normalized Least-Mean-Squares algorithm to the first audio stream using the second audio stream.
+.SS "anlmf, anlms"
+.IX Subsection "anlmf, anlms"
+Apply Normalized Least\-Mean\-(Squares|Fourth) algorithm to the first audio stream using the second audio stream.
 .PP
 This adaptive filter is used to mimic a desired filter by finding the filter coefficients that
 relate to producing the least mean square of the error signal (difference between the desired,
@@ -12645,18 +12885,21 @@ with \fBpad_len\fR.
 .IX Item "pad_dur"
 Specify the duration of samples of silence to add. See
 \&\fBthe Time duration section in the \fBffmpeg\-utils\fB\|(1) manual\fR
-for the accepted syntax. Used only if set to non-zero value.
+for the accepted syntax. Used only if set to non-negative value.
 .IP "\fBwhole_dur\fR" 4
 .IX Item "whole_dur"
 Specify the minimum total duration in the output audio stream. See
 \&\fBthe Time duration section in the \fBffmpeg\-utils\fB\|(1) manual\fR
-for the accepted syntax. Used only if set to non-zero value. If the value is longer than
+for the accepted syntax. Used only if set to non-negative value. If the value is longer than
 the input audio length, silence is added to the end, until the value is reached.
 This option is mutually exclusive with \fBpad_dur\fR
 .PP
 If neither the \fBpad_len\fR nor the \fBwhole_len\fR nor \fBpad_dur\fR
 nor \fBwhole_dur\fR option is set, the filter will add silence to the end of
 the input stream indefinitely.
+.PP
+Note that for ffmpeg 4.4 and earlier a zero \fBpad_dur\fR or
+\&\fBwhole_dur\fR also caused the filter to add silence indefinitely.
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
@@ -12733,6 +12976,45 @@ Default value is 0.0.
 .IX Item "level"
 Set output gain applied to final output. Allowed range is from 0.0 to 1.0.
 Default value is 1.0.
+.IP "\fBorder\fR" 4
+.IX Item "order"
+Set filter order used for filtering. Allowed range is from 1 to 16.
+Default value is 8.
+.PP
+\fICommands\fR
+.IX Subsection "Commands"
+.PP
+This filter supports the all above options as \fBcommands\fR.
+.SS "apsyclip"
+.IX Subsection "apsyclip"
+Apply Psychoacoustic clipper to input audio stream.
+.PP
+The filter accepts the following options:
+.IP "\fBlevel_in\fR" 4
+.IX Item "level_in"
+Set input gain. By default it is 1. Range is [0.015625 \- 64].
+.IP "\fBlevel_out\fR" 4
+.IX Item "level_out"
+Set output gain. By default it is 1. Range is [0.015625 \- 64].
+.IP "\fBclip\fR" 4
+.IX Item "clip"
+Set the clipping start value. Default value is 0dBFS or 1.
+.IP "\fBdiff\fR" 4
+.IX Item "diff"
+Output only difference samples, useful to hear introduced distortions.
+By default is disabled.
+.IP "\fBadaptive\fR" 4
+.IX Item "adaptive"
+Set strenght of adaptive distortion applied. Default value is 0.5.
+Allowed range is from 0 to 1.
+.IP "\fBiterations\fR" 4
+.IX Item "iterations"
+Set number of iterations of psychoacoustic clipper.
+Allowed range is from 1 to 20. Default value is 10.
+.IP "\fBlevel\fR" 4
+.IX Item "level"
+Auto level output signal. Default is disabled.
+This normalizes audio back to 0dBFS if enabled.
 .PP
 \fICommands\fR
 .IX Subsection "Commands"
@@ -12860,6 +13142,13 @@ noise removed from input signal.
 .IX Subsection "Commands"
 .PP
 This filter supports the all above options as \fBcommands\fR.
+.SS "asdr"
+.IX Subsection "asdr"
+Measure Audio Signal-to-Distortion Ratio.
+.PP
+This filter takes two audio streams for input, and outputs first
+audio stream.
+Results are in dB per channel at end of either input.
 .SS "asetnsamples"
 .IX Subsection "asetnsamples"
 Set the number of samples per each output audio frame.
@@ -12991,6 +13280,103 @@ Set oversampling factor.
 .IX Subsection "Commands"
 .PP
 This filter supports the all above options as \fBcommands\fR.
+.SS "aspectralstats"
+.IX Subsection "aspectralstats"
+Display frequency domain statistical information about the audio channels.
+Statistics are calculated and stored as metadata for each audio channel and for each audio frame.
+.PP
+It accepts the following option:
+.IP "\fBwin_size\fR" 4
+.IX Item "win_size"
+Set the window length in samples. Default value is 2048.
+Allowed range is from 32 to 65536.
+.IP "\fBwin_func\fR" 4
+.IX Item "win_func"
+Set window function.
+.Sp
+It accepts the following values:
+.RS 4
+.IP "\fBrect\fR" 4
+.IX Item "rect"
+.PD 0
+.IP "\fBbartlett\fR" 4
+.IX Item "bartlett"
+.IP "\fBhann, hanning\fR" 4
+.IX Item "hann, hanning"
+.IP "\fBhamming\fR" 4
+.IX Item "hamming"
+.IP "\fBblackman\fR" 4
+.IX Item "blackman"
+.IP "\fBwelch\fR" 4
+.IX Item "welch"
+.IP "\fBflattop\fR" 4
+.IX Item "flattop"
+.IP "\fBbharris\fR" 4
+.IX Item "bharris"
+.IP "\fBbnuttall\fR" 4
+.IX Item "bnuttall"
+.IP "\fBbhann\fR" 4
+.IX Item "bhann"
+.IP "\fBsine\fR" 4
+.IX Item "sine"
+.IP "\fBnuttall\fR" 4
+.IX Item "nuttall"
+.IP "\fBlanczos\fR" 4
+.IX Item "lanczos"
+.IP "\fBgauss\fR" 4
+.IX Item "gauss"
+.IP "\fBtukey\fR" 4
+.IX Item "tukey"
+.IP "\fBdolph\fR" 4
+.IX Item "dolph"
+.IP "\fBcauchy\fR" 4
+.IX Item "cauchy"
+.IP "\fBparzen\fR" 4
+.IX Item "parzen"
+.IP "\fBpoisson\fR" 4
+.IX Item "poisson"
+.IP "\fBbohman\fR" 4
+.IX Item "bohman"
+.RE
+.RS 4
+.PD
+.Sp
+Default is \f(CW\*(C`hann\*(C'\fR.
+.RE
+.IP "\fBoverlap\fR" 4
+.IX Item "overlap"
+Set window overlap. Allowed range is from \f(CW0\fR
+to \f(CW1\fR. Default value is \f(CW0.5\fR.
+.PP
+A list of each metadata key follows:
+.IP "\fBmean\fR" 4
+.IX Item "mean"
+.PD 0
+.IP "\fBvariance\fR" 4
+.IX Item "variance"
+.IP "\fBcentroid\fR" 4
+.IX Item "centroid"
+.IP "\fBspread\fR" 4
+.IX Item "spread"
+.IP "\fBskewness\fR" 4
+.IX Item "skewness"
+.IP "\fBkurtosis\fR" 4
+.IX Item "kurtosis"
+.IP "\fBentropy\fR" 4
+.IX Item "entropy"
+.IP "\fBflatness\fR" 4
+.IX Item "flatness"
+.IP "\fBcrest\fR" 4
+.IX Item "crest"
+.IP "\fBflux\fR" 4
+.IX Item "flux"
+.IP "\fBslope\fR" 4
+.IX Item "slope"
+.IP "\fBdecrease\fR" 4
+.IX Item "decrease"
+.IP "\fBrolloff\fR" 4
+.IX Item "rolloff"
+.PD
 .SS "asr"
 .IX Subsection "asr"
 Automatic Speech Recognition
@@ -13034,7 +13420,7 @@ It accepts the following option:
 .IP "\fBlength\fR" 4
 .IX Item "length"
 Short window length in seconds, used for peak and trough \s-1RMS\s0 measurement.
-Default is \f(CW0.05\fR (50 milliseconds). Allowed range is \f(CW\*(C`[0.01 \- 10]\*(C'\fR.
+Default is \f(CW0.05\fR (50 milliseconds). Allowed range is \f(CW\*(C`[0 \- 10]\*(C'\fR.
 .IP "\fBmetadata\fR" 4
 .IX Item "metadata"
 Set metadata injection. All the metadata keys are prefixed with \f(CW\*(C`lavfi.astats.X\*(C'\fR,
@@ -13057,6 +13443,7 @@ Flat_factor
 Peak_count
 Noise_floor
 Noise_floor_count
+Entropy
 Bit_depth
 Dynamic_range
 Zero_crossings
@@ -13081,6 +13468,7 @@ Flat_factor
 Peak_count
 Noise_floor
 Noise_floor_count
+Entropy
 Bit_depth
 Number_of_samples
 Number_of_NaNs
@@ -13093,16 +13481,17 @@ this \f(CW\*(C`lavfi.astats.Overall.Peak_count\*(C'\fR.
 For description what each key means read below.
 .IP "\fBreset\fR" 4
 .IX Item "reset"
-Set number of frame after which stats are going to be recalculated.
+Set the number of frames over which cumulative stats are calculated before
+being reset
 Default is disabled.
 .IP "\fBmeasure_perchannel\fR" 4
 .IX Item "measure_perchannel"
-Select the entries which need to be measured per channel. The metadata keys can
+Select the parameters which are measured per channel. The metadata keys can
 be used as flags, default is \fBall\fR which measures everything.
 \&\fBnone\fR disables all per channel measurement.
 .IP "\fBmeasure_overall\fR" 4
 .IX Item "measure_overall"
-Select the entries which need to be measured overall. The metadata keys can
+Select the parameters which are measured overall. The metadata keys can
 be used as flags, default is \fBall\fR which measures everything.
 \&\fBnone\fR disables all overall measurement.
 .PP
@@ -13161,6 +13550,9 @@ Minimum local peak measured in dBFS over a short window.
 .IX Item "Noise floor count"
 Number of occasions (not the number of samples) that the signal attained
 \&\fINoise floor\fR.
+.IP "\fBEntropy\fR" 4
+.IX Item "Entropy"
+Entropy measured across whole audio. Entropy of value near 1.0 is typically measured for white noise.
 .IP "\fBBit depth\fR" 4
 .IX Item "Bit depth"
 Overall bit depth of audio. Number of bits used for each sample.
@@ -13347,6 +13739,34 @@ This filter supports the following commands:
 .IX Item "tempo"
 Change filter tempo scale factor.
 Syntax for the command is : "\fItempo\fR"
+.SS "atilt"
+.IX Subsection "atilt"
+Apply spectral tilt filter to audio stream.
+.PP
+This filter apply any spectral roll-off slope over any specified frequency band.
+.PP
+The filter accepts the following options:
+.IP "\fBfreq\fR" 4
+.IX Item "freq"
+Set central frequency of tilt in Hz. Default is 10000 Hz.
+.IP "\fBslope\fR" 4
+.IX Item "slope"
+Set slope direction of tilt. Default is 0. Allowed range is from \-1 to 1.
+.IP "\fBwidth\fR" 4
+.IX Item "width"
+Set width of tilt. Default is 1000. Allowed range is from 100 to 10000.
+.IP "\fBorder\fR" 4
+.IX Item "order"
+Set order of tilt filter.
+.IP "\fBlevel\fR" 4
+.IX Item "level"
+Set input volume level. Allowed range is from 0 to 4.
+Defalt is 1.
+.PP
+\fICommands\fR
+.IX Subsection "Commands"
+.PP
+This filter supports the all above options as \fBcommands\fR.
 .SS "atrim"
 .IX Subsection "atrim"
 Trim the input so that the output contains one continuous subpart of the input.
@@ -13414,7 +13834,7 @@ Keep only the first 1000 samples:
 .Ve
 .SS "axcorrelate"
 .IX Subsection "axcorrelate"
-Calculate normalized cross-correlation between two input audio streams.
+Calculate normalized windowed cross-correlation between two input audio streams.
 .PP
 Resulted samples are always between \-1 and 1 inclusive.
 If result is 1 it means two input samples are highly correlated in that selected segment.
@@ -13506,6 +13926,8 @@ Set transform type of \s-1IIR\s0 filter.
 .IX Item "tdii"
 .IP "\fBlatt\fR" 4
 .IX Item "latt"
+.IP "\fBsvf\fR" 4
+.IX Item "svf"
 .RE
 .RS 4
 .RE
@@ -13612,6 +14034,8 @@ Set transform type of \s-1IIR\s0 filter.
 .IX Item "tdii"
 .IP "\fBlatt\fR" 4
 .IX Item "latt"
+.IP "\fBsvf\fR" 4
+.IX Item "svf"
 .RE
 .RS 4
 .RE
@@ -13728,6 +14152,8 @@ Set transform type of \s-1IIR\s0 filter.
 .IX Item "tdii"
 .IP "\fBlatt\fR" 4
 .IX Item "latt"
+.IP "\fBsvf\fR" 4
+.IX Item "svf"
 .RE
 .RS 4
 .RE
@@ -13831,6 +14257,8 @@ Set transform type of \s-1IIR\s0 filter.
 .IX Item "tdii"
 .IP "\fBlatt\fR" 4
 .IX Item "latt"
+.IP "\fBsvf\fR" 4
+.IX Item "svf"
 .RE
 .RS 4
 .RE
@@ -14580,6 +15008,8 @@ Set transform type of \s-1IIR\s0 filter.
 .IX Item "tdii"
 .IP "\fBlatt\fR" 4
 .IX Item "latt"
+.IP "\fBsvf\fR" 4
+.IX Item "svf"
 .RE
 .RS 4
 .RE
@@ -15132,6 +15562,8 @@ Set transform type of \s-1IIR\s0 filter.
 .IX Item "tdii"
 .IP "\fBlatt\fR" 4
 .IX Item "latt"
+.IP "\fBsvf\fR" 4
+.IX Item "svf"
 .RE
 .RS 4
 .RE
@@ -15493,6 +15925,8 @@ Set transform type of \s-1IIR\s0 filter.
 .IX Item "tdii"
 .IP "\fBlatt\fR" 4
 .IX Item "latt"
+.IP "\fBsvf\fR" 4
+.IX Item "svf"
 .RE
 .RS 4
 .RE
@@ -16803,6 +17237,8 @@ Set transform type of \s-1IIR\s0 filter.
 .IX Item "tdii"
 .IP "\fBlatt\fR" 4
 .IX Item "latt"
+.IP "\fBsvf\fR" 4
+.IX Item "svf"
 .RE
 .RS 4
 .RE
@@ -18002,38 +18438,48 @@ Available values for component modes are:
 .IP "\fBaddition\fR" 4
 .IX Item "addition"
 .PD 0
-.IP "\fBgrainmerge\fR" 4
-.IX Item "grainmerge"
 .IP "\fBand\fR" 4
 .IX Item "and"
 .IP "\fBaverage\fR" 4
 .IX Item "average"
+.IP "\fBbleach\fR" 4
+.IX Item "bleach"
 .IP "\fBburn\fR" 4
 .IX Item "burn"
 .IP "\fBdarken\fR" 4
 .IX Item "darken"
 .IP "\fBdifference\fR" 4
 .IX Item "difference"
-.IP "\fBgrainextract\fR" 4
-.IX Item "grainextract"
 .IP "\fBdivide\fR" 4
 .IX Item "divide"
 .IP "\fBdodge\fR" 4
 .IX Item "dodge"
-.IP "\fBfreeze\fR" 4
-.IX Item "freeze"
 .IP "\fBexclusion\fR" 4
 .IX Item "exclusion"
 .IP "\fBextremity\fR" 4
 .IX Item "extremity"
+.IP "\fBfreeze\fR" 4
+.IX Item "freeze"
+.IP "\fBgeometric\fR" 4
+.IX Item "geometric"
 .IP "\fBglow\fR" 4
 .IX Item "glow"
+.IP "\fBgrainextract\fR" 4
+.IX Item "grainextract"
+.IP "\fBgrainmerge\fR" 4
+.IX Item "grainmerge"
 .IP "\fBhardlight\fR" 4
 .IX Item "hardlight"
 .IP "\fBhardmix\fR" 4
 .IX Item "hardmix"
+.IP "\fBhardoverlay\fR" 4
+.IX Item "hardoverlay"
+.IP "\fBharmonic\fR" 4
+.IX Item "harmonic"
 .IP "\fBheat\fR" 4
 .IX Item "heat"
+.IP "\fBinterpolate\fR" 4
+.IX Item "interpolate"
 .IP "\fBlighten\fR" 4
 .IX Item "lighten"
 .IP "\fBlinearlight\fR" 4
@@ -18058,8 +18504,12 @@ Available values for component modes are:
 .IX Item "reflect"
 .IP "\fBscreen\fR" 4
 .IX Item "screen"
+.IP "\fBsoftdifference\fR" 4
+.IX Item "softdifference"
 .IP "\fBsoftlight\fR" 4
 .IX Item "softlight"
+.IP "\fBstain\fR" 4
+.IX Item "stain"
 .IP "\fBsubtract\fR" 4
 .IX Item "subtract"
 .IP "\fBvividlight\fR" 4
@@ -18555,7 +19005,7 @@ Set threshold for averaging chrominance values.
 Sum of absolute difference of Y, U and V pixel components of current
 pixel and neighbour pixels lower than this threshold will be used in
 averaging. Luma component is left unchanged and is copied to output.
-Default value is 30. Allowed range is from 1 to 5000.
+Default value is 30. Allowed range is from 1 to 200.
 .IP "\fBsizew\fR" 4
 .IX Item "sizew"
 Set horizontal radius of rectangle used for averaging.
@@ -18579,19 +19029,19 @@ Mostly useful to speed-up filtering.
 Set Y threshold for averaging chrominance values.
 Set finer control for max allowed difference between Y components
 of current pixel and neigbour pixels.
-Default value is 5000. Allowed range is from 1 to 5000.
+Default value is 200. Allowed range is from 1 to 200.
 .IP "\fBthreu\fR" 4
 .IX Item "threu"
 Set U threshold for averaging chrominance values.
 Set finer control for max allowed difference between U components
 of current pixel and neigbour pixels.
-Default value is 5000. Allowed range is from 1 to 5000.
+Default value is 200. Allowed range is from 1 to 200.
 .IP "\fBthrev\fR" 4
 .IX Item "threv"
 Set V threshold for averaging chrominance values.
 Set finer control for max allowed difference between V components
 of current pixel and neigbour pixels.
-Default value is 5000. Allowed range is from 1 to 5000.
+Default value is 200. Allowed range is from 1 to 200.
 .IP "\fBdistance\fR" 4
 .IX Item "distance"
 Set distance type used in calculations.
@@ -18719,6 +19169,9 @@ means. For example, some \s-1MPEG\s0 based codecs export motion vectors through 
 \&\fIexport_mvs\fR flag in the codec \fBflags2\fR option.
 .PP
 The filter accepts the following option:
+.IP "\fBblock\fR" 4
+.IX Item "block"
+Display block partition structure using the luma plane.
 .IP "\fBmv\fR" 4
 .IX Item "mv"
 Set motion vectors to visualize.
@@ -18906,8 +19359,25 @@ Default value is 1.
 .IP "\fBanalyze\fR" 4
 .IX Item "analyze"
 If set to anything other than \f(CW\*(C`manual\*(C'\fR it will analyze every frame and use derived
-parameters for filtering output frame. Can be \f(CW\*(C`manual\*(C'\fR or \f(CW\*(C`average\*(C'\fR.
+parameters for filtering output frame.
+.Sp
+Possible values are:
+.RS 4
+.IP "\fBmanual\fR" 4
+.IX Item "manual"
+.PD 0
+.IP "\fBaverage\fR" 4
+.IX Item "average"
+.IP "\fBminmax\fR" 4
+.IX Item "minmax"
+.IP "\fBmedian\fR" 4
+.IX Item "median"
+.RE
+.RS 4
+.PD
+.Sp
 Default value is \f(CW\*(C`manual\*(C'\fR.
+.RE
 .PP
 \fICommands\fR
 .IX Subsection "Commands"
@@ -18976,9 +19446,37 @@ Adjust contribution of input red, green, blue and alpha channels for output alph
 Default is \f(CW1\fR for \fIaa\fR, and \f(CW0\fR for \fIar\fR, \fIag\fR and \fIab\fR.
 .Sp
 Allowed ranges for options are \f(CW\*(C`[\-2.0, 2.0]\*(C'\fR.
-.IP "\fBpl\fR" 4
-.IX Item "pl"
-Preserve lightness when changing colors. Allowed range is from \f(CW\*(C`[0.0, 1.0]\*(C'\fR.
+.IP "\fBpc\fR" 4
+.IX Item "pc"
+Set preserve color mode. The accepted values are:
+.RS 4
+.IP "\fBnone\fR" 4
+.IX Item "none"
+Disable color preserving, this is default.
+.IP "\fBlum\fR" 4
+.IX Item "lum"
+Preserve luminance.
+.IP "\fBmax\fR" 4
+.IX Item "max"
+Preserve max value of \s-1RGB\s0 triplet.
+.IP "\fBavg\fR" 4
+.IX Item "avg"
+Preserve average value of \s-1RGB\s0 triplet.
+.IP "\fBsum\fR" 4
+.IX Item "sum"
+Preserve sum value of \s-1RGB\s0 triplet.
+.IP "\fBnrm\fR" 4
+.IX Item "nrm"
+Preserve normalized value of \s-1RGB\s0 triplet.
+.IP "\fBpwr\fR" 4
+.IX Item "pwr"
+Preserve power value of \s-1RGB\s0 triplet.
+.RE
+.RS 4
+.RE
+.IP "\fBpa\fR" 4
+.IX Item "pa"
+Set the preserve color amount when changing colors. Allowed range is from \f(CW\*(C`[0.0, 1.0]\*(C'\fR.
 Default is \f(CW0.0\fR, thus disabled.
 .PP
 \fIExamples\fR
@@ -19029,24 +19527,30 @@ This filter supports the all above options as \fBcommands\fR.
 .SS "colorkey"
 .IX Subsection "colorkey"
 \&\s-1RGB\s0 colorspace color keying.
+This filter operates on 8\-bit \s-1RGB\s0 format frames by setting the alpha component of each pixel
+which falls within the similarity radius of the key color to 0. The alpha value for pixels outside
+the similarity radius depends on the value of the blend option.
 .PP
 The filter accepts the following options:
 .IP "\fBcolor\fR" 4
 .IX Item "color"
-The color which will be replaced with transparency.
+Set the color for which alpha will be set to 0 (full transparency).
+See \fB\*(L"Color\*(R" section in the ffmpeg-utils manual\fR.
+Default is \f(CW\*(C`black\*(C'\fR.
 .IP "\fBsimilarity\fR" 4
 .IX Item "similarity"
-Similarity percentage with the key color.
-.Sp
-0.01 matches only the exact key color, while 1.0 matches everything.
+Set the radius from the key color within which other colors also have full transparency.
+The computed distance is related to the unit fractional distance in 3D space between the \s-1RGB\s0 values
+of the key color and the pixel's color. Range is 0.01 to 1.0. 0.01 matches within a very small radius
+around the exact key color, while 1.0 matches everything.
+Default is \f(CW0.01\fR.
 .IP "\fBblend\fR" 4
 .IX Item "blend"
-Blend percentage.
-.Sp
-0.0 makes pixels either fully transparent, or not transparent at all.
-.Sp
-Higher values result in semi-transparent pixels, with a higher transparency
-the more similar the pixels color is to the key color.
+Set how the alpha value for pixels that fall outside the similarity radius is computed.
+0.0 makes pixels either fully transparent or fully opaque.
+Higher values result in semi-transparent pixels, with greater transparency
+the more similar the pixel color is to the key color.
+Range is 0.0 to 1.0. Default is \f(CW0.0\fR.
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
@@ -19154,6 +19658,34 @@ Adjust red, green, blue and alpha output white point.
 Allowed ranges for options are \f(CW\*(C`[0, 1.0]\*(C'\fR. Defaults are \f(CW1\fR.
 .Sp
 Output levels allows manual selection of a constrained output level range.
+.IP "\fBpreserve\fR" 4
+.IX Item "preserve"
+Set preserve color mode. The accepted values are:
+.RS 4
+.IP "\fBnone\fR" 4
+.IX Item "none"
+Disable color preserving, this is default.
+.IP "\fBlum\fR" 4
+.IX Item "lum"
+Preserve luminance.
+.IP "\fBmax\fR" 4
+.IX Item "max"
+Preserve max value of \s-1RGB\s0 triplet.
+.IP "\fBavg\fR" 4
+.IX Item "avg"
+Preserve average value of \s-1RGB\s0 triplet.
+.IP "\fBsum\fR" 4
+.IX Item "sum"
+Preserve sum value of \s-1RGB\s0 triplet.
+.IP "\fBnrm\fR" 4
+.IX Item "nrm"
+Preserve normalized value of \s-1RGB\s0 triplet.
+.IP "\fBpwr\fR" 4
+.IX Item "pwr"
+Preserve power value of \s-1RGB\s0 triplet.
+.RE
+.RS 4
+.RE
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
@@ -20748,7 +21280,7 @@ Set path to model file specifying network architecture and its parameters.
 Note that different backends use different file formats. TensorFlow and native
 backend can load files for only its format.
 .PP
-It can also be finished with \fBdnn_processing\fR filter.
+To get full functionality (such as async execution), please use the \fBdnn_processing\fR filter.
 .SS "deshake"
 .IX Subsection "deshake"
 Attempt to fix small changes in horizontal and/or vertical shift. This
@@ -21063,11 +21595,8 @@ and the second line is the name of label id 1, etc.
 The label id is considered as name if the label file is not provided.
 .IP "\fBbackend_configs\fR" 4
 .IX Item "backend_configs"
-Set the configs to be passed into backend
-.IP "\fBasync\fR" 4
-.IX Item "async"
-use \s-1DNN\s0 async execution if set (default: set),
-roll back to sync execution if the backend does not support async.
+Set the configs to be passed into backend. To use async execution, set async (default: set).
+Roll back to sync execution if the backend does not support async.
 .SS "dnn_processing"
 .IX Subsection "dnn_processing"
 Do image processing with deep neural networks. It works together with another filter
@@ -21115,14 +21644,11 @@ Set the input name of the dnn network.
 Set the output name of the dnn network.
 .IP "\fBbackend_configs\fR" 4
 .IX Item "backend_configs"
-Set the configs to be passed into backend
+Set the configs to be passed into backend. To use async execution, set async (default: set).
+Roll back to sync execution if the backend does not support async.
 .Sp
 For tensorflow backend, you can set its configs with \fBsess_config\fR options,
 please use tools/python/tf_sess_config.py to get the configs of TensorFlow backend for your system.
-.IP "\fBasync\fR" 4
-.IX Item "async"
-use \s-1DNN\s0 async execution if set (default: set),
-roll back to sync execution if the backend does not support async.
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
@@ -22139,6 +22665,10 @@ will try to use a good random seed on a best effort basis.
 .IX Item "pal8"
 Set pal8 output pixel format. This option does not work with codebook
 length greater than 256. Default is disabled.
+.IP "\fBuse_alpha\fR" 4
+.IX Item "use_alpha"
+Include alpha values in the quantization calculation. Allows creating
+palettized output images (e.g. \s-1PNG8\s0) with multiple alpha smooth blending.
 .SS "entropy"
 .IX Subsection "entropy"
 Measure graylevel entropy in histogram of color channels of video frames.
@@ -22373,6 +22903,18 @@ Allowed range is from 1 to 15.
 .IX Item "redge"
 Specify the search radius for best edge matching. Default value is 2.
 Allowed range is from 0 to 15.
+.IP "\fBecost\fR" 4
+.IX Item "ecost"
+Specify the edge cost for edge matching. Default value is 0.03125.
+Allowed range is from 0 to 1.
+.IP "\fBmcost\fR" 4
+.IX Item "mcost"
+Specify the middle cost for edge matching. Default value is 0.5.
+Allowed range is from 0 to 1.
+.IP "\fBdcost\fR" 4
+.IX Item "dcost"
+Specify the distance cost for edge matching. Default value is 0.5.
+Allowed range is from 0 to 1.
 .IP "\fBinterp\fR" 4
 .IX Item "interp"
 Specify the interpolation used. Default is 4\-point interpolation. It accepts one
@@ -22640,6 +23182,13 @@ The width and height of the image.
 .IP "\fBN\fR" 4
 .IX Item "N"
 The number of input frame, starting from 0.
+.IP "\fB\s-1WS\s0\fR" 4
+.IX Item "WS"
+.PD 0
+.IP "\fB\s-1HS\s0\fR" 4
+.IX Item "HS"
+.PD
+The size of \s-1FFT\s0 array for horizontal and vertical processing.
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
@@ -23906,6 +24455,18 @@ Display number of samples given out from filter.
 .IX Item "rate, r"
 Set upper limit for video rate of output stream, Default value is \fI25\fR.
 This guarantee that output video frame rate will not be higher than this value.
+.SS "grayworld"
+.IX Subsection "grayworld"
+A color constancy filter that applies color correction based on the grayworld assumption
+.PP
+See: <\fBhttps://www.researchgate.net/publication/275213614_A_New_Color_Correction_Method_for_Underwater_Imaging\fR>
+.PP
+The algorithm  uses linear light, so input
+data should be linearized beforehand (and possibly correctly tagged).
+.PP
+.Vb 1
+\&        ffmpeg \-i INPUT \-vf zscale=transfer=linear,grayworld,zscale=transfer=bt709,format=yuv420p OUTPUT
+.Ve
 .SS "greyedge"
 .IX Subsection "greyedge"
 A color constancy variation filter which estimates scene illumination via grey edge algorithm
@@ -24175,6 +24736,38 @@ Set foreground opacity. Default is \f(CW0.7\fR.
 .IP "\fBbgopacity\fR" 4
 .IX Item "bgopacity"
 Set background opacity. Default is \f(CW0.5\fR.
+.IP "\fBcolors_mode\fR" 4
+.IX Item "colors_mode"
+Set colors mode.
+It accepts the following values:
+.RS 4
+.IP "\fBwhiteonblack\fR" 4
+.IX Item "whiteonblack"
+.PD 0
+.IP "\fBblackonwhite\fR" 4
+.IX Item "blackonwhite"
+.IP "\fBwhiteongray\fR" 4
+.IX Item "whiteongray"
+.IP "\fBblackongray\fR" 4
+.IX Item "blackongray"
+.IP "\fBcoloronblack\fR" 4
+.IX Item "coloronblack"
+.IP "\fBcoloronwhite\fR" 4
+.IX Item "coloronwhite"
+.IP "\fBcolorongray\fR" 4
+.IX Item "colorongray"
+.IP "\fBblackoncolor\fR" 4
+.IX Item "blackoncolor"
+.IP "\fBwhiteoncolor\fR" 4
+.IX Item "whiteoncolor"
+.IP "\fBgrayoncolor\fR" 4
+.IX Item "grayoncolor"
+.RE
+.RS 4
+.PD
+.Sp
+Default is \f(CW\*(C`whiteonblack\*(C'\fR.
+.RE
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
@@ -24359,6 +24952,78 @@ Set number of input streams. Default is 2.
 .IX Item "shortest"
 If set to 1, force the output to terminate when the shortest input
 terminates. Default value is 0.
+.SS "hsvhold"
+.IX Subsection "hsvhold"
+Turns a certain \s-1HSV\s0 range into gray values.
+.PP
+This filter measures color difference between set \s-1HSV\s0 color in options
+and ones measured in video stream. Depending on options, output
+colors can be changed to be gray or not.
+.PP
+The filter accepts the following options:
+.IP "\fBhue\fR" 4
+.IX Item "hue"
+Set the hue value which will be used in color difference calculation.
+Allowed range is from \-360 to 360. Default value is 0.
+.IP "\fBsat\fR" 4
+.IX Item "sat"
+Set the saturation value which will be used in color difference calculation.
+Allowed range is from \-1 to 1. Default value is 0.
+.IP "\fBval\fR" 4
+.IX Item "val"
+Set the value which will be used in color difference calculation.
+Allowed range is from \-1 to 1. Default value is 0.
+.IP "\fBsimilarity\fR" 4
+.IX Item "similarity"
+Set similarity percentage with the key color.
+Allowed range is from 0 to 1. Default value is 0.01.
+.Sp
+0.00001 matches only the exact key color, while 1.0 matches everything.
+.IP "\fBblend\fR" 4
+.IX Item "blend"
+Blend percentage.
+Allowed range is from 0 to 1. Default value is 0.
+.Sp
+0.0 makes pixels either fully gray, or not gray at all.
+.Sp
+Higher values result in more gray pixels, with a higher gray pixel
+the more similar the pixels color is to the key color.
+.SS "hsvkey"
+.IX Subsection "hsvkey"
+Turns a certain \s-1HSV\s0 range into transparency.
+.PP
+This filter measures color difference between set \s-1HSV\s0 color in options
+and ones measured in video stream. Depending on options, output
+colors can be changed to transparent by adding alpha channel.
+.PP
+The filter accepts the following options:
+.IP "\fBhue\fR" 4
+.IX Item "hue"
+Set the hue value which will be used in color difference calculation.
+Allowed range is from \-360 to 360. Default value is 0.
+.IP "\fBsat\fR" 4
+.IX Item "sat"
+Set the saturation value which will be used in color difference calculation.
+Allowed range is from \-1 to 1. Default value is 0.
+.IP "\fBval\fR" 4
+.IX Item "val"
+Set the value which will be used in color difference calculation.
+Allowed range is from \-1 to 1. Default value is 0.
+.IP "\fBsimilarity\fR" 4
+.IX Item "similarity"
+Set similarity percentage with the key color.
+Allowed range is from 0 to 1. Default value is 0.01.
+.Sp
+0.00001 matches only the exact key color, while 1.0 matches everything.
+.IP "\fBblend\fR" 4
+.IX Item "blend"
+Blend percentage.
+Allowed range is from 0 to 1. Default value is 0.
+.Sp
+0.0 makes pixels either fully transparent, or not transparent at all.
+.Sp
+Higher values result in semi-transparent pixels, with a higher transparency
+the more similar the pixels color is to the key color.
 .SS "hue"
 .IX Subsection "hue"
 Modify the hue and/or the saturation of the input.
@@ -24467,6 +25132,69 @@ The command accepts the same syntax of the corresponding option.
 .Sp
 If the specified expression is not valid, it is kept at its current
 value.
+.SS "huesaturation"
+.IX Subsection "huesaturation"
+Apply hue-saturation-intensity adjustments to input video stream.
+.PP
+This filter operates in \s-1RGB\s0 colorspace.
+.PP
+This filter accepts the following options:
+.IP "\fBhue\fR" 4
+.IX Item "hue"
+Set the hue shift in degrees to apply. Default is 0.
+Allowed range is from \-180 to 180.
+.IP "\fBsaturation\fR" 4
+.IX Item "saturation"
+Set the saturation shift. Default is 0.
+Allowed range is from \-1 to 1.
+.IP "\fBintensity\fR" 4
+.IX Item "intensity"
+Set the intensity shift. Default is 0.
+Allowed range is from \-1 to 1.
+.IP "\fBcolors\fR" 4
+.IX Item "colors"
+Set which primary and complementary colors are going to be adjusted.
+This options is set by providing one or multiple values.
+This can select multiple colors at once. By default all colors are selected.
+.RS 4
+.IP "\fBr\fR" 4
+.IX Item "r"
+Adjust reds.
+.IP "\fBy\fR" 4
+.IX Item "y"
+Adjust yellows.
+.IP "\fBg\fR" 4
+.IX Item "g"
+Adjust greens.
+.IP "\fBc\fR" 4
+.IX Item "c"
+Adjust cyans.
+.IP "\fBb\fR" 4
+.IX Item "b"
+Adjust blues.
+.IP "\fBm\fR" 4
+.IX Item "m"
+Adjust magentas.
+.IP "\fBa\fR" 4
+.IX Item "a"
+Adjust all colors.
+.RE
+.RS 4
+.RE
+.IP "\fBstrength\fR" 4
+.IX Item "strength"
+Set strength of filtering. Allowed range is from 0 to 100.
+Default value is 1.
+.IP "\fBrw, gw, bw\fR" 4
+.IX Item "rw, gw, bw"
+Set weight for each \s-1RGB\s0 component. Allowed range is from 0 to 1.
+By default is set to 0.333, 0.334, 0.333.
+Those options are used in saturation and lightess processing.
+.IP "\fBlightness\fR" 4
+.IX Item "lightness"
+Set preserving lightness, by default is disabled.
+Adjusting hues can change lightness from original \s-1RGB\s0 triplet,
+with this option enabled lightness is kept at same value.
 .SS "hysteresis"
 .IX Subsection "hysteresis"
 Grow first stream into second stream by connecting components.
@@ -25079,6 +25807,36 @@ Example with options and different containers:
 .Vb 1
 \&        ffmpeg \-i main.mpg \-i ref.mkv \-lavfi "[0:v]settb=AVTB,setpts=PTS\-STARTPTS[main];[1:v]settb=AVTB,setpts=PTS\-STARTPTS[ref];[main][ref]libvmaf=psnr=1:log_fmt=json" \-f null \-
 .Ve
+.SS "limitdiff"
+.IX Subsection "limitdiff"
+Apply limited difference filter using second and optionally third video stream.
+.PP
+The filter accepts the following options:
+.IP "\fBthreshold\fR" 4
+.IX Item "threshold"
+Set the threshold to use when allowing certain differences between video streams.
+Any absolute difference value lower or exact than this threshold will pick pixel components from
+first video stream.
+.IP "\fBelasticity\fR" 4
+.IX Item "elasticity"
+Set the elasticity of soft thresholding when processing video streams.
+This value multiplied with first one sets second threshold.
+Any absolute difference value greater or exact than second threshold will pick pixel components
+from second video stream. For values between those two threshold
+linear interpolation between first and second video stream will be used.
+.IP "\fBreference\fR" 4
+.IX Item "reference"
+Enable the reference (third) video stream processing. By default is disabled.
+If set, this video stream will be used for calculating absolute difference with first video
+stream.
+.IP "\fBplanes\fR" 4
+.IX Item "planes"
+Specify which planes will be processed. Defaults to all available.
+.PP
+\fICommands\fR
+.IX Subsection "Commands"
+.PP
+This filter supports the all above options as \fBcommands\fR except option \fBreference\fR.
 .SS "limiter"
 .IX Subsection "limiter"
 Limits the pixel components values to the specified range [min, max].
@@ -26048,6 +26806,55 @@ Default value is 0.
 .IX Subsection "Commands"
 .PP
 This filter supports the all above options as \fBcommands\fR.
+.SS "morpho"
+.IX Subsection "morpho"
+This filter allows to apply main morphological grayscale transforms,
+erode and dilate with arbitrary structures set in second input stream.
+.PP
+Unlike naive implementation and much slower performance in \fBerosion\fR
+and \fBdilation\fR filters, when speed is critical \f(CW\*(C`morpho\*(C'\fR filter
+should be used instead.
+.PP
+A description of accepted options follows,
+.IP "\fBmode\fR" 4
+.IX Item "mode"
+Set morphological transform to apply, can be:
+.RS 4
+.IP "\fBerode\fR" 4
+.IX Item "erode"
+.PD 0
+.IP "\fBdilate\fR" 4
+.IX Item "dilate"
+.IP "\fBopen\fR" 4
+.IX Item "open"
+.IP "\fBclose\fR" 4
+.IX Item "close"
+.IP "\fBgradient\fR" 4
+.IX Item "gradient"
+.IP "\fBtophat\fR" 4
+.IX Item "tophat"
+.IP "\fBblackhat\fR" 4
+.IX Item "blackhat"
+.RE
+.RS 4
+.PD
+.Sp
+Default is \f(CW\*(C`erode\*(C'\fR.
+.RE
+.IP "\fBplanes\fR" 4
+.IX Item "planes"
+Set planes to filter, by default all planes except alpha are filtered.
+.IP "\fBstructure\fR" 4
+.IX Item "structure"
+Set which structure video frames will be processed from second input stream,
+can be \fIfirst\fR or \fIall\fR. Default is \fIall\fR.
+.PP
+The \f(CW\*(C`morpho\*(C'\fR filter also supports the \fBframesync\fR options.
+.PP
+\fICommands\fR
+.IX Subsection "Commands"
+.PP
+This filter supports same \fBcommands\fR as options.
 .SS "mpdecimate"
 .IX Subsection "mpdecimate"
 Drop frames that do not differ greatly from the previous frame in
@@ -26113,8 +26920,33 @@ with the reference file \fIref.mpg\fR.
 Negate (invert) the input video.
 .PP
 It accepts the following option:
+.IP "\fBcomponents\fR" 4
+.IX Item "components"
+Set components to negate.
+.Sp
+Available values for components are:
+.RS 4
+.IP "\fBy\fR" 4
+.IX Item "y"
+.PD 0
+.IP "\fBu\fR" 4
+.IX Item "u"
+.IP "\fBv\fR" 4
+.IX Item "v"
+.IP "\fBa\fR" 4
+.IX Item "a"
+.IP "\fBr\fR" 4
+.IX Item "r"
+.IP "\fBg\fR" 4
+.IX Item "g"
+.IP "\fBb\fR" 4
+.IX Item "b"
+.RE
+.RS 4
+.RE
 .IP "\fBnegate_alpha\fR" 4
 .IX Item "negate_alpha"
+.PD
 With value 1, it negates the alpha component, if present. Default value is 0.
 .PP
 \fICommands\fR
@@ -27284,6 +28116,10 @@ Compute new histogram for each frame.
 .Sp
 Default value is \fIfull\fR.
 .RE
+.IP "\fBuse_alpha\fR" 4
+.IX Item "use_alpha"
+Create a palette of colors with alpha components.
+Setting this, will automatically disable 'reserve_transparent'.
 .PP
 The filter also exports the frame metadata \f(CW\*(C`lavfi.color_quant_ratio\*(C'\fR
 (\f(CW\*(C`nb_color_in / nb_color_out\*(C'\fR) which you can use to evaluate the degree of
@@ -27367,6 +28203,11 @@ will be treated as completely opaque, and values below this threshold will be
 treated as completely transparent.
 .Sp
 The option must be an integer value in the range [0,255]. Default is \fI128\fR.
+.IP "\fBuse_alpha\fR" 4
+.IX Item "use_alpha"
+Apply the palette by taking alpha values into account. Only useful with
+palettes that are containing multiple colors with alpha components.
+Setting this will automatically disable 'alpha_treshold'.
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
@@ -29225,6 +30066,72 @@ may be slightly modified.
 This option can be handy if you need to have a video fit within or exceed
 a defined resolution using \fBforce_original_aspect_ratio\fR but also have
 encoder restrictions on width or height divisibility.
+.IP "\fBeval\fR" 4
+.IX Item "eval"
+Specify when to evaluate \fIwidth\fR and \fIheight\fR expression. It accepts the following values:
+.RS 4
+.IP "\fBinit\fR" 4
+.IX Item "init"
+Only evaluate expressions once during the filter initialization or when a command is processed.
+.IP "\fBframe\fR" 4
+.IX Item "frame"
+Evaluate expressions for each incoming frame.
+.RE
+.RS 4
+.RE
+.PP
+The values of the \fBw\fR and \fBh\fR options are expressions
+containing the following constants:
+.IP "\fIin_w\fR" 4
+.IX Item "in_w"
+.PD 0
+.IP "\fIin_h\fR" 4
+.IX Item "in_h"
+.PD
+The input width and height
+.IP "\fIiw\fR" 4
+.IX Item "iw"
+.PD 0
+.IP "\fIih\fR" 4
+.IX Item "ih"
+.PD
+These are the same as \fIin_w\fR and \fIin_h\fR.
+.IP "\fIout_w\fR" 4
+.IX Item "out_w"
+.PD 0
+.IP "\fIout_h\fR" 4
+.IX Item "out_h"
+.PD
+The output (scaled) width and height
+.IP "\fIow\fR" 4
+.IX Item "ow"
+.PD 0
+.IP "\fIoh\fR" 4
+.IX Item "oh"
+.PD
+These are the same as \fIout_w\fR and \fIout_h\fR
+.IP "\fIa\fR" 4
+.IX Item "a"
+The same as \fIiw\fR / \fIih\fR
+.IP "\fIsar\fR" 4
+.IX Item "sar"
+input sample aspect ratio
+.IP "\fIdar\fR" 4
+.IX Item "dar"
+The input display aspect ratio. Calculated from \f(CW\*(C`(iw / ih) * sar\*(C'\fR.
+.IP "\fIn\fR" 4
+.IX Item "n"
+The (sequential) number of the input frame, starting from 0.
+Only available with \f(CW\*(C`eval=frame\*(C'\fR.
+.IP "\fIt\fR" 4
+.IX Item "t"
+The presentation timestamp of the input frame, expressed as a number of
+seconds. Only available with \f(CW\*(C`eval=frame\*(C'\fR.
+.IP "\fIpos\fR" 4
+.IX Item "pos"
+The position (byte offset) of the frame in the input stream, or NaN if
+this information is unavailable and/or meaningless (for example in case of synthetic video).
+Only available with \f(CW\*(C`eval=frame\*(C'\fR.
 .SS "scale2ref"
 .IX Subsection "scale2ref"
 Scale (resize) the input video, based on a reference video.
@@ -29303,6 +30210,80 @@ The command accepts the same syntax of the corresponding option.
 .Sp
 If the specified expression is not valid, it is kept at its current
 value.
+.SS "scale2ref_npp"
+.IX Subsection "scale2ref_npp"
+Use the \s-1NVIDIA\s0 Performance Primitives (libnpp) to scale (resize) the input
+video, based on a reference video.
+.PP
+See the \fBscale_npp\fR filter for available options, scale2ref_npp supports the same
+but uses the reference video instead of the main input as basis. scale2ref_npp
+also supports the following additional constants for the \fBw\fR and
+\&\fBh\fR options:
+.IP "\fImain_w\fR" 4
+.IX Item "main_w"
+.PD 0
+.IP "\fImain_h\fR" 4
+.IX Item "main_h"
+.PD
+The main input video's width and height
+.IP "\fImain_a\fR" 4
+.IX Item "main_a"
+The same as \fImain_w\fR / \fImain_h\fR
+.IP "\fImain_sar\fR" 4
+.IX Item "main_sar"
+The main input video's sample aspect ratio
+.IP "\fImain_dar, mdar\fR" 4
+.IX Item "main_dar, mdar"
+The main input video's display aspect ratio. Calculated from
+\&\f(CW\*(C`(main_w / main_h) * main_sar\*(C'\fR.
+.IP "\fImain_n\fR" 4
+.IX Item "main_n"
+The (sequential) number of the main input frame, starting from 0.
+Only available with \f(CW\*(C`eval=frame\*(C'\fR.
+.IP "\fImain_t\fR" 4
+.IX Item "main_t"
+The presentation timestamp of the main input frame, expressed as a number of
+seconds. Only available with \f(CW\*(C`eval=frame\*(C'\fR.
+.IP "\fImain_pos\fR" 4
+.IX Item "main_pos"
+The position (byte offset) of the frame in the main input stream, or NaN if
+this information is unavailable and/or meaningless (for example in case of synthetic video).
+Only available with \f(CW\*(C`eval=frame\*(C'\fR.
+.PP
+\fIExamples\fR
+.IX Subsection "Examples"
+.IP "\(bu" 4
+Scale a subtitle stream (b) to match the main video (a) in size before overlaying
+.Sp
+.Vb 1
+\&        \*(Aqscale2ref_npp[b][a];[a][b]overlay_cuda\*(Aq
+.Ve
+.IP "\(bu" 4
+Scale a logo to 1/10th the height of a video, while preserving its display aspect ratio.
+.Sp
+.Vb 1
+\&        [logo\-in][video\-in]scale2ref_npp=w=oh*mdar:h=ih/10[logo\-out][video\-out]
+.Ve
+.SS "scharr"
+.IX Subsection "scharr"
+Apply scharr operator to input video stream.
+.PP
+The filter accepts the following option:
+.IP "\fBplanes\fR" 4
+.IX Item "planes"
+Set which planes will be processed, unprocessed planes will be copied.
+By default value 0xf, all planes will be processed.
+.IP "\fBscale\fR" 4
+.IX Item "scale"
+Set value which will be multiplied with filtered result.
+.IP "\fBdelta\fR" 4
+.IX Item "delta"
+Set value which will be added to filtered result.
+.PP
+\fICommands\fR
+.IX Subsection "Commands"
+.PP
+This filter supports the all above options as \fBcommands\fR.
 .SS "scroll"
 .IX Subsection "scroll"
 Scroll input video horizontally and/or vertically by constant speed.
@@ -29744,6 +30725,22 @@ Keep the same colorspace property (default).
 .RS 4
 .RE
 .PD
+.SS "sharpen_npp"
+.IX Subsection "sharpen_npp"
+Use the \s-1NVIDIA\s0 Performance Primitives (libnpp) to perform image sharpening with
+border control.
+.PP
+The following additional options are accepted:
+.IP "\fBborder_type\fR" 4
+.IX Item "border_type"
+Type of sampling to be used ad frame borders. One of the following:
+.RS 4
+.IP "\fBreplicate\fR" 4
+.IX Item "replicate"
+Replicate pixel values.
+.RE
+.RS 4
+.RE
 .SS "shear"
 .IX Subsection "shear"
 Apply shear transform to input video.
@@ -30378,7 +31375,7 @@ Set scale factor for \s-1SRCNN\s0 model. Allowed values are \f(CW2\fR, \f(CW3\fR
 Default value is \f(CW2\fR. Scale factor is necessary for \s-1SRCNN\s0 model, because it accepts
 input upscaled using bicubic upscaling with proper scale factor.
 .PP
-This feature can also be finished with \fBdnn_processing\fR filter.
+To get full functionality (such as async execution), please use the \fBdnn_processing\fR filter.
 .SS "ssim"
 .IX Subsection "ssim"
 Obtain the \s-1SSIM\s0 (Structural SImilarity Metric) between two input videos.
@@ -32495,9 +33492,20 @@ Set if input video is transposed. Boolean value, by default disabled.
 .IP "\fBout_trans\fR" 4
 .IX Item "out_trans"
 Set if output video needs to be transposed. Boolean value, by default disabled.
+.IP "\fBh_offset\fR" 4
+.IX Item "h_offset"
+.PD 0
+.IP "\fBv_offset\fR" 4
+.IX Item "v_offset"
+.PD
+Set output horizontal/vertical off-axis offset. Default is set to 0.
+Allowed range is from \-1 to 1.
 .IP "\fBalpha_mask\fR" 4
 .IX Item "alpha_mask"
 Build mask in alpha plane for all unmapped pixels by marking them fully transparent. Boolean value, by default disabled.
+.IP "\fBreset_rot\fR" 4
+.IX Item "reset_rot"
+Reset rotation of output video. Boolean value, by default disabled.
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
@@ -32590,6 +33598,28 @@ Threshold used depends also on each decomposition coefficients.
 .Sp
 Default is universal.
 .RE
+.SS "varblur"
+.IX Subsection "varblur"
+Apply variable blur filter by using 2nd video stream to set blur radius.
+The 2nd stream must have the same dimensions.
+.PP
+This filter accepts the following options:
+.IP "\fBmin_r\fR" 4
+.IX Item "min_r"
+Set min allowed radius. Allowed range is from 0 to 254. Default is 0.
+.IP "\fBmax_r\fR" 4
+.IX Item "max_r"
+Set max allowed radius. Allowed range is from 1 to 255. Default is 8.
+.IP "\fBplanes\fR" 4
+.IX Item "planes"
+Set which planes to process. By default, all are used.
+.PP
+The \f(CW\*(C`varblur\*(C'\fR filter also supports the \fBframesync\fR options.
+.PP
+\fICommands\fR
+.IX Subsection "Commands"
+.PP
+This filter supports all the above options as \fBcommands\fR.
 .SS "vectorscope"
 .IX Subsection "vectorscope"
 Display 2 color component values in the two dimensional graph (which is called
@@ -33545,6 +34575,22 @@ It accepts the following option:
 Set the scaling dimension: \f(CW2\fR for \f(CW\*(C`2xBR\*(C'\fR, \f(CW3\fR for
 \&\f(CW\*(C`3xBR\*(C'\fR and \f(CW4\fR for \f(CW\*(C`4xBR\*(C'\fR.
 Default is \f(CW3\fR.
+.SS "xcorrelate"
+.IX Subsection "xcorrelate"
+Apply normalized cross-correlation between first and second input video stream.
+.PP
+Second input video stream dimensions must be lower than first input video stream.
+.PP
+The filter accepts the following options:
+.IP "\fBplanes\fR" 4
+.IX Item "planes"
+Set which planes to process.
+.IP "\fBsecondary\fR" 4
+.IX Item "secondary"
+Set which secondary video frames will be processed from second input video stream,
+can be \fIfirst\fR or \fIall\fR. Default is \fIall\fR.
+.PP
+The \f(CW\*(C`xcorrelate\*(C'\fR filter also supports the \fBframesync\fR options.
 .SS "xfade"
 .IX Subsection "xfade"
 Apply cross fade from one input video stream to another input video stream.
@@ -33647,6 +34693,8 @@ Set one of available transition effects:
 .IX Item "squeezeh"
 .IP "\fBsqueezev\fR" 4
 .IX Item "squeezev"
+.IP "\fBzoomin\fR" 4
+.IX Item "zoomin"
 .RE
 .RS 4
 .PD
@@ -33656,6 +34704,7 @@ Default transition effect is fade.
 .IP "\fBduration\fR" 4
 .IX Item "duration"
 Set cross fade duration in seconds.
+Range is 0 to 60 seconds.
 Default duration is 1 second.
 .IP "\fBoffset\fR" 4
 .IX Item "offset"
@@ -36190,13 +37239,15 @@ Full example with slow death effect (mold) using \fBffplay\fR:
 .Vb 1
 \&        ffplay \-f lavfi life=s=300x200:mold=10:r=60:ratio=0.1:death_color=#C83232:life_color=#00ff00,scale=1200:800:flags=16
 .Ve
-.SS "allrgb, allyuv, color, haldclutsrc, nullsrc, pal75bars, pal100bars, rgbtestsrc, smptebars, smptehdbars, testsrc, testsrc2, yuvtestsrc"
-.IX Subsection "allrgb, allyuv, color, haldclutsrc, nullsrc, pal75bars, pal100bars, rgbtestsrc, smptebars, smptehdbars, testsrc, testsrc2, yuvtestsrc"
+.SS "allrgb, allyuv, color, colorspectrum, haldclutsrc, nullsrc, pal75bars, pal100bars, rgbtestsrc, smptebars, smptehdbars, testsrc, testsrc2, yuvtestsrc"
+.IX Subsection "allrgb, allyuv, color, colorspectrum, haldclutsrc, nullsrc, pal75bars, pal100bars, rgbtestsrc, smptebars, smptehdbars, testsrc, testsrc2, yuvtestsrc"
 The \f(CW\*(C`allrgb\*(C'\fR source returns frames of size 4096x4096 of all rgb colors.
 .PP
 The \f(CW\*(C`allyuv\*(C'\fR source returns frames of size 4096x4096 of all yuv colors.
 .PP
 The \f(CW\*(C`color\*(C'\fR source provides an uniformly colored input.
+.PP
+The \f(CW\*(C`colorspectrum\*(C'\fR source provides a color spectrum input.
 .PP
 The \f(CW\*(C`haldclutsrc\*(C'\fR source provides an identity Hald \s-1CLUT.\s0 See also
 \&\fBhaldclut\fR filter.
@@ -36287,6 +37338,22 @@ Set the number of decimals to show in the timestamp, only available in the
 The displayed timestamp value will correspond to the original
 timestamp value multiplied by the power of 10 of the specified
 value. Default value is 0.
+.IP "\fBtype\fR" 4
+.IX Item "type"
+Set the type of the color spectrum, only available in the
+\&\f(CW\*(C`colorspectrum\*(C'\fR source. Can be one of the following:
+.RS 4
+.IP "\fBblack\fR" 4
+.IX Item "black"
+.PD 0
+.IP "\fBwhite\fR" 4
+.IX Item "white"
+.IP "\fBall\fR" 4
+.IX Item "all"
+.RE
+.RS 4
+.RE
+.PD
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
@@ -36765,6 +37832,11 @@ Complete example using \fBffplay\fR:
 \&        ffplay \-f lavfi \*(Aqamovie=input.mp3, asplit [a][out1];
 \&                     [a] avectorscope=zoom=1.3:rc=2:gc=200:bc=10:rf=1:gf=8:bf=7 [out0]\*(Aq
 .Ve
+.PP
+\fICommands\fR
+.IX Subsection "Commands"
+.PP
+This filter supports the all above options as commands except options \f(CW\*(C`size\*(C'\fR and \f(CW\*(C`rate\*(C'\fR.
 .SS "bench, abench"
 .IX Subsection "bench, abench"
 Benchmark part of a filtergraph.
@@ -37077,6 +38149,15 @@ Add flickering blur effect:
 .Vb 1
 \&        select=\*(Aqif(gt(random(0), 0.2), 1, 2)\*(Aq:n=2 [tmp], boxblur=2:2, [tmp] interleave
 .Ve
+.SS "latency, alatency"
+.IX Subsection "latency, alatency"
+Measure filtering latency.
+.PP
+Report previous filter filtering latency, delay in number of audio samples for audio filters
+or number of video frames for video filters.
+.PP
+On end of input stream, filter will report min and max measured latency for previous running filter
+in filtergraph.
 .SS "metadata, ametadata"
 .IX Subsection "metadata, ametadata"
 Manipulate frame metadata.
@@ -37292,7 +38373,7 @@ and storing that in 1st output audio stream, then following at 60th second and s
 output audio stream, and last after 150th second of input audio stream store in 3rd output audio stream:
 .Sp
 .Vb 1
-\&        asegment=timestamps="60 | 150"
+\&        asegment=timestamps="60|150"
 .Ve
 .SS "select, aselect"
 .IX Subsection "select, aselect"
@@ -37331,27 +38412,27 @@ The sequential number of the last selected frame. It's \s-1NAN\s0 if undefined.
 The timebase of the input timestamps.
 .IP "\fBpts\fR" 4
 .IX Item "pts"
-The \s-1PTS\s0 (Presentation TimeStamp) of the filtered video frame,
+The \s-1PTS\s0 (Presentation TimeStamp) of the filtered frame,
 expressed in \fI\s-1TB\s0\fR units. It's \s-1NAN\s0 if undefined.
 .IP "\fBt\fR" 4
 .IX Item "t"
-The \s-1PTS\s0 of the filtered video frame,
+The \s-1PTS\s0 of the filtered frame,
 expressed in seconds. It's \s-1NAN\s0 if undefined.
 .IP "\fBprev_pts\fR" 4
 .IX Item "prev_pts"
-The \s-1PTS\s0 of the previously filtered video frame. It's \s-1NAN\s0 if undefined.
+The \s-1PTS\s0 of the previously filtered frame. It's \s-1NAN\s0 if undefined.
 .IP "\fBprev_selected_pts\fR" 4
 .IX Item "prev_selected_pts"
-The \s-1PTS\s0 of the last previously filtered video frame. It's \s-1NAN\s0 if undefined.
+The \s-1PTS\s0 of the last previously filtered frame. It's \s-1NAN\s0 if undefined.
 .IP "\fBprev_selected_t\fR" 4
 .IX Item "prev_selected_t"
-The \s-1PTS\s0 of the last previously selected video frame, expressed in seconds. It's \s-1NAN\s0 if undefined.
+The \s-1PTS\s0 of the last previously selected frame, expressed in seconds. It's \s-1NAN\s0 if undefined.
 .IP "\fBstart_pts\fR" 4
 .IX Item "start_pts"
-The \s-1PTS\s0 of the first video frame in the video. It's \s-1NAN\s0 if undefined.
+The first \s-1PTS\s0 in the stream which is not \s-1NAN.\s0 It remains \s-1NAN\s0 if not found.
 .IP "\fBstart_t\fR" 4
 .IX Item "start_t"
-The time of the first video frame in the video. It's \s-1NAN\s0 if undefined.
+The first \s-1PTS,\s0 in seconds, in the stream which is not \s-1NAN.\s0 It remains \s-1NAN\s0 if not found.
 .IP "\fBpict_type\fR \fI(video only)\fR" 4
 .IX Item "pict_type (video only)"
 The type of the filtered frame. It can assume one of the following
@@ -39489,6 +40570,19 @@ changed, so it will generate non monotonically increasing timestamps.
 Specifies the time difference between frames above which the point is
 considered a timestamp discontinuity which is removed by adjusting the later
 timestamps.
+.IP "\fBdec_threads\fR" 4
+.IX Item "dec_threads"
+Specifies the number of threads for decoding
+.IP "\fBformat_opts\fR" 4
+.IX Item "format_opts"
+Specify format options for the opened file. Format options can be specified
+as a list of \fIkey\fR=\fIvalue\fR pairs separated by ':'. The following example
+shows how to add protocol_whitelist and protocol_blacklist options:
+.Sp
+.Vb 2
+\&        ffplay \-f lavfi
+\&        "movie=filename=\*(Aq1.sdp\*(Aq:format_opts=\*(Aqprotocol_whitelist=file,rtp,udp\e:protocol_blacklist=http\*(Aq"
+.Ve
 .PP
 It allows overlaying a second video on top of the main input of
 a filtergraph, as shown in this graph:
@@ -40515,6 +41609,8 @@ library:
 .IX Item "raw video : X @tab X"
 .IP "\fBraw id RoQ                 :  X \f(CB@tab\fB\fR" 4
 .IX Item "raw id RoQ : X @tab"
+.IP "\fBraw \s-1OBU\s0                    :  X \f(CB@tab\fB X\fR" 4
+.IX Item "raw OBU : X @tab X"
 .IP "\fBraw \s-1SBC\s0                    :  X \f(CB@tab\fB X\fR" 4
 .IX Item "raw SBC : X @tab X"
 .IP "\fBraw Shorten                :    \f(CB@tab\fB X\fR" 4
@@ -40841,6 +41937,11 @@ following image formats are supported:
 .IX Item "FITS : X @tab X"
 .Vb 1
 \&    @tab Flexible Image Transport System
+.Ve
+.IP "\fB\s-1IMG\s0           :    \f(CB@tab\fB X\fR" 4
+.IX Item "IMG : @tab X"
+.Vb 1
+\&    @tab GEM Raster image
 .Ve
 .IP "\fB\s-1JPEG\s0          :  X \f(CB@tab\fB X\fR" 4
 .IX Item "JPEG : X @tab X"
@@ -41539,8 +42640,8 @@ following image formats are supported:
 .Vb 1
 \&    @tab fourcc: \*(Aqrle \*(Aq
 .Ve
-.IP "\fBQuickTime Graphics (\s-1SMC\s0)   :      \f(CB@tab\fB  X\fR" 4
-.IX Item "QuickTime Graphics (SMC) : @tab X"
+.IP "\fBQuickTime Graphics (\s-1SMC\s0)   :   X  \f(CB@tab\fB  X\fR" 4
+.IX Item "QuickTime Graphics (SMC) : X @tab X"
 .Vb 1
 \&    @tab fourcc: \*(Aqsmc \*(Aq
 .Ve
@@ -42050,8 +43151,8 @@ following image formats are supported:
 .IP "\fB\s-1IAC\s0 (Indeo Audio Coder)   :      \f(CB@tab\fB  X\fR" 4
 .IX Item "IAC (Indeo Audio Coder) : @tab X"
 .PD 0
-.IP "\fBiLBC (Internet Low Bitrate Codec)  :   E  \f(CB@tab\fB  E\fR" 4
-.IX Item "iLBC (Internet Low Bitrate Codec) : E @tab E"
+.IP "\fBiLBC (Internet Low Bitrate Codec)  :   E  \f(CB@tab\fB  \s-1EX\s0\fR" 4
+.IX Item "iLBC (Internet Low Bitrate Codec) : E @tab EX"
 .PD
 .Vb 1
 \&    @tab encoding and decoding supported through external library libilbc
@@ -42222,8 +43323,8 @@ following image formats are supported:
 .Vb 1
 \&    @tab experimental codec
 .Ve
-.IP "\fBSpeex                   :   E  \f(CB@tab\fB  E\fR" 4
-.IX Item "Speex : E @tab E"
+.IP "\fBSpeex                   :   E  \f(CB@tab\fB  \s-1EX\s0\fR" 4
+.IX Item "Speex : E @tab EX"
 .Vb 1
 \&    @tab supported through external library libspeex
 .Ve

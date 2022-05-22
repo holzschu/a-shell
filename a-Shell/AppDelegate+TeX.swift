@@ -14,7 +14,7 @@ private let texmf_varResource = NSBundleResourceRequest(tags: ["texlive_2022_var
 private let texmf_dist_fontsResource = NSBundleResourceRequest(tags: ["texlive_2022_dist_fonts"])
 private let texmf_dist_fonts_vfResource = NSBundleResourceRequest(tags: ["texlive_2022_texmf_dist_fonts_vf"])
 private let texmf_dist_fonts_type1Resource = NSBundleResourceRequest(tags: ["texlive_2022_texmf_dist_fonts_type1"])
-private let texmf_dist_fonts_opentypeResource = NSBundleResourceRequest(tags: ["texlive_2022_texmf_dist_fonts_oft_ttf"])
+private let texmf_dist_fonts_opentypeResource = NSBundleResourceRequest(tags: ["texlive_2022_texmf_dist_fonts_otf_ttf"])
 
 extension AppDelegate {
     
@@ -76,7 +76,10 @@ extension AppDelegate {
             downloadingTeX = false
             self.TeXEnabled = true
             addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
-            // Create all the commands:
+            if (self.OpentypeEnabled) {
+                addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
+            }
+            // Create all the scripts commands:
             let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                        in: .userDomainMask,
                                                        appropriateFor: nil,
@@ -91,17 +94,26 @@ extension AppDelegate {
                 }
             }
             for script in TeXscripts {
-                let command = localPath.path + "/" + script[0]
+                let command = localPath.appendingPathComponent(script[0])
                 let location = "../texlive/2022/texmf-dist/" + script[1]
+                // fileExists doesn't work, because it follows symbolic links
                 do {
-                    if (FileManager().fileExists(atPath: command)) {
-                        // NSLog("Removing existing file \(command)")
-                        try FileManager().removeItem(atPath: command)
+                    let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
+                    if (fileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
+                        // It's a symbolic link, does the destination exist?
+                        if (!FileManager().fileExists(atPath: command.path)) {
+                            try FileManager().removeItem(at: command)
+                            try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
+                        }
                     }
-                    try FileManager().createSymbolicLink(atPath: command, withDestinationPath: location)
                 }
                 catch {
-                    NSLog("Unable to create symbolic link at \(command) to \(location): \(error)")
+                    do {
+                        try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
+                    }
+                    catch {
+                        NSLog("Unable to create symbolic link at \(command.path) to \(location): \(error)")
+                    }
                 }
             }
             if let installedTexVersion = UserDefaults.standard.string(forKey: "TeXVersion") {
@@ -242,6 +254,7 @@ extension AppDelegate {
             return
         }
         // If tl2021 exists, move it to 2022:
+        // If 2022 already exists, this will fail.
         let tl2021 = localURL.appendingPathComponent("2021")
         let tl2022 = localURL.appendingPathComponent("2022")
         if (FileManager().fileExists(atPath: tl2021.path) && !FileManager().fileExists(atPath: tl2022.path)) {
@@ -490,7 +503,7 @@ extension AppDelegate {
             } else {
                 NSLog("texmf-dist/fonts OpenType resource succesfully downloaded")
                 // link the sub-directories in the right place:
-                self.copyContentFromResource(resource: texmf_dist_fonts_opentypeResource, path: "texlive_2022_texmf_dist_fonts_oft_ttf")
+                self.copyContentFromResource(resource: texmf_dist_fonts_opentypeResource, path: "texlive_2022_texmf_dist_fonts_otf_ttf")
                 NSLog("Done copying texmf-dist/fonts OpenType resource")
                 // Release the resource:
                 texmf_dist_fonts_opentypeResource.endAccessingResources()
@@ -505,7 +518,9 @@ extension AppDelegate {
             NSLog("Opentype fonts have been downloaded.")
             downloadingOpentype = false
             self.OpentypeEnabled = true
-            addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
+            if (self.TeXEnabled) {
+                addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
+            }
             UserDefaults.standard.setValue("2022", forKey: "LuaTeXVersion")
         }
     }

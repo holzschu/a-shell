@@ -307,16 +307,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         // - parse PS1 (bash syntax) using a regexp:
         do {
-            let regex = try NSRegularExpression(pattern: #"\\[adDehHjlnrstT@AuvVwW!#$]"#, options: [])
+            let regex = try NSRegularExpression(pattern: #"\\[]adDehHjlnrstT@AuvVwW!#$\[]"#, options: [])
             let matches = regex.matches(in: prompt, range: NSRange(prompt.startIndex..<prompt.endIndex, in: prompt))
             var offset = 0
             var newPrompt = ""
             for match in matches {
-                let range = match.range
+                var range = match.range
                 newPrompt += prompt[prompt.index(prompt.startIndex, offsetBy:offset)..<prompt.index(prompt.startIndex, offsetBy: range.lowerBound)]
                 let subString = prompt[prompt.index(prompt.startIndex, offsetBy:range.lowerBound)..<prompt.index(prompt.startIndex, offsetBy: range.upperBound)]
+                // NSLog("Found: \(subString)")
                 switch (subString) {
-                    //aAdDehHjlnrstTuvVwW@! # $
+                    //aAdDehHjlnrstTuvVwW@! # $ [ ]
                 case "\\a": // ASCII bell character (07)
                     newPrompt += "\u{0007}"
                     break
@@ -331,7 +332,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     newPrompt += format.string(from: Date())
                     break
                 case "\\D": // \D{format} : the format is passed to strftime(3) and the result is inserted into the prompt string; an empty format results in a locale-specific time representation. The braces are required
-                    var formatStringParse = prompt[prompt.index(prompt.startIndex, offsetBy:offset + subString.count)..<prompt.index(prompt.startIndex, offsetBy: range.lowerBound)]
+                    var formatStringParse = prompt[prompt.index(prompt.startIndex, offsetBy:range.upperBound)..<prompt.endIndex]
                     if (formatStringParse.hasPrefix("{")) {
                         formatStringParse.removeFirst()
                         if let formatString = formatStringParse.split(separator: "}").first {
@@ -340,6 +341,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             var time: time_t = Int(NSDate().timeIntervalSince1970)
                             _ = strftime(&buffer, Int(maxSize), String(formatString).toCString(), localtime(&time))
                             newPrompt += String(cString: buffer)
+                            // Advance to after "}":
+                            range = NSRange(prompt.range(of: "}", options: [], range: (prompt.index(prompt.startIndex, offsetBy:range.upperBound)..<prompt.endIndex))!, in: prompt)
                         }
                     }
                     break
@@ -424,6 +427,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     break
                 case "\\$": // if the effective UID is 0, a #, otherwise a $
                     newPrompt += "$"
+                    break
+                case "\\[", "\\]": // supposed to encase zero-length characters. Not needed for a-Shell.
+                    break
+                case "\\0", "\\1", "\\2", "\\3", "\\4", "\\5", "\\6", "\\7", "\\8", "\\9": // \nnn: unicode character
+                    newPrompt += "\\u\\{"
+                    newPrompt += prompt[prompt.index(prompt.startIndex, offsetBy:range.lowerBound + 1)..<prompt.index(prompt.startIndex, offsetBy: range.upperBound + 2)]
+                    newPrompt += "\\}"
+                    let newRange = prompt.index(prompt.startIndex, offsetBy:range.lowerBound)..<prompt.index(prompt.startIndex, offsetBy: range.upperBound+2)
+                    range = NSRange(newRange, in: prompt)
                     break
                 default:
                     newPrompt += subString
@@ -533,6 +545,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     let name = components[0]
                     var value = envVar
                     value.removeFirst(name.count + 1)
+                    value = value.replacingOccurrences(of: "\\", with: "\\\\")
                     environmentAsJSDictionary += "\"" + name + "\"" + ":" + "\"" + value + "\",\n"
                 }
             }
@@ -2356,11 +2369,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // Don't override PATH, MANPATH, PERL5LIB...
                 // PATH itself will be dealt with separately
                 if (value.hasPrefix("/") && (value.contains(":"))) { continue }
-                // Don't override PERL_MB_OPT, PERL_MM_OPT, TERMINFO, PS1 (for now) either:
+                // Don't override PERL_MB_OPT, PERL_MM_OPT, TERMINFO either:
                 if name == "PERL_MB_OPT" { continue }
                 if name == "PERL_MM_OPT" { continue }
                 if name == "TERMINFO" { continue }
-                if name == "PS1" { continue }
+                if (name == "TERM") && (value == "dumb") { continue }
                 // Env vars that are files:
                 if (value.hasPrefix("/") && (!value.contains(":"))) {
                     // This variable might be a file or directory. Check it exists first:
@@ -2376,7 +2389,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
                 // NSLog("setenv \(components[0]) \(components[1])")
-                setenv(String(components[0]), String(components[1]), 1)
+                setenv(name, value, 1)
             }
             // The virtual environment is not in the right place anymore, get the PATH variable back to the correct value
             if (virtualEnvironmentGone) {
@@ -2517,6 +2530,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // I could have been removed by the system, or by the user.
                 // TODO: also check that files are still available / no
                 if (storedCommand.hasPrefix("vim -S ")) {
+                    // We counter it by restoring TERM before starting Vim:
+                    if let storedTermC = getenv("TERM") {
+                        if let storedTerm = String(utf8String: storedTermC) {
+                            if storedTerm == "dumb" {
+                                setenv("TERM", "xterm", 1)
+                            }
+                        }
+                    }
                     NSLog("Restarting session with \(storedCommand)")
                     var sessionFile = storedCommand
                     sessionFile.removeFirst("vim -S ".count)

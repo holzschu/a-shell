@@ -299,9 +299,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 create: true)
         if (appVersion != "a-Shell-mini") {
             if let installedTexVersion = UserDefaults.standard.string(forKey: "TeXVersion") {
+                let localURL = libraryURL.appendingPathComponent("texlive") // $HOME/Library/texlive
                 if (installedTexVersion == "2021") {
-                    // texlive 2021 already installed, move it to 2022 so the user can start using TeX immediately:
-                    let localURL = libraryURL.appendingPathComponent("texlive") // $HOME/Library/texlive
+                    // texlive 2021 already installed, move it to 2022 to keep installed packages:
+                    // (user cannot run TeX immediately since the format has changed)
                     let tl2021 = localURL.appendingPathComponent("2021")
                     let tl2022 = localURL.appendingPathComponent("2022")
                     do {
@@ -310,20 +311,66 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     catch {
                         NSLog("Error in copying texlive 2021 to texlive 2022: \(error)")
                     }
-                    TeXEnabled = true
                     downloadTeX()
-                    addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
                     if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
-                        if (installedLuatexVersion == "2021") {
-                            OpentypeEnabled = true;
-                            downloadOpentype();
-                            addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
+                        if (installedLuatexVersion <= "2021") {
+                            downloadOpentype()
                         }
                     }
                 } else if (installedTexVersion >= "2022") {
                     // We have TeX files already installed. Activate commands:
                     TeXEnabled = true;
                     addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
+                    if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
+                        let openTypeDir = libraryURL.appendingPathComponent("texlive/2022/texmf-dist/fonts/opentype")
+                        if (installedLuatexVersion == "2022") &&
+                            (FileManager().fileExists(atPath: openTypeDir.path)) {
+                            OpentypeEnabled = true;
+                            addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
+                        }
+                    }
+                    // Also do the binary scripts (install may have failed 1st time)
+                    let localPath = libraryURL.appendingPathComponent("bin") // $HOME/Library/bin
+                    for script in TeXscripts {
+                        let command = localPath.appendingPathComponent(script[0])
+                        let location = "../texlive/2022/texmf-dist/" + script[1]
+                        // fileExists doesn't work, because it follows symbolic links
+                        do {
+                            let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
+                            if (fileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
+                                // It's a symbolic link, does the destination exist?
+                                if (!FileManager().fileExists(atPath: command.path)) {
+                                    try FileManager().removeItem(at: command)
+                                    try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
+                                }
+                            }
+                        }
+                        catch {
+                            NSLog("Symbolic link attributes at \(command.path): \(error)")
+                            do {
+                                try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
+                            }
+                            catch {
+                                NSLog("Unable to create symbolic link at \(command.path) to \(location): \(error)")
+                            }
+                        }
+                    }
+                    // Also copy latexmk over the wrong one:
+                    if let forbidden = Bundle.main.resourceURL?.appendingPathComponent("forbidden_2022/2022/texmf-dist/scripts/latexmk/latexmk.pl") {
+                        let latexmk = localURL.appendingPathComponent("2022/texmf-dist/scripts/latexmk/latexmk.pl")
+                        do {
+                            try FileManager().removeItem(at: latexmk)
+                        }
+                        catch {
+                            NSLog("Did not remove \(latexmk)")
+                        }
+                        do {
+                            try FileManager().copyItem(at: forbidden, to: latexmk)
+                        }
+                        catch {
+                            NSLog("Could not copy \(forbidden) to \(latexmk)")
+                        }
+                    }
                 }
             }
             if (TeXEnabled) {

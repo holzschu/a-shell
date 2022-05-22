@@ -716,6 +716,9 @@ Show available sample formats.
 .IP "\fB\-layouts\fR" 4
 .IX Item "-layouts"
 Show channel names and standard channel layouts.
+.IP "\fB\-dispositions\fR" 4
+.IX Item "-dispositions"
+Show stream dispositions.
 .IP "\fB\-colors\fR" 4
 .IX Item "-colors"
 Show recognized color names.
@@ -1182,45 +1185,22 @@ To set the language of the first audio stream:
 .IX Item "-disposition[:stream_specifier] value (output,per-stream)"
 Sets the disposition for a stream.
 .Sp
-This option overrides the disposition copied from the input stream. It is also
-possible to delete the disposition by setting it to 0.
+By default, the disposition is copied from the input stream, unless the output
+stream this option applies to is fed by a complex filtergraph \- in that case the
+disposition is unset by default.
 .Sp
-The following dispositions are recognized:
-.RS 4
-.IP "\fBdefault\fR" 4
-.IX Item "default"
-.PD 0
-.IP "\fBdub\fR" 4
-.IX Item "dub"
-.IP "\fBoriginal\fR" 4
-.IX Item "original"
-.IP "\fBcomment\fR" 4
-.IX Item "comment"
-.IP "\fBlyrics\fR" 4
-.IX Item "lyrics"
-.IP "\fBkaraoke\fR" 4
-.IX Item "karaoke"
-.IP "\fBforced\fR" 4
-.IX Item "forced"
-.IP "\fBhearing_impaired\fR" 4
-.IX Item "hearing_impaired"
-.IP "\fBvisual_impaired\fR" 4
-.IX Item "visual_impaired"
-.IP "\fBclean_effects\fR" 4
-.IX Item "clean_effects"
-.IP "\fBattached_pic\fR" 4
-.IX Item "attached_pic"
-.IP "\fBcaptions\fR" 4
-.IX Item "captions"
-.IP "\fBdescriptions\fR" 4
-.IX Item "descriptions"
-.IP "\fBdependent\fR" 4
-.IX Item "dependent"
-.IP "\fBmetadata\fR" 4
-.IX Item "metadata"
-.RE
-.RS 4
-.PD
+\&\fIvalue\fR is a sequence of items separated by '+' or '\-'. The first item may
+also be prefixed with '+' or '\-', in which case this option modifies the default
+value. Otherwise (the first item is not prefixed) this options overrides the
+default value. A '+' prefix adds the given disposition, '\-' removes it. It is
+also possible to clear the disposition by setting it to 0.
+.Sp
+If no \f(CW\*(C`\-disposition\*(C'\fR options were specified for an output file, ffmpeg will
+automatically set the 'default' disposition on the first stream of each type,
+when there are multiple streams of this type in the output file and no stream of
+that type is already marked as default.
+.Sp
+The \f(CW\*(C`\-dispositions\*(C'\fR option lists the known dispositions.
 .Sp
 For example, to make the second audio stream the default stream:
 .Sp
@@ -1242,7 +1222,6 @@ To add an embedded cover/thumbnail:
 .Ve
 .Sp
 Not all muxers support embedded thumbnails, and those who do, only support a few formats, like \s-1JPEG\s0 or \s-1PNG.\s0
-.RE
 .IP "\fB\-program [title=\fR\fItitle\fR\fB:][program_num=\fR\fIprogram_num\fR\fB:]st=\fR\fIstream\fR\fB[:st=\fR\fIstream\fR\fB...] (\fR\fIoutput\fR\fB)\fR" 4
 .IX Item "-program [title=title:][program_num=program_num:]st=stream[:st=stream...] (output)"
 Creates a program with the specified \fItitle\fR, \fIprogram_num\fR and adds the specified
@@ -1775,9 +1754,31 @@ device type:
 .IP "\fBcuda\fR" 4
 .IX Item "cuda"
 \&\fIdevice\fR is the number of the \s-1CUDA\s0 device.
+.Sp
+The following options are recognized:
+.RS 4
+.IP "\fBprimary_ctx\fR" 4
+.IX Item "primary_ctx"
+If set to 1, uses the primary device context instead of creating a new one.
+.RE
+.RS 4
+.Sp
+Examples:
+.IP "\fI\-init_hw_device cuda:1\fR" 4
+.IX Item "-init_hw_device cuda:1"
+Choose the second device on the system.
+.IP "\fI\-init_hw_device cuda:0,primary_ctx=1\fR" 4
+.IX Item "-init_hw_device cuda:0,primary_ctx=1"
+Choose the first device and use the primary device context.
+.RE
+.RS 4
+.RE
 .IP "\fBdxva2\fR" 4
 .IX Item "dxva2"
 \&\fIdevice\fR is the number of the Direct3D 9 display adapter.
+.IP "\fBd3d11va\fR" 4
+.IX Item "d3d11va"
+\&\fIdevice\fR is the number of the Direct3D 11 display adapter.
 .IP "\fBvaapi\fR" 4
 .IX Item "vaapi"
 \&\fIdevice\fR is either an X11 display name or a \s-1DRM\s0 render node.
@@ -1814,8 +1815,21 @@ If not specified, it will attempt to open the default X11 display (\fI\f(CI$DISP
 .Sp
 If not specified, \fBauto_any\fR is used.
 (Note that it may be easier to achieve the desired result for \s-1QSV\s0 by creating the
-platform-appropriate subdevice (\fBdxva2\fR or \fBvaapi\fR) and then deriving a
+platform-appropriate subdevice (\fBdxva2\fR or \fBd3d11va\fR or \fBvaapi\fR) and then deriving a
 \&\s-1QSV\s0 device from that.)
+.Sp
+Alternatively, \fBchild_device_type\fR helps to choose platform-appropriate subdevice type.
+On Windows \fBd3d11va\fR is used as default subdevice type.
+.Sp
+Examples:
+.IP "\fI\-init_hw_device qsv:hw,child_device_type=d3d11va\fR" 4
+.IX Item "-init_hw_device qsv:hw,child_device_type=d3d11va"
+Choose the \s-1GPU\s0 subdevice with type \fBd3d11va\fR and create \s-1QSV\s0 device with \fB\s-1MFX_IMPL_HARDWARE\s0\fR.
+.IP "\fI\-init_hw_device qsv:hw,child_device_type=dxva2\fR" 4
+.IX Item "-init_hw_device qsv:hw,child_device_type=dxva2"
+Choose the \s-1GPU\s0 subdevice with type \fBdxva2\fR and create \s-1QSV\s0 device with \fB\s-1MFX_IMPL_HARDWARE\s0\fR.
+.RE
+.RS 4
 .RE
 .IP "\fBopencl\fR" 4
 .IX Item "opencl"
@@ -1945,6 +1959,9 @@ Use \s-1VDPAU\s0 (Video Decode and Presentation \s-1API\s0 for Unix) hardware ac
 .IP "\fBdxva2\fR" 4
 .IX Item "dxva2"
 Use \s-1DXVA2\s0 (DirectX Video Acceleration) hardware acceleration.
+.IP "\fBd3d11va\fR" 4
+.IX Item "d3d11va"
+Use D3D11VA (DirectX Video Acceleration) hardware acceleration.
 .IP "\fBvaapi\fR" 4
 .IX Item "vaapi"
 Use \s-1VAAPI\s0 (Video Acceleration \s-1API\s0) hardware acceleration.
@@ -2332,27 +2349,29 @@ Read input at native frame rate. This is equivalent to setting \f(CW\*(C`\-readr
 .IP "\fB\-vsync\fR \fIparameter\fR" 4
 .IX Item "-vsync parameter"
 Video sync method.
-For compatibility reasons old values can be specified as numbers.
-Newly added values will have to be specified as strings always.
+.Sp
+For compatibility reasons some of the values can be specified as numbers (shown
+in parentheses in the following table). This is deprecated and will stop working
+in the future.
 .RS 4
-.IP "\fB0, passthrough\fR" 4
-.IX Item "0, passthrough"
+.IP "\fBpassthrough (0)\fR" 4
+.IX Item "passthrough (0)"
 Each frame is passed with its timestamp from the demuxer to the muxer.
-.IP "\fB1, cfr\fR" 4
-.IX Item "1, cfr"
+.IP "\fBcfr (1)\fR" 4
+.IX Item "cfr (1)"
 Frames will be duplicated and dropped to achieve exactly the requested
 constant frame rate.
-.IP "\fB2, vfr\fR" 4
-.IX Item "2, vfr"
+.IP "\fBvfr (2)\fR" 4
+.IX Item "vfr (2)"
 Frames are passed through with their timestamp or dropped so as to
 prevent 2 frames from having the same timestamp.
 .IP "\fBdrop\fR" 4
 .IX Item "drop"
 As passthrough but destroys all timestamps, making the muxer generate
 fresh timestamps based on frame-rate.
-.IP "\fB\-1, auto\fR" 4
-.IX Item "-1, auto"
-Chooses between 1 and 2 depending on muxer capabilities. This is the
+.IP "\fBauto (\-1)\fR" 4
+.IX Item "auto (-1)"
+Chooses between cfr and vfr depending on muxer capabilities. This is the
 default method.
 .RE
 .RS 4
@@ -2701,6 +2720,13 @@ Conversions can still be performed by inserting the relevant conversion
 filter (scale, aresample) in the graph.
 On by default, to explicitly disable it you need to specify
 \&\f(CW\*(C`\-noauto_conversion_filters\*(C'\fR.
+.IP "\fB\-bits_per_raw_sample[:\fR\fIstream_specifier\fR\fB]\fR \fIvalue\fR \fB(\fR\fIoutput,per\-stream\fR\fB)\fR" 4
+.IX Item "-bits_per_raw_sample[:stream_specifier] value (output,per-stream)"
+Declare the number of bits per raw sample in the given output stream to be
+\&\fIvalue\fR. Note that this option sets the information provided to the
+encoder/muxer, it does not change the stream to conform to this value. Setting
+values that do not match the stream properties may result in encoding failures
+or invalid output files.
 .SS "Preset files"
 .IX Subsection "Preset files"
 A preset file contains a sequence of \fIoption\fR=\fIvalue\fR pairs,

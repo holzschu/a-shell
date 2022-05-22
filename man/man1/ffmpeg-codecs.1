@@ -1584,13 +1584,19 @@ The following options are supported by the libdav1d wrapper.
 .IP "\fBframethreads\fR" 4
 .IX Item "framethreads"
 Set amount of frame threads to use during decoding. The default value is 0 (autodetect).
+This option is deprecated for libdav1d >= 1.0 and will be removed in the future. Use the
+global option \f(CW\*(C`threads\*(C'\fR instead.
 .IP "\fBtilethreads\fR" 4
 .IX Item "tilethreads"
 Set amount of tile threads to use during decoding. The default value is 0 (autodetect).
+This option is deprecated for libdav1d >= 1.0 and will be removed in the future. Use the
+global option \f(CW\*(C`threads\*(C'\fR instead.
 .IP "\fBfilmgrain\fR" 4
 .IX Item "filmgrain"
 Apply film grain to the decoded video if present in the bitstream. Defaults to the
 internal default of the library.
+This option is deprecated and will be removed in the future. See the global option
+\&\f(CW\*(C`export_side_data\*(C'\fR to export Film Grain parameters instead of applying it.
 .IP "\fBoppoint\fR" 4
 .IX Item "oppoint"
 Select an operating point of a scalable \s-1AV1\s0 bitstream (0 \- 31). Defaults to the
@@ -3832,14 +3838,51 @@ You need to explicitly configure the build with \f(CW\*(C`\-\-enable\-libsvtav1\
 .IP "\fBprofile\fR" 4
 .IX Item "profile"
 Set the encoding profile.
+.RS 4
+.IP "\fBmain\fR" 4
+.IX Item "main"
+.PD 0
+.IP "\fBhigh\fR" 4
+.IX Item "high"
+.IP "\fBprofessional\fR" 4
+.IX Item "professional"
+.RE
+.RS 4
+.RE
 .IP "\fBlevel\fR" 4
 .IX Item "level"
-Set the operating point level.
+.PD
+Set the operating point level. For example: '4.0'
+.IP "\fBhielevel\fR" 4
+.IX Item "hielevel"
+Set the Hierarchical prediction levels.
+.RS 4
+.IP "\fB3level\fR" 4
+.IX Item "3level"
+.PD 0
+.IP "\fB4level\fR" 4
+.IX Item "4level"
+.PD
+This is the default.
+.RE
+.RS 4
+.RE
 .IP "\fBtier\fR" 4
 .IX Item "tier"
 Set the operating point tier.
+.RS 4
+.IP "\fBmain\fR" 4
+.IX Item "main"
+This is the default.
+.IP "\fBhigh\fR" 4
+.IX Item "high"
+.RE
+.RS 4
+.RE
+.PD 0
 .IP "\fBrc\fR" 4
 .IX Item "rc"
+.PD
 Set the rate control mode to use.
 .Sp
 Possible modes:
@@ -4858,6 +4901,9 @@ For example to specify libx264 encoding options with \fBffmpeg\fR:
 .IX Item "a53cc boolean"
 Import closed captions (which must be \s-1ATSC\s0 compatible format) into output.
 Only the mpeg2 and h264 decoders provide these. Default is 1 (on).
+.IP "\fBudu_sei\fR \fIboolean\fR" 4
+.IX Item "udu_sei boolean"
+Import user data unregistered \s-1SEI\s0 if available into output. Default is 0 (off).
 .IP "\fBx264\-params (N.A.)\fR" 4
 .IX Item "x264-params (N.A.)"
 Override the x264 configuration using a :\-separated list of key=value
@@ -4942,6 +4988,9 @@ Quantizer curve compression factor
 .PD
 Normally, when forcing a I\-frame type, the encoder can select any type
 of I\-frame. This option forces it to choose an IDR-frame.
+.IP "\fBudu_sei\fR \fIboolean\fR" 4
+.IX Item "udu_sei boolean"
+Import user data unregistered \s-1SEI\s0 if available into output. Default is 0 (off).
 .IP "\fBx265\-params\fR" 4
 .IX Item "x265-params"
 Set x265 options using a list of \fIkey\fR=\fIvalue\fR couples separated

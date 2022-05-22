@@ -1194,6 +1194,10 @@ set to 1) or to a default remote address (if set to 0).
 .IP "\fBlocalport=\fR\fIn\fR" 4
 .IX Item "localport=n"
 Set the local \s-1RTP\s0 port to \fIn\fR.
+.IP "\fBlocaladdr=\fR\fIaddr\fR" 4
+.IX Item "localaddr=addr"
+Local \s-1IP\s0 address of a network interface used for sending packets or joining
+multicast groups.
 .IP "\fBtimeout=\fR\fIn\fR" 4
 .IX Item "timeout=n"
 Set timeout (in microseconds) of socket I/O operations to \fIn\fR.
@@ -1605,6 +1609,12 @@ subsequent interval between when switchover occurs and
 when the old encryption key is decommissioned. Default is \-1.
 \&\-1 means auto (0x1000 in srt library). The range for
 this option is integers in the 0 \- \f(CW\*(C`INT_MAX\*(C'\fR.
+.IP "\fBsnddropdelay=\fR\fImicroseconds\fR" 4
+.IX Item "snddropdelay=microseconds"
+The sender's extra delay before dropping packets. This delay is
+added to the default drop delay time interval value.
+.Sp
+Special value \-1: Do not drop packets on the sender at all.
 .IP "\fBpayload_size=\fR\fIbytes\fR" 4
 .IX Item "payload_size=bytes"
 Sets the maximum declared size of a packet transferred

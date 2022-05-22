@@ -470,6 +470,12 @@ The description of some of the currently available demuxers follows.
 Audible Format 2, 3, and 4 demuxer.
 .PP
 This demuxer is used to demux Audible Format 2, 3, and 4 (.aa) files.
+.SS "aac"
+.IX Subsection "aac"
+Raw Audio Data Transport Stream \s-1AAC\s0 demuxer.
+.PP
+This demuxer is used to demux an \s-1ADTS\s0 input containing a single \s-1AAC\s0 stream
+alongwith any ID3v1/2 or \s-1APE\s0 tags in it.
 .SS "apng"
 .IX Subsection "apng"
 Animated Portable Network Graphics demuxer.
@@ -534,8 +540,7 @@ All subsequent file-related directives apply to that file.
 .ie n .IP "\fB\f(CB""ffconcat version 1.0""\fB\fR" 4
 .el .IP "\fB\f(CBffconcat version 1.0\fB\fR" 4
 .IX Item "ffconcat version 1.0"
-Identify the script type and version. It also sets the \fBsafe\fR option
-to 1 if it was \-1.
+Identify the script type and version.
 .Sp
 To make FFmpeg recognize the format automatically, this directive must
 appear exactly as is (no extra space or byte-order-mark) on the very first
@@ -593,6 +598,18 @@ directive) will be reduced based on their specified Out point.
 Metadata of the packets of the file. The specified metadata will be set for
 each file packet. You can specify this directive multiple times to add multiple
 metadata entries.
+This directive is deprecated, use \f(CW\*(C`file_packet_meta\*(C'\fR instead.
+.ie n .IP "\fB\f(CB""file_packet_meta \f(CBkey\f(CB \f(CBvalue\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBfile_packet_meta \f(CBkey\f(CB \f(CBvalue\f(CB\fB\fR" 4
+.IX Item "file_packet_meta key value"
+Metadata of the packets of the file. The specified metadata will be set for
+each file packet. You can specify this directive multiple times to add multiple
+metadata entries.
+.ie n .IP "\fB\f(CB""option \f(CBkey\f(CB \f(CBvalue\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBoption \f(CBkey\f(CB \f(CBvalue\f(CB\fB\fR" 4
+.IX Item "option key value"
+Option to access, open and probe the file.
+Can be present multiple times.
 .ie n .IP "\fB\f(CB""stream""\fB\fR" 4
 .el .IP "\fB\f(CBstream\fB\fR" 4
 .IX Item "stream"
@@ -611,6 +628,24 @@ If this directive is given, the string with the corresponding id in the
 subfiles will be used.
 This is especially useful for MPEG-PS (\s-1VOB\s0) files, where the order of the
 streams is not reliable.
+.ie n .IP "\fB\f(CB""stream_meta \f(CBkey\f(CB \f(CBvalue\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBstream_meta \f(CBkey\f(CB \f(CBvalue\f(CB\fB\fR" 4
+.IX Item "stream_meta key value"
+Metadata for the stream.
+Can be present multiple times.
+.ie n .IP "\fB\f(CB""stream_codec \f(CBvalue\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBstream_codec \f(CBvalue\f(CB\fB\fR" 4
+.IX Item "stream_codec value"
+Codec for the stream.
+.ie n .IP "\fB\f(CB""stream_extradata \f(CBhex_string\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBstream_extradata \f(CBhex_string\f(CB\fB\fR" 4
+.IX Item "stream_extradata hex_string"
+Extradata for the string, encoded in hexadecimal.
+.ie n .IP "\fB\f(CB""chapter \f(CBid\f(CB \f(CBstart\f(CB \f(CBend\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBchapter \f(CBid\f(CB \f(CBstart\f(CB \f(CBend\f(CB\fB\fR" 4
+.IX Item "chapter id start end"
+Add a chapter. \fIid\fR is an unique identifier, possibly small and
+consecutive.
 .PP
 \fIOptions\fR
 .IX Subsection "Options"
@@ -618,7 +653,8 @@ streams is not reliable.
 This demuxer accepts the following option:
 .IP "\fBsafe\fR" 4
 .IX Item "safe"
-If set to 1, reject unsafe file paths. A file path is considered safe if it
+If set to 1, reject unsafe file paths and directives.
+A file path is considered safe if it
 does not contain a protocol specification and is relative and all components
 only contain characters from the portable character set (letters, digits,
 period, underscore and hyphen) and have no period at the beginning of a
@@ -627,9 +663,6 @@ component.
 If set to 0, any file name is accepted.
 .Sp
 The default is 1.
-.Sp
-\&\-1 is equivalent to 1 if the format was automatically
-probed and 0 otherwise.
 .IP "\fBauto_convert\fR" 4
 .IX Item "auto_convert"
 If set to 1, try to perform automatic conversions on packet data to make the
@@ -682,6 +715,11 @@ By setting the discard flags on AVStreams the caller can decide
 which streams to actually receive.
 Each stream mirrors the \f(CW\*(C`id\*(C'\fR and \f(CW\*(C`bandwidth\*(C'\fR properties from the
 \&\f(CW\*(C`<Representation>\*(C'\fR as metadata keys named \*(L"id\*(R" and \*(L"variant_bitrate\*(R" respectively.
+.SS "imf"
+.IX Subsection "imf"
+Interoperable Master Format demuxer.
+.PP
+This demuxer presents audio and video streams found in an \s-1IMF\s0 Composition.
 .SS "flv, live_flv, kux"
 .IX Subsection "flv, live_flv, kux"
 Adobe Flash Video Format demuxer.
@@ -1102,7 +1140,7 @@ Don't use mfra box to set timestamps
 .IP "\fBuse_tfdt\fR" 4
 .IX Item "use_tfdt"
 For fragmented input, set fragment's starting timestamp to \f(CW\*(C`baseMediaDecodeTime\*(C'\fR from the \f(CW\*(C`tfdt\*(C'\fR box.
-Default is disabled, which will preferentially use the \f(CW\*(C`earliest_presentation_time\*(C'\fR from the \f(CW\*(C`sidx\*(C'\fR box.
+Default is enabled, which will prefer to use the \f(CW\*(C`tfdt\*(C'\fR box to set \s-1DTS.\s0 Disable to use the \f(CW\*(C`earliest_presentation_time\*(C'\fR from the \f(CW\*(C`sidx\*(C'\fR box.
 In either case, the timestamp from the \f(CW\*(C`mfra\*(C'\fR box will be used if it's available and \f(CW\*(C`use_mfra_for\*(C'\fR is
 set to pts or dts.
 .IP "\fBexport_all\fR" 4
@@ -1124,6 +1162,15 @@ specify.
 .IP "\fBdecryption_key\fR" 4
 .IX Item "decryption_key"
 16\-byte key, in hex, to decrypt files encrypted using \s-1ISO\s0 Common Encryption (\s-1CENC/AES\-128 CTR\s0; \s-1ISO/IEC 23001\-7\s0).
+.IP "\fBmax_stts_delta\fR" 4
+.IX Item "max_stts_delta"
+Very high sample deltas written in a trak's stts box may occasionally be intended but usually they are written in
+error or used to store a negative value for dts correction when treated as signed 32\-bit integers. This option lets
+the user set an upper limit, beyond which the delta is clamped to 1. Values greater than the limit if negative when
+cast to int32 are used to adjust onward dts.
+.Sp
+Unit is the track time scale. Range is 0 to \s-1UINT_MAX.\s0 Default is \f(CW\*(C`UINT_MAX \- 48000*10\*(C'\fR which allows upto
+a 10 second dts correction for 48 kHz audio streams while accommodating 99.9% of \f(CW\*(C`uint32\*(C'\fR range.
 .PP
 \fIAudible \s-1AAX\s0\fR
 .IX Subsection "Audible AAX"
@@ -1626,11 +1673,12 @@ Ignore \s-1IO\s0 errors during open and write. Useful for long-duration runs wit
 .IP "\fBlhls\fR \fIlhls\fR" 4
 .IX Item "lhls lhls"
 Enable Low-latency \s-1HLS\s0(\s-1LHLS\s0). Adds #EXT\-X\-PREFETCH tag with current segment's \s-1URI.\s0
-Apple doesn't have an official spec for \s-1LHLS.\s0 Meanwhile hls.js player folks are
-trying to standardize a open \s-1LHLS\s0 spec. The draft spec is available in https://github.com/video\-dev/hlsjs\-rfcs/blob/lhls\-spec/proposals/0001\-lhls.md
-This option will also try to comply with the above open spec, till Apple's spec officially supports it.
-Applicable only when \fIstreaming\fR and \fIhls_playlist\fR options are enabled.
+hls.js player folks are trying to standardize an open \s-1LHLS\s0 spec. The draft spec is available in https://github.com/video\-dev/hlsjs\-rfcs/blob/lhls\-spec/proposals/0001\-lhls.md
+This option tries to comply with the above open spec.
+It enables \fIstreaming\fR and \fIhls_playlist\fR options automatically.
 This is an experimental feature.
+.Sp
+Note: This is not Apple's version \s-1LHLS.\s0 See <\fBhttps://datatracker.ietf.org/doc/html/draft\-pantos\-hls\-rfc8216bis\fR>
 .IP "\fBldash\fR \fIldash\fR" 4
 .IX Item "ldash ldash"
 Enable Low-latency Dash by constraining the presence and values of some elements.
@@ -2043,6 +2091,7 @@ were recently referenced in the playlist. Default value is 1, meaning segments o
 Set output format options using a :\-separated list of key=value
 parameters. Values containing \f(CW\*(C`:\*(C'\fR special characters must be
 escaped.
+\&\f(CW\*(C`hls_ts_options\*(C'\fR is deprecated, use hls_segment_options instead of it..
 .IP "\fBhls_start_number_source\fR" 4
 .IX Item "hls_start_number_source"
 Start the playlist sequence number (\f(CW\*(C`#EXT\-X\-MEDIA\-SEQUENCE\*(C'\fR) according to the specified source.
@@ -2175,6 +2224,11 @@ produce the playlist, \fIout.m3u8\fR, and segment files:
 This example will create a directory hierarchy 2016/02/15 (if any of them do not exist), and then
 produce the playlist, \fIout.m3u8\fR, and segment files:
 \&\fI2016/02/15/file\-20160215\-1455569023.ts\fR, \fI2016/02/15/file\-20160215\-1455569024.ts\fR, etc.
+.IP "\fBhls_segment_options\fR \fIoptions_list\fR" 4
+.IX Item "hls_segment_options options_list"
+Set output format options using a :\-separated list of key=value
+parameters. Values containing \f(CW\*(C`:\*(C'\fR special characters must be
+escaped.
 .IP "\fBhls_key_info_file\fR \fIkey_info_file\fR" 4
 .IX Item "hls_key_info_file key_info_file"
 Use the information in \fIkey_info_file\fR for segment encryption. The first
@@ -2857,16 +2911,16 @@ have no effect if it is not.
 .IX Item "default_mode"
 This option controls how the FlagDefault of the output tracks will be set.
 It influences which tracks players should play by default. The default mode
-is \fBinfer\fR.
+is \fBpassthrough\fR.
 .RS 4
 .IP "\fBinfer\fR" 4
 .IX Item "infer"
-In this mode, for each type of track (audio, video or subtitle), if there is
-a track with disposition default of this type, then the first such track
-(i.e. the one with the lowest index) will be marked as default; if no such
-track exists, the first track of this type will be marked as default instead
-(if existing). This ensures that the default flag is set in a sensible way even
-if the input originated from containers that lack the concept of default tracks.
+Every track with disposition default will have the FlagDefault set.
+Additionally, for each type of track (audio, video or subtitle), if no track
+with disposition default of this type exists, then the first track of this type
+will be marked as default (if existing). This ensures that the default flag
+is set in a sensible way even if the input originated from containers that
+lack the concept of default tracks.
 .IP "\fBinfer_no_subs\fR" 4
 .IX Item "infer_no_subs"
 This mode is the same as infer except that if no subtitle track with
@@ -3522,6 +3576,11 @@ Extensions: mpg, mpeg, m1v
 ITU-T H.262 / \s-1MPEG\-2\s0 Part 2 video.
 .PP
 Extensions: m2v
+.PP
+\fIobu\fR
+.IX Subsection "obu"
+.PP
+\&\s-1AV1\s0 low overhead Open Bitstream Units muxer. Temporal delimiter OBUs will be inserted in all temporal units of the stream.
 .PP
 \fIrawvideo\fR
 .IX Subsection "rawvideo"

@@ -756,7 +756,8 @@ function setupHterm() {
 						}
 						break;
 					case String.fromCharCode(9):  // Tab, so autocomplete
-						if ((window.commandRunning == '') || window.commandRunning.startsWith('dash')) {
+						if ((window.commandRunning == '') ||
+							window.commandRunning.startsWith('dash') || window.commandRunning.startsWith('sh')) {
 							if (autocompleteOn) {
 								// hit tab when menu already visible = select current
 								pickCurrentValue();

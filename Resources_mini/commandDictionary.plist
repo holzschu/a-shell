@@ -79,6 +79,13 @@
 		<string>2346aAbBcCdDeEfgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwxXYyz#</string>
 		<string>file</string>
 	</array>
+	<key>dash</key>
+	<array>
+		<string>dash.framework/dash</string>
+		<string>main</string>
+		<string>efIimnsxvVECabu</string>
+		<string>file</string>
+	</array>
 	<key>date</key>
 	<array>
 		<string>shell.framework/shell</string>
@@ -344,13 +351,6 @@
 		<string>Py_BytesMain</string>
 		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
 		<string>file</string>
-	</array>
-	<key>pythonA</key>
-	<array>
-		<string>pythonA.framework/pythonA</string>
-		<string>Py_BytesMain</string>
-		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
-		<string>no</string>
 	</array>
 	<key>readlink</key>
 	<array>

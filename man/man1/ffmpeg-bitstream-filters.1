@@ -240,7 +240,7 @@ Top-left position.
 .RE
 .IP "\fBtick_rate\fR" 4
 .IX Item "tick_rate"
-Set the tick rate (\fInum_units_in_display_tick / time_scale\fR) in
+Set the tick rate (\fItime_scale / num_units_in_display_tick\fR) in
 the timing info in the sequence header.
 .IP "\fBnum_ticks_per_picture\fR" 4
 .IX Item "num_ticks_per_picture"
@@ -415,7 +415,7 @@ Set the chroma sample location in the stream (see H.264 section
 E.2.1 and figure E\-1).
 .IP "\fBtick_rate\fR" 4
 .IX Item "tick_rate"
-Set the tick rate (num_units_in_tick / time_scale) in the \s-1VUI\s0
+Set the tick rate (time_scale / num_units_in_tick) in the \s-1VUI\s0
 parameters.  This is the smallest time unit representable in the
 stream, and in many cases represents the field rate of the stream
 (double the frame rate).
@@ -536,8 +536,8 @@ Set the chroma sample location in the stream (see H.265 section
 E.3.1 and figure E.1).
 .IP "\fBtick_rate\fR" 4
 .IX Item "tick_rate"
-Set the tick rate in the \s-1VPS\s0 and \s-1VUI\s0 parameters (num_units_in_tick /
-time_scale).  Combined with \fBnum_ticks_poc_diff_one\fR, this can
+Set the tick rate in the \s-1VPS\s0 and \s-1VUI\s0 parameters (time_scale /
+num_units_in_tick). Combined with \fBnum_ticks_poc_diff_one\fR, this can
 set a constant framerate in the stream.  Note that it is likely to be
 overridden by container parameters when the stream is in a container.
 .IP "\fBnum_ticks_poc_diff_one\fR" 4

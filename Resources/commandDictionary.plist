@@ -352,13 +352,6 @@
 		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
 		<string>file</string>
 	</array>
-	<key>pythonA</key>
-	<array>
-		<string>pythonA.framework/pythonA</string>
-		<string>Py_BytesMain</string>
-		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
-		<string>no</string>
-	</array>
 	<key>readlink</key>
 	<array>
 		<string>files.framework/files</string>
@@ -880,20 +873,6 @@
 	<key>perl5</key>
 	<array>
 		<string>perl.framework/perl</string>
-		<string>main</string>
-		<string></string>
-		<string>none</string>
-	</array>
-	<key>perlA</key>
-	<array>
-		<string>perlA.framework/perlA</string>
-		<string>main</string>
-		<string></string>
-		<string>none</string>
-	</array>
-	<key>perlB</key>
-	<array>
-		<string>perlB.framework/perlB</string>
 		<string>main</string>
 		<string></string>
 		<string>none</string>

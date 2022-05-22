@@ -762,6 +762,12 @@ be anything even fake one.
 Save the currently used video capture filter device and its
 parameters (if the filter supports it) to a file.
 If a file with the same name exists it will be overwritten.
+.IP "\fBuse_video_device_timestamps\fR" 4
+.IX Item "use_video_device_timestamps"
+If set to \fBfalse\fR, the timestamp for video frames will be
+derived from the wallclock instead of the timestamp provided by
+the capture device. This allows working around devices that
+provide unreliable timestamps.
 .PP
 \fIExamples\fR
 .IX Subsection "Examples"
