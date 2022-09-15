@@ -34,7 +34,7 @@ If you want to compile the project yourself, you will need the following steps:
 
 a-Shell now runs on the devices and on the simulator, as you wish. 
 
-Because Python 3.9 uses functions that are only available on the iOS 14 SDK, I've set the mimimum iOS version to 14.0. It also reduces the size of the binaries, so `ios_system` and the other frameworks have the same settings. If you need to run it on an iOS 13 device, you'll have to recompile most frameworks.
+Because Python 3.9 uses functions that are only available on the iOS 14 SDK, I've set the minimum iOS version to 14.0. It also reduces the size of the binaries, so `ios_system` and the other frameworks have the same settings. If you need to run it on an iOS 13 device, you'll have to recompile most frameworks.
 
 ## Home directory
 
