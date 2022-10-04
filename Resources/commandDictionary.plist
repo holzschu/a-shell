@@ -84,7 +84,7 @@
 		<string>dash.framework/dash</string>
 		<string>main</string>
 		<string>efIimnsxvVECabu</string>
-		<string>file</string>
+		<string>no</string>
 	</array>
 	<key>date</key>
 	<array>
@@ -212,6 +212,13 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>jq</key>
+	<array>
+		<string>jq.framework/jq</string>
+		<string>main</string>
+		<string>cnesrRCMS</string>
+		<string>file</string>
+	</array>
 	<key>link</key>
 	<array>
 		<string>files.framework/files</string>
@@ -315,6 +322,13 @@
 		<string>network_ios.framework/network_ios</string>
 		<string>ping_main</string>
 		<string>AaB:b:Cc:DdfG:g:h:I:i:k:K:Ll:M:m:noP:p:QqRrS:s:T:t:vW:z:</string>
+		<string>no</string>
+	</array>
+	<key>ping6</key>
+	<array>
+		<string>network_ios.framework/network_ios</string>
+		<string>ping6_main</string>
+		<string>a:b:B:Cc:DdfHG:g:h:I:i:k:K:l:mnNop:qrRS:s:tvwWz:</string>
 		<string>no</string>
 	</array>
 	<key>printenv</key>
@@ -953,6 +967,13 @@
 		<string>sw_vers</string>
 		<string></string>
 		<string>no</string>
+	</array>
+	<key>pico</key>
+	<array>
+		<string>pico.framework/pico</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
 	</array>
 </dict>
 </plist>
