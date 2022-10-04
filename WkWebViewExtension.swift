@@ -112,7 +112,7 @@ extension WKWebView {
     }
 
     func focus() {
-        NSLog("Received focus event")
+        // NSLog("Received focus event")
         if (toolbarShouldBeShown) {
             showToolbar = true
         }
@@ -128,9 +128,9 @@ extension WKWebView {
     }
     
     func blur() {
-        NSLog("Received blur event")
+        // NSLog("Received blur event")
         if (toolbarShouldBeShown) {
-            showToolbar = false
+            // showToolbar = false
         }
         let command = "window.term_.onFocusChange_(false)"
         self.evaluateJavaScript(command) { result, error in
