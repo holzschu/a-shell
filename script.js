@@ -45,7 +45,7 @@ function isInteractive(commandString) {
 	// (vim, ipython, ptpython, jupyter-console...) (see hterm.VT.CSI['n'])
 	// ssh and ssh-keygen (new version) are both interactive. So is scp. sftp is interactive until connected.
 	// vim is back on the list because it can be called by the Files app, and we have initialization issues.
-	let interactiveRegexp = /^less|^more|^vim|^ssh|^scp|^sftp|\|&? *less|\|&? *more|^man/;
+	let interactiveRegexp = /^less|^more|^vim|^ssh|^scp|^sftp|\|&? *less|\|&? *more|^man|^pico/;
 	return interactiveRegexp.test(commandString) 
 	// It's easier to match a regexp, then take the negation than to test a regexp that does not contain a pattern:
 	// This is disabled for now, but kept in case it can become useful again.
@@ -97,7 +97,6 @@ function printPrompt() {
 		window.term_.io.currentCommand = '';
 		window.interactiveCommandRunning = false;
 	} else {
-		// let the running command print its own prompt:
 		window.webkit.messageHandlers.aShell.postMessage('input:' + '\n');
 	}
 }
@@ -472,7 +471,11 @@ function setupHterm() {
 					helpRunning = true;
 				}
 			}
-			if (window.interactiveCommandRunning && (window.commandRunning != '') && !helpRunning) {
+			if ((window.commandRunning != '') && (term.vt.mouseReport != term.vt.MOUSE_REPORT_DISABLED)) {
+				// if an application has enabled mouse report, it is likely to be interactive:
+				// (this was added for textual)
+				window.webkit.messageHandlers.aShell.postMessage('inputInteractive:' + string);
+			} else if (window.interactiveCommandRunning && (window.commandRunning != '') && !helpRunning) {
 				// specific treatment for interactive commands: forward all keyboard input to them
 				// window.webkit.messageHandlers.aShell.postMessage('sending: ' + string); // for debugging
 				// post keyboard input to stdin
@@ -889,7 +892,6 @@ function setupHterm() {
 					case String.fromCharCode(32): // Space: end auto-complete
 						disableAutocompleteMenu(); 
 					default:
-						// TODO: Ctrl-H
 						// window.webkit.messageHandlers.aShell.postMessage('onVTKeyStroke received ' + string);
 						// insert character at cursor position:
 						if (this.document_.getSelection().type == 'Range') {
@@ -1652,6 +1654,10 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
  * @param {!TouchEvent} e
  */
 hterm.ScrollPort.prototype.onTouch_ = function(e) {
+	// TODO: disable scrolling with stylus *if* scribble is enabled. 
+	// Stylus and finger are both touch. but e.touches[0].touchType is 'stylus' for stylus touches.
+	// Now the question is how do I know that scribble is enabled?
+	
   this.onTouch(e);
 
   if (e.defaultPrevented) {
@@ -1967,10 +1973,10 @@ hterm.Terminal.IO.prototype.writeUTF16 = function(string) {
  * @param {!hterm.VT.ParseState} parseState
  */
 hterm.VT.CSI['n'] = function(parseState) {
+  window.webkit.messageHandlers.aShell.postMessage('CPR request (n) ' + parseState.args);
   if (parseState.args[0] == 5) {
     this.terminal.io.sendString('\x1b0n');
   } else if (parseState.args[0] == 6) {
-	// window.webkit.messageHandlers.aShell.postMessage('CPR request (n)');
 	if ((window.commandRunning !== undefined) && (window.commandRunning != '') && (!window.duringResize)) {
 		window.interactiveCommandRunning = true;
 	}
@@ -1997,8 +2003,8 @@ hterm.VT.CSI['n'] = function(parseState) {
  * @param {!hterm.VT.ParseState} parseState
  */
 hterm.VT.CSI['?n'] = function(parseState) {
+  window.webkit.messageHandlers.aShell.postMessage('CPR request (?n) ' + parseState.args);
   if (parseState.args[0] == 6) {
-	// window.webkit.messageHandlers.aShell.postMessage('CPR request (?n)');
 	if ((window.commandRunning !== undefined) && (window.commandRunning != '') && (!window.duringResize)) {
 		window.interactiveCommandRunning = true;
 	}
