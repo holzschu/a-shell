@@ -75,14 +75,13 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 - newWindow: open a new window
 - exit: close the current window
 
-- Edit files with vim and ed.
+- Edit files with vim and pico.
 - Transfer files with curl, tar, scp and sftp.
-- Clone repositories and do version control with lg2 (uses libgit2).
+- Clone repositories and do version control with lg2 (similar to git)
+- Install more commands with "pkg"
 - Process files with python3, lua, jsc, clang, pdflatex, lualatex.
 - Open files in other apps with open, play sound and video with play, preview with view.
 - For network queries: nslookup, ping, host, whois, ifconfig...
-
-You can download more commands at: https://github.com/holzschu/a-Shell-commands/
 
 """
         
@@ -117,7 +116,9 @@ You can download more commands at: https://github.com/holzschu/a-Shell-commands/
                     do {
                         // We don't check for exec status, because files inside $APPDIR have no x bit set.
                         for file in try FileManager().contentsOfDirectory(atPath: directory) {
-                            commandsArray.append(URL(fileURLWithPath: file).lastPathComponent)
+                            let fileUrl = URL(fileURLWithPath: directory).appendingPathComponent(file)
+                            if (fileUrl.isDirectory) { continue } // Don't include directories in command list
+                            commandsArray.append(fileUrl.lastPathComponent)
                         }
                     } catch {
                         // The directory is unreadable, move to next one
@@ -201,7 +202,7 @@ public func tex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int
     fputs(" requires the TeX distribution, which is not currently installed.\nDo you want to download and install it? (1.3 GB) (y/N)", thread_stderr)
     fflush(thread_stderr)
     var byte: Int8 = 0
-    let count = read(fileno(thread_stdin), &byte, 1)
+    _ = read(fileno(thread_stdin), &byte, 1)
     if (byte == 121) || (byte == 89) {
         fputs("Downloading the TeX distribution, this may take some time...\n", thread_stderr)
         fputs("(you can  remove it later using Settings)\n", thread_stderr)
@@ -233,7 +234,7 @@ public func luatex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     }
     fflush(thread_stderr)
     var byte: Int8 = 0
-    let count = read(fileno(thread_stdin), &byte, 1)
+    _ = read(fileno(thread_stdin), &byte, 1)
     if (byte == 121) || (byte == 89) {
         if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
             fputs("Downloading the LuaTeX extension, this may take some time...", thread_stderr)
@@ -654,7 +655,7 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
             } else {
                 var stale = false
                 do {
-                    let previousURL = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
+                    _ = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
                 }
                 catch {
                     NSLog("Could not resolve \(key)")
@@ -686,7 +687,7 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
                 } else {
                     var stale = false
                     do {
-                        let previousURL = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
+                        _ = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
                     }
                     catch {
                         NSLog("Could not resolve \(key)")
@@ -728,7 +729,15 @@ public func checkBookmarks() {
         if let bookmark = storedBookmarksDictionary[path] {
             var stale = false
             do {
-                let previousURL = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
+                let bookmarkedUrl = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
+                if (!FileManager().isReadableFile(atPath:bookmarkedUrl.path)) {
+                    let isSecuredURL = bookmarkedUrl.startAccessingSecurityScopedResource()
+                    let isReadable = FileManager().isReadableFile(atPath: bookmarkedUrl.path)
+                    if (!(isSecuredURL && isReadable)) {
+                        // NSLog("Access to \(bookmarkedUrl): isSecuredURL: \(isSecuredURL) isReadable: \(isReadable)")
+                        stale = true
+                    }
+                }
             }
             catch {
                 NSLog("Could not resolve \(key)")
