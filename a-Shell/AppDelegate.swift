@@ -95,7 +95,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let fileLocation = libraryURL.appendingPathComponent(PythonFiles[0])
         // fileExists(atPath:) will answer false, because the linked file does not exist.
         do {
-            let fileAttribute = try FileManager().attributesOfItem(atPath: fileLocation.path)
+            _ = try FileManager().attributesOfItem(atPath: fileLocation.path)
             return true
         }
         catch {
@@ -416,7 +416,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Make sure aws (Python package) can work:
         setenv("AWS_SHARED_CREDENTIALS_FILE", documentsUrl.appendingPathComponent(".aws/credentials").path, 1)
         setenv("AWS_CONFIG_FILE", documentsUrl.appendingPathComponent(".aws/config").path, 1)
-        setenv("JUPYTER_CONFIG_DIR", documentsUrl.appendingPathComponent(".jupyter").path, 1)
+        // Pip options:
+        setenv("PIP_CONFIG_FILE", documentsUrl.appendingPathComponent(".config/pip/pip.conf").path, 1)
+        setenv("PIP_NO_BUILD_ISOLATION", "false", 1)
         // Help aiohttp install itself:
         setenv("YARL_NO_EXTENSIONS", "1", 1)
         setenv("MULTIDICT_NO_EXTENSIONS", "1", 1)
