@@ -78,6 +78,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var avplayer: AVPlayer? = nil
     var avcontroller: AVPlayerViewController? = nil
     var avControllerPiPEnabled = false
+    // for repetitive buttons
+    var continuousButtonAction = false
     
     // Create a document picker for directories.
     private let documentPicker =
@@ -136,20 +138,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     @objc private func controlAction(_ sender: UIBarButtonItem) {
-        controlOn = !controlOn;
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
-        if (controlOn) {
-            editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration)
-            webView?.evaluateJavaScript("window.controlOn = true;") { (result, error) in
-                // if let error = error { print(error) }
-                // if let result = result { print(result) }
-            }
+        controlOn = !controlOn;
+        if #available(iOS 15.0, *) {
+            sender.isSelected = controlOn
         } else {
-            editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
-            webView?.evaluateJavaScript("window.controlOn = false;") { (result, error) in
-                // if let error = error { print(error) }
-                // if let result = result { print(result) }
-            }
+            sender.image = controlOn ? UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration) :
+            UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
+        }
+        webView?.evaluateJavaScript(controlOn ? "window.controlOn = true;" : "window.controlOn = false;") { (result, error) in
+            // if let error = error { print(error) }
+            // if let result = result { print(result) }
         }
     }
     
@@ -159,6 +158,30 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // if let result = result { print(result) }
         }
     }
+    
+    @objc private func pasteAction(_ sender: UIBarButtonItem) {
+        // edit mode paste (works)
+        if let pastedString = UIPasteboard.general.string {
+            webView?.paste(pastedString)
+        }
+    }
+
+    @objc private func copyAction(_ sender: UIBarButtonItem) {
+        // edit mode copy (works)
+        webView?.evaluateJavaScript("window.term_.copySelectionToClipboard();") { (result, error) in
+            if let error = error { print(error) }
+            if let result = result { print(result) }
+        }
+    }
+
+    @objc private func cutAction(_ sender: UIBarButtonItem) {
+        // edit mode cut (works)
+        webView?.evaluateJavaScript("window.term_.onCut();") { (result, error) in
+            if let error = error { print(error) }
+            if let result = result { print(result) }
+        }
+    }
+
     
     @objc private func upAction(_ sender: UIBarButtonItem) {
         webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[A' : '\\x1bOA');") { (result, error) in
@@ -199,8 +222,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var controlButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
         // Image used to be control
-        let imageControl = (controlOn == true) ? UIImage(systemName: "chevron.up.square.fill")! : UIImage(systemName: "chevron.up.square")!
+        let imageControl = UIImage(systemName: "chevron.up.square")!
         let controlButton = UIBarButtonItem(image: imageControl.withConfiguration(configuration), style: .plain, target: self, action: #selector(controlAction(_:)))
+        if #available(iOS 15.0, *) {
+            controlButton.changesSelectionAsPrimaryAction = true
+            controlButton.menu = nil
+        }
         controlButton.isAccessibilityElement = true
         controlButton.accessibilityLabel = "Control"
         return controlButton
@@ -214,7 +241,21 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return escapeButton
     }
     
+    var cutButton: UIBarButtonItem {
+        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
+        return UIBarButtonItem(image: UIImage(systemName: "scissors")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(cutAction(_:)))
+    }
     
+    var copyButton: UIBarButtonItem {
+        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
+        return UIBarButtonItem(image: UIImage(systemName: "doc.on.doc")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(copyAction(_:)))
+    }
+    
+    var pasteButton: UIBarButtonItem {
+        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
+        return UIBarButtonItem(image: UIImage(systemName: "doc.on.clipboard")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(pasteAction(_:)))
+    }
+
     var upButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
         let upButton = UIBarButtonItem(image: UIImage(systemName: "arrow.up")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(upAction(_:)))
@@ -248,7 +289,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     @objc func hideKeyboard() {
-        if (onScreenKeyboardVisible != nil) && (!onScreenKeyboardVisible!) { return }
+        // if (onScreenKeyboardVisible != nil) && (!onScreenKeyboardVisible!) { return }
         DispatchQueue.main.async {
             guard self.webView != nil else { return }
             self.webView!.endEditing(true)
@@ -270,7 +311,100 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    
+    func continuousButtonAction(button: String)  {
+        let ms: UInt32 = 1000
+        if (button == "up") {
+            while (continuousButtonAction) {
+                webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[A' : '\\x1bOA');") { (result, error) in
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
+                }
+                usleep(250 * ms)
+            }
+        } else if (button == "down") {
+            while (continuousButtonAction) {
+                webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[B' : '\\x1bOB');") { (result, error) in
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
+                }
+                usleep(250 * ms)
+            }
+        }  else if (button == "left") {
+            while (continuousButtonAction) {
+                webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[D' : '\\x1bOD');") { (result, error) in
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
+                }
+                usleep(100 * ms)
+            }
+        }  else if (button == "right") {
+            while (continuousButtonAction) {
+                webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[C' : '\\x1bOC');") { (result, error) in
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
+                }
+                usleep(100 * ms)
+            }
+        }
+    }
+    
     @objc func longPressAction(_ sender: UILongPressGestureRecognizer) {
+        // If up-down-left-right buttons are currently being pressed, activate multi-action arrows (instead of hide keyboard)
+        // get the location of the press event:
+        if (sender.state == .ended) {
+            continuousButtonAction = false
+            return
+        }
+        let location = sender.location(in: sender.view)
+        // NSLog("long press detected: \(location)")
+        // NSLog("sender of long press: \(sender)")
+        if (sender.state == .began) {
+            let toolbarUpButton = editorToolbar.items![5]
+            if let upButtonView = toolbarUpButton.value(forKey: "view") as? UIView {
+                if (location.x >= upButtonView.frame.minX) && (location.x <= upButtonView.frame.maxX) {
+                    continuousButtonAction = true
+                    commandQueue.async {
+                        self.continuousButtonAction(button: "up")
+                    }
+                    return
+                }
+            }
+            let toolbarDownButton = editorToolbar.items![6]
+            if let downButtonView = toolbarDownButton.value(forKey: "view") as? UIView {
+                if (location.x >= downButtonView.frame.minX) && (location.x <= downButtonView.frame.maxX) {
+                    continuousButtonAction = true
+                    commandQueue.async {
+                        self.continuousButtonAction(button: "down")
+                    }
+                    return
+                }
+            }
+            let toolbarLeftButton = editorToolbar.items![7]
+            if let leftButtonView = toolbarLeftButton.value(forKey: "view") as? UIView {
+                if (location.x >= leftButtonView.frame.minX) && (location.x <= leftButtonView.frame.maxX) {
+                    continuousButtonAction = true
+                    commandQueue.async {
+                        self.continuousButtonAction(button: "left")
+                    }
+                    return
+                }
+            }
+            let toolbarRightButton = editorToolbar.items![8]
+            if let rightButtonView = toolbarRightButton.value(forKey: "view") as? UIView {
+                if (location.x >= rightButtonView.frame.minX) && (location.x <= rightButtonView.frame.maxX) {
+                    continuousButtonAction = true
+                    commandQueue.async {
+                        self.continuousButtonAction(button: "right")
+                    }
+                    return
+                }
+            }
+        }
+        if (continuousButtonAction) {
+            return
+        }
+        // No buttons left, must be a hidekeyboard event:
         hideKeyboard()
     }
     
@@ -282,10 +416,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }()
 
 
+    // cutButton and copyButton exist, but make less sense than paste.
+    // the paste command is difficult to create with long press.
+    // Possible additions: undo/redo buttons
     public lazy var editorToolbar: UIToolbar = {
         var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
         toolbar.tintColor = .label
-        toolbar.items = [tabButton, controlButton, escapeButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil), upButton, downButton, leftButton, rightButton]
+        toolbar.items = [tabButton, controlButton, escapeButton, pasteButton,
+                         UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil),
+                         upButton, downButton, leftButton, rightButton]
         // Long press gesture recognsizer:
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
         longPressGesture.minimumPressDuration = 1.0 // 1 second press
@@ -562,6 +701,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         thread_stdin_copy = thread_stdin
         thread_stdout_copy = thread_stdout
         thread_stderr_copy = thread_stderr
+        stdinString = "" // reinitialize stdin
         DispatchQueue.main.async {
             self.wasmWebView?.evaluateJavaScript(javascript) { (result, error) in
                 if let error = error {
@@ -615,6 +755,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // if let result = result { print(result) }
             }
         }
+        // Do not close thread_stdin because if it's a pipe, processes could still be writing into it
+        // fclose(thread_stdin)
+        
         thread_stdin_copy = nil
         thread_stdout_copy = nil
         thread_stderr_copy = nil
@@ -837,9 +980,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         if (backgroundColor != nil) {
             terminalBackgroundColor = backgroundColor
-            webView!.backgroundColor = backgroundColor
             let terminalColorCommand = "window.term_.setBackgroundColor(\"\(backgroundColor!.toHexString())\");"
             DispatchQueue.main.async {
+                self.webView?.backgroundColor = backgroundColor
                 self.webView?.evaluateJavaScript(terminalColorCommand) { (result, error) in
                     // if let error = error { print(error) }
                     // if let result = result { print(result) }
@@ -848,9 +991,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         if (foregroundColor != nil) {
             terminalForegroundColor = foregroundColor
-            webView!.tintColor = foregroundColor
             let terminalColorCommand = "window.term_.setForegroundColor(\"\(foregroundColor!.toHexString())\");"
             DispatchQueue.main.async {
+                self.webView?.tintColor = foregroundColor
                 self.webView?.evaluateJavaScript(terminalColorCommand) { (result, error) in
                     // if let error = error { print(error) }
                     // if let result = result { print(result) }
@@ -940,8 +1083,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         documentPicker.delegate = self
         
         let rootVC = self.window?.rootViewController
-        // Set the initial directory.
-        // documentPicker.directoryURL = URL(fileURLWithPath: FileManager().default.currentDirectoryPath)
+        // Set the initial directory (it doesn't work, so it's commented)
+        // documentPicker.directoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         // Present the document picker.
         selectedDirectory = ""
         DispatchQueue.main.async {
@@ -1209,7 +1352,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     continue
                 }
                 self.currentCommand = command
-                stdinString = "" // reinitialize stdin
+                // If we received multiple commands (or if it's a shortcut), we need to inform the window if they are interactive:
+                var commandForWindow = command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n")
+                let windowCommand = "window.commandRunning = '\(commandForWindow)';window.interactiveCommandRunning = isInteractive('\(commandForWindow)');\n"
+                DispatchQueue.main.async { // iOS 14 experiment. The line below specifically caused a crash.
+                    // If it's not it, what are the options? Do this only for iOS 15+?
+                    self.webView?.evaluateJavaScript(windowCommand) { (result, error) in
+                        if let error = error {
+                            print(error)
+                        }
+                        if let result = result {
+                            print(result)
+                        }
+                    }
+                }
                 self.pid = ios_fork()
                 DispatchQueue.main.async {
                     UIApplication.shared.isIdleTimerDisabled = true
@@ -1299,8 +1455,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         } else if (cmd.hasPrefix("controlOff")) {
             controlOn = false
-            let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
-            editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
+            if #available(iOS 15.0, *) {
+                editorToolbar.items?[1].isSelected = controlOn
+            } else {
+                let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
+                editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
+            }
         } else if (cmd.hasPrefix("input:")) {
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
@@ -1309,15 +1469,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             var command = cmd
             command.removeFirst("input:".count)
             // NSLog("Writing \(command) to stdin")
-            stdinString += command
+            // Because wasm is running asynchronously, we can have thread_stdin closed while wasm is still running
+            if (javascriptRunning && (thread_stdin_copy != nil)) {
+                stdinString += command
+                return
+            }
             guard let data = command.data(using: .utf8) else { return }
             if (command == endOfTransmission) {
                 // There is a webAssembly command running, do not close stdin.
-                if (javascriptRunning && (thread_stdin_copy != nil)) {
-                    fclose(thread_stdin_copy);
-                    thread_stdin_copy = nil;
-                    return
-                }
                 // Stop standard input for the command:
                 guard stdin_file_input != nil else {
                     // no command running, maybe it ended without us knowing:
@@ -1412,19 +1571,23 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 let components = directoryForListing.components(separatedBy: "/")
                 var name = components[0]
                 if (name.hasPrefix("~")) {
-                    // TODO: also for ~shortcuts, separate from ~/...
-                    // JS removes the last slash before sending. No difference btw ~/ and ~
-                    // But behaviour *must* be different --> other function
-                    // ~ : HOME
-                    // ~/something: HOME
-                    // ~somt: find in bookmarkNames dictionary, if not found get list of bookmarks instead of filePaths
-                    // ~somt/something: find in bookmarkNames dictionary
-                    directoryForListing.removeFirst("~".count)
-                    let homeUrl = try! FileManager().url(for: .documentDirectory,
-                                                              in: .userDomainMask,
-                                                              appropriateFor: nil,
-                                                              create: true).deletingLastPathComponent()
-                    directoryForListing = homeUrl.path + "/" + directoryForListing
+                    // separate action between home directory ("~") and bookmarks ("~something"):
+                    if (name.count == 1) {
+                        directoryForListing.removeFirst("~".count)
+                        let homeUrl = try! FileManager().url(for: .documentDirectory,
+                                                             in: .userDomainMask,
+                                                             appropriateFor: nil,
+                                                             create: true).deletingLastPathComponent()
+                        directoryForListing = homeUrl.path + "/" + directoryForListing
+                    } else {
+                        let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+                        name.removeFirst("~".count)
+                        if let bookmarkedDirectory = storedNamesDictionary[name] as? String {
+                            directoryForListing.removeFirst(name.count + 1)
+                            directoryForListing = bookmarkedDirectory + "/" + directoryForListing
+                        }
+                        NSLog("Listing a bookmark: \(directoryForListing): \(name)")
+                    }
                 } else if (name.hasPrefix("$")) {
                     name.removeFirst(1) // without the '$'
                     if let value = ios_getenv(name) {
@@ -1567,7 +1730,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         } else if (cmd.hasPrefix("resendCommand:")) {
             if (shortcutCommandReceived != nil) {
-                NSLog("resendCommand for Shortcut, command=\(shortcutCommandReceived)")
+                NSLog("resendCommand for Shortcut, command=\(shortcutCommandReceived!)")
                 executeCommand(command: shortcutCommandReceived!)
                 shortcutCommandReceived = nil
             } else {
@@ -1703,7 +1866,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // window.commandToExecute: too late for that (term_ is already created)
                     // executeCommand: too early for that. (keyboard is not ready yet)
                     commandSent = commandSent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n")
-                    let restoreCommand = "window.term_.io.println(\"Executing Shortcut: \(commandSent.replacingOccurrences(of: "\\n", with: "\\n\\r"))\");\nwindow.webkit.messageHandlers.aShell.postMessage('shell:' + '\(commandSent)');\nwindow.commandRunning = '\(commandSent)';\n"
+                    let restoreCommand = "window.term_.io.println(\"Executing Shortcut: \(commandSent.replacingOccurrences(of: "\\n", with: "\\n\\r"))\");\nwindow.webkit.messageHandlers.aShell.postMessage('shell:' + '\(commandSent)');\n"
                     self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
                         if let error = error {
                             print(error)
@@ -1745,7 +1908,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             webView?.navigationDelegate = self
             webView?.uiDelegate = self;
             webView?.isAccessibilityElement = false
-            // toolbar for everyone because I can't change the aspect of inputAssistantItem buttons
+            // toolbar for everyone because inputAssistantItem does not look good with a-Shell.
             if (!toolbarShouldBeShown) {
                 showToolbar = false
                 self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
@@ -2748,7 +2911,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         guard (webView != nil) else { return }
         // Sanitize the output string to it can be sent to javascript:
         let parsedString = string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
-        // NSLog("\(parsedString)")
+        // iosNSLog("\(parsedString)")
         // This may cause several \r in a row
         let command = "window.term_.io.print(\"" + parsedString + "\");"
         DispatchQueue.main.async {
@@ -2769,6 +2932,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return
         }
         if let string = String(data: data, encoding: String.Encoding.utf8) {
+            // NSLog("UTF8 string: \(string)")
             outputToWebView(string: string)
             if (string.contains(endOfTransmission)) {
                 stdout_active = false
@@ -2906,17 +3070,12 @@ extension SceneDelegate: WKUIDelegate {
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             if (arguments[1] == "open") {
                 let rights = Int32(arguments[3]) ?? 577;
-                if (!FileManager().fileExists(atPath: arguments[2]) && (rights > 0)) {
-                    // The file doesn't exist *and* we will want to write into it. First, we create it:
-                    let fileUrl = URL(fileURLWithPath: arguments[2])
-                    do {
-                        try "".write(to: fileUrl, atomically: true, encoding: .utf8)
-                    }
-                    catch {
-                        // We will raise an error with open later.
-                    }
+                var returnValue:Int32 = 0
+                if (rights & O_CREAT != 0) {
+                    returnValue = open(arguments[2], rights, 0o644)
+                } else {
+                    returnValue = open(arguments[2], rights)
                 }
-                let returnValue = open(arguments[2], rights)
                 if (returnValue == -1) {
                     completionHandler("\(-errno)")
                     errno = 0
@@ -2966,15 +3125,28 @@ extension SceneDelegate: WKUIDelegate {
                                 }
                                 // let returnValue = write(fd, data, numValues)
                                 let file = FileHandle(fileDescriptor: fd)
-                                if (offset > 0) {
-                                    do {
-                                        try file.seek(toOffset: offset)
+                                do {
+                                    try file.seek(toOffset: offset)
+                                }
+                                catch {
+                                    let error = error as NSError
+                                    //  Objects that are not capable of seeking always write from the current position (man page of read)
+                                    if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                                        NSLog("Underlying error in seek for write: \(underlyingError)")
                                     }
-                                    catch {
-                                        let errorCode = (error as NSError).code
-                                        completionHandler("\(-errorCode)")
+/*
+                                    // printf write to stdout with offset == 0, which cause an error.
+                                    if (fd != fileno(stdout_file)) {
+                                        let error = error as NSError
+                                        //  Objects that are not capable of seeking always read from the current position (man page of read)
+                                        if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                                            completionHandler("\(-underlyingError.code)")
+                                        } else {
+                                            completionHandler("\(-error.code)")
+                                        }
                                         return
                                     }
+ */
                                 }
                                 file.write(data)
                                 returnValue = numValues
@@ -2986,59 +3158,71 @@ extension SceneDelegate: WKUIDelegate {
                 return
             } else if (arguments[1] == "read") {
                 var data: Data?
-                if let fd = fileDescriptor(input: arguments[2]) {
+                if let numValues = Int(arguments[3]) {
                     // arguments[3] = length
                     // arguments[4] = offset
                     // arguments[5] = tty input
                     // let values = arguments[3].components(separatedBy:",")
-                    if let numValues = Int(arguments[3]) {
-                        let offset = UInt64(arguments[4]) ?? 0
-                        let file = FileHandle(fileDescriptor: fd)
-                        let isTTY = Int(arguments[5]) ?? 0
-                        if (fd == fileno(thread_stdin_copy)) && (isTTY != 0) {
-                            // Reading from stdin is delicate, we must avoid blocking the UI.
-                            var inputString = stdinString;
-                            if (inputString.count > numValues) {
-                                inputString = String(stdinString.prefix(numValues))
-                                stdinString.removeFirst(numValues)
-                            } else {
-                                stdinString = ""
-                            }
-                            var utf8str = inputString.data(using: .utf8)
-                            if (utf8str == nil) {
-                                utf8str = inputString.data(using: .ascii)
-                            }
-                            if (utf8str == nil) {
-                                completionHandler("")
-                            } else {
-                                completionHandler("\(utf8str!.base64EncodedString(options: Data.Base64EncodingOptions(rawValue: 0)))")
-                            }
-                            return
+                    let offset = UInt64(arguments[4]) ?? 0
+                    let isTTY = Int(arguments[5]) ?? 0
+                    if (isTTY != 0) && (arguments[2] == "0") {
+                        // Reading from stdin is delicate, we must avoid blocking the UI.
+                        var inputString = stdinString;
+                        if (inputString.count > numValues) {
+                            inputString = String(stdinString.prefix(numValues))
+                            stdinString.removeFirst(numValues)
                         } else {
-                            do {
-                                try file.seek(toOffset: offset)
-                            }
-                            catch {
-                                if (offset != 0) {
-                                    let errorCode = (error as NSError).code
-                                    completionHandler("\(-errorCode)")
-                                    return
-                                }
-                            }
-                            do {
-                                try data = file.read(upToCount: numValues)
-                            }
-                            catch {
-                             }
+                            stdinString = ""
                         }
-                    }
-                    if (data != nil) {
-                        completionHandler("\(data!.base64EncodedString())")
+                        // Dealing with control-D in input stream
+                        if (inputString.hasPrefix(endOfTransmission)) {
+                            completionHandler("\(-255)") // Mapped to EOF internally
+                            return
+                        } else if (inputString.contains(endOfTransmission)) {
+                            // cut before EOF, rest of input string goes back to stdin
+                            let components = inputString.components(separatedBy: endOfTransmission)
+                            var sendBackToInput = inputString
+                            sendBackToInput.removeFirst(components[0].count + 1)
+                            stdinString = sendBackToInput + stdinString
+                            inputString = components[0]
+                        }
+                        var utf8str = inputString.data(using: .utf8)
+                        if (utf8str == nil) {
+                            utf8str = inputString.data(using: .ascii)
+                        }
+                        if utf8str == nil {
+                            completionHandler("")
+                        } else {
+                            completionHandler("\(utf8str!.base64EncodedString(options: Data.Base64EncodingOptions(rawValue: 0)))")
+                        }
+                        return
+                    } else if let fd = fileDescriptor(input: arguments[2]) {
+                        let file = FileHandle(fileDescriptor: fd)
+                        do {
+                            try file.seek(toOffset: offset)
+                        }
+                        catch {
+                            let error = error as NSError
+                            //  Objects that are not capable of seeking always read from the current position (man page of read)
+                            if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                                NSLog("Underlying error in seek: \(underlyingError)")
+                            }
+                        }
+                        do {
+                            // check if there are numValues available in file?
+                            try data = file.read(upToCount: numValues)
+                        }
+                        catch {
+                        }
                     } else {
-                        completionHandler("") // Did not read anything
+                        completionHandler("\(-EBADF)") // Invalid file descriptor
+                        return
                     }
+                }
+                if (data != nil) {
+                    completionHandler("\(data!.base64EncodedString())")
                 } else {
-                    completionHandler("\(-EBADF)") // Invalid file descriptor
+                    completionHandler("") // Did not read anything
                 }
                 return
             } else if (arguments[1] == "fstat") {
@@ -3063,6 +3247,7 @@ extension SceneDelegate: WKUIDelegate {
                 pbuf.initialize(to: buf)
                 let returnValue = stat(arguments[2], pbuf)
                 if (returnValue == 0) {
+                    NSLog("Mode: \(arguments[2]) = \(pbuf.pointee.st_mode)")
                     completionHandler("\(pbuf.pointee)")
                 } else {
                     completionHandler("\(-errno)")
@@ -3080,8 +3265,12 @@ extension SceneDelegate: WKUIDelegate {
                     completionHandler(returnString)
                 }
                 catch {
-                    let errorCode = (error as NSError).code
-                    completionHandler("\(-errorCode)")
+                    let error = (error as NSError)
+                    if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        completionHandler("\(-underlyingError.code)")
+                    } else {
+                        completionHandler("\(-error.code)")
+                    }
                 }
                 return
             } else if (arguments[1] == "mkdir") {
@@ -3090,28 +3279,53 @@ extension SceneDelegate: WKUIDelegate {
                     completionHandler("0")
                 }
                 catch {
-                    let errorCode = (error as NSError).code
-                    completionHandler("\(-errorCode)")
+                    let error = (error as NSError)
+                    if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        completionHandler("\(-underlyingError.code)")
+                    } else {
+                        completionHandler("\(-error.code)")
+                    }
                 }
                 return
             } else if (arguments[1] == "rmdir") {
                 do {
-                    try FileManager().removeItem(atPath: arguments[2])
-                    completionHandler("0")
+                    let path = arguments[2]
+                    let contentsOfDirectory = try FileManager().contentsOfDirectory(atPath: path)
+                    if (contentsOfDirectory.isEmpty) {
+                        try FileManager().removeItem(atPath: path)
+                        completionHandler("0")
+                    } else {
+                        completionHandler("\(-ENOTEMPTY)")
+                    }
                 }
                 catch {
-                    let errorCode = (error as NSError).code
-                    completionHandler("\(-errorCode)")
+                    let error = (error as NSError)
+                    if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        completionHandler("\(-underlyingError.code)")
+                    } else {
+                        completionHandler("\(-error.code)")
+                    }
                 }
                 return
             } else if (arguments[1] == "rename") {
                 do {
+                    if (FileManager().fileExists(atPath: arguments[3])) {
+                        do {
+                            try FileManager().removeItem(atPath: arguments[3])
+                        }
+                        catch {
+                        }
+                    }
                     try FileManager().moveItem(atPath:arguments[2], toPath: arguments[3])
                     completionHandler("0")
                 }
                 catch {
-                    let errorCode = (error as NSError).code
-                    completionHandler("\(-errorCode)")
+                    let error = (error as NSError)
+                    if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        completionHandler("\(-underlyingError.code)")
+                    } else {
+                        completionHandler("\(-error.code)")
+                    }
                 }
                 return
             }  else if (arguments[1] == "link") {
@@ -3120,8 +3334,12 @@ extension SceneDelegate: WKUIDelegate {
                     completionHandler("0")
                 }
                 catch {
-                    let errorCode = (error as NSError).code
-                    completionHandler("\(-errorCode)")
+                    let error = (error as NSError)
+                    if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        completionHandler("\(-underlyingError.code)")
+                    } else {
+                        completionHandler("\(-error.code)")
+                    }
                 }
                 return
             } else if (arguments[1] == "symlink") {
@@ -3130,8 +3348,12 @@ extension SceneDelegate: WKUIDelegate {
                     completionHandler("0")
                 }
                 catch {
-                    let errorCode = (error as NSError).code
-                    completionHandler("\(-errorCode)")
+                    let error = (error as NSError)
+                    if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        completionHandler("\(-underlyingError.code)")
+                    } else {
+                        completionHandler("\(-error.code)")
+                    }
                 }
                 return
             } else if (arguments[1] == "readlink") {
@@ -3142,8 +3364,12 @@ extension SceneDelegate: WKUIDelegate {
                 catch {
                     // to remove ambiguity, add '\n' at the beginning
                     // this might fail if a link points to
-                    let errorCode = (error as NSError).code
-                    completionHandler("\n\(-errorCode)")
+                    let error = (error as NSError)
+                    if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        completionHandler("\(-underlyingError.code)")
+                    } else {
+                        completionHandler("\(-error.code)")
+                    }
                 }
                 return
             } else if (arguments[1] == "unlink") {
