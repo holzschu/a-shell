@@ -8,13 +8,13 @@
 
 "0ltuRO-i2Vf9p" = "There are ${count} options matching ‘no (run in extension)’.";
 
-"2PGaCe" = "Keep going after an error";
+"2PGaCe" = "오류가 나도 계속 실행";
 
-"2fJ9cq" = "true";
+"2fJ9cq" = "참";
 
-"2iOcKE" = "File";
+"2iOcKE" = "파일";
 
-"41sJlD" = "Execute shell command";
+"41sJlD" = "셸 명령 실행";
 
 "4yCt8L-Ev6eBG" = "Just to confirm, you wanted ‘default (depends on commands)’?";
 
@@ -26,93 +26,94 @@
 
 "58h7pK" = "${file}";
 
-"7wS9Ta" = "Put File";
+"7wS9Ta" = "파일 보내기";
 
-"8AtaM0" = "Get file from a-Shell";
+"8AtaM0" = "a-Shell로부터 파일 가져오기";
 
 "8PiF49" = "${property}";
 
 "8eLC56" = "${property}";
 
-"94QBWm" = "File created successfully";
+"94QBWm" = "파일이 성공적으로 생성되었습니다";
 
-"9n3JUI" = "false";
+"9n3JUI" = "거짓";
 
-"BKUcxZ" = "Get ${fileName} from a-Shell";
+"BKUcxZ" = "a-Shell로부터 ${fileName} 가져오기";
 
 "BxvHYF" = "errorCode";
 
-"CQUSHQ" = "file name? ";
+"CQUSHQ" = "파일명? ";
 
-"ClThF5" = "output";
+"ClThF5" = "출력";
 
-"Ev6eBG" = "default (depends on commands)";
+"Ev6eBG" = "필요 시에만 앱 열기";
 
-"EzhjO7" = "yes";
+"EzhjO7" = "예";
 
-"J7zfzK" = "File created successfully";
+"J7zfzK" = "파일이 성공적으로 생성되었습니다";
 
-"JJgpB5" = "Open the app to execute the commands?";
+"JJgpB5" = "명령 실행을 위해 앱을 열까요?";
 
-"KqS0gJ" = "Run shell command";
+"KqS0gJ" = "셸 명령 실행";
 
-"N556Rd" = "default (depend on commands)";
+"N556Rd" = "기본값 (명령에 따라 다름)";
 
-"NJGW0j" = "Your command failed with error code ${property1}. Output was: ${property}";
+"NJGW0j" = "명령이 실패했습니다. 오류 코드: ${property1}. 출력: ${property}";
 
-"OmjmQg" = "file";
+"OmjmQg" = "파일";
 
-"PJgP7x" = "Error";
+"PJgP7x" = "오류";
 
-"SMk14K" = "Error code ${property1}. ${property}";
+"SMk14K" = "오류 코드 ${property1}. ${property}";
 
-"UvKwrp" = "Create a file in a-Shell sandbox";
+"UvKwrp" = "a-Shell 샌드박스에 파일 생성";
 
-"W4gWBJ" = "Could not create file: ${error}";
+"W4gWBJ" = "파일을 생성할 수 없습니다: ${error}";
 
-"Y7KKwU" = "shell command(s)";
+"Y7KKwU" = "셸 명령";
 
-"YxbbRt" = "Execute ${command}";
+"YxbbRt" = "${command} 실행";
 
-"a2n63A" = "Copy ${file} to a-Shell";
+"a2n63A" = "a-Shell로 ${file} 복사";
 
-"aRe2H0" = "Overwrite existing file?";
+"aRe2H0" = "기존 파일을 덮어쓸까요?";
 
-"cELXqS" = "Overwrite existing file ${file}?";
+"cELXqS" = "기존 파일 ${file}을(를) 덮어쓸까요?";
 
-"d8qG96" = "Should I keep going after one command returns an error?";
+"d8qG96" = "명령에 오류가 나도 계속 실행할까요?";
 
-"epnx1H" = "false";
+"epnx1H" = "거짓";
 
 "fyMs4g" = "${message}";
 
-"i2Vf9p" = "no (run in extension)";
+"i2Vf9p" = "아니요 (확장파일에서 실행)";
 
-"iokfkK" = "Copy file to a-Shell";
+"iokfkK" = "a-Shell로 파일 복사";
 
-"isZTIL" = "Copy ${file} to a-Shell";
+"isZTIL" = "a-Shell로 ${file} 복사";
 
-"mT8e9Y" = "file name";
+"mT8e9Y" = "파일명";
 
-"n11Zfh" = "Get ${fileName} from a-Shell";
+"n11Zfh" = "a-Shell로부터 ${fileName} 가져오기";
 
-"pHBUcg" = "Could not create file: ${error}";
+"pHBUcg" = "파일을 생성할 수 없습니다: ${error}";
 
 "qDIloo" = "openWindow";
 
-"rz0Hmn" = "Execute Command";
+"rz0Hmn" = "명령 실행";
 
-"tIMaMc" = "Copy ${file} to a-Shell";
+"tIMaMc" = "a-Shell로 ${file} 복사";
 
-"uW0NxR" = "Message";
+"uW0NxR" = "메시지";
 
-"umwm1q" = "Execute ${command}";
+"umwm1q" = "${command} 실행";
 
-"vk5k4v" = "Run the following command in a-Shell";
+"vk5k4v" = "다음의 명령을 a-Shell에서 실행";
 
 "wXdWw9" = "${file}";
 
-"xYZuUZ" = "true";
+"xYZuUZ" = "참";
 
-"xrhJta" = "Get file";
+"xrhJta" = "파일 가져오기";
+
 

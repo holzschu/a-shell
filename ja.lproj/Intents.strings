@@ -8,13 +8,13 @@
 
 "0ltuRO-i2Vf9p" = "There are ${count} options matching ‘no (run in extension)’.";
 
-"2PGaCe" = "Keep going after an error";
+"2PGaCe" = "エラー後も処理を続行する";
 
-"2fJ9cq" = "true";
+"2fJ9cq" = "真";
 
-"2iOcKE" = "File";
+"2iOcKE" = "ファイル";
 
-"41sJlD" = "Execute shell command";
+"41sJlD" = "シェルコマンドを実行";
 
 "4yCt8L-Ev6eBG" = "Just to confirm, you wanted ‘default (depends on commands)’?";
 
@@ -26,93 +26,92 @@
 
 "58h7pK" = "${file}";
 
-"7wS9Ta" = "Put File";
+"7wS9Ta" = "ファイルを置く";
 
-"8AtaM0" = "Get file from a-Shell";
+"8AtaM0" = "a-Shellからファイルをゲット";
 
 "8PiF49" = "${property}";
 
 "8eLC56" = "${property}";
 
-"94QBWm" = "File created successfully";
+"94QBWm" = "ファイルの生成に成功しました";
 
-"9n3JUI" = "false";
+"9n3JUI" = "偽";
 
-"BKUcxZ" = "Get ${fileName} from a-Shell";
+"BKUcxZ" = "a-shellから${fileName}をゲット";
 
-"BxvHYF" = "errorCode";
+"BxvHYF" = "エラーコード";
 
-"CQUSHQ" = "file name? ";
+"CQUSHQ" = "ファイルネームは? ";
 
-"ClThF5" = "output";
+"ClThF5" = "アウトプット";
 
-"Ev6eBG" = "default (depends on commands)";
+"Ev6eBG" = "デフォルト (コマンドに依ります)";
 
-"EzhjO7" = "yes";
+"EzhjO7" = "はい";
 
-"J7zfzK" = "File created successfully";
+"J7zfzK" = "ファイルの生成に成功しました";
 
-"JJgpB5" = "Open the app to execute the commands?";
+"JJgpB5" = "コマンド実行のためにアプリを開きますか？";
 
-"KqS0gJ" = "Run shell command";
+"KqS0gJ" = "シェルコマンドの実行";
 
-"N556Rd" = "default (depend on commands)";
+"N556Rd" = "デフォルト (コマンドに依ります)";
 
-"NJGW0j" = "Your command failed with error code ${property1}. Output was: ${property}";
+"NJGW0j" = "コマンドはエラーコード ${property1}で終了しました。アウトプットは ${property}です";
 
-"OmjmQg" = "file";
+"OmjmQg" = "ファイル";
 
-"PJgP7x" = "Error";
+"PJgP7x" = "エラー";
 
-"SMk14K" = "Error code ${property1}. ${property}";
+"SMk14K" = "エラーコードは${property1}です。 ${property}";
 
-"UvKwrp" = "Create a file in a-Shell sandbox";
+"UvKwrp" = "a-Shell サンドボックスでファイルを生成";
 
-"W4gWBJ" = "Could not create file: ${error}";
+"W4gWBJ" = "ファイルを生成できません: ${error}";
 
-"Y7KKwU" = "shell command(s)";
+"Y7KKwU" = "シェルコマンド";
 
-"YxbbRt" = "Execute ${command}";
+"YxbbRt" = "コマンドを実行 ${command}";
 
-"a2n63A" = "Copy ${file} to a-Shell";
+"a2n63A" = "${file} を a-Shell にコピー";
 
-"aRe2H0" = "Overwrite existing file?";
+"aRe2H0" = "既存のファイルを上書きしますか?";
 
-"cELXqS" = "Overwrite existing file ${file}?";
+"cELXqS" = "既存のファイル${file}を上書きしますか?";
 
-"d8qG96" = "Should I keep going after one command returns an error?";
+"d8qG96" = "一つのコマンドがエラーを返しても処理を続行しますか?";
 
-"epnx1H" = "false";
+"epnx1H" = "偽";
 
 "fyMs4g" = "${message}";
 
-"i2Vf9p" = "no (run in extension)";
+"i2Vf9p" = "いいえ (エクステンション内で実行)";
 
-"iokfkK" = "Copy file to a-Shell";
+"iokfkK" = "a-Shellにファイルをコピー";
 
-"isZTIL" = "Copy ${file} to a-Shell";
+"isZTIL" = "${file} を a-Shellにコピー";
 
-"mT8e9Y" = "file name";
+"mT8e9Y" = "ファイル名";
 
-"n11Zfh" = "Get ${fileName} from a-Shell";
+"n11Zfh" = "${fileName} を a-Shell からゲット";
 
-"pHBUcg" = "Could not create file: ${error}";
+"pHBUcg" = "ファイルを生成できません: ${error}";
 
 "qDIloo" = "openWindow";
 
-"rz0Hmn" = "Execute Command";
+"rz0Hmn" = "コマンドを実行";
 
-"tIMaMc" = "Copy ${file} to a-Shell";
+"tIMaMc" = "${file} を a-Shel にコピーl";
 
-"uW0NxR" = "Message";
+"uW0NxR" = "メッセージ";
 
-"umwm1q" = "Execute ${command}";
+"umwm1q" = "${command}を実行";
 
-"vk5k4v" = "Run the following command in a-Shell";
+"vk5k4v" = "以下のコマンドをa-Shellで実行";
 
 "wXdWw9" = "${file}";
 
-"xYZuUZ" = "true";
+"xYZuUZ" = "真";
 
-"xrhJta" = "Get file";
-
+"xrhJta" = "ファイルをゲット";

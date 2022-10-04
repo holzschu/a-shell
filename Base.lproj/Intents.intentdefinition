@@ -614,7 +614,7 @@
 							<key>INIntentParameterPromptDialogCustom</key>
 							<true/>
 							<key>INIntentParameterPromptDialogFormatString</key>
-							<string>Copy ${file} to a-Shell (${overwrite})</string>
+							<string>Copy ${file} to a-Shell</string>
 							<key>INIntentParameterPromptDialogFormatStringID</key>
 							<string>a2n63A</string>
 							<key>INIntentParameterPromptDialogType</key>

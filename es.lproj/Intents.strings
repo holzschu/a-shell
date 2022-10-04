@@ -8,13 +8,13 @@
 
 "0ltuRO-i2Vf9p" = "There are ${count} options matching ‘no (run in extension)’.";
 
-"2PGaCe" = "Keep going after an error";
+"2PGaCe" = "Continuar en caso de error";
 
-"2fJ9cq" = "true";
+"2fJ9cq" = "verdadero";
 
-"2iOcKE" = "File";
+"2iOcKE" = "Archivo";
 
-"41sJlD" = "Execute shell command";
+"41sJlD" = "Ejecuta comando de shell";
 
 "4yCt8L-Ev6eBG" = "Just to confirm, you wanted ‘default (depends on commands)’?";
 
@@ -26,95 +26,88 @@
 
 "58h7pK" = "${file}";
 
-"7wS9Ta" = "Put File";
+"7wS9Ta" = "Poner archivo";
 
-"8AtaM0" = "Get file from a-Shell";
+"8AtaM0" = "Obtiene un archivo de a-Shell";
+"94QBWm" = "Archivo creado con éxito";
 
-"8PiF49" = "${property}";
+"9n3JUI" = "falso";
 
-"8eLC56" = "${property}";
+"BKUcxZ" = "Obtén ${fileName} de a-Shell";
 
-"94QBWm" = "File created successfully";
+"BxvHYF" = "Código de error";
 
-"9n3JUI" = "false";
+"CQUSHQ" = "¿Nombre del archivo?";
 
-"BKUcxZ" = "Get ${fileName} from a-Shell";
+"ClThF5" = "resultado";
 
-"BxvHYF" = "errorCode";
+"Ev6eBG" = "automático (según comandos)";
 
-"CQUSHQ" = "file name? ";
+"EzhjO7" = "sí";
 
-"ClThF5" = "output";
+"J7zfzK" = "Archivo creado con éxito";
 
-"Ev6eBG" = "default (depends on commands)";
+"JJgpB5" = "¿Abrir la app para ejecutar los comandos?";
 
-"EzhjO7" = "yes";
+"KqS0gJ" = "Ejecuta comando de shell";
 
-"J7zfzK" = "File created successfully";
+"N556Rd" = "automático (según comandos)";
 
-"JJgpB5" = "Open the app to execute the commands?";
+"NJGW0j" = "El comando falló con el código de error ${property1}. El resultado fue: ${property}";
 
-"KqS0gJ" = "Run shell command";
-
-"N556Rd" = "default (depend on commands)";
-
-"NJGW0j" = "Your command failed with error code ${property1}. Output was: ${property}";
-
-"OmjmQg" = "file";
+"OmjmQg" = "Archivo";
 
 "PJgP7x" = "Error";
 
-"SMk14K" = "Error code ${property1}. ${property}";
+"SMk14K" = "Código de error ${property1}. ${property}";
 
-"UvKwrp" = "Create a file in a-Shell sandbox";
+"UvKwrp" = "Crea un archivo en el sandbox de a-Shell";
 
-"W4gWBJ" = "Could not create file: ${error}";
+"W4gWBJ" = "No se pudo crear el archivo: ${error}";
 
-"Y7KKwU" = "shell command(s)";
+"Y7KKwU" = "Comando/s de shell";
 
-"YxbbRt" = "Execute ${command}";
+"YxbbRt" = "Ejecuta ${command}";
 
-"a2n63A-epnx1H" = "Copy ${file} to a-Shell (false)";
+"a2n63A-epnx1H" = "Copia ${file} en a-Shell";
 
-"a2n63A-xYZuUZ" = "Copy ${file} to a-Shell (true)";
+"aRe2H0" = "¿Sobrescribir el archivo existente?";
 
-"aRe2H0" = "Overwrite existing file?";
+"cELXqS" = "¿Sobrescribir el archivo existente ${file}?";
 
-"cELXqS" = "Overwrite existing file ${file}?";
+"d8qG96" = "¿Debo continuar después de que un comando devuelva un error?";
 
-"d8qG96" = "Should I keep going after one command returns an error?";
-
-"epnx1H" = "false";
+"epnx1H" = "falso";
 
 "fyMs4g" = "${message}";
 
-"i2Vf9p" = "no (run in extension)";
+"i2Vf9p" = "no (usar extensión)";
 
-"iokfkK" = "Copy file to a-Shell";
+"iokfkK" = "Copiar archivo a a-Shell";
 
-"isZTIL" = "Copy ${file} to a-Shell";
+"isZTIL" = "Copia ${file} a a-Shell";
 
-"mT8e9Y" = "file name";
+"mT8e9Y" = "Nombre del archivo";
 
-"n11Zfh" = "Get ${fileName} from a-Shell";
+"n11Zfh" = "Obtén ${fileName} de a-Shell";
 
-"pHBUcg" = "Could not create file: ${error}";
+"pHBUcg" = "No se pudo crear el archivo: ${error}";
 
 "qDIloo" = "openWindow";
 
-"rz0Hmn" = "Execute Command";
+"rz0Hmn" = "Ejecutar comando";
 
-"tIMaMc" = "Copy ${file} to a-Shell";
+"tIMaMc" = "Copia ${file} a a-Shell";
 
-"uW0NxR" = "Message";
+"uW0NxR" = "Mensaje";
 
-"umwm1q" = "Execute ${command}";
+"umwm1q" = "Ejecutar ${command}";
 
-"vk5k4v" = "Run the following command in a-Shell";
+"vk5k4v" = "Ejecutar comando/s en a-Shell";
 
 "wXdWw9" = "${file}";
 
-"xYZuUZ" = "true";
+"xYZuUZ" = "verdadero";
 
-"xrhJta" = "Get file";
+"xrhJta" = "Obtén el archivo";
 
