@@ -292,6 +292,11 @@ _ = Package(
             url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/ffprobe.xcframework.zip",
             checksum: "c66df5198becb1e0432c27c8f0df628fa185224c9f0bcff2039e3bd21246b130"
         ),
+        .binaryTarget(
+            name: "jq",
+            url: "https://github.com/fprimex/jq/releases/download/ios/jq.xcframework.zip",
+            checksum: "d3c4486e5ed788995b0ad9586465d3407e463d90f4e91b843846cabfe21f297f"
+        ),
         // TODO: update make/mandoc binaries, add dash, lg2, unrar binary.
         .target(
             name: "build",
