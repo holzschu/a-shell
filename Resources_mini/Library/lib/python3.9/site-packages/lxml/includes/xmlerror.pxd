@@ -156,6 +156,7 @@ cdef extern from "libxml/xmlerror.h":
         XML_ERR_VERSION_MISMATCH                           =     109
         XML_ERR_NAME_TOO_LONG                              =     110
         XML_ERR_USER_STOP                                  =     111
+        XML_ERR_COMMENT_ABRUPTLY_ENDED                     =     112
         XML_NS_ERR_XML_NAMESPACE                           =     200
         XML_NS_ERR_UNDEFINED_NAMESPACE                     =     201
         XML_NS_ERR_QNAME                                   =     202

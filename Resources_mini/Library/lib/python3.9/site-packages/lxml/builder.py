@@ -42,6 +42,7 @@ The ``E`` Element factory for generating XML documents.
 from __future__ import absolute_import
 
 import lxml.etree as ET
+_QName = ET.QName
 
 from functools import partial
 
@@ -147,34 +148,22 @@ class ElementMaker(object):
 
     def __init__(self, typemap=None,
                  namespace=None, nsmap=None, makeelement=None):
-        if namespace is not None:
-            self._namespace = '{' + namespace + '}'
-        else:
-            self._namespace = None
+        self._namespace = '{' + namespace + '}' if namespace is not None else None
+        self._nsmap = dict(nsmap) if nsmap else None
 
-        if nsmap:
-            self._nsmap = dict(nsmap)
-        else:
-            self._nsmap = None
+        assert makeelement is None or callable(makeelement)
+        self._makeelement = makeelement if makeelement is not None else ET.Element
 
-        if makeelement is not None:
-            assert callable(makeelement)
-            self._makeelement = makeelement
-        else:
-            self._makeelement = ET.Element
-
-        # initialize type map for this element factory
-
-        if typemap:
-            typemap = dict(typemap)
-        else:
-            typemap = {}
+        # initialize the default type map functions for this element factory
+        typemap = dict(typemap) if typemap else {}
 
         def add_text(elem, item):
             try:
-                elem[-1].tail = (elem[-1].tail or "") + item
+                last_child = elem[-1]
             except IndexError:
                 elem.text = (elem.text or "") + item
+            else:
+                last_child.tail = (last_child.tail or "") + item
 
         def add_cdata(elem, cdata):
             if elem.text:
@@ -195,6 +184,7 @@ class ElementMaker(object):
                     attrib[k] = v
                 else:
                     attrib[k] = typemap[type(v)](None, v)
+
         if dict not in typemap:
             typemap[dict] = add_dict
 
@@ -203,7 +193,11 @@ class ElementMaker(object):
     def __call__(self, tag, *children, **attrib):
         typemap = self._typemap
 
-        if self._namespace is not None and tag[0] != '{':
+        # We'll usually get a 'str', and the compiled type check is very fast.
+        if not isinstance(tag, str) and isinstance(tag, _QName):
+            # A QName is explicitly qualified, do not look at self._namespace.
+            tag = tag.text
+        elif self._namespace is not None and tag[0] != '{':
             tag = self._namespace + tag
         elem = self._makeelement(tag, nsmap=self._nsmap)
         if attrib:

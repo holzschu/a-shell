@@ -251,7 +251,7 @@ def merge_insert(ins_chunks, doc):
     doc.append('</ins> ')
     doc.extend(unbalanced_end)
 
-# These are sentinals to represent the start and end of a <del>
+# These are sentinels to represent the start and end of a <del>
 # segment, until we do the cleanup phase to turn them into proper
 # markup:
 class DEL_START:

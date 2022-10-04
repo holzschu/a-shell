@@ -14,13 +14,13 @@ build_time_vars = {'ABIFLAGS': '',
  'BINLIBDEST': '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/lib/python3.9',
  'BLDLIBRARY': '-L. -lpython3.9',
  'BLDSHARED': 'clang -v -undefined error -dynamiclib -isysroot '
-              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
               '-lz -L. -lpython3.9  '
               '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos '
               '-framework ios_system '
               '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos/lib '
               '-arch arm64 -miphoneos-version-min=14.0 -isysroot '
-              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
               '-lz '
               '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos '
               '-framework ios_system '
@@ -33,14 +33,14 @@ build_time_vars = {'ABIFLAGS': '',
  'CCSHARED': '',
  'CFLAGS': '-Wno-unused-result -Wsign-compare -Wunreachable-code -DNDEBUG -O3 '
            '-Wall -arch arm64 -miphoneos-version-min=14.0 -isysroot '
-           '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk',
+           '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk',
  'CFLAGSFORSHARED': '',
  'CFLAGS_ALIASING': '',
  'CFLAGS_NODIST': '',
  'CONFIGFILES': 'configure configure.ac acconfig.h pyconfig.h.in '
                 'Makefile.pre.in',
  'CONFIGURE_CFLAGS': '-arch arm64 -miphoneos-version-min=14.0 -isysroot '
-                     '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk',
+                     '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk',
  'CONFIGURE_CFLAGS_NODIST': '-std=c99 -Wextra -Wno-unused-result '
                             '-Wno-unused-parameter '
                             '-Wno-missing-field-initializers '
@@ -48,9 +48,9 @@ build_time_vars = {'ABIFLAGS': '',
                             '-Werror=implicit-function-declaration '
                             '-fvisibility=hidden',
  'CONFIGURE_CPPFLAGS': '-arch arm64 -miphoneos-version-min=14.0 -isysroot '
-                       '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk',
+                       '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk',
  'CONFIGURE_LDFLAGS': '-arch arm64 -miphoneos-version-min=14.0 -isysroot '
-                      '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+                      '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
                       '-lz '
                       '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos '
                       '-framework ios_system '
@@ -71,15 +71,15 @@ build_time_vars = {'ABIFLAGS': '',
                 "'build_alias=x86_64-apple-darwin' "
                 "'host_alias=arm-apple-darwin' 'CC=clang' 'CFLAGS=-arch arm64 "
                 '-miphoneos-version-min=14.0 -isysroot '
-                "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk' "
+                "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk' "
                 "'LDFLAGS=-arch arm64 -miphoneos-version-min=14.0 -isysroot "
-                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
                 '-lz '
                 '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos '
                 '-framework ios_system '
                 "-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos/lib' "
                 "'CPPFLAGS=-arch arm64 -miphoneos-version-min=14.0 -isysroot "
-                "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk'",
+                "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk'",
  'CONFINCLUDEDIR': '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/include',
  'CONFINCLUDEPY': '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/include/python3.9',
  'COREPYTHONPATH': '',
@@ -89,7 +89,7 @@ build_time_vars = {'ABIFLAGS': '',
                             'report"',
  'CPPFLAGS': '-I. -I./Include -arch arm64 -miphoneos-version-min=14.0 '
              '-isysroot '
-             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk',
+             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk',
  'CXX': 'clang++',
  'DESTDIRS': '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library '
              '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/lib '
@@ -574,13 +574,13 @@ build_time_vars = {'ABIFLAGS': '',
  'IO_H': 'Modules/_io/_iomodule.h',
  'IO_OBJS': '\\',
  'LDCXXSHARED': 'clang -v -undefined error -dynamiclib -isysroot '
-                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
                 '-lz -L. -lpython3.9  '
                 '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos '
                 '-framework ios_system '
                 '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos/lib',
  'LDFLAGS': '-arch arm64 -miphoneos-version-min=14.0 -isysroot '
-            '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+            '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
             '-lz '
             '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos '
             '-framework ios_system '
@@ -589,13 +589,13 @@ build_time_vars = {'ABIFLAGS': '',
  'LDLIBRARY': 'libpython3.9.dylib',
  'LDLIBRARYDIR': '',
  'LDSHARED': 'clang -v -undefined error -dynamiclib -isysroot '
-             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
              '-lz -L. -lpython3.9  '
              '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos '
              '-framework ios_system '
              '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos/lib '
              '-arch arm64 -miphoneos-version-min=14.0 -isysroot '
-             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
              '-lz '
              '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos '
              '-framework ios_system '
@@ -629,7 +629,7 @@ build_time_vars = {'ABIFLAGS': '',
  'MACHDEP': 'darwin',
  'MACHDEP_OBJS': '',
  'MACHDESTLIB': '/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/lib/python3.9',
- 'MACOSX_DEPLOYMENT_TARGET': '11.6',
+ 'MACOSX_DEPLOYMENT_TARGET': '12.4',
  'MAINCC': 'clang',
  'MAJOR_IN_MKDEV': 0,
  'MAJOR_IN_SYSMACROS': 0,
@@ -736,7 +736,7 @@ build_time_vars = {'ABIFLAGS': '',
  'PY_BUILTIN_MODULE_CFLAGS': '-Wno-unused-result -Wsign-compare '
                              '-Wunreachable-code -DNDEBUG -O3 -Wall -arch '
                              'arm64 -miphoneos-version-min=14.0 -isysroot '
-                             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+                             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
                              '-std=c99 -Wextra -Wno-unused-result '
                              '-Wno-unused-parameter '
                              '-Wno-missing-field-initializers '
@@ -745,11 +745,11 @@ build_time_vars = {'ABIFLAGS': '',
                              '-fvisibility=hidden  -I./Include/internal -I. '
                              '-I./Include -arch arm64 '
                              '-miphoneos-version-min=14.0 -isysroot '
-                             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+                             '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
                              '-DPy_BUILD_CORE_BUILTIN',
  'PY_CFLAGS': '-Wno-unused-result -Wsign-compare -Wunreachable-code -DNDEBUG '
               '-O3 -Wall -arch arm64 -miphoneos-version-min=14.0 -isysroot '
-              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk',
+              '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk',
  'PY_CFLAGS_NODIST': '-std=c99 -Wextra -Wno-unused-result '
                      '-Wno-unused-parameter -Wno-missing-field-initializers '
                      '-Wstrict-prototypes '
@@ -759,26 +759,26 @@ build_time_vars = {'ABIFLAGS': '',
  'PY_CORE_CFLAGS': '-Wno-unused-result -Wsign-compare -Wunreachable-code '
                    '-DNDEBUG -O3 -Wall -arch arm64 -miphoneos-version-min=14.0 '
                    '-isysroot '
-                   '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+                   '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
                    '-std=c99 -Wextra -Wno-unused-result -Wno-unused-parameter '
                    '-Wno-missing-field-initializers -Wstrict-prototypes '
                    '-Werror=implicit-function-declaration -fvisibility=hidden  '
                    '-I./Include/internal -I. -I./Include -arch arm64 '
                    '-miphoneos-version-min=14.0 -isysroot '
-                   '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+                   '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
                    '-DPy_BUILD_CORE',
  'PY_CORE_LDFLAGS': '-arch arm64 -miphoneos-version-min=14.0 -isysroot '
-                    '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+                    '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
                     '-lz '
                     '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos '
                     '-framework ios_system '
                     '-L/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos/lib',
  'PY_CPPFLAGS': '-I. -I./Include -arch arm64 -miphoneos-version-min=14.0 '
                 '-isysroot '
-                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk',
+                '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk',
  'PY_FORMAT_SIZE_T': '"z"',
  'PY_LDFLAGS': '-arch arm64 -miphoneos-version-min=14.0 -isysroot '
-               '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+               '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
                '-lz '
                '-F/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Frameworks_iphoneos '
                '-framework ios_system '
@@ -789,7 +789,7 @@ build_time_vars = {'ABIFLAGS': '',
  'PY_STDMODULE_CFLAGS': '-Wno-unused-result -Wsign-compare -Wunreachable-code '
                         '-DNDEBUG -O3 -Wall -arch arm64 '
                         '-miphoneos-version-min=14.0 -isysroot '
-                        '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk '
+                        '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk '
                         '-std=c99 -Wextra -Wno-unused-result '
                         '-Wno-unused-parameter -Wno-missing-field-initializers '
                         '-Wstrict-prototypes '
@@ -797,7 +797,7 @@ build_time_vars = {'ABIFLAGS': '',
                         '-fvisibility=hidden  -I./Include/internal -I. '
                         '-I./Include -arch arm64 -miphoneos-version-min=14.0 '
                         '-isysroot '
-                        '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk',
+                        '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk',
  'Py_DEBUG': 0,
  'Py_ENABLE_SHARED': 1,
  'Py_HASH_ALGORITHM': 0,

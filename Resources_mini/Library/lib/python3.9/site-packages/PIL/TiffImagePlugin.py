@@ -41,6 +41,7 @@
 import io
 import itertools
 import logging
+import math
 import os
 import struct
 import warnings
@@ -49,6 +50,8 @@ from fractions import Fraction
 from numbers import Number, Rational
 
 from . import Image, ImageFile, ImageOps, ImagePalette, TiffTags
+from ._binary import i16be as i16
+from ._binary import i32be as i32
 from ._binary import o8
 from .TiffTags import TYPES
 
@@ -172,6 +175,7 @@ OPEN_INFO = {
     (II, 1, (1,), 1, (12,), ()): ("I;16", "I;12"),
     (II, 1, (1,), 1, (16,), ()): ("I;16", "I;16"),
     (MM, 1, (1,), 1, (16,), ()): ("I;16B", "I;16B"),
+    (II, 1, (1,), 2, (16,), ()): ("I;16", "I;16R"),
     (II, 1, (2,), 1, (16,), ()): ("I", "I;16S"),
     (MM, 1, (2,), 1, (16,), ()): ("I", "I;16BS"),
     (II, 0, (3,), 1, (32,), ()): ("F", "F;32F"),
@@ -257,6 +261,8 @@ PREFIXES = [
     b"II\x2A\x00",  # Valid TIFF header with little-endian byte order
     b"MM\x2A\x00",  # Invalid TIFF header, assume big-endian
     b"II\x00\x2A",  # Invalid TIFF header, assume little-endian
+    b"MM\x00\x2B",  # BigTIFF with big-endian byte order
+    b"II\x2B\x00",  # BigTIFF with little-endian byte order
 ]
 
 
@@ -490,7 +496,7 @@ class ImageFileDirectory_v2(MutableMapping):
               endianness.
         :param prefix: Override the endianness of the file.
         """
-        if ifh[:4] not in PREFIXES:
+        if not _accept(ifh):
             raise SyntaxError(f"not a TIFF file (header {repr(ifh)} not valid)")
         self._prefix = prefix if prefix is not None else ifh[:2]
         if self._prefix == MM:
@@ -499,11 +505,14 @@ class ImageFileDirectory_v2(MutableMapping):
             self._endian = "<"
         else:
             raise SyntaxError("not a TIFF IFD")
+        self._bigtiff = ifh[2] == 43
         self.group = group
         self.tagtype = {}
         """ Dictionary of tag types """
         self.reset()
-        (self.next,) = self._unpack("L", ifh[4:])
+        (self.next,) = (
+            self._unpack("Q", ifh[8:]) if self._bigtiff else self._unpack("L", ifh[4:])
+        )
         self._legacy_api = False
 
     prefix = property(lambda self: self._prefix)
@@ -574,9 +583,9 @@ class ImageFileDirectory_v2(MutableMapping):
                         else TiffTags.SIGNED_RATIONAL
                     )
                 elif all(isinstance(v, int) for v in values):
-                    if all(0 <= v < 2 ** 16 for v in values):
+                    if all(0 <= v < 2**16 for v in values):
                         self.tagtype[tag] = TiffTags.SHORT
-                    elif all(-(2 ** 15) < v < 2 ** 15 for v in values):
+                    elif all(-(2**15) < v < 2**15 for v in values):
                         self.tagtype[tag] = TiffTags.SIGNED_SHORT
                     else:
                         self.tagtype[tag] = (
@@ -696,6 +705,7 @@ class ImageFileDirectory_v2(MutableMapping):
                 (TiffTags.FLOAT, "f", "float"),
                 (TiffTags.DOUBLE, "d", "double"),
                 (TiffTags.IFD, "L", "long"),
+                (TiffTags.LONG8, "Q", "long8"),
             ],
         )
     )
@@ -731,7 +741,7 @@ class ImageFileDirectory_v2(MutableMapping):
     @_register_writer(5)
     def write_rational(self, *values):
         return b"".join(
-            self._pack("2L", *_limit_rational(frac, 2 ** 32 - 1)) for frac in values
+            self._pack("2L", *_limit_rational(frac, 2**32 - 1)) for frac in values
         )
 
     @_register_loader(7, 1)
@@ -754,7 +764,7 @@ class ImageFileDirectory_v2(MutableMapping):
     @_register_writer(10)
     def write_signed_rational(self, *values):
         return b"".join(
-            self._pack("2l", *_limit_signed_rational(frac, 2 ** 31 - 1, -(2 ** 31)))
+            self._pack("2l", *_limit_signed_rational(frac, 2**31 - 1, -(2**31)))
             for frac in values
         )
 
@@ -773,8 +783,17 @@ class ImageFileDirectory_v2(MutableMapping):
         self._offset = fp.tell()
 
         try:
-            for i in range(self._unpack("H", self._ensure_read(fp, 2))[0]):
-                tag, typ, count, data = self._unpack("HHL4s", self._ensure_read(fp, 12))
+            tag_count = (
+                self._unpack("Q", self._ensure_read(fp, 8))
+                if self._bigtiff
+                else self._unpack("H", self._ensure_read(fp, 2))
+            )[0]
+            for i in range(tag_count):
+                tag, typ, count, data = (
+                    self._unpack("HHQ8s", self._ensure_read(fp, 20))
+                    if self._bigtiff
+                    else self._unpack("HHL4s", self._ensure_read(fp, 12))
+                )
 
                 tagname = TiffTags.lookup(tag, self.group).name
                 typname = TYPES.get(typ, "unknown")
@@ -786,9 +805,9 @@ class ImageFileDirectory_v2(MutableMapping):
                     logger.debug(msg + f" - unsupported type {typ}")
                     continue  # ignore unsupported type
                 size = count * unit_size
-                if size > 4:
+                if size > (8 if self._bigtiff else 4):
                     here = fp.tell()
-                    (offset,) = self._unpack("L", data)
+                    (offset,) = self._unpack("Q" if self._bigtiff else "L", data)
                     msg += f" Tag Location: {here} - Data Location: {offset}"
                     fp.seek(offset)
                     data = ImageFile._safe_read(fp, size)
@@ -817,7 +836,11 @@ class ImageFileDirectory_v2(MutableMapping):
                 )
                 logger.debug(msg)
 
-            (self.next,) = self._unpack("L", self._ensure_read(fp, 4))
+            (self.next,) = (
+                self._unpack("Q", self._ensure_read(fp, 8))
+                if self._bigtiff
+                else self._unpack("L", self._ensure_read(fp, 4))
+            )
         except OSError as msg:
             warnings.warn(str(msg))
             return
@@ -1039,6 +1062,8 @@ class TiffImageFile(ImageFile.ImageFile):
 
         # Header
         ifh = self.fp.read(8)
+        if ifh[2] == 43:
+            ifh += self.fp.read(8)
 
         self.tag_v2 = ImageFileDirectory_v2(ifh)
 
@@ -1124,9 +1149,31 @@ class TiffImageFile(ImageFile.ImageFile):
         """
         Returns a dictionary containing the XMP tags.
         Requires defusedxml to be installed.
+
         :returns: XMP tags in a dictionary.
         """
         return self._getxmp(self.tag_v2[700]) if 700 in self.tag_v2 else {}
+
+    def get_photoshop_blocks(self):
+        """
+        Returns a dictionary of Photoshop "Image Resource Blocks".
+        The keys are the image resource ID. For more information, see
+        https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_pgfId-1037727
+
+        :returns: Photoshop "Image Resource Blocks" in a dictionary.
+        """
+        blocks = {}
+        val = self.tag_v2.get(0x8649)
+        if val:
+            while val[:4] == b"8BIM":
+                id = i16(val[4:6])
+                n = math.ceil((val[6] + 1) / 2) * 2
+                size = i32(val[6 + n : 10 + n])
+                data = val[10 + n : 10 + n + size]
+                blocks[id] = {"data": data}
+
+                val = val[math.ceil((10 + n + size) / 2) * 2 :]
+        return blocks
 
     def load(self):
         if self.tile and self.use_load_libtiff:
@@ -1136,13 +1183,13 @@ class TiffImageFile(ImageFile.ImageFile):
     def load_end(self):
         if self._tile_orientation:
             method = {
-                2: Image.FLIP_LEFT_RIGHT,
-                3: Image.ROTATE_180,
-                4: Image.FLIP_TOP_BOTTOM,
-                5: Image.TRANSPOSE,
-                6: Image.ROTATE_270,
-                7: Image.TRANSVERSE,
-                8: Image.ROTATE_90,
+                2: Image.Transpose.FLIP_LEFT_RIGHT,
+                3: Image.Transpose.ROTATE_180,
+                4: Image.Transpose.FLIP_TOP_BOTTOM,
+                5: Image.Transpose.TRANSPOSE,
+                6: Image.Transpose.ROTATE_270,
+                7: Image.Transpose.TRANSVERSE,
+                8: Image.Transpose.ROTATE_90,
             }.get(self._tile_orientation)
             if method is not None:
                 self.im = self.im.transpose(method)
@@ -1234,6 +1281,12 @@ class TiffImageFile(ImageFile.ImageFile):
             # UNDONE -- so much for that buffer size thing.
             n, err = decoder.decode(self.fp.read())
 
+        if fp:
+            try:
+                os.close(fp)
+            except OSError:
+                pass
+
         self.tile = []
         self.readonly = 0
 
@@ -1301,9 +1354,14 @@ class TiffImageFile(ImageFile.ImageFile):
         else:
             bps_count = 1
         bps_count += len(extra_tuple)
-        # Some files have only one value in bps_tuple,
-        # while should have more. Fix it
-        if bps_count > len(bps_tuple) and len(bps_tuple) == 1:
+        bps_actual_count = len(bps_tuple)
+        if bps_count < bps_actual_count:
+            # If a file has more values in bps_tuple than expected,
+            # remove the excess.
+            bps_tuple = bps_tuple[:bps_count]
+        elif bps_count > bps_actual_count and bps_actual_count == 1:
+            # If a file has only one value in bps_tuple, when it should have more,
+            # presume it is the same number of bits for all of the samples.
             bps_tuple = bps_tuple * bps_count
 
         samplesPerPixel = self.tag_v2.get(
@@ -1522,7 +1580,7 @@ def _save(im, fp, filename):
     libtiff = WRITE_LIBTIFF or compression != "raw"
 
     # required for color libtiff images
-    ifd[PLANAR_CONFIGURATION] = getattr(im, "_planar_configuration", 1)
+    ifd[PLANAR_CONFIGURATION] = 1
 
     ifd[IMAGEWIDTH] = im.size[0]
     ifd[IMAGELENGTH] = im.size[1]
@@ -1634,7 +1692,7 @@ def _save(im, fp, filename):
     strip_byte_counts = 1 if stride == 0 else stride * rows_per_strip
     strips_per_image = (im.size[1] + rows_per_strip - 1) // rows_per_strip
     ifd[ROWSPERSTRIP] = rows_per_strip
-    if strip_byte_counts >= 2 ** 16:
+    if strip_byte_counts >= 2**16:
         ifd.tagtype[STRIPBYTECOUNTS] = TiffTags.LONG
     ifd[STRIPBYTECOUNTS] = (strip_byte_counts,) * (strips_per_image - 1) + (
         stride * im.size[1] - strip_byte_counts * (strips_per_image - 1),

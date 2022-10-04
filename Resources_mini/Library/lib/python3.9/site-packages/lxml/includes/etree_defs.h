@@ -78,13 +78,6 @@
 #  define PyFile_AsFile(o)                   (NULL)
 #endif
 
-#if PY_VERSION_HEX <= 0x03030000 && !(defined(CYTHON_PEP393_ENABLED) && CYTHON_PEP393_ENABLED)
-  #define PyUnicode_IS_READY(op)    (0)
-  #define PyUnicode_GET_LENGTH(u)   PyUnicode_GET_SIZE(u)
-  #define PyUnicode_KIND(u)         (sizeof(Py_UNICODE))
-  #define PyUnicode_DATA(u)         ((void*)PyUnicode_AS_UNICODE(u))
-#endif
-
 #if IS_PYPY
 #  ifndef PyUnicode_FromFormat
 #    define PyUnicode_FromFormat  PyString_FromFormat
@@ -245,6 +238,12 @@ long _ftol2( double dblSource ) { return _ftol( dblSource ); }
 /* builtin subtype type checks are almost as fast as exact checks in Py2.7+
  * and Unicode is more common in Py3 */
 #define _isString(obj)   (PyUnicode_Check(obj) || PyBytes_Check(obj))
+#endif
+
+#if PY_VERSION_HEX >= 0x03060000
+#define lxml_PyOS_FSPath(obj) (PyOS_FSPath(obj))
+#else
+#define lxml_PyOS_FSPath(obj) (NULL)
 #endif
 
 #define _isElement(c_node) \

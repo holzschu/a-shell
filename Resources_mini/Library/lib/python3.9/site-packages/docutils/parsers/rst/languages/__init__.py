@@ -1,9 +1,9 @@
-# $Id: __init__.py 8467 2020-01-26 21:23:42Z milde $
+# $Id: __init__.py 9026 2022-03-04 15:57:13Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
 # Internationalization details are documented in
-# <http://docutils.sf.net/docs/howto/i18n.html>.
+# <https://docutils.sourceforge.io/docs/howto/i18n.html>.
 
 """
 This package contains modules for language-dependent features of
@@ -12,9 +12,9 @@ reStructuredText.
 
 __docformat__ = 'reStructuredText'
 
-import sys
 
 from docutils.languages import LanguageImporter
+
 
 class RstLanguageImporter(LanguageImporter):
     """Import language modules.
@@ -35,5 +35,6 @@ class RstLanguageImporter(LanguageImporter):
         if not (isinstance(module.directives, dict)
                 and isinstance(module.roles, dict)):
             raise ImportError
+
 
 get_language = RstLanguageImporter()

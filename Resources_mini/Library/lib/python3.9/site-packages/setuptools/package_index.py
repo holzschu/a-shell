@@ -680,8 +680,7 @@ class PackageIndex(Environment):
             # Make sure the file has been downloaded to the temp dir.
             if os.path.dirname(filename) != tmpdir:
                 dst = os.path.join(tmpdir, basename)
-                from setuptools.command.easy_install import samefile
-                if not samefile(filename, dst):
+                if not (os.path.exists(dst) and os.path.samefile(filename, dst)):
                     shutil.copy2(filename, dst)
                     filename = dst
 

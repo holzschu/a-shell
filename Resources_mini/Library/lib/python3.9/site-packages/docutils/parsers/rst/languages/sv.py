@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-# $Id: sv.py 8012 2017-01-03 23:08:19Z milde $
+# $Id: sv.py 9030 2022-03-05 23:28:32Z milde $
 # Author: Adam Chodorowski <chodorowski@users.sourceforge.net>
 # Copyright: This module has been placed in the public domain.
 
 # New language mappings are welcome.  Before doing a new translation, please
-# read <http://docutils.sf.net/docs/howto/i18n.html>.  Two files must be
-# translated for each language: one in docutils/languages, the other in
-# docutils/parsers/rst/languages.
+# read <https://docutils.sourceforge.io/docs/howto/i18n.html>.
+# Two files must be translated for each language: one in docutils/languages,
+# the other in docutils/parsers/rst/languages.
 
 """
 Swedish language mappings for language-dependent features of reStructuredText.
@@ -15,81 +14,83 @@ Swedish language mappings for language-dependent features of reStructuredText.
 __docformat__ = 'reStructuredText'
 
 directives = {
-      u'observera': 'attention',
-      u'akta': 'caution', # also 'försiktigt'
-      u'kod': 'code',
-      u'fara': 'danger',
-      u'fel': 'error',
-      u'vink': 'hint', # also 'hint'
-      u'viktigt': 'important',
-      u'notera': 'note',
-      u'tips': 'tip',
-      u'varning': 'warning',
-      u'anmärkning': 'admonition', # literal 'tillrättavisning', 'förmaning'
-      u'sidorad': 'sidebar',
-      u'ämne': 'topic',
-      u'tema': 'topic',
-      u'rad-block': 'line-block',
-      u'parsed-literal (translation required)': 'parsed-literal', # 'tolkad-bokstavlig'?
-      u'rubrik': 'rubric',
-      u'epigraf': 'epigraph',
-      u'höjdpunkter': 'highlights',
-      u'pull-quote (translation required)': 'pull-quote',
-      u'sammansatt': 'compound',
-      u'container': 'container',
-      # u'frågor': 'questions',
+      'observera': 'attention',
+      'akta': 'caution',  # also 'försiktigt'
+      'kod': 'code',
+      'fara': 'danger',
+      'fel': 'error',
+      'vink': 'hint',  # also 'hint'
+      'viktigt': 'important',
+      'notera': 'note',
+      'tips': 'tip',
+      'varning': 'warning',
+      'anmärkning': 'admonition',  # literal 'tillrättavisning', 'förmaning'
+      'sidorad': 'sidebar',
+      'ämne': 'topic',
+      'tema': 'topic',
+      'rad-block': 'line-block',
+      # 'tolkad-bokstavlig'?
+      'parsed-literal (translation required)': 'parsed-literal',
+      'rubrik': 'rubric',
+      'epigraf': 'epigraph',
+      'höjdpunkter': 'highlights',
+      'pull-quote (translation required)': 'pull-quote',
+      'sammansatt': 'compound',
+      'container': 'container',
+      # 'frågor': 'questions',
       # NOTE: A bit long, but recommended by http://www.nada.kth.se/dataterm/:
-      # u'frågor-och-svar': 'questions',
-      # u'vanliga-frågor': 'questions',
-      u'tabell': 'table',
-      u'csv-tabell': 'csv-table',
-      u'list-tabell': 'list-table',
-      u'meta': 'meta',
-      u'matematik': 'math',
-      # u'bildkarta': 'imagemap',   # FIXME: Translation might be too literal.
-      u'bild': 'image',
-      u'figur': 'figure',
-      u'inkludera': 'include',
-      u'rå': 'raw',
-      u'ersätta': 'replace',
-      u'unicode': 'unicode',
-      u'datum': 'date',
-      u'klass': 'class',
-      u'roll': 'role',
-      u'standardroll': 'default-role',
-      u'titel': 'title',
-      u'innehåll': 'contents',
-      u'sektionsnumrering': 'sectnum',
-      u'target-notes (translation required)': 'target-notes',
-      u'sidhuvud': 'header',
-      u'sidfot': 'footer',
-      # u'fotnoter': 'footnotes',
-      # u'citeringar': 'citations',
+      # 'frågor-och-svar': 'questions',
+      # 'vanliga-frågor': 'questions',
+      'tabell': 'table',
+      'csv-tabell': 'csv-table',
+      'list-tabell': 'list-table',
+      'meta': 'meta',
+      'matematik': 'math',
+      # 'bildkarta': 'imagemap',  # FIXME: Translation might be too literal.
+      'bild': 'image',
+      'figur': 'figure',
+      'inkludera': 'include',
+      'rå': 'raw',
+      'ersätta': 'replace',
+      'unicode': 'unicode',
+      'datum': 'date',
+      'klass': 'class',
+      'roll': 'role',
+      'standardroll': 'default-role',
+      'titel': 'title',
+      'innehåll': 'contents',
+      'sektionsnumrering': 'sectnum',
+      'target-notes (translation required)': 'target-notes',
+      'sidhuvud': 'header',
+      'sidfot': 'footer',
+      # 'fotnoter': 'footnotes',
+      # 'citeringar': 'citations',
       }
 """Swedish name to registered (in directives/__init__.py) directive name
 mapping."""
 
 roles = {
-      u'förkortning': 'abbreviation',
-      u'akronym': 'acronym',
-      u'kod': 'code',
-      u'index': 'index',
-      u'nedsänkt': 'subscript',
-      u'upphöjd': 'superscript',
-      u'titel-referens': 'title-reference',
-      u'pep-referens': 'pep-reference',
-      u'rfc-referens': 'rfc-reference',
-      u'betoning': 'emphasis',
-      u'stark': 'strong',
-      u'bokstavlig': 'literal', # also 'ordagranna'
-      u'matematik': 'math',
-      u'namngiven-referens': 'named-reference',
-      u'anonym-referens': 'anonymous-reference',
-      u'fotnot-referens': 'footnote-reference',
-      u'citat-referens': 'citation-reference',
-      u'ersättnings-referens': 'substitution-reference',
-      u'mål': 'target',
-      u'uri-referens': 'uri-reference',
-      u'rå': 'raw',}
+      'förkortning': 'abbreviation',
+      'akronym': 'acronym',
+      'kod': 'code',
+      'index': 'index',
+      'nedsänkt': 'subscript',
+      'upphöjd': 'superscript',
+      'titel-referens': 'title-reference',
+      'pep-referens': 'pep-reference',
+      'rfc-referens': 'rfc-reference',
+      'betoning': 'emphasis',
+      'stark': 'strong',
+      'bokstavlig': 'literal',  # also 'ordagranna'
+      'matematik': 'math',
+      'namngiven-referens': 'named-reference',
+      'anonym-referens': 'anonymous-reference',
+      'fotnot-referens': 'footnote-reference',
+      'citat-referens': 'citation-reference',
+      'ersättnings-referens': 'substitution-reference',
+      'mål': 'target',
+      'uri-referens': 'uri-reference',
+      'rå': 'raw',
+      }
 """Mapping of Swedish role names to canonical role names for interpreted text.
 """

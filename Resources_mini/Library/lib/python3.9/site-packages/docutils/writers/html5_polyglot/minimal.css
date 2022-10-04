@@ -1,7 +1,7 @@
 /* Minimal style sheet for the HTML output of Docutils.                    */
 /*                                                                         */
 /* :Author: Günter Milde, based on html4css1.css by David Goodger          */
-/* :Id: $Id: minimal.css 8783 2021-06-30 07:47:46Z milde $                                                               */
+/* :Id: $Id: minimal.css 9079 2022-06-19 14:00:56Z milde $                                                               */
 /* :Copyright: © 2015, 2021 Günter Milde.                                  */
 /* :License: Released under the terms of the `2-Clause BSD license`_,      */
 /*    in short:                                                            */
@@ -151,10 +151,10 @@ span.option { white-space: nowrap; }
 /* hanging indent */
 .citation { padding-left: 2em; }
 .footnote { padding-left: 1.7em; }
-.footnote.superscript { padding-left: 0.9em; }
+.footnote.superscript { padding-left: 1.0em; }
 .citation > .label { margin-left: -2em; }
 .footnote > .label { margin-left: -1.7em; }
-.footnote.superscript > .label { margin-left: -0.9em; }
+.footnote.superscript > .label { margin-left: -1.0em; }
 
 .footnote > .label + *,
 .citation > .label + * {
@@ -172,6 +172,7 @@ span.option { white-space: nowrap; }
   vertical-align: inherit;
 }
 
+.backrefs { user-select: none; }
 .backrefs > a { font-style: italic; }
 
 /* superscript footnotes */

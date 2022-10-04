@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-# $Id: lv.py 7975 2016-10-20 20:00:19Z milde $
+# $Id: lv.py 9030 2022-03-05 23:28:32Z milde $
 # Copyright: This module has been placed in the public domain.
 
 # New language mappings are welcome.  Before doing a new translation, please
-# read <http://docutils.sf.net/docs/howto/i18n.html>.  Two files must be
-# translated for each language: one in docutils/languages, the other in
-# docutils/parsers/rst/languages.
+# read <https://docutils.sourceforge.io/docs/howto/i18n.html>.
+# Two files must be translated for each language: one in docutils/languages,
+# the other in docutils/parsers/rst/languages.
 
 """
 Latvian-language mappings for language-dependent features of
@@ -40,15 +39,15 @@ directives = {
       'izvilkuma-citāts': 'pull-quote',
       'savienojums': 'compound',
       'konteiners': 'container',
-      #'questions': 'questions',
+      # 'questions': 'questions',
       'tabula': 'table',
       'csv-tabula': 'csv-table',
       'sarakstveida-tabula': 'list-table',
-      #'qa': 'questions',
-      #'faq': 'questions',
+      # 'qa': 'questions',
+      # 'faq': 'questions',
       'meta': 'meta',
       'matemātika': 'math',
-      #'imagemap': 'imagemap',
+      # 'imagemap': 'imagemap',
       'attēls': 'image',
       'figūra': 'figure',
       'ietvert': 'include',
@@ -64,8 +63,8 @@ directives = {
       'numurēt-sekcijas': 'sectnum',
       'galvene': 'header',
       'kājene': 'footer',
-      #'footnotes': 'footnotes',
-      #'citations': 'citations',
+      # 'footnotes': 'footnotes',
+      # 'citations': 'citations',
       'atsauces-apakšā': 'target-notes',
       'restructuredtext-testa-direktīva': 'restructuredtext-test-directive'}
 """English name to registered (in directives/__init__.py) directive name
@@ -103,6 +102,7 @@ roles = {
     'atsauce-uz-uri': 'uri-reference',
     'uri': 'uri-reference',
     'url': 'uri-reference',
-    'burtiski': 'raw',}
+    'burtiski': 'raw',
+    }
 """Mapping of English role names to canonical role names for interpreted text.
 """

@@ -1,11 +1,11 @@
-# $Id: eo.py 4564 2006-05-21 20:44:42Z wiemann $
+# $Id: eo.py 9030 2022-03-05 23:28:32Z milde $
 # Author: Marcelo Huerta San Martin <richieadler@users.sourceforge.net>
 # Copyright: This module has been placed in the public domain.
 
 # New language mappings are welcome.  Before doing a new translation, please
-# read <http://docutils.sf.net/docs/howto/i18n.html>.  Two files must be
-# translated for each language: one in docutils/languages, the other in
-# docutils/parsers/rst/languages.
+# read <https://docutils.sourceforge.io/docs/howto/i18n.html>.
+# Two files must be translated for each language: one in docutils/languages,
+# the other in docutils/parsers/rst/languages.
 
 """
 Esperanto-language mappings for language-dependent features of Docutils.
@@ -15,29 +15,29 @@ __docformat__ = 'reStructuredText'
 
 labels = {
       # fixed: language-dependent
-      'author': u'A\u016dtoro',
-      'authors': u'A\u016dtoroj',
-      'organization': u'Organizo',
-      'address': u'Adreso',
-      'contact': u'Kontakto',
-      'version': u'Versio',
-      'revision': u'Revido',
-      'status': u'Stato',
-      'date': u'Dato',
-      # 'copyright': u'Kopirajto',
-      'copyright': u'A\u016dtorrajto',
-      'dedication': u'Dedi\u0109o',
-      'abstract': u'Resumo',
-      'attention': u'Atentu!',
-      'caution': u'Zorgu!',
-      'danger': u'DAN\u011cERO!',
-      'error': u'Eraro',
-      'hint': u'Spuro',
-      'important': u'Grava',
-      'note': u'Noto',
-      'tip': u'Helpeto',
-      'warning': u'Averto',
-      'contents': u'Enhavo'}
+      'author': 'A\u016dtoro',
+      'authors': 'A\u016dtoroj',
+      'organization': 'Organizo',
+      'address': 'Adreso',
+      'contact': 'Kontakto',
+      'version': 'Versio',
+      'revision': 'Revido',
+      'status': 'Stato',
+      'date': 'Dato',
+      # 'copyright': 'Kopirajto',
+      'copyright': 'A\u016dtorrajto',
+      'dedication': 'Dedi\u0109o',
+      'abstract': 'Resumo',
+      'attention': 'Atentu!',
+      'caution': 'Zorgu!',
+      'danger': 'DAN\u011cERO!',
+      'error': 'Eraro',
+      'hint': 'Spuro',
+      'important': 'Grava',
+      'note': 'Noto',
+      'tip': 'Helpeto',
+      'warning': 'Averto',
+      'contents': 'Enhavo'}
 """Mapping of node class name to label text."""
 
 bibliographic_fields = {

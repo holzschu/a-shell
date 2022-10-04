@@ -1,4 +1,4 @@
-# $Id: __init__.py 8673 2021-04-07 17:57:27Z milde $
+# $Id: __init__.py 9037 2022-03-05 23:31:10Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -8,13 +8,12 @@ This package contains Docutils Writer modules.
 
 __docformat__ = 'reStructuredText'
 
-import os.path
-import sys
 from importlib import import_module
 
 import docutils
 from docutils import languages, Component
 from docutils.transforms import universal
+
 
 class Writer(Component):
 
@@ -33,9 +32,9 @@ class Writer(Component):
 
     def get_transforms(self):
         return Component.get_transforms(self) + [
-            universal.Messages,
-            universal.FilterMessages,
-            universal.StripClassesAndElements,]
+                   universal.Messages,
+                   universal.FilterMessages,
+                   universal.StripClassesAndElements]
 
     document = None
     """The document to write (Docutils doctree); set by `write`."""
@@ -76,8 +75,7 @@ class Writer(Component):
             document.reporter)
         self.destination = destination
         self.translate()
-        output = self.destination.write(self.output)
-        return output
+        return self.destination.write(self.output)
 
     def translate(self):
         """
@@ -128,26 +126,26 @@ _writer_aliases = {
       'xelatex': 'xetex',
       'luatex': 'xetex',
       'lualatex': 'xetex',
-      'odf': 'odf_odt',                   
-      'odt': 'odf_odt',                   
-      'ooffice': 'odf_odt',                   
-      'openoffice': 'odf_odt',                   
-      'libreoffice': 'odf_odt',                   
+      'odf': 'odf_odt',
+      'odt': 'odf_odt',
+      'ooffice': 'odf_odt',
+      'openoffice': 'odf_odt',
+      'libreoffice': 'odf_odt',
       'pprint': 'pseudoxml',
       'pformat': 'pseudoxml',
       'pdf': 'rlpdf',
       'xml': 'docutils_xml'}
 
+
 def get_writer_class(writer_name):
     """Return the Writer class from the `writer_name` module."""
-    writer_name = writer_name.lower()
-    if writer_name in _writer_aliases:
-        writer_name = _writer_aliases[writer_name]
+    name = writer_name.lower()
+    name = _writer_aliases.get(name, name)
     try:
-        module = import_module('docutils.writers.'+writer_name)
+        module = import_module('docutils.writers.'+name)
     except ImportError:
         try:
-            module = import_module(writer_name)
+            module = import_module(name)
         except ImportError as err:
-            raise ImportError('No writer named "%s".' % writer_name) 
+            raise ImportError(f'Writer "{writer_name}" not found. {err}')
     return module.Writer

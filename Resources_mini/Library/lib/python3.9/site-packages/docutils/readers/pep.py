@@ -1,4 +1,4 @@
-# $Id: pep.py 7320 2012-01-19 22:33:02Z milde $
+# $Id: pep.py 9037 2022-03-05 23:31:10Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -10,7 +10,7 @@ __docformat__ = 'reStructuredText'
 
 
 from docutils.readers import standalone
-from docutils.transforms import peps, references, misc, frontmatter
+from docutils.transforms import peps, frontmatter
 from docutils.parsers import rst
 
 

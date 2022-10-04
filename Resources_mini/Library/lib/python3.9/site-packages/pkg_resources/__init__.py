@@ -83,6 +83,7 @@ __import__('pkg_resources.extern.packaging.version')
 __import__('pkg_resources.extern.packaging.specifiers')
 __import__('pkg_resources.extern.packaging.requirements')
 __import__('pkg_resources.extern.packaging.markers')
+__import__('pkg_resources.extern.packaging.utils')
 
 if sys.version_info < (3, 5):
     raise RuntimeError("Python 3.5 or later is required")
@@ -554,6 +555,7 @@ class WorkingSet:
         self.entries = []
         self.entry_keys = {}
         self.by_key = {}
+        self.normalized_to_canonical_keys = {}
         self.callbacks = []
 
         if entries is None:
@@ -634,6 +636,14 @@ class WorkingSet:
         is returned.
         """
         dist = self.by_key.get(req.key)
+
+        if dist is None:
+            canonical_key = self.normalized_to_canonical_keys.get(req.key)
+
+            if canonical_key is not None:
+                req.key = canonical_key
+                dist = self.by_key.get(canonical_key)
+
         if dist is not None and dist not in req:
             # XXX add more info
             raise VersionConflict(dist, req)
@@ -702,6 +712,8 @@ class WorkingSet:
             return
 
         self.by_key[dist.key] = dist
+        normalized_name = packaging.utils.canonicalize_name(dist.key)
+        self.normalized_to_canonical_keys[normalized_name] = dist.key
         if dist.key not in keys:
             keys.append(dist.key)
         if dist.key not in keys2:
@@ -922,14 +934,15 @@ class WorkingSet:
     def __getstate__(self):
         return (
             self.entries[:], self.entry_keys.copy(), self.by_key.copy(),
-            self.callbacks[:]
+            self.normalized_to_canonical_keys.copy(), self.callbacks[:]
         )
 
-    def __setstate__(self, e_k_b_c):
-        entries, keys, by_key, callbacks = e_k_b_c
+    def __setstate__(self, e_k_b_n_c):
+        entries, keys, by_key, normalized_to_canonical_keys, callbacks = e_k_b_n_c
         self.entries = entries[:]
         self.entry_keys = keys.copy()
         self.by_key = by_key.copy()
+        self.normalized_to_canonical_keys = normalized_to_canonical_keys.copy()
         self.callbacks = callbacks[:]
 
 

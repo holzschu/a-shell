@@ -1,4 +1,4 @@
-# $Id: __init__.py 8671 2021-04-07 12:09:51Z milde $
+# $Id: __init__.py 9048 2022-03-29 21:50:15Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -8,7 +8,6 @@ This package contains Docutils parser modules.
 
 __docformat__ = 'reStructuredText'
 
-import sys
 from importlib import import_module
 
 from docutils import Component, frontend
@@ -40,7 +39,8 @@ class Parser(Component):
           ['--line-length-limit'],
           {'metavar': '<length>', 'type': 'int', 'default': 10000,
            'validator': frontend.validate_nonnegative_int}),
-        ))
+         )
+        )
     component_type = 'parser'
     config_section = 'parsers'
 
@@ -64,22 +64,29 @@ class Parser(Component):
             self.document.note_parse_message)
 
 
-_parser_aliases = {
-      'restructuredtext': 'rst',
-      'rest': 'rst',
-      'restx': 'rst',
-      'rtxt': 'rst',
-      'recommonmark': 'recommonmark_wrapper',
-      'commonmark': 'recommonmark_wrapper',
-      'markdown': 'recommonmark_wrapper'}
+_parser_aliases = {  # short names for known parsers
+                   'null': 'docutils.parsers.null',
+                   # reStructuredText
+                   'rst': 'docutils.parsers.rst',
+                   'restructuredtext': 'docutils.parsers.rst',
+                   'rest': 'docutils.parsers.rst',
+                   'restx': 'docutils.parsers.rst',
+                   'rtxt': 'docutils.parsers.rst',
+                   # 3rd-party Markdown parsers
+                   'recommonmark': 'docutils.parsers.recommonmark_wrapper',
+                   'myst': 'myst_parser.docutils_',
+                   # 'pycmark': works out of the box
+                   # dispatcher for 3rd-party Markdown parsers
+                   'commonmark': 'docutils.parsers.commonmark_wrapper',
+                   'markdown': 'docutils.parsers.commonmark_wrapper',
+                  }
+
 
 def get_parser_class(parser_name):
     """Return the Parser class from the `parser_name` module."""
-    parser_name = parser_name.lower()
-    if parser_name in _parser_aliases:
-        parser_name = _parser_aliases[parser_name]
+    name = parser_name.lower()
     try:
-        module = import_module('docutils.parsers.'+parser_name)
-    except ImportError:
-        module = import_module(parser_name)
+        module = import_module(_parser_aliases.get(name, name))
+    except ImportError as err:
+        raise ImportError(f'Parser "{parser_name}" not found. {err}')
     return module.Parser

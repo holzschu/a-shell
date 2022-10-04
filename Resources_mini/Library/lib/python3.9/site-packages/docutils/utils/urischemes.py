@@ -1,4 +1,4 @@
-# $Id: urischemes.py 8376 2019-08-27 19:49:29Z milde $
+# $Id: urischemes.py 9030 2022-03-05 23:28:32Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -6,7 +6,7 @@
 `schemes` is a dictionary with lowercase URI addressing schemes as
 keys and descriptions as values. It was compiled from the index at
 http://www.iana.org/assignments/uri-schemes (revised 2005-11-28)
-and an older list at http://www.w3.org/Addressing/schemes.html.
+and an older list at https://www.w3.org/Addressing/schemes.html.
 """
 
 # Many values are blank and should be filled in with useful descriptions.
@@ -50,7 +50,8 @@ schemes = {
       'hnews': 'an HTTP-tunneling variant of the NNTP news protocol',
       'http': 'Hypertext Transfer Protocol; RFC 2616',
       'https': 'HTTP over SSL; RFC 2818',
-      'hydra': 'SubEthaEdit URI.  See http://www.codingmonkeys.de/subethaedit.',
+      'hydra': ('SubEthaEdit URI. '
+                'See http://www.codingmonkeys.de/subethaedit.'),
       'iioploc': 'Internet Inter-ORB Protocol Location?',
       'ilu': 'Inter-Language Unification',
       'im': 'Instant Messaging; RFC 3860',
@@ -62,8 +63,8 @@ schemes = {
       'iris.beep': 'iris.beep; RFC 3983',
       'iseek': 'See www.ambrosiasw.com;  a little util for OS X.',
       'jar': 'Java archive',
-      'javascript': ('JavaScript code; evaluates the expression after the '
-                     'colon'),
+      'javascript': ('JavaScript code; '
+                     'evaluates the expression after the colon'),
       'jdbc': 'JDBC connection URI.',
       'ldap': 'Lightweight Directory Access Protocol',
       'lifn': '',
@@ -90,7 +91,7 @@ schemes = {
       'printer': '',
       'prospero': 'Prospero Directory Service; RFC 4157',
       'rdar': ('URLs found in Darwin source '
-                '(http://www.opensource.apple.com/darwinsource/).'),
+               '(http://www.opensource.apple.com/darwinsource/).'),
       'res': '',
       'rtsp': 'real time streaming protocol; RFC 2326',
       'rvp': '',
@@ -133,4 +134,5 @@ schemes = {
       'xmlrpc.beep': 'RFC 3529',
       'xmlrpc.beeps': 'RFC 3529',
       'z39.50r': 'Z39.50 Retrieval; RFC 2056',
-      'z39.50s': 'Z39.50 Session; RFC 2056',}
+      'z39.50s': 'Z39.50 Session; RFC 2056',
+      }

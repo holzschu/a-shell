@@ -1053,9 +1053,9 @@ class AggregatingLocator(Locator):
 
 
 # We use a legacy scheme simply because most of the dists on PyPI use legacy
-# versions which don't conform to PEP 426 / PEP 440.
+# versions which don't conform to PEP 440.
 default_locator = AggregatingLocator(
-                    JSONLocator(),
+                    # JSONLocator(), # don't use as PEP 426 is withdrawn
                     SimpleScrapingLocator('https://pypi.org/simple/',
                                           timeout=3.0),
                     scheme='legacy')

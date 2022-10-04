@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Author: David Goodger
 # Contact: goodger@users.sourceforge.net
 # Revision: $Revision: 2224 $
@@ -6,9 +5,9 @@
 # Copyright: This module has been placed in the public domain.
 
 # New language mappings are welcome.  Before doing a new translation, please
-# read <http://docutils.sf.net/docs/howto/i18n.html>.  Two files must be
-# translated for each language: one in docutils/languages, the other in
-# docutils/parsers/rst/languages.
+# read <https://docutils.sourceforge.io/docs/howto/i18n.html>.
+# Two files must be translated for each language: one in docutils/languages,
+# the other in docutils/parsers/rst/languages.
 
 """
 Galician-language mappings for language-dependent features of Docutils.
@@ -18,44 +17,44 @@ __docformat__ = 'reStructuredText'
 
 labels = {
       # fixed: language-dependent
-      'author': u'Autor',
-      'authors': u'Autores',
-      'organization': u'Organizaci\u00f3n',
-      'address': u'Enderezo',
-      'contact': u'Contacto',
-      'version': u'Versi\u00f3n',
-      'revision': u'Revisi\u00f3n',
-      'status': u'Estado',
-      'date': u'Data',
-      'copyright': u'Dereitos de copia',
-      'dedication': u'Dedicatoria',
-      'abstract': u'Abstract',
-      'attention': u'Atenci\u00f3n!',
-      'caution': u'Advertencia!',
-      'danger': u'PERIGO!',
-      'error': u'Erro',
-      'hint': u'Consello',
-      'important': u'Importante',
-      'note': u'Nota',
-      'tip': u'Suxesti\u00f3n',
-      'warning': u'Aviso',
-      'contents': u'Contido'}
+      'author': 'Autor',
+      'authors': 'Autores',
+      'organization': 'Organizaci\u00f3n',
+      'address': 'Enderezo',
+      'contact': 'Contacto',
+      'version': 'Versi\u00f3n',
+      'revision': 'Revisi\u00f3n',
+      'status': 'Estado',
+      'date': 'Data',
+      'copyright': 'Dereitos de copia',
+      'dedication': 'Dedicatoria',
+      'abstract': 'Abstract',
+      'attention': 'Atenci\u00f3n!',
+      'caution': 'Advertencia!',
+      'danger': 'PERIGO!',
+      'error': 'Erro',
+      'hint': 'Consello',
+      'important': 'Importante',
+      'note': 'Nota',
+      'tip': 'Suxesti\u00f3n',
+      'warning': 'Aviso',
+      'contents': 'Contido'}
 """Mapping of node class name to label text."""
 
 bibliographic_fields = {
       # language-dependent: fixed
-      u'autor': 'author',
-      u'autores': 'authors',
-      u'organizaci\u00f3n': 'organization',
-      u'enderezo': 'address',
-      u'contacto': 'contact',
-      u'versi\u00f3n': 'version',
-      u'revisi\u00f3n': 'revision',
-      u'estado': 'status',
-      u'data': 'date',
-      u'dereitos de copia': 'copyright',
-      u'dedicatoria': 'dedication',
-      u'abstract': 'abstract'}
+      'autor': 'author',
+      'autores': 'authors',
+      'organizaci\u00f3n': 'organization',
+      'enderezo': 'address',
+      'contacto': 'contact',
+      'versi\u00f3n': 'version',
+      'revisi\u00f3n': 'revision',
+      'estado': 'status',
+      'data': 'date',
+      'dereitos de copia': 'copyright',
+      'dedicatoria': 'dedication',
+      'abstract': 'abstract'}
 """Galician (lowcased) to canonical name mapping for bibliographic fields."""
 
 author_separators = [';', ',']

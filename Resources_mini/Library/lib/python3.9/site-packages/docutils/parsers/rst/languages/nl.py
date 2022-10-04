@@ -1,11 +1,11 @@
-# $Id: nl.py 7119 2011-09-02 13:00:23Z milde $
+# $Id: nl.py 9030 2022-03-05 23:28:32Z milde $
 # Author: Martijn Pieters <mjpieters@users.sourceforge.net>
 # Copyright: This module has been placed in the public domain.
 
 # New language mappings are welcome.  Before doing a new translation, please
-# read <http://docutils.sf.net/docs/howto/i18n.html>.  Two files must be
-# translated for each language: one in docutils/languages, the other in
-# docutils/parsers/rst/languages.
+# read <https://docutils.sourceforge.io/docs/howto/i18n.html>.
+# Two files must be translated for each language: one in docutils/languages,
+# the other in docutils/parsers/rst/languages.
 
 """
 Dutch-language mappings for language-dependent features of
@@ -35,18 +35,18 @@ directives = {
       'rubriek': 'rubric',
       'opschrift': 'epigraph',
       'hoogtepunten': 'highlights',
-      'pull-quote': 'pull-quote', # Dutch printers use the english term
+      'pull-quote': 'pull-quote',  # Dutch printers use the english term
       'samenstelling': 'compound',
       'verbinding': 'compound',
-      u'container (translation required)': 'container',
-      #'vragen': 'questions',
+      'container (translation required)': 'container',
+      # 'vragen': 'questions',
       'tabel': 'table',
       'csv-tabel': 'csv-table',
       'lijst-tabel': 'list-table',
-      #'veelgestelde-vragen': 'questions',
+      # 'veelgestelde-vragen': 'questions',
       'meta': 'meta',
       'math (translation required)': 'math',
-      #'imagemap': 'imagemap',
+      # 'imagemap': 'imagemap',
       'beeld': 'image',
       'figuur': 'figure',
       'opnemen': 'include',
@@ -57,16 +57,16 @@ directives = {
       'datum': 'date',
       'klasse': 'class',
       'rol': 'role',
-      u'default-role (translation required)': 'default-role',
+      'default-role (translation required)': 'default-role',
       'title (translation required)': 'title',
       'inhoud': 'contents',
       'sectnum': 'sectnum',
       'sectie-nummering': 'sectnum',
       'hoofdstuk-nummering': 'sectnum',
-      u'header (translation required)': 'header',
-      u'footer (translation required)': 'footer',
-      #'voetnoten': 'footnotes',
-      #'citaten': 'citations',
+      'header (translation required)': 'header',
+      'footer (translation required)': 'footer',
+      # 'voetnoten': 'footnotes',
+      # 'citaten': 'citations',
       'verwijzing-voetnoten': 'target-notes',
       'restructuredtext-test-instructie': 'restructuredtext-test-directive'}
 """Dutch name to registered (in directives/__init__.py) directive name
@@ -78,7 +78,7 @@ roles = {
     # 'ab': 'abbreviation',
     'acroniem': 'acronym',
     'ac': 'acronym',
-    u'code (translation required)': 'code',
+    'code (translation required)': 'code',
     'index': 'index',
     'i': 'index',
     'inferieur': 'subscript',
@@ -107,6 +107,7 @@ roles = {
     'uri-referentie': 'uri-reference',
     'uri': 'uri-reference',
     'url': 'uri-reference',
-    'onbewerkt': 'raw',}
+    'onbewerkt': 'raw',
+    }
 """Mapping of Dutch role names to canonical role names for interpreted text.
 """

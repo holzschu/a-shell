@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-# $Id: ko.py 8541 2020-08-22 22:16:25Z milde $
+# $Id: ko.py 9030 2022-03-05 23:28:32Z milde $
 # Author: Thomas SJ Kang <thomas.kangsj@ujuc.kr>
 # Copyright: This module has been placed in the public domain.
 
 # New language mappings are welcome.  Before doing a new translation, please
-# read <http://docutils.sf.net/docs/howto/i18n.html>.  Two files must be
-# translated for each language: one in docutils/languages, the other in
-# docutils/parsers/rst/languages.
+# read <https://docutils.sourceforge.io/docs/howto/i18n.html>.
+# Two files must be translated for each language: one in docutils/languages,
+# the other in docutils/parsers/rst/languages.
 
 """
 Korean-language mappings for language-dependent features of Docutils.
@@ -16,44 +15,44 @@ __docformat__ = 'reStructuredText'
 
 labels = {
       # fixed: language-dependent
-      'author': u'저자',
-      'authors': u'저자들',
-      'organization': u'조직',
-      'address': u'주소',
-      'contact': u'연락처',
-      'version': u'버전',
-      'revision': u'리비전',
-      'status': u'상태',
-      'date': u'날짜',
-      'copyright': u'저작권',
-      'dedication': u'헌정',
-      'abstract': u'요약',
-      'attention': u'집중!',
-      'caution': u'주의!',
-      'danger': u'!위험!',
-      'error': u'오류',
-      'hint': u'실마리',
-      'important': u'중요한',
-      'note': u'비고',
-      'tip': u'팁',
-      'warning': u'경고',
-      'contents': u'목차'}
+      'author': '저자',
+      'authors': '저자들',
+      'organization': '조직',
+      'address': '주소',
+      'contact': '연락처',
+      'version': '버전',
+      'revision': '리비전',
+      'status': '상태',
+      'date': '날짜',
+      'copyright': '저작권',
+      'dedication': '헌정',
+      'abstract': '요약',
+      'attention': '집중!',
+      'caution': '주의!',
+      'danger': '!위험!',
+      'error': '오류',
+      'hint': '실마리',
+      'important': '중요한',
+      'note': '비고',
+      'tip': '팁',
+      'warning': '경고',
+      'contents': '목차'}
 """Mapping of node class name to label text."""
 
 bibliographic_fields = {
       # language-dependent: fixed
-      u'저자': 'author',
-      u'저자들': 'authors',
-      u'조직': 'organization',
-      u'주소': 'address',
-      u'연락처': 'contact',
-      u'버전': 'version',
-      u'리비전': 'revision',
-      u'상태': 'status',
-      u'날짜': 'date',
-      u'저작권': 'copyright',
-      u'헌정': 'dedication',
-      u'요약': 'abstract'}
+      '저자': 'author',
+      '저자들': 'authors',
+      '조직': 'organization',
+      '주소': 'address',
+      '연락처': 'contact',
+      '버전': 'version',
+      '리비전': 'revision',
+      '상태': 'status',
+      '날짜': 'date',
+      '저작권': 'copyright',
+      '헌정': 'dedication',
+      '요약': 'abstract'}
 """Korean to canonical name mapping for bibliographic fields."""
 
 author_separators = [';', ',']

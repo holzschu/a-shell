@@ -1623,11 +1623,11 @@ class FileFinder:
                             "astropy.io.votable.tablewriter",
                             "astropy.utils._compiler",
                             "astropy.utils.xml._iterparser",
-                            "astropy.modeling._projections",
+                            # "astropy.modeling._projections",
                             "astropy.time._parse_times",
                             "astropy.table._np_utils",
                             "astropy.table._column_mixins",
-                            "astropy.cosmology.scalar_inv_efuncs",
+                            "astropy.cosmology.flrw.scalar_inv_efuncs",
                             "astropy.convolution._convolve",
                             "astropy.stats._fast_sigma_clip", 
                             "astropy.stats._stats"]:
@@ -1756,7 +1756,7 @@ class FileFinder:
                             "pyproj._sync"]:
                         frameworkName = pythonName + "-" + "pyproj_all"
                     elif fullname in ["rasterio._fill",
-                            "rasterio._crs",
+                            "rasterio.crs",
                             "rasterio._err",
                             "rasterio._warp",
                             "rasterio._transform",
@@ -1765,6 +1765,8 @@ class FileFinder:
                             "rasterio._base",
                             "rasterio.shutil",
                             "rasterio._env",
+                            "rasterio._version",
+                            "rasterio._filepath",
                             "rasterio._features"]:
                         frameworkName = pythonName + "-" + "rasterio_all"
                     else:

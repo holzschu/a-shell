@@ -1,22 +1,22 @@
-from subprocess import Popen, PIPE
 import sys
+from subprocess import PIPE, Popen
 
 
 def get_output_error_code(cmd):
     """Get stdout, stderr, and exit code from running a command"""
     p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     out, err = p.communicate()
-    out = out.decode('utf8', 'replace')
-    err = err.decode('utf8', 'replace')
+    out = out.decode("utf8", "replace")
+    err = err.decode("utf8", "replace")
     return out, err, p.returncode
 
 
 def check_help_output(pkg, subcommand=None):
     """test that `python -m PKG [subcommand] -h` works"""
-    cmd = [sys.executable, '-m', pkg]
+    cmd = [sys.executable, "-m", pkg]
     if subcommand:
         cmd.extend(subcommand)
-    cmd.append('-h')
+    cmd.append("-h")
     out, err, rc = get_output_error_code(cmd)
     assert rc == 0, err
     assert "Traceback" not in err
@@ -27,10 +27,10 @@ def check_help_output(pkg, subcommand=None):
 
 def check_help_all_output(pkg, subcommand=None):
     """test that `python -m PKG --help-all` works"""
-    cmd = [sys.executable, '-m', pkg]
+    cmd = [sys.executable, "-m", pkg]
     if subcommand:
         cmd.extend(subcommand)
-    cmd.append('--help-all')
+    cmd.append("--help-all")
     out, err, rc = get_output_error_code(cmd)
     assert rc == 0, err
     assert "Traceback" not in err

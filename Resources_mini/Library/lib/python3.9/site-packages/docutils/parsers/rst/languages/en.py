@@ -1,11 +1,11 @@
-# $Id: en.py 7179 2011-10-15 22:06:45Z milde $
+# $Id: en.py 9030 2022-03-05 23:28:32Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
 # New language mappings are welcome.  Before doing a new translation, please
-# read <http://docutils.sf.net/docs/howto/i18n.html>.  Two files must be
-# translated for each language: one in docutils/languages, the other in
-# docutils/parsers/rst/languages.
+# read <https://docutils.sourceforge.io/docs/howto/i18n.html>.
+# Two files must be translated for each language: one in docutils/languages,
+# the other in docutils/parsers/rst/languages.
 
 """
 English-language mappings for language-dependent features of
@@ -40,15 +40,15 @@ directives = {
       'pull-quote': 'pull-quote',
       'compound': 'compound',
       'container': 'container',
-      #'questions': 'questions',
+      # 'questions': 'questions',
       'table': 'table',
       'csv-table': 'csv-table',
       'list-table': 'list-table',
-      #'qa': 'questions',
-      #'faq': 'questions',
+      # 'qa': 'questions',
+      # 'faq': 'questions',
       'meta': 'meta',
       'math': 'math',
-      #'imagemap': 'imagemap',
+      # 'imagemap': 'imagemap',
       'image': 'image',
       'figure': 'figure',
       'include': 'include',
@@ -65,8 +65,8 @@ directives = {
       'section-numbering': 'sectnum',
       'header': 'header',
       'footer': 'footer',
-      #'footnotes': 'footnotes',
-      #'citations': 'citations',
+      # 'footnotes': 'footnotes',
+      # 'citations': 'citations',
       'target-notes': 'target-notes',
       'restructuredtext-test-directive': 'restructuredtext-test-directive'}
 """English name to registered (in directives/__init__.py) directive name
@@ -105,6 +105,7 @@ roles = {
     'uri-reference': 'uri-reference',
     'uri': 'uri-reference',
     'url': 'uri-reference',
-    'raw': 'raw',}
+    'raw': 'raw',
+    }
 """Mapping of English role names to canonical role names for interpreted text.
 """

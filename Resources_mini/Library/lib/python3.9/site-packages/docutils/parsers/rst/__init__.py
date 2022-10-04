@@ -1,4 +1,4 @@
-# $Id: __init__.py 8671 2021-04-07 12:09:51Z milde $
+# $Id: __init__.py 9045 2022-03-13 18:04:05Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -81,7 +81,7 @@ class Parser(docutils.parsers.Parser):
 
     """The reStructuredText parser."""
 
-    supported = ('restructuredtext', 'rst', 'rest', 'restx', 'rtxt', 'rstx')
+    supported = ('rst', 'restructuredtext', 'rest', 'restx', 'rtxt', 'rstx')
     """Aliases this parser supports."""
 
     settings_spec = docutils.parsers.Parser.settings_spec + (
@@ -91,9 +91,9 @@ class Parser(docutils.parsers.Parser):
           ['--pep-references'],
           {'action': 'store_true', 'validator': frontend.validate_boolean}),
          ('Base URL for PEP references '
-          '(default "http://www.python.org/dev/peps/").',
+          '(default "https://peps.python.org/").',
           ['--pep-base-url'],
-          {'metavar': '<URL>', 'default': 'http://www.python.org/dev/peps/',
+          {'metavar': '<URL>', 'default': 'https://peps.python.org/',
            'validator': frontend.validate_url_trailing_slash}),
          ('Template for PEP file part of URL. (default "pep-%04d")',
           ['--pep-file-url-template'],
@@ -101,9 +101,10 @@ class Parser(docutils.parsers.Parser):
          ('Recognize and link to standalone RFC references (like "RFC 822").',
           ['--rfc-references'],
           {'action': 'store_true', 'validator': frontend.validate_boolean}),
-         ('Base URL for RFC references (default "http://tools.ietf.org/html/").',
+         ('Base URL for RFC references '
+          '(default "https://tools.ietf.org/html/").',
           ['--rfc-base-url'],
-          {'metavar': '<URL>', 'default': 'http://tools.ietf.org/html/',
+          {'metavar': '<URL>', 'default': 'https://tools.ietf.org/html/',
            'validator': frontend.validate_url_trailing_slash}),
          ('Set number of spaces for tab expansion (default 8).',
           ['--tab-width'],
@@ -143,7 +144,8 @@ class Parser(docutils.parsers.Parser):
           ['--character-level-inline-markup'],
           {'action': 'store_true', 'default': False,
            'dest': 'character_level_inline_markup'}),
-        ))
+         )
+        )
 
     config_section = 'restructuredtext parser'
     config_section_dependencies = ('parsers',)
@@ -205,7 +207,7 @@ class DirectiveError(Exception):
         self.msg = message
 
 
-class Directive(object):
+class Directive:
 
     """
     Base class for reStructuredText directives.
@@ -263,15 +265,18 @@ class Directive(object):
     - ``lineno`` is the absolute line number of the first line
       of the directive.
 
-    - ``content_offset`` is the line offset of the first line of the content from
-      the beginning of the current input.  Used when initiating a nested parse.
+    - ``content_offset`` is the line offset of the first line
+      of the content from the beginning of the current input.
+      Used when initiating a nested parse.
 
     - ``block_text`` is a string containing the entire directive.
 
     - ``state`` is the state which called the directive function.
 
-    - ``state_machine`` is the state machine which controls the state which called
-      the directive function.
+    - ``state_machine`` is the state machine which controls the state
+      which called the directive function.
+
+    - ``reporter`` is the state machine's `reporter` instance.
 
     Directive functions return a list of nodes which will be inserted
     into the document tree at the point where the directive was
@@ -286,7 +291,7 @@ class Directive(object):
     substitution definition context, typically using code like this::
 
         if not isinstance(state, states.SubstitutionDef):
-            error = state_machine.reporter.error(
+            error = self.reporter.error(
                 'Invalid context: the "%s" directive can only be used '
                 'within a substitution definition.' % (name),
                 nodes.literal_block(block_text, block_text), line=lineno)
@@ -294,7 +299,7 @@ class Directive(object):
     """
 
     # There is a "Creating reStructuredText Directives" how-to at
-    # <http://docutils.sf.net/docs/howto/rst-directives.html>.  If you
+    # <https://docutils.sourceforge.io/docs/howto/rst-directives.html>.  If you
     # update this docstring, please update the how-to as well.
 
     required_arguments = 0
@@ -323,9 +328,10 @@ class Directive(object):
         self.block_text = block_text
         self.state = state
         self.state_machine = state_machine
+        self.reporter = state_machine.reporter
 
     def run(self):
-        raise NotImplementedError('Must override run() is subclass.')
+        raise NotImplementedError('Must override run() in subclass.')
 
     # Directive errors:
 

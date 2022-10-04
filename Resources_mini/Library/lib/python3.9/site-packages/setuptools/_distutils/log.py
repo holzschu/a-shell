@@ -13,7 +13,6 @@ FATAL = 5
 
 
 class Log:
-
     def __init__(self, threshold=WARN):
         self.threshold = threshold
 

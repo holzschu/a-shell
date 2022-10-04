@@ -1,4 +1,4 @@
-# $Id: it.py 7119 2011-09-02 13:00:23Z milde $
+# $Id: it.py 9022 2022-03-04 15:54:56Z milde $
 # Authors: Nicola Larosa <docutils@tekNico.net>;
 #          Lele Gaifax <lele@seldati.it>
 # Copyright: This module has been placed in the public domain.
@@ -37,16 +37,16 @@ directives = {
       'punti-salienti': 'highlights',
       'estratto-evidenziato': 'pull-quote',
       'composito': 'compound',
-      u'container (translation required)': 'container',
-      #'questions': 'questions',
-      #'qa': 'questions',
-      #'faq': 'questions',
+      'container (translation required)': 'container',
+      # 'questions': 'questions',
+      # 'qa': 'questions',
+      # 'faq': 'questions',
       'tabella': 'table',
       'tabella-csv': 'csv-table',
       'tabella-elenco': 'list-table',
       'meta': 'meta',
       'math (translation required)': 'math',
-      #'imagemap': 'imagemap',
+      # 'imagemap': 'imagemap',
       'immagine': 'image',
       'figura': 'figure',
       'includi': 'include',
@@ -65,8 +65,8 @@ directives = {
       'annota-riferimenti-esterni': 'target-notes',
       'intestazione': 'header',
       'piede-pagina': 'footer',
-      #'footnotes': 'footnotes',
-      #'citations': 'citations',
+      # 'footnotes': 'footnotes',
+      # 'citations': 'citations',
       'restructuredtext-test-directive': 'restructuredtext-test-directive'}
 """Italian name to registered (in directives/__init__.py) directive name
 mapping."""
@@ -74,7 +74,7 @@ mapping."""
 roles = {
       'abbreviazione': 'abbreviation',
       'acronimo': 'acronym',
-      u'code (translation required)': 'code',
+      'code (translation required)': 'code',
       'indice': 'index',
       'deponente': 'subscript',
       'esponente': 'superscript',
@@ -84,7 +84,7 @@ roles = {
       'enfasi': 'emphasis',
       'forte': 'strong',
       'letterale': 'literal',
-    'math (translation required)': 'math',
+      'math (translation required)': 'math',
       'riferimento-con-nome': 'named-reference',
       'riferimento-anonimo': 'anonymous-reference',
       'riferimento-nota': 'footnote-reference',
@@ -92,6 +92,7 @@ roles = {
       'riferimento-sostituzione': 'substitution-reference',
       'destinazione': 'target',
       'riferimento-uri': 'uri-reference',
-      'grezzo': 'raw',}
+      'grezzo': 'raw',
+      }
 """Mapping of Italian role names to canonical role names for interpreted text.
 """

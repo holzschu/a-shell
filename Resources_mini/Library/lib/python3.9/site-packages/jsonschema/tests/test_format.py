@@ -1,5 +1,5 @@
 """
-Tests for the parts of jsonschema related to the :validator:`format` property.
+Tests for the parts of jsonschema related to the :kw:`format` keyword.
 """
 
 from unittest import TestCase
@@ -29,7 +29,8 @@ class TestFormatChecker(TestCase):
     def test_it_can_register_cls_checkers(self):
         original = dict(FormatChecker.checkers)
         self.addCleanup(FormatChecker.checkers.pop, "boom")
-        FormatChecker.cls_checks("boom")(boom)
+        with self.assertWarns(DeprecationWarning):
+            FormatChecker.cls_checks("boom")(boom)
         self.assertEqual(
             FormatChecker.checkers,
             dict(original, boom=(boom, ())),

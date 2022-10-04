@@ -1,5 +1,5 @@
 // S5 v1.1 slides.js -- released into the Public Domain
-// Modified for Docutils (http://docutils.sf.net) by David Goodger
+// Modified for Docutils (https://docutils.sourceforge.io) by David Goodger
 //
 // Please see http://www.meyerweb.com/eric/tools/s5/credits.html for
 // information about all the wonderful and talented contributors to this code!
@@ -66,7 +66,7 @@ function nodeValue(node) {
 		var children = node.childNodes;
 		for (var i = 0; i < children.length; ++i) {
 			result += nodeValue(children[i]);
-		}		
+		}
 	}
 	else if (node.nodeType == 3) {
 		result = node.nodeValue;
@@ -118,8 +118,8 @@ function currentSlide() {
 		cs = document.currentSlide;
 		footer = document.footer.childNodes;
 	}
-	cs.innerHTML = '<span id="csHere">' + snum + '<\/span> ' + 
-		'<span id="csSep">\/<\/span> ' + 
+	cs.innerHTML = '<span id="csHere">' + snum + '<\/span> ' +
+		'<span id="csSep">\/<\/span> ' +
 		'<span id="csTotal">' + (smax-1) + '<\/span>';
 	if (snum == 0) {
 		vis = 'hidden';
@@ -129,7 +129,7 @@ function currentSlide() {
 		if (footer_nodes[i].nodeType == 1) {
 			footer_nodes[i].style.visibility = vis;
 		}
-	}		
+	}
 }
 
 function go(step) {
@@ -305,7 +305,7 @@ function clicker(e) {
 		target = window.event.srcElement;
 		e = window.event;
 	} else target = e.target;
-    if (target.href != null || hasValue(target.rel, 'external') || isParentOrSelf(target, 'controls') || isParentOrSelf(target,'embed') || isParentOrSelf(target, 'object')) return true; 
+    if (target.href != null || hasValue(target.rel, 'external') || isParentOrSelf(target, 'controls') || isParentOrSelf(target,'embed') || isParentOrSelf(target, 'object')) return true;
 	if (!e.which || e.which == 1) {
 		if (!incrementals[snum] || incpos >= incrementals[snum].length) {
 			go(1);
@@ -466,7 +466,7 @@ function notOperaFix() {
 
 function getIncrementals(obj) {
 	var incrementals = new Array();
-	if (!obj) 
+	if (!obj)
 		return incrementals;
 	var children = obj.childNodes;
 	for (var i = 0; i < children.length; i++) {

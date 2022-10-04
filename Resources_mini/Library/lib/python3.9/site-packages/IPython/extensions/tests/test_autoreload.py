@@ -33,7 +33,7 @@ from IPython.testing.decorators import skipif_not_numpy
 
 if platform.python_implementation() == "PyPy":
     pytest.skip(
-        "Current autoreload implementation is extremly slow on PyPy",
+        "Current autoreload implementation is extremely slow on PyPy",
         allow_module_level=True,
     )
 
@@ -119,13 +119,13 @@ class Fixture(TestCase):
         time.sleep(1.05)
 
         # Write
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(content)
 
     def new_module(self, code):
         code = textwrap.dedent(code)
         mod_name, mod_fn = self.get_module()
-        with open(mod_fn, "w") as f:
+        with open(mod_fn, "w", encoding="utf-8") as f:
             f.write(code)
         return mod_name, mod_fn
 

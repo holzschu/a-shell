@@ -1,4 +1,4 @@
-# $Id: __init__.py 8358 2019-08-26 16:45:09Z milde $
+# $Id: __init__.py 9032 2022-03-05 23:29:06Z milde $
 # Authors: David Goodger <goodger@python.org>; Ueli Schlaepfer
 # Copyright: This module has been placed in the public domain.
 
@@ -27,10 +27,11 @@ __docformat__ = 'reStructuredText'
 from docutils import languages, ApplicationError, TransformSpec
 
 
-class TransformError(ApplicationError): pass
+class TransformError(ApplicationError):
+    pass
 
 
-class Transform(object):
+class Transform:
 
     """
     Docutils transform component abstract base class.
@@ -153,7 +154,8 @@ class Transformer(TransformSpec):
         unknown_reference_resolvers = []
         for i in components:
             unknown_reference_resolvers.extend(i.unknown_reference_resolvers)
-        decorated_list = sorted((f.priority, f) for f in unknown_reference_resolvers)
+        decorated_list = sorted((f.priority, f)
+                                for f in unknown_reference_resolvers)
         self.unknown_reference_resolvers.extend(f[1] for f in decorated_list)
 
     def apply_transforms(self):

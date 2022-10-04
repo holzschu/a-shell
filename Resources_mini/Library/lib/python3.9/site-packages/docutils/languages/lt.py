@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-# $Id: lt.py 7911 2015-08-31 08:23:06Z milde $
+# $Id: lt.py 9030 2022-03-05 23:28:32Z milde $
 # Author: Dalius Dobravolskas <dalius.do...@gmail.com>
 # Copyright: This module has been placed in the public domain.
 
 # New language mappings are welcome.  Before doing a new translation, please
-# read <http://docutils.sf.net/docs/howto/i18n.html>.  Two files must be
-# translated for each language: one in docutils/languages, the other in
-# docutils/parsers/rst/languages.
+# read <https://docutils.sourceforge.io/docs/howto/i18n.html>.
+# Two files must be translated for each language: one in docutils/languages,
+# the other in docutils/parsers/rst/languages.
 
 """
 Lithuanian language mappings for language-dependent features of Docutils.
@@ -23,20 +22,20 @@ labels = {
       'contact': 'Kontaktas',
       'version': 'Versija',
       'revision': 'Revizija',
-      'status': u'Būsena',
+      'status': 'Būsena',
       'date': 'Data',
-      'copyright': u'Autoriaus teisės',
+      'copyright': 'Autoriaus teisės',
       'dedication': 'Dedikacija',
       'abstract': 'Santrauka',
-      'attention': u'Dėmesio!',
+      'attention': 'Dėmesio!',
       'caution': 'Atsargiai!',
       'danger': '!PAVOJINGA!',
       'error': 'Klaida',
-      'hint': u'Užuomina',
+      'hint': 'Užuomina',
       'important': 'Svarbu',
       'note': 'Pastaba',
       'tip': 'Patarimas',
-      'warning': u'Įspėjimas',
+      'warning': 'Įspėjimas',
       'contents': 'Turinys'}
 """Mapping of node class name to label text."""
 

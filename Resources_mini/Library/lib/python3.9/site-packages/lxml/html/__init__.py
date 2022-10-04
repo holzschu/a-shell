@@ -245,7 +245,7 @@ class HtmlMixin(object):
         creates a 'boolean' attribute without value, e.g. "<form novalidate></form>"
         for ``form.set('novalidate')``.
         """
-        super(HtmlElement, self).set(key, value)
+        super(HtmlMixin, self).set(key, value)
 
     @property
     def classes(self):
@@ -685,21 +685,19 @@ iterlinks = _MethodFunc('iterlinks', copy=False)
 rewrite_links = _MethodFunc('rewrite_links', copy=True)
 
 
-class HtmlComment(etree.CommentBase, HtmlMixin):
+class HtmlComment(HtmlMixin, etree.CommentBase):
     pass
 
 
-class HtmlElement(etree.ElementBase, HtmlMixin):
-    # Override etree.ElementBase.cssselect() and set(), despite the MRO (FIXME: change base order?)
-    cssselect = HtmlMixin.cssselect
-    set = HtmlMixin.set
-
-
-class HtmlProcessingInstruction(etree.PIBase, HtmlMixin):
+class HtmlElement(HtmlMixin, etree.ElementBase):
     pass
 
 
-class HtmlEntity(etree.EntityBase, HtmlMixin):
+class HtmlProcessingInstruction(HtmlMixin, etree.PIBase):
+    pass
+
+
+class HtmlEntity(HtmlMixin, etree.EntityBase):
     pass
 
 

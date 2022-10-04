@@ -23,17 +23,16 @@ Authors
 import shutil
 import sys
 import tempfile
-
 from pathlib import Path
 from unittest import TestCase
 
-from IPython.core.profileapp import list_profiles_in, list_bundled_profiles
-from IPython.core.profiledir import ProfileDir
+from tempfile import TemporaryDirectory
 
+from IPython.core.profileapp import list_bundled_profiles, list_profiles_in
+from IPython.core.profiledir import ProfileDir
 from IPython.testing import decorators as dec
 from IPython.testing import tools as tt
 from IPython.utils.process import getoutput
-from IPython.utils.tempdir import TemporaryDirectory
 
 #-----------------------------------------------------------------------------
 # Globals
@@ -84,10 +83,10 @@ class ProfileStartupTest(TestCase):
 
     def init(self, startup_file, startup, test):
         # write startup python file
-        with open(Path(self.pd.startup_dir) / startup_file, "w") as f:
+        with open(Path(self.pd.startup_dir) / startup_file, "w", encoding="utf-8") as f:
             f.write(startup)
         # write simple test file, to check that the startup file was run
-        with open(self.fname, 'w') as f:
+        with open(self.fname, "w", encoding="utf-8") as f:
             f.write(test)
 
     def validate(self, output):
@@ -109,9 +108,9 @@ def test_list_profiles_in():
     for name in ("profile_foo", "profile_hello", "not_a_profile"):
         Path(td / name).mkdir(parents=True)
     if dec.unicode_paths:
-        Path(td / u"profile_ünicode").mkdir(parents=True)
+        Path(td / "profile_ünicode").mkdir(parents=True)
 
-    with open(td / "profile_file", "w") as f:
+    with open(td / "profile_file", "w", encoding="utf-8") as f:
         f.write("I am not a profile directory")
     profiles = list_profiles_in(td)
 

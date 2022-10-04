@@ -1,4 +1,4 @@
-# $Id: core.py 8367 2019-08-27 12:09:56Z milde $
+# $Id: core.py 9089 2022-06-22 08:51:16Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 
@@ -9,22 +9,24 @@ behavior.  For custom behavior (setting component options), create
 custom component objects first, and pass *them* to
 ``publish_*``/`Publisher`.  See `The Docutils Publisher`_.
 
-.. _The Docutils Publisher: http://docutils.sf.net/docs/api/publisher.html
+.. _The Docutils Publisher:
+    https://docutils.sourceforge.io/docs/api/publisher.html
 """
-from __future__ import print_function
 
 __docformat__ = 'reStructuredText'
 
-import sys
 import pprint
-from docutils import __version__, __version_details__, SettingsSpec
-from docutils import frontend, io, utils, readers, writers
-from docutils.frontend import OptionParser
-from docutils.transforms import Transformer
-from docutils.utils.error_reporting import ErrorOutput, ErrorString
-import docutils.readers.doctree
+import os
+import sys
+import warnings
 
-class Publisher(object):
+from docutils import (__version__, __version_details__, SettingsSpec,
+                      io, utils, readers, writers)
+from docutils.frontend import OptionParser
+from docutils.readers import doctree
+
+
+class Publisher:
 
     """
     A facade encapsulating the high-level logic of a Docutils system.
@@ -76,7 +78,7 @@ class Publisher(object):
         """An object containing Docutils settings as instance attributes.
         Set by `self.process_command_line()` or `self.get_settings()`."""
 
-        self._stderr = ErrorOutput()
+        self._stderr = io.ErrorOutput()
 
     def set_reader(self, reader_name, parser, parser_name):
         """Set `self.reader` by name."""
@@ -102,6 +104,9 @@ class Publisher(object):
     def setup_option_parser(self, usage=None, description=None,
                             settings_spec=None, config_section=None,
                             **defaults):
+        warnings.warn('Publisher.setup_option_parser is deprecated, '
+                      'and will be removed in Docutils 0.21.',
+                      DeprecationWarning, stacklevel=2)
         if config_section:
             if not settings_spec:
                 settings_spec = SettingsSpec()
@@ -109,23 +114,33 @@ class Publisher(object):
             parts = config_section.split()
             if len(parts) > 1 and parts[-1] == 'application':
                 settings_spec.config_section_dependencies = ['applications']
-        #@@@ Add self.source & self.destination to components in future?
-        option_parser = OptionParser(
+        # @@@ Add self.source & self.destination to components in future?
+        return OptionParser(
             components=(self.parser, self.reader, self.writer, settings_spec),
             defaults=defaults, read_config_files=True,
             usage=usage, description=description)
-        return option_parser
+
+    def _setup_settings_parser(self, *args, **kwargs):
+        # Provisional: will change (docutils.frontend.OptionParser will
+        # be replaced by a parser based on arparse.ArgumentParser)
+        # and may be removed later.
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=DeprecationWarning)
+            return self.setup_option_parser(*args, **kwargs)
 
     def get_settings(self, usage=None, description=None,
                      settings_spec=None, config_section=None, **defaults):
         """
-        Set and return default settings (overrides in `defaults` dict).
+        Return settings from components and config files.
 
-        Set components first (`self.set_reader` & `self.set_writer`).
-        Explicitly setting `self.settings` disables command line option
-        processing from `self.publish()`.
+        Please set components first (`self.set_reader` & `self.set_writer`).
+        Use keyword arguments to override component defaults
+        (before updating from configuration files).
+
+        Calling this function also sets `self.settings` which makes
+        `self.publish()` skip parsing command line options.
         """
-        option_parser = self.setup_option_parser(
+        option_parser = self._setup_settings_parser(
             usage, description, settings_spec, config_section, **defaults)
         self.settings = option_parser.get_default_values()
         return self.settings
@@ -134,7 +149,7 @@ class Publisher(object):
                                       settings_overrides,
                                       config_section):
         if self.settings is None:
-            defaults = (settings_overrides or {}).copy()
+            defaults = settings_overrides.copy() if settings_overrides else {}
             # Propagate exceptions by default when used programmatically:
             defaults.setdefault('traceback', True)
             self.get_settings(settings_spec=settings_spec,
@@ -145,20 +160,17 @@ class Publisher(object):
                              settings_spec=None, config_section=None,
                              **defaults):
         """
-        Pass an empty list to `argv` to avoid reading `sys.argv` (the
-        default).
+        Parse command line arguments and set ``self.settings``.
+
+        Pass an empty sequence to `argv` to avoid reading `sys.argv`
+        (the default behaviour).
 
         Set components first (`self.set_reader` & `self.set_writer`).
         """
-        option_parser = self.setup_option_parser(
+        option_parser = self._setup_settings_parser(
             usage, description, settings_spec, config_section, **defaults)
         if argv is None:
             argv = sys.argv[1:]
-            # converting to Unicode (Python 3 does this automatically):
-            if sys.version_info < (3, 0):
-                # TODO: make this failsafe and reversible?
-                argv_encoding = (frontend.locale_encoding or 'ascii')
-                argv = [a.decode(argv_encoding) for a in argv]
         self.settings = option_parser.parse_args(argv)
 
     def set_io(self, source_path=None, destination_path=None):
@@ -172,16 +184,10 @@ class Publisher(object):
             source_path = self.settings._source
         else:
             self.settings._source = source_path
-        # Raise IOError instead of system exit with `tracback == True`
-        # TODO: change io.FileInput's default behaviour and remove this hack
-        try:
-            self.source = self.source_class(
-                source=source, source_path=source_path,
-                encoding=self.settings.input_encoding)
-        except TypeError:
-            self.source = self.source_class(
-                source=source, source_path=source_path,
-                encoding=self.settings.input_encoding)
+        self.source = self.source_class(
+            source=source, source_path=source_path,
+            encoding=self.settings.input_encoding,
+            error_handler=self.settings.input_encoding_error_handler)
 
     def set_destination(self, destination=None, destination_path=None):
         if destination_path is None:
@@ -214,6 +220,7 @@ class Publisher(object):
                     argv, usage, description, settings_spec, config_section,
                     **(settings_overrides or {}))
             self.set_io()
+            self.prompt()
             self.document = self.reader.read(self.source, self.parser,
                                              self.settings)
             self.apply_transforms()
@@ -225,7 +232,7 @@ class Publisher(object):
         except Exception as error:
             if not self.settings:       # exception too early to report nicely
                 raise
-            if self.settings.traceback: # Propagate exceptions?
+            if self.settings.traceback:  # Propagate exceptions?
                 self.debugging_dumps()
                 raise
             self.report_Exception(error)
@@ -263,33 +270,52 @@ class Publisher(object):
             print(self.document.pformat().encode(
                 'raw_unicode_escape'), file=self._stderr)
 
+    def prompt(self):
+        """Print info and prompt when waiting for input from a terminal."""
+        try:
+            if not (self.source.isatty() and self._stderr.isatty()):
+                return
+        except AttributeError:
+            return
+        eot_key = 'Ctrl+Z' if os.name == 'nt' else 'Ctrl+D on an empty line'
+        in_format = ''
+        out_format = 'useful formats'
+        try:
+            in_format = self.parser.supported[0]
+            out_format = self.writer.supported[0]
+        except (AttributeError, IndexError):
+            pass
+        print(f'Docutils {__version__} <https://docutils.sourceforge.io>\n'
+              f'converting "{in_format}" into "{out_format}".\n'
+              f'Call with option "--help" for more info.\n'
+              f'.. Waiting for source text (finish with {eot_key}):',
+              file=self._stderr)
+
     def report_Exception(self, error):
         if isinstance(error, utils.SystemMessage):
             self.report_SystemMessage(error)
         elif isinstance(error, UnicodeEncodeError):
             self.report_UnicodeError(error)
         elif isinstance(error, io.InputError):
-            self._stderr.write(u'Unable to open source file for reading:\n'
-                               u'  %s\n' % ErrorString(error))
+            self._stderr.write('Unable to open source file for reading:\n'
+                               '  %s\n' % io.error_string(error))
         elif isinstance(error, io.OutputError):
             self._stderr.write(
-                u'Unable to open destination file for writing:\n'
-                u'  %s\n' % ErrorString(error))
+                'Unable to open destination file for writing:\n'
+                '  %s\n' % io.error_string(error))
         else:
-            print(u'%s' % ErrorString(error), file=self._stderr)
-            print(("""\
+            print('%s' % io.error_string(error), file=self._stderr)
+            print(f"""\
 Exiting due to error.  Use "--traceback" to diagnose.
-Please report errors to <docutils-users@lists.sf.net>.
-Include "--traceback" output, Docutils version (%s%s),
-Python version (%s), your OS type & version, and the
-command line used.""" % (__version__,
-                         docutils.__version_details__ and
-                         ' [%s]'%docutils.__version_details__ or '',
-                         sys.version.split()[0])), file=self._stderr)
+Please report errors to <docutils-users@lists.sourceforge.net>.
+Include "--traceback" output, Docutils version ({__version__}\
+{f' [{__version_details__}]' if __version_details__ else ''}),
+Python version ({sys.version.split()[0]}), your OS type & version, \
+and the command line used.""", file=self._stderr)
 
     def report_SystemMessage(self, error):
         print('Exiting due to level-%s (%s) system message.' % (
-            error.level, utils.Reporter.levels[error.level]),
+                  error.level, utils.Reporter.levels[error.level]),
               file=self._stderr)
 
     def report_UnicodeError(self, error):
@@ -311,23 +337,34 @@ command line used.""" % (__version__,
             '\n'
             'Exiting due to error.  Use "--traceback" to diagnose.\n'
             'If the advice above doesn\'t eliminate the error,\n'
-            'please report it to <docutils-users@lists.sf.net>.\n'
+            'please report it to <docutils-users@lists.sourceforge.net>.\n'
             'Include "--traceback" output, Docutils version (%s),\n'
             'Python version (%s), your OS type & version, and the\n'
             'command line used.\n'
-            % (ErrorString(error),
+            % (io.error_string(error),
                self.settings.output_encoding,
                data.encode('ascii', 'xmlcharrefreplace'),
                data.encode('ascii', 'backslashreplace'),
                self.settings.output_encoding_error_handler,
                __version__, sys.version.split()[0]))
 
-default_usage = '%prog [options] [<source> [<destination>]]'
-default_description = ('Reads from <source> (default is stdin) and writes to '
-                       '<destination> (default is stdout).  See '
-                       '<http://docutils.sf.net/docs/user/config.html> for '
-                       'the full reference.')
 
+default_usage = '%prog [options] [<source> [<destination>]]'
+default_description = (
+    'Reads from <source> (default is stdin) '
+    'and writes to <destination> (default is stdout).  '
+    'See https://docutils.sourceforge.io/docs/user/config.html '
+    'for a detailed settings reference.')
+
+
+# TODO: or not to do?  cf. https://clig.dev/#help
+#
+# Display output on success, but keep it brief.
+#
+# Provide a -q option to suppress all non-essential output.
+# Chain several args as input and use --output or redirection for output:
+#   argparser.add_argument('source', nargs='+')
+#
 def publish_cmdline(reader=None, reader_name='standalone',
                     parser=None, parser_name='restructuredtext',
                     writer=None, writer_name='pseudoxml',
@@ -355,6 +392,7 @@ def publish_cmdline(reader=None, reader_name='standalone',
         config_section=config_section, enable_exit_status=enable_exit_status)
     return output
 
+
 def publish_file(source=None, source_path=None,
                  destination=None, destination_path=None,
                  reader=None, reader_name='standalone',
@@ -380,6 +418,7 @@ def publish_file(source=None, source_path=None,
         config_section=config_section,
         enable_exit_status=enable_exit_status)
     return output
+
 
 def publish_string(source, source_path=None, destination_path=None,
                    reader=None, reader_name='standalone',
@@ -417,6 +456,7 @@ def publish_string(source, source_path=None, destination_path=None,
         enable_exit_status=enable_exit_status)
     return output
 
+
 def publish_parts(source, source_path=None, source_class=io.StringInput,
                   destination_path=None,
                   reader=None, reader_name='standalone',
@@ -451,6 +491,7 @@ def publish_parts(source, source_path=None, source_class=io.StringInput,
         enable_exit_status=enable_exit_status)
     return pub.writer.parts
 
+
 def publish_doctree(source, source_path=None,
                     source_class=io.StringInput,
                     reader=None, reader_name='standalone',
@@ -479,8 +520,9 @@ def publish_doctree(source, source_path=None,
         settings_spec, settings_overrides, config_section)
     pub.set_source(source, source_path)
     pub.set_destination(None, None)
-    output = pub.publish(enable_exit_status=enable_exit_status)
+    pub.publish(enable_exit_status=enable_exit_status)
     return pub.document
+
 
 def publish_from_doctree(document, destination_path=None,
                          writer=None, writer_name='pseudoxml',
@@ -510,7 +552,7 @@ def publish_from_doctree(document, destination_path=None,
 
     Other parameters: see `publish_programmatically`.
     """
-    reader = docutils.readers.doctree.Reader(parser_name='null')
+    reader = doctree.Reader(parser_name='null')
     pub = Publisher(reader, None, writer,
                     source=io.DocTreeInput(document),
                     destination_class=io.StringOutput, settings=settings)
@@ -521,15 +563,20 @@ def publish_from_doctree(document, destination_path=None,
     pub.set_destination(None, destination_path)
     return pub.publish(enable_exit_status=enable_exit_status)
 
+
 def publish_cmdline_to_binary(reader=None, reader_name='standalone',
-                    parser=None, parser_name='restructuredtext',
-                    writer=None, writer_name='pseudoxml',
-                    settings=None, settings_spec=None,
-                    settings_overrides=None, config_section=None,
-                    enable_exit_status=True, argv=None,
-                    usage=default_usage, description=default_description,
-                    destination=None, destination_class=io.BinaryFileOutput
-                    ):
+                              parser=None, parser_name='restructuredtext',
+                              writer=None, writer_name='pseudoxml',
+                              settings=None,
+                              settings_spec=None,
+                              settings_overrides=None,
+                              config_section=None,
+                              enable_exit_status=True,
+                              argv=None,
+                              usage=default_usage,
+                              description=default_description,
+                              destination=None,
+                              destination_class=io.BinaryFileOutput):
     """
     Set up & run a `Publisher` for command-line-based file I/O (input and
     output file paths taken automatically from the command line).  Return the
@@ -547,12 +594,13 @@ def publish_cmdline_to_binary(reader=None, reader_name='standalone',
       (along with command-line option descriptions).
     """
     pub = Publisher(reader, parser, writer, settings=settings,
-        destination_class=destination_class)
+                    destination_class=destination_class)
     pub.set_components(reader_name, parser_name, writer_name)
     output = pub.publish(
         argv, usage, description, settings_spec, settings_overrides,
         config_section=config_section, enable_exit_status=enable_exit_status)
     return output
+
 
 def publish_programmatically(source_class, source, source_path,
                              destination_class, destination, destination_path,
@@ -569,7 +617,7 @@ def publish_programmatically(source_class, source, source_path,
     Applications should not need to call this function directly.  If it does
     seem to be necessary to call this function directly, please write to the
     Docutils-develop mailing list
-    <http://docutils.sf.net/docs/user/mailing-lists.html#docutils-develop>.
+    <https://docutils.sourceforge.io/docs/user/mailing-lists.html#docutils-develop>.
 
     Parameters:
 
