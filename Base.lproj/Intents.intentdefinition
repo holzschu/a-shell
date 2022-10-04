@@ -37,7 +37,7 @@
 				</dict>
 				<dict>
 					<key>INEnumValueDisplayName</key>
-					<string>Run in extension</string>
+					<string>no (run in extension)</string>
 					<key>INEnumValueDisplayNameID</key>
 					<string>i2Vf9p</string>
 					<key>INEnumValueIndex</key>
@@ -47,7 +47,7 @@
 				</dict>
 				<dict>
 					<key>INEnumValueDisplayName</key>
-					<string>Run in the App</string>
+					<string>yes</string>
 					<key>INEnumValueDisplayNameID</key>
 					<string>EzhjO7</string>
 					<key>INEnumValueIndex</key>
@@ -63,11 +63,11 @@
 	<key>INIntentDefinitionNamespace</key>
 	<string>iwbZ8l</string>
 	<key>INIntentDefinitionSystemVersion</key>
-	<string>20G95</string>
+	<string>21F79</string>
 	<key>INIntentDefinitionToolsBuildVersion</key>
-	<string>13A233</string>
+	<string>13F100</string>
 	<key>INIntentDefinitionToolsVersion</key>
-	<string>13.0</string>
+	<string>13.4.1</string>
 	<key>INIntents</key>
 	<array>
 		<dict>
@@ -92,7 +92,7 @@
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
 					<key>INIntentParameterCombinationTitle</key>
-					<string>Execute shell command</string>
+					<string>Execute ${command}</string>
 					<key>INIntentParameterCombinationTitleID</key>
 					<string>YxbbRt</string>
 					<key>INIntentParameterCombinationUpdatesLinked</key>
@@ -121,7 +121,7 @@
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
 					<key>INIntentParameterCombinationTitle</key>
-					<string>Execute shell command</string>
+					<string>Execute ${command}</string>
 					<key>INIntentParameterCombinationTitleID</key>
 					<string>umwm1q</string>
 				</dict>
@@ -134,7 +134,7 @@
 					<key>INIntentParameterCustomDisambiguation</key>
 					<true/>
 					<key>INIntentParameterDisplayName</key>
-					<string>Command(s)</string>
+					<string>shell command(s)</string>
 					<key>INIntentParameterDisplayNameID</key>
 					<string>Y7KKwU</string>
 					<key>INIntentParameterDisplayPriority</key>
@@ -240,7 +240,7 @@
 					<key>INIntentParameterConfigurable</key>
 					<true/>
 					<key>INIntentParameterDisplayName</key>
-					<string>Keep going after an error:</string>
+					<string>Keep going after an error</string>
 					<key>INIntentParameterDisplayNameID</key>
 					<string>2PGaCe</string>
 					<key>INIntentParameterDisplayPriority</key>
@@ -383,7 +383,7 @@
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
 					<key>INIntentParameterCombinationTitle</key>
-					<string>Get file </string>
+					<string>Get ${fileName} from a-Shell</string>
 					<key>INIntentParameterCombinationTitleID</key>
 					<string>n11Zfh</string>
 					<key>INIntentParameterCombinationUpdatesLinked</key>
@@ -401,7 +401,7 @@
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
 					<key>INIntentParameterCombinationTitle</key>
-					<string>Get file </string>
+					<string>Get ${fileName} from a-Shell</string>
 					<key>INIntentParameterCombinationTitleID</key>
 					<string>BKUcxZ</string>
 				</dict>
@@ -412,7 +412,7 @@
 					<key>INIntentParameterConfigurable</key>
 					<true/>
 					<key>INIntentParameterDisplayName</key>
-					<string>File Name</string>
+					<string>file name</string>
 					<key>INIntentParameterDisplayNameID</key>
 					<string>mT8e9Y</string>
 					<key>INIntentParameterDisplayPriority</key>
@@ -543,7 +543,7 @@
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
 					<key>INIntentParameterCombinationTitle</key>
-					<string>Create a file in a-Shell sandbox, overwrite existing file.</string>
+					<string>Copy ${file} to a-Shell</string>
 					<key>INIntentParameterCombinationTitleID</key>
 					<string>isZTIL</string>
 					<key>INIntentParameterCombinationUpdatesLinked</key>
@@ -570,7 +570,7 @@
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
 					<key>INIntentParameterCombinationTitle</key>
-					<string>Create a file in a-Shell sandbox, overwrite existing file.</string>
+					<string>Copy ${file} to a-Shell</string>
 					<key>INIntentParameterCombinationTitleID</key>
 					<string>tIMaMc</string>
 				</dict>
@@ -581,7 +581,7 @@
 					<key>INIntentParameterConfigurable</key>
 					<true/>
 					<key>INIntentParameterDisplayName</key>
-					<string>File</string>
+					<string>file</string>
 					<key>INIntentParameterDisplayNameID</key>
 					<string>OmjmQg</string>
 					<key>INIntentParameterDisplayPriority</key>
@@ -614,7 +614,7 @@
 							<key>INIntentParameterPromptDialogCustom</key>
 							<true/>
 							<key>INIntentParameterPromptDialogFormatString</key>
-							<string>Copy ${file} to a-Shell.</string>
+							<string>Copy ${file} to a-Shell (${overwrite})</string>
 							<key>INIntentParameterPromptDialogFormatStringID</key>
 							<string>a2n63A</string>
 							<key>INIntentParameterPromptDialogType</key>
@@ -632,7 +632,7 @@
 					<key>INIntentParameterConfigurable</key>
 					<true/>
 					<key>INIntentParameterDisplayName</key>
-					<string>Overwrite</string>
+					<string>Overwrite existing file?</string>
 					<key>INIntentParameterDisplayNameID</key>
 					<string>aRe2H0</string>
 					<key>INIntentParameterDisplayPriority</key>

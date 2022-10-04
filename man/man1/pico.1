@@ -1,0 +1,258 @@
+.TH pico 1 "Version 5.09"
+.SH Name
+pico \- simple text editor in the style of the Alpine Composer
+.SH Syntax
+.B pico
+[
+.I options
+] [
+.I file
+]
+.SH Description
+\fIPico\fR is a simple, display-oriented text editor based on
+the Alpine message system composer.  As with Alpine, commands are 
+displayed at the bottom of the screen, and context-sensitive
+help is provided.  As characters are typed they are immediately 
+inserted into the text.
+.PP
+Editing commands are entered using control-key
+combinations.  As a work-around for communications programs that
+swallow certain control characters, you can emulate a control key
+by pressing ESCAPE twice, followed by the desired control character,
+e.g. "ESC ESC c" would be equivalent to entering a ctrl-c.
+The editor has five basic features: paragraph justification,
+searching, block cut/paste, a spelling checker, and a file browser.
+.PP
+Paragraph justification (or filling) takes place in the paragraph that
+contains the cursor, or, if the cursor is between lines, in the paragraph
+immediately below.  Paragraphs are delimited by blank lines, or by lines
+beginning with a space or tab.  Unjustification can be done immediately
+after justification using the control-U key combination. 
+.PP
+String searches are not sensitive to case.  A search begins at the current
+cursor position and wraps around the end of the text.  The most recent   
+search string is offered as the default in subsequent searches.
+.PP
+Blocks of text can be moved, copied or deleted with creative use of the
+command for mark (ctrl-^), delete (ctrl-k) and undelete (ctrl-u).
+The delete command will remove text between the "mark" and the current 
+cursor position, and place it in the "cut" buffer.  The undelete command
+effects a "paste" at the current cursor position.
+.PP
+The spell checker examines all words in the text.  It then offers, in 
+turn, each misspelled word for correction while 
+highlighting it in the text.  Spell checking can be cancelled at any time.  
+Alternatively, \fIpico\fR will substitute for the default spell checking 
+routine a routine defined by the SPELL environment variable.  The replacement 
+routine should read standard input and write standard output.
+.PP
+The file browser is offered as an option in the "Read File" and "Write Out"
+command prompts.  It is intended to help in searching for specific files 
+and navigating directory hierarchies.  Filenames with sizes and names of 
+directories in the current working directory are presented for selection.
+The current working directory is displayed on the top line of the display 
+while the list of available commands takes up the bottom two.  Several 
+basic file manipulation functions are supported:  file renaming, copying, 
+and deletion.
+.PP
+More specific help is available in \fIpico\fR's online help.
+.SH Options
+.IP \fB+\fIn\fB\fR
+Causes \fIpico\fR to be started with the cursor located \fIn\fR lines 
+into the file. (Note: no space between "+" sign and number)
+.IP \fB-a\fR
+Display all files including those beginning with a period (.).
+.IP \fB-b\fR
+Enable the option to Replace text matches found using the
+"Where is" command. This now does nothing. Instead, the option is
+always turned on (as if the -b flag had been specified).
+.IP \fB-d\fR
+Rebind the "delete" key so the character the cursor is on is rubbed out
+rather than the character to its left.
+.IP \fB-e\fR
+Enable file name completion.
+.IP \fB-f\fR
+Use function keys for commands.  This option supported only in 
+conjunction with UW Enhanced NCSA telnet.
+.IP \fB-h\fR
+List valid command line options.
+.IP \fB-j\fR
+Enable "Goto" command in the file browser.  This enables the command to
+permit explicitly telling \fIpilot\fR which directory to visit.
+.IP \fB-g\fR
+Enable "Show Cursor" mode in file browser.  Cause cursor to be positioned
+before the current selection rather than placed at the lower left of the
+display.
+.IP \fB-k\fR
+Causes "Cut Text" command to remove characters from the cursor position
+to the end of the line rather than remove the entire line.
+.IP \fB-m\fR
+Enable mouse functionality.  This only works when \fIpico\fR is run from
+within an X Window System "xterm" window.
+.IP \fB-n\fIn\fB\fR
+The \-n\fIn\fR option enables new mail notification.  The \fIn\fR 
+argument is optional, and specifies how often, in seconds, your 
+mailbox is checked for new mail.  For example, \-n60 causes \fIpico\fR 
+to check for new mail once every minute.  The default interval is 180 
+seconds, while the minimum allowed is 30. (Note: no space between "n" and 
+the number) 
+.IP \fB-o\ \fIdir\fB\fR
+Sets operating directory.  Only files within this directory are accessible.
+Likewise, the file browser is limited to the specified directory subtree.
+.IP \fB-r\fIn\fB\fR
+Sets column used to limit the "Justify" command's right margin
+.IP \fB-s\ \fIspeller\fR
+Specify an alternate program
+.I spell
+to use when spell checking.
+.IP \fB-t\fR
+Enable "tool" mode.  Intended for when \fIpico\fR is used as the
+editor within other tools (e.g., Elm, Pnews).  \fIPico\fR will not prompt
+for save on exit, and will not rename the buffer during the "Write Out"
+command.
+.IP \fB-v\fR
+View the file only, disallowing any editing.
+.IP \fB-version\fR
+Print Pico version and exit.
+.IP \fB-w\fR
+Disable word wrap (thus allow editing of long lines).
+.IP \fB-x\fR
+Disable keymenu at the bottom of the screen.
+.IP \fB-z\fR
+Enable ^Z suspension of \fIpico\fR.
+.IP \fB-p\fR
+Preserve the "start" and "stop" characters, typically Ctrl-Q and Ctrl-S,
+which are sometimes used in communications paths to control data flow
+between devices that operate at different speeds.
+.IP \fB-Q\ \fIquotestr\fB\fR
+Set the quote string.  Especially useful when composing email, setting this 
+allows the quote string to be checked for when Justifying paragraphs.
+A common quote string is "> ".
+.IP \fB-W\ \fIword_separators\fB\fR
+If characters listed here appear in the middle of a word surrounded by
+alphanumeric characters that word is split into two words. This is used by
+the Forward and Backward word commands and by the spell checker.
+.IP \fB-q\fR
+Termcap or terminfo definition for input escape sequences are used in
+preference to sequences defined by default.  This option is only available
+if \fIpico\fR was compiled with the TERMCAP_WINS define turned on.
+.IP \fB-setlocale_ctype\fR
+Do setlocale(LC_CTYPE) if available. Default is to not do this setlocale.
+.IP \fB-no_setlocale_collate\fR
+Do not do setlocale(LC_COLLATE). Default is to do this setlocale.
+.PP
+Lastly, when a running \fIpico\fR is disconnected (i.e., receives a 
+SIGHUP), \fIpico\fR will save the current work if needed before exiting.
+Work is saved under the current filename with ".save" appended.
+If the current work is unnamed, it is saved under the filename "pico.save".
+.PP
+.SH Color Support
+If your terminal supports colors, Pico can be configured to color
+text. Users can configure the color of the text, the text in the key menu,
+the titlebar, messages and prompt in the status line. As an added feature
+Pico can also be used to configure the color of up to three different
+levels of quoted text, and the signature of an email message. This is 
+useful when Pico is used as a tool (with the -t command line switch.)
+.PP
+Pico can tell you the number of colors that your terminal supports, when
+started with the switch -color_codes. In addition Pico will print a table
+showing the numerical code of every color supported in that terminal. In order
+to configure colors, one must use these numerical codes. For example, 0 is
+for black, so in order to configure a black color, one must use its code, the
+number 0.
+.PP
+In order to activate colors, one must use the option -ncolors with a numerical
+value indicating the number of colors that your terminal supports, for example,
+\fI-ncolors 256\fR indicates that the user wishes to use a table of 256 colors.
+.PP
+All options that control color, are four letter options. Their last two 
+letters are either "fc" or "bc", indicating \fIforeground color\fR and 
+\fIbacground color\fR, respectively. The first two letters indicate the 
+type of text that is being configured, for example "nt" stands for 
+\fInormal text\fR, so that -ntfc represents the color of the normal text,
+while -ntbc represents the color of the background of normal text. Here
+is a complete list of the color options supported by Pico.
+.IP \fB-color_code\fR
+displays the number of colors supported by the terminal, and a 
+table showing the association of colors and numerical codes
+.IP \fB-ncolors\fB\ \fInumber\fR
+activates color support in Pico, and tells Pico how many colors to use.
+Depending on your terminal \fInumber\fR could be 8, 16, or 256.
+.IP \fB-ntfc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color to be used to color normal text.
+.IP \fB-ntbc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the background for normal text.
+.IP \fB-rtfc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of reverse text. Default: same
+as background color of normal text (if specified.)
+.IP \fB-rtbc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the background of
+reverse text. Default: same as color of normal text (if specified.)
+.IP \fB-tbfc\fB\ \fInum\fR
+specifies the number \fInum\fR of then color of text of the title bar.
+Default: same as foreground color of reverse text.
+.IP \fB-tbbc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color in the background of the title bar.
+.IP \fB-klfc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the text of the key label.
+.IP \fB-klbc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color in the background of the key label.
+.IP \fB-knfc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the text of the key name.
+.IP \fB-knbc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the background of the key name.
+.IP \fB-stfc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the text of the status line.
+.IP \fB-stbc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the background of the status line.
+.IP \fB-prfc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the text of a prompt.
+.IP \fB-prbc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the background of a prompt.
+.IP \fB-q1fc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the text of level one of quoted text.
+.IP \fB-q1bc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the background of level one of quoted text. If the option
+-q1bc is used, the default value of this option is the background color
+or normal text.
+.IP \fB-q2fc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of text of level two of quoted text.
+.IP \fB-q2bc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the background of level two of quoted text. If the option
+-q1bc is used, the default value of this option is the background color
+or normal text.
+.IP \fB-q3fc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of text of level three of quoted text.
+.IP \fB-sbfc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of text of signature block text.
+.IP \fB-sbbc\fB\ \fInum\fR
+specifies the number \fInum\fR of the color of the background of signature
+block text.
+.PP
+.SH Bugs
+The manner in which lines longer than the display width are dealt
+is not immediately obvious.  Lines that continue beyond the edge
+of the display are indicated by a '$' character at the end
+of the line.  Long lines are scrolled horizontally as the cursor 
+moves through them.
+.SH Files
+.ta 1.75i
+.nf
+pico.save	Unnamed interrupted work saved here.
+*.save	Interrupted work on a named file is saved here.
+.fi
+.SH Authors
+Michael Seibel <mikes@cac.washington.edu>
+.br
+Laurence Lundblade <lgl@cac.washington.edu>
+.br
+Pico was originally derived from MicroEmacs 3.6, by Dave G. Conroy.
+.br
+Copyright 1989-2008 by the University of Washington.
+.SH "See Also"
+alpine(1)
+.br
+Source distribution (part of the Alpine Message System):
+
+.nf
+$Date: 2009-02-02 13:54:23 -0600 (Mon, 02 Feb 2009) $
