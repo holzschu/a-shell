@@ -21,54 +21,6 @@ extension WKWebView {
         }
     }
     
-    /*
-    @objc private func upAction(_ sender: UIBarButtonItem) {
-        evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[A\");") { (result, error) in
-          if let error = error {
-              print(error)
-          }
-          if let result = result {
-              print(result)
-          }
-        }
-    }
-    
-    @objc private func downAction(_ sender: UIBarButtonItem) {
-        evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[B\");") { (result, error) in
-            if let error = error {
-                print(error)
-            }
-            if let result = result {
-                print(result)
-            }
-            
-        }
-    }
-
-    @objc private func leftAction(_ sender: UIBarButtonItem) {
-        evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[D\");") { (result, error) in
-            if let error = error {
-                print(error)
-            }
-            if let result = result {
-                print(result)
-            }
-            
-        }
-    }
-
-    @objc private func rightAction(_ sender: UIBarButtonItem) {
-        evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "[C\");") { (result, error) in
-            if let error = error {
-                print(error)
-            }
-            if let result = result {
-                print(result)
-            }
-            
-        }
-    } */
-    
     @objc private func newWindow(_ sender: UIBarButtonItem) {
         if (UIDevice.current.model.hasPrefix("iPad")) {
             UIApplication.shared.requestSceneSessionActivation(nil, userActivity: nil, options: nil)
