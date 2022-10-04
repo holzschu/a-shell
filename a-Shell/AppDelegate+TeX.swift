@@ -484,10 +484,6 @@ extension AppDelegate {
         downloadingOpentype = true;
         percentOpentypeDownloadComplete = 0.0
         // download the extensions: texlive, texmf-dist and texmf-dist-fonts
-        let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                in: .userDomainMask,
-                                                appropriateFor: nil,
-                                                create: true)
         // First, wait until TeX is done:
         texmf_dist_fonts_opentypeResource.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
         NSLog("Begin downloading LuaTeX ")
