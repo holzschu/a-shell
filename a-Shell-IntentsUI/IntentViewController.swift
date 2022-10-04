@@ -33,9 +33,9 @@ class IntentViewController: UIViewController, INUIHostedViewControlling {
         if interaction.intentHandlingStatus == .success {
             if let response = interaction.intentResponse as? ExecuteCommandIntentResponse {
                 responseView.text = response.property
-            } else if let response = interaction.intentResponse as? GetFileIntentResponse{
+            } else if let response = interaction.intentResponse as? GetFileIntentResponse {
                 responseView.text = response.file?.filename
-            } else if let response = interaction.intentResponse as? PutFileIntentResponse{
+            } else if interaction.intentResponse is PutFileIntentResponse {
                 let intent = interaction.intent as! PutFileIntent
                 responseView.font = UIFont.systemFont(ofSize: 13)
                 responseView.text = "File " + intent.file!.filename + " successfully created."

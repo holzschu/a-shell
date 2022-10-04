@@ -181,7 +181,7 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
     func handle(intent: ExecuteCommandIntent, completion: @escaping (ExecuteCommandIntentResponse) -> Void) {
         if let commands = intent.command {
             var open = intent.openWindow // .open: always open the app. .close: never open the app
-            var keepGoing = intent.keepGoing as? Bool
+            let keepGoing = intent.keepGoing as? Bool
             if (open != .open) && (open != .close) {
                // Should we open the App to resolve this set of commands?
                // Make the decision based on all commands
@@ -215,7 +215,8 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
                     if (result != 0) && (keepGoing != nil) && (!keepGoing!) { break } // Stop executing after an error
                 }
                 var intentResponse: ExecuteCommandIntentResponse
-                if (result == 0) {
+                // If keepGoing is set, don't stop the Shortcut even if the commands have failed.
+                if (result == 0 || ((keepGoing != nil) && keepGoing!)) {
                     let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.ExecuteCommand")
                     intentResponse = ExecuteCommandIntentResponse(code: .success, userActivity: activity)
                 } else {
@@ -226,7 +227,6 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
                 completion(intentResponse)
             } else {
                 // other commands --> sent to the application itself
-                // TODO.
                 var urlString = ""
                 for command in commands {
                     if let string = command.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) {
@@ -301,6 +301,10 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
             returnVal = ios_system(command)
             fflush(thread_stdout)
             ios_waitpid(pid)
+            if (returnVal == 0) {
+                // If there's already been an error (e.g. "command not found") no need to ask for more.
+                returnVal = ios_getCommandStatus()
+            }
         }
         fflush(thread_stdout)
         // Send info to the stdout handler that the command has finished:
