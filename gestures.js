@@ -210,6 +210,14 @@ function initializeTerminalGestures() {
     term_.scrollPort_.onTouch = origTouchFn;
   };
 
+  // Returns true iff the last line is
+  //within a few lines of the cisible region.
+  const isLastLineNearVisible = () => {
+    const errorMargin = 4;
+    const scrollPort = term_.getScrollPort();
+    return term_.getRowCount() <= scrollPort.getTopRowIndex() + scrollPort.visibleRowCount + errorMargin;
+  };
+
   /// Tracks the velocity of a given
   //pointer.
   class VelocityTracker {
@@ -494,6 +502,10 @@ function initializeTerminalGestures() {
     /// [dx] is in units of characters
     /// and must have magnitude \geq 1
     handleHorizontal_(dx) {
+      if (!isLastLineNearVisible()) {
+        return;
+      }
+
       if (!this.isHorizontal_ && this.isVertical_) {
         // If we're breaking away from a snap...
         this.isVertical_ = false;
@@ -805,4 +817,3 @@ function initializeTerminalGestures() {
     momentum = [0, 0];
   };
 }
-
