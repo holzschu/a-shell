@@ -210,9 +210,12 @@ function initializeTerminalGestures() {
     term_.scrollPort_.onTouch = origTouchFn;
   };
 
-  const isLastLineVisible = () => {
+  // Returns true iff the last line is
+  //within a few lines of the cisible region.
+  const isLastLineNearVisible = () => {
+    const errorMargin = 4;
     const scrollPort = term_.getScrollPort();
-    return term_.getRowCount() <= scrollPort.getTopRowIndex() + scrollPort.visibleRowCount;
+    return term_.getRowCount() <= scrollPort.getTopRowIndex() + scrollPort.visibleRowCount + errorMargin;
   };
 
   /// Tracks the velocity of a given
@@ -499,7 +502,7 @@ function initializeTerminalGestures() {
     /// [dx] is in units of characters
     /// and must have magnitude \geq 1
     handleHorizontal_(dx) {
-      if (!isLastLineVisible()) {
+      if (!isLastLineNearVisible()) {
         return;
       }
 
@@ -539,6 +542,7 @@ function initializeTerminalGestures() {
         moveCursor(dx, 0);
       }
 
+      term_.scrollEnd();
       return this;
     }
 
