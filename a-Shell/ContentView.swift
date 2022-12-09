@@ -10,6 +10,7 @@ import SwiftUI
 import WebKit
 
 public var toolbarShouldBeShown = true
+public var useSystemToolbar = false
 public var showToolbar = true
 public var showKeyboardAtStartup = true
 public var onScreenKeyboardVisible: Bool? = nil

@@ -248,6 +248,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.libraryFilesUpToDate = true
     }
     
+    func isM1iPad(modelName: String) -> Bool {
+        // modelName for M1 iPad: iPad13,x for x in [4-17] (covers 11" and 12.9" iPad Pro and Air 5th gen)
+        // modelName for M2 iPad: iPad14,x for x in [3-6]
+        var deviceName = UIDevice.current.modelName
+        if (deviceName.hasPrefix("iPad13,")) {
+            deviceName.removeFirst("iPad13,".count)
+            if let minor = Int(deviceName) {
+                if (minor >= 4) && (minor <= 17) {
+                    return true
+                }
+            }
+        } else if (deviceName.hasPrefix("iPad14,")) {
+            deviceName.removeFirst("iPad14,".count)
+            if let minor = Int(deviceName) {
+                if (minor >= 3) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
@@ -263,8 +284,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
         UserDefaults.standard.register(defaults: ["show_toolbar" : true])
+        // Use the system toolbar is the default for iPad M1 and M2, but not for the other models:
+        UserDefaults.standard.register(defaults: ["system_toolbar" : isM1iPad(modelName: UIDevice.current.modelName)])
         UserDefaults.standard.register(defaults: ["restart_vim" : false])
+        UserDefaults.standard.register(defaults: ["keep_content" : true])
         toolbarShouldBeShown = UserDefaults.standard.bool(forKey: "show_toolbar")
+        // system toolbar only applies on iPads:
+        if (UIDevice.current.model.hasPrefix("iPad")) {
+            useSystemToolbar = UserDefaults.standard.bool(forKey: "system_toolbar")
+        } else {
+            useSystemToolbar = false
+        }
         initializeEnvironment()
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
@@ -419,6 +449,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Pip options:
         setenv("PIP_CONFIG_FILE", documentsUrl.appendingPathComponent(".config/pip/pip.conf").path, 1)
         setenv("PIP_NO_BUILD_ISOLATION", "false", 1)
+        setenv("SPACEVIMDIR", documentsUrl.appendingPathComponent(".SpaceVim.d").path + "/", 1); // configuration directory for SpaceVim
         // Help aiohttp install itself:
         setenv("YARL_NO_EXTENSIONS", "1", 1)
         setenv("MULTIDICT_NO_EXTENSIONS", "1", 1)
@@ -449,16 +480,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             if (!versionUpToDate || needToUpdateCFiles()) {
                 createCSDK()
             }
-            if (needToRemovePython37Files()) {
-                installQueue.async{
-                    ios_switchSession("wasiSDKLibrariesCreation")
-                    // Remove files and directories created with Python 3.7
-                    self.removePython37Files()
-                    // Move all remaining packages to $HOME/Library/lib/python3.9/site-packages/
-                    executeCommandAndWait(command: "mv " + libraryURL.path + "/lib/python3.7/site-packages/* " + libraryURL.path + "/lib/python3.9/site-packages/")
-                    // Erase the directory
-                    executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/lib/python3.7/")
-                }
+        } // a-Shell mini
+        if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
+            installQueue.async{
+                ios_switchSession("wasiSDKLibrariesCreation")
+                // Move all site-packages to $HOME/Library/lib/python3.11/site-packages/
+                executeCommandAndWait(command: "mkdir -p " + libraryURL.path + "/lib/python3.11/site-packages/")
+                executeCommandAndWait(command: "mv " + libraryURL.path + "/lib/python3.9/site-packages/* " + libraryURL.path + "/lib/python3.11/site-packages/")
+                // Erase the directory
+                executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/lib/python3.9/")
+            }
+        } else if (needToRemovePython37Files()) {
+            installQueue.async{
+                ios_switchSession("wasiSDKLibrariesCreation")
+                // Remove files and directories created with Python 3.7
+                self.removePython37Files()
+                // Move all remaining packages to $HOME/Library/lib/python3.9/site-packages/
+                executeCommandAndWait(command: "mkdir -p " + libraryURL.path + "/lib/python3.11/site-packages/")
+                executeCommandAndWait(command: "mv " + libraryURL.path + "/lib/python3.7/site-packages/* " + libraryURL.path + "/lib/python3.11/site-packages/")
+                // Erase the directory
+                executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/lib/python3.7/")
             }
         }
         if (!versionUpToDate) {
@@ -522,7 +563,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             try audioSession.setCategory(.playback, mode: .moviePlayback)
         }
         catch {
-            print("Setting category to AVAudioSessionCategoryPlayback failed.")
+            // print("Setting category to AVAudioSessionCategoryPlayback failed.")
         }
         return true
     }
@@ -682,7 +723,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NSLog("Received call to show the toolbar through preferences")
             // User has just requested we show the toolbar
             // Send the value to all the SceneDelegate connected to this application
-            toolbarShouldBeShown = false
+            toolbarShouldBeShown = true
             // Remove the toolbar on all connected scenes (usually none since the app is in the background):
             for scene in UIApplication.shared.connectedScenes {
                 if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
@@ -691,6 +732,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         toolbarShouldBeShown = toolbarSettings
+        // Ability to switch to the iPadOS-style system toolbar. Only available on iPads
+        if (UIDevice.current.model.hasPrefix("iPad")) {
+            let systemToolbarSettings = UserDefaults.standard.bool(forKey: "system_toolbar")
+            if (useSystemToolbar && !systemToolbarSettings) {
+                NSLog("Received call to switch to system toolbar through preferences")
+                // User has just requested we hide the system toolbar
+                // Send the value to all the SceneDelegate connected to this application
+                useSystemToolbar = false
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                        if (toolbarShouldBeShown) {
+                            delegate.showEditorToolbar()
+                        } else {
+                            delegate.hideToolbar()
+                        }
+                    }
+                }
+            } else if (!useSystemToolbar && systemToolbarSettings) {
+                NSLog("Received call to switch to regular toolbar through preferences")
+                // User has just requested we show the toolbar
+                // Send the value to all the SceneDelegate connected to this application
+                useSystemToolbar = true
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                        if (toolbarShouldBeShown) {
+                            delegate.showEditorToolbar()
+                        } else {
+                            delegate.hideToolbar()
+                        }
+                    }
+                }
+            }
+        }
     }
     
     // MARK: Shortcuts / Intents handling

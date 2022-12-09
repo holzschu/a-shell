@@ -68,12 +68,16 @@ a-Shell is a terminal emulator for iOS, with many Unix commands: ls, pwd, tar, m
 
 a-Shell can do most of the things you can do in a terminal, locally on your iPhone or iPad. You can redirect command output to a file with ">" (append with ">>") and you can pipe commands with "|".
 
- - Single-finger swipes move the cursor or scroll, two-finger swipes send keyboard input (up, down, escape, tab). "man gestures" for more.
-
 - customize appearance with config
 - pickFolder: open, bookmark and access a directory anywhere (another app, iCloud, WorkingCopy, file providers...)
 - newWindow: open a new window
 - exit: close the current window
+
+- All your files, including configuration files (.bashrc, .profile, .ssh...) are in ~/Documents/
+- Files created by Shortcuts are in ~shortcuts/
+- a-Shell executes the ~/Documents/.profile and ~/Documents/.bashrc files for each new window
+
+- Single-finger swipes move the cursor or scroll, two-finger swipes send keyboard input (up, down, escape, tab). "man gestures" for more.
 
 - Edit files with vim and pico.
 - Transfer files with curl, tar, scp and sftp.
@@ -167,6 +171,7 @@ Lua: lua.org, PUC-Rio, https://www.lua.org/
 LuaTeX: The LuaTeX team, http://www.luatex.org
 llvm/clang: the LLVM foundation
 make: bmake, http://www.crufty.net/help/sjg/bmake.html
+multiMarkdown: Fletcher Penney, https://fletcherpenney.net/multimarkdown/
 openSSL and libSSH2: port by Yury Korolev, https://github.com/blinksh/libssh2-apple
 Perl: Larry Wall, http://www.perl.org/, type perldoc perlintro
 Python3: Python Software Foundation, https://www.python.org/about/
@@ -281,6 +286,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     var terminalBackgroundColor: UIColor?
     var terminalForegroundColor: UIColor?
     var terminalCursorColor: UIColor?
+    var terminalCursorShape: String?
     let shortUsage = "usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-dgpr]\n"
     let usageString = """
     usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-g][-p][-d][-r]
@@ -291,6 +297,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     -b | --background: set background color
     -f | --foreground: set foreground color
     -c | --cursor: set cursor and highlight color
+    -k | --cursorShape: set cursor shape (beam, block or underline)
     -g | --global: extend settings to all windows currently open
     -p | --permanent: store settings as default values
     -d | --default: reset all settings to default values
@@ -483,6 +490,39 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
                 fputs("Could not retrieve cursor color.\n", thread_stderr)
             }
             continue
+        case "-k", "--cursorShape":
+            argumentsSet = true
+            var name = ""
+            if (i + 1 < args.count) {
+                if !args[i+1].hasPrefix("-") {
+                    name = args[i+1]
+                    skipNextArgument = 1
+                } else {
+                    fputs("Cursor shape not defined.\n", thread_stderr)
+                    continue
+                }
+            }
+            if (name == "") {
+                fputs("No parameter for cursor shape.\n", thread_stderr)
+                continue
+            } else if name == "default" {
+                if let storedName = UserDefaults.standard.object(forKey: "cursorShape") as? String {
+                    terminalCursorShape = storedName
+                } else {
+                    terminalCursorShape = factoryCursorShape
+                }
+            } else if name == "factory" {
+                terminalCursorShape = factoryCursorShape
+            } else {
+                name = name.uppercased()
+                if (name == "BEAM") || (name == "UNDERLINE") || (name == "BLOCK") {
+                    terminalCursorShape = name
+                } else {
+                    fputs("Did not understand cursor shape: \(name) (possible names are beam, block and underline)\n", thread_stderr)
+                }
+            }
+            continue
+
         case "--show":
             delegate?.showConfigWindow()
             continue
@@ -523,6 +563,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         delegate?.terminalBackgroundColor = nil
         delegate?.terminalForegroundColor = nil
         delegate?.terminalCursorColor = nil
+        delegate?.terminalCursorShape = factoryCursorShape
         delegate?.writeConfigWindow()
     } else if (revertToDefault) {
         // "default" = what is stored in User Preferences, if it exists, and factory default otherwise.
@@ -551,9 +592,14 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         } else {
             delegate?.terminalCursorColor = nil
         }
+        if let storedName = UserDefaults.standard.object(forKey: "cursorShape") as? String {
+            delegate?.terminalCursorShape = storedName
+        } else {
+            delegate?.terminalCursorShape = factoryCursorShape
+        }
         delegate?.writeConfigWindow()
     } else {
-        delegate?.configWindow(fontSize: terminalFontSize, fontName: terminalFontName, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor)
+        delegate?.configWindow(fontSize: terminalFontSize, fontName: terminalFontName, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor, cursorShape: terminalCursorShape)
     }
     if (makeGlobal) {
         // If nothing except "-p" (and possibly -d or -r): extend current window settings to all open windows
@@ -561,14 +607,14 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         if (argumentsSet) {
             for scene in UIApplication.shared.connectedScenes {
                 if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                    delegate.configWindow(fontSize: terminalFontSize, fontName: terminalFontName, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor)
+                    delegate.configWindow(fontSize: terminalFontSize, fontName: terminalFontName, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor, cursorShape: terminalCursorShape)
                 }
             }
         } else {
             for scene in UIApplication.shared.connectedScenes {
                 if let delegate2: SceneDelegate = scene.delegate as? SceneDelegate {
                     if (delegate2 != delegate) {
-                        delegate2.configWindow(fontSize: delegate?.terminalFontSize, fontName: delegate?.terminalFontName, backgroundColor: delegate?.terminalBackgroundColor, foregroundColor: delegate?.terminalForegroundColor, cursorColor: delegate?.terminalCursorColor)
+                        delegate2.configWindow(fontSize: delegate?.terminalFontSize, fontName: delegate?.terminalFontName, backgroundColor: delegate?.terminalBackgroundColor, foregroundColor: delegate?.terminalForegroundColor, cursorColor: delegate?.terminalCursorColor, cursorShape: delegate?.terminalCursorShape)
                     }
                 }
             }
@@ -584,6 +630,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             terminalBackgroundColor = delegate?.terminalBackgroundColor
             terminalForegroundColor = delegate?.terminalForegroundColor
             terminalCursorColor = delegate?.terminalCursorColor
+            terminalCursorShape = delegate?.terminalCursorShape
             if terminalFontSize == nil {
                 UserDefaults.standard.removeObject(forKey: "fontSize")
             }
@@ -598,6 +645,9 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             }
             if terminalCursorColor == nil {
                 UserDefaults.standard.removeObject(forKey: "cursorColor")
+            }
+            if terminalCursorShape == nil {
+                UserDefaults.standard.removeObject(forKey: "cursorShape")
             }
         }
         if terminalFontSize != nil {
@@ -614,6 +664,9 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         }
         if terminalCursorColor != nil && terminalCursorColor != .link {
             UserDefaults.standard.set(terminalCursorColor?.toHexString(), forKey: "cursorColor")
+        }
+        if terminalCursorShape != nil {
+            UserDefaults.standard.set(terminalCursorShape, forKey: "cursorShape")
         }
     }
     return 0
@@ -959,7 +1012,7 @@ func downloadRemoteFileFromCloud(fileURL: URL) {
     }
     catch {
         NSLog("Could not download file \(downloadedFilePath) from iCloud")
-        print(error)
+        // print(error)
     }
 }
 
@@ -1065,7 +1118,7 @@ public func downloadRemoteFile(fileURL: URL) -> Bool {
     }
     catch {
         NSLog("Could not download file from iCloud")
-        print(error)
+        // print(error)
     }
     return false
 }
@@ -1300,6 +1353,25 @@ public func stopInteractive() {
     }
 }
 
+@_cdecl("storeInteractive")
+public func storeInteractive() -> Int32 {
+    var returnValue:Int32 = -1;
+    var waitingForAnswer = true
+    DispatchQueue.main.async {
+        if let delegate = currentDelegate {
+            delegate.resignFirstResponder()
+            delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning;") { (result, error) in
+                if let error = error { print(error); }
+                if let result = result as? Int32 { print(result); returnValue = result; }
+                waitingForAnswer = false
+            }
+        }
+    }
+    while (waitingForAnswer) { }
+    NSLog("Returning from storeInteractive, result= \(returnValue)")
+    return returnValue;
+}
+
 @_cdecl("startInteractive")
 public func startInteractive() {
     DispatchQueue.main.async {
@@ -1307,7 +1379,7 @@ public func startInteractive() {
             delegate.resignFirstResponder()
             delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = true;") { (result, error) in
                 if let error = error {
-                    print(error)
+                    // print(error)
                 }
                 // if let result = result { print(result) }
             }

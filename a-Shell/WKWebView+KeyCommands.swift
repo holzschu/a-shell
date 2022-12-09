@@ -60,6 +60,36 @@ extension WKWebView {
         }
     }
 
+    @objc private func increaseTextSize(_ sender: UIBarButtonItem) {
+        NSLog("Increase event received")
+        let opaquePointer = OpaquePointer(ios_getContext())
+        guard let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) else { return }
+        let currentSessionIdentifier = String(cString: stringPointer)
+        for scene in UIApplication.shared.connectedScenes {
+            if (scene.session.persistentIdentifier == currentSessionIdentifier) {
+                let delegate: SceneDelegate = scene.delegate as! SceneDelegate
+                let fontSize = delegate.terminalFontSize ?? factoryFontSize
+                delegate.configWindow(fontSize: fontSize + 1, fontName: nil, backgroundColor: nil, foregroundColor: nil, cursorColor: nil, cursorShape: nil)
+                return
+            }
+        }
+    }
+
+    @objc private func decreaseTextSize(_ sender: UIBarButtonItem) {
+        NSLog("Decrease event received")
+        let opaquePointer = OpaquePointer(ios_getContext())
+        guard let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) else { return }
+        let currentSessionIdentifier = String(cString: stringPointer)
+        for scene in UIApplication.shared.connectedScenes {
+            if (scene.session.persistentIdentifier == currentSessionIdentifier) {
+                let delegate: SceneDelegate = scene.delegate as! SceneDelegate
+                let fontSize = delegate.terminalFontSize ?? factoryFontSize
+                delegate.configWindow(fontSize: fontSize - 1, fontName: nil, backgroundColor: nil, foregroundColor: nil, cursorColor: nil, cursorShape: nil)
+                return
+            }
+        }
+    }
+
 
     override open var keyCommands: [UIKeyCommand]? {
         // In case we need keyboard personalization for specific languages
@@ -75,6 +105,8 @@ extension WKWebView {
             UIKeyCommand(input: "n", modifierFlags:.command, action: #selector(newWindow), discoverabilityTitle: "New window"),
             UIKeyCommand(input: "w", modifierFlags:.command, action: #selector(closeWindow), discoverabilityTitle: "Close window"),
             UIKeyCommand(input: "x", modifierFlags:.command, action: #selector(cutText), discoverabilityTitle: "Cut"),
+            UIKeyCommand(input: "+", modifierFlags:.command, action: #selector(increaseTextSize), discoverabilityTitle: "Bigger text"),
+            UIKeyCommand(input: "-", modifierFlags:.command, action: #selector(decreaseTextSize), discoverabilityTitle: "Smaller text"),
             // Still required with external keyboards as of May 26, 2020: control-C maps to control-C
             UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC))
             ]
@@ -106,7 +138,7 @@ extension WKWebView {
     @objc func cutText(_ sender: UIKeyCommand) {
         let commandString = "window.term_.onCut('null');"
         evaluateJavaScript(commandString) { (result, error) in
-            if let error = error { print(error) }
+            // if let error = error { print(error) }
             // if let result = result { print(result) }
         }
     }
@@ -120,7 +152,7 @@ extension WKWebView {
         }
         let commandString = "window.term_.io.onVTKeystroke(\'\(string)');"
         evaluateJavaScript(commandString) { (result, error) in
-            if let error = error { print(error) }
+            // if let error = error { print(error) }
             // if let result = result { print(result) }
         }
     }
@@ -133,7 +165,7 @@ extension WKWebView {
         }
         let commandString = "window.term_.io.onVTKeystroke(\'\(string)');"
         evaluateJavaScript(commandString) { (result, error) in
-            if let error = error { print(error) }
+            // if let error = error { print(error) }
             // if let result = result { print(result) }
         }
     }
@@ -143,7 +175,7 @@ extension WKWebView {
         guard (sender.input != nil) else { return }
         let commandString = "window.term_.io.onVTKeystroke(\'\(sender.input!)');"
         evaluateJavaScript(commandString) { (result, error) in
-            if let error = error { print(error) }
+            // if let error = error { print(error) }
             // if let result = result { print(result) }
         }
     }
