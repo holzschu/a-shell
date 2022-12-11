@@ -279,7 +279,7 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
         setenv("SSL_CERT_FILE", bundleUrl.path +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
         setenv("SHORTCUTS", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
         setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
-        setenv("PYTHONUSERDIR", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.appendingPathComponent("Library").path, 1) // Python packages for extension
+        setenv("PYTHONUSERBASE", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.appendingPathComponent("Library").path, 1) // Python packages for extension
         // Compiled files: ~/Library/__pycache__
         setenv("PYTHONPYCACHEPREFIX", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.appendingPathComponent("Library").appendingPathComponent("__pycache__").path.toCString(), 1)
         numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
