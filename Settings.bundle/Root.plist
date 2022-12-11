@@ -72,6 +72,26 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
+			<string>Use the iPadOS toolbar</string>
+			<key>Key</key>
+			<string>system_toolbar</string>
+			<key>DefaultValue</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>Keep screen content between sessions</string>
+			<key>Key</key>
+			<string>keep_content</string>
+			<key>DefaultValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
 			<string>Restart Vim after closing a-Shell</string>
 			<key>Key</key>
 			<string>restart_vim</string>
