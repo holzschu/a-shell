@@ -367,7 +367,7 @@ function updateAutocompleteMenu(io, cursorPosition) {
 function setupHterm() {
 	const term = new hterm.Terminal();
 	// Default monospaced fonts installed: Menlo and Courier. 
-	term.prefs_.set('cursor-shape', 'UNDERLINE'); 
+	term.prefs_.set('cursor-shape', window.cursorShape); 
 	term.prefs_.set('font-family', window.fontFamily);
 	term.prefs_.set('font-size', window.fontSize); 
 	term.prefs_.set('foreground-color', window.foregroundColor);
@@ -464,11 +464,23 @@ function setupHterm() {
 			var helpRunning = false;
 			if (window.commandRunning.startsWith("ipython")) {
 				var lastNewline = window.printedContent.lastIndexOf("\n");
-				var lastLine = window.printedContent.substr(lastNewline + 2); // skip \n\r
+				var lastLine = window.printedContent.substr(lastNewline + 1); // 1 to skip \n.
+				lastLine = lastLine.replace(/(\r\n|\n|\r|\n\r)/gm,""); // skip past \r and \n, if any
 				if (lastLine.startsWith("help>")) {
 					helpRunning = true;
 				} else if (lastLine.includes("Do you really want to exit ([y]/n)?")) {
 					helpRunning = true;
+				}
+			}
+			// Easiest way to handle the case where Python (non-interactive) starts help, which starts less, which 
+			// changes the status to interactive, but does not reset it when leaving.
+			// TODO: adress the larger issue where a non-interactive command starts an interactive command.
+			if (window.commandRunning.startsWith("python")) {
+				var lastNewline = window.printedContent.lastIndexOf("\n");
+				var lastLine = window.printedContent.substr(lastNewline + 1); // 1 to skip \n.
+				lastLine = lastLine.replace(/(\r\n|\n|\r|\n\r)/gm,""); // skip past \r and \n, if any
+				if ((lastLine.startsWith("help>")) || (lastLine.startsWith(">>>"))) {
+					window.interactiveCommandRunning = false;
 				}
 			}
 			if ((window.commandRunning != '') && (term.vt.mouseReport != term.vt.MOUSE_REPORT_DISABLED)) {
@@ -978,6 +990,7 @@ function setupHterm() {
 		this.setForegroundColor(window.foregroundColor);
 		this.setBackgroundColor(window.backgroundColor);
 		this.setCursorColor(window.cursorColor);
+		this.setCursorShape(window.cursorShape);
 		this.keyboard.characterEncoding = 'raw';
 		// this.keyboard.bindings.addBinding('F11', 'PASS');
 		// this.keyboard.bindings.addBinding('Ctrl-R', 'PASS');
@@ -1922,6 +1935,10 @@ hterm.Terminal.prototype.realizeWidth_ = function(columnCount) {
 		window.term_.setCursorColor(window.cursorColor);
 		window.term_.prefs_.set('cursor-color', window.cursorColor);
 	}
+	if (window.term_.getCursorShape() === undefined) {
+		window.term_.setCursorShape(window.cursorShape);
+		window.term_.prefs_.set('cursor-shape', window.cursorShape);
+	}
   	// only rewrite content for primary screen:
   	if (this.isPrimaryScreen()) { 
 	  if ((window.printedContent !== undefined) && (window.printedContent != 'undefined')) {
@@ -2087,5 +2104,46 @@ hterm.ScrollPort.prototype.setFontFamily = function(
   this.screen_.style.webkitFontSmoothing = smoothing;
 
   this.syncCharacterSize();
+};
+
+/**
+ * Handle font zooming.
+ *
+ * @param {!KeyboardEvent} e The event to process.
+ * @param {!hterm.Keyboard.KeyDef} keyDef Key definition.
+ * @return {symbol|string} Key action or sequence.
+ */
+// iOS edit: tell the Swift part of the change in font size
+hterm.Keyboard.KeyMap.prototype.onZoom_ = function(e, keyDef) {
+  if (this.keyboard.ctrlPlusMinusZeroZoom === e.shiftKey) {
+    // If ctrl-PMZ controls zoom and the shift key is pressed, or
+    // ctrl-shift-PMZ controls zoom and this shift key is not pressed,
+    // then we want to send the control code instead of affecting zoom.
+    if (keyDef.keyCap == '-_') {
+      // ^_
+      return '\x1f';
+    }
+
+    // Only ^_ is valid, the other sequences have no meaning.
+    return hterm.Keyboard.KeyActions.CANCEL;
+  }
+
+  const cap = keyDef.keyCap.substr(0, 1);
+  if (cap == '0') {
+      this.keyboard.terminal.setFontSize(0);
+  } else {
+    let size = this.keyboard.terminal.getFontSize();
+
+    if (cap == '-' || keyDef.keyCap == '[KP-]') {
+      size -= 1;
+    } else {
+      size += 1;
+    }
+
+    this.keyboard.terminal.setFontSize(size);
+	window.webkit.messageHandlers.aShell.postMessage('setFontSize:' + size);
+  }
+
+  return hterm.Keyboard.KeyActions.CANCEL;
 };
 
