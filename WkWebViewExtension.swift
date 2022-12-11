@@ -80,7 +80,7 @@ extension WKWebView {
     func setKeyboardRequiresUserInteraction( _ value: Bool) {
         NSLog("hideKeyboard: entered setKeyboardRequiresUserInteraction; value= \(value)")
         guard let WKContentView: AnyClass = NSClassFromString("WKContentView") else {
-            print("setKeyboardRequiresUserInteraction extension: Cannot find the WKContentView class")
+            NSLog("setKeyboardRequiresUserInteraction extension: Cannot find the WKContentView class")
             return
         }
         var selector: Selector = sel_getUid("_elementDidFocus:userIsInteracting:blurPreviousNode:activityStateChanges:userObject:")
@@ -94,8 +94,12 @@ extension WKWebView {
 
             method_setImplementation(method, override);
         }
-        guard let WKContentViewAgain: AnyClass = NSClassFromString("WKApplicationStateTrackingView_CustomInputAccessoryView") else {
-            print("setKeyboardRequiresUserInteraction extension: Cannot find the WKApplicationStateTrackingView_CustomInputAccessoryView class")
+        var WKContentViewAgain: AnyClass? = NSClassFromString("WKApplicationStateTrackingView_CustomInputAccessoryView")
+        if (WKContentViewAgain == nil) {
+            WKContentViewAgain = NSClassFromString("WKContentView")
+        }
+        if (WKContentViewAgain == nil) {
+            NSLog("setKeyboardRequiresUserInteraction extension: Cannot find either WKApplicationStateTrackingView_CustomInputAccessoryView or  WKContentView class")
             return
         }
         selector = sel_getUid("_elementDidFocus:userIsInteracting:blurPreviousNode:activityStateChanges:userObject:")
@@ -135,7 +139,7 @@ extension WKWebView {
         let command = "window.term_.onFocusChange_(false)"
         self.evaluateJavaScript(command) { result, error in
             if let error = error {
-                print(error)
+                // print(error)
             }
             if let result = result {
                 // print(result)
