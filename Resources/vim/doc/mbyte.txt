@@ -1,4 +1,4 @@
-*mbyte.txt*     For Vim version 8.1.  Last change: 2019 Jul 04
+*mbyte.txt*     For Vim version 8.2.  Last change: 2022 Apr 03
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -36,7 +36,7 @@ characters or boxes when using another encoding.
 This is a summary of the multibyte features in Vim.  If you are lucky it works
 as described and you can start using Vim without much trouble.  If something
 doesn't work you will have to read the rest.  Don't be surprised if it takes
-quite a bit of work and experimenting to make Vim use all the multi-byte
+quite a bit of work and experimenting to make Vim use all the multibyte
 features.  Unfortunately, every system has its own way to deal with multibyte
 languages and it is quite complicated.
 
@@ -123,12 +123,12 @@ You can also set 'guifont' alone, Vim will try to find a matching
 
 INPUT
 
-There are several ways to enter multi-byte characters:
+There are several ways to enter multibyte characters:
 - For X11 XIM can be used.  See |XIM|.
 - For MS-Windows IME can be used.  See |IME|.
 - For all systems keymaps can be used.  See |mbyte-keymap|.
 
-The options 'iminsert', 'imsearch' and 'imcmdline' can be used to chose
+The options 'iminsert', 'imsearch' and 'imcmdline' can be used to choose
 the different input methods or disable them temporarily.
 
 ==============================================================================
@@ -141,8 +141,8 @@ in, or just use a certain locale inside Vim.
 
 WHAT IS A LOCALE?					*locale*
 
-There are many of languages in the world.  And there are different cultures
-and environments at least as much as the number of languages.	A linguistic
+There are many languages in the world.  And there are different cultures and
+environments at least as many as the number of languages.  A linguistic
 environment corresponding to an area is called "locale".  This includes
 information about the used language, the charset, collating order for sorting,
 date format, currency format and so on.  For Vim only the language and charset
@@ -237,11 +237,11 @@ encoded with one byte, we call this a single-byte encoding.  The most often
 used one is called "latin1".  This limits the number of characters to 256.
 Some of these are control characters, thus even fewer can be used for text.
 
-When some characters use two or more bytes, we call this a multi-byte
+When some characters use two or more bytes, we call this a multibyte
 encoding.  This allows using much more than 256 characters, which is required
 for most East Asian languages.
 
-Most multi-byte encodings use one byte for the first 127 characters.  These
+Most multibyte encodings use one byte for the first 127 characters.  These
 are equal to ASCII, which makes it easy to exchange plain-ASCII text, no
 matter what language is used.  Thus you might see the right text even when the
 encoding was set wrong.
@@ -488,11 +488,11 @@ possible.
 ==============================================================================
 4. Using a terminal					*mbyte-terminal*
 
-The GUI fully supports multi-byte characters.  It is also possible in a
+The GUI fully supports multibyte characters.  It is also possible in a
 terminal, if the terminal supports the same encoding that Vim uses.  Thus this
 is less flexible.
 
-For example, you can run Vim in a xterm with added multi-byte support and/or
+For example, you can run Vim in a xterm with added multibyte support and/or
 |XIM|.  Examples are kterm (Kanji term) and hanterm (for Korean), Eterm
 (Enlightened terminal) and rxvt.
 
@@ -544,7 +544,7 @@ For Vim you may need to set 'encoding' to "utf-8".
 5.  Fonts on X11					*mbyte-fonts-X11*
 
 Unfortunately, using fonts in X11 is complicated.  The name of a single-byte
-font is a long string.  For multi-byte fonts we need several of these...
+font is a long string.  For multibyte fonts we need several of these...
 
 Note: Most of this is no longer relevant for GTK+ 2.  Selecting a font via
 its XLFD is not supported; see 'guifont' for an example of how to
@@ -610,7 +610,7 @@ written like:
 
 X FONTSET
 						*fontset* *xfontset*
-A single-byte charset is typically associated with one font.  For multi-byte
+A single-byte charset is typically associated with one font.  For multibyte
 charsets a combination of fonts is often used.  This means that one group of
 characters are used from one font and another group from another font (which
 might be double wide).  This collection of fonts is called a fontset.
@@ -702,7 +702,7 @@ USING RESOURCE FILES
 Instead of specifying 'guifontset', you can set X11 resources and Vim will
 pick them up.  This is only for people who know how X resource files work.
 
-For Motif and Athena insert these three lines in your $HOME/.Xdefaults file:
+For Motif insert these three lines in your $HOME/.Xdefaults file:
 
 	Vim.font: |base_font_name_list|
 	Vim*fontSet: |base_font_name_list|
@@ -770,7 +770,7 @@ is suitable for complex input, such as CJK.
   of the two ways: FrontEnd system and BackEnd system.  In the FrontEnd
   system, input events are snatched by the |IM-server| first, then |IM-server|
   give the application the result of input.  On the other hand, the BackEnd
-  system works reverse order.  MS Windows adopt BackEnd system.  In X, most of
+  system works reverse order.  MS-Windows adopt BackEnd system.  In X, most of
   |IM-server|s adopt FrontEnd system.  The demerit of BackEnd system is the
   large overhead in communication, but it provides safe synchronization with
   no restrictions on applications.
@@ -862,8 +862,8 @@ Use the RPM or port for your system.
     window specific to the input method.
 
 
-USING XIM			*multibyte-input* *E284* *E286* *E287* *E288*
-				*E285* *E289*
+USING XIM			*multibyte-input* *E284* *E285* *E286* *E287*
+					*E288* *E289*
 
 Note that Display and Input are independent.  It is possible to see your
 language even though you have no input method for it.  But when your Display
@@ -889,7 +889,7 @@ input_server_name	is your |IM-server| name (check your |IM-server|
 your_input_style	is one of |OverTheSpot|, |OffTheSpot|, |Root|.  See
 			also |xim-input-style|.
 
-*international may not necessary if you use X11R6.
+*international may not be necessary if you use X11R6.
 *.inputMethod and *.preeditType are optional if you use X11R6.
 
 For example, when you are using kinput2 as |IM-server|, >
@@ -952,34 +952,13 @@ automatically.
 
 This works on not only insert-normal mode, but also search-command input and
 replace mode.
-The options 'iminsert', 'imsearch' and 'imcmdline' can be used to chose
+The options 'iminsert', 'imsearch' and 'imcmdline' can be used to choose
 the different input methods or disable them temporarily.
 
-WHAT IS IME
-    IME is a part of East asian version Windows.  That helps you to input
-    multibyte character.  English and other language version Windows does not
-    have any IME.  (Also there is no need usually.) But there is one that
-    called Microsoft Global IME.  Global IME is a part of Internet Explorer
-    4.0 or above.  You can get more information about Global IME, at below
-    URL.
-
-WHAT IS GLOBAL IME					*global-ime*
-    Global IME makes capability to input Chinese, Japanese, and Korean text
-    into Vim buffer on any language version of Windows 98, Windows 95, and
-    Windows NT 4.0.
-    On Windows 2000 and XP it should work as well (without downloading).  On
-    Windows 2000 Professional, Global IME is built in, and the Input Locales
-    can be added through Control Panel/Regional Options/Input Locales.
-    Please see below URL for detail of Global IME.  You can also find various
-    language version of Global IME at same place.
-
-    - Global IME detailed information.
-	http://search.microsoft.com/results.aspx?q=global+ime
-
-    - Active Input Method Manager (Global IME)
+On Windows 9x and Windows NT 4.0 there was *global-ime* , but this is no
+longer supported.  You can still find documentation for Active Input Method
+Manager (Global IME) here:
 	http://msdn.microsoft.com/en-us/library/aa741221(v=VS.85).aspx
-
-    Support for Global IME is an experimental feature.
 
 NOTE: For IME to work you must make sure the input locales of your language
 are added to your system.  The exact location of this depends on the version
@@ -1132,7 +1111,7 @@ This file explains what characters are available in UTF-8 and CP1255 encodings,
 and what the keymaps are to get those characters:
 
 glyph   encoding	   keymap ~
-Char   utf-8 cp1255  hebrew  hebrewp  name ~
+Char UTF-8 cp1255  hebrew  hebrewp  name ~
 א    0x5d0  0xe0     t	      a     'alef
 ב    0x5d1  0xe1     c	      b     bet
 ג    0x5d2  0xe2     d	      g     gimel
@@ -1185,11 +1164,11 @@ Vowel marks and special punctuation:
 ױ    0x5f1  0xd5     VY      VY   vav-yod
 ײ    0x5f2  0xd6     YY      YY   yod-yod
 
-The following are only available in utf-8
+The following are only available in UTF-8
 
 Cantillation marks:
 glyph
-Char utf-8 hebrew name
+Char UTF-8 hebrew name
 ב֑    0x591   C:   etnahta
 ב֒    0x592   Cs   segol
 ב֓    0x593   CS   shalshelet
@@ -1300,8 +1279,8 @@ ASCII.   On MS-Windows UTF-16 is also used (previously UCS-2), which uses
 internally.
 
 Vim has comprehensive UTF-8 support.  It works well in:
-- xterm with utf-8 support enabled
-- Athena, Motif and GTK GUI
+- xterm with UTF-8 support enabled
+- Motif and GTK GUI
 - MS-Windows GUI
 - several other platforms
 
@@ -1313,13 +1292,13 @@ is no longer relevant in the GTK+ 2 GUI.
 							*bom-bytes*
 When reading a file a BOM (Byte Order Mark) can be used to recognize the
 Unicode encoding:
-	EF BB BF     utf-8
-	FE FF        utf-16 big endian
-	FF FE        utf-16 little endian
-	00 00 FE FF  utf-32 big endian
-	FF FE 00 00  utf-32 little endian
+	EF BB BF     UTF-8
+	FE FF        UTF-16 big endian
+	FF FE        UTF-16 little endian
+	00 00 FE FF  UTF-32 big endian
+	FF FE 00 00  UTF-32 little endian
 
-Utf-8 is the recommended encoding.  Note that it's difficult to tell utf-16
+UTF-8 is the recommended encoding.  Note that it's difficult to tell utf-16
 and utf-32 apart.  Utf-16 is often used on MS-Windows, utf-32 is not
 widespread as file format.
 
@@ -1365,8 +1344,8 @@ Useful commands:
 
 STARTING VIM
 
-If your current locale is in an utf-8 encoding, Vim will automatically start
-in utf-8 mode.
+If your current locale is in an UTF-8 encoding, Vim will automatically start
+in UTF-8 mode.
 
 If you are using another locale: >
 
@@ -1399,10 +1378,10 @@ Motif.  Use the ":hi Menu font={fontname}" command for this. |:highlight|
 TYPING UTF-8						*utf-8-typing*
 
 If you are using X-Windows, you should find an input method that supports
-utf-8.
+UTF-8.
 
-If your system does not provide support for typing utf-8, you can use the
-'keymap' feature.  This allows writing a keymap file, which defines a utf-8
+If your system does not provide support for typing UTF-8, you can use the
+'keymap' feature.  This allows writing a keymap file, which defines a UTF-8
 character as a sequence of ASCII characters.  See |mbyte-keymap|.
 
 Another method is to set the current locale to the language you want to use
@@ -1436,7 +1415,7 @@ not everybody is able to type a composing character.
 ==============================================================================
 12. Overview of options					*mbyte-options*
 
-These options are relevant for editing multi-byte files.  Check the help in
+These options are relevant for editing multibyte files.  Check the help in
 options.txt for detailed information.
 
 'encoding'	Encoding used for the keyboard and display.  It is also the
@@ -1456,14 +1435,14 @@ options.txt for detailed information.
 		languages where a sequence of characters can be broken
 		anywhere.
 
-'guifontset'	The list of font names used for a multi-byte encoding.  When
+'guifontset'	The list of font names used for a multibyte encoding.  When
 		this option is not empty, it replaces 'guifont'.
 
 'keymap'	Specify the name of a keyboard mapping.
 
 ==============================================================================
 
-Contributions specifically for the multi-byte features by:
+Contributions specifically for the multibyte features by:
 	Chi-Deok Hwang <hwang@mizi.co.kr>
 	SungHyun Nam <goweol@gmail.com>
 	K.Nagano <nagano@atese.advantest.co.jp>

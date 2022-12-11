@@ -1,6 +1,7 @@
 " Menu Translations:	Vietnamese
 " Maintainer:		Phan Vinh Thinh <teppi@vnlinux.org>
 " Last Change:		12 Mar 2005
+" Original translations
 " URL:			http://iatp.vspu.ac.ru/phan/vietvim/lang/menu_vi_vn.vim
 "
 "
@@ -58,7 +59,7 @@ menutrans Split\ &Diff\ with\.\.\.	&So\ sánh\ với\.\.\.
 menutrans Split\ Patched\ &By\.\.\.	So\ sánh\ đã\ vá\ lỗi\ &bởi\.\.\.
 "--------------------
 menutrans &Print			In\ &ra
-menutrans Sa&ve-Exit<Tab>:wqa		Ghi\ nhớ\ rồi\ th&oát <Tab>:wqa
+menutrans Sa&ve-Exit<Tab>:wqa		Ghi\ nhớ\ rồi\ th&oát\ <Tab>:wqa
 menutrans E&xit<Tab>:qa			&Thoát<Tab>:qa
 "
 "
@@ -87,7 +88,7 @@ menutrans C&olor\ Scheme		Phối\ hợp\ màu\ &sắc
 menutrans &Keymap			Sơ\ đồ\ &bàn\ phím
 menutrans Select\ Fo&nt\.\.\.		Chọn\ &phông\ chữ\.\.\.
 ">>>----------------- Edit/Global settings
-menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!     &Chiếu\ sáng\ từ\ tìm\ thấy <Tab>:set\ hls!
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!     &Chiếu\ sáng\ từ\ tìm\ thấy\ <Tab>:set\ hls!
 menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		 &Không\ tính\ đến\ kiểu\ chữ<Tab>:set\ ic!
 menutrans Toggle\ &Showmatch<Tab>:set\ sm!		 Cho\ &biết\ phần\ tử\ có\ cặp<Tab>:set\ sm!
 menutrans &Context\ lines				 Số\ &dòng\ quanh\ con\ trỏ
@@ -149,7 +150,7 @@ menutrans Jump\ &back<Tab>^T				&Quay\ lại<Tab>^T
 menutrans Build\ &Tags\ File				&Tạo\ tập\ tin\ thẻ\ ghi
 "-------------------
 menutrans &Folding					Nếp\ &gấp
-menutrans &Diff						&Khác\ biệt (diff)
+menutrans &Diff						&Khác\ biệt\ (diff)
 "-------------------
 menutrans &Make<Tab>:make				&Biên\ dịch<Tab>:make
 menutrans &List\ Errors<Tab>:cl				&Danh\ sách\ lỗi<Tab>:cl

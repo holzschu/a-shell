@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	2019 May 12
+" Last Change:	2022 May 15
 
 " Quit when a (custom) syntax file was already loaded
 if exists("b:current_syntax")
@@ -11,7 +11,7 @@ endif
 let s:cpo_save = &cpo
 set cpo&vim
 
-syn match helpHeadline		"^[-A-Z .][-A-Z0-9 .()_]*[ \t]\+\*"me=e-1
+syn match helpHeadline		"^[-A-Z .][-A-Z0-9 .()_]*\ze\(\s\+\*\|$\)"
 syn match helpSectionDelim	"^===.*===$"
 syn match helpSectionDelim	"^---.*--$"
 if has("conceal")
@@ -76,6 +76,7 @@ syn match helpSpecial		"\[line]"
 syn match helpSpecial		"\[count]"
 syn match helpSpecial		"\[offset]"
 syn match helpSpecial		"\[cmd]"
+syn match helpNormal		"vim9\[cmd]"
 syn match helpSpecial		"\[num]"
 syn match helpSpecial		"\[+num]"
 syn match helpSpecial		"\[-num]"
@@ -90,6 +91,7 @@ syn match helpSpecial		"\[group]"
 syn match helpNormal		"\[\(readonly\|fifo\|socket\|converted\|crypted\)]"
 
 syn match helpSpecial		"CTRL-."
+syn match helpSpecial		"CTRL-SHIFT-."
 syn match helpSpecial		"CTRL-Break"
 syn match helpSpecial		"CTRL-PageUp"
 syn match helpSpecial		"CTRL-PageDown"
@@ -212,6 +214,12 @@ hi def link helpUnderlined	Underlined
 hi def link helpError		Error
 hi def link helpTodo		Todo
 hi def link helpURL		String
+
+if has('textprop') && expand('%:p') =~ '[/\\]doc[/\\]syntax.txt'
+  " highlight groups with their respective color
+  import 'dist/vimhelp.vim'
+  call vimhelp.HighlightGroups()
+endif
 
 let b:current_syntax = "help"
 

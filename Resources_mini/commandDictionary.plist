@@ -352,7 +352,7 @@
 		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
 		<string>file</string>
 	</array>
-	<key>python3.9</key>
+	<key>python3.11</key>
 	<array>
 		<string>python3_ios.framework/python3_ios</string>
 		<string>Py_BytesMain</string>
@@ -810,6 +810,13 @@
 	<key>pico</key>
 	<array>
 		<string>pico.framework/pico</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>multimarkdown</key>
+	<array>
+		<string>multimarkdown.framework/multimarkdown</string>
 		<string>main</string>
 		<string></string>
 		<string>file</string>

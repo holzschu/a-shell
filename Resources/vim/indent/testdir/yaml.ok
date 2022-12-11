@@ -12,3 +12,9 @@ map2:
 map: &anchor
 map: val
 # END_INDENT
+
+# START_INDENT
+map: |
+  line1
+  line2
+# END_INDENT

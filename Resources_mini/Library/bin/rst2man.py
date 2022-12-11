@@ -1,4 +1,4 @@
-#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.9
+#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.11
 
 # Author:
 # Contact: grubert@users.sf.net
@@ -21,6 +21,7 @@ except:
 from docutils.core import publish_cmdline, default_description
 from docutils.writers import manpage
 
-description = ("Generates plain unix manual documents.  " + default_description)
+description = ("Generates plain unix manual documents.  "
+               + default_description)
 
 publish_cmdline(writer=manpage.Writer(), description=description)

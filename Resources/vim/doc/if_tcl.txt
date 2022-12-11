@@ -1,4 +1,4 @@
-*if_tcl.txt*    For Vim version 8.1.  Last change: 2019 Jul 21
+*if_tcl.txt*    For Vim version 8.2.  Last change: 2022 Jan 08
 
 
 		  VIM REFERENCE MANUAL    by Ingo Wilken
@@ -16,21 +16,21 @@ The Tcl Interface to Vim				*tcl* *Tcl* *TCL*
 8. Examples				|tcl-examples|
 9. Dynamic loading			|tcl-dynamic|
 
-*E280*
 {only available when Vim was compiled with the |+tcl| feature}
 
+							*E280*
 WARNING: There are probably still some bugs.  Please send bug reports,
 comments, ideas etc to <Ingo.Wilken@informatik.uni-oldenburg.de>
 
 ==============================================================================
 1. Commands				*tcl-ex-commands* *E571* *E572*
 
-							*:tcl* *:tc*
-:tc[l] {cmd}		Execute Tcl command {cmd}.  A simple check if `:tcl`
+							*:tcl*
+:tcl {cmd}		Execute Tcl command {cmd}.  A simple check if `:tcl`
 			is working: >
 				:tcl puts "Hello"
 
-:[range]tc[l] << [endmarker]
+:[range]tcl << [trim] [{endmarker}]
 {script}
 {endmarker}
 			Execute Tcl script {script}.
@@ -38,10 +38,9 @@ comments, ideas etc to <Ingo.Wilken@informatik.uni-oldenburg.de>
 			wasn't compiled in.  To avoid errors, see
 			|script-here|.
 
-The {endmarker} after {script} must NOT be preceded by any white space.
-
 If [endmarker] is omitted from after the "<<", a dot '.' must be used after
-{script}, like for the |:append| and |:insert| commands.
+{script}, like for the |:append| and |:insert| commands.  Refer to
+|:let-heredoc| for more information.
 
 This form of the |:tcl| command is mainly useful for including tcl code in Vim
 scripts.
@@ -276,7 +275,7 @@ Options:
 	$win delcmd {cmd}				*tcl-window-delcmd*
 	Registers the Tcl command {cmd} as a deletion callback for the window.
 	This command is executed (in the global scope) just before the window
-	is closed.  Complex commands should be build with "list": >
+	is closed.  Complex commands should be built with "list": >
 		$win delcmd [list puts vimerr "window deleted"]
 <	See also |tcl-buffer-delcmd|.
 
@@ -358,7 +357,7 @@ Options:
 	$buf delcmd {cmd}				*tcl-buffer-delcmd*
 	Registers the Tcl command {cmd} as a deletion callback for the buffer.
 	This command is executed (in the global scope) just before the buffer
-	is deleted.  Complex commands should be build with "list": >
+	is deleted.  Complex commands should be built with "list": >
 		$buf delcmd [list puts vimerr "buffer [$buf number] gone"]
 <	See also |tcl-window-delcmd|.
 

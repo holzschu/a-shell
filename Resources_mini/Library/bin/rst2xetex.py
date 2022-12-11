@@ -1,6 +1,6 @@
-#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.9
+#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.11
 
-# $Id: rst2xetex.py 7847 2015-03-17 17:30:47Z milde $
+# $Id: rst2xetex.py 8956 2022-01-20 10:11:44Z milde $
 # Author: Guenter Milde
 # Copyright: This module has been placed in the public domain.
 
@@ -21,7 +21,7 @@ description = ('Generates LaTeX documents from standalone reStructuredText '
                'XeLaTeX or LuaLaTeX. '
                'Reads from <source> (default is stdin) and writes to '
                '<destination> (default is stdout).  See '
-               '<http://docutils.sourceforge.net/docs/user/latex.html> for '
+               '<https://docutils.sourceforge.io/docs/user/latex.html> for '
                'the full reference.')
 
 publish_cmdline(writer_name='xetex', description=description)

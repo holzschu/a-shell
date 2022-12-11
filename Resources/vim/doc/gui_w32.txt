@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 8.1.  Last change: 2019 May 05
+*gui_w32.txt*   For Vim version 8.2.  Last change: 2022 Mar 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -106,8 +106,6 @@ when you have got a new version):
 You can also install Vim in the "Send To" menu:
 1. Start a Windows Explorer
 2. Navigate to your sendto directory:
-   Windows NT: %windir%\profiles\%user%\sendto (e.g.
-	       "c:\winnt\profiles\mattha\sendto")
    Windows XP: C:\Documents and Settings\%user%\SendTo
    Windows Vista: C:\Users\%user%\AppData\Roaming\Microsoft\Windows\SendTo .
 3. Right-click in the file pane and select New->Shortcut
@@ -115,7 +113,8 @@ You can also install Vim in the "Send To" menu:
 
 When you 'send a file to Vim', Vim changes to that file's directory.  Note,
 however, that any long directory names will appear in their short (MS-DOS)
-form.  This is a limitation of the Windows "Send To" mechanism.
+form on some Windows versions.  This is a limitation of the Windows "Send To"
+mechanism.
 
 						*notepad*
 You could replace notepad.exe with gvim.exe, but that has a few side effects.
@@ -169,8 +168,8 @@ you can.
 					    Vim Shell Extension
    HKEY_LOCAL_MACHINE\Software\Vim\Gvim
 		path			    {path}\gvim.exe
-   HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Uninstall\vim 5.6
-		DisplayName		    Vim 5.6: Edit with Vim popup menu entry
+   HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Uninstall\vim 8.2
+		DisplayName		    Vim 8.2: Edit with Vim popup menu entry
 		UninstallString		    {path}\uninstall.exe
 
    Replace {path} with the path that leads to the executable.
@@ -200,7 +199,7 @@ With..." menu.  This means you can use Vim to edit many files.  Not every file
 One reason to add this is to be able to edit HTML files directly from Internet
 Explorer.  To enable this use the "Tools" menu, "Internet Options..." entry.
 In the dialog select the "Programs" tab and select Vim in the "HTML editor"
-choice.  If it's not there than installing didn't work properly.
+choice.  If it's not there then installing didn't work properly.
 
 Doing this manually can be done with this script:
 
@@ -214,7 +213,7 @@ REGEDIT4
 [HKEY_CLASSES_ROOT\Applications\gvim.exe\shell\edit]
 
 [HKEY_CLASSES_ROOT\Applications\gvim.exe\shell\edit\command]
-@="c:\\vim\\vim62\\gvim.exe \"%1\""
+@="c:\\vim\\vim82\\gvim.exe \"%1\""
 
 [HKEY_CLASSES_ROOT\.htm\OpenWithList\gvim.exe]
 
@@ -222,7 +221,7 @@ REGEDIT4
 
 ----------------------------------------------------------
 
-Change the "c:\\vim\\vim62" bit to where gvim.exe is actually located.
+Change the "c:\\vim\\vim82" bit to where gvim.exe is actually located.
 
 To uninstall this run the Vim uninstall program or manually delete the
 registry entries with "regedit".
@@ -237,7 +236,8 @@ The "* register reflects the contents of the clipboard.  |quotestar|
 
 When the "unnamed" string is included in the 'clipboard' option, the unnamed
 register is the same.  Thus you can yank to and paste from the clipboard
-without prepending "* to commands.
+without prepending "* to commands. If this doesn't work use the "unnamedplus"
+string in the 'clipboard' option.
 
 The 'a' flag in 'guioptions' is not included by default.  This means that text
 is only put on the clipboard when an operation is performed on it.  Just
@@ -324,20 +324,10 @@ These extra colors are also available:
 Gray, Grey, LightYellow, SeaGreen, Orange, Purple, SlateBlue, Violet,
 
 								*rgb.txt*
-Additionally, colors defined by a "rgb.txt" file can be used.  This file is
-well known from X11.  A few lines from it: >
-
-  255 218 185		   peach puff
-  205 133  63		   peru
-  255 181 197		   pink
-
-This shows the layout of the file:  First the R, G and B value as a decimal
-number, followed by the name of the color.  The four fields are separated by
-spaces.
-
-You can get an rgb.txt file from any X11 distribution.  It is located in a
-directory like "/usr/X11R6/lib/X11/".  For Vim it must be located in the
-$VIMRUNTIME directory.  Thus the file can be found with "$VIMRUNTIME/rgb.txt".
+Additionally, colors defined by a default color list can be used.  For more
+info see |:colorscheme|.  These colors used to be defined in
+$VIMRUNTIME/rgb.txt, now they are in |v:colornames| which is initialized from
+$VIMRUNTIME/colors/lists/default.vim.
 
 ==============================================================================
 						*gui-w32-dialogs* *dialog*
@@ -404,7 +394,7 @@ The "File/Print" menu prints the text with syntax highlighting, see
 printer installed this should also work: >
 	:w >>prn
 
-Vim supports a number of standard MS Windows features.  Some of these are
+Vim supports a number of standard MS-Windows features.  Some of these are
 detailed elsewhere: see |'mouse'|, |win32-hidden-menus|.
 
 							*drag-n-drop-win32*
@@ -452,13 +442,17 @@ with the Intellimouse driver 2.2 and when "Universal Scrolling" is turned on.
 
 XPM support						*w32-xpm-support*
 
-GVim can be build on MS-Windows with support for XPM files.  |+xpm_w32|
+GVim can be built on MS-Windows with support for XPM files.  |+xpm_w32|
 See the Make_mvc.mak file for instructions, search for XPM.
 
 To try out if XPM support works do this: >
 	:help
-	:exe 'sign define vimxpm icon=' . $VIMRUNTIME . '\\vim16x16.xpm'
-	:exe 'sign place 1 line=1 name=vimxpm file=' . expand('%:p')
+	:let runtime = escape($VIMRUNTIME, ' \')
+	:exe 'sign define vimxpm icon=' .. runtime .. '\\vim16x16.xpm'
+	:exe 'sign place 1 line=1 name=vimxpm file=' .. expand('%:p')
 <
+You may need to get the vim16x16.xpm file from github:
+https://github.com/vim/vim/blob/master/runtime/vim16x16.xpm
+
 
  vim:tw=78:sw=4:ts=8:noet:ft=help:norl:

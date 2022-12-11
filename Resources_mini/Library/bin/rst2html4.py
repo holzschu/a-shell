@@ -1,6 +1,6 @@
-#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.9
+#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.11
 
-# $Id: rst2html4.py 7994 2016-12-10 17:41:45Z milde $
+# $Id: rst2html4.py 8927 2022-01-03 23:50:05Z milde $
 # Author: David Goodger <goodger@python.org>
 # Copyright: This module has been placed in the public domain.
 

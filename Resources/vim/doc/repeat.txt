@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 8.1.  Last change: 2019 Sep 20
+*repeat.txt*    For Vim version 8.2.  Last change: 2022 Jun 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -59,6 +59,11 @@ of area is used, see |visual-repeat|.
 :[range]v[global]/{pattern}/[cmd]
 			Same as :g!.
 
+Example: >
+	:g/^Obsolete/d _
+Using the underscore after `:d` avoids clobbering registers or the clipboard.
+This also makes it faster.
+
 Instead of the '/' which surrounds the {pattern}, you can use any other
 single byte character, but not an alphabetic character, '\', '"' or '|'.
 This is useful if you want to include a '/' in the search pattern or
@@ -79,7 +84,7 @@ The default for [range] is the whole buffer (1,$).  Use "CTRL-C" to interrupt
 the command.  If an error message is given for a line, the command for that
 line is aborted and the global command continues with the next marked or
 unmarked line.
-								*E147* 
+								*E147*
 When the command is used recursively, it only works on one line.  Giving a
 range is then not allowed. This is useful to find all lines that match a
 pattern and do not match another pattern: >
@@ -126,6 +131,11 @@ q{0-9a-zA-Z"}		Record typed characters into register {0-9a-zA-Z"}
 			recorded macro and the yank will overwrite the
 			recorded macro.
 
+			Note: The recording happens while you type, replaying
+			the register happens as if the keys come from a
+			mapping.  This matters, for example, for undo, which
+			only syncs when commands were typed.
+
 q			Stops recording.  (Implementation note: The 'q' that
 			stops recording is not stored in the register, unless
 			it was the result of a mapping)
@@ -137,7 +147,7 @@ q			Stops recording.  (Implementation note: The 'q' that
 			used.
 			The register is executed like a mapping, that means
 			that the difference between 'wildchar' and 'wildcharm'
-			applies.
+			applies, and undo might not be synced in the same way.
 			For "@=" you are prompted to enter an expression.  The
 			result of the expression is then executed.
 			See also |@:|.
@@ -145,28 +155,37 @@ q			Stops recording.  (Implementation note: The 'q' that
 							*@@* *E748*
 @@			Repeat the previous @{0-9a-z":*} [count] times.
 
-:[addr]*{0-9a-z".=+}						*:@* *:star*
+								*:@*
 :[addr]@{0-9a-z".=*+}	Execute the contents of register {0-9a-z".=*+} as an Ex
 			command.  First set cursor at line [addr] (default is
 			current line).  When the last line in the register does
 			not have a <CR> it will be added automatically when
 			the 'e' flag is present in 'cpoptions'.
-			Note that the ":*" command is only recognized when the
-			'*' flag is present in 'cpoptions'.  This is NOT the
-			default when 'nocompatible' is used.
 			For ":@=" the last used expression is used.  The
 			result of evaluating the expression is executed as an
 			Ex command.
 			Mappings are not recognized in these commands.
+			When the |line-continuation| character (\) is present
+			at the beginning of a line in a linewise register,
+			then it is combined with the previous line. This is
+			useful for yanking and executing parts of a Vim
+			script.
 			Future: Will execute the register for each line in the
 			address range.
+
+:[addr]*{0-9a-z".=+}					*:star-compatible*
+			When '*' is present in 'cpoptions' |cpo-star|, use
+			":*" in the same way as ":@".  This is NOT the default
+			when 'nocompatible' is used.  When the '*' flag is not
+			present in 'cpoptions', ":*" is an alias for ":'<,'>",
+			select the Visual area |:star|.
 
 							*:@:*
 :[addr]@:		Repeat last command-line.  First set cursor at line
 			[addr] (default is current line).
 
 :[addr]@							*:@@*
-:[addr]@@		Repeat the previous :@{0-9a-z"}.  First set cursor at
+:[addr]@@		Repeat the previous :@{register}.  First set cursor at
 			line [addr] (default is current line).
 
 ==============================================================================
@@ -178,6 +197,41 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 :so[urce] {file}	Read Ex commands from {file}.  These are commands that
 			start with a ":".
 			Triggers the |SourcePre| autocommand.
+							*:source-range*
+:[range]so[urce] [++clear]
+			Read Ex commands from the [range] of lines in the
+			current buffer.
+
+			When sourcing commands from the current buffer, the
+			same script-ID |<SID>| is used even if the buffer is
+			sourced multiple times. If a buffer is sourced more
+			than once, then the functions in the buffer are
+			defined again.
+
+			To source a range of lines that doesn't start with the
+			|:vim9script| command in Vim9 script context, the
+			|:vim9cmd| modifier can be used.  If you use a Visual
+			selection and type ":", the range in the form "'<,'>"
+			can come before it: >
+				:'<,'>vim9cmd source
+<			Otherwise the range goes after the modifier and must
+			have a colon prefixed, like all Vim9 ranges: >
+				:vim9cmd :5,9source
+
+<			When a range of lines in a buffer is sourced in the
+			Vim9 script context, the previously defined
+			script-local variables and functions are not cleared.
+			This works like the range started with the
+			":vim9script noclear" command.  The "++clear" argument
+			can be used to clear the script-local variables and
+			functions before sourcing the script. This works like
+			the range started with the `:vim9script` command
+			without the "noclear" argument. See |vim9-reload| for
+			more information.
+			Examples: >
+				:4,5source
+				:10,18source ++clear
+
 							*:source!*
 :so[urce]! {file}	Read Vim commands from {file}.  These are commands
 			that are executed from Normal mode, like you type
@@ -193,7 +247,7 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 			Read Ex commands from {file} in each directory given
 			by 'runtimepath' and/or 'packpath'.  There is no error
 			for non-existing files.
-			
+
 			Example: >
 				:runtime syntax/c.vim
 
@@ -260,7 +314,12 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 			ftdetect scripts are loaded, only the matching
 			directories are added to 'runtimepath'.  This is
 			useful in your .vimrc.  The plugins will then be
-			loaded during initialization, see |load-plugins|.
+			loaded during initialization, see |load-plugins| (note
+			that the loading order will be reversed, because each
+			directory is inserted before others).
+			Note that for ftdetect scripts to be loaded
+			you will need to write `filetype plugin indent on`
+			AFTER all `packadd!` commands.
 
 			Also see |pack-add|.
 			{only available when compiled with |+eval|}
@@ -268,7 +327,7 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 						*:packl* *:packloadall*
 :packl[oadall][!]	Load all packages in the "start" directory under each
 			entry in 'packpath'.
-			
+
 			First all the directories found are added to
 			'runtimepath', then the plugins found in the
 			directories are sourced.  This allows for a plugin to
@@ -330,7 +389,7 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 <
 
 :scriptv[ersion] {version}		*:scriptv* *:scriptversion*
-								*E999* *E984*
+							*E999* *E984* *E1040*
 			Specify the version of Vim for the lines that follow
 			in the same file.  Only applies at the toplevel of
 			sourced scripts, not inside functions.
@@ -341,10 +400,23 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 			Vim version, or update Vim to a newer version.  See
 			|vimscript-version| for what changed between versions.
 
+:vim9s[cript] [noclear]				*:vim9s* *:vim9script*
+			Marks a script file as containing |Vim9-script|
+			commands.  Also see |vim9-namespace|. *E1038*
+			Must be the first command in the file. *E1039*
+			For [noclear] see |vim9-reload|.
+			Without the |+eval| feature this changes the syntax
+			for some commands.
+			See |:vim9cmd| for executing one command with Vim9
+			syntax and semantics.
+
 						*:scr* *:scriptnames*
 :scr[iptnames]		List all sourced script names, in the order they were
-			first sourced.  The number is used for the script ID
-			|<SID>|.
+			first encountered.  The number is used for the script
+			ID |<SID>|.
+			For a script that was used with `import autoload` but
+			was not actually sourced yet an "A" is shown after the
+			script ID.
 			{not available when compiled without the |+eval|
 			feature}
 
@@ -382,10 +454,10 @@ An alternative is to put the commands in a file, and execute them with the
 ':source!' command.  Useful for long command sequences.  Can be combined with
 the ':map' command to put complicated commands under a function key.
 
-The ':source' command reads Ex commands from a file line by line.  You will
-have to type any needed keyboard input.  The ':source!' command reads from a
-script file character by character, interpreting each character as if you
-typed it.
+The ':source' command reads Ex commands from a file or a buffer line by line.
+You will have to type any needed keyboard input.  The ':source!' command reads
+from a script file character by character, interpreting each character as if
+you typed it.
 
 Example: When you give the ":!ls" command you get the |hit-enter| prompt.  If
 you ':source' a file with the line "!ls" in it, you will have to type the
@@ -414,13 +486,13 @@ with CTRL-V followed by the three digit decimal code.  This does NOT work for
 the <t_xx> termcap codes, these can only be used in mappings.
 
 							*:source_crnl* *W15*
-MS-DOS, Win32 and OS/2: Files that are read with ":source" normally have
-<CR><NL> <EOL>s.  These always work.  If you are using a file with <NL> <EOL>s
-(for example, a file made on Unix), this will be recognized if 'fileformats'
-is not empty and the first line does not end in a <CR>.  This fails if the
-first line has something like ":map <F1> :help^M", where "^M" is a <CR>.  If
-the first line ends in a <CR>, but following ones don't, you will get an error
-message, because the <CR> from the first lines will be lost.
+Win32: Files that are read with ":source" normally have <CR><NL> <EOL>s.
+These always work.  If you are using a file with <NL> <EOL>s (for example, a
+file made on Unix), this will be recognized if 'fileformats' is not empty and
+the first line does not end in a <CR>.  This fails if the first line has
+something like ":map <F1> :help^M", where "^M" is a <CR>.  If the first line
+ends in a <CR>, but following ones don't, you will get an error message,
+because the <CR> from the first lines will be lost.
 
 Mac Classic: Files that are read with ":source" normally have <CR> <EOL>s.
 These always work.  If you are using a file with <NL> <EOL>s (for example, a
@@ -430,7 +502,7 @@ linebreaks which has a <CR> in first line.
 
 On other systems, Vim expects ":source"ed files to end in a <NL>.  These
 always work.  If you are using a file with <CR><NL> <EOL>s (for example, a
-file made on MS-DOS), all lines will have a trailing <CR>.  This may cause
+file made on MS-Windows), all lines will have a trailing <CR>.  This may cause
 problems for some commands (e.g., mappings).  There is no automatic <EOL>
 detection, because it's common to start with a line that defines a mapping
 that ends in a <CR>, which will confuse the automaton.
@@ -460,6 +532,9 @@ space at the end of a line is hard to see and may be accidentally deleted. >
 	:syn match Comment
 		\ "very long regexp"
 		\ keepend
+
+In |Vim9| script the backslash can often be omitted, but not always.
+See |vim9-line-continuation|.
 
 There is a problem with the ":append" and ":insert" commands: >
    :1append
@@ -547,7 +622,7 @@ When Vim starts up, after processing your .vimrc, it scans all directories in
 directories are added to 'runtimepath'.  Then all the plugins are loaded.
 See |packload-two-steps| for how these two steps can be useful.
 
-In the example Vim will find "pack/foo/start/foobar/plugin/foo.vim" and adds 
+In the example Vim will find "pack/foo/start/foobar/plugin/foo.vim" and adds
 "~/.vim/pack/foo/start/foobar" to 'runtimepath'.
 
 If the "foobar" plugin kicks in and sets the 'filetype' to "some", Vim will
@@ -632,8 +707,8 @@ disallowed though.
 This assumes you write one or more plugins that you distribute as a package.
 
 If you have two unrelated plugins you would use two packages, so that Vim
-users can chose what they include or not.  Or you can decide to use one
-package with optional plugins, and tell the user to add the ones he wants with
+users can choose what they include or not.  Or you can decide to use one
+package with optional plugins, and tell the user to add the preferred ones with
 `:packadd`.
 
 Decide how you want to distribute the package.  You can create an archive or
@@ -654,9 +729,9 @@ Your directory layout would be like this:
    opt/fooextra/doc/tags  	        " help tags
 
 This allows for the user to do: >
-	mkdir ~/.vim/pack/myfoobar
-	cd ~/.vim/pack/myfoobar
-	git clone https://github.com/you/foobar.git
+	mkdir ~/.vim/pack
+	cd ~/.vim/pack
+	git clone https://github.com/you/foobar.git myfoobar
 
 Here "myfoobar" is a name that the user can choose, the only condition is that
 it differs from other packages.
@@ -669,7 +744,7 @@ You could add this packadd command in one of your plugins, to be executed when
 the optional plugin is needed.
 
 Run the `:helptags` command to generate the doc/tags file.  Including this
-generated file in the package means that the user can drop the package in his
+generated file in the package means that the user can drop the package in the
 pack directory and the help command works right away.  Don't forget to re-run
 the command after changing the plugin help: >
 	:helptags path/start/foobar/doc
@@ -758,6 +833,10 @@ won't be very helpful.
 
 There is a separate command-line history for debug mode.
 
+NOTE: In Vim9 script, if a command is written at the script level and
+continues on the next line, not using the old way with a backslash for line
+continuation, only the first line is printed before the debugging prompt.
+
 The line number for a function line is relative to the start of the function.
 If you have trouble figuring out where you are, edit the file that defines
 the function in another Vim, search for the start of the function and do
@@ -810,6 +889,16 @@ About the additional commands in debug mode:
   is reset (because it's not clear what you want to repeat).
 - When you want to use the Ex command with the same name, prepend a colon:
   ":cont", ":next", ":finish" (or shorter).
+							*vim9-debug*
+When debugging a compiled :def function, "step" will stop before every
+executed line, not every single instruction.  Thus it works mostly like a not
+compiled function.  Access to local variables is limited you can use: >
+	echo varname
+But not much else.
+When executing a command that is not a specific bytecode instruction but
+executed like a normal Ex command, "step" will stop once in the compiled
+context, where local variables can be inspected, and once just before
+executing the command.
 
 The backtrace shows the hierarchy of function calls, e.g.:
 	>bt ~
@@ -849,14 +938,18 @@ DEFINING BREAKPOINTS
 		Sets a breakpoint, that will break whenever the {expression}
 		evaluates to a different value. Example: >
 			:breakadd expr g:lnum
-
 <		Will break, whenever the global variable lnum changes.
+
+		Errors in evaluation are suppressed, you can use the name of a
+		variable that does not exist yet.  This also means you will
+		not notice anything if the expression has a mistake.
+
 		Note if you watch a |script-variable| this will break
 		when switching scripts, since the script variable is only
 		valid in the script where it has been defined and if that
 		script is called from several other scripts, this will stop
 		whenever that particular variable will become visible or
-		unaccessible again.
+		inaccessible again.
 
 The [lnum] is the line number of the breakpoint.  Vim will stop at or after
 this line.  When omitted line 1 is used.
@@ -878,8 +971,9 @@ matches ".../plugin/explorer.vim", ".../plugin/iexplorer.vim", etc. >
 matches ".../plugin/explorer.vim" and "explorer.vim" in any other directory.
 
 The match for functions is done against the name as it's shown in the output
-of ":function".  For local functions this means that something like "<SNR>99_"
-is prepended.
+of ":function".  However, for local functions the script-specific prefix such
+as "<SNR>99_" is ignored to make it easier to match script-local functions
+without knowing the ID of the script.
 
 Note that functions are first loaded and later executed.  When they are loaded
 the "file" breakpoints are checked, when they are executed the "func"
@@ -934,10 +1028,10 @@ OBSCURE
 
 Profiling means that Vim measures the time that is spent on executing
 functions and/or scripts.  The |+profile| feature is required for this.
-It is only included when Vim was compiled with "huge" features.
+It is included when Vim was compiled with "huge" features.
 
 You can also use the |reltime()| function to measure time.  This only requires
-the |+reltime| feature, which is present more often.
+the |+reltime| feature, which is present in more builds.
 
 For profiling syntax highlighting see |:syntime|.
 
@@ -949,18 +1043,24 @@ For example, to profile the one_script.vim script file: >
 
 
 :prof[ile] start {fname}			*:prof* *:profile* *E750*
-		Start profiling, write the output in {fname} upon exit.
+		Start profiling, write the output in {fname} upon exit or when
+		a `:profile stop` or `:profile dump` command is invoked.
 		"~/" and environment variables in {fname} will be expanded.
 		If {fname} already exists it will be silently overwritten.
 		The variable |v:profiling| is set to one.
 
+:prof[ile] stop
+		Write the collected profiling information to the logfile and
+		stop profiling. You can use the `:profile start` command to
+		clear the profiling statistics and start profiling again.
+
 :prof[ile] pause
-		Don't profile until the following ":profile continue".  Can be
+		Don't profile until the following `:profile continue`.  Can be
 		used when doing something that should not be counted (e.g., an
 		external command).  Does not nest.
 
 :prof[ile] continue
-		Continue profiling after ":profile pause".
+		Continue profiling after `:profile pause`.
 
 :prof[ile] func {pattern}
 		Profile function that matches the pattern {pattern}.
@@ -977,14 +1077,25 @@ For example, to profile the one_script.vim script file: >
 		after this command.  A :profile command in the script itself
 		won't work.
 
+:prof[ile] dump
+		Write the current state of profiling to the logfile
+		immediately.  After running this command, Vim continues to
+		collect the profiling statistics.
 
 :profd[el] ...						*:profd* *:profdel*
 		Stop profiling for the arguments specified. See |:breakdel|
-		for the arguments.
-
+		for the arguments. Examples: >
+			profdel func MyFunc
+			profdel file MyScript.vim
+			profdel here
 
 You must always start with a ":profile start fname" command.  The resulting
-file is written when Vim exits.  Here is an example of the output, with line
+file is written when Vim exits.  For example, to profile one specific
+function: >
+	profile start /tmp/vimprofile
+	profile func MyFunc
+
+Here is an example of the output, with line
 numbers prepended for the explanation:
 
   1 FUNCTION  Test2() ~

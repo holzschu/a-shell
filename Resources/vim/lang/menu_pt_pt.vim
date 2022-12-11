@@ -1,6 +1,7 @@
 " Menu Translations: Português
 " adaptado de pt_br.
 " Maintainer: Duarte Henriques <duarte_henriques@myrealbox.com>
+" Original translations
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -98,9 +99,9 @@ menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Activar/Desactivar\ &numeração\
 menutrans Toggle\ &List\ Mode<Tab>:set\ list!		Activar/Desactivar\ modo\ &list<Tab>:set\ list!
 menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Activar/Desactivar\ &quebra\ de\ linhas<Tab>:set\ wrap!
 menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	Activar/Desactivar\ quebra\ na\ &palavra<Tab>:set\ lbr!
-menutrans Toggle\ &expand-tab<Tab>:set\ et!		Activar/Desactivar\ expansão de tabs<Tab>:set\ et!
+menutrans Toggle\ &expand-tab<Tab>:set\ et!		Activar/Desactivar\ expansão\ de\ tabs<Tab>:set\ et!
 menutrans Toggle\ &auto-indent<Tab>:set\ ai!		Activar/Desactivar\ &auto-indentação<Tab>:set\ ai!
-menutrans Toggle\ &C-indenting<Tab>:set\ cin!		Activar/Desactivar\ indentação estilo &C<Tab>:set\ cin!
+menutrans Toggle\ &C-indenting<Tab>:set\ cin!		Activar/Desactivar\ indentação\ estilo\ &C<Tab>:set\ cin!
 
 " other options
 menutrans &Shiftwidth			Largura\ da\ &indentação

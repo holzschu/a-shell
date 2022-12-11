@@ -1,4 +1,4 @@
-*digraph.txt*   For Vim version 8.1.  Last change: 2019 May 05
+*digraph.txt*   For Vim version 8.2.  Last change: 2021 Jul 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -33,9 +33,14 @@ An alternative is using the 'keymap' option.
 			it is the Unicode character, see |digraph-encoding|.
 			Example: >
 	:digr e: 235 a: 228
+<			You can use `:exe` to enter a hex number: >
+	:exe 'digr += ' .. 0x2A72
 <			Avoid defining a digraph with '_' (underscore) as the
 			first character, it has a special meaning in the
 			future.
+			NOTE: This command cannot add a digraph that starts
+			with a white space.  If you want to add such digraph,
+			you can use |digraph_set()| instead.
 
 Vim is normally compiled with the |+digraphs| feature.  If the feature is
 disabled, the ":digraph" command will display an error message.
@@ -346,8 +351,8 @@ $	DO	0x24	 36	DOLLAR SIGN
 þ	th	0xfe	254	LATIN SMALL LETTER THORN (Icelandic)
 ÿ	y:	0xff	255	LATIN SMALL LETTER Y WITH DIAERESIS
 
-If your Vim is compiled with |multibyte| support and you are using a multibyte
-'encoding', Vim provides this enhanced set of additional digraphs:
+If you are using a |multibyte| 'encoding', Vim provides this enhanced set of
+additional digraphs:
 
 							*digraph-table-mbyte*
 char  digraph	hex	dec	official name ~
@@ -919,6 +924,7 @@ char  digraph	hex	dec	official name ~
 ‟	9"	201F	8223	DOUBLE HIGH-REVERSED-9 QUOTATION MARK
 †	/-	2020	8224	DAGGER
 ‡	/=	2021	8225	DOUBLE DAGGER
+•	oo	2022	8226	BULLET
 ‥	..	2025	8229	TWO DOT LEADER
 …	,.	2026	8230	HORIZONTAL ELLIPSIS
 ‰	%0	2030	8240	PER MILLE SIGN

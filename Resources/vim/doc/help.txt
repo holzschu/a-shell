@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 8.1.  Last change: 2019 Jul 21
+*help.txt*	For Vim version 8.2.  Last change: 2022 May 13
 
 			VIM - main help file
 									 k
@@ -31,7 +31,7 @@ Get specific help:  It is possible to go directly to whatever you want help
 		    help entries for "word".
 		    Or use ":helpgrep word". |:helpgrep|
 
-  Getting started:  Do the Vim tutor, a 20 minute interactive training for the
+  Getting started:  Do the Vim tutor, a 30-minute interactive course for the
 		    basic commands, see |vimtutor|.
 		    Read the user manual from start to end: |usr_01.txt|
 
@@ -41,7 +41,7 @@ through the help of many others.  See |credits|.
 						*doc-file-list* *Q_ct*
 BASIC:
 |quickref|	Overview of the most common commands you will use
-|tutor|		20 minutes training course for beginners
+|tutor|		30-minute interactive course for beginners
 |copying|	About copyrights
 |iccf|		Helping poor children in Uganda
 |sponsor|	Sponsor Vim development, become a registered Vim user
@@ -89,9 +89,13 @@ Tuning Vim ~
 |usr_44.txt|  Your own syntax highlighted
 |usr_45.txt|  Select your language
 
+Writing Vim scripts ~
+|usr_50.txt|  Advanced Vim script writing
+|usr_51.txt|  Create a plugin
+|usr_52.txt|  Write plugins using Vim9 script
+
 Making Vim Run ~
 |usr_90.txt|  Installing Vim
-
 
 REFERENCE MANUAL: These files explain every detail of Vim.	*reference_toc*
 
@@ -132,9 +136,10 @@ Advanced editing ~
 |windows.txt|	commands for using multiple windows and buffers
 |tabpage.txt|	commands for using multiple tab pages
 |spell.txt|	spell checking
-|diff.txt|	working with two to four versions of the same file
+|diff.txt|	working with two to eight versions of the same file
 |autocmd.txt|	automatically executing commands on an event
 |eval.txt|	expression evaluation, conditional commands
+|builtin.txt|	builtin functions
 |channel.txt|	Jobs, Channels, inter-process communication
 |fold.txt|	hide (fold) ranges of lines
 
@@ -144,7 +149,8 @@ Special issues ~
 |remote.txt|	using Vim as a server or client
 |term.txt|	using different terminals and mice
 |terminal.txt|	Terminal window support
-|popup.txt|	popop window support
+|popup.txt|	popup window support
+|vim9.txt|	using Vim9 script
 
 Programming language support ~
 |indent.txt|	automatic indenting for C and other languages
@@ -153,12 +159,14 @@ Programming language support ~
 |filetype.txt|	settings done specifically for a type of file
 |quickfix.txt|	commands for a quick edit-compile-fix cycle
 |ft_ada.txt|	Ada (the programming language) support
+|ft_ps1.txt|	Filetype plugin for Windows PowerShell
+|ft_raku.txt|	Filetype plugin for Raku
 |ft_rust.txt|	Filetype plugin for Rust
 |ft_sql.txt|	about the SQL filetype plugin
 
 Language support ~
 |digraph.txt|	list of available digraphs
-|mbyte.txt|	multi-byte text support
+|mbyte.txt|	multibyte text support
 |mlang.txt|	non-English language support
 |rileft.txt|	right-to-left editing mode
 |arabic.txt|	Arabic language support and editing
@@ -192,12 +200,14 @@ Versions ~
 |version6.txt|	Differences between Vim version 5.7 and 6.x
 |version7.txt|	Differences between Vim version 6.4 and 7.x
 |version8.txt|	Differences between Vim version 7.4 and 8.x
+|version9.txt|	Differences between Vim version 8.2 and 9.0
 						*sys-file-list*
 Remarks about specific systems ~
 |os_390.txt|	OS/390 Unix
 |os_amiga.txt|	Amiga
 |os_beos.txt|	BeOS and BeBox
-|os_dos.txt|	MS-DOS and MS-Windows NT/95 common items
+|os_dos.txt|	MS-DOS and MS-Windows common items
+|os_haiku.txt|	Haiku
 |os_mac.txt|	Macintosh
 |os_mint.txt|	Atari MiNT
 |os_msdos.txt|	MS-DOS (plain DOS and DOS box under Windows)
@@ -206,7 +216,7 @@ Remarks about specific systems ~
 |os_risc.txt|	RISC-OS
 |os_unix.txt|	Unix
 |os_vms.txt|	VMS
-|os_win32.txt|	MS-Windows 95/98/NT
+|os_win32.txt|	MS-Windows
 						*standard-plugin-list*
 Standard plugins ~
 |pi_getscript.txt| Downloading latest version of Vim scripts

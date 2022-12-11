@@ -1,6 +1,6 @@
-#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.9
+#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.11
 
-# $Id: rst2s5.py 4564 2006-05-21 20:44:42Z wiemann $
+# $Id: rst2s5.py 8927 2022-01-03 23:50:05Z milde $
 # Author: Chris Liechti <cliechti@gmx.net>
 # Copyright: This module has been placed in the public domain.
 

@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2017 Sep 28
+" Last Change:	2022 Apr 08
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -15,11 +15,15 @@ let b:did_ftplugin = 1
 let s:cpo_save = &cpo
 set cpo-=C
 
-let b:undo_ftplugin = "setl fo< com< ofu< | if has('vms') | setl isk< | endif"
+let b:undo_ftplugin = "setl fo< com< ofu< cms< def< inc< | if has('vms') | setl isk< | endif"
 
 " Set 'formatoptions' to break comment lines but not other lines,
 " and insert the comment leader when hitting <CR> or using "o".
 setlocal fo-=t fo+=croql
+
+" These options have the right value as default, but the user may have
+" overruled that.
+setlocal commentstring& define& include&
 
 " Set completion with CTRL-X CTRL-O to autoloaded function.
 if exists('&ofu')
@@ -27,7 +31,8 @@ if exists('&ofu')
 endif
 
 " Set 'comments' to format dashed lists in comments.
-setlocal comments=sO:*\ -,mO:*\ \ ,exO:*/,s1:/*,mb:*,ex:*/,://
+" Also include ///, used for Doxygen.
+setlocal comments=sO:*\ -,mO:*\ \ ,exO:*/,s1:/*,mb:*,ex:*/,:///,://
 
 " In VMS C keywords contain '$' characters.
 if has("vms")
@@ -36,8 +41,11 @@ endif
 
 " When the matchit plugin is loaded, this makes the % command skip parens and
 " braces in comments properly.
-let b:match_words = '^\s*#\s*if\(\|def\|ndef\)\>:^\s*#\s*elif\>:^\s*#\s*else\>:^\s*#\s*endif\>'
-let b:match_skip = 's:comment\|string\|character\|special'
+if !exists("b:match_words")
+  let b:match_words = '^\s*#\s*if\(\|def\|ndef\)\>:^\s*#\s*elif\>:^\s*#\s*else\>:^\s*#\s*endif\>'
+  let b:match_skip = 's:comment\|string\|character\|special'
+  let b:undo_ftplugin ..= " | unlet! b:match_skip b:match_words"
+endif
 
 " Win32 can filter files in the browse dialog
 if (has("gui_win32") || has("gui_gtk")) && !exists("b:browsefilter")
@@ -58,6 +66,7 @@ if (has("gui_win32") || has("gui_gtk")) && !exists("b:browsefilter")
 	  \ "C++ Source Files (*.cpp *.c++)\t*.cpp;*.c++\n" .
 	  \ "All Files (*.*)\t*.*\n"
   endif
+  let b:undo_ftplugin ..= " | unlet! b:browsefilter"
 endif
 
 let &cpo = s:cpo_save

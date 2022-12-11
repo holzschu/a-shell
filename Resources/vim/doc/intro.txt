@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 8.1.  Last change: 2019 Aug 16
+*intro.txt*     For Vim version 8.2.  Last change: 2022 Apr 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -121,14 +121,16 @@ http://www.vim.org/maillist.php
 
 Bug reports:				*bugs* *bug-reports* *bugreport.vim*
 
-There are two ways to report bugs, both work:
-1. Send bug reports to: Vim Developers <vim-dev@vim.org>
+There are three ways to report bugs:
+1. Open an issue on GitHub: https://github.com/vim/vim/issues
+   The text will be forwarded to the vim-dev maillist.
+2. For issues with runtime files, look in the header for an email address or
+   any other way to report it to the maintainer.
+3. Send bug reports to: Vim Developers <vim-dev@vim.org>
    This is a maillist, you need to become a member first and many people will
    see the message.  If you don't want that, e.g. because it is a security
    issue, send it to <bugs@vim.org>, this only goes to the Vim maintainer
    (that's Bram).
-2. Open an issue on GitHub: https://github.com/vim/vim/issues
-   The text will be forwarded to the vim-dev maillist.
 
 Please be brief; all the time that is spent on answering mail is subtracted
 from the time that is spent on improving Vim!  Always give a reproducible
@@ -211,7 +213,7 @@ Vim would never have become what it is now, without the help of these people!
 	Daniel Elstner		GTK+ 2 port
 	Eric Fischer		Mac port, 'cindent', and other improvements
 	Benji Fisher		Answering lots of user questions
-	Bill Foster		Athena GUI port
+	Bill Foster		Athena GUI port (later removed)
 	Google			Lets me work on Vim one day a week
 	Loic Grenie		xvim (ideas for multi windows version)
 	Sven Guckes		Vim promoter and previous WWW page maintainer
@@ -230,11 +232,11 @@ Vim would never have become what it is now, without the help of these people!
 	Flemming Madsen		X11 client-server, various features and patches
 	Tony Mechelynck		answers many user questions
 	Paul Moore		Python interface extensions, many patches
-	Katsuhito Nagano	Work on multi-byte versions
-	Sung-Hyun Nam		Work on multi-byte versions
+	Katsuhito Nagano	Work on multibyte versions
+	Sung-Hyun Nam		Work on multibyte versions
 	Vince Negri		Win32 GUI and generic console enhancements
 	Steve Oualline		Author of the first Vim book |frombook|
-	Dominique Pelle		valgrind reports and many fixes
+	Dominique Pelle		Valgrind reports and many fixes
 	A.Politz		Many bug reports and some fixes
 	George V. Reilly	Win32 port, Win32 GUI start-off
 	Stephen Riehm		bug collector
@@ -419,7 +421,6 @@ notation	meaning		    equivalent	decimal value(s)	~
 <Tab>		tab			CTRL-I	  9	*tab* *Tab*
 							*linefeed*
 <NL>		linefeed		CTRL-J	 10 (used for <Nul>)
-<FF>		formfeed		CTRL-L	 12	*formfeed*
 <CR>		carriage return		CTRL-M	 13	*carriage-return*
 <Return>	same as <CR>				*<Return>*
 <Enter>		same as <CR>				*<Enter>*
@@ -432,7 +433,7 @@ notation	meaning		    equivalent	decimal value(s)	~
 <CSI>		command sequence intro  ALT-Esc 155	*<CSI>*
 <xCSI>		CSI when typed in the GUI		*<xCSI>*
 
-<EOL>		end-of-line (can be <CR>, <LF> or <CR><LF>,
+<EOL>		end-of-line (can be <CR>, <NL> or <CR><NL>,
 		depends on system and 'fileformat')	*<EOL>*
 
 <Up>		cursor-up			*cursor-up* *cursor_up*
@@ -508,7 +509,7 @@ the ":map" command.  The rules are:
 	   <M-a>		Meta- a  ('a' with bit 8 set)
 	   <M-A>		Meta- A  ('A' with bit 8 set)
 	   <t_kd>		"kd" termcap entry (cursor down key)
-    Although you can specify <M-{char}> with {char} being a multi-byte
+    Although you can specify <M-{char}> with {char} being a multibyte
     character, Vim may not be able to know what byte sequence that is and then
     it won't work.
 
@@ -676,8 +677,8 @@ Normal mode from any other mode.  This can be used to make sure Vim is in
 Normal mode, without causing a beep like <Esc> would.  However, this does not
 work in Ex mode.  When used after a command that takes an argument, such as
 |f| or |m|, the timeout set with 'ttimeoutlen' applies.
-When focus is in a terminal window, CTRL-\ CTRL-N goes to Normal mode for only
-one command, see |t_CTRL-\_CTRL-N|.
+When focus is in a terminal window, CTRL-\ CTRL-N goes to Normal mode until an
+edit command is entered, see |t_CTRL-\_CTRL-N|.
 
 	*CTRL-\_CTRL-G* *i_CTRL-\_CTRL-G* *c_CTRL-\_CTRL-G* *v_CTRL-\_CTRL-G*
 The command CTRL-\ CTRL-G or <C-\><C-G> can be used to go to Insert mode when
@@ -700,7 +701,8 @@ Q			Switch to "Ex" mode.  This is a bit like typing ":"
 			Use the ":vi" command |:visual| to exit "Ex" mode.
 			Note: In older versions of Vim "Q" formatted text,
 			that is now done with |gq|.  But if you use the
-			|vimrc_example.vim| script "Q" works like "gq".
+			|vimrc_example.vim| script or |defaults.vim|, "Q"
+			works like "gq".  Except for Select mode.
 
 					*gQ*
 gQ			Switch to "Ex" mode like with "Q", but really behave

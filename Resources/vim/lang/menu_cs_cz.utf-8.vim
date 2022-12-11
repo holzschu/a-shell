@@ -2,6 +2,7 @@
 " Maintainer:           Jiri Sedlak <jiri_sedlak@users.sourceforge.net>
 " Previous maintainer:  Jiri Brezina
 " Based on:             menu.vim (2012-10-21)
+" Original translations
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -110,7 +111,7 @@ menutrans Build\ &Tags\ File		&Vytvořit\ soubor\ tagů
 if has("spell")
    menutrans &Spelling			&Kontrola\ pravopisu
    menutrans &Spell\ Check\ On		&Zapnout\ kontrolu\ pravopisu
-   menutrans Spell\ Check\ &Off		&Vypnout \kontrolu\ pravopisu
+   menutrans Spell\ Check\ &Off		&Vypnout\ kontrolu\ pravopisu
    menutrans To\ &Next\ error<Tab>]s	&Další\ chyba<Tab>]s
    menutrans To\ &Previous\ error<Tab>[s	&Předchozí\ chyba<Tab>[s
    menutrans Suggest\ &Corrections<Tab>z=	&Navrhnout\ opravy<Tab>z=

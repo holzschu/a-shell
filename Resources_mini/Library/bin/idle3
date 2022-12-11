@@ -1,1 +1,5 @@
-idle3.9
+#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.11
+
+from idlelib.pyshell import main
+if __name__ == '__main__':
+    main()

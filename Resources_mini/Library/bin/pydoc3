@@ -1,1 +1,5 @@
-pydoc3.9
+#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.11
+
+import pydoc
+if __name__ == '__main__':
+    pydoc.cli()

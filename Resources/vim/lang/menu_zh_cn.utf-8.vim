@@ -1,7 +1,8 @@
 " Menu Translations:    Simplified Chinese
 " Maintainer:           Shun Bai <baishunde@gmail.com>
 " Previous Maintainer:  Yuheng Xie <elephant@linux.net.cn>
-" Last Change:          2019 Sep 11
+" Last Change:          2022 Feb 19
+" Original translations
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -122,7 +123,7 @@ menutrans Toggle\ &C-Style\ Indenting<Tab>:set\ cin!		开/关\ C\ 语言式缩�
 
 " other options
 menutrans &Shiftwidth										缩进宽度(&S)
-menutrans Soft\ &Tabstop									软制表位宽度(Soft Tabstop)(&T)
+menutrans Soft\ &Tabstop									软制表位宽度(Soft\ Tabstop)(&T)
 menutrans Te&xt\ Width\.\.\.								文本宽度(&X)\.\.\.
 menutrans &File\ Format\.\.\.								文件格式(&F)\.\.\.
 
@@ -435,8 +436,8 @@ menutrans Set\ '&filetype'\ Too			也设置\ 'filetype'(&F)
   menutrans Sorting\ Method					排序方式
   " Netrw.Style.Sorting Method menuitems {{{3
   menutrans Name<tab>s		文件名<tab>s
-  menutrans Time<tab>s  	修改时间<tab>s
-  menutrans Size<tab>s  	大小<tab>s
+  menutrans Time<tab>s		修改时间<tab>s
+  menutrans Size<tab>s		大小<tab>s
   menutrans Exten<tab>s		扩展名<tab>s
   " }}}
   " }}}
