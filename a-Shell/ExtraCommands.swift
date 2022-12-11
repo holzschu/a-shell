@@ -1361,14 +1361,18 @@ public func storeInteractive() -> Int32 {
         if let delegate = currentDelegate {
             delegate.resignFirstResponder()
             delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning;") { (result, error) in
-                if let error = error { print(error); }
-                if let result = result as? Int32 { print(result); returnValue = result; }
+                // if let error = error { print(error); }
+                if let result = result as? Int32 { returnValue = result; }
                 waitingForAnswer = false
             }
         }
     }
-    while (waitingForAnswer) { }
-    NSLog("Returning from storeInteractive, result= \(returnValue)")
+    // We need to place something in this loop, otherwise it gets removed by the optimizer.
+    while (waitingForAnswer) {
+        if (thread_stdout != nil) { fflush(thread_stdout) }
+        if (thread_stderr != nil) { fflush(thread_stderr) }
+    }
+    // NSLog("Returning from storeInteractive, result= \(returnValue)")
     return returnValue;
 }
 
@@ -1378,9 +1382,7 @@ public func startInteractive() {
         if let delegate = currentDelegate {
             delegate.resignFirstResponder()
             delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = true;") { (result, error) in
-                if let error = error {
-                    // print(error)
-                }
+                // if let error = error { print(error) }
                 // if let result = result { print(result) }
             }
         }
