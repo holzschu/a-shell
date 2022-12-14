@@ -298,6 +298,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     -f | --foreground: set foreground color
     -c | --cursor: set cursor and highlight color
     -k | --cursorShape: set cursor shape (beam, block or underline)
+    -t | --toolbar: create a configuration file to change the toolbar
     -g | --global: extend settings to all windows currently open
     -p | --permanent: store settings as default values
     -d | --default: reset all settings to default values
@@ -520,6 +521,31 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
                 } else {
                     fputs("Did not understand cursor shape: \(name) (possible names are beam, block and underline)\n", thread_stderr)
                 }
+            }
+            continue
+        case "-t", "--toolbar":
+            var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
+            do {
+                let documentsUrl = try FileManager().url(for: .documentDirectory,
+                                                         in: .userDomainMask,
+                                                         appropriateFor: nil,
+                                                         create: true)
+                let localConfigFile = documentsUrl.appendingPathComponent(".toolbarDefinition")
+                if FileManager().fileExists(atPath: localConfigFile.path) {
+                    fputs("The configuration file .toolbarDefinition already exists. Do you want to overwrite it? (y/N)", thread_stderr)
+                    fflush(thread_stderr)
+                    var byte: Int8 = 0
+                    _ = read(fileno(thread_stdin), &byte, 1)
+                    if (byte != 121) && (byte != 89) {
+                        continue
+                    }
+                    try FileManager().removeItem(at: localConfigFile)
+                }
+                try FileManager().copyItem(at: configFile!, to: localConfigFile)
+                fputs("I have created a toolbar configuration file: ~/Documents/.toolbarDefinition\nYou can now edit it to add or remove buttons to the toolbar.\nChanges will take effect when the app restarts.\n", thread_stdout)
+            }
+            catch {
+                fputs("An error occured when copying the toolbar configuration file.", thread_stderr)
             }
             continue
 

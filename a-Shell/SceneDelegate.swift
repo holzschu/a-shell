@@ -82,11 +82,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var avControllerPiPEnabled = false
     // for repetitive buttons
     var continuousButtonAction = false
-    
+    var leftButtonGroup: [UIBarButtonItem] = []
+    var rightButtonGroup: [UIBarButtonItem] = []
+
     // Create a document picker for directories.
     private let documentPicker =
-        UIDocumentPickerViewController(documentTypes: [kUTTypeFolder as String],
-                                       in: .open)
+    UIDocumentPickerViewController(documentTypes: [kUTTypeFolder as String],
+                                   in: .open)
     
     var screenWidth: CGFloat {
         if windowScene!.interfaceOrientation.isPortrait {
@@ -131,97 +133,78 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return (currentCommand.hasPrefix("vim ")) || (currentCommand == "vim") || (currentCommand.hasPrefix("jump "))
     }
     
-    
-    @objc private func tabAction(_ sender: UIBarButtonItem) {
-        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + "\u{0009}" + "\");") { (result, error) in
-            // if let error = error { print(error) }
-            // if let result = result { print(result) }
-        }
-    }
-    
-    @objc private func controlAction(_ sender: UIBarButtonItem) {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
-        controlOn = !controlOn;
-        if #available(iOS 15.0, *) {
-            if (!useSystemToolbar) {
-                editorToolbar.items?[1].isSelected = controlOn
-            } else {
-                // This has no impact on the button appearance in some cases
-                webView?.inputAssistantItem.leadingBarButtonGroups[0].barButtonItems[1].isSelected = controlOn
+    @objc private func insertString(_ sender: UIBarButtonItem) {
+        if let title = sender.title {
+            webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + title + "\");") { (result, error) in
+                // if let error = error { print(error) }
+                // if let result = result { print(result) }
             }
-        } else {
-            sender.image = controlOn ? UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration) :
-            UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
-        }
-        webView?.evaluateJavaScript(controlOn ? "window.controlOn = true;" : "window.controlOn = false;") { (result, error) in
-            // if let error = error { print(error) }
-            // if let result = result { print(result) }
         }
     }
     
-    @objc private func escapeAction(_ sender: UIBarButtonItem) {
-        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + escape + "\");") { (result, error) in
-            // if let error = error { print(error) }
-            // if let result = result { print(result) }
-        }
-    }
-    
-    @objc private func pasteAction(_ sender: UIBarButtonItem) {
-        // edit mode paste (works)
-        if let pastedString = UIPasteboard.general.string {
-            webView?.paste(pastedString)
+    @objc private func runCommand(_ sender: UIBarButtonItem) {
+        if let command = sender.title {
+            NSLog("Running command: \(command)")
+            executeCommandAndWait(command: command)
         }
     }
 
-    @objc private func copyAction(_ sender: UIBarButtonItem) {
-        // edit mode copy (works)
-        webView?.evaluateJavaScript("window.term_.copySelectionToClipboard();") { (result, error) in
-            if let error = error { print(error) }
-            if let result = result { print(result) }
+    @objc private func systemAction(_ sender: UIBarButtonItem) {
+        if (sender.title == "paste") {
+            if let pastedString = UIPasteboard.general.string {
+                webView?.paste(pastedString)
+            }
+            return
         }
-    }
-
-    @objc private func cutAction(_ sender: UIBarButtonItem) {
-        // edit mode cut (works)
-        webView?.evaluateJavaScript("window.term_.onCut();") { (result, error) in
-            if let error = error { print(error) }
-            if let result = result { print(result) }
+        var commandString: String? = nil
+        switch (sender.title) {
+        case "up":
+            commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[A' : '\\x1bOA');"
+            break
+        case "down":
+            commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[B' : '\\x1bOB');"
+            break
+        case "left":
+            commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[D' : '\\x1bOD');"
+            break
+        case "right":
+            commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[C' : '\\x1bOC');"
+            break
+        case "copy":
+            commandString = "window.term_.copySelectionToClipboard();"
+            break
+        case "cut":
+            commandString = "window.term_.onCut();"
+            break
+        case "control":
+            controlOn = !controlOn;
+            if #available(iOS 15.0, *) {
+                // This has no impact on the button appearance with systemToolbar and no keyboard visible.
+                sender.isSelected = controlOn
+            } else {
+                // buttonName.fill? if it exists?
+                let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
+                sender.image = controlOn ? UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration) :
+                UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
+            }
+            commandString = controlOn ? "window.controlOn = true;" : "window.controlOn = false;"
+            break
+        default:
+            break
         }
-    }
-
-    
-    @objc private func upAction(_ sender: UIBarButtonItem) {
-        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[A' : '\\x1bOA');") { (result, error) in
-            // if let error = error { print(error) }
-            // if let result = result { print(result) }
-        }
-    }
-    
-    @objc private func downAction(_ sender: UIBarButtonItem) {
-        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[B' : '\\x1bOB');") { (result, error) in
-            // if let error = error { print(error) }
-            // if let result = result { print(result) }
-        }
-    }
-    
-    @objc private func leftAction(_ sender: UIBarButtonItem) {
-        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[D' : '\\x1bOD');") { (result, error) in
-            // if let error = error { print(error) }
-            // if let result = result { print(result) }
-        }
-    }
-    
-    @objc private func rightAction(_ sender: UIBarButtonItem) {
-        webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[C' : '\\x1bOC');") { (result, error) in
-            // if let error = error { print(error) }
-            // if let result = result { print(result) }
+        if (commandString != nil) {
+            webView?.evaluateJavaScript(commandString!) { (result, error) in
+                // if let error = error { print(error) }
+                // if let result = result { print(result) }
+            }
         }
     }
     
     var tabButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let tabButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right.to.line.alt")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(tabAction(_:)))
+        let tabButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right.to.line.alt")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(insertString(_:)))
         tabButton.isAccessibilityElement = true
+        tabButton.title="\u{0009}"
         tabButton.accessibilityLabel = "Tab"
         return tabButton
     }
@@ -230,67 +213,79 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
         // Image used to be control
         let imageControl = UIImage(systemName: "chevron.up.square")!
-        let controlButton = UIBarButtonItem(image: imageControl.withConfiguration(configuration), style: .plain, target: self, action: #selector(controlAction(_:)))
+        let controlButton = UIBarButtonItem(image: imageControl.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
         if #available(iOS 15.0, *) {
             controlButton.changesSelectionAsPrimaryAction = true
             controlButton.menu = nil
         }
         controlButton.isAccessibilityElement = true
+        controlButton.title = "control"
         controlButton.accessibilityLabel = "Control"
         return controlButton
     }
     
     var escapeButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let escapeButton = UIBarButtonItem(image: UIImage(systemName: "escape")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(escapeAction(_:)))
+        let escapeButton = UIBarButtonItem(image: UIImage(systemName: "escape")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(insertString(_:)))
         escapeButton.isAccessibilityElement = true
+        escapeButton.title = escape
         escapeButton.accessibilityLabel = "Escape"
         return escapeButton
     }
     
     var cutButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        return UIBarButtonItem(image: UIImage(systemName: "scissors")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(cutAction(_:)))
+        let cutButton = UIBarButtonItem(image: UIImage(systemName: "scissors")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
+        cutButton.title = "cut"
+        return cutButton
     }
     
     var copyButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        return UIBarButtonItem(image: UIImage(systemName: "doc.on.doc")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(copyAction(_:)))
+        let copyButton = UIBarButtonItem(image: UIImage(systemName: "doc.on.doc")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
+        copyButton.title = "copy"
+        return copyButton
     }
     
     var pasteButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        return UIBarButtonItem(image: UIImage(systemName: "doc.on.clipboard")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(pasteAction(_:)))
+        let pasteButton = UIBarButtonItem(image: UIImage(systemName: "doc.on.clipboard")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
+        pasteButton.title = "paste"
+        return pasteButton
     }
-
+    
     var upButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let upButton = UIBarButtonItem(image: UIImage(systemName: "arrow.up")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(upAction(_:)))
+        let upButton = UIBarButtonItem(image: UIImage(systemName: "arrow.up")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
         upButton.isAccessibilityElement = true
+        upButton.title = "up"
         upButton.accessibilityLabel = "Up arrow"
         return upButton
     }
     
     var downButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let downButton = UIBarButtonItem(image: UIImage(systemName: "arrow.down")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(downAction(_:)))
+        let downButton = UIBarButtonItem(image: UIImage(systemName: "arrow.down")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
         downButton.isAccessibilityElement = true
+        downButton.title = "down"
         downButton.accessibilityLabel = "Down arrow"
         return downButton
     }
     
     var leftButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let leftButton = UIBarButtonItem(image: UIImage(systemName: "arrow.left")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(leftAction(_:)))
+        let leftButton = UIBarButtonItem(image: UIImage(systemName: "arrow.left")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
         leftButton.isAccessibilityElement = true
+        leftButton.title = "left"
         leftButton.accessibilityLabel = "Left arrow"
         return leftButton
     }
     
     var rightButton: UIBarButtonItem {
         let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let rightButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(rightAction(_:)))
+        let rightButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
         rightButton.isAccessibilityElement = true
+        rightButton.title = "right"
         rightButton.accessibilityLabel = "Right arrow"
         return rightButton
     }
@@ -315,55 +310,111 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
 
+    @objc func generateToolbarButtons() {
+        // Scan the configuration file to generate the button groups:
+        var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
+        if let documentsUrl = try? FileManager().url(for: .documentDirectory,
+                                                     in: .userDomainMask,
+                                                     appropriateFor: nil,
+                                                     create: true) {
+            let localConfigFile = documentsUrl.appendingPathComponent(".toolbarDefinition")
+            if FileManager().fileExists(atPath: localConfigFile.path) {
+                configFile = localConfigFile
+            }
+        }
+        if let configFileUrl = configFile {
+            if let contentOfFile = try? String(contentsOf: configFileUrl, encoding: String.Encoding.utf8) {
+                leftButtonGroup = []
+                rightButtonGroup = []
+                let buttonsDefinition = contentOfFile.split(separator: "\n")
+                var group = 0 // 0: insert into left group, 1: rightgroup
+                for buttonLine in buttonsDefinition {
+                    let trimmedButtonLine = buttonLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if (trimmedButtonLine.hasPrefix("#")) { continue } // skip comments
+                    if (trimmedButtonLine.count == 0) { continue } // skip blank lines
+                    if (trimmedButtonLine == "separator") { // first time: switch to next button group. After: ignored.
+                        group = 1
+                        continue
+                    }
+                    // We have a line with a button definition. We need to split it into 3 parts (icon, command, title)
+                    let buttonPartsLine = trimmedButtonLine.components(separatedBy: .whitespaces)
+                    // There are usually white parts, so we skip them and keep only the non-whites:
+                    var buttonParts: [String] = []
+                    for str in buttonPartsLine {
+                        if (str.count > 0) {
+                            buttonParts.append(str)
+                        }
+                    }
+                    var button: UIBarButtonItem
+                    let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
+                    var action: Selector?
+                    switch (buttonParts[1]) {
+                    case "insertString":
+                        action = #selector(insertString(_:))
+                        break
+                    case "systemAction":
+                        action = #selector(systemAction(_:))
+                        break
+                    case "runCommand":
+                        action = #selector(runCommand(_:))
+                        break
+                    default:
+                        break
+                    }
+                    if (action == nil) { continue }
+                    var image: UIImage? = nil
+                    if let systemImage = UIImage(systemName: String(buttonParts[0])) {
+                        image = systemImage
+                    } else if let textImage = buttonParts[0].image(withAttributes: [.font: UIFont.systemFont(ofSize: fontSize, weight: .regular)],
+                                                                   size: CGSize(width: 0.7 * toolbarHeight, height: 0.7 * toolbarHeight)) {
+                        NSLog("fontSize: \(fontSize) or toolbarHeight \(toolbarHeight)")
+                        image = textImage
+                    } else {
+                        // No valid button image, use a question mark:
+                        image = UIImage(systemName: "questionmark.app.dashed")
+                    }
+                    if (image == nil) { continue }
+                    button = UIBarButtonItem(image: image!.withConfiguration(configuration), style: .plain, target: self, action: action)
+                    button.title = String(buttonParts[2])
+                    if (group == 0) {
+                        leftButtonGroup.append(button)
+                    } else {
+                        rightButtonGroup.append(button)
+                    }
+                }
+            }
+        }
+    }
+    
     @objc func showEditorToolbar() {
+        generateToolbarButtons()
         DispatchQueue.main.async {
             if (useSystemToolbar) {
                 showToolbar = false
                 self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
                 self.webView!.inputAssistantItem.leadingBarButtonGroups =
-                [UIBarButtonItemGroup(barButtonItems: [self.tabButton, self.controlButton, self.escapeButton, self.pasteButton], representativeItem: nil)]
+                [UIBarButtonItemGroup(barButtonItems: self.leftButtonGroup, representativeItem: nil)]
                 self.webView!.inputAssistantItem.trailingBarButtonGroups =
-                [UIBarButtonItemGroup(barButtonItems: [self.upButton, self.downButton, self.leftButton, self.rightButton], representativeItem: nil)]
+                [UIBarButtonItemGroup(barButtonItems: self.rightButtonGroup, representativeItem: nil)]
             } else {
                 showToolbar = true
+                self.webView!.inputAssistantItem.leadingBarButtonGroups = []
+                self.webView!.inputAssistantItem.trailingBarButtonGroups = []
                 self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
             }
         }
     }
     
-    
-    func continuousButtonAction(button: String)  {
+    func continuousButtonAction(_ button: UIBarButtonItem)  {
         let ms: UInt32 = 1000
-        if (button == "up") {
+        if (button.title == "up") || (button.title == "down") {
             while (continuousButtonAction) {
-                webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[A' : '\\x1bOA');") { (result, error) in
-                    // if let error = error { print(error) }
-                    // if let result = result { print(result) }
-                }
+                systemAction(button)
                 usleep(250 * ms)
             }
-        } else if (button == "down") {
+        } else if (button.title == "left") || (button.title == "right") {
             while (continuousButtonAction) {
-                webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[B' : '\\x1bOB');") { (result, error) in
-                    // if let error = error { print(error) }
-                    // if let result = result { print(result) }
-                }
-                usleep(250 * ms)
-            }
-        }  else if (button == "left") {
-            while (continuousButtonAction) {
-                webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[D' : '\\x1bOD');") { (result, error) in
-                    // if let error = error { print(error) }
-                    // if let result = result { print(result) }
-                }
-                usleep(100 * ms)
-            }
-        }  else if (button == "right") {
-            while (continuousButtonAction) {
-                webView?.evaluateJavaScript("window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[C' : '\\x1bOC');") { (result, error) in
-                    // if let error = error { print(error) }
-                    // if let result = result { print(result) }
-                }
+                systemAction(button)
                 usleep(100 * ms)
             }
         }
@@ -377,54 +428,26 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return
         }
         let location = sender.location(in: sender.view)
-        // NSLog("long press detected: \(location)")
-        // NSLog("sender of long press: \(sender)")
         if (sender.state == .began) {
-            let toolbarUpButton = editorToolbar.items![5]
-            if let upButtonView = toolbarUpButton.value(forKey: "view") as? UIView {
-                if (location.x >= upButtonView.frame.minX) && (location.x <= upButtonView.frame.maxX) {
-                    continuousButtonAction = true
-                    commandQueue.async {
-                        self.continuousButtonAction(button: "up")
+            // NSLog("long press detected: \(location)")
+            // NSLog("sender of long press: \(sender)")
+            for button in editorToolbar.items! {
+                if let buttonView = button.value(forKey: "view") as? UIView {
+                    if (location.x >= buttonView.frame.minX) && (location.x <= buttonView.frame.maxX) {
+                        // NSLog("Long press on button: \(button)")
+                        continuousButtonAction = true
+                        commandQueue.async {
+                            self.continuousButtonAction(button)
+                        }
+                        return
                     }
-                    return
-                }
-            }
-            let toolbarDownButton = editorToolbar.items![6]
-            if let downButtonView = toolbarDownButton.value(forKey: "view") as? UIView {
-                if (location.x >= downButtonView.frame.minX) && (location.x <= downButtonView.frame.maxX) {
-                    continuousButtonAction = true
-                    commandQueue.async {
-                        self.continuousButtonAction(button: "down")
-                    }
-                    return
-                }
-            }
-            let toolbarLeftButton = editorToolbar.items![7]
-            if let leftButtonView = toolbarLeftButton.value(forKey: "view") as? UIView {
-                if (location.x >= leftButtonView.frame.minX) && (location.x <= leftButtonView.frame.maxX) {
-                    continuousButtonAction = true
-                    commandQueue.async {
-                        self.continuousButtonAction(button: "left")
-                    }
-                    return
-                }
-            }
-            let toolbarRightButton = editorToolbar.items![8]
-            if let rightButtonView = toolbarRightButton.value(forKey: "view") as? UIView {
-                if (location.x >= rightButtonView.frame.minX) && (location.x <= rightButtonView.frame.maxX) {
-                    continuousButtonAction = true
-                    commandQueue.async {
-                        self.continuousButtonAction(button: "right")
-                    }
-                    return
                 }
             }
         }
         if (continuousButtonAction) {
             return
         }
-        // No buttons left, must be a hidekeyboard event:
+        // Not on any button, must be a hidekeyboard event:
         hideKeyboard()
     }
     
@@ -434,7 +457,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         toolbar.items = []
         return toolbar
     }()
-
+    
+    /* public lazy var leftButtonGroup: [UIBarButtonItem] = {
+        return [tabButton, controlButton, escapeButton, pasteButton]
+    }()
+    
+    public lazy var rightButtonGroup: [UIBarButtonItem] = {
+        return [upButton, downButton, leftButton, rightButton]
+    }() */
 
     // cutButton and copyButton exist, but make less sense than paste.
     // the paste command is difficult to create with long press.
@@ -442,9 +472,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     public lazy var editorToolbar: UIToolbar = {
         var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
         toolbar.tintColor = .label
-        toolbar.items = [tabButton, controlButton, escapeButton, pasteButton,
-                         UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil),
-                         upButton, downButton, leftButton, rightButton]
+        toolbar.items = leftButtonGroup
+        toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
+        toolbar.items?.append(contentsOf: rightButtonGroup)
         // Long press gesture recognsizer:
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
         longPressGesture.minimumPressDuration = 1.0 // 1 second press
@@ -1492,13 +1522,43 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             controlOn = false
             if #available(iOS 15.0, *) {
                 if (!useSystemToolbar) {
-                    editorToolbar.items?[1].isSelected = controlOn
+                    for button in editorToolbar.items! {
+                        if button.title == "control" {
+                            button.isSelected = controlOn
+                            break
+                        }
+                    }
                 } else {
-                    webView?.inputAssistantItem.leadingBarButtonGroups[0].barButtonItems[1].isSelected = controlOn
+                    var foundControl = false
+                    if let leftButtonGroup = webView?.inputAssistantItem.leadingBarButtonGroups[0].barButtonItems {
+                        for button in leftButtonGroup {
+                            if button.title == "control" {
+                                foundControl = true
+                                button.isSelected = controlOn
+                                break
+                            }
+                        }
+                        // webView?.inputAssistantItem.leadingBarButtonGroups[0].barButtonItems[1].isSelected = controlOn
+                    }
+                    if (!foundControl) {
+                        if let rightButtonGroup = webView?.inputAssistantItem.trailingBarButtonGroups[0].barButtonItems {
+                            for button in rightButtonGroup {
+                                if button.title == "control" {
+                                    button.isSelected = controlOn
+                                    break
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
                 let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
-                editorToolbar.items?[1].image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
+                for button in editorToolbar.items! {
+                    if button.title == "control" {
+                        button.image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
+                        break
+                    }
+                }
             }
         } else if (cmd.hasPrefix("input:")) {
             ios_switchSession(self.persistentIdentifier?.toCString())
@@ -1955,17 +2015,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             webView?.navigationDelegate = self
             webView?.uiDelegate = self;
             webView?.isAccessibilityElement = false
-            // toolbar for everyone because inputAssistantItem does not look good with a-Shell.
             if (!toolbarShouldBeShown) {
                 showToolbar = false
                 self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
             } else {
+                generateToolbarButtons()
                 if (useSystemToolbar) {
-                    showToolbar = false // ???
+                    showToolbar = false
                     self.webView!.inputAssistantItem.leadingBarButtonGroups =
-                    [UIBarButtonItemGroup(barButtonItems: [tabButton, controlButton, escapeButton, pasteButton], representativeItem: nil)]
+                    [UIBarButtonItemGroup(barButtonItems: leftButtonGroup, representativeItem: nil)]
                     self.webView!.inputAssistantItem.trailingBarButtonGroups =
-                    [UIBarButtonItemGroup(barButtonItems: [upButton, downButton, leftButton, rightButton], representativeItem: nil)]
+                    [UIBarButtonItemGroup(barButtonItems: rightButtonGroup, representativeItem: nil)]
                 } else {
                     showToolbar = true
                     self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
@@ -2366,6 +2426,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 exitCommand = "\nquit()"
             } else if ((currentCommand == "ipython") || currentCommand.hasPrefix("ipython ")) {
                 exitCommand = "\nquit"
+            } else if ((currentCommand == "isympy") || currentCommand.hasPrefix("isympy ")) {
+                exitCommand = "\nquit"
             } else if ((currentCommand == "nslookup") || currentCommand.hasPrefix("nslookup ")) {
                 exitCommand = "\nexit"
             } else if (isVimRunning) {
@@ -2513,12 +2575,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             showToolbar = false
             self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
         } else {
+            generateToolbarButtons()
             if (useSystemToolbar) {
                 showToolbar = false
                 self.webView!.inputAssistantItem.leadingBarButtonGroups =
-                [UIBarButtonItemGroup(barButtonItems: [tabButton, controlButton, escapeButton, pasteButton], representativeItem: nil)]
+                [UIBarButtonItemGroup(barButtonItems: leftButtonGroup, representativeItem: nil)]
                 self.webView!.inputAssistantItem.trailingBarButtonGroups =
-                [UIBarButtonItemGroup(barButtonItems: [upButton, downButton, leftButton, rightButton], representativeItem: nil)]
+                [UIBarButtonItemGroup(barButtonItems: rightButtonGroup, representativeItem: nil)]
             } else {
                 showToolbar = true
                 self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)

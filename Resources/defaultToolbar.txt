@@ -1,0 +1,33 @@
+# Customizable toolbar: 
+# Each button is defined by its icon (first column), the action to be executed when the button is clicked (second column) and a parameter for that action (third column).
+
+# Icons can be either the name of one of the SF Symbols from Apple: https://developer.apple.com/sf-symbols/ or a string of characters.
+# Action can be either "insertString", "systemAction" or "runCommand"
+
+# The effect of the parameter depends on the action:
+# - for insertString, it can be any string, and will be inserted when you type the button
+# - for systemAction, it can be any of: control, up, down, left, right, cut, copy or paste.
+# - for runCommand, it is a command that will be executed when the button is pressed.
+
+# This file corresponds to the default toolbar: first the 4 buttons on the left (tab, control, escape, paste), 
+# then a line with "separator" to indicate the separation between the two groups, 
+# then the 4 arrow buttons on the right.
+# To customize the toolbar, simply edit this file. To go back to the default toolbar, remove it.
+
+# Button icon				action				parameter
+
+arrow.right.to.line.alt		insertString		\u{0009}
+chevron.up.square			systemAction		control
+escape						insertString		\u{001B}
+doc.on.clipboard			systemAction		paste
+
+separator
+
+arrow.up					systemAction		up
+arrow.down					systemAction		down
+arrow.left					systemAction		left
+arrow.right					systemAction		right
+
+# Examples:
+# delete.backward           insertString        \u{007F}
+# return                    insertString        \u{000D}
