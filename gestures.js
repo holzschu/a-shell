@@ -42,21 +42,23 @@ function initializeTerminalGestures() {
   const SNAP_BREAKAWAY_VERT_CHARS = 4;
 
   // We don't know how long wheel gestures actually take, but we can
-  // guess.
-  const MOUSE_WHEEL_GESTURE_EST_D_TIME = 0.5;
+  // guess. In seconds.
+  const MOUSE_WHEEL_GESTURE_EST_D_TIME = 0.6;
 
   // Multiplies the number of lines by which mouse wheel gestures scroll.
-  const MOUSE_WHEEL_SENSITIVITY = 2;
+  const MOUSE_WHEEL_SENSITIVITY = 1;
 
   // Maximum estimated mouse wheel gesture speed in lines/second.
-  const MOUSE_WHEEL_GESTURE_MAX_SPEED = 60;
+  const MOUSE_WHEEL_GESTURE_MAX_SPEED = 80;
 
   // Discard wheel events that happen within this number of seconds after
   // the previous.
-  const MIN_TIME_BETWEEN_WHEEL_GESTURES = 0.05;
+  const MIN_TIME_BETWEEN_WHEEL_GESTURES = 0.0;
 
   // Minimum number of lines a single mouse wheel gesture can scroll.
   const MOUSE_WHEEL_MIN_LINES = 1;
+
+  const MOUSE_WHEEL_INERTIAL_SCROLL_ENABLED = true;
 
   // Things that should only be done once: Useful for
   // debugging if we want to run this script multiple times
@@ -756,7 +758,8 @@ function initializeTerminalGestures() {
     const nowTime = (new Date()).getTime();
 
     try {
-      let dy = evt.deltaY;
+      // Inevert the scroll direction to match the system.
+      let dy = -evt.deltaY;
 
       // Don't scroll the main window.
       document.scrollingElement.scrollTop = 0;
@@ -767,7 +770,7 @@ function initializeTerminalGestures() {
       let actualDt = (nowTime - lastWheelTime) / 1000;
 
       if (actualDt < MIN_TIME_BETWEEN_WHEEL_GESTURES) {
-          return;
+        return;
       }
 
       // If the actual time between this and the last scroll gestures
@@ -801,7 +804,9 @@ function initializeTerminalGestures() {
         estimatedVy = Math.sign(estimatedVy) * MOUSE_WHEEL_GESTURE_MAX_SPEED;
       }
 
-      currentGesture.startInertialScroll_(0, estimatedVy, dt, startInertialScroll);
+      if (MOUSE_WHEEL_INERTIAL_SCROLL_ENABLED) {
+        currentGesture.startInertialScroll_(0, estimatedVy, dt, startInertialScroll);
+      }
       currentGesture = undefined;
     } catch(e) {
       if (DEBUG) {
