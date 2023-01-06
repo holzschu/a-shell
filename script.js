@@ -129,6 +129,7 @@ function printString(string) {
 		window.term_.io.print(' ');
 		endOfCommandWidth = 1;
 	} 
+	// window.term_.io.print has issues (known) when a wide char crosses the end of line. Annoying.
 	for (var i = 0; i < endOfCommandWidth; i++) {
 		window.term_.io.print('\b'); 
 	}
@@ -166,7 +167,15 @@ function deleteBackward() {
 		return;
 	}
 
-	const currentChar = window.term_.io.currentCommand[currentCommandCursorPosition - 1];
+	var previousCursorPosition = 0;
+	var currentChar;
+	for (const v of window.term_.io.currentCommand) {
+		if (previousCursorPosition + v.length >= currentCommandCursorPosition) {
+			currentChar = v;
+			break;
+		}
+		previousCursorPosition += v.length;
+	}
 	const currentCharWidth = lib.wc.strWidth(currentChar);
 	for (let i = 0; i < currentCharWidth; i++) {
 		window.term_.io.print('\b'); // move cursor back n chars, across lines
@@ -185,8 +194,8 @@ function deleteBackward() {
 	}
 
 	// remove character from command at current position:
-	window.term_.io.currentCommand = window.term_.io.currentCommand.slice(0, currentCommandCursorPosition - 1) + endOfCommand;
-	currentCommandCursorPosition -= 1;
+	window.term_.io.currentCommand = window.term_.io.currentCommand.slice(0, previousCursorPosition) + endOfCommand;
+	currentCommandCursorPosition = previousCursorPosition;
 }
 
 function pickCurrentValue() {
@@ -404,41 +413,97 @@ function setupHterm() {
 			var startOffset = this.scrollPort_.selection.startOffset;
 			// endOffset = position of selection from start of endRow (not used)
 			var endOffset = this.scrollPort_.selection.endOffset;
-			var startPosition = ((startRow - window.promptScroll - window.promptLine) * this.screenSize.width) + startOffset;
+			var startPosition = this.io.currentCommand.indexOf(text)
 			var xcursor = startOffset;
-			var cutText = this.io.currentCommand.slice(startPosition, startPosition + text.length); 
-			if (cutText == text) {
-				this.io.currentCommand =  this.io.currentCommand.slice(0, startPosition) + this.io.currentCommand.slice(startPosition + text.length, this.io.currentCommand.length); 
-				xcursor += window.promptEnd;
-			} else {
-				// startOffset can sometimes be off by promptLength. 
-				startPosition -= window.promptEnd; 
-				var cutText = this.io.currentCommand.slice(startPosition, startPosition + text.length); 
-				if (cutText == text) {
-					this.io.currentCommand =  this.io.currentCommand.slice(0, startPosition) + this.io.currentCommand.slice(startPosition + text.length, this.io.currentCommand.length); 
+			if (startPosition != -1) {
+				// check if text is inside currentCommand *once*, if yes, just remove it.
+				if (this.io.currentCommand.lastIndexOf(text) == startPosition) {
+					this.io.currentCommand =  this.io.currentCommand.slice(0, startPosition) + this.io.currentCommand.slice(startPosition + text.length, this.io.currentCommand.length);
 				} else {
-					// This happens too often.
-					window.webkit.messageHandlers.aShell.postMessage("Cannot find text = " + text + " in " + this.io.currentCommand); 
-					// Do not cut if we don't agree on what to cut
-					if (e != null) {
-						e.preventDefault();
+					const startNode = this.scrollPort_.selection.startNode;
+					const endNode = this.scrollPort_.selection.endNode
+					const numLines = (startRow - window.promptScroll - window.promptLine);
+					var fullOffset = 0;
+					if (this.scrollPort_.selection.startRow.childNodes[0] == startNode) {
+						// easy case, we're on the first node.
+						startOffset += numLines * this.screenSize.width - window.promptEnd;
+						var cutText = this.io.currentCommand.slice(startOffset, startOffset + text.length); 
+						if (cutText == text) {
+							startPosition = startOffset;
+							this.io.currentCommand =  this.io.currentCommand.slice(0, startPosition) + this.io.currentCommand.slice(startPosition + text.length, this.io.currentCommand.length); 
+						}
+					} else {
+						// Multiple nodes, the selected text is not on the first node.
+						// We must advance inside currentCommand by at least this much:
+						startPosition = numLines * this.screenSize.width - window.promptEnd;
+						startPosition += this.scrollPort_.selection.startRow.childNodes[0].length;
+						var cutText = this.io.currentCommand.slice(startPosition, this.io.currentCommand.length); 
+						for (let i = 1; i < this.scrollPort_.selection.startRow.childNodes.length; i++) {
+							const node = this.scrollPort_.selection.startRow.childNodes[i];
+							if (node.nodeName == "#text") {
+								if (startNode != node) {
+									startPosition += node.data.length;
+								} else {
+									startPosition += startOffset;
+									break;
+								}
+							} else {
+								var foundNode = false;
+								for (let j = 0; j < node.childNodes.length; j++) {
+									const secondNode = node.childNodes[j];
+									if (startNode != secondNode) {
+										startPosition += secondNote.data.length;
+									} else {
+										startPosition += startOffset;
+										foundNode = true;
+										break;
+									}
+								}
+								if (foundNode) {
+									break;
+								}
+							}
+						}
+						var cutText = this.io.currentCommand.slice(startPosition, startPosition + text.length); 
+						if (cutText == text) {
+							this.io.currentCommand =  this.io.currentCommand.slice(0, startPosition) + this.io.currentCommand.slice(startPosition + text.length, this.io.currentCommand.length); 
+						} else {
+							// This happens too often. 
+							// TODO: make sure we don't cut "newline" instead of actual text.
+							// Do not cut if we don't agree on what to cut
+							if (e != null) {
+								e.preventDefault();
+							}
+							return false; 
+						}
 					}
-					return false; 
 				}
+				// Move cursor to startLine, startOffset
+				// We redraw the command ourselves because iOS removes extra spaces around the text.
+				// var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
+				// io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
+				xcursor = window.promptEnd + startPosition;
+				while (xcursor > this.screenSize.width) {
+					xcursor -= this.screenSize.width;
+				}
+				currentCommandCursorPosition = startPosition
+				var ycursor = startRow - this.scrollPort_.getTopRowIndex();
+				this.io.print('\x1b[' + (ycursor + 1) + ';' + (xcursor + 1) + 'H'); // move cursor to new position 
+				this.io.print('\x1b[0J'); // delete display after cursor
+				var endOfCommand = this.io.currentCommand.slice(startPosition, this.io.currentCommand.length); 
+				this.io.print(endOfCommand); 
+				this.io.print('\x1b[' + (ycursor + 1) + ';' + (xcursor + 1) + 'H'); // move cursor back to new position 
+				window.webkit.messageHandlers.aShell.postMessage('copy:' + text); // copy the text to clipboard. We can't use JS fonctions because we removed the text.
+				e.preventDefault();
+				return true;
+			} else {
+				window.webkit.messageHandlers.aShell.postMessage("Really cannot find text = " + text + " in " + this.io.currentCommand); 
+				// Do not cut if we don't agree on what to cut
+				if (e != null) {
+					e.preventDefault();
+				}
+				return false; 
 			}
-			// Move cursor to startLine, startOffset
-			// We redraw the command ourselves because iOS removes extra spaces around the text.
-			// var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
-			// io.print('\x1b[' + (window.promptLine + scrolledLines + 1) + ';' + (window.promptEnd + 1) + 'H'); // move cursor to position at start of line
-			currentCommandCursorPosition = startPosition
-			var ycursor = startRow - this.scrollPort_.getTopRowIndex();
-			this.io.print('\x1b[' + (ycursor + 1) + ';' + (xcursor + 1) + 'H'); // move cursor to new position 
-			this.io.print('\x1b[0J'); // delete display after cursor
-			var endOfCommand = this.io.currentCommand.slice(startPosition, this.io.currentCommand.length); 
-			this.io.print(endOfCommand); 
-			this.io.print('\x1b[' + (ycursor + 1) + ';' + (xcursor + 1) + 'H'); // move cursor back to new position 
-			window.webkit.messageHandlers.aShell.postMessage('copy:' + text); // copy the text to clipboard. We can't use JS fonctions because we removed the text.
-			return true;
 		}
 		// Do not cut if we are outside the command line:
 		if (e != null) {
@@ -462,7 +527,7 @@ function setupHterm() {
 			window.webkit.messageHandlers.aShell.postMessage('inputTTY:' + string);
 			// If help() is running in iPython, then it stops being interactive.
 			var helpRunning = false;
-			if (window.commandRunning.startsWith("ipython")) {
+			if (window.commandRunning.startsWith("ipython") || window.commandRunning.startsWith("isympy")) {
 				var lastNewline = window.printedContent.lastIndexOf("\n");
 				var lastLine = window.printedContent.substr(lastNewline + 1); // 1 to skip \n.
 				lastLine = lastLine.replace(/(\r\n|\n|\r|\n\r)/gm,""); // skip past \r and \n, if any
@@ -500,8 +565,8 @@ function setupHterm() {
 					io.currentCommand = '';
 				}
 				window.webkit.messageHandlers.aShell.postMessage('input:' + string);
-			} else { 
-				// window.webkit.messageHandlers.aShell.postMessage('Received character: ' + string); // for debugging
+			} else {
+				// window.webkit.messageHandlers.aShell.postMessage('Received character: ' + string + ' ' + string.length); // for debugging
 				if (io.currentCommand === '') { 
 					// new line, reset things: (required for commands inside commands)
 					updatePromptPosition(); 
@@ -701,14 +766,21 @@ function setupHterm() {
 						} else {
 							disableAutocompleteMenu();
 							if (currentCommandCursorPosition > 0) { 
-								var currentChar = io.currentCommand[currentCommandCursorPosition - 1];
+								var previousCursorPosition = 0;
+								var currentChar;
+								for (const v of window.term_.io.currentCommand) {
+									if (previousCursorPosition + v.length >= currentCommandCursorPosition) {
+										currentChar = v;
+										break;
+									}
+									previousCursorPosition += v.length;
+								}
 								var currentCharWidth = lib.wc.strWidth(currentChar);
 								this.document_.getSelection().empty();
 								for (var i = 0; i < currentCharWidth; i++) {
 									io.print('\b'); // move cursor back n chars, across lines
 								}
-								currentCommandCursorPosition -= 1;
-								this.document_.getSelection().empty();
+								currentCommandCursorPosition = previousCursorPosition;
 							}
 						}
 						break;
@@ -723,15 +795,51 @@ function setupHterm() {
 							// recompute complete menu? For now, disable it.
 							disableAutocompleteMenu();
 							if (currentCommandCursorPosition < io.currentCommand.length) {
-								var currentChar = io.currentCommand[currentCommandCursorPosition];
-								var currentCharWidth = lib.wc.strWidth(currentChar);
-								this.document_.getSelection().empty();
+								const codePoint = io.currentCommand.codePointAt(currentCommandCursorPosition);
+								var currentChar = String.fromCodePoint(codePoint);
+								var	currentCharWidth = lib.wc.strWidth(currentChar);
+								var nextCodePointPosition = currentCommandCursorPosition + 1;
+								if (codePoint >= 0x010000) {
+								    nextCodePointPosition += 1;
+								}
+								while (nextCodePointPosition < io.currentCommand.length) {
+									const nextCodePoint = io.currentCommand.codePointAt(nextCodePointPosition);
+									const nextChar = String.fromCodePoint(nextCodePoint);
+									const isModifier = (nextChar.match(/\p{Emoji_Modifier}/gu) != null);
+									if (isModifier) {
+										// advance over modifier:
+										nextCodePointPosition += 1;
+										currentCharWidth += nextChar.length;
+										if (nextCodePoint >= 0x010000) {
+											nextCodePointPosition += 1;
+										}
+									} else if (nextCodePoint == 8205) {
+										// zero-width joiner, move forward and keep joining
+										nextCodePointPosition += 1;
+										if (nextCodePoint >= 0x010000) {
+											nextCodePointPosition += 1;
+										}
+										currentCharWidth += nextChar.length;
+										if (nextCodePointPosition < io.currentCommand.length) {
+											// Advance over the next character:
+											const nextCodePoint = io.currentCommand.codePointAt(nextCodePointPosition);
+											nextCodePointPosition += 1; 
+											if (nextCodePoint >= 0x010000) {
+												nextCodePointPosition += 1;
+											}
+											currentCharWidth += nextChar.length;
+											// Can I have a modifier in the middle of a joined-emoji?
+										}
+									} else {
+										break;
+									}
+								}
 								if (term.screen_.cursorPosition.column < term.screenSize.width - currentCharWidth) {
 									io.print('\x1b[' + currentCharWidth + 'C'); // move cursor forward n chars
 								} else {
 									io.print('\x1b[' + (term.screen_.cursorPosition.row + 2) + ';' + 0 + 'H'); // move cursor to start of next line
 								}
-								currentCommandCursorPosition += 1;
+								currentCommandCursorPosition = nextCodePointPosition;
 								this.document_.getSelection().empty();
 							}
 						}
@@ -740,9 +848,18 @@ function setupHterm() {
 						disableAutocompleteMenu();
 						if (currentCommandCursorPosition > 0) { // prompt.length
 							while (currentCommandCursorPosition > 0) {
-								currentCommandCursorPosition -= 1;
-								var currentChar = io.currentCommand[currentCommandCursorPosition];
+								// get previous char, emoji compatible
+								var previousCursorPosition = 0;
+								var currentChar;
+								for (const v of window.term_.io.currentCommand) {
+									if (previousCursorPosition + v.length >= currentCommandCursorPosition) {
+										currentChar = v;
+										break;
+									}
+									previousCursorPosition += v.length;
+								}
 								var currentCharWidth = lib.wc.strWidth(currentChar);
+								currentCommandCursorPosition = previousCursorPosition;
 								for (var i = 0; i < currentCharWidth; i++) {
 									io.print('\b'); // move cursor back n chars, across lines
 								}
@@ -756,14 +873,52 @@ function setupHterm() {
 						disableAutocompleteMenu();
 						if (currentCommandCursorPosition < io.currentCommand.length) { // prompt.length
 							while (currentCommandCursorPosition < io.currentCommand.length) {
-								currentCommandCursorPosition += 1;
-								var currentChar = io.currentCommand[currentCommandCursorPosition];
+								const codePoint = io.currentCommand.codePointAt(currentCommandCursorPosition);
+								var currentChar = String.fromCodePoint(codePoint);
 								var currentCharWidth = lib.wc.strWidth(currentChar);
+								var nextCodePointPosition = currentCommandCursorPosition + 1;
+								if (codePoint >= 0x010000) {
+								    nextCodePointPosition += 1;
+								}
+								// Move forward until the end of the current emoji (copied from right-arrow):
+								while (nextCodePointPosition < io.currentCommand.length) {
+									const nextCodePoint = io.currentCommand.codePointAt(nextCodePointPosition);
+									const nextChar = String.fromCodePoint(nextCodePoint);
+									const isModifier = (nextChar.match(/\p{Emoji_Modifier}/gu) != null);
+									if (isModifier) {
+										// advance over modifier:
+										nextCodePointPosition += 1;
+										currentCharWidth += nextChar.length;
+										if (nextCodePoint >= 0x010000) {
+											nextCodePointPosition += 1;
+										}
+									} else if (nextCodePoint == 8205) {
+										// zero-width joiner, move forward and keep joining
+										nextCodePointPosition += 1;
+										if (nextCodePoint >= 0x010000) {
+											nextCodePointPosition += 1;
+										}
+										currentCharWidth += nextChar.length;
+										if (nextCodePointPosition < io.currentCommand.length) {
+											// Advance over the next character:
+											const nextCodePoint = io.currentCommand.codePointAt(nextCodePointPosition);
+											nextCodePointPosition += 1; 
+											if (nextCodePoint >= 0x010000) {
+												nextCodePointPosition += 1;
+											}
+											currentCharWidth += nextChar.length;
+											// Can I have a modifier in the middle of a joined-emoji?
+										}
+									} else {
+										break;
+									}
+								}
 								if (term.screen_.cursorPosition.column < term.screenSize.width - currentCharWidth) {
 									io.print('\x1b[' + currentCharWidth + 'C'); // move cursor forward n chars
 								} else {
 									io.print('\x1b[' + (term.screen_.cursorPosition.row + 2) + ';' + 0 + 'H'); // move cursor to start of next line
 								}
+								currentCommandCursorPosition = nextCodePointPosition;
 								if  (!isLetter(currentChar)) {
 									break;
 								}
@@ -930,14 +1085,12 @@ function setupHterm() {
 			}
 		};
 		term.moveCursorPosition = function(y, x) {
-		    // window.webkit.messageHandlers.aShell.postMessage('moveCursorPosition ' + x + ' ' + y);
 			// If currentCommand is empty, update prompt position (JS is asynchronous, position might have been computed before the end of the scroll)
 			if (io.currentCommand === '') { 
 				updatePromptPosition(); 
 			}
 			var scrolledLines = window.promptScroll - this.scrollPort_.getTopRowIndex();
 			var topRowCommand = window.promptLine + scrolledLines;
-			// window.webkit.messageHandlers.aShell.postMessage('topRowCommand: ' + topRowCommand + ' window.promptEnd: ' + window.promptEnd);
 			// Don't move cursor outside of current line
 			if (y < topRowCommand) { 
 				return; 
@@ -962,18 +1115,33 @@ function setupHterm() {
 			}
 			// Now compute the new position inside the command line, taking into account multi-byte characters.
 			// We assume characters have a width of at least 1, so we move of at least deltaCursor.
-			var newCursorPosition = currentCommandCursorPosition - deltaCursor; 
-			if (deltaCursor > 0) { 
-				var string = io.currentCommand.slice(newCursorPosition, currentCommandCursorPosition);
-				while (lib.wc.strWidth(string) > deltaCursor) {
-					newCursorPosition += 1; 
-					string = io.currentCommand.slice(newCursorPosition, currentCommandCursorPosition);
+			var newCursorPosition = currentCommandCursorPosition; // - deltaCursor; 
+			if (deltaCursor > 0) {
+				// deltaCursor is computed in screen char width. cursorPosition is computed in char inside the string.
+				// We move back by -deltaCursor characters.
+				var endOfStringPosition = 0;
+				var currentChar;
+				var string = ''
+				for (const v of window.term_.io.currentCommand) {
+					string = io.currentCommand.slice(endOfStringPosition, currentCommandCursorPosition);
+					if (lib.wc.strWidth(string) <= deltaCursor) {
+						break;
+					}
+					endOfStringPosition += v.length;
 				}
+				newCursorPosition = endOfStringPosition;
 			} else {
-				var string = io.currentCommand.slice(currentCommandCursorPosition, newCursorPosition);
-				while (lib.wc.strWidth(string) > -deltaCursor) {
-					newCursorPosition -= 1; 
-					string = io.currentCommand.slice(currentCommandCursorPosition, newCursorPosition);
+				// We move forward by deltaCursor characters:
+				var string = '';
+				var endOfStringPosition = 0;
+				while (lib.wc.strWidth(string) < -deltaCursor) {
+					const codePoint = io.currentCommand.codePointAt(newCursorPosition);
+					var currentChar = String.fromCodePoint(codePoint);
+					string += currentChar;
+					newCursorPosition += 1; 
+					if (codePoint >= 0x010000) {
+						newCursorPosition += 1;
+					}
 				}
 			}
 			currentCommandCursorPosition = newCursorPosition;
@@ -1268,6 +1436,7 @@ hterm.Keyboard.prototype.onKeyDown_ = function(e) {
     meta = false;
   }
 
+	
   if (typeof action == 'string' && action.substr(0, 2) == '\x1b[' &&
       (alt || control || shift || meta)) {
     // The action is an escape sequence that and it was triggered in the
@@ -1338,6 +1507,8 @@ hterm.Keyboard.prototype.onKeyDown_ = function(e) {
  * programmatic width change.
  */
 hterm.Terminal.prototype.onResize_ = function() {
+  // window.webkit.messageHandlers.aShell.postMessage('onResize_ terminal event: ' + this.scrollPort_.getScreenWidth() + ' x ' + this.scrollPort_.getScreenHeight());
+  // window.webkit.messageHandlers.aShell.postMessage('columnCount: ' + this.scrollPort_.getScreenWidth() / this.scrollPort_.characterSize.width);
   const columnCount = Math.floor(this.scrollPort_.getScreenWidth() /
                                  this.scrollPort_.characterSize.width) || 0;
   const rowCount = lib.f.smartFloorDivide(
@@ -1364,7 +1535,7 @@ hterm.Terminal.prototype.onResize_ = function() {
   let margin = (this.scrollPort_.getScreenWidth() - columnCount * this.scrollPort_.characterSize.width) / 2;
   this.div_.style.marginLeft = Math.round(margin)+'px';
 
-  this.updateCssCharsize_();
+  // this.updateCssCharsize_(); // but why?
 
   if (isNewSize) {
     this.overlaySize();
@@ -2140,10 +2311,85 @@ hterm.Keyboard.KeyMap.prototype.onZoom_ = function(e, keyDef) {
       size += 1;
     }
 
+    window.fontSize = size;
     this.keyboard.terminal.setFontSize(size);
 	window.webkit.messageHandlers.aShell.postMessage('setFontSize:' + size);
   }
 
   return hterm.Keyboard.KeyActions.CANCEL;
 };
+
+/**
+ * Set the font size for this terminal.
+ *
+ * Call setFontSize(0) to reset to the default font size.
+ *
+ * This function does not modify the font-size preference.
+ *
+ * @param {number} px The desired font size, in pixels.
+ */
+hterm.Terminal.prototype.setFontSize = function(px) {
+	// a bit strong, but trying to prevent arbitrary changes in font size with StageManager.
+	px = window.fontSize;
+
+	this.scrollPort_.setFontSize(px);
+	this.setCssVar('font-size', `${px}px`);
+	this.updateCssCharsize_();
+};
+
+
+/**
+ * Handle keypress events.
+ *
+ * TODO(vapier): Drop this event entirely and only use keydown.
+ *
+ * @param {!KeyboardEvent} e The event to process.
+ */
+hterm.Keyboard.prototype.onKeyPress_ = function(e) {
+  // FF doesn't set keyCode reliably in keypress events.  Stick to the which
+  // field here until we can move to keydown entirely.
+  const key = String.fromCharCode(e.which).toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && (key == 'c' || key == 'v')) {
+    // On FF the key press (not key down) event gets fired for copy/paste.
+    // Let it fall through for the default browser behavior.
+    return;
+  }
+
+  if (e.keyCode == 9 /* Tab */) {
+    // On FF, a key press event will be fired in addition of key down for the
+    // Tab key if key down isn't handled. This would only happen if a custom
+    // PASS binding has been created and therefore this should be handled by the
+    // browser.
+    return;
+  }
+
+  /** @type {string} */
+  let ch;
+  if (e.altKey && this.altSendsWhat == 'browser-key' && e.charCode == 0) {
+    // If we got here because we were expecting the browser to handle an
+    // alt sequence but it didn't do it, then we might be on an OS without
+    // an enabled IME system.  In that case we fall back to xterm-like
+    // behavior.
+    //
+    // This happens here only as a fallback.  Typically these platforms should
+    // set altSendsWhat to either 'escape' or '8-bit'.
+    ch = String.fromCharCode(e.keyCode);
+    if (!e.shiftKey) {
+      ch = ch.toLowerCase();
+    }
+
+  } else if (e.charCode >= 32) {
+    // iOS: fromCodePoint to get the first character, key to get the full (composed) emoji
+	ch = e.key;
+    // ch = String.fromCodePoint(e.charCode);
+  }
+
+  if (ch) {
+    this.terminal.onVTKeystroke(ch);
+  }
+
+  e.preventDefault();
+  e.stopPropagation();
+};
+
 
