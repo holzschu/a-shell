@@ -1,0 +1,70 @@
+# Customizable toolbar: 
+# Each button is defined by its icon (first column), the action to be executed when the button is clicked (second column) and a parameter for that action (third column).
+
+# Icons can be either the name of one of the SF Symbols from Apple: https://developer.apple.com/sf-symbols/ or a string of characters.
+# Action can be either "insertString", "systemAction" or "insertCommand"
+
+# The effect of the parameter depends on the action:
+# - for insertString, it can be any string, and will be inserted when you type the button. 
+#					  Strings can contain \n, so you can execute commands, even multiple commands.
+# - for systemAction, it can be any of: control, up, down, left, right, cut, copy or paste.
+# - for insertCommand, it is a short command that will be executed when the button is pressed. 
+#					  The output of this command will be inserted at the cursor position
+
+# Groups are enclosed in brackets (see bottom of file for an example). 
+# The part after the closing bracket is the representative item (icon or text, can be nil). 
+# If space is constrained, iPadOS will display the group as a submenu using that item,
+# if it's not nil (iOS will always display all buttons). 
+
+# On iOS 16, groups can be made to appear depending on the command: after the opening bracket, you can
+# add a regular expression. If that expression matches the current command, the buttons will 
+# show. A special regexp ("none") is for buttons that should only appear if no commands are running.
+
+# This file corresponds to the default toolbar: first the 4 buttons on the left (tab, control, escape, paste), 
+# then a line with "separator" to indicate the separation between the two groups, 
+# then the 4 arrow buttons on the right.
+# To customize the toolbar, simply edit this file. To go back to the default toolbar, remove it.
+
+# Button icon				action				parameter
+arrow.right.to.line.alt		insertString		\u{0009}
+chevron.up.square			systemAction		control
+escape						insertString		\u{001B}
+doc.on.clipboard			systemAction		paste
+
+separator
+
+arrow.up					systemAction		up
+arrow.down					systemAction		down
+arrow.left					systemAction		left
+arrow.right					systemAction		right
+
+# Example buttons:
+#
+# delete.backward           insertString        \u{007F}
+# return                    insertString        \u{000D}
+# switch.2					insertString		vim .toolbarDefinition\n
+# calendar.badge.clock		insertCommand		date "+%Y_%m_%d"
+
+# Example groups (only with iPads and iOS-style toolbar). Max 15 commands in a submenu
+# [
+#     scissors						systemAction		cut
+#     arrow.up.doc.on.clipboard		systemAction		copy
+#     doc.on.clipboard				systemAction		paste
+# ] filemenu.and.cursorarrow
+
+# This one is shown only if no commands are running:
+# [="none"
+#     ls				insertString		ls -a ~/Documents/
+#     uname				insertString		uname -a
+#     ping 🍎			insertString		ping www.apple.com
+#     date				insertString		date
+# ]
+
+# This one appears if you edit a Markdown file in Vim:
+# [="vim .*\.md"
+#     key					insertString		\u{001B}:q!\n
+#     bold				insertString		:s/\\%V.*\\%V./**&**\n
+#     italic				insertString		:s/\\%V.*\\%V./*&*\n
+#     strikethrough		insertString		:s/\\%V.*\\%V./\\~\\~&\\~\\~\n
+# ] contextualmenu.and.cursorarrow
+
