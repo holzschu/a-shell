@@ -27,6 +27,7 @@ var stdinString: String = ""
 
 class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate {
     var window: UIWindow?
+    var screen: UIScreen?
     var windowScene: UIWindowScene?
     var webView: Webview.WebViewType?
     var wasmWebView: WKWebView? // webView for executing wasm
@@ -35,6 +36,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var width = 80
     var height = 80
     var stdout_active = false
+    var stdout_button_active = false
     var persistentIdentifier: String? = nil
     var stdin_file: UnsafeMutablePointer<FILE>? = nil
     var stdin_file_input: FileHandle? = nil
@@ -54,6 +56,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     let interrupt = "\u{0003}"  // control-C, used to kill the process
     let endOfTransmission = "\u{0004}"  // control-D, used to signal end of transmission
     let escape = "\u{001B}"
+    let carriageReturn = "\u{000D}" // carriage return
     // Are we editing a file?
     var closeAfterCommandTerminates = false
     var resetDirectoryAfterCommandTerminates = ""
@@ -82,8 +85,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var avControllerPiPEnabled = false
     // for repetitive buttons
     var continuousButtonAction = false
+    // If we introduce submenus, the abilities of editorToolbar and inputAssistantItem change.
     var leftButtonGroup: [UIBarButtonItem] = []
+    var leftButtonGroups: [UIBarButtonItemGroup] = []
     var rightButtonGroup: [UIBarButtonItem] = []
+    var rightButtonGroups: [UIBarButtonItemGroup] = []
+    let maxSubmenuLevels = 15
+    var buttonRegex: [Int:String] = [:]
+    var noneTag = -1
 
     // Create a document picker for directories.
     private let documentPicker =
@@ -133,165 +142,540 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return (currentCommand.hasPrefix("vim ")) || (currentCommand == "vim") || (currentCommand.hasPrefix("jump "))
     }
     
+    private func title(_ button: UIBarButtonItem) -> String? {
+        var title: String? = nil
+        if let possibleTitles = button.possibleTitles {
+            for attemptedTitle in possibleTitles {
+                if (attemptedTitle.count > 0) {
+                    return attemptedTitle
+                }
+            }
+        }
+        return button.title
+    }
+    
     @objc private func insertString(_ sender: UIBarButtonItem) {
-        if let title = sender.title {
-            webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + title + "\");") { (result, error) in
-                // if let error = error { print(error) }
-                // if let result = result { print(result) }
+        if var title = title(sender) {
+            var sendCarriageReturn = false
+            if (title.hasSuffix("\\n")) {
+                title.removeLast("\\n".count)
+                sendCarriageReturn = true
+            }
+            DispatchQueue.main.async {
+                self.webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + title + "\");") { (result, error) in
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
+                }
+                if (sendCarriageReturn) {
+                    self.webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + "\\r" + "\");") { (result, error) in
+                        // if let error = error { print(error) }
+                        // if let result = result { print(result) }
+                    }
+                }
             }
         }
     }
     
-    @objc private func runCommand(_ sender: UIBarButtonItem) {
-        if let command = sender.title {
-            NSLog("Running command: \(command)")
-            executeCommandAndWait(command: command)
+    // This is a bit sad, but when a menu uses a representativeItem, sender is set to that representativeItem,
+    // so we have no way to know which button was pressed. Hence the multiple commands (3 * maxSubmenuLevels)
+    @objc private func insertString_0(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[0])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_1(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[1])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_2(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[2])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_3(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[3])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_4(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[4])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_5(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[5])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_6(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[6])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_7(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[7])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_8(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[8])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_9(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[9])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_10(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[10])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_11(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[11])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_12(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[12])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_13(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[13])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertString_14(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertString(buttonGroup.barButtonItems[14])
+            }
+        }
+        insertString(sender)
+     }
+    
+    @objc private func insertCommand(_ sender: UIBarButtonItem) {
+        // runs the command, and inserts on screen the result of running it. So a button can produce the current date, for example.
+        if let command = title(sender) {
+            NSLog("Running button command: \(command)")
+            // Get file for stdout/stderr that can be written to
+            let stdin_pipe = Pipe()
+            let stdin_file = fdopen(stdin_pipe.fileHandleForReading.fileDescriptor, "r")
+            var stdout_pipe = Pipe()
+            var stdout_file = fdopen(stdout_pipe.fileHandleForWriting.fileDescriptor, "w")
+            while (stdout_file == nil) {
+                stdout_pipe = Pipe()
+                stdout_file = fdopen(stdout_pipe.fileHandleForWriting.fileDescriptor, "w")
+            }
+            // Call the following functions when data is written to stdout/stderr.
+            stdout_pipe.fileHandleForReading.readabilityHandler = self.onStdoutButton
+            stdout_button_active = true
+            NSLog("Streams for button: \(stdin_file)  \(stdout_file)")
+            ios_setStreams(stdin_file, stdout_file, stdout_file)
+            let pid = ios_fork()
+            ios_system(command)
+            ios_waitpid(pid)
+            ios_releaseThreadId(pid)
+            // Send info to the stdout handler that the command has finished:
+            let writeOpen = fcntl(stdout_pipe.fileHandleForWriting.fileDescriptor, F_GETFD)
+            if (writeOpen >= 0) {
+                NSLog("write channel still open, flushing")
+                fflush(stdout_file)
+                // Pipe is still open, send information to close it, once all output has been processed.
+                stdout_pipe.fileHandleForWriting.write(self.endOfTransmission.data(using: .utf8)!)
+                while (stdout_button_active) {
+                    fflush(stdout_file)
+                }
+            }
+            close(stdout_pipe.fileHandleForWriting.fileDescriptor)
         }
     }
-
+    
+    @objc private func insertCommand_0(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[0])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_1(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[1])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_2(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[2])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_3(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[3])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_4(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[4])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_5(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[5])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_6(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[6])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_7(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[7])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_8(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[8])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_9(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[9])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_10(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[10])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_11(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[11])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_12(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[12])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_13(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[13])
+            }
+        }
+        insertCommand(sender)
+     }
+    
+    @objc private func insertCommand_14(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return insertCommand(buttonGroup.barButtonItems[14])
+            }
+        }
+        insertCommand(sender)
+     }
+    
     @objc private func systemAction(_ sender: UIBarButtonItem) {
-        if (sender.title == "paste") {
-            if let pastedString = UIPasteboard.general.string {
-                webView?.paste(pastedString)
+        if let title = title(sender) {
+            if (title == "paste") {
+                if let pastedString = UIPasteboard.general.string {
+                    NSLog("Sending text to paste: \(pastedString)")
+                    webView?.paste(pastedString)
+                }
+                return
             }
-            return
-        }
-        var commandString: String? = nil
-        switch (sender.title) {
-        case "up":
-            commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[A' : '\\x1bOA');"
-            break
-        case "down":
-            commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[B' : '\\x1bOB');"
-            break
-        case "left":
-            commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[D' : '\\x1bOD');"
-            break
-        case "right":
-            commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[C' : '\\x1bOC');"
-            break
-        case "copy":
-            commandString = "window.term_.copySelectionToClipboard();"
-            break
-        case "cut":
-            commandString = "window.term_.onCut();"
-            break
-        case "control":
-            controlOn = !controlOn;
-            if #available(iOS 15.0, *) {
-                // This has no impact on the button appearance with systemToolbar and no keyboard visible.
-                sender.isSelected = controlOn
-            } else {
-                // buttonName.fill? if it exists?
-                let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
-                sender.image = controlOn ? UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration) :
-                UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
+            var commandString: String? = nil
+            switch (title) {
+            case "up":
+                commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[A' : '\\x1bOA');"
+                break
+            case "down":
+                commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[B' : '\\x1bOB');"
+                break
+            case "left":
+                commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[D' : '\\x1bOD');"
+                break
+            case "right":
+                commandString = "window.term_.io.onVTKeystroke((!window.term_.keyboard.applicationCursor) ? '\\x1b[C' : '\\x1bOC');"
+                break
+            case "copy":
+                commandString = "window.term_.copySelectionToClipboard();"
+                break
+            case "cut":
+                commandString = "window.term_.onCut();"
+                break
+            case "control":
+                controlOn = !controlOn;
+                if #available(iOS 15.0, *) {
+                    // This has no impact on the button appearance with systemToolbar and no keyboard visible.
+                    sender.isSelected = controlOn
+                } else {
+                    // buttonName.fill? if it exists?
+                    let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
+                    sender.image = controlOn ? UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration) :
+                    UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
+                }
+                commandString = controlOn ? "window.controlOn = true;" : "window.controlOn = false;"
+                break
+            default:
+                break
             }
-            commandString = controlOn ? "window.controlOn = true;" : "window.controlOn = false;"
-            break
-        default:
-            break
-        }
-        if (commandString != nil) {
-            webView?.evaluateJavaScript(commandString!) { (result, error) in
-                // if let error = error { print(error) }
-                // if let result = result { print(result) }
+            if (commandString != nil) {
+                webView?.evaluateJavaScript(commandString!) { (result, error) in
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
+                }
             }
         }
     }
     
-    var tabButton: UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let tabButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right.to.line.alt")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(insertString(_:)))
-        tabButton.isAccessibilityElement = true
-        tabButton.title="\u{0009}"
-        tabButton.accessibilityLabel = "Tab"
-        return tabButton
-    }
-    
-    var controlButton: UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
-        // Image used to be control
-        let imageControl = UIImage(systemName: "chevron.up.square")!
-        let controlButton = UIBarButtonItem(image: imageControl.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
-        if #available(iOS 15.0, *) {
-            controlButton.changesSelectionAsPrimaryAction = true
-            controlButton.menu = nil
+    @objc private func systemAction_0(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[0])
+            }
         }
-        controlButton.isAccessibilityElement = true
-        controlButton.title = "control"
-        controlButton.accessibilityLabel = "Control"
-        return controlButton
-    }
+        systemAction(sender)
+     }
+
+    @objc private func systemAction_1(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[1])
+            }
+        }
+        systemAction(sender)
+     }
+    @objc private func systemAction_2(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[2])
+            }
+        }
+        systemAction(sender)
+     }
     
-    var escapeButton: UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let escapeButton = UIBarButtonItem(image: UIImage(systemName: "escape")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(insertString(_:)))
-        escapeButton.isAccessibilityElement = true
-        escapeButton.title = escape
-        escapeButton.accessibilityLabel = "Escape"
-        return escapeButton
-    }
+    @objc private func systemAction_3(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[3])
+            }
+        }
+        systemAction(sender)
+     }
+
+    @objc private func systemAction_4(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[4])
+            }
+        }
+        systemAction(sender)
+     }
     
-    var cutButton: UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let cutButton = UIBarButtonItem(image: UIImage(systemName: "scissors")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
-        cutButton.title = "cut"
-        return cutButton
-    }
+    @objc private func systemAction_5(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[5])
+            }
+        }
+        systemAction(sender)
+     }
     
-    var copyButton: UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let copyButton = UIBarButtonItem(image: UIImage(systemName: "doc.on.doc")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
-        copyButton.title = "copy"
-        return copyButton
-    }
+    @objc private func systemAction_6(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[6])
+            }
+        }
+        systemAction(sender)
+     }
     
-    var pasteButton: UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let pasteButton = UIBarButtonItem(image: UIImage(systemName: "doc.on.clipboard")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
-        pasteButton.title = "paste"
-        return pasteButton
-    }
+    @objc private func systemAction_7(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[7])
+            }
+        }
+        systemAction(sender)
+     }
     
-    var upButton: UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let upButton = UIBarButtonItem(image: UIImage(systemName: "arrow.up")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
-        upButton.isAccessibilityElement = true
-        upButton.title = "up"
-        upButton.accessibilityLabel = "Up arrow"
-        return upButton
-    }
+    @objc private func systemAction_8(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[8])
+            }
+        }
+        systemAction(sender)
+     }
     
-    var downButton: UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let downButton = UIBarButtonItem(image: UIImage(systemName: "arrow.down")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
-        downButton.isAccessibilityElement = true
-        downButton.title = "down"
-        downButton.accessibilityLabel = "Down arrow"
-        return downButton
-    }
+    @objc private func systemAction_9(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[9])
+            }
+        }
+        systemAction(sender)
+     }
     
-    var leftButton: UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let leftButton = UIBarButtonItem(image: UIImage(systemName: "arrow.left")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
-        leftButton.isAccessibilityElement = true
-        leftButton.title = "left"
-        leftButton.accessibilityLabel = "Left arrow"
-        return leftButton
-    }
+    @objc private func systemAction_10(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[10])
+            }
+        }
+        systemAction(sender)
+     }
     
-    var rightButton: UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-        let rightButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(systemAction(_:)))
-        rightButton.isAccessibilityElement = true
-        rightButton.title = "right"
-        rightButton.accessibilityLabel = "Right arrow"
-        return rightButton
-    }
+    @objc private func systemAction_11(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[11])
+            }
+        }
+        systemAction(sender)
+     }
+    
+    @objc private func systemAction_12(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[12])
+            }
+        }
+        systemAction(sender)
+     }
+    
+    @objc private func systemAction_13(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[13])
+            }
+        }
+        systemAction(sender)
+     }
+    
+    @objc private func systemAction_14(_ sender: UIBarButtonItem) {
+        if (useSystemToolbar) {
+            if let buttonGroup = sender.buttonGroup {
+                return systemAction(buttonGroup.barButtonItems[14])
+            }
+        }
+        systemAction(sender)
+     }
+    
+
     
     @objc func hideKeyboard() {
-        // if (onScreenKeyboardVisible != nil) && (!onScreenKeyboardVisible!) { return }
         DispatchQueue.main.async {
             guard self.webView != nil else { return }
             self.webView!.endEditing(true)
@@ -309,8 +693,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
     }
-
-    @objc func generateToolbarButtons() {
+@objc func generateToolbarButtons() {
+        // check issue with screen size and pico.
         // Scan the configuration file to generate the button groups:
         var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
         if let documentsUrl = try? FileManager().url(for: .documentDirectory,
@@ -326,93 +710,219 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let contentOfFile = try? String(contentsOf: configFileUrl, encoding: String.Encoding.utf8) {
                 leftButtonGroup = []
                 rightButtonGroup = []
+                leftButtonGroups = []
+                rightButtonGroups = []
+                buttonRegex = [:]
+                var maximumTag = 0
+                var insideSubmenu = false
+                var submenuLevel = 0
+                var pastSeparator = false
+                var activeTag = 0
+                noneTag = -1
                 let buttonsDefinition = contentOfFile.split(separator: "\n")
-                var group = 0 // 0: insert into left group, 1: rightgroup
+                var activeButtonGroup: [UIBarButtonItem] = []
+                let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
                 for buttonLine in buttonsDefinition {
                     let trimmedButtonLine = buttonLine.trimmingCharacters(in: .whitespacesAndNewlines)
                     if (trimmedButtonLine.hasPrefix("#")) { continue } // skip comments
                     if (trimmedButtonLine.count == 0) { continue } // skip blank lines
+                    NSLog("Parsing line: \(trimmedButtonLine)")
                     if (trimmedButtonLine == "separator") { // first time: switch to next button group. After: ignored.
-                        group = 1
+                        leftButtonGroup.append(contentsOf: activeButtonGroup)
+                        leftButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: nil))
+                        activeButtonGroup = []
+                        pastSeparator = true
+                        continue
+                    }
+                    let regularLine = trimmedButtonLine.contains("insertString") || trimmedButtonLine.contains("systemAction") || trimmedButtonLine.contains("insertCommand")
+                    if (!insideSubmenu) && ((trimmedButtonLine == "[")
+                                            || ((trimmedButtonLine.hasPrefix("[=\"")) && !regularLine)
+                                            || ((trimmedButtonLine.hasPrefix("[='")) && !regularLine)) {
+                        // new group:
+                        if (activeButtonGroup.count > 0) {
+                            // start of a new group. Dump what we have so far:
+                            if (pastSeparator) {
+                                rightButtonGroup.append(contentsOf: activeButtonGroup)
+                                rightButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: nil))
+                            } else {
+                                leftButtonGroup.append(contentsOf: activeButtonGroup)
+                                leftButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: nil))
+                            }
+                            activeButtonGroup = []
+                        }
+                        insideSubmenu = true
+                        submenuLevel = 0
+                        if trimmedButtonLine.hasPrefix("[=") {
+                            var commandRegex = trimmedButtonLine
+                            commandRegex.removeFirst("[=".count)
+                            if (commandRegex.first == commandRegex.last) {
+                                commandRegex.removeFirst()
+                                commandRegex.removeLast()
+                            }
+                            var foundRegexBefore = false
+                            for (key, value) in buttonRegex {
+                                if value == commandRegex {
+                                    activeTag = key
+                                    foundRegexBefore = true
+                                    break
+                                }
+                            }
+                            if (!foundRegexBefore) {
+                                activeTag = maximumTag + 1
+                                maximumTag = activeTag
+                                NSLog("Storing: \(commandRegex) for tag: \(activeTag)")
+                                if (commandRegex == "none") {
+                                    noneTag = activeTag
+                                }
+                                buttonRegex[activeTag] = commandRegex
+                            }
+                        }
+                        continue
+                    }
+                    if insideSubmenu && trimmedButtonLine.hasPrefix("]") {
+                        // end of submenu
+                        var iconName = trimmedButtonLine
+                        insideSubmenu = false
+                        submenuLevel = 0
+                        iconName.removeFirst("]".count)
+                        iconName = iconName.trimmingCharacters(in: .whitespacesAndNewlines)
+                        var button:UIBarButtonItem? = nil
+                        if (iconName != "nil") {
+                            if let systemImage = UIImage(systemName: String(iconName)) {
+                                button = UIBarButtonItem(image: systemImage.withConfiguration(configuration), style: .plain, target: nil, action: nil)
+                            } else {
+                                button = UIBarButtonItem(title: iconName, style: .plain, target: nil, action: nil)
+                            }
+                        }
+                        if (button != nil) {
+                            button!.tag = activeTag
+                            if #available(iOS 16.0, *) {
+                                if (activeTag != 0) && (activeTag != noneTag) {
+                                    button!.isHidden = true
+                                }
+                            }
+                        }
+                        activeTag = 0
+                        if (pastSeparator) {
+                            rightButtonGroup.append(contentsOf: activeButtonGroup)
+                            rightButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: button))
+                        } else {
+                            leftButtonGroup.append(contentsOf: activeButtonGroup)
+                            leftButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: button))
+                        }
+                        activeButtonGroup = []
                         continue
                     }
                     // We have a line with a button definition. We need to split it into 3 parts (icon, command, title)
                     let buttonPartsLine = trimmedButtonLine.components(separatedBy: .whitespaces)
                     // There are usually white parts, so we skip them and keep only the non-whites:
                     var buttonParts: [String] = []
+                    var buttonCount = 0
                     for str in buttonPartsLine {
+                        // command is a single string, the others can have spaces
                         if (str.count > 0) {
-                            buttonParts.append(str)
+                            if ((str == "insertString") || (str == "systemAction") || (str == "insertCommand")) {
+                                if (buttonParts.count == 0) {
+                                    buttonParts.append("questionmark.app.dashed")
+                                }
+                                buttonParts.append(str)
+                                buttonCount = 2
+                            } else if (buttonCount == 0) {
+                                if (buttonParts.count > 0) {
+                                    buttonParts[0].append(" ")
+                                    buttonParts[0].append(str)
+                                } else {
+                                    buttonParts.append(str)
+                                }
+                            } else {
+                                if (buttonParts.count <= 2) {
+                                    buttonParts.append(str)
+                                } else {
+                                    buttonParts[2].append(" ")
+                                    buttonParts[2].append(str)
+                                }
+                            }
                         }
                     }
-                    var button: UIBarButtonItem
-                    let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-                    var action: Selector?
-                    switch (buttonParts[1]) {
-                    case "insertString":
-                        action = #selector(insertString(_:))
-                        break
-                    case "systemAction":
-                        action = #selector(systemAction(_:))
-                        break
-                    case "runCommand":
-                        action = #selector(runCommand(_:))
-                        break
-                    default:
-                        break
+                    if (buttonParts.count < 2) {
+                        continue
+                    }
+                    // How to use hierarchical UIImages. Contrast not good enough in Dec. 2022, so disabled.
+                    /* var configuration: UIImage.SymbolConfiguration
+                    if #available(iOS 15.0, *) {
+                        configuration = UIImage.SymbolConfiguration(hierarchicalColor: .placeholderText)
+                    } else {
+                        configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
+                    } */
+                    // If there's no string to insert, string to insert == title
+                    if (buttonParts.count == 2) {
+                        buttonParts.append(buttonParts[0])
+                    }
+                    var action: Selector? = nil
+                    if ((buttonParts[1] == "insertString") || (buttonParts[1] == "systemAction") || (buttonParts[1] == "insertCommand")) {
+                        action = Selector(buttonParts[1] + ":")
                     }
                     if (action == nil) { continue }
-                    var image: UIImage? = nil
+                    if insideSubmenu && (submenuLevel < maxSubmenuLevels) {
+                        action = Selector(buttonParts[1] + "_\(submenuLevel):")
+                        submenuLevel += 1
+                    }
+                    var button: UIBarButtonItem? = nil
                     if let systemImage = UIImage(systemName: String(buttonParts[0])) {
-                        image = systemImage
-                    } else if let textImage = buttonParts[0].image(withAttributes: [.font: UIFont.systemFont(ofSize: fontSize, weight: .regular)],
-                                                                   size: CGSize(width: 0.7 * toolbarHeight, height: 0.7 * toolbarHeight)) {
-                        NSLog("fontSize: \(fontSize) or toolbarHeight \(toolbarHeight)")
-                        image = textImage
+                        button = UIBarButtonItem(image: systemImage.withConfiguration(configuration), style: .plain, target: self, action: action)
+                        button!.target = self
                     } else {
-                        // No valid button image, use a question mark:
-                        image = UIImage(systemName: "questionmark.app.dashed")
+                        button = UIBarButtonItem(title: buttonParts[0], style: .plain, target: self, action: action)
+                        button!.target = self
                     }
-                    if (image == nil) { continue }
-                    button = UIBarButtonItem(image: image!.withConfiguration(configuration), style: .plain, target: self, action: action)
-                    button.title = String(buttonParts[2])
-                    if (group == 0) {
-                        leftButtonGroup.append(button)
+                    if (button == nil) { continue }
+                    // Sanitize the button title before storing it:
+                    if (buttonParts[1] == "insertString") {
+                        button!.possibleTitles = ["", String(buttonParts[2]).replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'")]
                     } else {
-                        rightButtonGroup.append(button)
+                        button!.possibleTitles = ["", String(buttonParts[2])]
                     }
+                    button!.tag = activeTag
+                    if #available(iOS 16.0, *) {
+                        if (activeTag != 0) && (activeTag != noneTag) {
+                            button!.isHidden = true
+                        }
+                    }
+                    activeButtonGroup.append(button!)
                 }
+                rightButtonGroup.append(contentsOf: activeButtonGroup)
+                rightButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: nil))
             }
         }
     }
     
     @objc func showEditorToolbar() {
         generateToolbarButtons()
+        NSLog("leftButtonGroup: \(leftButtonGroup)")
+        NSLog("rightButtonGroup: \(rightButtonGroup)")
         DispatchQueue.main.async {
             if (useSystemToolbar) {
                 showToolbar = false
-                self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
-                self.webView!.inputAssistantItem.leadingBarButtonGroups =
-                [UIBarButtonItemGroup(barButtonItems: self.leftButtonGroup, representativeItem: nil)]
-                self.webView!.inputAssistantItem.trailingBarButtonGroups =
-                [UIBarButtonItemGroup(barButtonItems: self.rightButtonGroup, representativeItem: nil)]
+                self.webView?.addInputAccessoryView(toolbar: self.emptyToolbar)
+                self.webView?.inputAssistantItem.leadingBarButtonGroups = self.leftButtonGroups
+                self.webView?.inputAssistantItem.trailingBarButtonGroups = self.rightButtonGroups
             } else {
                 showToolbar = true
-                self.webView!.inputAssistantItem.leadingBarButtonGroups = []
-                self.webView!.inputAssistantItem.trailingBarButtonGroups = []
-                self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
+                self.webView?.inputAssistantItem.leadingBarButtonGroups = []
+                self.webView?.inputAssistantItem.trailingBarButtonGroups = []
+                self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             }
         }
     }
     
     func continuousButtonAction(_ button: UIBarButtonItem)  {
         let ms: UInt32 = 1000
-        if (button.title == "up") || (button.title == "down") {
+        if (title(button) == "up") || (title(button) == "down") {
             while (continuousButtonAction) {
                 systemAction(button)
                 usleep(250 * ms)
             }
-        } else if (button.title == "left") || (button.title == "right") {
+        } else if (title(button) == "left") || (title(button) == "right") {
             while (continuousButtonAction) {
                 systemAction(button)
                 usleep(100 * ms)
@@ -458,14 +968,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return toolbar
     }()
     
-    /* public lazy var leftButtonGroup: [UIBarButtonItem] = {
-        return [tabButton, controlButton, escapeButton, pasteButton]
-    }()
-    
-    public lazy var rightButtonGroup: [UIBarButtonItem] = {
-        return [upButton, downButton, leftButton, rightButton]
-    }() */
-
     // cutButton and copyButton exist, but make less sense than paste.
     // the paste command is difficult to create with long press.
     // Possible additions: undo/redo buttons
@@ -973,7 +1475,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let fontName = terminalFontName ?? factoryFontName
         let cursorShape = terminalCursorShape ?? factoryCursorShape
         // Force writing all config to term. Used when we changed many parameters.
-        var command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)'); window.term_.setCursorShape('\(cursorShape)');"
+        var command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.fontSize = \(fontSize); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)'); window.term_.setCursorShape('\(cursorShape)');"
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript(command) { (result, error) in
                 // if let error = error {
@@ -998,7 +1500,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     func configWindow(fontSize: Float?, fontName: String?, backgroundColor: UIColor?, foregroundColor: UIColor?, cursorColor: UIColor?, cursorShape: String?) {
         if (fontSize != nil) {
             terminalFontSize = fontSize
-            let fontSizeCommand = "window.term_.setFontSize(\(fontSize!));"
+            let fontSizeCommand = "window.fontSize = \(fontSize!); window.term_.setFontSize(\(fontSize!));"
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(fontSizeCommand) { (result, error) in
                     // if let error = error { print(error) }
@@ -1298,6 +1800,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    private func hideButton(tag: Int) -> Bool {
+        if (tag == 0) { return false }
+        if (tag == noneTag) { return true }
+        if let regexString = self.buttonRegex[tag] {
+            do {
+                let regex = try NSRegularExpression(pattern: regexString, options: [])
+                let matches = regex.matches(in: currentCommand, range: NSRange(currentCommand.startIndex..<currentCommand.endIndex, in: currentCommand))
+                if (matches.count > 0) {
+                    // one match: make this button visible.
+                    return false
+                }
+            }
+            catch {
+            }
+        }
+        return true
+    }
+    
     func executeCommand(command: String) {
         NSLog("executeCommand: \(command)")
         // There are 2 commands that are called directly, before going to ios_system(), because they need to.
@@ -1430,6 +1950,32 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         //     print(result)
                         // }
                     }
+                    if #available(iOS 16.0, *) {
+                        // Show buttons depending on commands:
+                        // Hide all buttons with tag == noneTag, show all buttons that match.
+                        if (useSystemToolbar) {
+                            self.webView?.inputAssistantItem.leadingBarButtonGroups.forEach { leftButtonGroup in
+                                if let representativeItem = leftButtonGroup.representativeItem {
+                                    representativeItem.isHidden = self.hideButton(tag: representativeItem.tag)
+                                }
+                                leftButtonGroup.barButtonItems.forEach { button in
+                                    button.isHidden = self.hideButton(tag: button.tag)
+                                }
+                            }
+                            self.webView?.inputAssistantItem.trailingBarButtonGroups.forEach { rightButtonGroup in
+                                if let representativeItem = rightButtonGroup.representativeItem {
+                                    representativeItem.isHidden = self.hideButton(tag: representativeItem.tag)
+                                }
+                                rightButtonGroup.barButtonItems.forEach { button in
+                                    button.isHidden = self.hideButton(tag: button.tag)
+                                }
+                            }
+                        } else {
+                            self.editorToolbar.items?.forEach { button in
+                                button.isHidden = self.hideButton(tag: button.tag)
+                            }
+                        }
+                    }
                 }
                 self.pid = ios_fork()
                 DispatchQueue.main.async {
@@ -1483,6 +2029,44 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 self.resetDirectoryAfterCommandTerminates = ""
             }
+            // re-hide buttons after leaving command:
+            DispatchQueue.main.async {
+                if #available(iOS 16.0, *) {
+                    if (useSystemToolbar) {
+                        // Show buttons after command is done:
+                        self.webView?.inputAssistantItem.leadingBarButtonGroups.forEach { leftButtonGroup in
+                            if let representativeItem = leftButtonGroup.representativeItem {
+                                if (representativeItem.tag != 0) {
+                                    representativeItem.isHidden = !(representativeItem.tag == self.noneTag)
+                                }
+                            }
+                            leftButtonGroup.barButtonItems.forEach { button in
+                                if (button.tag != 0) {
+                                    button.isHidden = !(button.tag == self.noneTag)
+                                }
+                            }
+                        }
+                        self.webView?.inputAssistantItem.trailingBarButtonGroups.forEach { rightButtonGroup in
+                            if let representativeItem = rightButtonGroup.representativeItem {
+                                if (representativeItem.tag != 0) {
+                                    representativeItem.isHidden = !(representativeItem.tag == self.noneTag)
+                                }
+                            }
+                            rightButtonGroup.barButtonItems.forEach { button in
+                                if (button.tag != 0) {
+                                    button.isHidden = !(button.tag == self.noneTag)
+                                }
+                            }
+                        }
+                    } else {
+                        self.editorToolbar.items?.forEach { button in
+                            if (button.tag != 0) {
+                                button.isHidden = !(button.tag == self.noneTag)
+                            }
+                        }
+                    }
+                }
+            }
             self.currentCommand = ""
             self.pid = 0
             self.printPrompt();
@@ -1523,29 +2107,32 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if #available(iOS 15.0, *) {
                 if (!useSystemToolbar) {
                     for button in editorToolbar.items! {
-                        if button.title == "control" {
+                        if title(button) == "control" {
                             button.isSelected = controlOn
                             break
                         }
                     }
                 } else {
                     var foundControl = false
-                    if let leftButtonGroup = webView?.inputAssistantItem.leadingBarButtonGroups[0].barButtonItems {
-                        for button in leftButtonGroup {
-                            if button.title == "control" {
-                                foundControl = true
-                                button.isSelected = controlOn
-                                break
-                            }
-                        }
-                        // webView?.inputAssistantItem.leadingBarButtonGroups[0].barButtonItems[1].isSelected = controlOn
-                    }
-                    if (!foundControl) {
-                        if let rightButtonGroup = webView?.inputAssistantItem.trailingBarButtonGroups[0].barButtonItems {
-                            for button in rightButtonGroup {
-                                if button.title == "control" {
+                    if let leftButtonGroups = webView?.inputAssistantItem.leadingBarButtonGroups {
+                        for leftButtonGroup in leftButtonGroups {
+                            for button in leftButtonGroup.barButtonItems {
+                                if title(button) == "control" {
+                                    foundControl = true
                                     button.isSelected = controlOn
                                     break
+                                }
+                            }
+                        }
+                    }
+                    if (!foundControl) {
+                        if let rightButtonGroups = webView?.inputAssistantItem.trailingBarButtonGroups {
+                            for rightButtonGroup in rightButtonGroups {
+                                for button in rightButtonGroup.barButtonItems {
+                                    if title(button) == "control" {
+                                        button.isSelected = controlOn
+                                        break
+                                    }
                                 }
                             }
                         }
@@ -1554,7 +2141,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             } else {
                 let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
                 for button in editorToolbar.items! {
-                    if button.title == "control" {
+                    if title(button) == "control" {
                         button.image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
                         break
                     }
@@ -1729,8 +2316,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // copy text to clipboard. Required since simpler methods don't work with what we want to do with cut in JS.
             var string = cmd
             string.removeFirst("copy:".count)
-            let pasteBoard = UIPasteboard.general
-            pasteBoard.string = string
+            NSLog("Received text to copy: \(string)")
+            UIPasteboard.general.string = string
+            NSLog("Copied text: \(UIPasteboard.general.string)")
         } else if (cmd.hasPrefix("print:")) {
             // print result of JS file:
             var string = cmd
@@ -1770,7 +2358,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // print(result)
                 }
             }
-            command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setCursorShape('\(cursorShape)'); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
+            command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setCursorShape('\(cursorShape)'); window.fontSize = \(fontSize); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
             self.webView!.evaluateJavaScript(command) { (result, error) in
                 if let error = error {
                     NSLog("Error in resendConfiguration, line = \(command)")
@@ -1997,14 +2585,25 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnecting:SceneSession` instead).
         // Use a UIHostingController as window root view controller
         // NSLog("Scene, willConnectTo session: \(connectionOptions)")
+        NSLog("Scene, willConnectTo session.role: \(session.role)")
         if let windowScene = scene as? UIWindowScene {
             self.windowScene = windowScene
             let window = UIWindow(windowScene: windowScene)
             contentView = ContentView()
+            // if session.role == .windowApplication {
             window.rootViewController = UIHostingController(rootView: contentView)
             window.autoresizesSubviews = true
             self.window = window
             window.makeKeyAndVisible()
+            // }
+            // if #available(iOS 16.0, *) {
+            //     if session.role == .windowExternalDisplayNonInteractive {
+            //         window.rootViewController = UIHostingController(rootView: contentView)
+            //         window.autoresizesSubviews = true
+            //         self.window = window
+            //         window.makeKeyAndVisible()
+            //     }
+            // }
             self.persistentIdentifier = session.persistentIdentifier
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
@@ -2015,20 +2614,21 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             webView?.navigationDelegate = self
             webView?.uiDelegate = self;
             webView?.isAccessibilityElement = false
+            if #available(iOS 16.0, *) {
+                webView?.isFindInteractionEnabled = true
+            }
             if (!toolbarShouldBeShown) {
                 showToolbar = false
-                self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
+                self.webView?.addInputAccessoryView(toolbar: self.emptyToolbar)
             } else {
                 generateToolbarButtons()
                 if (useSystemToolbar) {
                     showToolbar = false
-                    self.webView!.inputAssistantItem.leadingBarButtonGroups =
-                    [UIBarButtonItemGroup(barButtonItems: leftButtonGroup, representativeItem: nil)]
-                    self.webView!.inputAssistantItem.trailingBarButtonGroups =
-                    [UIBarButtonItemGroup(barButtonItems: rightButtonGroup, representativeItem: nil)]
+                    self.webView?.inputAssistantItem.leadingBarButtonGroups = self.leftButtonGroups
+                    self.webView?.inputAssistantItem.trailingBarButtonGroups = self.rightButtonGroups
                 } else {
                     showToolbar = true
-                    self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
+                    self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
                 }
             }
             // We create a separate WkWebView for webAssembly:
@@ -2090,7 +2690,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 javascriptCommand += "\"" + command + "\", "
             }
             javascriptCommand += "];"
-            webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
+            webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if error != nil {
                     // NSLog("Error in creating command list, line = \(javascriptCommand)")
                     // print(error)
@@ -2268,11 +2868,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
             }
-
-           NotificationCenter.default
+            
+            // Make sure we are informed when the keyboard status changes.
+            NotificationCenter.default
                 .publisher(for: UIWindow.didBecomeKeyNotification, object: window)
                 .merge(with: NotificationCenter.default
-                        .publisher(for: UIResponder.keyboardWillShowNotification))
+                    .publisher(for: UIResponder.keyboardWillShowNotification))
                 .handleEvents(receiveOutput: { notification in
                     // NSLog("didBecomeKey: \(notification.name.rawValue): \(session.persistentIdentifier).")
                 })
@@ -2281,7 +2882,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             NotificationCenter.default
                 .publisher(for: UIWindow.didResignKeyNotification, object: window)
                 .merge(with: NotificationCenter.default
-                        .publisher(for: UIResponder.keyboardWillHideNotification))
+                    .publisher(for: UIResponder.keyboardWillHideNotification))
                 .handleEvents(receiveOutput: { notification in
                     // NSLog("didResignKey: \(notification.name.rawValue): \(session.persistentIdentifier).")
                 })
@@ -2438,6 +3039,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 exitCommand = "\nquit"
             } else if ((currentCommand == "ed") || currentCommand.hasPrefix("ed ")) {
                 exitCommand = "\n.\nwq" // Won't work if no filename provided. Then again, not much I can do.
+            } else if ((currentCommand == "pico") || currentCommand.hasPrefix("pico ")) {
+                exitCommand = "\u{0017}\u{0018}" // ^W ^X
             }
             if (exitCommand != "") {
                 exitCommand += "\n"
@@ -2522,7 +3125,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let resultN = result as? Int {
                 if (resultN == 1) {
                     // window.term_ exists, let's send commands:
-                    command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setCursorShape('\(cursorShape)');window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
+                    command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setCursorShape('\(cursorShape)');window.fontSize = \(fontSize);window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
                     self.webView!.evaluateJavaScript(command) { (result, error) in
                         if error != nil {
                             // NSLog("Error in sceneDidBecomeActive, line = \(command)")
@@ -2578,10 +3181,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             generateToolbarButtons()
             if (useSystemToolbar) {
                 showToolbar = false
-                self.webView!.inputAssistantItem.leadingBarButtonGroups =
-                [UIBarButtonItemGroup(barButtonItems: leftButtonGroup, representativeItem: nil)]
-                self.webView!.inputAssistantItem.trailingBarButtonGroups =
-                [UIBarButtonItemGroup(barButtonItems: rightButtonGroup, representativeItem: nil)]
+                self.webView?.inputAssistantItem.leadingBarButtonGroups = self.leftButtonGroups
+                self.webView?.inputAssistantItem.trailingBarButtonGroups = self.rightButtonGroups
             } else {
                 showToolbar = true
                 self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
@@ -2837,7 +3438,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let currentCommandData = userInfo["currentCommand"]
         if let storedCommand = currentCommandData as? String {
             if (storedCommand.count > 0) {
-                // We only restart vim commands. Other commands are just creating issues, unless we could save their status.
+                // We only restart vim commands (and dash). Other commands are just creating issues, unless we could save their status.
                 // Safety check: is the vim session file still there?
                 // I could have been removed by the system, or by the user.
                 // TODO: also check that files are still available / no
@@ -2881,15 +3482,31 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     } else {
                         NSLog("Could not find session file at \(sessionFile)")
                     }
+                } else if (storedCommand.hasPrefix("dash ")) || (storedCommand == "dash") {
+                    if (UserDefaults.standard.bool(forKey: "restart_vim")) {
+                        /* We only restart vim and dash commands, and only if the user asks for it.
+                         Everything else is creating problems.
+                         Basically, we can only restart commands if we can save their status. */
+                        NSLog("sceneWillEnterForeground, Restoring command: \(storedCommand)")
+                        let commandSent = storedCommand.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n")
+                        let restoreCommand = "window.webkit.messageHandlers.aShell.postMessage('shell:' + '\(commandSent)');\nwindow.commandRunning = '\(commandSent)';\n"
+                        currentCommand = commandSent
+                        NSLog("Calling command: \(restoreCommand)")
+                        self.webView?.evaluateJavaScript(restoreCommand) { (result, error) in
+                            // if let error = error { print(error) }
+                            // if let result = result { print(result) }
+                        }
+                    }
                 }
             }
         }
         if #available(iOS 16.0, *) {
+            // TODO: probably remove this line since it didn't work, and size enforcement is now at a deeper level.
             if (UIDevice.current.model.hasPrefix("iPad")) {
                 // On iPadOS 16, windows going into the background and back to the foreground
                 // sometimes change their font size. This tries to enforce it back:
                 let fontSize = terminalFontSize ?? factoryFontSize
-                let fontSizeCommand = "window.term_.setFontSize(\(fontSize));"
+                let fontSizeCommand = "window.fontSize = \(fontSize);window.term_.setFontSize(\(fontSize));"
                 DispatchQueue.main.async {
                     self.webView?.evaluateJavaScript(fontSizeCommand) { (result, error) in
                         if let error = error { print(error) }
@@ -2996,6 +3613,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 scene.session.stateRestorationActivity?.userInfo!["terminal"] = nil
             } else if ((currentCommand == "ed") || currentCommand.hasPrefix("ed ")) {
                 saveCommand = "\n.\nw\n" // Won't work if no filename provided. Then again, not much I can do.
+            } else if ((currentCommand == "dash") || currentCommand.hasPrefix("dash ")) {
+                scene.session.stateRestorationActivity?.userInfo!["currentCommand"] = currentCommand // restore command is modified
             }
             if (saveCommand != "") {
                 // NSLog("Sending save command: \(saveCommand)")
@@ -3052,7 +3671,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let command = "window.voiceOver = \(value);"
         // NSLog(command)
         DispatchQueue.main.async {
-            self.webView!.evaluateJavaScript(command) { (result, error) in
+            self.webView?.evaluateJavaScript(command) { (result, error) in
                 if let error = error {
                     NSLog("Error in activateVoiceOver.")
                     // print(error)
@@ -3063,7 +3682,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let command2 = "if (window.term_ != undefined) { window.term_.setAccessibilityEnabled(window.voiceOver); }"
         // NSLog(command2)
         DispatchQueue.main.async {
-            self.webView!.evaluateJavaScript(command2) { (result, error) in
+            self.webView?.evaluateJavaScript(command2) { (result, error) in
                 if let error = error {
                     NSLog("Error in activateVoiceOver.")
                     // print(error)
@@ -3087,6 +3706,36 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // print(error)
                 }
                 // if let result = result { print(result) }
+            }
+        }
+    }
+    
+    private func onStdoutButton(_ stdout: FileHandle) {
+        if (!stdout_button_active) { return }
+        let data = stdout.availableData
+        guard (data.count > 0) else {
+            return
+        }
+        guard (webView != nil) else { return }
+        if var string = String(data: data, encoding: String.Encoding.utf8) {
+            // Remove all trailing \n\r (but keep those inside the string)
+            if (string.contains(endOfTransmission)) {
+                stdout_button_active = false
+                string = string.replacingOccurrences(of: endOfTransmission, with: "")
+            }
+            while (string.hasSuffix("\n") || string.hasSuffix("\r")) {
+                string.removeLast("\n".count)
+            }
+            // Sanitize the output string to it can be sent to javascript:
+            let parsedString = string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
+            DispatchQueue.main.async {
+                self.webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + parsedString + "\");") { (result, error) in
+                    if let error = error {
+                        NSLog("Error in onStdoutButton; offending line = \(parsedString), error = \(error)")
+                        // print(error)
+                    }
+                    // if let result = result { print(result) }
+                }
             }
         }
     }

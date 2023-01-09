@@ -13,7 +13,6 @@ public var toolbarShouldBeShown = true
 public var useSystemToolbar = false
 public var showToolbar = true
 public var showKeyboardAtStartup = true
-public var onScreenKeyboardVisible: Bool? = nil
 
 struct Webview : UIViewRepresentable {
     typealias WebViewType = KBWebViewBase
@@ -24,6 +23,12 @@ struct Webview : UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.preferences.javaScriptEnabled = true
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
+        if #available(iOS 15.4, *) {
+            config.preferences.isElementFullscreenEnabled = true
+        }
+        if #available(iOS 14.5, *) {
+            config.preferences.isTextInteractionEnabled = true
+        }
         config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
         // Does not change anything either way (??? !!!)
         config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
@@ -81,18 +86,14 @@ struct ContentView: View {
             // height != 0 ==> there is a keyboard, and iOS did detect it, so no need to change the height.
             // A bit counter-intuitive, but it works.
             // Except sometimes with a floating keyboard, we get h = 324 and view not set.
-            if (height == 0) {
-                onScreenKeyboardVisible = false
-            } else if (height > 200) {
-                onScreenKeyboardVisible = true
-            }
             if (height == 0) && showToolbar { return 40 } // At least the size of the toolbar -- if no keyboard present
             // Floating window detected (at least on iPad Pro 12.9). 40 is too much, 20 not enough.
             else if (height == 60) { // floating window detected, external keyboard
-                onScreenKeyboardVisible = true
                 return 20
             }
-            else if (height > 200) && (x > 0) { return 40 } // Floating keyboard not detected
+            else if (height > 200) && (x > 0) && showToolbar {
+                return 40
+            } // Floating keyboard not detected
             else { return 0 } // SwiftUI has done its job and returned the proper keyboard size.
     }
     

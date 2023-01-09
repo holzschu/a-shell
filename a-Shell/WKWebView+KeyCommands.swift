@@ -27,15 +27,52 @@ extension WKWebView {
         }
     }
 
+    @objc private func nextWindow(_ sender: UIBarButtonItem) {
+        // This doesn't work for the time being.
+        // It's probably connected to the issue with Stage Manager.
+        // Could not find documentation on how to activate the next scene with the keyboard.
+        if (UIDevice.current.model.hasPrefix("iPad")) {
+            var activateNextWindow = false
+            let options = UIScene.ActivationRequestOptions()
+            for scene in UIApplication.shared.connectedScenes {
+                if let delegate = scene.delegate as? SceneDelegate {
+                    if (activateNextWindow) {
+                        DispatchQueue.main.async {
+                            NSLog("Activating WebView, Scene ID: \(scene.session.persistentIdentifier)")
+                            UIApplication.shared.requestSceneSessionActivation(scene.session, userActivity: nil, options: options)
+                            // activates the scene, but gives focus back to previous window.
+                        }
+                        return
+                    }
+                    if delegate.webView == self {
+                        NSLog("Active WebView, Scene ID: \(scene.session.persistentIdentifier)")
+                        activateNextWindow = true
+                        options.requestingScene = scene
+                    } else {
+                        NSLog("Not-active WebView, Scene ID: \(scene.session.persistentIdentifier)")
+                    }
+                }
+            }
+            // If we arrived here, the last window was active: activate the first one:
+            if let scene = UIApplication.shared.connectedScenes.first {
+                if let delegate = scene.delegate as? SceneDelegate {
+                    DispatchQueue.main.async {
+                        // self.keyboardDisplayRequiresUserAction = true
+                        NSLog("Activating first WebView, Scene ID: \(scene.session.persistentIdentifier)")
+                        UIApplication.shared.requestSceneSessionActivation(scene.session, userActivity: nil, options: nil)
+                    }
+                }
+            }
+        }
+    }
+
     @objc private func closeWindow(_ sender: UIBarButtonItem) {
-        let opaquePointer = OpaquePointer(ios_getContext())
-        guard let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) else { return }
-        let currentSessionIdentifier = String(cString: stringPointer)
         for scene in UIApplication.shared.connectedScenes {
-            if (scene.session.persistentIdentifier == currentSessionIdentifier) {
-                let delegate: SceneDelegate = scene.delegate as! SceneDelegate
-                delegate.closeWindow()
-                return
+            if let delegate = scene.delegate as? SceneDelegate {
+                if delegate.webView == self {
+                    delegate.closeWindow()
+                    return
+                }
             }
         }
     }
@@ -62,30 +99,26 @@ extension WKWebView {
 
     @objc private func increaseTextSize(_ sender: UIBarButtonItem) {
         NSLog("Increase event received")
-        let opaquePointer = OpaquePointer(ios_getContext())
-        guard let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) else { return }
-        let currentSessionIdentifier = String(cString: stringPointer)
         for scene in UIApplication.shared.connectedScenes {
-            if (scene.session.persistentIdentifier == currentSessionIdentifier) {
-                let delegate: SceneDelegate = scene.delegate as! SceneDelegate
-                let fontSize = delegate.terminalFontSize ?? factoryFontSize
-                delegate.configWindow(fontSize: fontSize + 1, fontName: nil, backgroundColor: nil, foregroundColor: nil, cursorColor: nil, cursorShape: nil)
-                return
+            if let delegate = scene.delegate as? SceneDelegate {
+                if delegate.webView == self {
+                    let fontSize = delegate.terminalFontSize ?? factoryFontSize
+                    delegate.configWindow(fontSize: fontSize + 1, fontName: nil, backgroundColor: nil, foregroundColor: nil, cursorColor: nil, cursorShape: nil)
+                    return
+                }
             }
         }
     }
 
     @objc private func decreaseTextSize(_ sender: UIBarButtonItem) {
         NSLog("Decrease event received")
-        let opaquePointer = OpaquePointer(ios_getContext())
-        guard let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) else { return }
-        let currentSessionIdentifier = String(cString: stringPointer)
         for scene in UIApplication.shared.connectedScenes {
-            if (scene.session.persistentIdentifier == currentSessionIdentifier) {
-                let delegate: SceneDelegate = scene.delegate as! SceneDelegate
-                let fontSize = delegate.terminalFontSize ?? factoryFontSize
-                delegate.configWindow(fontSize: fontSize - 1, fontName: nil, backgroundColor: nil, foregroundColor: nil, cursorColor: nil, cursorShape: nil)
-                return
+            if let delegate = scene.delegate as? SceneDelegate {
+                if delegate.webView == self {
+                    let fontSize = delegate.terminalFontSize ?? factoryFontSize
+                    delegate.configWindow(fontSize: fontSize - 1, fontName: nil, backgroundColor: nil, foregroundColor: nil, cursorColor: nil, cursorShape: nil)
+                    return
+                }
             }
         }
     }
@@ -103,6 +136,7 @@ extension WKWebView {
             // "discoverabilityTitle:)' was deprecated in iOS 13.0" but it's quite convenient
             UIKeyCommand(input: "k", modifierFlags:.command, action: #selector(clearScreen), discoverabilityTitle: "Clear screen"),
             UIKeyCommand(input: "n", modifierFlags:.command, action: #selector(newWindow), discoverabilityTitle: "New window"),
+            // UIKeyCommand(input: "t", modifierFlags:.command, action: #selector(nextWindow), discoverabilityTitle: "Next window"),
             UIKeyCommand(input: "w", modifierFlags:.command, action: #selector(closeWindow), discoverabilityTitle: "Close window"),
             UIKeyCommand(input: "x", modifierFlags:.command, action: #selector(cutText), discoverabilityTitle: "Cut"),
             UIKeyCommand(input: "+", modifierFlags:.command, action: #selector(increaseTextSize), discoverabilityTitle: "Bigger text"),
