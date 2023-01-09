@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Bucket
-   uuid = "7C0F6D26-E0A7-4B2A-905A-DB537E0212B5"
+   uuid = "0D2DD3BC-E74B-4122-B4B7-8B87A6A20F13"
    type = "1"
    version = "2.0">
    <Breakpoints>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
          <BreakpointContent
-            uuid = "81EBDFE6-96E5-46B6-B8B8-90DC76CC5E07"
-            shouldBeEnabled = "Yes"
+            uuid = "796A7B79-7F0C-4008-ACB5-9DE89FB1C3CB"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             symbolName = "tgetent"
             moduleName = "">
             <Locations>
                <Location
-                  uuid = "81EBDFE6-96E5-46B6-B8B8-90DC76CC5E07 - 8c4d225c4c9def57"
+                  uuid = "796A7B79-7F0C-4008-ACB5-9DE89FB1C3CB - 8c4d225c4c9def57"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -30,15 +30,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
          <BreakpointContent
-            uuid = "B96B3E8E-A760-412D-95DE-D00DA0001BFF"
-            shouldBeEnabled = "Yes"
+            uuid = "A40B0797-D4FC-4A24-AAE0-0A66E879D373"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             symbolName = "tgetflag"
             moduleName = "">
             <Locations>
                <Location
-                  uuid = "B96B3E8E-A760-412D-95DE-D00DA0001BFF - 9b9258d98c4b1403"
+                  uuid = "A40B0797-D4FC-4A24-AAE0-0A66E879D373 - 9b9258d98c4b1403"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -53,15 +53,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
          <BreakpointContent
-            uuid = "94FFADE4-FA7C-41EA-BB45-94A911567250"
-            shouldBeEnabled = "Yes"
+            uuid = "E29013B5-D67B-4298-8402-6A370BA41511"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             symbolName = "tgetstr"
             moduleName = "">
             <Locations>
                <Location
-                  uuid = "94FFADE4-FA7C-41EA-BB45-94A911567250 - 8c4d225c55b2b441"
+                  uuid = "E29013B5-D67B-4298-8402-6A370BA41511 - 8c4d225c55b2b441"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -76,38 +76,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
          <BreakpointContent
-            uuid = "5C70A90D-7E40-4EB6-9975-882652F90837"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            symbolName = "tgoto"
-            moduleName = "">
-            <Locations>
-               <Location
-                  uuid = "5C70A90D-7E40-4EB6-9975-882652F90837 - c62a73c73a65cf27"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "tgoto"
-                  moduleName = "libncurses.5.4.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  offsetFromSymbolStart = "0">
-               </Location>
-            </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
-         <BreakpointContent
-            uuid = "B2F962B7-E618-47F4-8F90-9EBF7DC5E260"
-            shouldBeEnabled = "Yes"
+            uuid = "B5C45125-8695-4F3D-A00E-66C16F39E5EC"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             symbolName = "tputs"
             moduleName = "">
             <Locations>
                <Location
-                  uuid = "B2F962B7-E618-47F4-8F90-9EBF7DC5E260 - c62a73c668a3b6b0"
+                  uuid = "B5C45125-8695-4F3D-A00E-66C16F39E5EC - c62a73c668a3b6b0"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -122,22 +99,548 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
          <BreakpointContent
-            uuid = "7A3D8E6C-0C04-4AB3-9E09-96E37FF728D0"
-            shouldBeEnabled = "Yes"
+            uuid = "B6D15308-BF6C-451C-9B44-3DDDDC229799"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            symbolName = "malloc_error_break"
+            symbolName = "putp"
             moduleName = "">
             <Locations>
                <Location
-                  uuid = "7A3D8E6C-0C04-4AB3-9E09-96E37FF728D0 - 9d096611641b4e7c"
+                  uuid = "B6D15308-BF6C-451C-9B44-3DDDDC229799 - c62a6217ba5ecbc8"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "malloc_error_break"
-                  moduleName = "libsystem_malloc.dylib"
+                  symbolName = "putp"
+                  moduleName = "libncurses.5.4.dylib"
                   usesParentBreakpointCondition = "Yes"
                   offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "53981ECA-B3E2-495A-9169-5F860286BA20"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "_curses_putp"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "53981ECA-B3E2-495A-9169-5F860286BA20 - 49ab591deb7ae59b"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "_curses_putp"
+                  moduleName = "python3_ios-_curses"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "A5168B9A-F205-49D7-979F-13FBA5F71379"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "_curses_putp_impl"
+            moduleName = "">
+            <Locations>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "B3CC93D1-F665-41C6-9277-E2911E871901"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "addstr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "B3CC93D1-F665-41C6-9277-E2911E871901 - c635066de3ecf4dd"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "addstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+               <Location
+                  uuid = "B3CC93D1-F665-41C6-9277-E2911E871901 - 4e582aa919944f9a"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "CI::XXHashHelper::addstr(char const*)"
+                  moduleName = "CoreImage"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+               <Location
+                  uuid = "B3CC93D1-F665-41C6-9277-E2911E871901 - f884e004be62ee04"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "addstr"
+                  moduleName = "libresolv.9.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "D99CF349-F046-4E96-A4CA-DB6CB0EF6664"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "addnstr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "D99CF349-F046-4E96-A4CA-DB6CB0EF6664 - 86b2d0dd049dea22"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "addnstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "0E732A1B-801E-4B29-9707-CA6D5C505F07"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "insstr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "0E732A1B-801E-4B29-9707-CA6D5C505F07 - c60b1b5819073fbc"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "insstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "E69EA199-9754-41DA-9272-3B4FFBAFD768"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "insnstr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "E69EA199-9754-41DA-9272-3B4FFBAFD768 - 82942883d81b3b4d"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "insnstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "EDBAD084-FFA6-481B-9F3A-BA6DC5D4A407"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "tigetstr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "EDBAD084-FFA6-481B-9F3A-BA6DC5D4A407 - 9bea04e7e579c72b"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "tigetstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "A8A39DB2-9AD7-48A2-B975-7A2C8748AF45"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "mvwgetnstr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "A8A39DB2-9AD7-48A2-B975-7A2C8748AF45 - 2585274d2adfc63e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "mvwgetnstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "B98F3D8D-3C8D-4D95-967A-93E1C320F8A1"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "wgetnstr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "B98F3D8D-3C8D-4D95-967A-93E1C320F8A1 - afd0b5815cff96d3"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "wgetnstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "6037FB3C-9992-4E7E-B2FD-39B18C821BC7"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "tparm"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "6037FB3C-9992-4E7E-B2FD-39B18C821BC7 - c62a73c66f08231c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "tparm"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "C01B7582-5578-462B-88D3-058084A092EA"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "mvwinnstr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "C01B7582-5578-462B-88D3-058084A092EA - 40e56b6761235b54"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "mvwinnstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "7B635779-6886-4012-B2C4-B6C73D5320BB"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "tigetnum"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "7B635779-6886-4012-B2C4-B6C73D5320BB - 9bea04e79e6be920"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "tigetnum"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "C15C1AC5-AA13-46BB-BE50-3CEBB6115976"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "tigetflag"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "C15C1AC5-AA13-46BB-BE50-3CEBB6115976 - a99da79bcf518695"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "tigetflag"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "046FDF1C-402E-4AF4-8760-B53C89BA7415"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "use_env"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "046FDF1C-402E-4AF4-8760-B53C89BA7415 - 8cdb1a55a1e760a9"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "use_env"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "B6A34AE4-D785-4A23-A4AF-F12A3AEB69C6"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "doupdate"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "B6A34AE4-D785-4A23-A4AF-F12A3AEB69C6 - da5faa4c63e1150b"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "doupdate"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "22D1EDAC-E7AB-4517-9B95-5646FCD57577"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "newterm"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "22D1EDAC-E7AB-4517-9B95-5646FCD57577 - 816792d001a0cedc"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "newterm"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "D071C30B-A012-45E8-BF60-EF00BB4760B1"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "addch"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "D071C30B-A012-45E8-BF60-EF00BB4760B1 - c62a6d45fa0fc24c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "addch"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "C6499C41-93E1-4109-AAB5-4C9CE9478E74"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "waddch"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "C6499C41-93E1-4109-AAB5-4C9CE9478E74 - c60f77cde07407e4"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "waddch"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "56F60578-8EF9-4776-B02B-36C52E005D11"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "mvwaddch"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "56F60578-8EF9-4776-B02B-36C52E005D11 - 8770478fecf6f103"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "mvwaddch"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "093E9EED-5497-48EB-B83F-9866FDE55C4B"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "addchstr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "093E9EED-5497-48EB-B83F-9866FDE55C4B - d62c7cf34370de00"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "addchstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  offsetFromSymbolStart = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "30F43FE1-4566-4598-8DC9-6BB86066644E"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "crash_handler"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "30F43FE1-4566-4598-8DC9-6BB86066644E - c3e12084ba149ee0"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "crash_handler"
+                  moduleName = "ios_system"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/ios_system/ios_system.m"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "512"
+                  endingLineNumber = "512"
+                  offsetFromSymbolStart = "12">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "967B8A29-3FD5-4152-BD58-52C37484F54C"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "print_lladdr"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "967B8A29-3FD5-4152-BD58-52C37484F54C - 2b0d9865f4eb7386"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "print_lladdr"
+                  moduleName = "network_ios"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/network_ios/sources/arp/arp.c"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "822"
+                  endingLineNumber = "822"
+                  offsetFromSymbolStart = "36">
                </Location>
             </Locations>
          </BreakpointContent>

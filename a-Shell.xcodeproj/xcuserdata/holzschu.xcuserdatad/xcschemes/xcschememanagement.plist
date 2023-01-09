@@ -4,15 +4,10 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>a-Shell copy.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>6</integer>
-		</dict>
 		<key>a-Shell mini.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>3</integer>
+			<integer>1</integer>
 		</dict>
 		<key>a-Shell-Intents.xcscheme_^#shared#^_</key>
 		<dict>
@@ -22,7 +17,7 @@
 		<key>a-Shell-IntentsUI.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>1</integer>
+			<integer>3</integer>
 		</dict>
 		<key>a-Shell-mini-Intents.xcscheme_^#shared#^_</key>
 		<dict>
@@ -38,19 +33,6 @@
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
-		</dict>
-	</dict>
-	<key>SuppressBuildableAutocreation</key>
-	<dict>
-		<key>22984EE922C93DBC00069497</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>229D2471257931E4004A78AC</key>
-		<dict>
-			<key>primary</key>
-			<true/>
 		</dict>
 	</dict>
 </dict>
