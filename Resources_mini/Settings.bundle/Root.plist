@@ -92,7 +92,7 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
-			<string>Restart Vim after closing a-Shell</string>
+			<string>Restart Vim or dash after closing a-Shell</string>
 			<key>Key</key>
 			<string>restart_vim</string>
 			<key>DefaultValue</key>
