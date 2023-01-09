@@ -20,46 +20,45 @@ _ = Package(
             url: "https://github.com/blinksh/openssl-apple/releases/download/v1.1.1k/openssl-dynamic.xcframework.zip",
             checksum: "9a7cc2686122e62445b85a8ce04f49379d99c952b8ea3534127c004b8a00af59"
         ),
-        // ios_system:
         .binaryTarget(
             name: "ios_system",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/ios_system.xcframework.zip",
-            checksum: "635fc346304416f05f94a61ded08a2a5792f5072081eca7c142834326366d4d0"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.2/ios_system.xcframework.zip",
+            checksum: "f8e1364037de546809065ecdf804277fa7b95faffc32604e91ecb4de44d6294e"
         ),
         .binaryTarget(
             name: "awk",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/awk.xcframework.zip",
-            checksum: "d8fc59849698f9b0b43b5fa77d7d38410ec95482965e3a11afe03e6bebd06b88"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.2/awk.xcframework.zip",
+            checksum: "73abc0d502eab50e6bbdd0e49b0cf592f3a85b3843c43de6d7f42c27cde9b953"
         ),
         .binaryTarget(
             name: "curl_ios",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/curl_ios.xcframework.zip",
-            checksum: "c07f2fca448a1cc23ba98bd979962a44587b4017508e101e1f7dcb4d0ca27b60"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.2/curl_ios.xcframework.zip",
+            checksum: "7338fb9ae8094356c8cd523cfda9e4c60b52d710488432eb64cf57731b388dd2"
         ),
         .binaryTarget(
             name: "files",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/files.xcframework.zip",
-            checksum: "c24641cf21f710d6db0832399e261c01b3504caf86ff6d13dcf0dcbaa1dd1172"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.2/files.xcframework.zip",
+            checksum: "d0643e2244009fc5279f1f969c6da47ca197b4e7c9dac27dea09ba0a5f1567d7"
         ),
         .binaryTarget(
             name: "shell",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/shell.xcframework.zip",
-            checksum: "cbd1a7675990777cef0d19c85295915f9d5af4430d1c7c631322d6e19495b148"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.2/shell.xcframework.zip",
+            checksum: "876b709c1b76cbc1748d434fcbc2cea1aea2e281572e5fadc40244dd8a549757"
         ),
         .binaryTarget(
             name: "ssh_cmd",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/ssh_cmd.xcframework.zip",
-            checksum: "67174120060604888ee15c7b5f71686b671d80224f1cd9576f8d24381ed96759"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.2/ssh_cmd.xcframework.zip",
+            checksum: "342065209123f54c92eb78a0fbda579e61948443e5f60e41d8fe356a3fe8f2ff"
         ),
         .binaryTarget(
             name: "tar",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/tar.xcframework.zip",
-            checksum: "e5e1ca866576d291a75b9f8ae18cdf215a6b70efde3144e7a0905488b0d42dc5"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.2/tar.xcframework.zip",
+            checksum: "6ffe4ed265060f971df229dd1d2bff90e7bc78c80c50dcc3a0a633face440bc4"
         ),
         .binaryTarget(
             name: "text",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.1/text.xcframework.zip",
-            checksum: "c832c4e6b234c297526f2e16cfbf197da5be332dc69a3bdf452e135f8c33a77c"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.2/text.xcframework.zip",
+            checksum: "697bee697b509d0dc8acc156a7430f453c29878d8af273adfb8902643c70ea0f"
         ),
         // network_ios
         .binaryTarget(
@@ -275,12 +274,42 @@ _ = Package(
         .binaryTarget(
             name: "dash",
             url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dash.xcframework.zip",
-            checksum: "c019c30377247a4244dd34464f1a71f6730717b0ec779114241ca68729a173d1"
+            checksum: "9a30ac6b3780dd68d2268d10467902214e32333e980c59090faa6099f0d250fc"
+        ),
+        .binaryTarget(
+            name: "dashA",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dashA.xcframework.zip",
+            checksum: "a45eb647bf81caf0fd80dba704326842ce03668c60499488d387dce26cf30ee6"
+        ),
+        .binaryTarget(
+            name: "dashB",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dashB.xcframework.zip",
+            checksum: "c0de9fdc7c9cc2386012a1dccdbb112cf4b15243699ffcf49c9dbc6d17163bce"
+        ),
+        .binaryTarget(
+            name: "dashC",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dashC.xcframework.zip",
+            checksum: "553d98fa8c5705754a9cdd2f4d2f5d3cd5d1dc5f765921f5fb0f3422848e09bf"
+        ),
+        .binaryTarget(
+            name: "dashD",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dashD.xcframework.zip",
+            checksum: "7aa457e359b3bb215fdd56df5b689b826863f2e96d72a87a3046a3116f2dd30c"
+        ),
+        .binaryTarget(
+            name: "dashE",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dashE.xcframework.zip",
+            checksum: "9f79675fa3c797257931853ca746337a66f8218157d44736d1c14425030aff3e"
         ),
         .binaryTarget(
             name: "unrar",
             url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/unrar.xcframework.zip",
             checksum: "b1c2318db3b89a668abd66f69036ec9c3c5d474b2d75a0b1ffbaf2ac47b02782"
+        ),
+        .binaryTarget(
+            name: "vimproc",
+            url: "https://github.com/holzschu/ios_system/releases/download/Auxiliary/vimproc.xcframework.zip",
+            checksum: "400dcf3f4414562a9c62f1541b349be4176bdae9f7fcd95a5c7ed34046586982"
         ),
         .binaryTarget(
             name: "ffmpeg",
@@ -297,7 +326,7 @@ _ = Package(
             url: "https://github.com/fprimex/jq/releases/download/ios/jq.xcframework.zip",
             checksum: "d3c4486e5ed788995b0ad9586465d3407e463d90f4e91b843846cabfe21f297f"
         ),
-        // TODO: update make/mandoc binaries, add dash, lg2, unrar binary.
+        // TODO: add vimproc binary.
         .target(
             name: "build",
             dependencies: ["FMake"]
