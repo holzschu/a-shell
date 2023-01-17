@@ -143,14 +143,12 @@ extension WKWebView {
             UIKeyCommand(input: "-", modifierFlags:.command, action: #selector(decreaseTextSize), discoverabilityTitle: "Smaller text"),
             // Still required with external keyboards as of May 26, 2020: control-C maps to control-C
             UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC))
-            ]
+        ]
+        let dKey = UIKeyCommand(input: "d", modifierFlags:.control, action: #selector(insertD))
         if #available(iOS 15.0, *) {
-            let dKey = UIKeyCommand(input: "d", modifierFlags:.control, action: #selector(insertD))
             dKey.wantsPriorityOverSystemBehavior = true
-            basicKeyCommands.append(dKey)
-        } else {
-            basicKeyCommands.append(UIKeyCommand(input: "d", modifierFlags:.control, action: #selector(insertD)))
         }
+        basicKeyCommands.append(dKey)
         /* Caps Lock remapped to escape: */
         if (UserDefaults.standard.bool(forKey: "escape_preference")) {
             // If we remapped caps-lock to escape, we need to disable caps-lock, at least with certain keyboards.
@@ -160,11 +158,56 @@ extension WKWebView {
                 let K = Unicode.Scalar(key)!
                 if CharacterSet.lowercaseLetters.contains(Unicode.Scalar(key)!) {
                     // no discoverabilityTitle
-                    basicKeyCommands.append(UIKeyCommand(input: "\(K)", modifierFlags: [],  action: #selector(insertKey)))
+                    let key = UIKeyCommand(input: "\(K)", modifierFlags: [],  action: #selector(insertKey))
+                    if #available(iOS 15.0, *) {
+                        key.wantsPriorityOverSystemBehavior = true
+                    }
+                    basicKeyCommands.append(key)
                 }
             }
             // This one remaps capslock to escape, no discoverabilityTitle
             basicKeyCommands.append(UIKeyCommand(input: "", modifierFlags:.alphaShift,  action: #selector(escapeAction)))
+        } else if #available(iOS 15.0, *) {
+            if let keyboardLanguage = self.textInputMode?.primaryLanguage {
+                // Is the keyboard language one of the multi-input languages? Chinese, Japanese, Korean and Hindi-Transliteration
+                if (!keyboardLanguage.hasPrefix("hi") && !keyboardLanguage.hasPrefix("zh") && !keyboardLanguage.hasPrefix("ja")) {
+                    // auto-repeat for external keyboard keys (only non-accented lowercase letters, because we need to
+                    // be able to define shift-key. On non-English keyboards, shift-à is 0, which we cannot guess).
+                    if (lastKey != nil) && (-lastKeyTime.timeIntervalSinceNow < 1) {
+                        NSLog("auto-repeat for \(lastKey!)")
+                        if ((lastKey! >= "a") && (lastKey! <= "z")) {
+                            let key = UIKeyCommand(input: "\(lastKey!)", modifierFlags: [],  action: #selector(insertKey))
+                            key.wantsPriorityOverSystemBehavior = true
+                            basicKeyCommands.append(key)
+                        } else if ((lastKey! >= "A") && (lastKey! <= "Z")) {
+                            let K = lastKey!.lowercased()
+                            let keyS = UIKeyCommand(input: "\(K)", modifierFlags: .shift,  action: #selector(insertKey))
+                            keyS.wantsPriorityOverSystemBehavior = true
+                            basicKeyCommands.append(keyS)
+                        }
+                    }
+                    if (false) {
+                        for key in 0x061...0x079 { // all 26 lowercase roman letters
+                            let K = Unicode.Scalar(key)!
+                            let key = UIKeyCommand(input: "\(K)", modifierFlags: [],  action: #selector(insertKey))
+                            key.wantsPriorityOverSystemBehavior = true
+                            basicKeyCommands.append(key)
+                            let keyS = UIKeyCommand(input: "\(K)", modifierFlags: .shift,  action: #selector(insertKey))
+                            keyS.wantsPriorityOverSystemBehavior = true
+                            basicKeyCommands.append(keyS)
+                        }
+                    }
+                }
+                if keyboardLanguage.hasPrefix("en") {
+                    // For the english keyboard, we can set auto-repeat for numbers too:
+                    for key in 0x030...0x039 { // all 10 numbers
+                        let K = Unicode.Scalar(key)!
+                        let key = UIKeyCommand(input: "\(K)", modifierFlags: [],  action: #selector(insertKey))
+                        key.wantsPriorityOverSystemBehavior = true
+                        basicKeyCommands.append(key)
+                    }
+                }
+            }
         }
         return basicKeyCommands
     }
@@ -207,7 +250,16 @@ extension WKWebView {
     
     @objc func insertKey(_ sender: UIKeyCommand) {
         guard (sender.input != nil) else { return }
-        let commandString = "window.term_.io.onVTKeystroke(\'\(sender.input!)');"
+        // Not modifierFlags, attributes, state
+        if #available(iOS 15.0, *) {
+            lastKey = sender.input!.last
+            lastKeyTime = .now
+        }
+        var input = sender.input
+        if sender.modifierFlags.contains(.shift) {
+            input = input?.uppercased()
+        }
+        let commandString = "window.term_.io.onVTKeystroke(\'\(input!)');"
         evaluateJavaScript(commandString) { (result, error) in
             // if let error = error { print(error) }
             // if let result = result { print(result) }

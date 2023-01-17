@@ -22,6 +22,8 @@ let factoryFontSize = Float(13)
 let factoryFontName = "Menlo"
 let factoryCursorShape = "UNDERLINE"
 var stdinString: String = ""
+var lastKey: Character?
+var lastKeyTime: Date = Date(timeIntervalSinceNow: 0)
 
 // Need: dictionary connecting userContentController with output streams (?)
 
@@ -726,7 +728,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     let trimmedButtonLine = buttonLine.trimmingCharacters(in: .whitespacesAndNewlines)
                     if (trimmedButtonLine.hasPrefix("#")) { continue } // skip comments
                     if (trimmedButtonLine.count == 0) { continue } // skip blank lines
-                    NSLog("Parsing line: \(trimmedButtonLine)")
+                    // NSLog("Parsing line: \(trimmedButtonLine)")
                     if (trimmedButtonLine == "separator") { // first time: switch to next button group. After: ignored.
                         leftButtonGroup.append(contentsOf: activeButtonGroup)
                         leftButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: nil))
@@ -2210,6 +2212,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             command.removeFirst("inputTTY:".count)
             // NSLog("Received (inputTTY) \(command)")
             guard let data = command.data(using: .utf8) else { return }
+            if #available(iOS 15.0, *) {
+                if let character = command.last {
+                    if ((character >= "a") && (character <= "z")) || ((character >= "A") && (character <= "Z")) {
+                        lastKey = character
+                        lastKeyTime = .now
+                    } else {
+                        lastKey = nil
+                    }
+                }
+            }
             guard tty_file_input != nil else { return }
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
