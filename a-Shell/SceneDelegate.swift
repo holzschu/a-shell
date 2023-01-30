@@ -24,6 +24,7 @@ let factoryCursorShape = "UNDERLINE"
 var stdinString: String = ""
 var lastKey: Character?
 var lastKeyTime: Date = Date(timeIntervalSinceNow: 0)
+var directoriesUsed: [String:Int] = [:]
 
 // Need: dictionary connecting userContentController with output streams (?)
 
@@ -318,7 +319,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     @objc private func insertCommand(_ sender: UIBarButtonItem) {
         // runs the command, and inserts on screen the result of running it. So a button can produce the current date, for example.
         if let command = title(sender) {
-            NSLog("Running button command: \(command)")
+            // NSLog("Running button command: \(command)")
             // Get file for stdout/stderr that can be written to
             let stdin_pipe = Pipe()
             let stdin_file = fdopen(stdin_pipe.fileHandleForReading.fileDescriptor, "r")
@@ -331,7 +332,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Call the following functions when data is written to stdout/stderr.
             stdout_pipe.fileHandleForReading.readabilityHandler = self.onStdoutButton
             stdout_button_active = true
-            NSLog("Streams for button: \(stdin_file)  \(stdout_file)")
+            // NSLog("Streams for button: \(stdin_file)  \(stdout_file)")
             ios_setStreams(stdin_file, stdout_file, stdout_file)
             let pid = ios_fork()
             ios_system(command)
@@ -340,7 +341,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Send info to the stdout handler that the command has finished:
             let writeOpen = fcntl(stdout_pipe.fileHandleForWriting.fileDescriptor, F_GETFD)
             if (writeOpen >= 0) {
-                NSLog("write channel still open, flushing")
+                // NSLog("write channel still open, flushing")
                 fflush(stdout_file)
                 // Pipe is still open, send information to close it, once all output has been processed.
                 stdout_pipe.fileHandleForWriting.write(self.endOfTransmission.data(using: .utf8)!)
@@ -1074,6 +1075,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     newPrompt += format.string(from: Date())
                     break
                 case "\\u": // username
+                    if let username = ios_getenv("USERNAME") {
+                        newPrompt += String(utf8String: username) ?? "mobile"
+                        break;
+                    }
+                    if let username = ios_getenv("USER") {
+                        newPrompt += String(utf8String: username) ?? "mobile"
+                        break;
+                    }
+                    if let username = ios_getenv("LOGNAME") {
+                        newPrompt += String(utf8String: username) ?? "mobile"
+                        break;
+                    }
                     if let pw = getpwuid((getuid())) {
                         if let username = pw.pointee.pw_name {
                             newPrompt += String(utf8String: username) ?? "mobile"
@@ -1843,6 +1856,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Also clear history:
             history = []
+            // and directories used:
+            directoriesUsed = [:]
             // Also reset directory:
             if (resetDirectoryAfterCommandTerminates != "") {
                 // NSLog("Calling resetDirectoryAfterCommandTerminates in exit to \(resetDirectoryAfterCommandTerminates)")
@@ -2213,6 +2228,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // NSLog("Received (inputTTY) \(command)")
             guard let data = command.data(using: .utf8) else { return }
             if #available(iOS 15.0, *) {
+                // Take over from the system for letters, to enforce auto-repeat for letters:
                 if let character = command.last {
                     if ((character >= "a") && (character <= "z")) || ((character >= "A") && (character <= "Z")) {
                         lastKey = character
@@ -2235,17 +2251,33 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 tty_file_input?.write(data)
             }
-        } else if (cmd.hasPrefix("listBookmarks:")) {
+        } else if (cmd.hasPrefix("listBookmarks:") || cmd.hasPrefix("listBookmarksDir:")) {
             let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
-            let sortedKeys = storedNamesDictionary.keys.sorted()
-            var javascriptCommand = "fileList = [ \"~/\", "
+            var onlyDirectories = false
+            if cmd.hasPrefix("listBookmarksDir:") {
+                onlyDirectories = true
+            }
+            var sortedKeys = storedNamesDictionary.keys.sorted() // alphabetical order
+            if (onlyDirectories) {
+                // sort directories in order of use:
+                sortedKeys = sortedKeys.sorted(by: { current, next in rankDirectory(dir:"~" + current, base: nil) > rankDirectory(dir:"~" + next, base: nil)})
+            }
+            var javascriptCommand = "fileList = [ "
             for key in sortedKeys {
-                // print(filePath)
+                // Skip bookmarks that aren't directories
+                if (onlyDirectories) {
+                    if let path = storedNamesDictionary[key] as? String {
+                        if (!URL(fileURLWithPath: path).isDirectory) {
+                            continue
+                        }
+                    }
+                }
+                // print(key)
                 // escape spaces, replace "\r" in filenames with "?"
                 javascriptCommand += "\"~" + key.replacingOccurrences(of: " ", with: "\\ ") + "/\", "
             }
             // We need to re-escapce spaces for string comparison to work in JS:
-            javascriptCommand += "]; lastDirectory = \"~bookmarkNames\"; updateFileMenu(); "
+            javascriptCommand += "]; lastDirectory = \"~bookmarkNames\"; lastOnlyDirectories= \(onlyDirectories); updateFileMenu(); "
             // print(javascriptCommand)
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
@@ -2257,9 +2289,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // }
                 }
             }
-        } else if (cmd.hasPrefix("listDirectory:")) {
+        } else if (cmd.hasPrefix("listDirectory:") || cmd.hasPrefix("listDirectoryDir:")) {
             var directory = cmd
-            directory.removeFirst("listDirectory:".count)
+            var onlyDirectories = false
+            if cmd.hasPrefix("listDirectoryDir:") {
+                directory.removeFirst("listDirectoryDir:".count)
+                onlyDirectories = true
+            } else {
+                directory.removeFirst("listDirectory:".count)
+            }
             if (directory.count == 0) { return }
             do {
                 ios_switchSession(self.persistentIdentifier?.toCString())
@@ -2276,7 +2314,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                              in: .userDomainMask,
                                                              appropriateFor: nil,
                                                              create: true).deletingLastPathComponent()
-                        directoryForListing = homeUrl.path + "/" + directoryForListing
+                        if (directoryForListing.hasPrefix("/")) {
+                            directoryForListing.removeFirst()
+                        }
+                        if (homeUrl.path.hasSuffix("/")) {
+                            directoryForListing = homeUrl.path + directoryForListing
+                        } else {
+                            directoryForListing = homeUrl.path + "/" + directoryForListing
+                        }
                     } else {
                         let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
                         name.removeFirst("~".count)
@@ -2295,15 +2340,34 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 // NSLog("after parsing: \(directoryForListing)")
                 var filePaths = try FileManager().contentsOfDirectory(atPath: directoryForListing.replacingOccurrences(of: "\\ ", with: " ")) // un-escape spaces
-                filePaths.sort()
+                filePaths.sort() // alphabetical order
+                if (onlyDirectories) {
+                    // sort directories in order of use:
+                    var directoryForSorting = directoryForListing
+                    if (directoryForSorting.hasPrefix(".")) {
+                        if (directoryForSorting == ".") {
+                            directoryForSorting = FileManager().currentDirectoryPath
+                        } else if (directoryForSorting.hasPrefix("./")) {
+                            directoryForSorting = directoryForSorting.replacingOccurrences(of: "./", with: FileManager().currentDirectoryPath + "/")
+                        } else {
+                            directoryForSorting = FileManager().currentDirectoryPath + "/" + directoryForSorting
+                        }
+                    }
+                    var localDirCompact = String(cString: ios_getBookmarkedVersion(directoryForSorting))
+                    filePaths = filePaths.sorted(by: { current, next in rankDirectory(dir:current, base: localDirCompact) > rankDirectory(dir:next, base: localDirCompact)})
+                    NSLog("after sorting: \(filePaths)")
+                }
                 var javascriptCommand = "fileList = ["
                 for filePath in filePaths {
-                    // print(filePath)
-                    // escape spaces, replace "\r" in filenames with "?"
-                    javascriptCommand += "\"" + filePath.replacingOccurrences(of: " ", with: "\\\\ ").replacingOccurrences(of: "\r", with: "?")
                     let fullPath = directoryForListing.replacingOccurrences(of: "\\ ", with: " ") + "/" + filePath
                     // NSLog("path = \(fullPath) , isDirectory: \(URL(fileURLWithPath: fullPath).isDirectory)")
-                    if URL(fileURLWithPath: fullPath).isDirectory {
+                    let isDirectory = URL(fileURLWithPath: fullPath).isDirectory
+                    if onlyDirectories && !isDirectory {
+                        continue
+                    }
+                    // escape spaces, replace "\r" in filenames with "?"
+                    javascriptCommand += "\"" + filePath.replacingOccurrences(of: " ", with: "\\\\ ").replacingOccurrences(of: "\r", with: "?")
+                    if isDirectory {
                         javascriptCommand += "/"
                     }
                     else {
@@ -2312,7 +2376,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     javascriptCommand += "\", "
                 }
                 // We need to re-escapce spaces for string comparison to work in JS:
-                javascriptCommand += "]; lastDirectory = \"" + directory.replacingOccurrences(of: " ", with: "\\ ") + "\"; updateFileMenu(); "
+                javascriptCommand += "]; lastDirectory = \"" + directory.replacingOccurrences(of: " ", with: "\\ ") + "\"; lastOnlyDirectories= \(onlyDirectories); updateFileMenu(); "
                 // print(javascriptCommand)
                 DispatchQueue.main.async {
                     self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
@@ -2324,6 +2388,50 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             } catch {
                 NSLog("Error getting files from directory: \(directory): \(error.localizedDescription)")
             }
+        } else if (cmd.hasPrefix("listDirectoriesForZ:")) {
+            var directory = cmd
+            directory.removeFirst("listDirectoriesForZ:".count)
+            if (directory.count == 0) { return }
+            var keys: [String]
+            do {
+                ios_switchSession(self.persistentIdentifier?.toCString())
+                ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+                let matchingRegexp = directory.replacingOccurrences(of: ".", with: "\\.").replacingOccurrences(of: "/", with: ".*/.*")
+                let regex = try NSRegularExpression(pattern: matchingRegexp, options: [])
+                // select keys from dictionary that match argument. Using partial match.
+                let result = directoriesUsed.filter( { regex.matches(in: $0.key, range: NSRange($0.key.startIndex..<$0.key.endIndex, in: $0.key)).count > 0 } )
+                if (result.count == 0) {
+                    // No matches in history. Search local directory, same regexp.
+                    let filePaths = try FileManager().contentsOfDirectory(atPath: FileManager().currentDirectoryPath)
+                    var result = filePaths.filter( { regex.matches(in: $0, range: NSRange($0.startIndex..<$0.endIndex, in: $0)).count > 0 } )
+                    if (result.count > 1) {
+                        let localDirCompact = String(cString: ios_getBookmarkedVersion(FileManager().currentDirectoryPath)) + "/"
+                        result = result.sorted(by: { current, next in rankDirectory(dir: current, base: localDirCompact) > rankDirectory(dir: next, base: localDirCompact)})
+                    }
+                }
+                keys = result.keys.sorted()
+                keys = keys.sorted(by: { current, next in rankDirectory(dir: current, base: nil) > rankDirectory(dir: next, base: nil)})
+
+                var javascriptCommand = "fileList = ["
+                for key in keys {
+                    // escape spaces, replace "\r" in filenames with "?"
+                    javascriptCommand += "\"" + key.replacingOccurrences(of: " ", with: "\\\\ ").replacingOccurrences(of: "\r", with: "?")
+                    javascriptCommand += " "
+                    javascriptCommand += "\", "
+                }
+                // We need to re-escapce spaces for string comparison to work in JS:
+                javascriptCommand += "]; lastDirectory = \"" + directory.replacingOccurrences(of: " ", with: "\\ ") + "\"; updateFileMenu(); "
+                // print(javascriptCommand)
+                DispatchQueue.main.async {
+                    self.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
+                        if let error = error { print(error) }
+                        // if let result = result { print(result) }
+                    }
+                }
+            } catch {
+                NSLog("Error getting Z files from directory: \(directory): \(error.localizedDescription)")
+            }
+        
         } else if (cmd.hasPrefix("copy:")) {
             // copy text to clipboard. Required since simpler methods don't work with what we want to do with cut in JS.
             var string = cmd
@@ -2647,6 +2755,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let config = WKWebViewConfiguration()
             config.preferences.javaScriptCanOpenWindowsAutomatically = true
             config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
+            config.setValue(true as Bool, forKey: "allowUniversalAccessFromFileURLs")
             wasmWebView = WKWebView(frame: .zero, configuration: config)
             let wasmFilePath = Bundle.main.path(forResource: "wasm", ofType: "html")
             wasmWebView?.isOpaque = false
@@ -3208,20 +3317,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         NSLog("Restoring history, previousDir, currentDir:")
         if let historyData = userInfo["history"] {
             history = historyData as! [String]
-            // NSLog("set history to \(history)")
-            windowHistory = "window.commandArray = ["
-            for command in history {
-                windowHistory += "\"" + command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\", "
-            }
-            windowHistory += "]; window.commandIndex = \(history.count); window.maxCommandIndex = \(history.count); "
-            // webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
-            //     if error != nil {
-            //         NSLog("Error in recreating history, line = \(javascriptCommand)")
-            //         print(error)
-            //     }
-            //     if let result = result { print("Recreating history: \(result), line= \(javascriptCommand)") }
-            // }
+        } else {
+            history = UserDefaults.standard.array(forKey: "history") as? [String] ?? []
         }
+        directoriesUsed = UserDefaults.standard.dictionary(forKey: "directoriesUsed") as? [String:Int] ?? [:]
+        // NSLog("set history to \(history)")
+        // NSLog("set directoriesUsed to \(directoriesUsed)")
+        windowHistory = "window.commandArray = ["
+        for command in history {
+            windowHistory += "\"" + command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\", "
+        }
+        windowHistory += "]; window.commandIndex = \(history.count); window.maxCommandIndex = \(history.count); "
+        // webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
+        //     if error != nil {
+        //         NSLog("Error in recreating history, line = \(javascriptCommand)")
+        //         print(error)
+        //     }
+        //     if let result = result { print("Recreating history: \(result), line= \(javascriptCommand)") }
+        // }
         if let previousDirectoryData = userInfo["prev_wd"] {
             if let previousDirectory = previousDirectoryData as? String {
                 NSLog("got previousDirectory as \(previousDirectory)")
@@ -3559,6 +3672,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         scene.session.stateRestorationActivity?.userInfo!["prev_wd"] = previousDirectory
         scene.session.stateRestorationActivity?.userInfo!["history"] = history
+        // Store history and directories used in the UserDefaults (so new windows don't start with a blank state)
+        UserDefaults.standard.set(history, forKey: "history")
+        UserDefaults.standard.set(directoriesUsed, forKey: "directoriesUsed")
         if (terminalFontSize != nil) {
             scene.session.stateRestorationActivity?.userInfo!["fontSize"] = terminalFontSize
         }

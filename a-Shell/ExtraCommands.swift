@@ -51,7 +51,7 @@ public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
     return 0
 }
 
-@_cdecl("jsc")
+@_cdecl("jsc_internal")
 public func jsc(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let args = convertCArguments(argc: argc, argv: argv)
     if let delegate = currentDelegate {
@@ -730,7 +730,7 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
             let bookmark = storedBookmarksDictionary[path]
             if (bookmark == nil) {
                 // not a secured URL, fine:
-                fputs(key + ": " + path + "\n", thread_stdout);
+                fputs("~" + key + ": " + path + "\n", thread_stdout);
             } else {
                 var stale = false
                 do {
@@ -741,7 +741,7 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
                     stale = true
                 }
                 if (!stale) {
-                    fputs(key + ": " + path + "\n", thread_stdout);
+                    fputs("~" + key + ": " + path + "\n", thread_stdout);
                 } else {
                     // remove the bookmark from both dictionaries:
                     mustUpdateDictionaries = true
@@ -762,7 +762,7 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
                 let bookmark = storedBookmarksDictionary[path]
                 if (bookmark == nil) {
                     // not a secured URL, fine:
-                    fputs(key + ": " + path + "\n", thread_stdout);
+                    fputs("~" + key + ": " + path + "\n", thread_stdout);
                 } else {
                     var stale = false
                     do {
@@ -773,7 +773,7 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
                         stale = true
                     }
                     if (!stale) {
-                        fputs(key + ": " + path + "\n", thread_stdout);
+                        fputs("~" + key + ": " + path + "\n", thread_stdout);
                     } else {
                         fputs("\(key): not found (directory removed)", thread_stderr)
                         // remove the bookmark from both dictionaries:
@@ -838,6 +838,11 @@ public func checkBookmarks() {
     let storedHome = mutableNamesDictionary["home"] as? String
     if (storedHome == nil) || (storedHome != homeUrl.path) {
         mutableNamesDictionary["home"] = homeUrl.path
+        mustUpdateDictionaries = true
+    }
+    let storedHome2 = mutableNamesDictionary[""] as? String
+    if (storedHome2 == nil) || (storedHome2 != homeUrl.path) {
+        mutableNamesDictionary[""] = homeUrl.path
         mustUpdateDictionaries = true
     }
     let storedShortcuts = mutableNamesDictionary["shortcuts"] as? String
@@ -1366,6 +1371,145 @@ public func preview(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
     return 0
 }
 
+import Contacts
+
+private func fullName(contact: CNContact) -> String {
+    let name = "\(contact.givenName) \(contact.familyName)"
+    let organization = contact.organizationName
+    var fullName = ""
+    if name.count > 1 {
+        fullName = name
+        if (organization.count > 0) {
+            return fullName + " — " + organization
+        }
+    } else {
+        return organization
+    }
+    return fullName
+}
+
+private func phoneNumberFromContacts(key: String, action: String) -> String? {
+    let store = CNContactStore()
+    let keysToFetch = [CNContactGivenNameKey, CNContactFamilyNameKey, CNContactOrganizationNameKey, CNContactPhoneNumbersKey] as [CNKeyDescriptor]
+    let predicate = CNContact.predicateForContacts(matchingName: key)
+    do {
+        let contacts = try store.unifiedContacts(matching: predicate, keysToFetch: keysToFetch)
+        if (contacts.count == 0) {
+            // No matching contacts found, check if key is a phone number:
+            var number = key
+            if (number.hasPrefix("+")) {
+                number.removeFirst()
+            }
+            number = number.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")
+            if Int(number) != nil {
+                fputs("\(action) \(key)\n", thread_stdout)
+                return key
+            }
+            return nil
+        }
+        if (contacts.count == 1) {
+            fputs("\(action) \(fullName(contact: contacts[0]))\n", thread_stdout)
+            let phoneNumber = contacts[0].phoneNumbers[0].value.stringValue
+            return phoneNumber.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")
+        }
+        // More than 1 contact. How many phone numbers?
+        var phoneNumber: String? = nil
+        for contact in contacts {
+            if (contact.phoneNumbers.count > 0) {
+                let newNumber = contact.phoneNumbers[0].value.stringValue.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")
+                if (phoneNumber == nil) {
+                    phoneNumber = newNumber
+                } else if (phoneNumber != newNumber) {
+                    phoneNumber = nil
+                    break
+                }
+            }
+        }
+        if (phoneNumber != nil) {
+            fputs("\(action) \(fullName(contact: contacts[0]))\n", thread_stdout)
+            return phoneNumber
+        } else {
+            fputs("Cannot separate between multiple contacts:\n", thread_stdout)
+            for contact in contacts {
+                fputs("- \(fullName(contact: contact))\n", thread_stdout)
+            }
+            return nil
+        }
+    }
+    catch {
+        fputs("No contacts found for \(key)\n", thread_stdout)
+        return nil
+    }
+}
+
+@_cdecl("call")
+public func call(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let args = convertCArguments(argc: argc, argv: argv)
+    guard args != nil  else {
+        return -1
+    }
+    guard args!.count >= 1  else {
+        fputs("Usage: \(args![0]) [name]\n", thread_stderr)
+        return -1
+    }
+    var key = args![1]
+    if (args!.count > 2) {
+        for i in 2...args!.count-1 {
+            key += " " + args![i]
+        }
+    }
+    if let phoneNumber = phoneNumberFromContacts(key: key, action: "Calling") {
+        if let url = URL(string: "tel://" + phoneNumber) {
+            DispatchQueue.main.async {
+                UIApplication.shared.open(url, options: [.universalLinksOnly: false], completionHandler: nil)
+            }
+        }
+        return 0
+    }
+    return -1
+}
+
+@_cdecl("text")
+public func text(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let args = convertCArguments(argc: argc, argv: argv)
+    guard args != nil  else {
+        return -1
+    }
+    guard args!.count >= 2  else {
+        fputs("Usage: \(args![0]) [name] [message]\n", thread_stderr)
+        return -1
+    }
+    if let phoneNumber = phoneNumberFromContacts(key: args![1], action: "Texting") {
+        if (args!.count == 2) { // No message:
+            if let url = URL(string: "sms://" + phoneNumber) {
+                DispatchQueue.main.async {
+                    UIApplication.shared.open(url, options: [.universalLinksOnly: false], completionHandler: nil)
+                }
+                return 0
+            }
+            return -1
+        }
+        var message = args![2]
+        if (args!.count > 3) {
+            for i in 3...args!.count-1 {
+                message += " "
+                message += args![i]
+            }
+        }
+        if let messageFixed = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            if let url = URL(string: "sms://" + phoneNumber + "&body=" + messageFixed) {
+                DispatchQueue.main.async {
+                    UIApplication.shared.open(url, options: [.universalLinksOnly: false], completionHandler: nil)
+                }
+                return 0
+            }
+        } else {
+            fputs("Error converting \(message). Could not send.", thread_stderr)
+        }
+    }
+    return -1
+}
+
 @_cdecl("stopInteractive")
 public func stopInteractive() {
     DispatchQueue.main.async {
@@ -1413,6 +1557,172 @@ public func startInteractive() {
             }
         }
     }
+}
+
+// Used both by z and by auto-complete for directories
+public func rankDirectory(dir: String, base: String?) -> Int {
+    var key = dir
+    if (base != nil) {
+        key = base!
+        if (!key.hasSuffix("/")) {
+            key += "/"
+        }
+        key += dir
+    }
+    if let used = directoriesUsed[key] {
+        return used
+    }
+    if dir.hasPrefix(".") {
+        return -2
+    }
+    return -1
+}
+
+// Called by "cd", used to store the directory where we go, so we can sort them based on frequency
+@_cdecl("storeDirectoryUsed")
+public func storeDirectoryUsed(directory: String) {
+    var key = directory
+    if (key.hasSuffix("/")) {
+        key.removeLast()
+    }
+    if let seenBefore = directoriesUsed[key] {
+        directoriesUsed[key] = seenBefore + 1;
+    } else {
+        directoriesUsed[key] = 0;
+    }
+    // NSLog("Storing directory: \(key) : \(directoriesUsed[key])")
+}
+
+// z command: change to the most recent directory that matches the argument(s)
+// TODO: autocomplete for z
+@_cdecl("z_command")
+public func z_command(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    if args.count <= 1 {
+        fputs("usage: z [keyword]\nwill change directory to the most frequently used directory matching argument.\n", thread_stdout)
+        return 0
+    }
+    // If argument is a directory that exists, change to that:
+    // (usually as a result of auto-complete)
+    if (FileManager().fileExists(atPath: args[1])) {
+        let fileUrl = URL(fileURLWithPath: args[1])
+        if (fileUrl.isDirectory) {
+            fputs("cd \(args[1])\n", thread_stdout)
+            executeCommandAndWait(command: "cd \"" + args[1] + "\"")
+            return 0
+        }
+    }
+    // If that didn't work
+    // we build a regex from the args, to make sure args are in order.
+    var matchingRegexp = args[1].replacingOccurrences(of: ".", with: "\\.").replacingOccurrences(of: "/", with: ".*/.*")
+    if (args.count > 2) {
+        for i in 2...args.count - 1 {
+            matchingRegexp += ".*" + args[i].replacingOccurrences(of: ".", with: "\\.").replacingOccurrences(of: "/", with: ".*/.*")
+        }
+    }
+    do {
+        let regex = try NSRegularExpression(pattern: matchingRegexp, options: [])
+        // select keys from dictionary that match argument. Using partial match.
+        let result = directoriesUsed.filter( { regex.matches(in: $0.key, range: NSRange($0.key.startIndex..<$0.key.endIndex, in: $0.key)).count > 0 } )
+        if (result.count == 0) {
+            // No matches in history. Search local directory, same regexp.
+            let filePaths = try FileManager().contentsOfDirectory(atPath: FileManager().currentDirectoryPath)
+            var result = filePaths.filter( { regex.matches(in: $0, range: NSRange($0.startIndex..<$0.endIndex, in: $0)).count > 0 } )
+            NSLog("local search: \(result)")
+            NSLog("Current directory: \(FileManager().currentDirectoryPath)")
+            if (result.count == 0) {
+                fputs("No matches for ", thread_stdout)
+                for i in 1...args.count - 1 {
+                    fputs(args[i] + " ", thread_stdout)
+                }
+                fputs("\n", thread_stdout)
+                return -1
+            }
+            if (result.count > 1) {
+                let localDirCompact = String(cString: ios_getBookmarkedVersion(FileManager().currentDirectoryPath)) + "/"
+                result = result.sorted(by: { current, next in rankDirectory(dir: current, base: localDirCompact) > rankDirectory(dir: next, base: localDirCompact)})
+            }
+            fputs("cd \(result[0])\n", thread_stdout)
+            executeCommandAndWait(command: "cd " + result[0])
+            newPreviousDirectory()
+            return 0
+        }
+        if (result.count == 1) {
+            if let directory = result.first?.key {
+                fputs("cd \(directory)\n", thread_stdout)
+                executeCommandAndWait(command: "cd " + directory)
+                newPreviousDirectory()
+                return 0
+            }
+            return 1
+        }
+        var keys = result.keys.sorted()
+        keys = keys.sorted(by: { current, next in rankDirectory(dir: current, base: nil) > rankDirectory(dir: next, base: nil)})
+        fputs("cd \(keys[0])\n", thread_stdout)
+        executeCommandAndWait(command: "cd " + keys[0])
+        newPreviousDirectory()
+        return 0
+    }
+    catch {
+        NSLog("Could not create regexp for: \(matchingRegexp)", thread_stderr)
+        return -1
+    }
+    return 1
+}
+
+
+// TODO: autocomplete for z
+@_cdecl("rehash")
+public func rehash(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    if args.count > 1 {
+        fputs("usage: rehash\nRecomputes list of executables in $PATH for auto-complete.\n", thread_stdout)
+        return 0
+    }
+    // First get list of builtin commnds:
+    guard var commandsArray = commandsAsArray() as! [String]? else { return -1 }
+    // Then scan PATH for executable files:
+    let executablePath = String(cString: getenv("PATH"))
+    // NSLog("\(executablePath)")
+    for directory in executablePath.components(separatedBy: ":") {
+        if (directory == "") {
+            continue
+        }
+        if (directory == ".") {
+            continue
+        }
+        do {
+            // We don't check for exec status, because files inside $APPDIR have no x bit set.
+            for file in try FileManager().contentsOfDirectory(atPath: directory) {
+                let newCommand = URL(fileURLWithPath: file).lastPathComponent
+                // Do not add a command if it is already present:
+                if (!commandsArray.contains(newCommand)) {
+                    commandsArray.append(newCommand)
+                }
+            }
+        } catch {
+            // The directory is unreadable, move to next one
+            continue
+        }
+    }
+    commandsArray.sort() // make sure it's in alphabetical order
+    var javascriptCommand = "commandList = ["
+    for command in commandsArray {
+        javascriptCommand += "\"" + command + "\", "
+    }
+    javascriptCommand += "];"
+    DispatchQueue.main.async {
+        if let delegate = currentDelegate {
+            delegate.resignFirstResponder()
+            delegate.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
+                if let error = error {
+                    NSLog("Error in creating command list, line = \(javascriptCommand) error = \(error)")
+                }
+                // if let result = result as? Int32 {  }
+            }
+        }
+    }
+    return 0
 }
 
 public func executeCommandAndWait(command: String) {

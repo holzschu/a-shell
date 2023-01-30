@@ -101,6 +101,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>a-Shell would like to access your camera</string>
+	<key>NSContactsUsageDescription</key>
+	<string>a-Shell would like to access your contacts</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>a-Shell would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>

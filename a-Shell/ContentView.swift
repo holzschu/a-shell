@@ -30,6 +30,7 @@ struct Webview : UIViewRepresentable {
             config.preferences.isTextInteractionEnabled = true
         }
         config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
+        config.setValue(true as Bool, forKey: "allowUniversalAccessFromFileURLs")
         // Does not change anything either way (??? !!!)
         config.preferences.setValue(true as Bool, forKey: "shouldAllowUserInstalledFonts")
         config.selectionGranularity = .character; // Could be .dynamic

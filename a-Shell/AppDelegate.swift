@@ -306,9 +306,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("config", "config", true)
         replaceCommand("keepDirectoryAfterShortcut", "keepDirectoryAfterShortcut", true)
         replaceCommand("wasm", "wasm", true)
-        replaceCommand("jsc", "jsc", true)  // use our own jsc instead of ios_system jsc
+        replaceCommand("jsc", "jsc_internal", true)  // use our own jsc instead of ios_system jsc
+        replaceCommand("call", "call", true)  // call a contact
+        replaceCommand("text", "text", true)  // send a text to a contact
         replaceCommand("play", "play_main", true)
         replaceCommand("view", "preview_main", true)
+        replaceCommand("z", "z_command", true) // change directory based on frequencys
+        replaceCommand("rehash", "rehash", true) // update list of commands for auto-complete
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
         replaceCommand("hideKeyboard", "hideKeyboard", true)

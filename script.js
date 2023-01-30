@@ -55,6 +55,7 @@ function isInteractive(commandString) {
 
 // standard functions (terminal, autocomplete, etc)
 var lastDirectory = '';
+var lastOnlyDirectories = false;
 var fileList = [];
 var currentCommandCursorPosition;
 var autocompleteList = []; 
@@ -68,6 +69,7 @@ function disableAutocompleteMenu() {
 	autocompleteIndex = 0;
 	fileList = '';
 	lastDirectory = '';
+	lastOnlyDirectories = false;
 }
 
 function isLetter(c) {
@@ -222,8 +224,10 @@ function updateAutocompleteMenu(io, cursorPosition) {
 	var rootForMatch = io.currentCommand.slice(0, currentCommandCursorPosition);
 	var predicate = rootForMatch;
 	var n = predicate.lastIndexOf("|");
+	var lastPipePosition = 0; 
 	if (n < predicate.length) {
-		var predicate = predicate.substr(n + 1);
+		lastPipePosition = n + 1;
+		predicate = predicate.substr(n + 1);
 	}
 	n = predicate.lastIndexOf(" ");
 	while ((n > 0) && (predicate[n-1] == "\\")) { 
@@ -231,11 +235,11 @@ function updateAutocompleteMenu(io, cursorPosition) {
 		n = predicate.lastIndexOf(" ", n - 1);
 	}
 	if (n < predicate.length) {
-		var predicate = predicate.substr(n + 1);
+		predicate = predicate.substr(n + 1);
 	}
 	n = predicate.lastIndexOf(">");
 	if (n < predicate.length) {
-		var predicate = predicate.substr(n + 1);
+		predicate = predicate.substr(n + 1);
 	}
 	if (predicate[0] == '-') return; // arguments to function, no autocomplete
 	// we have the string to use for matching (predicate). Is it a file or a command?
@@ -246,16 +250,127 @@ function updateAutocompleteMenu(io, cursorPosition) {
 	}
 	autocompleteIndex = 0; 
 	autocompleteList = [];
+	var numFound = 0; 
 	var matchToCommands = false;
+	var listDirectories = false;
+	var matchingWithZ = false;
 	if (beforePredicate.length == 0) {
 		matchToCommands = true; // beginning of line, must be a command
 	} else if (beforePredicate.slice(-1) == "|") {
 		matchToCommands = true; // right after a pipe, must be a command
+	} 
+	// Now extract the command after the pipe:
+	var beforePredicate = rootForMatch.substr(lastPipePosition, rootForMatch.lastIndexOf(predicate));
+	// remove all trailing spaces:
+	while ((beforePredicate.length > 0) && (beforePredicate.slice(-1) == " ")) {
+		beforePredicate = beforePredicate.slice(0, beforePredicate.length - 1)
+	}
+	// remove all beginning spaces:
+	while ((beforePredicate.length > 0) && (beforePredicate[0] == " ")) {
+		beforePredicate = beforePredicate.slice(1)
+	}
+	if (beforePredicate.startsWith("cd")) {
+		listDirectories = true;
+	} else if (beforePredicate.startsWith("z")) {
+		// Specific action for z + tab. *Very* specific.
+		if (fileList.length == 0) {
+			window.webkit.messageHandlers.aShell.postMessage('listDirectoriesForZ:' + predicate);
+			return;
+		} else { 
+			// Erase the "z" command (to the start of beforePredicate), replace with "cd"
+			const wcwidth = lib.wc.strWidth(predicate);
+			for (let i = 0; i < wcwidth; i++) {
+				deleteBackward()
+			}
+			var toDelete = window.term_.io.currentCommand.lastIndexOf("z");
+			var toDeleteStr = window.term_.io.currentCommand.slice(toDelete);
+			const wcwidth2 = lib.wc.strWidth(toDeleteStr);
+			for (let i = 0; i < wcwidth2; i++) {
+				deleteBackward()
+			}
+			printString("cd ");
+			io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + "cd " + 
+				io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
+			currentCommandCursorPosition += "cd ".length;
+			if (fileList.length == 1) {
+				// only one solution: print it
+				printString(fileList[0]);
+				io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + fileList[0] + 
+					io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
+				currentCommandCursorPosition += fileList[0].length; 
+				autocompleteOn = false;
+				return
+			} else {
+				// multiple solutions, print all:
+				for (var i = 0, len = fileList.length; i < len; i++) {
+					autocompleteList[numFound] = fileList[i]; 
+					lastFound = value; 
+					numFound += 1;
+				}
+				autocompleteOn = true;
+				autocompleteIndex = 0;
+				printAutocompleteString(autocompleteList[autocompleteIndex]);
+				return;
+			}
+		}
+		return;
 	}
 	// otherwise, it's probably a file
-	var numFound = 0; 
 	var file = '';
+	var directory = '.';
+	// Compute list of files from current directory:
+	if ((predicate[0] == "~") && (predicate.lastIndexOf("/") == -1)) {
+		// string beginning with ~, with no / at the end: it's a bookmark.
+		directory = '';
+		file = predicate;
+		// recompute if the directory listed has changed, or if we now want files instead of directories:
+		if ((lastDirectory != '~bookmarkNames') || (lastOnlyDirectories != listDirectories)) {
+			// asynchronous communication. Will have to execute the rest of the command too.
+			if (listDirectories) {
+				window.webkit.messageHandlers.aShell.postMessage('listBookmarksDir:');
+			} else {
+				window.webkit.messageHandlers.aShell.postMessage('listBookmarks:');
+			}
+		}
+	} else {
+		// compute list of files from local directory
+		var lastSlash = predicate.lastIndexOf("/");
+		if ((predicate.length > 0) && (lastSlash > 0) && (lastSlash < predicate.length)) {
+			var directory = predicate.substr(0, lastSlash); // include "/" in directory
+			file = predicate.substr(lastSlash + 1); // don't include "/" in file name
+		} else {
+			directory = ".";
+			file = predicate;
+		}
+		// recompute if the directory listed has changed, or if we now want files instead of directories:
+		if ((directory != lastDirectory) ||  (lastOnlyDirectories != listDirectories)){
+			// asynchronous communication. Will have to execute the rest of the command too.
+			if (listDirectories) {
+				// Only directories, include bookmarks for directories
+				window.webkit.messageHandlers.aShell.postMessage('listDirectoryDir:' + directory);
+			} else {
+				window.webkit.messageHandlers.aShell.postMessage('listDirectory:' + directory);
+			}
+		}
+	}
 	if (matchToCommands) { 
+		// First, match command with history:
+		for (var i = 0 , len = window.commandArray.length; i < len ; i++) {
+			if (window.commandArray[i].startsWith(predicate)) {
+				var value = window.commandArray[i].replace(predicate, ""); 
+				autocompleteList[numFound] = value;
+				lastFound = value; 
+				numFound += 1;
+			}
+		}
+		// only keep the last version of the command from history:
+		unique = autocompleteList.filter((v,i,a) => a.lastIndexOf(v) == i);
+		autocompleteList = unique;
+		// Stop on latest command matching, up = history, down = commands.
+		numFound = autocompleteList.length;
+		if (numFound > 0) {
+			autocompleteIndex = autocompleteList.length - 1;
+		}
 		for (var i = 0, len = commandList.length; i < len; i++) {
 			if (commandList[i].startsWith(predicate)) {
 				var value = commandList[i].replace(predicate, "") + ' '; // add a space at the end if it's a command; 
@@ -264,55 +379,49 @@ function updateAutocompleteMenu(io, cursorPosition) {
 				numFound += 1;
 			}
 		}
+	} 
+	// Then add list of files from local directory:
+	if ((predicate[0] == "~") && (predicate.lastIndexOf("/") == -1)) {
+		// string beginning with ~, with no / at the end: it's a bookmark.
+		directory = '';
+		file = predicate;
+		if (lastDirectory == '~bookmarkNames') {
+			// First, remove predicate from the autocomplete list:
+			for (var i = 0, len = fileList.length; i < len; i++) {
+				if (fileList[i].startsWith(file)) {
+					var value = fileList[i].replace(file, "")
+					autocompleteList[numFound] = value; 
+					lastFound = value; 
+					numFound += 1;
+				}
+			}
+		} 
 	} else {
-		if ((predicate[0] == "~") && (predicate.lastIndexOf("/") == -1)) {
-			// string beginning with ~, with no / at the end: it's a bookmark.
-			directory = '';
-			file = predicate;
-			if (lastDirectory == '~bookmarkNames') {
-				// First, remove 
-				for (var i = 0, len = fileList.length; i < len; i++) {
-					if (fileList[i].startsWith(file)) {
-						var value = fileList[i].replace(file, "")
-						autocompleteList[numFound] = value; 
-						lastFound = value; 
-						numFound += 1;
-					}
-				}
-			} else {
-				// asynchronous communication. Will have to execute the rest of the command too.
-				window.webkit.messageHandlers.aShell.postMessage('listBookmarks:');
-			}
+		if ((predicate[0] == "/") && (predicate.lastIndexOf("/") == 0)) {
+			// special case for root
+			directory = "/";
+			file = predicate.substr(1);
+			// This will only work for shortcuts expansion:
 		} else {
-			if ((predicate[0] == "/") && (predicate.lastIndexOf("/") == 0)) {
-				// special case for root
-				directory = "/";
-				file = predicate.substr(1);
-				// This will only work for shortcuts expansion:
+			var lastSlash = predicate.lastIndexOf("/");
+			if ((predicate.length > 0) && (lastSlash > 0) && (lastSlash < predicate.length)) {
+				var directory = predicate.substr(0, lastSlash); // include "/" in directory
+				file = predicate.substr(lastSlash + 1); // don't include "/" in file name
 			} else {
-				var lastSlash = predicate.lastIndexOf("/");
-				if ((predicate.length > 0) && (lastSlash > 0) && (lastSlash < predicate.length)) {
-					var directory = predicate.substr(0, lastSlash); // include "/" in directory
-					file = predicate.substr(lastSlash + 1); // don't include "/" in file name
-				} else {
-					var directory = ".";
-					file = predicate;
-				}
+				directory = ".";
+				file = predicate;
 			}
-			// Need to get list of files from directory. 
-			if (directory == lastDirectory) {
-				// First, remove 
-				for (var i = 0, len = fileList.length; i < len; i++) {
-					if (fileList[i].startsWith(file)) {
-						var value = fileList[i].replace(file, "")
-						autocompleteList[numFound] = value; 
-						lastFound = value; 
-						numFound += 1;
-					}
+		}
+		// Need to get list of files from directory. 
+		if ((directory == lastDirectory) && (lastOnlyDirectories == listDirectories)) {
+			// First, remove 
+			for (var i = 0, len = fileList.length; i < len; i++) {
+				if (fileList[i].startsWith(file)) {
+					var value = fileList[i].replace(file, "")
+					autocompleteList[numFound] = value; 
+					lastFound = value; 
+					numFound += 1;
 				}
-			} else {
-				// asynchronous communication. Will have to execute the rest of the command too.
-				window.webkit.messageHandlers.aShell.postMessage('listDirectory:' + directory);
 			}
 		}
 	}
@@ -323,52 +432,60 @@ function updateAutocompleteMenu(io, cursorPosition) {
 	if (numFound > 1) {
 		// If list is not empty:
 		// Find largest starting substring:
-		var commonSubstring = ''
-		for (var l = 1; l < autocompleteList[0].length; l++) {
-			substring =  autocompleteList[0].substr(0, l)
-			var contained = true
-			for (var i = 0, len = autocompleteList.length; i < len; i++) {
-				if (!autocompleteList[i].startsWith(substring)) {
-					contained = false;
+		if (((directory == lastDirectory) && (lastOnlyDirectories == listDirectories)) 
+				|| ((lastDirectory == '~bookmarkNames') && (predicate[0] == "~") && (lastOnlyDirectories == listDirectories))) {
+			var commonSubstring = ''
+			for (var l = 1; l < autocompleteList[0].length; l++) {
+				substring =  autocompleteList[0].substr(0, l)
+				var contained = true
+				for (var i = 0, len = autocompleteList.length; i < len; i++) {
+					if (!autocompleteList[i].startsWith(substring)) {
+						contained = false;
+						break;
+					}
+				}
+				if (contained) { 
+					commonSubstring = substring;
+				} else {
 					break;
 				}
 			}
-			if (contained) { 
-				commonSubstring = substring;
-			} else {
-				break;
+			if (commonSubstring.length > 0) {
+				printString(commonSubstring);
+				io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + commonSubstring + 
+					io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
+				currentCommandCursorPosition += commonSubstring.length;
+				for (var i = 0, len = autocompleteList.length; i < len; i++) {
+					var value = autocompleteList[i].replace(commonSubstring, "")
+					autocompleteList[i] = value; 
+				}
 			}
-		}
-		if (commonSubstring.length > 0) {
-			printString(commonSubstring);
-			io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + commonSubstring + 
-				io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
-			currentCommandCursorPosition += commonSubstring.length;
-			for (var i = 0, len = autocompleteList.length; i < len; i++) {
-				var value = autocompleteList[i].replace(commonSubstring, "")
-				autocompleteList[i] = value; 
+			//
+			autocompleteOn = true;
+			// Don't display files starting with "." first (they're in the list, but we don't start with them)
+			// Don't do this with directories because we already sorted them
+			if ((file.length == 0) && (!listDirectories)) {
+				while ((autocompleteList[autocompleteIndex][0] == ".") && (autocompleteIndex < autocompleteList.length - 1)) {
+					autocompleteIndex += 1;
+				} 
+				if (autocompleteIndex == autocompleteList.length - 1) {
+					// directory with only ".*" files
+					autocompleteIndex = 0;
+				}
 			}
+			printAutocompleteString(autocompleteList[autocompleteIndex]);
 		}
-		//
-		autocompleteOn = true;
-		// Don't display files starting with "." first (they're in the list, but we don't start with them)
-		if (file.length == 0) {
-			while ((autocompleteList[autocompleteIndex][0] == ".") && (autocompleteIndex < autocompleteList.length - 1)) {
-				autocompleteIndex += 1;
-			} 
-			if (autocompleteIndex == autocompleteList.length - 1) {
-				// directory with only ".*" files
-				autocompleteIndex = 0;
-			}
-		}
-		printAutocompleteString(autocompleteList[autocompleteIndex]);
 	} else {
 		if (numFound == 1) {
-			printString(lastFound);
-			io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + lastFound + 
-				io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
-			currentCommandCursorPosition += lastFound.length;
+			if (((directory == lastDirectory) && (lastOnlyDirectories == listDirectories))
+				|| ((lastDirectory == '~bookmarkNames') && (predicate[0] == "~") && (lastOnlyDirectories == listDirectories))) {
+				printString(lastFound);
+				io.currentCommand = io.currentCommand.slice(0, currentCommandCursorPosition) + lastFound + 
+					io.currentCommand.slice(currentCommandCursorPosition, io.currentCommand.length);
+				currentCommandCursorPosition += lastFound.length;
+			}
 		}
+		autocompleteOn = false;
 		disableAutocompleteMenu(); 
 	}
 }
@@ -652,6 +769,10 @@ function setupHterm() {
 						}
 						disableAutocompleteMenu();
 						break;
+					case String.fromCharCode(24):  // Ctrl-X
+					case String.fromCharCode(26):  // Ctrl-Z // Cancel. Make popup menu disappear
+						disableAutocompleteMenu();
+						break;
 					case String.fromCharCode(27):  // Escape. Make popup menu disappear
 						disableAutocompleteMenu();
 						break;
@@ -764,7 +885,6 @@ function setupHterm() {
 							this.document_.getSelection().collapseToStart();
 							disableAutocompleteMenu();
 						} else {
-							disableAutocompleteMenu();
 							if (currentCommandCursorPosition > 0) { 
 								var previousCursorPosition = 0;
 								var currentChar;
@@ -791,9 +911,10 @@ function setupHterm() {
 							this.moveCursorPosition(term.scrollPort_.selection.endRow.rowIndex - term.scrollPort_.getTopRowIndex(), term.scrollPort_.selection.endOffset);
 							this.document_.getSelection().collapseToEnd();
 							disableAutocompleteMenu();
+						} else if (autocompleteOn) {
+							// hit right arrow when autocomplete menu already visible = select current
+							pickCurrentValue();
 						} else {
-							// recompute complete menu? For now, disable it.
-							disableAutocompleteMenu();
 							if (currentCommandCursorPosition < io.currentCommand.length) {
 								const codePoint = io.currentCommand.codePointAt(currentCommandCursorPosition);
 								var currentChar = String.fromCodePoint(codePoint);
@@ -1201,6 +1322,13 @@ function setupHterm() {
 	// If a command was started while we were starting the terminal, we might not know about it:
 	// This also prints the first prompt, after updating the prompt message.
 	window.webkit.messageHandlers.aShell.postMessage('resendCommand:');
+	// using web workers to run web assembly:
+	// current problem: we need a way to wait until the worker has finished its work.
+	// Inside Swift file, separate into two functions (startWebAssembly and endWebAssembly)?
+	wasmWorker = new Worker('wasm_worker.js');
+	window.wasmWorker.onmessage = (e) => {
+		window.webkit.messageHandlers.aShell.postMessage('print: ' + e.data + '\n');
+	}
 
 	initializeTerminalGestures();
 };
@@ -2392,4 +2520,7 @@ hterm.Keyboard.prototype.onKeyPress_ = function(e) {
   e.stopPropagation();
 };
 
+function executeInWorker() {
+	wasmWorker.postMessage("Hello from the main guy"); 
+}
 
