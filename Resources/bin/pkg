@@ -68,6 +68,7 @@ install() {
 			chmod +x ~/tmp/$packageName
 			sh ~/tmp/$packageName
 			rm ~/tmp/$packageName
+			rehash
 			echo Done
 		else
 			for packageName in `cat ~/tmp/packageList`
@@ -81,8 +82,10 @@ install() {
 					rm ~/tmp/$packageName
 					echo Done
 					rm ~/tmp/packageList
+					rehash
+					echo Done
 					return
-				fi	
+				fi
 			done
 			echo Package name $name unclear. Did you mean:
 			cat ~/tmp/packageList
@@ -104,6 +107,7 @@ remove() {
 			sh ~/Documents/.pkg/$name
 			rm ~/Documents/.pkg/$name
 			mandocdb ~/Library/man
+			rehash
 			echo Done
 		else
 			echo Package $name was not installed by pkg. Cannot remove it.
