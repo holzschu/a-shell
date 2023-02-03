@@ -261,6 +261,20 @@
 		<string>pqrs:tx</string>
 		<string>file</string>
 	</array>
+	<key>sha1</key>
+	<array>
+		<string>text.framework/text</string>
+		<string>md5_main</string>
+		<string>pqrs:tx</string>
+		<string>file</string>
+	</array>
+	<key>sha256</key>
+	<array>
+		<string>text.framework/text</string>
+		<string>md5_main</string>
+		<string>pqrs:tx</string>
+		<string>file</string>
+	</array>
 	<key>mkdir</key>
 	<array>
 		<string>files.framework/files</string>

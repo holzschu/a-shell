@@ -70,6 +70,20 @@ install() {
 			rm ~/tmp/$packageName
 			echo Done
 		else
+			for packageName in `cat ~/tmp/packageList`
+			do
+				if [ $packageName = $name ]
+				then
+					echo Downloading $packageName
+					curl -L $server/packages/$packageName -o ~/tmp/$packageName --silent
+					chmod +x ~/tmp/$packageName
+					sh ~/tmp/$packageName
+					rm ~/tmp/$packageName
+					echo Done
+					rm ~/tmp/packageList
+					return
+				fi	
+			done
 			echo Package name $name unclear. Did you mean:
 			cat ~/tmp/packageList
 		fi
@@ -98,13 +112,12 @@ remove() {
 }
 
 case $1 in
-	# TODO: allow for multiple install (for loop on all arguments except first one)
 	install|update|upgrade) 
 	    shift
 	    install $@
 	    ;;
 	list) list;;
-	remove) 
+	remove|uninstall) 
 	    shift
 	    remove $@
 	    ;;
