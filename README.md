@@ -46,11 +46,11 @@ Most configuration files (Python packages, TeX files, Clang SDK...) are in `~/Li
 
 ## Sandbox and Bookmarks 
 
-a-Shell uses iOS 13 ability to access directories in other Apps sandbox. Type `pickFolder` to access a directory inside another App. Once you have selected a directory, you can do pretty much anything you want here, so be careful. 
+a-Shell uses iOS 13 ability to access directories in other Apps Sandboxes. Type `pickFolder` to access a directory inside another App. Once you have selected a directory, you can do pretty much anything you want here, so be careful. 
 
 All the directories you access with `pickFolder` are bookmarked, so you can return to them later without `pickFolder`. You can also bookmark the current directory with `bookmark`. `showmarks` will list all the existing bookmarks, `jump mark` and `cd ~mark` will change the current directory to this specific bookmark, `renamemark` will let you change the name of a specific bookmark and `deletemark` will delete a bookmark. 
 
-A user-configurable option in Settings lets you use the commands `s`, `g`, `l`, `r` and `d` instead or as well. 
+A user-configurable option in settings lets you use the commands `s`, `g`, `l`, `r` and `d` instead or as well. 
 
 If you are lost, `cd` will always bring you back to `~/Documents/`. `cd -` will change to the previous directory. 
 
