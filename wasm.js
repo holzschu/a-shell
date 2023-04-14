@@ -1,7 +1,9 @@
 // make the "require" function available to all
 Tarp.require({expose: true});
 // Have a global variable:
-window.global = window;
+if (typeof window !== 'undefined') {
+	window.global = window;
+}
 // and a Buffer variable
 var Buffer = require('buffer').Buffer;
 var process = require('process');
@@ -13,7 +15,8 @@ var process = require('process');
 const WASI = require('@wasmer/wasi/lib').WASI;
 const browserBindings = require('@wasmer/wasi/lib/bindings/browser').default;
 const WasmFs = require('@wasmer/wasmfs').WasmFs;
-const lowerI64Imports = require("@wasmer/wasm-transformer").lowerI64Imports
+// Experiment: don't call lowerI64Imports, see if that works.
+// const lowerI64Imports = require("@wasmer/wasm-transformer").lowerI64Imports
 
 function b64ToUint6 (nChr) {
 
@@ -56,13 +59,15 @@ function base64DecToArr (sBase64, nBlockSize) {
 // cwd: current working directory
 function executeWebAssembly(bufferString, args, cwd, tty, env) {
 	// Input: base64 encoded binary wasm file
-	if (!('WebAssembly' in window)) {
-		window.webkit.messageHandlers.aShell.postMessage('WebAssembly not supported');
-		return;
+	if (typeof window !== 'undefined') {
+		if (!('WebAssembly' in window)) {
+			window.webkit.messageHandlers.aShell.postMessage('WebAssembly not supported');
+			return;
+		}
 	}
-
 	var arrayBuffer = base64DecToArr(bufferString); 
-	const loweredWasmBytes = lowerI64Imports(arrayBuffer);
+	// Experiment: don't call lowerI64Imports, see if that works.
+	const loweredWasmBytes = arrayBuffer; // lowerI64Imports(arrayBuffer);
 	var errorMessage = '';
 	var errorCode = 0; 
 	// TODO: link with other libraries/frameworks? impossible, I guess.
@@ -101,5 +106,4 @@ function executeWebAssembly(bufferString, args, cwd, tty, env) {
 	}
 	return [errorCode, errorMessage];
 }
-
 
