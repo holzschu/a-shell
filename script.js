@@ -15,6 +15,7 @@ window.onerror = (msg, url, line, column, error) => {
   }
 };
 */
+
 //
 // functions to deal with executeJavaScript: 
 function print(printString) {
@@ -269,9 +270,9 @@ function updateAutocompleteMenu(io, cursorPosition) {
 	while ((beforePredicate.length > 0) && (beforePredicate[0] == " ")) {
 		beforePredicate = beforePredicate.slice(1)
 	}
-	if (beforePredicate.startsWith("cd")) {
+	if (beforePredicate === "cd") {
 		listDirectories = true;
-	} else if (beforePredicate.startsWith("z")) {
+	} else if (beforePredicate === "z") {
 		// Specific action for z + tab. *Very* specific.
 		if (fileList.length == 0) {
 			window.webkit.messageHandlers.aShell.postMessage('listDirectoriesForZ:' + predicate);
@@ -665,6 +666,7 @@ function setupHterm() {
 					window.interactiveCommandRunning = false;
 				}
 			}
+
 			if ((window.commandRunning != '') && (term.vt.mouseReport != term.vt.MOUSE_REPORT_DISABLED)) {
 				// if an application has enabled mouse report, it is likely to be interactive:
 				// (this was added for textual)
@@ -1322,14 +1324,6 @@ function setupHterm() {
 	// If a command was started while we were starting the terminal, we might not know about it:
 	// This also prints the first prompt, after updating the prompt message.
 	window.webkit.messageHandlers.aShell.postMessage('resendCommand:');
-	// using web workers to run web assembly:
-	// current problem: we need a way to wait until the worker has finished its work.
-	// Inside Swift file, separate into two functions (startWebAssembly and endWebAssembly)?
-	wasmWorker = new Worker('wasm_worker.js');
-	window.wasmWorker.onmessage = (e) => {
-		window.webkit.messageHandlers.aShell.postMessage('print: ' + e.data + '\n');
-	}
-
 	initializeTerminalGestures();
 };
 
@@ -2017,7 +2011,9 @@ hterm.ScrollPort.prototype.onTouch_ = function(e) {
         if ((this.lastTouch_[touch.id].y == touch.y) && (this.lastTouch_[touch.id].x == touch.x)) {
         	var xcursor = (touch.x / this.characterSize.width);
         	var ycursor = (touch.y / this.characterSize.height);
-			window.term_.moveCursorPosition(Math.floor(ycursor), Math.floor(xcursor));
+        	if (window.term_.moveCursorPosition) {
+				window.term_.moveCursorPosition(Math.floor(ycursor), Math.floor(xcursor));
+			}
 		} 
 	  }    	  
       // Throw away existing touches that we're finished with.
@@ -2214,32 +2210,44 @@ hterm.Terminal.prototype.realizeWidth_ = function(columnCount) {
   // iOS: rewrite everything after each resize:
   if ((window.term_ != undefined) && (window.term_.ready_)) {
   	// Check that config has been set:
-	if (window.term_.getForegroundColor() === undefined) {
+	if (window.foregroundColor != undefined) {
+	  if (window.term_.getForegroundColor() === undefined) {
 	    window.term_.setForegroundColor(window.foregroundColor);
 	    window.term_.prefs_.set('foreground-color', window.foregroundColor);
+	  }
 	}
-	if (window.term_.getBackgroundColor() === undefined) {
-		window.term_.setBackgroundColor(window.backgroundColor);
-		window.term_.prefs_.set('background-color', window.backgroundColor);
+	if (window.backgroundColor != undefined) {
+	  if (window.term_.getBackgroundColor() === undefined) {
+		  window.term_.setBackgroundColor(window.backgroundColor);
+		  window.term_.prefs_.set('background-color', window.backgroundColor);
+	  }
 	}
-	if (window.term_.getFontSize() === undefined) {
-		window.term_.setFontSize(window.fontSize); 
-		window.term_.prefs_.set('font-size', window.fontSize); 
+	if (window.fontSize != undefined) {
+	  if (window.term_.getFontSize() === undefined) {
+	  	window.term_.setFontSize(window.fontSize); 
+	  	window.term_.prefs_.set('font-size', window.fontSize); 
+	  }
 	}
-	if (window.term_.getFontFamily() === undefined) {
-		window.term_.setFontFamily(window.fontFamily); 
-		window.term_.prefs_.set('font-family', window.fontFamily);
+	if (window.fontFamily != undefined) {
+	  if (window.term_.getFontFamily() === undefined) {
+	  	window.term_.setFontFamily(window.fontFamily); 
+	  	window.term_.prefs_.set('font-family', window.fontFamily);
+	  }
 	}
-	if (window.term_.getCursorColor() === undefined) {
-		window.term_.setCursorColor(window.cursorColor);
-		window.term_.prefs_.set('cursor-color', window.cursorColor);
+	if (window.cursorColor != undefined) {
+	  if (window.term_.getCursorColor() === undefined) {
+	  	window.term_.setCursorColor(window.cursorColor);
+	  	window.term_.prefs_.set('cursor-color', window.cursorColor);
+	  }
 	}
-	if (window.term_.getCursorShape() === undefined) {
-		window.term_.setCursorShape(window.cursorShape);
-		window.term_.prefs_.set('cursor-shape', window.cursorShape);
+	if (window.cursorShape != undefined) {
+	  if (window.term_.getCursorShape() === undefined) {
+	  	window.term_.setCursorShape(window.cursorShape);
+	  	window.term_.prefs_.set('cursor-shape', window.cursorShape);
+	  }
 	}
   	// only rewrite content for primary screen:
-  	if (this.isPrimaryScreen()) { 
+  	if (this.isPrimaryScreen()) {
 	  if ((window.printedContent !== undefined) && (window.printedContent != 'undefined')) {
 	  	let content = window.printedContent; 
 	  	window.term_.wipeContents();
@@ -2462,6 +2470,7 @@ hterm.Terminal.prototype.setFontSize = function(px) {
 
 	this.scrollPort_.setFontSize(px);
 	this.setCssVar('font-size', `${px}px`);
+	this.setCssVar('font-variant-ligatures', `normal`, prefix=''); // activate ligatures (doesn't work, but still)
 	this.updateCssCharsize_();
 };
 
@@ -2520,7 +2529,29 @@ hterm.Keyboard.prototype.onKeyPress_ = function(e) {
   e.stopPropagation();
 };
 
-function executeInWorker() {
-	wasmWorker.postMessage("Hello from the main guy"); 
-}
+/**
+ * Take any valid CSS color definition and turn it into an rgb or rgba value.
+ *
+ * @param {string} def The CSS color spec to normalize.
+ * @return {?string} The converted value.
+ */
+// iOS edit: avoid raising an error if def === undefined
+lib.colors.normalizeCSS = function(def) {
+  if (def == undefined) {
+  	  return lib.colors.hexToRGB("#000000");
+  }
+  if (def.startsWith('#')) {
+    return lib.colors.hexToRGB(def);
+  }
+
+  if (lib.colors.re_.rgbx.test(def)) {
+    return def;
+  }
+
+  if (lib.colors.re_.hslx.test(def)) {
+    return lib.colors.hslToRGB(def);
+  }
+
+  return lib.colors.nameToRGB(def);
+};
 
