@@ -73,6 +73,26 @@
 				<string>ashell</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>AsheKube.app.a-Shell</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ashellplus</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>AsheKube.app.a-Shell</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ashellpro</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>

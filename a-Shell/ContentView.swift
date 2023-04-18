@@ -37,6 +37,9 @@ struct Webview : UIViewRepresentable {
         // let preferences = WKWebpagePreferences()
         // preferences.allowsContentJavaScript = true
         webView = .init(frame: .zero, configuration: config)
+        if #available(iOS 16.4, *) {
+            webView.isInspectable = true
+        }
     }
     
     func makeUIView(context: Context) -> WebViewType {

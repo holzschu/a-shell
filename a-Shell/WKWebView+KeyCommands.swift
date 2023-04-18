@@ -103,7 +103,7 @@ extension WKWebView {
             if let delegate = scene.delegate as? SceneDelegate {
                 if delegate.webView == self {
                     let fontSize = delegate.terminalFontSize ?? factoryFontSize
-                    delegate.configWindow(fontSize: fontSize + 1, fontName: nil, backgroundColor: nil, foregroundColor: nil, cursorColor: nil, cursorShape: nil)
+                    delegate.configWindow(fontSize: fontSize + 1, fontName: nil, backgroundColor: nil, foregroundColor: nil, cursorColor: nil, cursorShape: nil, fontLigature: nil)
                     return
                 }
             }
@@ -116,7 +116,7 @@ extension WKWebView {
             if let delegate = scene.delegate as? SceneDelegate {
                 if delegate.webView == self {
                     let fontSize = delegate.terminalFontSize ?? factoryFontSize
-                    delegate.configWindow(fontSize: fontSize - 1, fontName: nil, backgroundColor: nil, foregroundColor: nil, cursorColor: nil, cursorShape: nil)
+                    delegate.configWindow(fontSize: fontSize - 1, fontName: nil, backgroundColor: nil, foregroundColor: nil, cursorColor: nil, cursorShape: nil, fontLigature: nil)
                     return
                 }
             }

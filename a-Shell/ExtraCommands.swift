@@ -51,6 +51,14 @@ public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
     return 0
 }
 
+
+@_cdecl("executeWebAssemblyCommands")
+public func executeWebAssemblyCommands() {
+    if let delegate = currentDelegate {
+        return delegate.executeWebAssemblyCommands()
+    }
+}
+
 @_cdecl("jsc_internal")
 public func jsc(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let args = convertCArguments(argc: argc, argv: argv)
@@ -287,6 +295,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     var terminalForegroundColor: UIColor?
     var terminalCursorColor: UIColor?
     var terminalCursorShape: String?
+    var terminalFontLigature: String?
     let shortUsage = "usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-dgpr]\n"
     let usageString = """
     usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-g][-p][-d][-r]
@@ -298,6 +307,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     -f | --foreground: set foreground color
     -c | --cursor: set cursor and highlight color
     -k | --cursorShape: set cursor shape (beam, block or underline)
+    -l | --ligatures: normal, contextual, none...
     -t | --toolbar: create a configuration file to change the toolbar
     -g | --global: extend settings to all windows currently open
     -p | --permanent: store settings as default values
@@ -390,7 +400,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
                  // attempt to load fonts from file. Failed. 
                 terminalFontName = name
             } */ else if UIFont(name: name, size: 13) != nil {
-                    terminalFontName = name
+                terminalFontName     = name
             } else {
                 fputs("Could not load font: \(name)\n", thread_stderr)
             }
@@ -523,8 +533,35 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
                 }
             }
             continue
+        case "-l", "--ligatures":
+            argumentsSet = true
+            var name = ""
+            if (i + 1 < args.count) {
+                if !args[i+1].hasPrefix("-") {
+                    name = args[i+1]
+                    skipNextArgument = 1
+                } else {
+                    fputs("Font ligature not defined.\n", thread_stderr)
+                    continue
+                }
+            }
+            if (name == "") {
+                fputs("No parameter for font ligature.\n", thread_stderr)
+                continue
+            } else if name == "default" {
+                if let storedName = UserDefaults.standard.object(forKey: "fontLigature") as? String {
+                    terminalFontLigature = storedName
+                } else {
+                    terminalFontLigature = factoryFontLigature
+                }
+            } else if name == "factory" {
+                terminalFontLigature = factoryFontLigature
+            } else {
+                terminalFontLigature = name.lowercased()
+            }
+            continue
         case "-t", "--toolbar":
-            var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
+            let configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
             do {
                 let documentsUrl = try FileManager().url(for: .documentDirectory,
                                                          in: .userDomainMask,
@@ -590,6 +627,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         delegate?.terminalForegroundColor = nil
         delegate?.terminalCursorColor = nil
         delegate?.terminalCursorShape = factoryCursorShape
+        delegate?.terminalFontLigature = factoryFontLigature
         delegate?.writeConfigWindow()
     } else if (revertToDefault) {
         // "default" = what is stored in User Preferences, if it exists, and factory default otherwise.
@@ -623,9 +661,14 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         } else {
             delegate?.terminalCursorShape = factoryCursorShape
         }
+        if let storedName = UserDefaults.standard.object(forKey: "fontLigature") as? String {
+            delegate?.terminalFontLigature = storedName
+        } else {
+            delegate?.terminalFontLigature = factoryFontLigature
+        }
         delegate?.writeConfigWindow()
     } else {
-        delegate?.configWindow(fontSize: terminalFontSize, fontName: terminalFontName, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor, cursorShape: terminalCursorShape)
+        delegate?.configWindow(fontSize: terminalFontSize, fontName: terminalFontName, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor, cursorShape: terminalCursorShape, fontLigature: terminalFontLigature)
     }
     if (makeGlobal) {
         // If nothing except "-p" (and possibly -d or -r): extend current window settings to all open windows
@@ -633,14 +676,14 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         if (argumentsSet) {
             for scene in UIApplication.shared.connectedScenes {
                 if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                    delegate.configWindow(fontSize: terminalFontSize, fontName: terminalFontName, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor, cursorShape: terminalCursorShape)
+                    delegate.configWindow(fontSize: terminalFontSize, fontName: terminalFontName, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor, cursorShape: terminalCursorShape, fontLigature: terminalFontLigature)
                 }
             }
         } else {
             for scene in UIApplication.shared.connectedScenes {
                 if let delegate2: SceneDelegate = scene.delegate as? SceneDelegate {
                     if (delegate2 != delegate) {
-                        delegate2.configWindow(fontSize: delegate?.terminalFontSize, fontName: delegate?.terminalFontName, backgroundColor: delegate?.terminalBackgroundColor, foregroundColor: delegate?.terminalForegroundColor, cursorColor: delegate?.terminalCursorColor, cursorShape: delegate?.terminalCursorShape)
+                        delegate2.configWindow(fontSize: delegate?.terminalFontSize, fontName: delegate?.terminalFontName, backgroundColor: delegate?.terminalBackgroundColor, foregroundColor: delegate?.terminalForegroundColor, cursorColor: delegate?.terminalCursorColor, cursorShape: delegate?.terminalCursorShape, fontLigature: delegate?.terminalFontLigature)
                     }
                 }
             }
@@ -657,6 +700,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             terminalForegroundColor = delegate?.terminalForegroundColor
             terminalCursorColor = delegate?.terminalCursorColor
             terminalCursorShape = delegate?.terminalCursorShape
+            terminalFontLigature = delegate?.terminalFontLigature
             if terminalFontSize == nil {
                 UserDefaults.standard.removeObject(forKey: "fontSize")
             }
@@ -674,6 +718,9 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             }
             if terminalCursorShape == nil {
                 UserDefaults.standard.removeObject(forKey: "cursorShape")
+            }
+            if terminalFontLigature == nil {
+                UserDefaults.standard.removeObject(forKey: "fontLigature")
             }
         }
         if terminalFontSize != nil {
@@ -693,6 +740,9 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         }
         if terminalCursorShape != nil {
             UserDefaults.standard.set(terminalCursorShape, forKey: "cursorShape")
+        }
+        if terminalFontLigature != nil {
+            UserDefaults.standard.set(terminalFontLigature, forKey: "fontLigature")
         }
     }
     return 0
@@ -1727,6 +1777,7 @@ public func rehash(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
 
 public func executeCommandAndWait(command: String) {
     NSLog("executeCommandAndWait: \(command)")
+    resultStack.removeAll()
     let pid = ios_fork()
     _ = ios_system(command)
     fflush(thread_stdout)

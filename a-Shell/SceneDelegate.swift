@@ -21,12 +21,24 @@ var inputFileURLBackup: URL?
 let factoryFontSize = Float(13)
 let factoryFontName = "Menlo"
 let factoryCursorShape = "UNDERLINE"
+let factoryFontLigature = "contextual" // normal has a bug, so contextual by default
 var stdinString: String = ""
 var lastKey: Character?
 var lastKeyTime: Date = Date(timeIntervalSinceNow: 0)
 var directoriesUsed: [String:Int] = [:]
 
-// Need: dictionary connecting userContentController with output streams (?)
+// Experimental: execute JS & webAssembly commands in reverse order, so they can be piped.
+struct javascriptCommand {
+    var thread_stdin_copy: UnsafeMutablePointer<FILE>? = nil
+    var thread_stdout_copy: UnsafeMutablePointer<FILE>? = nil
+    var thread_stderr_copy: UnsafeMutablePointer<FILE>? = nil
+    var jsCommand: String = ""
+    var webAssemblyGroup: DispatchGroup? = nil
+    var originalCommand: String = ""
+}
+
+var commandsStack: [javascriptCommand?] = []
+var resultStack: [Int32?] = []
 
 class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate {
     var window: UIWindow?
@@ -53,6 +65,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     // var keyboardTimer: Timer!
     private let commandQueue = DispatchQueue(label: "executeCommand", qos: .utility) // low priority, for executing commands
     private var javascriptRunning = false // We can't execute JS while we are already executing JS.
+    private var executeWebAssemblyCommandsRunning = false // We can't execute JS while we are already executing JS.
     // Buttons and toolbars:
     var controlOn = false;
     // control codes:
@@ -82,6 +95,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var terminalForegroundColor: UIColor?
     var terminalCursorColor: UIColor?
     var terminalCursorShape: String?
+    var terminalFontLigature: String?
     // for audio / video playback:
     var avplayer: AVPlayer? = nil
     var avcontroller: AVPlayerViewController? = nil
@@ -335,6 +349,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // NSLog("Streams for button: \(stdin_file)  \(stdout_file)")
             ios_setStreams(stdin_file, stdout_file, stdout_file)
             let pid = ios_fork()
+            resultStack.removeAll()
             ios_system(command)
             ios_waitpid(pid)
             ios_releaseThreadId(pid)
@@ -492,7 +507,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if let title = title(sender) {
             if (title == "paste") {
                 if let pastedString = UIPasteboard.general.string {
-                    NSLog("Sending text to paste: \(pastedString)")
+                    // NSLog("Sending text to paste: \(pastedString)")
                     webView?.paste(pastedString)
                 }
                 return
@@ -901,8 +916,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     @objc func showEditorToolbar() {
         generateToolbarButtons()
-        NSLog("leftButtonGroup: \(leftButtonGroup)")
-        NSLog("rightButtonGroup: \(rightButtonGroup)")
+        // NSLog("leftButtonGroup: \(leftButtonGroup)")
+        // NSLog("rightButtonGroup: \(rightButtonGroup)")
         DispatchQueue.main.async {
             if (useSystemToolbar) {
                 showToolbar = false
@@ -950,6 +965,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         // NSLog("Long press on button: \(button)")
                         continuousButtonAction = true
                         commandQueue.async {
+                            // this function contains a sleep() call.
+                            // We need to prevent the entire program from sleeping,
+                            // so we run it in a queue.
                             self.continuousButtonAction(button)
                         }
                         return
@@ -1163,12 +1181,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // - have window.printPrompt() use promptString
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript("window.commandRunning = ''; window.promptMessage='\(self.parsePrompt())'; window.printPrompt(); window.updatePromptPosition();") { (result, error) in
-                if let error = error {
+                /* if let error = error {
                     NSLog("Error in executing window.commandRunning = ''; = \(error)")
                 }
                 if let result = result {
                     NSLog("Result of executing window.commandRunning = ''; = \(result)")
-                }
+                } */
             }
         }
     }
@@ -1217,6 +1235,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     func executeWebAssembly(arguments: [String]?) -> Int32 {
         guard (arguments != nil) else { return -1 }
         guard (arguments!.count >= 2) else { return -1 } // There must be at least one command
+        let commandNumber = Int(webAssemblyCommandOrder() - 1)
+        NSLog("WebAssembly command position: \(commandNumber)")
+        while (commandsStack.count <= commandNumber) {
+            commandsStack.append(nil)
+            resultStack.append(nil)
+        }
         // copy arguments:
         let command = arguments![1]
         var argumentString = "["
@@ -1228,12 +1252,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         argumentString = argumentString + "]"
+        NSLog("Entered webAssemblyCommand: \(argumentString) at position: \(commandNumber) = \(commandsStack.count) ")
         // async functions don't work in WKWebView (so, no fetch, no WebAssembly.instantiateStreaming)
         // Instead, we load the file in swift and send the base64 version to JS
         let currentDirectory = FileManager().currentDirectoryPath
         let fileName = command.hasPrefix("/") ? command : currentDirectory + "/" + command
         guard let buffer = NSData(contentsOf: URL(fileURLWithPath: fileName)) else {
             fputs("wasm: file \(command) not found\n", thread_stderr)
+            finishedPreparingWebAssemblyCommand();
             return -1
         }
         var environmentAsJSDictionary = "{"
@@ -1245,13 +1271,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         continue
                     }
                     let components = envVar.components(separatedBy:"=")
-                    if (components.count == 0) {
+                    if (components.count <= 1) {
                         continue
                     }
                     let name = components[0]
                     var value = envVar
-                    value.removeFirst(name.count + 1)
-                    value = value.replacingOccurrences(of: "\\", with: "\\\\")
+                    if (value.count > name.count + 1) {
+                        value.removeFirst(name.count + 1)
+                    } else {
+                        continue
+                    }
+                    value = value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\n", with: "\\n")
+                    // NSLog("envVar: \(envVar) name: \(name) value: \(value)")
                     environmentAsJSDictionary += "\"" + name + "\"" + ":" + "\"" + value + "\",\n"
                 }
             }
@@ -1259,80 +1290,137 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         environmentAsJSDictionary += "}"
         let base64string = buffer.base64EncodedString()
         let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + currentDirectory + "\", \(ios_isatty(STDIN_FILENO)), " + environmentAsJSDictionary + ")"
-        if (javascriptRunning) {
-            fputs("We can't execute webAssembly while we are already executing webAssembly.", thread_stderr)
-            return -1
-        }
-        javascriptRunning = true
-        var errorCode:Int32 = 0
-        thread_stdin_copy = thread_stdin
-        thread_stdout_copy = thread_stdout
-        thread_stderr_copy = thread_stderr
-        stdinString = "" // reinitialize stdin
-        DispatchQueue.main.async {
-            self.wasmWebView?.evaluateJavaScript(javascript) { (result, error) in
-                if let error = error {
-                    let userInfo = (error as NSError).userInfo
-                    fputs("wasm: Error ", self.thread_stderr_copy)
-                    // WKJavaScriptExceptionSourceURL is hterm.html, of course.
-                    if let file = userInfo["WKJavaScriptExceptionSourceURL"] as? String {
-                        fputs("in file " + file + " ", self.thread_stderr_copy)
-                    }
-                    if let line = userInfo["WKJavaScriptExceptionLineNumber"] as? Int32 {
-                        fputs("at line \(line)", self.thread_stderr_copy)
-                    }
-                    if let column = userInfo["WKJavaScriptExceptionColumnNumber"] as? Int32 {
-                        fputs(", column \(column): ", self.thread_stderr_copy)
-                    } else {
-                        fputs(": ", self.thread_stderr_copy)
-                    }
-                    if let message = userInfo["WKJavaScriptExceptionMessage"] as? String {
-                        fputs(message + "\n", self.thread_stderr_copy)
-                    }
-                    fflush(self.thread_stderr_copy)
-                    // print(error)
-                }
-                if let result = result {
-                    // executeWebAssembly sends back stdout and stderr as two Strings:
-                    if let array = result as? NSMutableArray {
-                        if let code = array[0] as? Int32 {
-                            // return value from program
-                            errorCode = code
-                        }
-                        if let errorMessage = array[1] as? String {
-                            // webAssembly compile error:
-                            fputs(errorMessage, self.thread_stderr_copy);
-                        }
-                    } else if let string = result as? String {
-                        fputs(string, self.thread_stdout_copy);
-                    }
-                }
-                self.javascriptRunning = false
-            }
-        }
-        // force synchronization:
-        while (javascriptRunning) {
-            if (thread_stdout != nil && stdout_active) { fflush(thread_stdout) }
-            if (thread_stderr != nil && stdout_active) { fflush(thread_stderr) }
-        }
-        if (thread_stdin_copy == nil) {
-            // Strangely, the letters typed after ^D do not appear on screen. We force two carriage return to get the prompt visible:
-            webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"\\n\\n\"); window.term_.io.currentCommand = '';") { (result, error) in
-                // if let error = error { print(error) }
-                // if let result = result { print(result) }
-            }
-        }
-        // Do not close thread_stdin because if it's a pipe, processes could still be writing into it
-        // fclose(thread_stdin)
         
-        thread_stdin_copy = nil
-        thread_stdout_copy = nil
-        thread_stderr_copy = nil
-        return errorCode
+        var webAssemblyCommand = javascriptCommand()
+        webAssemblyCommand.jsCommand = javascript
+        webAssemblyCommand.thread_stdin_copy = thread_stdin
+        webAssemblyCommand.thread_stdout_copy = thread_stdout
+        webAssemblyCommand.thread_stderr_copy = thread_stderr
+        webAssemblyCommand.webAssemblyGroup = DispatchGroup()
+        webAssemblyCommand.originalCommand = argumentString
+        NSLog("Created webAssemblyCommand: \(argumentString) at position: \(commandNumber) stdout:\(thread_stdout) == \(fileno(thread_stdout))")
+        if (commandsStack[commandNumber] == nil) {
+            commandsStack[commandNumber] = webAssemblyCommand
+            resultStack[commandNumber] = nil
+        } else {
+            NSLog("webAssemblyCommand collision detected!")
+            commandsStack.append(webAssemblyCommand)
+            resultStack.append(nil)
+        }
+        // This is the key issue for pipes in dash: make sure the resultStack and commandStack are in sync
+        // Also need to test (again) that this works in a-Shell shell.
+        finishedPreparingWebAssemblyCommand();
+        // Don't start the command, don't return from the command.
+        webAssemblyCommand.webAssemblyGroup?.enter()
+        webAssemblyCommand.webAssemblyGroup?.wait()
+        
+        if (fileno(webAssemblyCommand.thread_stdout_copy) != fileno(stdout_file)) {
+            fclose(webAssemblyCommand.thread_stdout_copy)
+        }
+        
+        return (resultStack[commandNumber]!)
     }
     
+    func executeWebAssemblyCommands() {
+        // since we're multi-threaded, we could be executing this while executeWebAssembly() is still running. So we wait.
+        //
+        NSLog("Starting executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack)")
+        if (commandsStack.isEmpty) {
+            NSLog("executeWebAssemblyCommands: empty stack")
+            return
+        }
+        if (executeWebAssemblyCommandsRunning) {
+            // Only run one of these at a time
+            return
+        }
+        executeWebAssemblyCommandsRunning = true
+        while let command = commandsStack.popLast() {
+            if (command == nil) {
+                continue
+            }
+            let position = commandsStack.count
+            var errorCode:Int32 = 0
+            javascriptRunning = true
+            let javascriptGroup = DispatchGroup()
+            javascriptGroup.enter()
+            DispatchQueue.main.async {
+                self.thread_stdin_copy = command!.thread_stdin_copy
+                self.thread_stdout_copy = command!.thread_stdout_copy
+                self.thread_stderr_copy = command!.thread_stderr_copy
+                stdinString = "" // reinitialize stdin
+                NSLog("Executing \(command!.originalCommand) in executeWebAssComm, position= \(commandsStack.count)")
+                self.wasmWebView?.evaluateJavaScript(command!.jsCommand) { (result, error) in
+                    // NSLog("webassembly command returned: \(result)")
+                    if let error = error {
+                        if (self.thread_stderr_copy != nil) {
+                            let userInfo = (error as NSError).userInfo
+                            fputs("wasm: Error ", self.thread_stderr_copy)
+                            // WKJavaScriptExceptionSourceURL is hterm.html, of course.
+                            if let file = userInfo["WKJavaScriptExceptionSourceURL"] as? String {
+                                fputs("in file " + file + " ", self.thread_stderr_copy)
+                            }
+                            if let line = userInfo["WKJavaScriptExceptionLineNumber"] as? Int32 {
+                                fputs("at line \(line)", self.thread_stderr_copy)
+                            }
+                            if let column = userInfo["WKJavaScriptExceptionColumnNumber"] as? Int32 {
+                                fputs(", column \(column): ", self.thread_stderr_copy)
+                            } else {
+                                fputs(": ", self.thread_stderr_copy)
+                            }
+                            if let message = userInfo["WKJavaScriptExceptionMessage"] as? String {
+                                fputs(message + "\n", self.thread_stderr_copy)
+                            }
+                            fflush(self.thread_stderr_copy)
+                        }
+                        print(error)
+                        errorCode = -1
+                    }
+                    if let result = result {
+                        // executeWebAssembly sends back stdout and stderr as two Strings:
+                        if let array = result as? NSMutableArray {
+                            if let code = array[0] as? Int32 {
+                                // return value from program
+                                errorCode = code
+                            }
+                            if let errorMessage = array[1] as? String {
+                                // webAssembly compile error:
+                                if (self.thread_stderr_copy != nil) {
+                                    fputs(errorMessage, self.thread_stderr_copy);
+                                }
+                            }
+                        } else if let string = result as? String {
+                            if (self.thread_stdout_copy != nil) {
+                                fputs(string, self.thread_stdout_copy);
+                            }
+                        }
+                    }
+                    self.javascriptRunning = false
+                    javascriptGroup.leave()
+                }
+            }
+            // force synchronization:
+            javascriptGroup.wait()
+            resultStack[position] = errorCode
+
+            if (thread_stdin_copy == nil) {
+                // Strangely, the letters typed after ^D do not appear on screen. We force two carriage return to get the prompt visible:
+                webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"\\n\\n\"); window.term_.io.currentCommand = '';") { (result, error) in
+                    // if let error = error { print(error) }
+                    // if let result = result { print(result) }
+                }
+            }
+            // Do not close thread_stdin because if it's a pipe, processes could still be writing into it
+            // fclose(thread_stdin)
+            
+            command!.webAssemblyGroup?.leave()
+        }
+        NSLog("Ended executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack)")
+        
+        executeWebAssemblyCommandsRunning = false
+    }
+        
     func printJscUsage() {
-        fputs("Usage: jsc [--in-window] file.js\nExecutes file.js.\n--in-window: runs inside the main window (can change terminal appearance or behaviour; use with caution).\n", thread_stdout)
+        fputs("Usage: jsc [--in-window] [--silent] file.js\nExecutes JavaScript file.js.\n--in-window: runs inside the main window (can change terminal appearance or behaviour; use with caution).\n--silent: do not print the result of the JavaScript execution.\n", thread_stdout)
     }
     
     func executeJavascript(arguments: [String]?) {
@@ -1340,19 +1428,22 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             printJscUsage()
             return
         }
-        guard ((arguments!.count <= 3) && (arguments!.count > 1)) else {
+        guard ((arguments!.count <= 4) && (arguments!.count > 1)) else {
             printJscUsage()
             return
         }
         var command = arguments![1]
+        var silent = false
         var jscWebView = wasmWebView
-        if (arguments!.count == 3) {
-            if (arguments![1] == "--in-window") {
-                command = arguments![2]
+        for argument in arguments! {
+            if (argument == "--in-window") {
                 jscWebView = webView
-            } else {
-                printJscUsage()
-                return
+            }
+            if (argument == "--silent") {
+                silent = true
+            }
+            if (!argument.hasPrefix("--")) {
+                command = argument
             }
         }
         // let fileName = FileManager().currentDirectoryPath + "/" + command
@@ -1388,22 +1479,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                         fflush(self.thread_stderr_copy)
                     }
-                    if let result = result {
-                        if let string = result as? String {
-                            fputs(string, self.thread_stdout_copy)
-                            fputs("\n", self.thread_stdout_copy)
-                        }  else if let number = result as? Int32 {
-                            fputs("\(number)", self.thread_stdout_copy)
-                            fputs("\n", self.thread_stdout_copy)
-                        } else if let number = result as? Float {
-                            fputs("\(number)", self.thread_stdout_copy)
-                            fputs("\n", self.thread_stdout_copy)
-                        } else {
-                            fputs("\(result)", self.thread_stdout_copy)
-                            fputs("\n", self.thread_stdout_copy)
+                    if (!silent) {
+                        if let result = result {
+                            if let string = result as? String {
+                                fputs(string, self.thread_stdout_copy)
+                                fputs("\n", self.thread_stdout_copy)
+                            }  else if let number = result as? Int32 {
+                                fputs("\(number)", self.thread_stdout_copy)
+                                fputs("\n", self.thread_stdout_copy)
+                            } else if let number = result as? Float {
+                                fputs("\(number)", self.thread_stdout_copy)
+                                fputs("\n", self.thread_stdout_copy)
+                            } else {
+                                fputs("\(result)", self.thread_stdout_copy)
+                                fputs("\n", self.thread_stdout_copy)
+                            }
+                            fflush(self.thread_stdout_copy)
+                            fflush(self.thread_stderr_copy)
                         }
-                        fflush(self.thread_stdout_copy)
-                        fflush(self.thread_stderr_copy)
                     }
                     self.javascriptRunning = false
                 }
@@ -1475,6 +1568,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else {
             fputs(terminalCursorShape?.lowercased(), thread_stdout)
         }
+        if (terminalFontLigature == nil) {
+            fputs(" ligatures: " + factoryFontLigature, thread_stdout)
+        } else {
+            fputs(" ligatures: " + terminalFontLigature!, thread_stdout)
+        }
         fputs("\n", thread_stdout)
     }
     
@@ -1489,13 +1587,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let fontSize = terminalFontSize ?? factoryFontSize
         let fontName = terminalFontName ?? factoryFontName
         let cursorShape = terminalCursorShape ?? factoryCursorShape
+        let fontLigature = terminalFontLigature ?? factoryFontLigature
         // Force writing all config to term. Used when we changed many parameters.
-        var command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.fontSize = \(fontSize); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)'); window.term_.setCursorShape('\(cursorShape)');"
+        var command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.fontSize = \(fontSize); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)'); window.term_.setCursorShape('\(cursorShape)'); window.term_.scrollPort_.screen_.style.fontVariantLigatures = '\(fontLigature)';"
         DispatchQueue.main.async {
             self.webView?.evaluateJavaScript(command) { (result, error) in
-                // if let error = error {
-                //     print(error)
-                // }
+                if let error = error {
+                    print(error)
+                }
                 // if let result = result {
                 //     print(result)
                 // }
@@ -1512,13 +1611,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
-    func configWindow(fontSize: Float?, fontName: String?, backgroundColor: UIColor?, foregroundColor: UIColor?, cursorColor: UIColor?, cursorShape: String?) {
+    func configWindow(fontSize: Float?, fontName: String?, backgroundColor: UIColor?, foregroundColor: UIColor?, cursorColor: UIColor?, cursorShape: String?, fontLigature: String?) {
         if (fontSize != nil) {
             terminalFontSize = fontSize
             let fontSizeCommand = "window.fontSize = \(fontSize!); window.term_.setFontSize(\(fontSize!));"
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(fontSizeCommand) { (result, error) in
-                    // if let error = error { print(error) }
+                    if let error = error { print(error) }
                     // if let result = result { print(result) }
                 }
             }
@@ -1530,7 +1629,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 let fontNameCommand = "window.term_.setFontFamily(\"\(fontName!)\");"
                 DispatchQueue.main.async {
                     self.webView?.evaluateJavaScript(fontNameCommand) { (result, error) in
-                        // if let error = error { print(error) }
+                        if let error = error { print(error) }
                         // if let result = result { print(result) }
                     }
                 }
@@ -1545,7 +1644,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     let fontNameCommand = "var newStyle = document.createElement('style'); newStyle.appendChild(document.createTextNode(\"@font-face { font-family: '\(localFontName)' ; src: url('\(localFontURL.path)') format('truetype'); }\")); document.head.appendChild(newStyle); window.term_.setFontFamily(\"\(localFontName)\");"
                     // NSLog(fontNameCommand)
                     self.webView?.evaluateJavaScript(fontNameCommand) { (result, error) in
-                        // if let error = error { print(error) }
+                        if let error = error { print(error) }
                         // if let result = result { print(result) }
                     }
                 }
@@ -1557,7 +1656,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             DispatchQueue.main.async {
                 self.webView?.backgroundColor = backgroundColor
                 self.webView?.evaluateJavaScript(terminalColorCommand) { (result, error) in
-                    // if let error = error { print(error) }
+                    if let error = error { print(error) }
                     // if let result = result { print(result) }
                 }
             }
@@ -1578,7 +1677,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let terminalColorCommand = "window.term_.setCursorColor(\"\(cursorColor!.toHexString())\");"
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(terminalColorCommand) { (result, error) in
-                    // if let error = error { print(error) }
+                    if let error = error { print(error) }
                     // if let result = result { print(result) }
                 }
             }
@@ -1588,7 +1687,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let terminalColorCommand = "window.term_.setCursorShape(\"\(cursorShape!)\");"
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(terminalColorCommand) { (result, error) in
-                    // if let error = error { print(error) }
+                    if let error = error { print(error) }
                     // if let result = result { print(result) }
                 }
             }
@@ -1598,6 +1697,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let fg = foregroundColor ?? terminalForegroundColor ?? UIColor.placeholderText.resolvedColor(with: traitCollection)
             let bg = backgroundColor ?? terminalBackgroundColor ?? UIColor.systemBackground.resolvedColor(with: traitCollection)
             setEnvironmentFGBG(foregroundColor: fg, backgroundColor: bg)
+        }
+        if (fontLigature != nil) {
+            terminalFontLigature = fontLigature
+            let terminalFontLigatureCommand = "window.term_.scrollPort_.screen_.style.fontVariantLigatures = '\(fontLigature!)';"
+            DispatchQueue.main.async {
+                self.webView?.evaluateJavaScript(terminalFontLigatureCommand) { (result, error) in
+                    if let error = error { print(error) }
+                    // if let result = result { print(result) }
+                }
+            }
         }
     }
     
@@ -1895,32 +2004,57 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             printPrompt() // Needed to show that the window is ready for a new command
             return
         }
-        // set up streams for feedback:
-        // Create new pipes for our own stdout/stderr
-        // Get file for stdin that can be read from
-        // Create new pipes for our own stdout/stderr
-        var stdin_pipe = Pipe()
-        stdin_file = fdopen(stdin_pipe.fileHandleForReading.fileDescriptor, "r")
-        while (stdin_file == nil) {
-            stdin_pipe = Pipe()
-            stdin_file = fdopen(stdin_pipe.fileHandleForReading.fileDescriptor, "r")
-        }
-        stdin_file_input = stdin_pipe.fileHandleForWriting
-        let tty_pipe = Pipe()
-        tty_file = fdopen(tty_pipe.fileHandleForReading.fileDescriptor, "r")
-        tty_file_input = tty_pipe.fileHandleForWriting
-        // Get file for stdout/stderr that can be written to
-        var stdout_pipe = Pipe()
-        stdout_file = fdopen(stdout_pipe.fileHandleForWriting.fileDescriptor, "w")
-        while (stdout_file == nil) {
-            stdout_pipe = Pipe()
-            stdout_file = fdopen(stdout_pipe.fileHandleForWriting.fileDescriptor, "w")
-        }
-        // Call the following functions when data is written to stdout/stderr.
-        stdout_pipe.fileHandleForReading.readabilityHandler = self.onStdout
-        stdout_active = true
         // "normal" commands can go through ios_system
+        // We use a queue to allow the system to continue running (important for commands that interact with the system, such as "config -n" and "view".
+        // Test: moved the commandQueue *upwards* to help with pipe generation and StageManager (?)
+        // If that's the issue with StageManager, then should I move commandQueue *inside* these commands?
         commandQueue.async {
+            // set up streams for feedback:
+            // Create new pipes for our own stdout/stderr
+            // Get file for stdin that can be read from
+            // Create new pipes for our own stdout/stderr
+            var stdin_pipe = Pipe()
+            self.stdin_file = fdopen(stdin_pipe.fileHandleForReading.fileDescriptor, "r")
+            var counter = 0
+            while (self.stdin_file == nil) && (counter < 5) {
+                self.outputToWebView(string: "Could not create an input stream, retrying (\(counter+1))\n")
+                stdin_pipe = Pipe()
+                self.stdin_file = fdopen(stdin_pipe.fileHandleForReading.fileDescriptor, "r")
+                if (counter > 2) {
+                    let ms: UInt32 = 1000
+                    usleep(150 * ms)
+                }
+                counter += 1
+            }
+            if (self.stdin_file == nil) {
+                self.outputToWebView(string: "Unable to create an input stream. I give up.\n")
+                return
+            }
+            self.stdin_file_input = stdin_pipe.fileHandleForWriting
+            let tty_pipe = Pipe()
+            self.tty_file = fdopen(tty_pipe.fileHandleForReading.fileDescriptor, "r")
+            self.tty_file_input = tty_pipe.fileHandleForWriting
+            // Get file for stdout/stderr that can be written to
+            var stdout_pipe = Pipe()
+            counter = 0
+            self.stdout_file = fdopen(stdout_pipe.fileHandleForWriting.fileDescriptor, "w")
+            while (self.stdout_file == nil) && (counter > 5) {
+                self.outputToWebView(string: "Could not create an output stream, retrying (\(counter+1))\n")
+                stdout_pipe = Pipe()
+                self.stdout_file = fdopen(stdout_pipe.fileHandleForWriting.fileDescriptor, "w")
+                if (counter > 2) {
+                    let ms: UInt32 = 1000
+                    usleep(150 * ms)
+                }
+                counter += 1
+            }
+            if (self.stdout_file == nil) {
+                self.outputToWebView(string: "Unable to create an output stream. I give up.\n")
+                return
+            }
+            // Call the following functions when data is written to stdout/stderr.
+            stdout_pipe.fileHandleForReading.readabilityHandler = self.onStdout
+            self.stdout_active = true
             // Make sure we're on the right session:
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
@@ -1948,7 +2082,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 NSLog("Received command to execute: \(actualCommand)")
                 if (actualCommand == "exit") {
                     self.closeWindow()
-                    break // if "exit" didn't work, still don't execute the rest of the commands. 
+                    break // if "exit" didn't work, still don't execute the rest of the commands.
                 }
                 if (actualCommand == "newWindow") {
                     self.executeCommand(command: command)
@@ -1994,12 +2128,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                 }
+                resultStack.removeAll()
                 self.pid = ios_fork()
                 DispatchQueue.main.async {
                     UIApplication.shared.isIdleTimerDisabled = true
                 }
                 ios_system(self.currentCommand)
+                NSLog("Returned from ios_system")
                 ios_waitpid(self.pid)
+                NSLog("Returned from ios_waitpid")
                 ios_releaseThreadId(self.pid)
                 DispatchQueue.main.async {
                     UIApplication.shared.isIdleTimerDisabled = false
@@ -2095,6 +2232,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // NSLog("Could not convert Javascript message: \(message.body)")
             return
         }
+        // NSLog("Received JS message: \(cmd)")
         // Make sure we're acting on the right session here:
         if (cmd.hasPrefix("shell:")) {
             var command = cmd
@@ -2173,6 +2311,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             command.removeFirst("input:".count)
             // NSLog("Writing \(command) to stdin")
             // Because wasm is running asynchronously, we can have thread_stdin closed while wasm is still running
+            // I would like to have a way to kill webassembly commands
             if (javascriptRunning && (thread_stdin_copy != nil)) {
                 stdinString += command
                 return
@@ -2329,7 +2468,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             directoryForListing.removeFirst(name.count + 1)
                             directoryForListing = bookmarkedDirectory + "/" + directoryForListing
                         }
-                        NSLog("Listing a bookmark: \(directoryForListing): \(name)")
+                        // NSLog("Listing a bookmark: \(directoryForListing): \(name)")
                     }
                 } else if (name.hasPrefix("$")) {
                     name.removeFirst(1) // without the '$'
@@ -2355,7 +2494,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                     var localDirCompact = String(cString: ios_getBookmarkedVersion(directoryForSorting))
                     filePaths = filePaths.sorted(by: { current, next in rankDirectory(dir:current, base: localDirCompact) > rankDirectory(dir:next, base: localDirCompact)})
-                    NSLog("after sorting: \(filePaths)")
+                    // NSLog("after sorting: \(filePaths)")
                 }
                 var javascriptCommand = "fileList = ["
                 for filePath in filePaths {
@@ -2436,9 +2575,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // copy text to clipboard. Required since simpler methods don't work with what we want to do with cut in JS.
             var string = cmd
             string.removeFirst("copy:".count)
-            NSLog("Received text to copy: \(string)")
             UIPasteboard.general.string = string
-            NSLog("Copied text: \(UIPasteboard.general.string)")
         } else if (cmd.hasPrefix("print:")) {
             // print result of JS file:
             var string = cmd
@@ -2462,43 +2599,44 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let backgroundColor = terminalBackgroundColor ?? UIColor.systemBackground.resolvedColor(with: traitCollection)
             let foregroundColor = terminalForegroundColor ?? UIColor.placeholderText.resolvedColor(with: traitCollection)
             let cursorColor = terminalCursorColor ?? UIColor.link.resolvedColor(with: traitCollection)
-            // TODO: add font size and font name
             let fontSize = terminalFontSize ?? factoryFontSize
             let fontName = terminalFontName ?? factoryFontName
             let cursorShape = terminalCursorShape ?? factoryCursorShape
-            var command = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.cursorShape = '\(cursorShape)'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
-            // NSLog("resendConfiguration, command=\(command)")
-            self.webView!.evaluateJavaScript(command) { (result, error) in
-                if let error = error {
-                    NSLog("Error in resendConfiguration, line = \(command)")
+            let fontLigature = terminalFontLigature ?? factoryFontLigature
+            // Force writing all config to term. Used when we changed many parameters.
+            let command1 = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.cursorShape = '\(cursorShape)'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
+            NSLog("resendConfiguration, command=\(command1)")
+            self.webView!.evaluateJavaScript(command1) { (result, error) in
+                /* if let error = error {
+                    NSLog("Error in resendConfiguration, line = \(command1) error = \(error)")
                     // print(error)
                 }
                 if result != nil {
-                    // NSLog("Return from resendConfiguration, line = \(command)")
+                    NSLog("Return from resendConfiguration, line = \(command1) result = \(result)")
                     // print(result)
-                }
+                } */
             }
-            command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setCursorShape('\(cursorShape)'); window.fontSize = \(fontSize); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
-            self.webView!.evaluateJavaScript(command) { (result, error) in
-                if let error = error {
-                    NSLog("Error in resendConfiguration, line = \(command)")
+            let command2 = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setCursorShape('\(cursorShape)'); window.fontSize = \(fontSize); window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)'); window.term_.scrollPort_.screen_.style.fontVariantLigatures = '\(fontLigature)';"
+            self.webView!.evaluateJavaScript(command2) { (result, error) in
+                /* if let error = error {
+                    NSLog("Error in resendConfiguration, line = \(command2) error= \(error)")
                     // print(error)
                 }
                 if result != nil {
-                    // NSLog("Return from resendConfiguration, line = \(command)")
+                    NSLog("Return from resendConfiguration, line = \(command2) result = \(result)")
                     // print(result)
-                }
+                } */
             }
-            command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');  window.term_.scrollPort_.isScrolledEnd = true;"
-            self.webView!.evaluateJavaScript(command) { (result, error) in
-                if let error = error {
-                    NSLog("Error in resendConfiguration, line = \(command)")
+            let command3 = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');  window.term_.scrollPort_.isScrolledEnd = true;"
+            self.webView!.evaluateJavaScript(command3) { (result, error) in
+                /* if let error = error {
+                    NSLog("Error in resendConfiguration, line = \(command3) error = \(error)")
                     // print(error)
                 }
                 if result != nil {
-                    // NSLog("Return from resendConfiguration, line = \(command)")
+                    NSLog("Return from resendConfiguration, line = \(command3) result = \(result)")
                     // print(result)
-                }
+                } */
             }
             // also initialize command list for autocomplete:
             guard var commandsArray = commandsAsArray() as! [String]? else { return }
@@ -2531,14 +2669,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             javascriptCommand += "];"
             webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                 if let error = error {
-                    NSLog("Error in creating command list, line = \(javascriptCommand)")
+                    NSLog("Error in creating command list, line = \(javascriptCommand) error = \(error)")
                     // print(error)
                 }
                 // if let result = result { print(result) }
             }
         } else if (cmd.hasPrefix("resendCommand:")) {
             if (shortcutCommandReceived != nil) {
-                NSLog("resendCommand for Shortcut, command=\(shortcutCommandReceived!)")
+                // NSLog("resendCommand for Shortcut, command=\(shortcutCommandReceived!)")
                 executeCommand(command: shortcutCommandReceived!)
                 shortcutCommandReceived = nil
             } else {
@@ -2547,14 +2685,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // print("PrintedContent to be restored: \(windowPrintedContent.count)")
                 // print(windowPrintedContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r"))
                 let command = "window.promptMessage = '\(self.parsePrompt())'; \(windowHistory)  window.printedContent = \"\(windowPrintedContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r"))\"; window.commandRunning = '\(currentCommand)'; window.interactiveCommandRunning = isInteractive(window.commandRunning); if (window.commandRunning == '') { if (window.printedContent != '') { window.term_.io.print(window.printedContent); } else { window.printPrompt(); } updatePromptPosition(); } else { window.printedContent= ''; }"
-                NSLog("resendCommand, command=\(command)")
+                // NSLog("resendCommand, command=\(command)")
                 self.webView!.evaluateJavaScript(command) { (result, error) in
                     if let error = error {
-                        NSLog("Error in resendCommand, line = \(command)")
+                        // NSLog("Error in resendCommand, line = \(command)")
                         // print(error)
                     }
                     if let result = result {
-                        NSLog("Return from resendCommand, line = \(command)")
                         // print(result)
                     }
                 }
@@ -2563,10 +2700,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             var size = cmd
             size.removeFirst("setFontSize:".count)
             if let sizeFloat = Float(size) {
-                NSLog("Setting size to \(sizeFloat)")
+                // NSLog("Setting size to \(sizeFloat)")
                 terminalFontSize = sizeFloat
             }
-        }/* else if (cmd.hasPrefix("JS Error:")) {
+        } /* else if (cmd.hasPrefix("JS Error:")) {
             // When debugging JS, output warning/error messages to a file.
             let file = "jsError.txt"
             if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
@@ -2668,7 +2805,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let fileURL: NSURL = userActivity.userInfo!["url"] as? NSURL {
                 // single command (probably won't be needed after)
                 if var commandSent = fileURL.absoluteString {
-                    commandSent.removeFirst("ashell:".count)
+                    let prefix = fileURL.scheme ?? ""
+                    commandSent.removeFirst(prefix.count + 1)
                     commandSent = commandSent.removingPercentEncoding!
                     // Set working directory to a safer place (also used by URL calls and extension shortcuts):
                     closeAfterCommandTerminates = false
@@ -2757,6 +2895,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
             config.setValue(true as Bool, forKey: "allowUniversalAccessFromFileURLs")
             wasmWebView = WKWebView(frame: .zero, configuration: config)
+            if #available(iOS 16.4, *) {
+                wasmWebView?.isInspectable = true
+            }
             let wasmFilePath = Bundle.main.path(forResource: "wasm", ofType: "html")
             wasmWebView?.isOpaque = false
             wasmWebView?.loadFileURL(URL(fileURLWithPath: wasmFilePath!), allowingReadAccessTo: URL(fileURLWithPath: wasmFilePath!))
@@ -2784,6 +2925,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             if let shape = UserDefaults.standard.value(forKey: "cursorShape") as? String {
                 terminalCursorShape = shape
+            }
+            if let ligature = UserDefaults.standard.value(forKey: "fontLigature") as? String {
+                terminalCursorShape = ligature
             }
             // initialize command list for autocomplete:
             guard var commandsArray = commandsAsArray() as! [String]? else { return }
@@ -2910,12 +3054,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             self.executeCommand(command: "vim " + (fileURL.path.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ ")))
                         }
                     }
-                } else if (fileURL.scheme == "ashell") {
-                    NSLog("We received an URL: \(fileURL)") // received "ashell:ls"
+                } else if ((fileURL.scheme ?? "").hasPrefix("ashell")) {
+                    NSLog("We received an URL: \(fileURL.absoluteString.removingPercentEncoding)") // received "ashell://ls"
                     // The window is not yet fully opened, so executeCommand might fail.
                     // We use installQueue to be called once the window is ready.
                     var command = fileURL.absoluteString
-                    command.removeFirst("ashell:".count)
+                    command.removeFirst((fileURL.scheme ?? "").count + 3)
                     command = command.removingPercentEncoding!
                     closeAfterCommandTerminates = false
                     installQueue.async {
@@ -2968,7 +3112,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     if let fileURL: NSURL = userActivity.userInfo!["url"] as? NSURL {
                         // single command:
                         if var commandSent = fileURL.absoluteString {
-                            commandSent.removeFirst("ashell:".count)
+                            commandSent.removeFirst((fileURL.scheme ?? "").count + 3)
                             commandSent = commandSent.removingPercentEncoding!
                             closeAfterCommandTerminates = false
                             if let closeAtEnd = userActivity.userInfo!["closeAtEnd"] as? String {
@@ -3018,8 +3162,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         for urlContext in openURLContexts {
             // Is it one of our URLs?
             let fileURL = urlContext.url
-            if (fileURL.scheme == "ashell") {
-                NSLog("We received an URL: \(fileURL)") // received "ashell:ls"
+            if ((fileURL.scheme ?? "").hasPrefix("ashell")) {
+                NSLog("We received an URL: \(fileURL.absoluteString.removingPercentEncoding)") // received "ashell://ls"
                 if (UIDevice.current.model.hasPrefix("iPad")) {
                     // iPad, so always open a new window to execute the command
                     let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.ExecuteCommand")
@@ -3029,7 +3173,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 } else {
                     // iPhone: create the command, send it to the window once it's created.
                     var command = fileURL.absoluteString
-                    command.removeFirst("ashell:".count)
+                    command.removeFirst((fileURL.scheme ?? "").count + 3)
                     command = command.removingPercentEncoding!
                     installQueue.async {
                         if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
@@ -3186,6 +3330,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    func overrideUserInterfaceStyle(style: UIUserInterfaceStyle) {
+        DispatchQueue.main.async {
+            self.window?.overrideUserInterfaceStyle = style
+            self.overrideUserInterfaceStyle = style
+        }
+    }
+    
     func setEnvironmentFGBG(foregroundColor: UIColor, backgroundColor: UIColor)  {
         // Are we in light mode or dark mode?
         // This could be improved now that we can be in a whole set of situations
@@ -3205,9 +3356,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (B_fg > B_bg) {
             // Dark mode
             setenv("COLORFGBG", "15;0", 1)
+            if (UserDefaults.standard.string(forKey: "toolbar_color") == "screen") {
+                overrideUserInterfaceStyle(style: .dark)
+            }
         } else {
             // Light mode
             setenv("COLORFGBG", "0;15", 1)
+            if (UserDefaults.standard.string(forKey: "toolbar_color") == "screen") {
+                overrideUserInterfaceStyle(style: .light)
+            }
         }
     }
     
@@ -3224,49 +3381,56 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let fontSize = terminalFontSize ?? factoryFontSize
         let fontName = terminalFontName ?? factoryFontName
         let cursorShape = terminalCursorShape ?? factoryCursorShape
-        
+        let fontLigature = terminalFontLigature ?? factoryFontLigature
+        // Force writing all config to term. Used when we changed many parameters.
         // Window.term_ does not always exist when sceneDidBecomeActive is called. We *also* set window.foregroundColor, and then use that when we create term.
         webView!.tintColor = foregroundColor
         webView!.backgroundColor = backgroundColor
-        var command = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.cursorShape = '\(cursorShape)'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
-        webView!.evaluateJavaScript(command) { (result, error) in
-            if error != nil {
-                // NSLog("Error in sceneDidBecomeActive, line = \(command)")
-                // print(error)
+        let command1 = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.cursorShape = '\(cursorShape)'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
+        webView!.evaluateJavaScript(command1) { (result, error) in
+            /* if error != nil {
+                NSLog("Error in sceneDidBecomeActive, line = \(command1)")
+                print(error)
             }
             if result != nil {
-                // NSLog("Return from sceneDidBecomeActive, line = \(command)")
-                // print(result)
-            }
+                NSLog("Return from sceneDidBecomeActive, line = \(command1)")
+                print(result)
+            } */
         }
         // Current status: window.term_ is undefined here in iOS 15b1.
-        command = "(window.term_ != undefined)"
-        webView!.evaluateJavaScript(command) { (result, error) in
-            // if let error = error { print(error) }
+        let command2 = "(window.term_ != undefined)"
+        webView!.evaluateJavaScript(command2) { (result, error) in
+            /* if let error = error {
+                NSLog("Error in sceneDidBecomeActive, line = \(command2)")
+                print(error)
+            }
+            if result != nil {
+                NSLog("Return from sceneDidBecomeActive, line = \(command2), result= \(result)")
+            } */
             if let resultN = result as? Int {
                 if (resultN == 1) {
                     // window.term_ exists, let's send commands:
-                    command = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setCursorShape('\(cursorShape)');window.fontSize = \(fontSize);window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)');"
-                    self.webView!.evaluateJavaScript(command) { (result, error) in
-                        if error != nil {
-                            // NSLog("Error in sceneDidBecomeActive, line = \(command)")
-                            // print(error)
+                    let command3 = "window.term_.setForegroundColor('" + foregroundColor.toHexString() + "'); window.term_.setBackgroundColor('" + backgroundColor.toHexString() + "'); window.term_.setCursorColor('" + cursorColor.toHexString() + "'); window.term_.setCursorShape('\(cursorShape)');window.fontSize = \(fontSize);window.term_.setFontSize(\(fontSize)); window.term_.setFontFamily('\(fontName)'); window.term_.scrollPort_.screen_.style.fontVariantLigatures = '\(fontLigature)';"
+                    self.webView!.evaluateJavaScript(command3) { (result, error) in
+                        /* if error != nil {
+                            NSLog("Error in sceneDidBecomeActive, line = \(command3)")
+                            print(error)
                         }
                         if result != nil {
-                            // NSLog("Return from sceneDidBecomeActive, line = \(command)")
-                            // print(result)
-                        }
+                            NSLog("Return from sceneDidBecomeActive, line = \(command3)")
+                            print(result)
+                        } */
                     }
-                    command = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-shape', '\(cursorShape)'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');  window.term_.scrollPort_.isScrolledEnd = true;"
-                    self.webView!.evaluateJavaScript(command) { (result, error) in
-                        if error != nil {
-                            // NSLog("Error in sceneDidBecomeActive, line = \(command)")
-                            // print(error)
+                    let command4 = "window.term_.prefs_.setSync('foreground-color', '" + foregroundColor.toHexString() + "'); window.term_.prefs_.setSync('background-color', '" + backgroundColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-color', '" + cursorColor.toHexString() + "'); window.term_.prefs_.setSync('cursor-shape', '\(cursorShape)'); window.term_.prefs_.setSync('font-size', '\(fontSize)'); window.term_.prefs_.setSync('font-family', '\(fontName)');  window.term_.scrollPort_.isScrolledEnd = true;"
+                    self.webView!.evaluateJavaScript(command4) { (result, error) in
+                        /* if error != nil {
+                            NSLog("Error in sceneDidBecomeActive, line = \(command4)")
+                            print(error)
                         }
                         if result != nil {
-                            // NSLog("Return from sceneDidBecomeActive, line = \(command)")
-                            // print(result)
-                        }
+                            NSLog("Return from sceneDidBecomeActive, line = \(command4)")
+                            print(result)
+                        } */
                     }
                 }
             }
@@ -3309,7 +3473,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
             }
         }
-        // If there is no userInfo and no stateRestorationActivity
+        // If there is no userInfo and no stateRestorationActivity:
+        // On the first run, one of these are null, so we return.
         guard (scene.session.stateRestorationActivity != nil) else { return }
         guard let userInfo = scene.session.stateRestorationActivity!.userInfo else { return }
         // If a command is already running, we don't restore directories, etc: they probably are still valid
@@ -3497,6 +3662,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if let cursorShape = userInfo["cursorShape"] as? String {
             terminalCursorShape = cursorShape
         }
+        if let fontLigature = userInfo["fontLigature"] as? String {
+            terminalFontLigature = fontLigature
+        }
         // Should we restore window content?
         if UserDefaults.standard.bool(forKey: "keep_content") {
             if var terminalData = userInfo["terminal"] as? String {
@@ -3515,19 +3683,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 webView!.evaluateJavaScript("window.setWindowContent",
                                             completionHandler: { (function: Any?, error: Error?) in
                     if (error != nil) || (function == nil) {
-                        NSLog("function does not exist, set window.printedContent")
+                        // NSLog("function does not exist, set window.printedContent")
                         // resendCommend will print this on screen
                         self.windowPrintedContent = terminalData
                     } else {
                         // The function is defined, we are here *after* JS initialization:
-                        NSLog("function does exist, calling window.setWindowContent")
+                        // NSLog("function does exist, calling window.setWindowContent")
                         let javascriptCommand = "window.promptMessage='\(self.parsePrompt())'; window.setWindowContent(\"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\");"
                         self.webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
-                            if error != nil {
+                            /* if error != nil {
                                 NSLog("Error in resetting terminal w setWindowContent, line = \(javascriptCommand)")
                                 // print(error)
                             }
                             // if let result = result { print(result) }
+                             */
                         }
                     }
                 })
@@ -3535,14 +3704,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // No terminal data stored, reset things:
                 let javascriptCommand = "window.promptMessage='\(self.parsePrompt())'; window.printedContent = '';"
                 webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
-                    if error != nil {
-                        // NSLog("Error in setting terminal to empty, line = \(javascriptCommand)")
-                        // print(error)
+                    /* if error != nil {
+                        NSLog("Error in setting terminal to empty, line = \(javascriptCommand)")
+                        print(error)
                     }
                     if result != nil {
-                        // NSLog("Result in setting terminal to empty, line = \(javascriptCommand)")
-                        // print(result)
-                    }
+                        NSLog("Result in setting terminal to empty, line = \(javascriptCommand)")
+                        print(result)
+                    } */
                 }
             }
         } else {
@@ -3693,6 +3862,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         if (terminalCursorShape != nil) {
             scene.session.stateRestorationActivity?.userInfo!["cursorShape"] = terminalCursorShape!
+        }
+        if (terminalFontLigature != nil) {
+            scene.session.stateRestorationActivity?.userInfo!["fontLigature"] = terminalFontLigature!
         }
         scene.session.stateRestorationActivity?.userInfo!["currentCommand"] = currentCommand
         // save the environment variables:
@@ -3979,21 +4151,36 @@ extension SceneDelegate: WKUIDelegate {
         }
         if (fd == 0) {
             if (thread_stdin_copy != nil) {
-                return fileno(thread_stdin_copy)
+                let f = fileno(thread_stdin_copy)
+                if (f >= 0) {
+                    return f
+                } else {
+                    return nil
+                }
             } else {
                 return nil
             }
         }
         if (fd == 1) {
             if (thread_stdout_copy != nil) {
-                return fileno(thread_stdout_copy)
+                let f = fileno(thread_stdout_copy)
+                if (f >= 0) {
+                    return f
+                } else {
+                    return nil
+                }
             } else {
                 return nil
             }
         }
         if (fd == 2) {
             if (thread_stderr_copy != nil) {
-                return fileno(thread_stderr_copy)
+                let f = fileno(thread_stderr_copy)
+                if (f >= 0) {
+                    return f
+                } else {
+                    return nil
+                }
             } else {
                 return nil
             }
@@ -4006,6 +4193,7 @@ extension SceneDelegate: WKUIDelegate {
         // communication with libc from webAssembly:
         let arguments = prompt.components(separatedBy: "\n")
         // NSLog("prompt: \(prompt)")
+        // NSLog("thread_stdout_copy: \(thread_stdout_copy)")
         let title = arguments[0]
         if (title == "libc") {
             // Make sure we are on the right iOS session. This resets the current working directory.
@@ -4074,10 +4262,10 @@ extension SceneDelegate: WKUIDelegate {
                                 catch {
                                     let error = error as NSError
                                     //  Objects that are not capable of seeking always write from the current position (man page of read)
+                                    /*
                                     if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
                                         NSLog("Underlying error in seek for write: \(underlyingError)")
                                     }
-/*
                                     // printf write to stdout with offset == 0, which cause an error.
                                     if (fd != fileno(stdout_file)) {
                                         let error = error as NSError
@@ -4147,12 +4335,14 @@ extension SceneDelegate: WKUIDelegate {
                         catch {
                             let error = error as NSError
                             //  Objects that are not capable of seeking always read from the current position (man page of read)
+                            /*
                             if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
                                 NSLog("Underlying error in seek: \(underlyingError)")
-                            }
+                            } */
                         }
                         do {
                             // check if there are numValues available in file?
+                            // check if file is still open?
                             try data = file.read(upToCount: numValues)
                         }
                         catch {
@@ -4384,9 +4574,13 @@ extension SceneDelegate: WKUIDelegate {
                 thread_stdout = self.thread_stdout_copy
                 thread_stderr = self.thread_stderr_copy
                 let pid = ios_fork()
-                let result = ios_system(arguments[2])
+                var result = ios_system(arguments[2])
                 ios_waitpid(pid)
                 ios_releaseThreadId(pid)
+                if (result == 0) {
+                    // If there's already been an error (e.g. "command not found") no need to ask for more.
+                    result = ios_getCommandStatus()
+                }
                 completionHandler("\(result)")
                 return
             } else if (arguments[1] == "getenv") {
@@ -4497,8 +4691,143 @@ extension SceneDelegate: WKUIDelegate {
             // Not one of our commands:
             completionHandler("-1")
             return
-        }
         // End communication with webAssembly using libc
+        // Start of JavaScriptCore extensions for interaction with filesystem
+        } else if (title == "jsc") {
+            // JSC extensions: readFile, writeFile...
+            // Copied from the extensions in iOS_system, making them available to WkWebView JS interpreter.
+            // Make sure we are on the right iOS session. This resets the current working directory.
+            ios_switchSession(self.persistentIdentifier?.toCString())
+            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            if (arguments[1] == "readFile") {
+                do {
+                    completionHandler(try String(contentsOf: URL(fileURLWithPath: arguments[2]), encoding: String.Encoding.utf8))
+                }
+                catch {
+                    completionHandler(error.localizedDescription)
+                }
+                return
+            } else if (arguments[1] == "readFileBase64") {
+                do {
+                    completionHandler(try NSData(contentsOf: URL(fileURLWithPath: arguments[2])).base64EncodedString())
+                }
+                catch {
+                    completionHandler(error.localizedDescription)
+                }
+                return
+            } else if (arguments[1] == "writeFile") {
+                do {
+                    try arguments[3].write(toFile: arguments[2], atomically: true, encoding: String.Encoding.utf8)
+                    completionHandler("0")
+                }
+                catch {
+                    completionHandler("-1\n" + error.localizedDescription)
+                }
+                return
+            } else if (arguments[1] == "writeFileBase64") {
+                do {
+                    if let data = Data(base64Encoded: arguments[3], options: .ignoreUnknownCharacters) {
+                        try data.write(to: URL(fileURLWithPath: arguments[2]))
+                        completionHandler("0")
+                    }
+                }
+                catch {
+                    completionHandler("-1\n" + error.localizedDescription)
+                }
+                return
+            } else if (arguments[1] == "listFiles") {
+                do {
+                    let items = try FileManager().contentsOfDirectory(atPath: arguments[2])
+                    var returnString = ""
+                    for item in items {
+                        returnString = returnString + item + "\n"
+                    }
+                    completionHandler(returnString)
+                }
+                catch {
+                    completionHandler("\n" + error.localizedDescription)
+                }
+                return
+            } else if (arguments[1] == "isFile") {
+                var isDirectory: ObjCBool = false
+                let isFile = FileManager().fileExists(atPath: arguments[2], isDirectory: &isDirectory)
+                if (isFile && !isDirectory.boolValue) {
+                    completionHandler("1")
+                } else {
+                    completionHandler("0")
+                }
+                return
+            } else if (arguments[1] == "isDirectory") {
+                var isDirectory: ObjCBool = false
+                let isFile = FileManager().fileExists(atPath: arguments[2], isDirectory: &isDirectory)
+                if (isFile && isDirectory.boolValue) {
+                    completionHandler("1")
+                } else {
+                    completionHandler("0")
+                }
+                return
+            } else if (arguments[1] == "makeFolder") {
+                do {
+                    try FileManager().createDirectory(atPath: arguments[2], withIntermediateDirectories: true)
+                    completionHandler("0")
+                }
+                catch {
+                    completionHandler("-1\n" + error.localizedDescription)
+                }
+                return
+            } else if (arguments[1] == "delete") {
+                do {
+                    try FileManager().removeItem(atPath: arguments[2])
+                    completionHandler("0")
+                }
+                catch {
+                    completionHandler("-1\n" + error.localizedDescription)
+                }
+                return
+            } else if (arguments[1] == "move") {
+                do {
+                    try FileManager().moveItem(atPath: arguments[2], toPath: arguments[3])
+                    completionHandler("0")
+                }
+                catch {
+                    completionHandler("-1\n" + error.localizedDescription)
+                }
+                return
+            } else if (arguments[1] == "copy") {
+                do {
+                    try FileManager().copyItem(atPath: arguments[2], toPath: arguments[3])
+                    completionHandler("0")
+                }
+                catch {
+                    completionHandler("-1\n" + error.localizedDescription)
+                }
+                return
+            } else if (arguments[1] == "fileSize") {
+                do {
+                    //return [FileAttributeKey : Any]
+                    let attr = try FileManager.default.attributesOfItem(atPath: arguments[2])
+                    completionHandler("\(attr[FileAttributeKey.size] as? UInt64 ?? 0)")
+                } catch {
+                    completionHandler("-1\n" + error.localizedDescription)
+                }
+                return
+            } else if (arguments[1] == "system") {
+                thread_stdin = self.thread_stdin_copy
+                thread_stdout = self.thread_stdout_copy
+                thread_stderr = self.thread_stderr_copy
+                let pid = ios_fork()
+                var result = ios_system(arguments[2])
+                ios_waitpid(pid)
+                ios_releaseThreadId(pid)
+                if (result == 0) {
+                    // If there's already been an error (e.g. "command not found") no need to ask for more.
+                    result = ios_getCommandStatus()
+                }
+                completionHandler("\(result)")
+                return
+            }
+        }
+        // End of JavaScriptCore extensions
         // Code copied from Carnets for better interaction with Jupyter
         var message = ""
         var cancel = "Dismiss"

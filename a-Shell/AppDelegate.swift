@@ -1,4 +1,5 @@
 //
+//
 //  AppDelegate.swift
 //  a-Shell
 //
@@ -48,7 +49,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
             }
         } catch {
-            NSLog("Error in creating directory \(localURL.path): \(error)")
+            // NSLog("Error in creating directory \(localURL.path): \(error)")
             return false
         }
         return true
@@ -75,6 +76,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let majorCurrent = Int(currentVersionNumbers[0])!
         let minorCurrent = Int(currentVersionNumbers[1])!
         let installedVersion = UserDefaults.standard.string(forKey: "versionInstalled")
+        if (installedVersion == "0.0") {
+            return false // it's the 1st time we run the app
+        }
         let buildNumberInstalled = Int(UserDefaults.standard.string(forKey: "buildNumber") ?? "0")!
         let currentBuildInt = Int(currentBuild)!
         let installedVersionNumbers = installedVersion!.split(separator: ".")
@@ -286,6 +290,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["show_toolbar" : true])
         // Use the system toolbar is the default for iPad M1 and M2, but not for the other models:
         UserDefaults.standard.register(defaults: ["system_toolbar" : isM1iPad(modelName: UIDevice.current.modelName)])
+        // What color should the keyboard and system toolbar be? (screen: same mode as the screen itself)
+        UserDefaults.standard.register(defaults: ["toolbar_color" : "screen"])
         UserDefaults.standard.register(defaults: ["restart_vim" : false])
         UserDefaults.standard.register(defaults: ["keep_content" : true])
         toolbarShouldBeShown = UserDefaults.standard.bool(forKey: "show_toolbar")
@@ -306,7 +312,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("config", "config", true)
         replaceCommand("keepDirectoryAfterShortcut", "keepDirectoryAfterShortcut", true)
         replaceCommand("wasm", "wasm", true)
-        replaceCommand("jsc", "jsc_internal", true)  // use our own jsc instead of ios_system jsc
+        replaceCommand("jsc", "jsc_internal", false)  // use our own jsc instead of ios_system jsc. Keep the original version
         replaceCommand("call", "call", true)  // call a contact
         replaceCommand("text", "text", true)  // send a text to a contact
         replaceCommand("play", "play_main", true)
@@ -512,9 +518,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 // The version number changed, so the App has been re-installed. Clean all pre-compiled Python files:
                 NSLog("Cleaning __pycache__ and .cpan/build")
                 ios_switchSession("wasiSDKLibrariesCreation")
-                executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/__pycache__/*")
-                // Also clean all CPAN build directories (they aren't valid anymore)    :
-                executeCommandAndWait(command: "rm -rf " + documentsUrl.appendingPathComponent(".cpan").path + "/build/*")
+                if (FileManager().fileExists(atPath: libraryURL.path + "/__pycache__")) {
+                    executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/__pycache__/*")
+                }
+                if (FileManager().fileExists(atPath: documentsUrl.appendingPathComponent(".cpan").path + "/build")) {
+                    // Also clean all CPAN build directories (they aren't valid anymore)    :
+                    executeCommandAndWait(command: "rm -rf " + documentsUrl.appendingPathComponent(".cpan").path + "/build/*")
+                }
             }
         }
         // Now set the version number to the current version:
@@ -711,6 +721,42 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("s", "bookmark", true) // add bookmark for current directory
             replaceCommand("d", "deletemark", true) // delete bookmark (might be dangerous)
             replaceCommand("r", "renamemark", true) // rename bookmark
+        }
+        let toolbarColor = UserDefaults.standard.string(forKey: "toolbar_color")
+        if (toolbarColor == "system") {
+            for scene in UIApplication.shared.connectedScenes {
+                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                    delegate.overrideUserInterfaceStyle(style: .unspecified)
+                }
+            }
+        } else if (toolbarColor == "dark") {
+            for scene in UIApplication.shared.connectedScenes {
+                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                    delegate.overrideUserInterfaceStyle(style: .dark)
+                }
+            }
+        } else if (toolbarColor == "light") {
+            for scene in UIApplication.shared.connectedScenes {
+                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                    delegate.overrideUserInterfaceStyle(style: .light)
+                }
+            }
+        } else if (toolbarColor == "screen") {
+            if let ColorFgBg = getenv("COLORFGBG") {
+                if (String(utf8String: ColorFgBg) == "15;0") {
+                    for scene in UIApplication.shared.connectedScenes {
+                        if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                            delegate.overrideUserInterfaceStyle(style: .dark)
+                        }
+                    }
+                } else {
+                    for scene in UIApplication.shared.connectedScenes {
+                        if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                            delegate.overrideUserInterfaceStyle(style: .light)
+                        }
+                    }
+                }
+            }
         }
         let toolbarSettings = UserDefaults.standard.bool(forKey: "show_toolbar")
         if (toolbarShouldBeShown && !toolbarSettings) {
