@@ -235,7 +235,7 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
                 }
                 let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.ExecuteCommand")
                 activity.userInfo!["url"] = URL(string: "ashell:" + urlString)
-                NSLog("Starting the app with command " + urlString)
+                // NSLog("Starting the app with command: " + (urlString.removingPercentEncoding ?? "<could not convert>"))
                 completion(ExecuteCommandIntentResponse(code: .continueInApp, userActivity: activity))
             }
             return
