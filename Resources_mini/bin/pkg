@@ -80,7 +80,6 @@ install() {
 					chmod +x ~/tmp/$packageName
 					sh ~/tmp/$packageName
 					rm ~/tmp/$packageName
-					echo Done
 					rm ~/tmp/packageList
 					rehash
 					echo Done
