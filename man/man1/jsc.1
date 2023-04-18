@@ -3,9 +3,17 @@
 jsc \- Execute JavaScript
 .SH SYNOPSIS
 \fBjsc\fP [ --in-window ] \fIfilename\fP
+.br
+\fBjsc_core\fP \fIfilename\fP
 .SH DESCRIPTION
-\fBjsc\fP executes JavaScript in a \fIWkWebView\fP,
+\fBjsc\fP and \fBjsc_core\fP execute a JavaScript file.
+.br
+\fBjsc\fP uses the optimized interpreter in a \fIWkWebView\fP,
 either the terminal's WebView or a background WebView.
+.br
+\fBjsc_core\fP uses the interpreter from JavaScriptCore (less optimized). 
+.PP
+For Shortcuts running in-extension, there is only \fBjsc\fP, which runs JavaScript files using JavaScriptCore.
 .SS Options
 .TP
 \fB--in-window\fP
@@ -13,9 +21,47 @@ Run the contents of the given file in the same
 WkWebView as the terminal GUI.
 If this option is given, the terminal can be
 accessed through the \fIterm_\fP global variable.
+.SS Extensions
+Both commands offer access to the file system with the following functions:
+.TP
+\fBjsc.readFile(filePath: string): string\fP 
+Opens the file at \fIfilePath\fP as a UTF-8 file, return contents of file as a string.
+.TP
+\fBjsc.readFileBase64(filePath: string): string\fP
+Opens the file at \fIfilePath\fP as a binary file, return the content encoded using Base64.
+.TP
+\fBjsc.writeFile(filePath: string, content: string): Result\fP
+Writes \fIcontent\fP to a UTF-8 file at \fIfilePath\fP.
+.TP
+\fBjsc.writeFileBase64(filePath: string, content: string): Result\fP 
+Writes binary \fIcontent\fP encoded using Base64 at \fIfilePath\fP.
+.TP
+\fBjsc.listFiles(folderPath: string): string[]\fP 
+Returns a list of the file names in the folder at \fIfolderPath\fP.
+.TP
+\fBjsc.isFile(filePath: string): boolean\fP 
+Returns true if there is a file at \fIfilePath\fP, false if there is a folder or nothing there.
+.TP
+\fBjsc.isFolder(folderPath: string): boolean\fP 
+Returns true if there is a folder at \fIfolderPath\fP, false if there is a file or nothing there.
+.TP
+\fBjsc.makeFolder(folderPath: string): Result\fP 
+Creates a folder at \fIfolderPath\fP.
+.TP
+\fBjsc.deleteFile(filePath: string): Result\fP 
+Deletes the file at \fIfilePath\fP.
+.TP
+\fBjsc.move(pathA: string, pathB: string): Result\fP 
+Moves a file from \fIpathA\fP to \fIpathB\fP.
+.TP
+\fBjsc.copy(pathA: string, pathB: string): Result\fP 
+Creates a copy of the file at \fIpathA\fP and puts it at \fIpathB\fP.
+.TP
+\fBjsc.system(command: string): Result\fP 
+executes \fIcommand\fP, and returns the return value (usually 0)
 .SS "Using term_"
 The terminal used by \fIa-Shell\fP is accessible via
-the global \fIterm_\fP variable if \fI--in-window\fP is given.
+the global \fIterm_\fP variable, only for \fIjsc --in-window\fP.
 .PP
 The terminal is inside of an \fIiframe\fP element.
 The \fIiframe\fP's \fIdocument\fP element can be accessed
