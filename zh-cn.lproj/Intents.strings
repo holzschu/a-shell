@@ -1,0 +1,117 @@
+"0MCBCc" = "${message}";
+
+"0ltuRO-Ev6eBG" = "There are ${count} options matching ‘default (depends on commands)’.";
+
+"0ltuRO-EzhjO7" = "There are ${count} options matching ‘yes’.";
+
+"0ltuRO-N556Rd" = "There are ${count} options matching ‘default (depend on commands)’.";
+
+"0ltuRO-i2Vf9p" = "There are ${count} options matching ‘no (run in extension)’.";
+
+"2PGaCe" = "报错时仍然处理";
+
+"2fJ9cq" = "真";
+
+"2iOcKE" = "文件";
+
+"41sJlD" = "执行 Shell 命令";
+
+"4yCt8L-Ev6eBG" = "Just to confirm, you wanted ‘default (depends on commands)’?";
+
+"4yCt8L-EzhjO7" = "Just to confirm, you wanted ‘yes’?";
+
+"4yCt8L-N556Rd" = "Just to confirm, you wanted ‘default (depend on commands)’?";
+
+"4yCt8L-i2Vf9p" = "Just to confirm, you wanted ‘no (run in extension)’?";
+
+"58h7pK" = "${file}";
+
+"7wS9Ta" = "保存文件";
+
+"8AtaM0" = "从 a-Shell 获取文件";
+
+"8PiF49" = "${property}";
+
+"8eLC56" = "${property}";
+
+"94QBWm" = "成功生成文件";
+
+"9n3JUI" = "假";
+
+"BKUcxZ" = "从 a-Shell 获取 ${fileName}";
+
+"BxvHYF" = "错误代码";
+
+"CQUSHQ" = "请输入文件名：";
+
+"ClThF5" = "输出";
+
+"Ev6eBG" = "默认（取决于命令）";
+
+"EzhjO7" = "是";
+
+"J7zfzK" = "成功生成文件";
+
+"JJgpB5" = "是否打开应用程序执行命令？";
+
+"KqS0gJ" = "执行 Shell 命令";
+
+"N556Rd" = "默认（取决于命令）";
+
+"NJGW0j" = "命令已终止，错误代码是 ${property1}，输出是 ${property}";
+
+"OmjmQg" = "文件";
+
+"PJgP7x" = "错误";
+
+"SMk14K" = "错误代码是 ${property1}。${property}";
+
+"UvKwrp" = "a-Shell 使用沙盒生成文件";
+
+"W4gWBJ" = "无法生成文件：${error}";
+
+"Y7KKwU" = "Shell 命令";
+
+"YxbbRt" = "执行命令 ${command}";
+
+"a2n63A" = "将 ${file} 复制到 a-Shell";
+
+"aRe2H0" = "是否覆盖现有文件？";
+
+"cELXqS" = "是否覆盖现有文件 ${file}？";
+
+"d8qG96" = "发生错误时是否继续执行命令？";
+
+"epnx1H" = "假";
+
+"fyMs4g" = "${message}";
+
+"i2Vf9p" = "否（在扩展内执行）";
+
+"iokfkK" = "将文件复制到 a-Shell";
+
+"isZTIL" = "将 ${file} 到 a-Shell";
+
+"mT8e9Y" = "文件名";
+
+"n11Zfh" = "从 a-Shell 中获取 ${fileName}";
+
+"pHBUcg" = "无法生成文件：${error}";
+
+"qDIloo" = "openWindow";
+
+"rz0Hmn" = "执行指令";
+
+"tIMaMc" = "将 ${file} 复制到 a-Shell";
+
+"uW0NxR" = "消息";
+
+"umwm1q" = "执行 ${command}";
+
+"vk5k4v" = "使用 a-Shell 执行以下指令";
+
+"wXdWw9" = "${file}";
+
+"xYZuUZ" = "真";
+
+"xrhJta" = "获取文件";
