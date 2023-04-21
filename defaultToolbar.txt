@@ -7,7 +7,7 @@
 # The effect of the parameter depends on the action:
 # - for insertString, it can be any string, and will be inserted when you type the button. 
 #					  Strings can contain \n, so you can execute commands, even multiple commands.
-# - for systemAction, it can be any of: control, up, down, left, right, cut, copy or paste.
+# - for systemAction, it can be any of: control, up, down, left, right, selectAll, cut, copy or paste.
 # - for insertCommand, it is a short command that will be executed when the button is pressed. 
 #					  The output of this command will be inserted at the cursor position
 
