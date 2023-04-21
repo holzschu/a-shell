@@ -32,25 +32,25 @@ JS_UTILITIES = r"""
  */
 
 let print = (...output) => {
-    _jsi.notePrintFn(global.print, output);
-    return global.print.apply(this, output);
+    _jsi.notePrintFn(window.print, output);
+    return window.print.apply(this, output);
 };
 
 let println = (...output) => {
-    _jsi.notePrintFn(global.println, output);
-    return global.println.apply(this, output);
+    _jsi.notePrintFn(window.println, output);
+    return window.println.apply(this, output);
 };
 
 let print_error = (...output) => {
-    _jsi.notePrintFn(global.print_error, output);
-    return global.print_error.apply(this, output);
+    _jsi.notePrintFn(window.print_error, output);
+    return window.print_error.apply(this, output);
 };
 
 // Define the _jsi namespace.
 (function() {
 
-if (!global._jsi) {
-    global._jsi = {};
+if (!window._jsi) {
+    window._jsi = {};
     _jsi.uncollectedPrints = [];
 }
 
@@ -376,7 +376,7 @@ try:
 
     class JSCompleter(Completer):
         completions = {
-            "global": None,
+            "window": None,
             "if": None,
             "else": None,
             "var": None,
@@ -426,11 +426,10 @@ try:
         def __init__(self, runJS):
             self._userPopulated = {}
             self._runJS = runJS
-            self._populateFromJS("global")
-            if "window" in self.completions:
-                self.completions["window"]["window"] = self.completions["window"]
-                for key in self.completions["window"]:
-                    self.completions[key] = self.completions["window"][key]
+            self._populateFromJS("window")
+            self.completions["window"]["window"] = self.completions["window"]
+            for key in self.completions["window"]:
+                self.completions[key] = self.completions["window"][key]
 
         def get_completions(self, document, complete_event):
             cursor = document.cursor_position
@@ -625,7 +624,7 @@ class InputReader:
                     completer=self._completer)
 
     def _makeInteractive(self):
-        runJS("global.interactiveCommandRunning = true;", inTermContext = True)
+        runJS("window.interactiveCommandRunning = true;", inTermContext = True)
 
 class Printer:
     PRIMARY_COLOR="\033[94m"
