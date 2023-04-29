@@ -1,0 +1,7 @@
+mkdir texlive_2023_texmf_dist
+mkdir texlive_2023_texmf_dist_fonts
+mkdir texlive_2023_texmf_dist_fonts_otf_ttf
+mkdir texlive_2023_texmf_dist_fonts_type1
+mkdir texlive_2023_texmf_dist_fonts_vf
+mkdir texlive_2023_texmf_var
+mkdir forbidden_2023
