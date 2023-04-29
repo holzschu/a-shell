@@ -225,7 +225,7 @@
   // NOTE Web-worker will use the origin, since location.href is not available.
   cache = Object.create(null);
   config = config || new Object();
-  config.paths = config.paths || ["./node_modules/"];
+  config.paths = config.paths || ["./node_modules/", "~/Library/local/lib/js_modules"];
   config.resolve = config.resolve || resolve;
   config.root = config.root || location.href;
   require = factory(null);
