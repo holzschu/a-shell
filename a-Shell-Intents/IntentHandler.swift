@@ -273,10 +273,10 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
         setenv("APPDIR", mainAppResourceURL.path.toCString(), 1)
         let bundleUrl = mainAppResourceURL.appendingPathComponent("Library")
         setenv("PYTHONHOME", bundleUrl.path.toCString(), 1)
-        setenv("MAGICK_HOME", bundleUrl.path +  "/ImageMagick-7", 1)
-        setenv("MAGICK_CONFIGURE_PATH", bundleUrl.path +  "/ImageMagick-7/config", 1)
+        setenv("MAGICK_HOME", mainAppResourceURL.path +  "/ImageMagick-7", 1)
+        setenv("MAGICK_CONFIGURE_PATH", mainAppResourceURL.path +  "/ImageMagick-7/config", 1)
         setenv("TZ", TimeZone.current.identifier, 1) // TimeZone information, since "systemsetup -gettimezone" won't work.
-        setenv("SSL_CERT_FILE", bundleUrl.path +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
+        setenv("SSL_CERT_FILE", mainAppResourceURL.path +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
         setenv("SHORTCUTS", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
         setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
         setenv("PYTHONUSERBASE", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.appendingPathComponent("Library").path, 1) // Python packages for extension
@@ -318,8 +318,13 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
             }
         }
         // Experimental: If it works, try removing the 4 lines above
-        close(stdout_pipe.fileHandleForWriting.fileDescriptor)
-        close(stdin_pipe.fileHandleForReading.fileDescriptor)
+        do {
+            try stdout_pipe.fileHandleForWriting.close()
+            try stdin_pipe.fileHandleForReading.close()
+        }
+        catch {
+            NSLog("Error in closing pipes in Extension: \(error)")
+        }
         return returnVal
     }
         
