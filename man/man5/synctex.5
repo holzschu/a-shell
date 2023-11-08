@@ -1,0 +1,374 @@
+.Dd Jan 17, 2018
+.Dt SYNCTEX 5
+.Os "Independent"
+.\"
+.\"
+.Sh NAME
+.Nm synctex
+.Nd Synchronize TeXnology help file
+.\"
+.\"
+.Sh DESCRIPTION
+Synchronize TeXnology help file
+.Pq synctexs
+are text files that help input/output synchronization during document preparation with the TeX typesetting system.
+.Sh BASICS
+The structure of this file should not be considered public, in the sense that no one should need to parse its contents, except the synctex command line utility, and the synctex_parser library which are both publicly available. Unless it is absolutely not avoidable, access to the contents of the synctex file should only be made through requests made to the synctex command line utility.
+.\"
+.Sh STRUCTURE
+The element structure of a synctex file is a list of text line records as follows.
+.Sq \&* ,
+.Sq \&+ ,
+and
+.Sq \&?
+have their usual EBNF meanings:
+.Sq \&*
+means zero or more,
+.Sq \&+
+means one or more, and
+.Sq \&?
+means zero or one
+.Pq i.e., optional .
+.Pp
+.Bl -item -offset indent
+.\"
+.It
+.Li <SyncTeX> ::=
+.Pq The whole contents in 4 sections
+.Bl -item -offset indent
+.It
+.Li <Preamble>
+.It
+.Li <Content>
+.It
+.Li <Postamble>
+.It
+.Li <Post Scriptum>
+.El
+.\"
+.El
+.Pp
+Each section starts with the first occurrence of a sectioning line, and ends with the next section, if any.
+In the following definitions, we do not mention the section ending condition.
+.Sh The preamble
+.Bl -item -offset indent
+.\"
+.It
+.Li <Preamble> ::=
+.Bl -item -offset indent
+.It
+.Qq SyncTeX Version:
+<Version Number> <EOL>
+.It
+.Li <Input Line>*
+.It
+.Qq Magnification:
+<TeX magnification> <EOL>
+.It
+.Qq Unit:
+<unit in scaled point> <EOL>
+.It
+.Qq X Offset:
+<horizontal offset in scaled point> <EOL>
+.It
+.Qq Y Offset:
+<vertical offset in scaled point> <EOL>
+.El
+.It
+.Li <Input Line> ::= 
+.Qq Input:
+<tag>
+.Qq \&:
+<File Name> <EOL>
+.\"
+.El
+.Sh The content
+.Bl -item -offset indent
+.It
+.Li <Content> ::=
+.Bl -item -offset indent
+.It
+.Li <byte offset record>
+.It
+.Qq Content:
+<EOL>
+.It
+.Li (<Form(k)>|<Input Line>)*
+.It
+.Li <sheet(1)>
+.It
+.Li (<Form(k)>|<Input Line>)*
+.It
+.Li <sheet(2)>
+.It
+.Li (<Form(k)>|<Input Line>)*
+.It
+.Li ...
+.It
+.Li <sheet(N)>
+.It
+.Li (<Form(k)>|<Input Line>)*
+.El
+.It
+.Li <byte offset record> ::=
+.Qq \&!
+<byte offset> <end of record>
+.Pp
+.El
+.Pp
+.Bl -item -offset indent
+.It
+.Li <sheet(n)> ::=
+.Bl -item -offset indent
+.It
+.Li <byte offset record>
+.It
+.Qq \&{
+<the integer n> <end of record>
+.It
+.Li <vbox section>|<hbox section>
+.It
+.Li <byte offset record>
+.It
+.Qq \&}
+<the integer n> <end of record>
+.El
+.It
+.Li <Form> ::=
+.Bl -item -offset indent
+.It
+.Li <byte offset record>
+.It
+.Qq \&<
+<form tag> <end of record>
+.It
+.Li <vbox section>|<hbox section>
+.It
+.Li <byte offset record>
+.It
+.Qq \&>
+<end of record>
+.El
+.It
+.Li <form tag> ::= <integer>
+.El
+.Pp
+Forms are available with pdfTeX.
+All the numbers are integers encoded using the decimal representation with "C" locale.
+The <box content> describes what is inside a box.
+It is either a vertical or horizontal box,
+with some records related to glue, kern or math nodes.
+.Bl -item -offset indent
+.It
+.Li <box content> ::=
+.Bl -item -offset indent
+.It
+.Li <vbox section>|<hbox section>
+.It
+.Li |<void vbox record>|<void hbox record>
+.It
+.Li |<current record>|<glue record>|<kern record>
+.It
+.Li |<math record>|<form ref record>|<Form>
+.El
+.It
+.Li <vbox section> ::=
+.Bl -item -offset indent
+.It
+.Qq \&[
+<link>
+.Qq \&:
+<point>
+.Qq \&:
+<size> <end of record>
+.It
+.Li <box content>*
+.It
+.Qq \&]
+<end of record>
+.El
+.It
+.Li <hbox section> ::=
+.Bl -item -offset indent
+.It
+.Li \&(
+<link>
+.Qq \&:
+<point>
+.Qq \&:
+<size> <end of record>
+.It
+.Li <box content>*
+.It
+.Qq \&)
+<end of record>
+.El
+.El
+.Pp
+Void boxes:
+.Bl -item -offset indent
+.It
+.Li <void vbox record> ::=
+.Qq v
+<link>
+.Qq \&:
+<point>
+.Qq \&:
+<size> <end of record>
+.It
+.Li <void hbox record> ::=
+.Qq h
+<link>
+.Qq \&:
+<point>
+.Qq \&:
+<size> <end of record>
+.It
+.Li <link> ::= <tag>
+.Qq \&,
+<line>(
+.Qq \&,
+<column>)?
+.It
+.Li <point> ::= <full point>|<compressed point>
+.It
+.Li <full point> ::=
+<integer>
+.Qq \&,
+<integer>
+.It
+.Li <compressed point> ::=
+<integer>
+.Qq \&,=
+.It
+.Li <line> ::= <integer>
+.It
+.Li <column> ::= <integer>
+.It
+.Li <size> ::= <Width>
+.Qq \&,
+<Height>
+.Qq \&,
+<Depth>
+.It
+.Li <Width> ::= <integer>
+.It
+.Li <Height> ::= <integer>
+.It
+.Li <Depth> ::= <integer>
+.El
+.Pp
+The forthcoming records are basic one liners.
+.Bl -item -offset indent
+.It
+.Li <current record> ::=
+.Qq x
+<link>
+.Qq \&:
+<point> <end of record>
+.It
+.Li <kern record> ::=
+.Qq k
+<link>
+.Qq \&:
+<point>
+.Qq \&:
+<Width> <end of record>
+.It
+.Li <glue record> ::=
+.Qq g
+<link>
+.Qq \&:
+<point> <end of record>
+.It
+.Li <math record> ::=
+.Qq $
+<link>
+.Qq \&:
+<point> <end of record>
+.It
+.Li <form ref record> ::=
+.Qq f
+<form tag>
+.Qq \&:
+<point> <end of record>
+.El
+.Pp
+.\" .Sx underline, .Dq double quotes, .Pq enclosed in parenthesis
+.Sh The postamble
+The postamble closes the file
+If there is no postamble, it means that the typesetting process did not end correctly.
+.Bl -item -offset indent
+.\"
+.It
+.Li <Postamble>::=
+.Bl -item -offset indent
+.It
+.Li <byte offset record>
+.It
+.Qq Count:
+<Number of records> <EOL>
+.El
+.El
+.Sh The post scriptum
+The post scriptum contains material possibly added by 3rd parties.
+It allows to append some transformation (shift and magnify).
+Typically, one applies a dvi to pdf filter with offset options and magnification,
+then he appends the same options to the synctex file, for example
+.Bd -literal -offset indent
+synctex update -o foo.pdf -m 0.486 -x 9472573sp -y 13.3dd source.dvi
+.Ed
+.Bl -item -offset indent
+.\"
+.It
+.Li <Post Scriptum>::=
+.\"
+.Bl -item -offset indent
+.It
+.Li <byte offset record>
+.It
+.Qq Post Scriptum:
+<EOL>
+.It
+.Qq Magnification:
+<number> <EOL>
+.Pq Set additional magnification
+.It
+.Qq X Offset:
+<dimension> <EOL>
+.Pq Set horizontal offset
+.It
+.Qq Y Offset:
+<dimension> <EOL>
+.Pq Set vertical offset
+.El
+.El
+This second information will override the offset and magnification previously available in the preamble section.
+All the numbers are encoded using the decimal representation with "C" locale.
+.Sh USAGE
+.Pp
+The <current record> is used to compute the visible size of hbox's.
+The byte offset is an implicit anchor to navigate the synctex file from sheet to sheet. The second coordinate of
+a compressed point has been replaced by a
+.Qq =
+character which means that it is the second coordinate of the
+last full point available above.
+.Sh SEE ALSO 
+.\" List links in ascending order by section, alphabetically within a section.
+.\" Please do not reference files that do not exist without filing a bug report
+.Xr synctex 1
+.Xr tex 1
+.Sh AUTHOR
+The Synchronize TeXnology is essentially due to Jerome Laurens,
+with useful suggestions by some well known actors of the TeX world.
+.\" .Sh BUGS              \" Document known, unremedied bugs 
+.Sh HISTORY           \" Document history if command behaves in a unique manner
+This document has been updated on Sat Apr 22 09:57:20 UTC 2017 to include \\pdfxform support.
+.\" nroff -man synctex.5 | less
+.\"groff -man -Tascii synctex.5 | less
+.\"To convert a man page to plain pre-formatted text (e.g. for spell checking) use:
+.\"nroff -man synctex.5 | col -b > synctex.5.txt
+.\"To convert it to PostScript (for printing or further conversion to pdf) use:
+.\"groff -man -Tps synctex.5 > synctex.5.ps
+.\"To convert the man page to html use:
+.\"man2html synctex.5
