@@ -37,5 +37,19 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>xetex</key>
+	<array>
+		<string>xetex.framework/xetex</string>
+		<string>dllxetexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>xelatex</key>
+	<array>
+		<string>xetex.framework/xetex</string>
+		<string>dllxetexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
 </dict>
 </plist>

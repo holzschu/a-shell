@@ -184,5 +184,40 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>dvipdfmx</key>
+	<array>
+		<string>xdvipdfmx.framework/xdvipdfmx</string>
+		<string>dlldvipdfmxmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>xdvipdfmx</key>
+	<array>
+		<string>xdvipdfmx.framework/xdvipdfmx</string>
+		<string>dlldvipdfmxmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>euptex</key>
+	<array>
+		<string>euptex.framework/euptex</string>
+		<string>dlleuptexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>uptex</key>
+	<array>
+		<string>euptex.framework/euptex</string>
+		<string>dlleuptexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>uplatex</key>
+	<array>
+		<string>euptex.framework/euptex</string>
+		<string>dlleuptexmain</string>
+		<string></string>
+		<string>file</string>
+	</array>
 </dict>
 </plist>

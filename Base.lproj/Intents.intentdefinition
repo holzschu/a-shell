@@ -63,11 +63,11 @@
 	<key>INIntentDefinitionNamespace</key>
 	<string>iwbZ8l</string>
 	<key>INIntentDefinitionSystemVersion</key>
-	<string>21F79</string>
+	<string>22F82</string>
 	<key>INIntentDefinitionToolsBuildVersion</key>
-	<string>13F100</string>
+	<string>14E222b</string>
 	<key>INIntentDefinitionToolsVersion</key>
-	<string>13.4.1</string>
+	<string>14.3</string>
 	<key>INIntents</key>
 	<array>
 		<dict>
@@ -535,7 +535,7 @@
 			<key>INIntentKeyParameter</key>
 			<string>file</string>
 			<key>INIntentLastParameterTag</key>
-			<integer>9</integer>
+			<integer>10</integer>
 			<key>INIntentManagedParameterCombinations</key>
 			<dict>
 				<key>file,overwrite</key>
@@ -621,10 +621,12 @@
 							<string>Primary</string>
 						</dict>
 					</array>
+					<key>INIntentParameterSupportsMultipleValues</key>
+					<true/>
 					<key>INIntentParameterSupportsResolution</key>
 					<true/>
 					<key>INIntentParameterTag</key>
-					<integer>9</integer>
+					<integer>10</integer>
 					<key>INIntentParameterType</key>
 					<string>File</string>
 				</dict>
@@ -679,7 +681,7 @@
 				<array>
 					<dict>
 						<key>INIntentResponseCodeConciseFormatString</key>
-						<string>File created successfully</string>
+						<string>File(s) created successfully</string>
 						<key>INIntentResponseCodeConciseFormatStringID</key>
 						<string>94QBWm</string>
 						<key>INIntentResponseCodeFormatString</key>

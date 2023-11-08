@@ -71,6 +71,7 @@ install() {
 			rehash
 			echo Done
 		else
+			packageFound=0
 			for packageName in `cat ~/tmp/packageList`
 			do
 				if [ $packageName = $name ]
@@ -80,14 +81,17 @@ install() {
 					chmod +x ~/tmp/$packageName
 					sh ~/tmp/$packageName
 					rm ~/tmp/$packageName
-					rm ~/tmp/packageList
 					rehash
+					packageFound=1
 					echo Done
-					return
+					break
 				fi
 			done
-			echo Package name $name unclear. Did you mean:
-			cat ~/tmp/packageList
+			if [ $packageFound -eq 0 ]
+			then
+				echo Package name $name unclear. Did you mean:
+				cat ~/tmp/packageList
+			fi
 		fi
 		rm ~/tmp/packageList
 	done

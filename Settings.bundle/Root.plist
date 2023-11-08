@@ -80,6 +80,30 @@
 		</dict>
 		<dict>
 			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Toolbar color:</string>
+			<key>Key</key>
+			<string>toolbar_color</string>
+			<key>DefaultValue</key>
+			<string>screen</string>
+			<key>Titles</key>
+			<array>
+				<string>system settings</string>
+				<string>depends on screen color (default)</string>
+				<string>dark mode</string>
+				<string>light mode</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>system</string>
+				<string>screen</string>
+				<string>dark</string>
+				<string>light</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
 			<string>Keep screen content between sessions</string>

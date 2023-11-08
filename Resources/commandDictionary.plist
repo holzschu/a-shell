@@ -212,6 +212,13 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>jsc_core</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>jsc</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>jq</key>
 	<array>
 		<string>jq.framework/jq</string>
@@ -499,6 +506,13 @@
 		<string>f:FlLnqrst:x</string>
 		<string>file</string>
 	</array>
+	<key>stty</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>stty_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
 	<key>sum</key>
 	<array>
 		<string>files.framework/files</string>
@@ -610,6 +624,13 @@
 		<string>wc_main</string>
 		<string>dhiflM:N:nsuw</string>
 		<string>file</string>
+	</array>
+	<key>id</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>id_main</string>
+		<string></string>
+		<string>no</string>
 	</array>
 	<key>whoami</key>
 	<array>
