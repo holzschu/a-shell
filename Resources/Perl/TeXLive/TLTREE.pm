@@ -1,6 +1,6 @@
-# $Id: TLTREE.pm 61372 2021-12-21 22:46:16Z karl $
+# $Id: TLTREE.pm 65994 2023-02-20 23:40:00Z karl $
 # TeXLive::TLTREE.pm - work with the tree of all files
-# Copyright 2007-2021 Norbert Preining
+# Copyright 2007-2023 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
@@ -8,7 +8,7 @@ use strict; use warnings;
 
 package TeXLive::TLTREE;
 
-my $svnrev = '$Revision: 61372 $';
+my $svnrev = '$Revision: 65994 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -434,7 +434,7 @@ sub _get_files_matching_glob_pattern
     }
   }
 
-  if ($dirpart =~ m,^bin/(win[0-9]|.*-cygwin),
+  if ($dirpart =~ m,^bin/(windows|win[0-9]|.*-cygwin),
       || $dirpart =~ m,tlpkg/installer,) {
     # for windows-ish we want to automatch more extensions.
     foreach my $f (@candfiles) {

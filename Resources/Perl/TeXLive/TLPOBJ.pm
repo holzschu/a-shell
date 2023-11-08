@@ -1,6 +1,6 @@
-# $Id: TLPOBJ.pm 61372 2021-12-21 22:46:16Z karl $
+# $Id: TLPOBJ.pm 65965 2023-02-20 17:26:54Z karl $
 # TeXLive::TLPOBJ.pm - module for using tlpobj files
-# Copyright 2007-2021 Norbert Preining
+# Copyright 2007-2023 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
@@ -8,7 +8,7 @@ use strict; use warnings;
 
 package TeXLive::TLPOBJ;
 
-my $svnrev = '$Revision: 61372 $';
+my $svnrev = '$Revision: 65965 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -680,11 +680,14 @@ sub make_container {
       tlwarn("$0: (make_container $containername) $f does not exist\n");
     } else {
       tlwarn("$0: (make_container $containername) $f not file or symlink\n");
+      if (! wndws()) {
+        tlwarn("$0:   ", `ls -l $f 2>&1`);
+      }
     }
   }
   
   my $tartempfile = "";
-  if (win32()) {
+  if (wndws()) {
     # Since we provide our own (GNU) tar on Windows, we know it has -T.
     my $tmpdir = TeXLive::TLUtils::tl_tmpdir();
     $tartempfile = "$tmpdir/mc$$";
@@ -1573,9 +1576,9 @@ with C<|> characters inserted to show the indentation:
   |binfiles arch=i386-solaris size=87
   | bin/i386-solaris/afm2tfm
   | bin/i386-solaris/dvips
-  |binfiles arch=win32 size=51
-  | bin/win32/afm2tfm.exe
-  | bin/win32/dvips.exe
+  |binfiles arch=windows size=51
+  | bin/windows/afm2tfm.exe
+  | bin/windows/dvips.exe
   |...
 
 =head1 PACKAGE VARIABLES

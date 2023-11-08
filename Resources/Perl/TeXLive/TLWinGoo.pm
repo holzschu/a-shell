@@ -1,6 +1,6 @@
-# $Id: TLWinGoo.pm 61372 2021-12-21 22:46:16Z karl $
+# $Id: TLWinGoo.pm 65994 2023-02-20 23:40:00Z karl $
 # TeXLive::TLWinGoo.pm - Windows goop.
-# Copyright 2008-2021 Siep Kroonenberg, Norbert Preining
+# Copyright 2008-2023 Siep Kroonenberg, Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
@@ -13,7 +13,7 @@
 
 package TeXLive::TLWinGoo;
 
-my $svnrev = '$Revision: 61372 $';
+my $svnrev = '$Revision: 65994 $';
 my $_modulerevision;
 if ($svnrev =~ m/: ([0-9]+) /) {
   $_modulerevision = $1;
@@ -1167,7 +1167,7 @@ sub create_uninstaller {
   my $td = $td_fw;
   $td =~ s!/!\\!g;
 
-  my $tdmain = `"$td\\bin\\win32\\kpsewhich" -var-value=TEXMFMAIN`;
+  my $tdmain = `"$td\\bin\\windows\\kpsewhich" -var-value=TEXMFMAIN`;
   $tdmain =~ s!/!\\!g;
   chomp $tdmain;
 
@@ -1182,7 +1182,7 @@ sub create_uninstaller {
   print UNINST <<UNEND;
 rem \@echo off
 setlocal
-path $td\\tlpkg\\tlperl\\bin;$td\\bin\\win32;%path%
+path $td\\tlpkg\\tlperl\\bin;$td\\bin\\windows;%path%
 set PERL5LIB=$td\\tlpkg\\tlperl\\lib
 rem Clean environment from other Perl variables
 set PERL5OPT=
@@ -1203,7 +1203,7 @@ set PERL_ROOT=
 set PERL_SIGNALS=
 set PERL_UNICODE=
 
-perl.exe \"$tdmain\\scripts\\texlive\\uninstall-win32.pl\" \%1
+perl.exe \"$tdmain\\scripts\\texlive\\uninstall-windows.pl\" \%1
 
 if errorlevel 1 goto :eof
 rem test for taskkill and try to stop exit tray menu
@@ -1242,7 +1242,7 @@ del /q \"$td\\release-texlive.txt\"
 UNEND2
 ;
   for my $d ('TEXMFSYSVAR', 'TEXMFSYSCONFIG') {
-    my $kd = `"$td\\bin\\win32\\kpsewhich" -var-value=$d`;
+    my $kd = `"$td\\bin\\windows\\kpsewhich" -var-value=$d`;
     chomp $kd;
     print UNINST2 "rmdir /s /q \"", $kd, "\"\r\n";
   }

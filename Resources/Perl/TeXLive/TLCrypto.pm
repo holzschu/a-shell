@@ -1,6 +1,6 @@
-# $Id: TLCrypto.pm 59224 2021-05-16 16:50:31Z karl $
+# $Id: TLCrypto.pm 65994 2023-02-20 23:40:00Z karl $
 # TeXLive::TLCrypto.pm - handle checksums and signatures.
-# Copyright 2016-2021 Norbert Preining
+# Copyright 2016-2023 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
@@ -9,10 +9,10 @@ package TeXLive::TLCrypto;
 use Digest::MD5;
 
 use TeXLive::TLConfig;
-use TeXLive::TLUtils qw(debug ddebug win32 which platform
+use TeXLive::TLUtils qw(debug ddebug wndws which platform
                         conv_to_w32_path tlwarn tldie);
 
-my $svnrev = '$Revision: 59224 $';
+my $svnrev = '$Revision: 65994 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -421,7 +421,7 @@ sub setup_gpg {
   # Set up the gpg invocation:
   my $gpghome = ($ENV{'TL_GNUPGHOME'} ? $ENV{'TL_GNUPGHOME'} : 
                                         "$master/tlpkg/gpg" );
-  $gpghome =~ s!/!\\!g if win32();
+  $gpghome =~ s!/!\\!g if wndws();
   my $gpghome_quote = "\"$gpghome\"";
   # mind the final space for following args
   $::gpg = "$prg --homedir $gpghome_quote ";
@@ -568,7 +568,7 @@ Internal routine running gpg to verify signature C<$sig> of C<$file>.
 sub gpg_verify_signature {
   my ($file, $sig) = @_;
   my ($file_quote, $sig_quote);
-  if (win32()) {
+  if (wndws()) {
     $file =~ s!/!\\!g;
     $sig =~ s!/!\\!g;
   }

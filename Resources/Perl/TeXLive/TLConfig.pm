@@ -1,13 +1,13 @@
-# $Id: TLConfig.pm 62232 2022-02-27 17:33:30Z karl $
+# $Id: TLConfig.pm 66204 2023-02-26 22:10:41Z karl $
 # TeXLive::TLConfig.pm - module exporting configuration values
-# Copyright 2007-2022 Norbert Preining
+# Copyright 2007-2023 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
 use strict; use warnings;
 package TeXLive::TLConfig;
 
-my $svnrev = '$Revision: 62232 $';
+my $svnrev = '$Revision: 66204 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -62,7 +62,7 @@ BEGIN {
 
 # the year of our release, will be used in the location of the
 # network packages, and in menu names, and other places.
-our $ReleaseYear = 2022;
+our $ReleaseYear = 2023;
 
 # users can upgrade from this year to the current year; might be the
 # same as the release year, or any number of releases earlier.
@@ -119,8 +119,8 @@ our $RelocPrefix = "RELOC";
 our @CriticalPackagesList = qw/texlive.infra/;
 our $CriticalPackagesRegexp = '^(texlive\.infra)';
 if ($^O =~ /^MSWin/i) {
-  push (@CriticalPackagesList, "tlperl.win32");
-  $CriticalPackagesRegexp = '^(texlive\.infra|tlperl\.win32$)';
+  push (@CriticalPackagesList, "tlperl.windows");
+  $CriticalPackagesRegexp = '^(texlive\.infra|tlperl\.windows$)';
 }
 
 
@@ -214,10 +214,10 @@ our %TLPDBOptions = (
       "Generate formats at installation or update" ],
   "desktop_integration" =>
     [ "b", 1, "desktop_integration",
-      "Create Start menu shortcuts (w32)" ],
+      "Create Start menu shortcuts (Windows)" ],
   "file_assocs" =>
     [ "n:0..2", 1, "fileassocs",
-      "Change file associations (w32)" ],
+      "Change file associations (Windows)" ],
   "generate_updmap" =>
     [ "b", 0, "generate_updmap",
       "Run tlmgr generate updmap after maps have changed" ],
@@ -244,7 +244,7 @@ our %TLPDBOptions = (
       "Destination for symlinks for man pages" ],
   "w32_multi_user" =>
     [ "b", 1, "multiuser",
-      "Install for all users (w32)" ],
+      "Install for all users (Windows)" ],
 );
 
 
@@ -257,7 +257,7 @@ our %TLPDBSettings = (
 our $WindowsMainMenuName = "TeX Live $ReleaseYear";
 
 # Comma-separated list of engines which do not exist on all platforms.
-our $PartialEngineSupport = "luajithbtex,luajittex,mfluajit";
+our $PartialEngineSupport = "luametatex,luajithbtex,luajittex,mfluajit";
 
 # Flags for error handling across the scripts and modules
 # all fine
@@ -367,7 +367,7 @@ C<systems/texlive/tlnet/>.
 =item C<@TeXLive::TLConfig::CriticalPackagesRegexp>
 
 A list of all those packages which we do not update regularly since they
-are too central, currently texlive.infra and (for Windows) tlperl.win32.
+are too central, currently texlive.infra and (for Windows) tlperl.windows.
 
 =item C<@TeXLive::TLConfig::InstallExtraRequiredPackages>
 
