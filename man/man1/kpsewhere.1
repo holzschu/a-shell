@@ -1,0 +1,50 @@
+.TH "kpsewhere" "1" "March 2004" "teTeX" "teTeX" 
+.PP 
+.SH "NAME" 
+kpsewhere \- Expanding \fBkpsewhich\fP to separately iterate over each
+texmf tree listed in $TEXMF.
+.PP 
+.SH "SYNOPSIS" 
+.PP 
+\fBkpsewhere \fP [ \fIkpsewhich-OPTIONS\fP\&.\&.\&. ] \fICOMMAND\fP
+.PP 
+.SH "DESCRIPTION" 
+.PP 
+\fBkpsewhere\fP is an extension to \fBkpsewhich\fP (as \fBwhere\fP is
+for \fBwhich\fP in tcsh).  The intention is to provide a way to check
+for conflicts/shadowed files. It will, however, only find \fBone\fP
+file per TEXMF tree.
+.PP 
+.SH "OPTIONS" 
+.PP 
+.IP "\fB-h|--help\fP"
+show a short help message
+.IP "\fB\&*\fP"
+all other options are directly handed to kpsewhich
+.PP 
+.SH "SEE ALSO" 
+.PP 
+\fBkpsewhich\fP(1)
+.PP 
+\fIKpathsea: A library for path searching\fP (info or DVI file)
+.PP 
+Web page: <http://tug\&.org/teTeX/>
+.PP 
+.SH "BUGS" 
+.PP 
+None known, but report any bugs found to <tetex@dbs\&.uni-hannover\&.de> (mailing list)\&.
+.PP 
+.SH "AUTHOR" 
+.PP 
+\fBkpsewhere\fP was written by Hans Fredrik Nordhaug
+<hans\&.fredrik@nordhaug\&.no>, additions by 
+Thomas Esser 
+<te@dbs\&.uni-hannover\&.de>, in 2003 and 2004\&.  \fBkpsewhere\fP
+is in the public domain\&.
+.PP 
+This manual page was written by Frank Küster <frank@kuesterei\&.ch>,
+for the Debian GNU/Linux system\&.  It is also in the public domain
+and may be used and changed by others without contacting the author\&.
+Any mistakes or omissions in the manual page are my fault; inquiries
+about or corrections to this manual page should be directed to me (and
+not to the primary author)\&.

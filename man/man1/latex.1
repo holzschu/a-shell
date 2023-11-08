@@ -1,0 +1,90 @@
+.TH LATEX 1 "30 April 2018" "Web2C 2019"
+.\"=====================================================================
+.if t .ds TX \fRT\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X\fP
+.if n .ds TX TeX
+.ie t .ds OX \fIT\v'+0.25m'E\v'-0.25m'X\fP\"
+.el .ds OX TeX\"
+.\" BX definition must follow TX so BX can use TX
+.if t .ds BX \fRB\s-2IB\s0\fP\*(TX
+.if n .ds BX BibTeX
+.\" LX definition must follow TX so LX can use TX
+.if t .ds LX \fRL\\h'-0.36m'\\v'-0.15v'\s-2A\s0\\h'-0.15m'\\v'0.15v'\fP\*(TX
+.if n .ds LX LaTeX
+.\"=====================================================================
+.SH NAME
+latex, pdflatex, xelatex, lualatex, dvilualatex, cslatex, pdfcslatex, platex, uplatex, lamed \- structured text formatting and typesetting
+.SH SYNOPSIS
+.B latex
+.RI [ first-line ]
+.\"=====================================================================
+.SH DESCRIPTION
+.PP
+This manual page is a mere skeleton.
+.PP
+The \*(LX language is described in the book
+.IR "\*(LX \- A Document Preparation System" .
+\*(LX is a \*(TX macro package, not a modification to the \*(TX source
+program, so all the capabilities described in
+.BR tex (1)
+are present.
+.PP
+The \*(LX macros encourage writers to think about the content of their
+documents, rather than the form.  The ideal, very difficult to realize, is to
+have no formatting commands (like ``switch to italic'' or ``skip 2
+picas'') in the document at all; instead, everything is done
+by specific markup instructions: ``emphasize'', ``start a section''.
+.PP
+The primary source of documentation for \*(LX is the \*(LX manual 
+referenced below.
+.PP
+.BR lualatex ,
+.BR pdflatex ,
+.BR pdfcslatex ,
+.B xelatex
+are \*(LX formats based on the respective engines.  All output PDF by default.
+.br
+.BR platex ,
+.B uplatex
+are Japanese \*(LX formats based on e-pTeX and e-upTeX (DVI output).
+.br
+.B lamed
+is the Aleph-based \*(LX format (DVI output).
+.br
+.B dvilualatex
+is LuaTeX-based and outputs DVI.
+.br
+.B cslatex
+is csTeX-based (primitives integrated into pdfTeX) and outputs DVI.
+.PP
+On some systems
+.B latex209
+and
+.B slitex
+may still be available for compatibility with older versions of \*(LX.  These
+should not be used for new texts.
+.\"=====================================================================
+.PP
+.SH "SEE ALSO"
+.BR amstex (1),
+.BR luatex (1),
+.BR pdftex (1),
+.BR ptex (1),
+.BR tex (1),
+.BR xetex (1).
+.PP
+Leslie Lamport,
+.IR "\*(LX \- A Document Preparation System" ,
+Addison-Wesley, 1985, ISBN 020115790X.
+.PP
+Frank Mittelbach, Michel Goossens, Johannes Braams, David Carlisle,
+and Chris Rowley, 
+.IR "LaTeX Companion" ,
+Addison-Wesley, 2004, ISBN 0201362996 (2nd edition).
+.PP
+The \*(LX home page is http://latex-project.org.
+.br
+A list of some \*(LX tutorials is at
+http://www.tex.ac.uk/cgi-bin/texfaq2html?label=man-latex.
+.br
+An unofficial reference manual for \*(LX is at
+https://ctan.org/pkg/latex2e-help-texinfo.

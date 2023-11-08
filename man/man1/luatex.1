@@ -1,0 +1,252 @@
+.TH LUATEX 1 "27 May 2018" "Web2C 2019"
+.\"=====================================================================
+.if n .ds MF Metafont
+.if t .ds MF Metafont
+.if t .ds TX \fRT\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X\fP
+.if n .ds TX TeX
+.if n .ds WB Web
+.if t .ds WB W\s-2EB\s0
+.\"=====================================================================
+.SH NAME
+luatex, dviluatex, luajittex, texlua, texluac \- An extended version of pdfTeX using Lua as
+an embedded scripting language
+.\"=====================================================================
+.SH SYNOPSIS
+.B luatex
+.RB [ \-\-lua=\fIFILE\fP ]
+.RI [ OPTION ].\|.\|.
+.RI [ TEXNAME [ \fB.tex\fP ]]
+.RI [ COMMANDS ]
+.br
+.B luatex
+.RB [ \-\-lua=\fIFILE\fP ]
+.RI [ OPTION ].\|.\|.
+.BI \e FIRST\-LINE
+.br
+.B luatex
+.RB [ \-\-lua=\fIFILE\fP ]
+.RI [ OPTION ].\|.\|.
+.BI & FMT
+.RI [ ARGS ]
+.\"=====================================================================
+.SH DESCRIPTION
+Run the lua\*(TX typesetter on
+.IR TEXNAME ,
+usually creating
+.IR TEXNAME\fB.pdf\fP .
+Any remaining
+.I COMMANDS
+are processed as lua\*(TX input, after
+.I TEXNAME
+is read.
+
+Alternatively, if the first non\-option argument begins with a backslash,
+interpret all non\-option arguments as a line of lua\*(TX input.
+
+Alternatively, if the first non\-option argument begins with a \fB&\fR,
+the
+next word is taken as the \fIFMT\fR to read, overriding all else. Any
+remaining arguments are processed as above.
+
+If no arguments or options are specified, prompt for input.
+
+If called as \fBtexlua\fR it acts as lua interpreter.
+If called as \fBtexluac\fR it acts as lua bytecode compiler.
+
+Lua\*(TX is an extended version of pdf\*(TX with Unicode and OpenType
+font support, embedded \fBLua\fR scripting language, the \fBe-\*(TX\fR
+and \fBOmega\fR extensions, as well as integrated MetaPost engine, that
+can create \fIPDF\fR files as well as \fIDVI\fR files.
+For more information about luatex, see http://www.luatex.org, you can
+read Lua\*(TX manual using texdoc utility (\fBtexdoc luatex\fR).
+
+All Lua\*(TX text input and output is considered to be Unicode text.
+
+In \fIDVI\fR mode, lua\*(TX can be used as a complete replacement for
+the \*(TX engine.
+
+In \fIPDF\fR mode, lua\*(TX can natively handle the \fIPDF\fR, \fIJPG\fR,
+\fIJBIG2\fR, and \fIPNG\fR graphics formats.  lua\*(TX cannot include
+PostScript or Encapsulated PostScript (EPS) graphics files; first convert
+them to PDF using \fBepstopdf\fR (1).
+
+.\"=====================================================================
+.SH "OPTIONS"
+When the Lua\*(TX executable starts, it looks for the \fB\-\-lua\fR
+command-line option.
+If there is no \fB\-\-lua\fR option, the command line is interpreted in a
+similar fashion as in traditional pdf\*(TX and Aleph. But if the option
+is present, Lua\*(TX will enter an alternative mode of command-line parsing
+in comparison to the standard web2c programs. The presence of \fB--lua\fR
+makes most of other options unreliable, because the lua initialization
+file can disable kpathsea and/or hook functions into various callbacks.
+.ig
+Here is the list of possibly affected switches/functionality, and why:
+..
+.TP
+.BI "\-\-lua=" FILE
+The lua initialization file.
+.PP
+The following two options alter the executable behaviour:
+.TP
+.B \-\-luaonly
+Start Lua\*(TX as a Lua interpreter. In this mode, it will set Lua's
+\fIarg[0]\fR to the found script name, pushing preceding options in
+negative values and the rest of the command line in the positive values,
+just like the Lua interpreter. Lua\*(TX will exit immediately after
+executing the specified Lua script.
+.TP
+.BI \-\-luaconly
+Start Lua\*(TX as a Lua byte compiler. In this mode, Lua\*(TX is exactly
+like \fBluac\fR from the standalone Lua distribution, except that it
+does not have the \fB\-l\fR switch, and that it accepts (but ignores)
+the \fB\-\-luaconly\fR switch.
+.PP
+Then the regular web2c options:
+.TP
+.B \-\-debug\-format
+.br
+Debug format loading.
+.TP
+.B \-\-draftmode
+Sets \epdfdraftmode so lua\*(TX doesn't write a PDF and doesn't read
+any included images, thus speeding up execution.
+.TP
+.B \-\-enable\-write18
+.br
+Synonym for \fB\-\-shell\-escape\fR.
+.TP
+.B \-\-disable\-write18
+.br
+Synonym for \fB\-\-no\-shell\-escape\fR.
+.TP
+.B \-\-shell\-escape
+.br
+Enable the
+.BI \ewrite18{ command }
+construct, and Lua functions \fBos.execute()\fR, \fBos.exec()\fR,
+\fBos.spawn()\fR, and \fBio.popen()\fR.  The \fIcommand\fR can be any
+shell command.  This construct is normally disallowed for security
+reasons.
+.TP
+.B \-\-no\-shell-escape
+.br
+Disable the
+.BI \ewrite18{ command }
+construct and the other Lua functions, even if it is enabled in the
+\fItexmf.cnf\fR file.
+.TP
+.B \-\-shell-restricted
+Enable restricted version of \fB\ewrite18\fR, \fBos.execute()\fR,
+\fBos.exec()\fR, \fBos.spawn()\fR, and \fBio.popen()\fR, only commands
+listed in \fItexmf.cnf\fR file are allowed.
+.TP
+.B \-\-file\-line\-error
+Print error messages in the form \fIfile:line:error\fR which is similar
+to the way many compilers format them.
+.TP
+.B \-\-no\-file\-line\-error
+Disable printing error messages in the \fIfile:line:error\fR style.
+.TP
+.BI "\-\-fmt=" FORMAT
+Use \fIFORMAT\fR as the name of the format to be used, instead of the
+name by which lua\*(TX was called or a \fI%&\fR line.
+.TP
+.B \-\-help
+Print help message and exit.
+.TP
+.B \-\-ini
+Start in \fIINI\fR mode, which is used to dump formats.  The \fIINI\fR
+mode can be used for typesetting, but no format is preloaded, and basic
+initializations like setting catcodes may be required.
+.TP
+.BI "\-\-interaction=" MODE
+Sets the interaction mode.  The \fIMODE\fR can be either
+.IR batchmode ,
+.IR nonstopmode ,
+.IR scrollmode ,
+and
+.IR errorstopmode .
+The meaning of these modes is the same as that of the corresponding
+\ecommands.
+.TP
+.BI "\-\-jobname=" NAME
+Use \fINAME\fR for the job name, instead of deriving it from the name
+of the input file.
+.TP
+.BI "\-\-kpathsea-debug=" BITMASK
+Sets path searching debugging flags according to the \fIBITMASK\fR.
+See the \fIKpathsea\fR manual for details.
+.TP
+.BI "\-\-mktex=" FMT
+Enable mktex\fIFMT\fR generation, where \fIFMT\fR must be either \fItex\fR
+or \fItfm\fR.
+.TP
+.B \-\-nosocket
+Disable the luasocket (network) library.
+.TP
+.TP
+.BI "\-\-output\-comment=" STRING
+In \fIDVI\fR mode, use \fISTRING\fR for the \fIDVI\fR file comment
+instead of the date.  This option is ignored in\fIPDF\fR mode.
+.TP
+.BI "\-\-output\-directory=" DIRECTORY
+Write output files in \fIDIRECTORY\fR instead of the current directory.
+Look up input files in \fIDIRECTORY\fR first, then along the normal
+search path.
+.TP
+.BI "\-\-output\-format=" FORMAT
+Set the output format mode, where \fIFORMAT\fR must be either \fIpdf\fR
+or \fIdvi\fR.
+This also influences the set of graphics formats understood by lua\*(TX.
+.TP
+.BI "\-\-progname=" NAME
+Pretend to be program \fINAME\fR (only for kpathsea).
+.TP
+.B \-\-recorder
+Enable the filename recorder.
+This leaves a trace of the files opened for input and output
+in a file with extension \fI.fls\fR.
+.TP
+.B \-\-safer
+Disable some Lua commands that can easily be abused by a malicious
+document.
+.TP
+.BI "\-\-synctex=" NUMBER
+Enable/disable Sync\*(TX extension.
+.TP
+.B \-\-version
+Print version information and exit.
+.TP
+.B \-\-credits
+Print credits and version details.
+.TP
+The following options are ignored:
+.TP
+.BR \-\-8bit ,\  \-\-etex ,\  \-\-parse\-first\-line ,\  \-\-no\-parse\-first\-line
+These are always on.
+.TP
+.BR \-\-default\-translate\-file=\fITCXNAME\fP  ,\  \-\-translate\-file=\fITCXNAME\fP
+These are always off.
+
+.\"=====================================================================
+.SH "SEE ALSO"
+.BR pdftex (1),
+.BR etex (1),
+.BR aleph (1),
+.BR lua (1).
+.\"=====================================================================
+.SH "AUTHORS"
+The primary authors of Lua\*(TX are Taco Hoekwater, Hartmut Henkel,
+Hans Hagen, and Luigi Scarso, with help from Martin Schr\[:o]der, Karel
+Skoupy, and Han The Thanh.
+.PP
+\*(TX was designed by Donald E. Knuth, who implemented it using his
+\*(WB system for Pascal programs.
+It was ported to Unix at Stanford by Howard Trickey, and at Cornell by
+Pavel Curtis.
+The version now offered with the Unix \*(TX distribution is that generated
+by the \*(WB to C system (\fBweb2c\fR), originally written by Tomas
+Rokicki and Tim Morgan.
+.PP
+The Lua\*(TX home page is http://luatex.org.

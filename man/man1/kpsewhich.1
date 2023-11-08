@@ -1,0 +1,144 @@
+.TH KPSEWHICH 1 "1 March 2011" "Kpathsea 6.3.1"
+.\"=====================================================================
+.if n .ds MP MetaPost
+.if t .ds MP MetaPost
+.if n .ds MF Metafont
+.if t .ds MF M\s-2ETAFONT\s0
+.if t .ds TX \fRT\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X\fP
+.if n .ds TX TeX
+.ie t .ds OX \fIT\v'+0.25m'E\v'-0.25m'X\fP for troff
+.el .ds OX TeX for nroff
+.\" the same but obliqued
+.\" BX definition must follow TX so BX can use TX
+.if t .ds BX \fRB\s-2IB\s0\fP\*(TX
+.if n .ds BX BibTeX
+.\" LX definition must follow TX so LX can use TX
+.if t .ds LX \fRL\\h'-0.36m'\\v'-0.15v'\s-2A\s0\\h'-0.15m'\\v'0.15v'\fP\*(TX
+.if n .ds LX LaTeX
+.\"=====================================================================
+.SH NAME
+kpsewhich \- standalone path lookup and and expansion for kpathsea
+.SH SYNOPSIS
+.B kpsewhich
+.RI [ options ]
+.RI [ filenames ]
+.\"=====================================================================
+.SH DESCRIPTION
+This manual page is not meant to be exhaustive.  The complete
+documentation for this version of \*(TX can be found in the info file
+or manual
+.IR "Kpathsea: A library for path searching" .
+.PP
+.B kpsewhich
+is used as a standalone front-end of the kpathsea library that can be
+used to examine variables and find files.  When the
+.B -format
+option is not given, the search path used when looking for a file is
+inferred from the name given, by looking for a known extension.  If
+no known extension is found, the search path for \*(TX source files is
+used.
+.\"=====================================================================
+.SH OPTIONS
+.B kpsewhich
+accepts the following options:
+.TP
+.BI -debug \ num
+Set debugging flags.
+.TP
+.BI -D \ num
+Use a base resolution of
+.IR num ;
+the default, set by the installer, is typically 600.
+.TP
+.BI -dpi \ num
+As
+.BR -D.
+.TP
+.BI -engine \ string
+Set
+.I $engine
+in the environment, which is used in some search paths.
+.TP
+.BI -expand-braces \ string
+Print variable and brace expansion of
+.IR string .
+.TP
+.BI -expand-path \ string
+Print complete path expansion of
+.IR string .
+.TP
+.BI -expand-var \ string
+Print variable expansion of
+.IR string .
+.TP
+.BI -format \ name
+Use file type
+.IR name .
+See the info manual for a list of valid names, or use the
+.B -help
+option to print the list.
+.TP
+.B -help
+Print help message and exit.
+.TP
+.B -interactive
+Ask for additional filenames to look up.
+.TP
+.BI -mktex \ fmt
+enable
+.RI mktex fmt
+generation.
+.RI ( fmt =pk/mf/tex/tfm)
+.TP
+.BI -mode \ string
+Set device name for
+.I $MAKETEX_MODE
+to
+.IR string ;
+no default.
+.TP
+.B -must-exist
+Search the disk as well as ls-R if necessary.
+.TP
+.BI -no-mktex \ fmt
+disable
+.RI mktex fmt
+generation.
+.RI ( fmt =pk/mf/tex/tfm)
+.TP
+.BI -path \ string
+Search in the path
+.IR string .
+.TP
+.BI -progname \ string
+Set program name to
+.IR string .
+.\" .TP
+.\" .BI -separator \ string
+.\" .rb
+.\" .I string
+.\" separates components in
+.\" .B -path
+.\" output; default is
+.\" .I :
+.\" on UNIX systems.
+.TP
+.BI -show-path \ name
+Output search path for file type
+.IR name .
+See the info manual for a list of valid names, or use the
+.B -help
+option to print the list.
+.TP
+.BI -var-value \ variable
+Print the expansion of
+.IR variable .
+.TP
+.B -version
+Print version information and exit.
+.\"=====================================================================
+.SH "SEE ALSO"
+.BR mktexlsr (1),
+.BR mktexmf (1),
+.BR mktexpk (1),
+.BR mktextfm (1).

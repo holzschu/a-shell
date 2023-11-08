@@ -1,0 +1,44 @@
+.TH MKTEXLSR 1 "1 March 2011" "Kpathsea 6.3.1"
+.\"=====================================================================
+.if n .ds MP MetaPost
+.if t .ds MP MetaPost
+.if n .ds MF Metafont
+.if t .ds MF M\s-2ETAFONT\s0
+.if t .ds TX \fRT\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X\fP
+.if n .ds TX TeX
+.ie t .ds OX \fIT\v'+0.25m'E\v'-0.25m'X\fP for troff
+.el .ds OX TeX for nroff
+.\" the same but obliqued
+.\" BX definition must follow TX so BX can use TX
+.if t .ds BX \fRB\s-2IB\s0\fP\*(TX
+.if n .ds BX BibTeX
+.\" LX definition must follow TX so LX can use TX
+.if t .ds LX \fRL\\h'-0.36m'\\v'-0.15v'\s-2A\s0\\h'-0.15m'\\v'0.15v'\fP\*(TX
+.if n .ds LX LaTeX
+.\"=====================================================================
+.SH NAME
+mktexlsr \- create ls-R databases
+.SH SYNOPSIS
+.B mktexlsr
+.RI [ directories ]
+.\"=====================================================================
+.SH DESCRIPTION
+This manual page is not meant to be exhaustive.  The complete
+documentation for this version of \*(TX can be found in the info file
+or manual
+.IR "Kpathsea: A library for path searching" .
+.PP
+.B mktexlsr
+is used to generate the ls-R databases used by the kpathsea library.
+It will create them for the specified directories, or for a default
+list if no directories are specified.
+.\"=====================================================================
+.SH OPTIONS
+.B mktexlsr
+accepts the following options:
+.TP
+.B --help
+Print help message and exit.
+.TP
+.B --version
+Print version information and exit.

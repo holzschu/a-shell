@@ -1,0 +1,63 @@
+.TH "rumakeindex" "1" "September 2000" "teTeX" "teTeX" 
+.PP 
+.SH "NAME" 
+rumakeindex \- process a LaTeX index using Russian Cyrillic
+characters
+.PP 
+.SH "SYNOPSIS" 
+.PP 
+\fBrumakeindex\fP \fIbasename\fP
+.PP 
+.SH "DESCRIPTION" 
+.PP 
+\fBrumakeindex\fP is used to run \fBmakeindex\fP(1) on \f(CWidx\fP files
+that use Russian characters\&.  It is part of the T2 package\&.
+.PP 
+\fBrumakeindex\fP runs \fBsed\fP(1) on the \f(CWidx\fP file to convert
+Cyrillic character commands to 8-bit ASCII characters; pipes the
+results through \fBmakeindex\fP(1); and then through \fBtr\fP(1)
+to do some final conversions\&.  The results are placed in a KOI8-R
+encoded \f(CWind\fP file\&.
+.PP 
+.SH "FILES" 
+.PP 
+.IP 
+.IP "\fIbasename\&.idx\fP" 
+LaTeX index entry file
+.IP "\fIbasename\&.ilg\fP" 
+LaTeX index log file
+.IP "\fIbasename\&.ind\fP" 
+LaTeX processed index file
+.IP 
+.PP 
+.SH "BUGS" 
+.PP 
+None known, but report any bugs found to the authors\&.
+.PP 
+.SH "COPYRIGHT" 
+.PP 
+The T2 package is Copyright 1997-1999 Werner Lemberg, Vladimir
+Volovich and any individual authors listed elsewhere in package files\&.
+.PP 
+It may be distributed under the conditions of the LaTeX Project Public
+License, either version 1\&.1 of this license or (at your option) any
+later version\&.
+.PP 
+.SH "SEE ALSO" 
+.PP 
+\fBmakeindex\fP(1), \fBsed\fP(1), \fBtr\fP(1),
+<ftp://ftp\&.vsu\&.ru/pub/tex/T2/README>\&.
+.PP 
+.SH "AUTHOR" 
+.PP 
+Werner Lemberg 
+<wl@gnu\&.org>, Vladimir Volovich
+<TeX@vvv\&.vsu\&.ru>\&.
+.PP 
+This manual page was written by C\&.M\&. Connelly
+<c@eskimo\&.com>, for
+the Debian GNU/Linux system\&.  It may be used by other distributions
+without contacting the author\&.  Any mistakes or omissions in the
+manual page are my fault; inquiries about or corrections to this
+manual page should be directed to me (and not to the primary author)\&.
+.PP 

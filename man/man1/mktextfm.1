@@ -1,0 +1,65 @@
+.TH MKTEXTFM 1 "1 March 2011" "Kpathsea 6.3.1"
+.\"=====================================================================
+.if n .ds MP MetaPost
+.if t .ds MP MetaPost
+.if n .ds MF Metafont
+.if t .ds MF M\s-2ETAFONT\s0
+.if t .ds TX \fRT\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X\fP
+.if n .ds TX TeX
+.ie t .ds OX \fIT\v'+0.25m'E\v'-0.25m'X\fP for troff
+.el .ds OX TeX for nroff
+.\" the same but obliqued
+.\" BX definition must follow TX so BX can use TX
+.if t .ds BX \fRB\s-2IB\s0\fP\*(TX
+.if n .ds BX BibTeX
+.\" LX definition must follow TX so LX can use TX
+.if t .ds LX \fRL\\h'-0.36m'\\v'-0.15v'\s-2A\s0\\h'-0.15m'\\v'0.15v'\fP\*(TX
+.if n .ds LX LaTeX
+.\"=====================================================================
+.SH NAME
+mktextfm \- create a TFM file for a font
+.SH SYNOPSIS
+.B mktextfm
+.RI [ options ]
+.I font
+.\"=====================================================================
+.SH DESCRIPTION
+This manual page is not meant to be exhaustive.  The complete
+documentation for this version of \*(TX can be found in the info file
+or manual
+.IR "Kpathsea: A library for path searching" .
+.PP
+.B mktextfm
+is used to generate a
+.I tfm
+file from the \*(MF source files for
+.IR font ,
+if possible.  If
+.I destdir
+is given, the generated file will be installed there, otherwise a
+(rather complicated) heuristic is used.
+.PP
+The name of the generated file is printed on standard output.
+.PP
+.B mktextfm
+is typically called by other programs, rather than from the command
+line.
+.\"=====================================================================
+.SH OPTIONS
+.B mktextfm
+accepts the following options:
+.TP
+.BI --destdir \ dir
+A directory name. If the directory is absolute, it is used as-is.
+Otherwise, it is appended to the root destination directory set in the
+script.
+.TP
+.B --help
+Print help message and exit.
+.TP
+.B --version
+Print version information and exit.
+.\"=====================================================================
+.SH "SEE ALSO"
+.BR mktexmf (1),
+.BR mktexpk (1).

@@ -1,0 +1,63 @@
+.TH dvired 1 "09/94" "teTeX" "teTeX"
+.SH NAME
+dvired \- print dvi-files
+.SH SYNOPSIS
+.B dvired
+[
+.B options
+]
+.B file
+.SH DESCRIPTION
+.I dvired
+behaves like
+.IR dvips ,
+except for the fact that two logical pages are put onto each physical
+sheet of paper.
+
+For
+.IR options ,
+see
+.IR dvips (1).
+This program only interprets the following options:
+
+.I \-o file
+\- redirect output into
+.I file.
+
+.I \-P printer
+\- direct output to
+.I printer.
+
+.I \-f
+\- direct output to stdout.
+
+Any other option is passed directly to
+.IR dvips .
+
+.SH EXAMPLES
+It is assumed that the PRINTER-variable is set.
+
+.B dvired \-Plw foo
+\- send output to printer
+.IR lw .
+.br
+.B dvired \-o foo.ps foo
+\- send output to file
+.IR foo.ps .
+.br
+.B dvired \-pp4-7 foo
+\- send 4 pages (reduced onto 2 sheets) of
+.I foo
+to the printer.
+.br
+.B dvired foo \-f | ghostview \-
+\- preview output with ghostview.
+
+.SH "SEE ALSO"
+.IR dvips (1)
+.SH BUGS
+.I dvired
+is fixed on A4 paper size. If you want to use it with other paper, you have
+to change the settings within the source.
+.SH AUTHOR
+Thomas Esser <te@dbs.uni-hannover.de>

@@ -1,0 +1,66 @@
+.TH "texlinks" "8" "November 2007" "teTeX" "teTeX" 
+.PP 
+.SH "NAME" 
+texlinks \- maintain symbolic links from format to engine
+.PP 
+.SH "SYNOPSIS" 
+.PP 
+\fBtexlinks\fP [ \fIOPTIONS\fP\&.\&.\&. ]  \fIDIRECTORIES\fP\&.\&.\&.
+.PP 
+.SH "DESCRIPTION" 
+.PP 
+\fBtexlinks\fP is used to create or recreate symbolic links from
+formats to engines according to the information in
+\fIfmtutil\&.cnf\fP or a file specified with \fB--cnffile\fP\&.
+.PP 
+\fIDIRECTORIES\fP is an optional list of directories in which to
+operate\&.  If no directories are specified the list of directories
+depends on the \fB--multiplatform\fP option\&.
+.PP 
+.SH "OPTIONS" 
+.PP 
+.IP "\fB--cnffile\fP \fIFILE\fP or \fB-f\fP \fIFILE\fP" 
+use file as configuration file (default:
+\fIfmtutil\&.cnf\fP)
+.IP "\fB--help\fP or \fB-h\fP" 
+show some help text
+.IP "\fB--multiplatform\fP or \fB-m\fP" 
+operate in all
+platform-specific directories (default:
+operate only in the directory for this
+platform)
+.IP "\fB--silent\fP or \fB-s\fP" 
+silently skip over existing
+scripts/binaries instead of printing a warning
+.IP "\fB--unlink\fP or \fB-u\fP"
+Unlink previously created symlinks
+.IP "\fB--verbose\fP or \fB-v\fP"
++set verbose mode on (default: off)
+.PP 
+.SH "FILES" 
+.PP 
+.IP "\fIfmtutil\&.cnf\fP" 
+default configuration file
+.PP 
+.SH "SEE ALSO" 
+.PP 
+\fBfmtutil\fP(1), \fBfmtutil\&.cnf\fP(5)
+.PP 
+Web page: <http://tug\&.org/teTeX/>
+.PP 
+.SH "BUGS" 
+.PP 
+None known, but report any bugs found to <tex-k@tug\&.org> (mailing list)\&.
+.PP 
+.SH "AUTHOR" 
+.PP 
+\fBtexlinks\fP was written by Thomas Esser 
+<te@dbs\&.uni-hannover\&.de> in 1999\&.
+\fBtexlinks\fP has been released into the public domain\&.
+.PP 
+This manual page was written by C\&.M\&. Connelly
+<c@eskimo\&.com>, for
+the Debian GNU/Linux system\&.  It may be used by other distributions
+without contacting the author\&.  Any mistakes or omissions in the
+manual page are my fault; inquiries about or corrections to this
+manual page should be directed to me (and not to the primary author)\&.

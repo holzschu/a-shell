@@ -1,0 +1,232 @@
+.TH pdftosrc 1 "16 June 2015" "Web2C 2019"
+.SH NAME
+pdftosrc \- extract source file or stream from PDF file
+.SH SYNOPSIS
+.B pdftosrc
+.I PDF-file
+.RI [ stream-object-number ]
+.SH DESCRIPTION
+If only
+.I PDF-file
+is given as argument,
+.B pdftosrc
+extracts the embedded source file
+from the first found stream object
+with /Type /SourceFile within the
+.I PDF-file
+and writes it to a file with the name /SourceName
+as defined in that PDF stream object
+(see application example below).
+
+If both
+.I PDF-file
+and
+.I stream-object-number
+are given as arguments, and
+.I stream-object-number
+is positive,
+.B pdftosrc
+extracts and uncompresses the PDF stream of the object
+given by its
+.I stream-object-number
+from the
+.I PDF-file
+and writes it to a file named
+.IR PDF-file . stream-object-number
+with the ending
+.B .pdf
+or
+.B .PDF
+stripped from the original
+.I PDF-file
+name.
+
+A special case is related to XRef object streams that are part
+of the PDF standard from PDF-1.5 onward:
+If
+.I stream-object-number
+equals -1,
+then
+.B pdftosrc
+decompresses the XRef stream from the PDF file and writes it
+in human-readable PDF cross-reference table format to a file named
+.IB PDF-file .xref
+(these XRef streams can not be extracted just by giving their object number).
+
+In any case
+an existing file with the output file name will be overwritten.
+.SH OPTIONS
+None.
+.SH FILES
+Just the executable
+.BR pdftosrc .
+.SH ENVIRONMENT
+None.
+.SH DIAGNOSTICS
+At success the exit code of
+.B pdftosrc
+is 0, else 1.
+
+All messages go to stderr.
+At program invocation,
+.B pdftosrc
+issues the current version number of the program
+.BR xpdf ,
+on which
+.B pdftosrc
+is based:
+
+.RS
+pdftosrc version 3.01
+
+.RE
+When
+.B pdftosrc
+was successful with the output file writing,
+one of the following messages will be issued:
+
+.RS
+Source file extracted to
+.I source-file-name
+
+.RE
+or
+
+.RS
+Stream object extracted to
+.IR PDF-file . stream-object-number
+
+.RE
+or
+
+.RS
+Cross-reference table extracted to
+.IR PDF-file .xref
+
+.RE
+
+.RE
+When the object given by the
+.I stream-object-number
+does not contain a stream,
+.B pdftosrc
+issues the following error message:
+
+.RS
+Not a Stream object
+
+.RE
+When the
+.I PDF-file
+can't be opened, the error message is:
+
+.RS
+Error: Couldn't open file
+.RI ' PDF-file '.
+
+.RE
+When
+.B pdftosrc
+encounters an invalid PDF file,
+the error message (several lines) is:
+
+.RS
+Error: May not be a PDF file (continuing anyway)
+.RE
+.RS
+(more lines)
+.RE
+.RS
+Invalid PDF file
+
+.RE
+There are also more error messages from
+.B pdftosrc
+for various kinds of broken PDF files.
+.SH NOTES
+An embedded source file will be written out unchanged,
+i. e. it will not be uncompressed in this process.
+
+Only the stream of the object will be written,
+i. e. not the dictionary of that object.
+
+Knowing which
+.I stream-object-number
+to query requires information about the PDF file
+that has to be gained elsewhere,
+e. g. by looking into the PDF file with an editor.
+
+The stream extraction capabilities of
+.B pdftosrc
+(e. g. regarding understood PDF versions and filter types)
+follow the capabilities of the underlying
+.B xpdf
+program version.
+
+Currently the generation number of the stream object
+is not supported.
+The default value 0 (zero) is taken.
+
+The wording
+.I stream-object-number
+has nothing to do with the `object streams' introduced
+by the Adobe PDF Reference,
+5th edition, version 1.6.
+.SH EXAMPLES
+When using pdftex,
+a source file can be embedded into some
+.I PDF-file
+by using pdftex primitives,
+as illustrated by the following example:
+
+\\immediate\\pdfobj
+.RE
+    stream attr {/Type /SourceFile /SourceName (myfile.zip)}
+.RS
+.RE
+    file{myfile.zip}
+.RS
+.RE
+\\pdfcatalog{/SourceObject \\the\\pdflastobj\\space 0 R}
+
+Then this zip file can be extracted from the
+.I PDF-file
+by calling
+.B pdftosrc
+.IR PDF-file .
+.SH BUGS
+Not all embedded source files will be extracted,
+only the first found one.
+
+Email bug reports to
+.B pdftex@tug.org.
+.SH SEE ALSO
+.BR xpdf (1),
+.BR pdfimages (1),
+.BR pdftotext (1),
+.BR pdftex (1),
+.SH AUTHORS
+.B pdftosrc
+written by Han The Thanh, using
+.B xpdf
+functionality from Derek Noonburg.
+
+Man page written by Hartmut Henkel.
+.SH COPYRIGHT
+Copyright (c) 1996-2006 Han The Thanh, <thanh@pdftex.org>
+
+This file is part of pdfTeX.
+
+pdfTeX is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+pdfTeX is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with pdfTeX; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA

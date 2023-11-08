@@ -1,0 +1,22 @@
+.TH DVI2FAX 1 "October 30, 1999"
+.\" man page by Jim Van Zandt <jrv@vanzandt.mv.com>         -*- nroff -*-
+.SH NAME
+dvi2fax \- convert a TeX DVI file to G3 fax format
+.SH SYNOPSIS
+\fBdvi2fax\fP [\fB-hi\fP|\fB-lo\fP] \fIfile\fP[.dvi] [\fIoptions for dvips\fP]
+.SH DESCRIPTION
+\fBdvi2fax\fP uses \fBdvips\fP(1) to convert a TeX DVI file to PostScript, 
+then \fBgs\fP(1) to convert the PostScript to G3 fax file format.
+.SH OPTIONS
+.LP
+.B -hi
+use high fax resolution (204x196 dpi) (default).
+.LP
+.B -lo
+use low fax resolution (204x98).
+.PP
+\fBdvips\fP options can follow the file name.
+.SH EXAMPLE
+Example: dvi2fax foo -l 2
+.SH SEE ALSO
+\fBdvips\fP(1), \fBgs\fP(1).

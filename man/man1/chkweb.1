@@ -1,0 +1,132 @@
+.TH chkweb 1 "March 30, 2001"
+.AT 3
+.SH NAME
+chkweb \- runs the LaTeX parts of a CWEB file through chktex
+.SH SYNOPSIS
+.B chkweb
+.I [-hiqrW] [-l <rcfile>] [-[wemn] <[1-42]|all>]
+.I [-d[0-...]] [-o <outfile>] [-[btxgI][0|1]]
+.B file1 file2 ...
+.SH DESCRIPTION
+.I chkweb
+runs the
+.I LaTeX
+parts of a CWEB file through chktex.
+.SH OPTIONS
+.PP
+Miscellaneous options:
+.TP
+.B "-h --help"
+Print a help screen.
+.TP
+.B "-i --license"
+Show distribution information.
+.TP
+.B "-l --localrc"
+Read local .chktexrc formatted  file.
+.TP
+.B "-d --debug"
+Debug information. Give it a number.
+.TP
+.B "-r --reset"
+Reset settings to default.
+.PP
+Muting warning messages:
+.TP
+.B "-w --warnon"
+Makes msg # given a warning and turns it on.
+.TP
+.B "-e  --erroron"
+Makes msg # given an error and turns it on.
+.TP
+.B "-m --msgon"
+Makes msg # given a message and turns it on.
+.TP
+.B "-n --nowarn"
+Mutes msg # given.
+
+.PP
+Output control flags:
+.TP
+.B "-V --pipeverb"
+How errors are displayed when stdout != tty.
+Defaults to the same as -v.
+.TP
+.B "-s --splitchar"
+String used to split fields when doing -v0
+.TP
+.B "-o --output"
+Redirect error report to a file.
+.TP
+.B "-q --quiet"
+Shuts up about version information.
+.TP
+.B "-f --format"
+Format to use for output
+
+.PP
+Boolean switches (1 -> enables / 0 -> disables):
+.TP
+.B "-b --backup"
+Backup output file.
+.TP
+.B "-x --wipeverb"
+Ignore contents of `\\verb' commands.
+.TP
+.B "-g --globalrc"
+Read global .chktexrc file.
+.TP
+.B "-I --inputfiles"
+Execute \\input statements.
+.TP
+.B "-H --headererr"
+Show errors found in front of \\begin{document}
+.PP Miscellaneous switches:
+.TP
+.B "-W --version"
+Version information
+
+.PP
+If no LaTeX files are specified on the command line, we will read from
+stdin.   For explanation of warning/error messages, please consult the
+main document /usr/share/doc/chktex/ChkTeX.dvi.gz.
+
+.SH DISTRIBUTION
+Copyright (C) 1996 Jens T. Berger Thielemann
+.PP
+This program is free software; you can redistribute it and/or modify
+it under the terms of the 
+.I GNU General Public License 
+as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+.PP
+This program is distributed in the hope that it will be useful,
+but
+.B WITHOUT ANY WARRANTY;
+without even the implied warranty of
+.B MERCHANTABILITY
+or
+.B FITNESS FOR A PARTICULAR PURPOSE.
+See the
+.I GNU General Public License
+for more details.
+.PP
+You should have received a copy of the 
+.B GNU General Public License
+along with this program; if not, write to the
+.I Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+.SH ENVIRONMENT
+No environment variables are used.
+.SH FILES
+None.
+.SH AUTHOR
+Jens T. Berger Thielemann,
+.I <jensthi@ifi.uio.no>
+.PP
+This manual page was cobbled together by Clint Adams <schizo@debian.org>,
+based on the output of "chktex --help" and deweb(1).
+.SH "SEE ALSO"
+.B deweb(1), chktex(1)

@@ -1,0 +1,216 @@
+.TH texconfig 1 "July 2014" "TeX Live" "TeX Live"
+.SH NAME
+texconfig \- configures teTeX or TeX Live
+.LP
+texconfig-sys \- configures teTeX or TeX Live system\-wide
+.SH SYNOPSIS
+.B texconfig
+.LP
+.B texconfig
+[\fB commands\fR ...]
+.LP
+.B texconfig-sys
+.SH DESCRIPTION
+.I texconfig
+allows one to configure and maintain TeX in an easy and convenient
+manner, offering a series of dialog boxes to the user.  The directory in
+which \fItexconfig\fP is found is also preferentially used to find
+subprograms.
+.PP
+The
+.I tlmgr
+program has subsumed this function for TeX Live.  This program
+is still supported, but the tlmgr interface is much more actively
+developed and tested.
+.PP
+After choosing settings or options, the appropriate files
+are changed automatically and the new settings are applied for the
+user.  If needed, copies of files in
+.I TEXMFDIST
+or
+.I TEXMFMAIN
+will be made in the user's
+.I TEXMFCONFIG
+tree.
+.PP
+.I texconfig
+uses either the
+.IR whiptail (1)
+or
+.IR dialog (1)
+program to communicate with the user, so must be run in a terminal.
+.PP
+For making system-wide changes, which will apply to all users of TeX
+(for example, default paper size and so on), run
+.I texconfig-sys
+instead.  Changed or generated files will be placed in
+.IR TEXMFSYSCONFIG .
+(You may need to be root to do this.)
+.PP
+.I texconfig
+also offers a non-interactive batch mode which can be accessed with
+the following commands
+.SH COMMANDS
+Commands that accept further options usually display available options
+if called without them.  For example,
+.B texconfig dvipdfm paper
+will inform about valid paper settings.
+.PP
+.B
+.IP conf
+Display the system configuration.  
+.PP
+.TP
+.B dvipdfm paper [letter|legal|ledger|tabloid|a4|a3]
+Set up dvipdfm to use papersize PAPER by default.
+.TP
+.B dvips add PRINTERNAME
+Create a new (empty) configuration file
+.I TEXMFCONFIG/dvips/config/config.PRINTERNAME.
+This file can later be filled with the
+.B mode, offset
+or
+.B printcmd
+options
+.TP
+.B dvips del PRINTERNAME
+Remove
+.I config.PRINTERNAME
+.TP
+.B dvips mode
+List available Metafont modes.
+.TP
+.B dvips [-P PRINTER] mode MODE
+Change the Metafont mode to
+.I MODE
+for
+.I PRINTER
+or for all output files
+.I (config.ps),
+if no
+.B -P
+option is given.
+.TP
+.B dvips [-P PRINTER] offset x-OFFSET,y-OFFSET
+Set printer offset for
+.I PRINTER
+or for all output files
+.I (config.ps),
+if no
+.B -P
+option is given.  Offsets must be given with units, e.g.
+.I 0pt,10pt
+You can use testpage.tex from the LaTeX distribution to find these
+numbers.
+.TP
+.B dvips [-P PRINTER] printcmd CMD
+Set the printing command for
+.I PRINTER
+or for all output files
+.I (config.ps),
+if no
+.B -P
+option is given.  Commands might be
+.B lp
+or
+.B lpr.
+See the description of the
+.I o
+option in
+.B info dvips
+or the
+.I -O
+option in
+.B dvips(1).
+.TP
+.B faq
+Display the list of Frequently Asked Questions about
+.B teTeX
+(and their answers).
+.TP
+.B font vardir DIR, font ro, font rw
+.TP
+.B formats
+This command allows to edit
+.B fmtutil.cnf(5)
+and (re)creates any new or changed formats afterwards.  
+.TP
+.B hyphen FORMAT
+This command allows to edit the hyphenation configuration file for
+formats that support this, and recreates the formats afterwards to
+enable the new languages.  Available formats are shown when no
+.I FORMAT
+is given.
+.IP
+Note that for formats that use LaTeX's
+.I language.dat,
+ e.g.
+.I (pdf)jadetex
+and
+.I latex
+itself, this change is not persistent, since this file is a generated
+file.  You should not use this command in these cases, read
+.B update-language(1)
+for alternatives.
+.TP
+.B init [format]
+Recreate
+.I format
+or all formats if none is given, and the font information.  This is
+the same as calling
+.B fmtutil --byfmt format
+or
+.B fmtutil --all,
+respectively, followed by
+.B updmap.
+.TP
+.B mode-list
+List available printer modes, together with the printers they were
+developed for, and their DPI resolution
+.TP
+.B mode MODE
+Set the default printer mode in
+.I /etc/texmf/web2c/mktex.cnf
+or the respective user file in
+.I $TEXMFCONFIG/web2c
+to
+.B MODE.
+.TP
+.B paper [a4|letter]
+Set the default papersize for
+.B dvips, dvipdfm, pdftex
+and
+.B xdvi.
+The set is restricted because not all programs understand all sizes.
+.TP
+.B pdftex paper [a4|letter]
+Set the default paper size for
+.B pdftex.
+.TP
+.B rehash
+Call
+.B mktexlsr.
+.TP
+.B xdvi paper PAPER
+Set the default paper size for
+.B xdvi.
+The (long) list is available with
+.B texconfig xdvi paper.
+
+.SH ENVIRONMENT
+To let you change files,
+.B texconfig
+will open the editor specified in the VISUAL or EDITOR variables, or
+.B sensible-editor
+if both are unset.
+.SH "SEE ALSO"
+.IR whiptail (1),
+.IR dialog (1),
+.IR tlmgr (1),
+.IR tex (1),
+.IR mf (1),
+.IR vi (1),
+.IR EDITOR
+environment variable.
+.SH AUTHOR
+Thomas Esser

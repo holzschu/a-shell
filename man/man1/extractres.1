@@ -1,0 +1,44 @@
+.TH EXTRACTRES 1 "PSUtils"
+.SH NAME
+extractres \- filter to extract resources from a PostScript document
+.SH SYNOPSIS
+.B extractres 
+.RB [ \-m ]
+.RI < document.ps
+.RI > output.ps
+.SH DESCRIPTION
+.B Extractres
+extracts resources (fonts, procsets, patterns, files, etc) appearing in a
+PostScript document, and puts appropriate
+.B %%IncludeResource
+comments in the document prologue. The extracted resources are written to
+files with the same name as the resource, and an appropriate extension. The
+pipeline
+.sp
+.ce
+extractres file.ps | includeres >out.ps
+.sp
+will move all resources appearing in a document to the document prologue,
+removing redundant copies. The output file can then be put through page
+re-arrangement filters such as
+.B psnup
+or 
+.B pstops
+safely.
+.PP
+The
+.B \-m
+option combines the resources of the same name into one file; this must be
+used for some programs which download fonts a bit at a time.
+.SH AUTHOR
+Written by Angus J. C. Duggan.
+.SH "SEE ALSO"
+.BR psutils (1)
+.SH TRADEMARKS
+.B PostScript
+is a trademark of Adobe Systems Incorporated.
+.SH BUGS
+.B extractres
+does not alter the
+.B %%DocumentSuppliedResources
+comments.

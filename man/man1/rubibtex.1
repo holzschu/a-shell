@@ -1,0 +1,63 @@
+.TH "rubibtex" "1" "October 2000" "teTeX" "teTeX" 
+.PP 
+.SH "NAME" 
+rubibtex \- make a bibliography for (La)TeX using Russian
+letters as item names
+.PP 
+.SH "SYNOPSIS" 
+.PP 
+\fBrubibtex\fP \fIBASENAME\fP
+.PP 
+.SH "DESCRIPTION" 
+.PP 
+\fBrubibtex\fP is used to run \fBbibtex\fP(1) on auxiliary files with
+Russian characters in item names (citation keys)\&.  It is part of the
+T2 package\&.
+.PP 
+\fBrubibtex\fP copies the auxiliary file to \fI/tmp\fP, uses
+\fBsed\fP(1) to convert Cyrillic character commands to their 8-bit
+ASCII equivalents; runs \fBbibtex\fP(1) on the modified file; and
+finally moves the original auxiliary file back (overwriting the
+modified file)\&.
+.PP 
+\fBrubibtex\fP assumes that the \fBbibtex\fP(1) database (\f(CWbib\fP)
+files are encoded with the KOI8-R encoding\&.
+.PP 
+.SH "FILES" 
+.PP 
+.IP 
+.IP "\fIbasename\&.aux\fP" 
+LaTeX auxiliary file
+.IP 
+.PP 
+.SH "BUGS" 
+.PP 
+None known, but report any bugs found to the authors\&.
+.PP 
+.SH "COPYRIGHT" 
+.PP 
+The T2 package is Copyright 1997-1999 Werner Lemberg, Vladimir
+Volovich and any individual authors listed elsewhere in package files\&.
+.PP 
+It may be distributed under the conditions of the LaTeX Project Public
+License, either version 1\&.1 of this license or (at your option) any
+later version\&.
+.PP 
+.SH "SEE ALSO" 
+.PP 
+\fBbibtex\fP(1), \fBsed\fP(1),
+<ftp://ftp\&.vsu\&.ru/pub/tex/T2/README>\&.
+.PP 
+.SH "AUTHOR" 
+.PP 
+Werner Lemberg 
+<wl@gnu\&.org>, Vladimir Volovich
+<TeX@vvv\&.vsu\&.ru>\&.
+.PP 
+This manual page was written by C\&.M\&. Connelly
+<c@eskimo\&.com>, for
+the Debian GNU/Linux system\&.  It may be used by other distributions
+without contacting the author\&.  Any mistakes or omissions in the
+manual page are my fault; inquiries about or corrections to this
+manual page should be directed to me (and not to the primary author)\&.
+.PP 

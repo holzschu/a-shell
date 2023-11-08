@@ -20,7 +20,7 @@ BEGIN {
   }
   chomp($TEXMFROOT);
   # iOS: we need to go through @INC before $Master/tlpkg, because of our edits:
-  # so we place the directories at the end:
+  # so we place the directories at the end:  
   # unshift(@INC, "$TEXMFROOT/tlpkg", "$TEXMFROOT/texmf-dist/scripts/texlive");
   push(@INC, "$TEXMFROOT/tlpkg", "$TEXMFROOT/texmf-dist/scripts/texlive");
   require "mktexlsr.pl";

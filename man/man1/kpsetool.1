@@ -1,0 +1,106 @@
+.TH "kpsetool" "1" "September 2000" "teTeX" "teTeX" 
+.PP 
+.SH "NAME" 
+kpsetool \- script to make teTeX-style \fBkpsetool\fP,
+\fBkpsexpand\fP, and \fBkpsepath\fP available
+.PP 
+.SH "SYNOPSIS" 
+.PP 
+\fBkpsetool \fP [ \fIOPTIONS\fP\&.\&.\&. ] \fICOMMAND\fP
+.PP 
+\fBkpsexpand\fP [ \fIOPTIONS\fP\&.\&.\&. ] \fISTRING\fP
+.PP 
+\fBkpsepath\fP  [ \fIOPTIONS\fP\&.\&.\&. ] \fIPATHTYPE\fP
+.PP 
+.SH "DESCRIPTION" 
+.PP 
+\fBkpsetool\fP is a Bourne shell script that makes a teTeX-style
+\fBkpsetool\fP, \fBkpsexpand\fP, and \fBkpsepath\fP available\&.
+\fBkpsetool\fP uses \fBweb2c\fP\'s (new) \fBkpsexpand\fP binary, so the
+syntax for \fBkpsexpand\fP is incompatible with teTeX\'s as of version
+0\&.4\&.
+.PP 
+.SH "OPTIONS" 
+.PP 
+.IP "\fB-m\fP \fImode\fP" 
+set Metafont mode
+.IP "\fB-n\fP \fIprogname\fP" 
+pretend to be \fIprogname\fP to kpathsea
+.IP "\fB-p\fP" 
+act like \fBkpsepath\fP(1)
+.IP "\fB-v\fP" 
+act like \fBkpsexpand\fP(1)
+.IP "\fB-w\fP" 
+act like \fBkpsewhich\fP(1)
+.PP 
+.SH "USAGE" 
+.PP 
+\fIPATHTYPE\fP can be
+.PP 
+.IP "\fBbase\fP" 
+Metafont memory dump
+.IP "\fBbib\fP" 
+BibTeX bibliography source
+.IP "\fBbst\fP" 
+BibTeX style files
+.IP "\fBcnf\fP" 
+Kpathsea runtime configuration files
+.IP "\fBdvips_config\fP" 
+dvips config files
+.IP "\fBdvips_header\fP" 
+dvips header files
+.IP "\fBfmt\fP" 
+TeX memory dump
+.IP "\fBgf\fP" 
+generic font bitmap
+.IP "\fBmem\fP" 
+MetaPost memory dump
+.IP "\fBmf\fP" 
+Metafont source
+.IP "\fBmfpool\fP" 
+Metafont program strings
+.IP "\fBmp\fP" 
+MetaPost source
+.IP "\fBmppool\fP" 
+MetaPost program strings
+.IP "\fBmpsupport\fP" 
+MetaPost support files
+.IP "\fBpict\fP" 
+Other kinds of figures
+.IP "\fBpk\fP" 
+packed bitmap font
+.IP "\fBtex\fP" 
+TeX source
+.IP "\fBtexpool\fP" 
+TeX program strings
+.IP "\fBtfm\fP" 
+TeX font metrics
+.IP "\fBtroff_font\fP" 
+troff fonts
+.IP "\fBvf\fP" 
+virtual font
+.PP 
+.SH "SEE ALSO" 
+.PP 
+\fBkpsewhich\fP(1)
+.PP 
+\fIKpathsea: A library for path searching\fP (info or DVI file)
+.PP 
+Web page: <http://tug\&.org/teTeX/>
+.PP 
+.SH "BUGS" 
+.PP 
+None known, but report any bugs found to <tetex@dbs\&.uni-hannover\&.de> (mailing list)\&.
+.PP 
+.SH "AUTHOR" 
+.PP 
+\fBkpsetool\fP was written by Thomas Esser 
+<te@dbs\&.uni-hannover\&.de> in March, 1997\&.  \fBkpsetool\fP
+is in the public domain\&.
+.PP 
+This manual page was written by C\&.M\&. Connelly
+<c@eskimo\&.com>, for
+the Debian GNU/Linux system\&.  It may be used by other distributions
+without contacting the author\&.  Any mistakes or omissions in the
+manual page are my fault; inquiries about or corrections to this
+manual page should be directed to me (and not to the primary author)\&.

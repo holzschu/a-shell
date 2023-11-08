@@ -1,0 +1,55 @@
+.TH "e2pall" "1" "August 2000" "teTeX" "teTeX" 
+.PP 
+.SH "NAME" 
+e2pall \- convert all EPS files in a LaTeX document to PDF
+.PP 
+.SH "SYNOPSIS" 
+.PP 
+\fBe2pall\fP \fITEXFILE\fP
+.PP 
+.SH "DESCRIPTION" 
+.PP 
+\fBe2pall\fP searches through \fITEXFILE\fP for \eincludegraphics
+commands to find the base names of image files\&.  When it finds one,
+\fBe2pall\fP runs \fBepstopdf\fP(1) to create a PDF file from the EPS
+file\&.
+.PP 
+\fBe2pall\fP will check to be sure that an existing PDF file is
+up-to-date with the EPS file, and will not run \fBepstopdf\fP(1) if
+the PDF file is newer than the EPS file\&.
+.PP 
+.SH "BUGS" 
+.PP 
+.IP "" 
+Seems to be broken
+.IP "" 
+Cannot handle \einput{\fIfilename\fP} or
+\eincludegraphics{\fIfilename\fP} split over more than one
+line
+.IP "" 
+Must be run from same directory as the LaTeX file
+.IP "" 
+Does not look down $TEXINPUTS
+.IP "" 
+Cannot handle documents that use \einclude commands
+.IP "" 
+Assumes \fIall\fP files included with \eincludegraphics are EPS
+files
+.IP 
+.PP 
+.SH "SEE ALSO" 
+.PP 
+\fBepstopdf\fP(1)
+.PP 
+.SH "AUTHOR" 
+.PP 
+\fBe2pall\fP was written by Jody Klymak <jklymak@apl\&.washington\&.edu> and published in a posting to
+the <pdftex@tug\&.org> (mailing list)\&.
+.PP 
+This manual page was written by C\&.M\&. Connelly
+<c@eskimo\&.com>, for
+the Debian GNU/Linux system\&.  It may be used by other distributions
+without contacting the author\&.  Any mistakes or omissions in the
+manual page are my fault; inquiries about or corrections to this
+manual page should be directed to me (and not to the primary author)\&.
+.PP 
