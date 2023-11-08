@@ -112,6 +112,33 @@ function updatePromptPosition() {
 	currentCommandCursorPosition = 0; 
 }
 
+// returns the actual width, on screen, of a string, including with emojis.
+// This is different from lib.wc.strWidth, which returns the length in characters. 
+// A family emoji has strWidth = 8, screenWidth = 2
+function screenWidth(str) {
+  let rv = 0;
+  let afterJoiner = false;
+  let isModifier = false;
+  	// modifiers (skin color) are *after* the emoji they change, zero-width-joiners are *between* two emojis.
+
+  for (let i = 0; i < str.length;) {
+    const codePoint = str.codePointAt(i);
+	const charAtCodePoint = String.fromCodePoint(codePoint);
+	isModifier = (charAtCodePoint.match(/\p{Emoji_Modifier}/gu) != null);
+    const width = lib.wc.charWidth(codePoint);
+    if (width < 0) {
+      return -1;
+    }
+    if ((!afterJoiner) && (!isModifier)) {
+      rv += width;
+	}
+	afterJoiner = (codePoint == 8205);
+    i += (codePoint <= 0xffff) ? 1 : 2;
+  }
+
+  return rv;
+}
+
 // prints a string and move the rest of the command around, even if it is over multiple lines
 // we use lib.wc.strWidth instead of length because of multiple-width characters (CJK, mostly).
 // TODO: get correct character width for emojis.
@@ -1672,6 +1699,77 @@ hterm.Terminal.prototype.onResize_ = function() {
 };
 
 /**
+ * Synchronizes the visible cursor and document selection with the current
+ * cursor coordinates.
+ *
+ * @return {boolean} True if the cursor is onscreen and synced.
+ */
+hterm.Terminal.prototype.syncCursorPosition_ = function() {
+  const topRowIndex = this.scrollPort_.getTopRowIndex();
+  const bottomRowIndex = this.scrollPort_.getBottomRowIndex(topRowIndex);
+  const cursorRowIndex = this.scrollbackRows_.length +
+      this.screen_.cursorPosition.row;
+
+  let forceSyncSelection = false;
+  if (this.accessibilityReader_.accessibilityEnabled) {
+    // Report the new position of the cursor for accessibility purposes.
+    const cursorColumnIndex = this.screen_.cursorPosition.column;
+    const cursorLineText =
+        this.screen_.rowsArray[this.screen_.cursorPosition.row].innerText;
+    // This will force the selection to be sync'd to the cursor position if the
+    // user has pressed a key. Generally we would only sync the cursor position
+    // when selection is collapsed so that if the user has selected something
+    // we don't clear the selection by moving the selection. However when a
+    // screen reader is used, it's intuitive for entering a key to move the
+    // selection to the cursor.
+    forceSyncSelection = this.accessibilityReader_.hasUserGesture;
+    this.accessibilityReader_.afterCursorChange(
+        cursorLineText, cursorRowIndex, cursorColumnIndex);
+  }
+
+  if (cursorRowIndex > bottomRowIndex) {
+    // Cursor is scrolled off screen, hide it.
+    this.cursorOffScreen_ = true;
+    this.cursorNode_.style.display = 'none';
+    return false;
+  }
+
+  if (this.cursorNode_.style.display == 'none') {
+    // Re-display the terminal cursor if it was hidden.
+    this.cursorOffScreen_ = false;
+    this.cursorNode_.style.display = '';
+  }
+
+  // Position the cursor using CSS variable math.  If we do the math in JS,
+  // the float math will end up being more precise than the CSS which will
+  // cause the cursor tracking to be off.
+  this.setCssVar(
+      'cursor-offset-row',
+      `${cursorRowIndex - topRowIndex} + ` +
+      `${this.scrollPort_.visibleRowTopMargin}px`);
+    
+  // screen_.cursorPosition.column = the position of the current char in the string. It's not equal to the cursor position when there are emojis, so we recompute each time:
+  let substr = lib.wc.substr(this.screen_.rowsArray[this.screen_.cursorPosition.row].innerText, 0, this.screen_.cursorPosition.column);
+  let actualCursorPosition = screenWidth(substr); 
+  this.setCssVar('cursor-offset-col', actualCursorPosition);
+
+  this.cursorNode_.setAttribute('title',
+                                '(' + actualCursorPosition +
+                                ', ' + this.screen_.cursorPosition.row +
+                                ')');
+
+  // Update the caret for a11y purposes unless FindBar has focus which it should
+  // keep.
+  if (!this.findBar.hasFocus) {
+    const selection = this.document_.getSelection();
+    if (selection && (selection.isCollapsed || forceSyncSelection)) {
+      this.screen_.syncSelectionCaret(selection);
+    }
+  }
+  return true;
+};
+
+/**
  * Initialises the content of this.iframe_. This needs to be done asynchronously
  * in FF after the Iframe's load event has fired.
  *
@@ -1960,6 +2058,7 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
  * @param {!TouchEvent} e
  */
 hterm.ScrollPort.prototype.onTouch_ = function(e) {
+
 	// TODO: disable scrolling with stylus *if* scribble is enabled. 
 	// Stylus and finger are both touch. but e.touches[0].touchType is 'stylus' for stylus touches.
 	// Now the question is how do I know that scribble is enabled?
@@ -2023,7 +2122,10 @@ hterm.ScrollPort.prototype.onTouch_ = function(e) {
       break;
 
     case 'touchmove': {
-  	  e.preventDefault(); // iOS: prevent WKWebView from scrolling too.
+      const selection = term_.document_.getSelection();
+      if (selection.isCollapsed) {
+		  e.preventDefault(); // iOS: prevent WKWebView from scrolling too.
+      }
       // Walk all of the touches in this one event and merge all of their
       // changes into one delta.  This lets multiple fingers scroll faster.
       let delta = 0;
@@ -2529,6 +2631,10 @@ hterm.Keyboard.prototype.onKeyPress_ = function(e) {
   e.stopPropagation();
 };
 
+/* 
+ * Changes to hterm_all.js that are just bug fixes, nothing specific to a-Shell
+ */
+
 /**
  * Take any valid CSS color definition and turn it into an rgb or rgba value.
  *
@@ -2553,5 +2659,46 @@ lib.colors.normalizeCSS = function(def) {
   }
 
   return lib.colors.nameToRGB(def);
+};
+
+/**
+ * Select all rows in the viewport.
+ */
+hterm.ScrollPort.prototype.selectAll = function() {
+  let firstRow;
+
+  if (this.topFold_.nextSibling.rowIndex != 0) {
+    while (this.topFold_.previousSibling) {
+      this.rowNodes_.removeChild(this.topFold_.previousSibling);
+    }
+
+    firstRow = this.fetchRowNode_(0);
+    this.rowNodes_.insertBefore(firstRow, this.topFold_);
+    this.syncRowNodesDimensions_();
+  } else {
+    firstRow = this.topFold_.nextSibling;
+  }
+
+  const lastRowIndex = this.rowProvider_.getRowCount() - 1;
+  let lastRow;
+
+  if (this.bottomFold_.previousSibling.rowIndex != lastRowIndex) {
+    while (this.bottomFold_.nextSibling) {
+      this.rowNodes_.removeChild(this.bottomFold_.nextSibling);
+    }
+
+    lastRow = this.fetchRowNode_(lastRowIndex);
+    this.rowNodes_.appendChild(lastRow);
+  } else {
+  	// iOS bug fix: lastRow must be a rowNode, not an integer
+    // lastRow = this.bottomFold_.previousSibling.rowIndex;
+    lastRow = this.fetchRowNode_(this.bottomFold_.previousSibling.rowIndex);
+  }
+
+  const selection = this.document_.getSelection();
+  selection.collapse(firstRow, 0);
+  selection.extend(lastRow, lastRow.childNodes.length);
+
+  this.selection.sync();
 };
 
