@@ -38,7 +38,11 @@ class IntentViewController: UIViewController, INUIHostedViewControlling {
             } else if interaction.intentResponse is PutFileIntentResponse {
                 let intent = interaction.intent as! PutFileIntent
                 responseView.font = UIFont.systemFont(ofSize: 13)
-                responseView.text = "File " + intent.file!.filename + " successfully created."
+                if let fileList = intent.file {
+                    for file in fileList {
+                        responseView.text += "File " + file.filename + " successfully created.\n"
+                    }
+                }
             }
             responseView.sizeToFit()
             view.addSubview(responseView)

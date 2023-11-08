@@ -21,13 +21,14 @@ import ios_system
 
 class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHandling, PutFileIntentHandling
 {
-    
-    func resolveFile(for intent: PutFileIntent, with completion: @escaping (INFileResolutionResult) -> Void) {
-        var result: INFileResolutionResult
-        if let file = intent.file {
-            result = INFileResolutionResult.success(with: file)
+    func resolveFile(for intent: PutFileIntent, with completion: @escaping ([INFileResolutionResult]) -> Void) {
+        var result: [INFileResolutionResult] = []
+        if let fileList = intent.file {
+            for file in fileList {
+                result.append(INFileResolutionResult.success(with: file))
+            }
         } else {
-            result = INFileResolutionResult.needsValue()
+            result.append(INFileResolutionResult.needsValue())
         }
         completion(result)
     }
@@ -47,44 +48,49 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
             completion(PutFileIntentResponse(code: .failureRequiringAppLaunch, userActivity: nil))
             return
         }
-        if let file = intent.file {
+        if let fileList = intent.file {
             FileManager().changeCurrentDirectoryPath(groupUrl.path)
-            if (FileManager().fileExists(atPath: file.filename) && (intent.overwrite != 1)) {
-                let intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
-                intentResponse.error = "File \(file.filename) already exists."
-                completion(intentResponse)
-                return
-            }
-            var localURL = URL(fileURLWithPath: groupUrl.path)
-            localURL = localURL.appendingPathComponent(file.filename)
-            var intentResponse: PutFileIntentResponse
-            if let distantURL = file.fileURL {
-                do {
-                    // request permission with secure URL:
-                    let isSecuredURL = distantURL.startAccessingSecurityScopedResource()
-                    let isReadable = FileManager().isReadableFile(atPath: distantURL.path)
-                    guard isSecuredURL && isReadable else {
-                        intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
-                        intentResponse.error = "Could get permission to access file \(file.filename)."
-                        completion(intentResponse)
-                        return
-                    }
-                    if (FileManager().fileExists(atPath: localURL.path) && (intent.overwrite == 1)) {
-                        try FileManager().removeItem(at: localURL)
-                    }
-                    try FileManager().copyItem(at: distantURL, to: localURL)
-                    intentResponse = PutFileIntentResponse(code: .success, userActivity: nil)
-                    if (isSecuredURL) {
-                        distantURL.stopAccessingSecurityScopedResource()
-                    }
-                }
-                catch {
+            // default value is success, any error will cause a failure
+            var intentResponse = PutFileIntentResponse(code: .success, userActivity: nil)
+            for file in fileList {
+                if (FileManager().fileExists(atPath: file.filename) && (intent.overwrite != 1)) {
                     intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
-                    intentResponse.error = "Could not create file \(file.filename): \(error.localizedDescription)"
+                    intentResponse.error = "File \(file.filename) already exists."
+                    completion(intentResponse)
+                    return
                 }
-            } else {
-                intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
-                intentResponse.error = "Could not access file \(file.filename)."
+                var localURL = URL(fileURLWithPath: groupUrl.path)
+                localURL = localURL.appendingPathComponent(file.filename)
+                if let distantURL = file.fileURL {
+                    do {
+                        // request permission with secure URL:
+                        let isSecuredURL = distantURL.startAccessingSecurityScopedResource()
+                        let isReadable = FileManager().isReadableFile(atPath: distantURL.path)
+                        guard isSecuredURL && isReadable else {
+                            intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
+                            intentResponse.error = "Could not get permission to access file \(file.filename)."
+                            completion(intentResponse)
+                            return
+                        }
+                        if (FileManager().fileExists(atPath: localURL.path) && (intent.overwrite == 1)) {
+                            try FileManager().removeItem(at: localURL)
+                        }
+                        try FileManager().copyItem(at: distantURL, to: localURL)
+                        
+                        if (isSecuredURL) {
+                            distantURL.stopAccessingSecurityScopedResource()
+                        }
+                    }
+                    catch {
+                        intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
+                        intentResponse.error = "Could not create file \(file.filename): \(error.localizedDescription)"
+                        completion(intentResponse)
+                    }
+                } else {
+                    intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
+                    intentResponse.error = "Could not access file \(file.filename)."
+                    completion(intentResponse)
+                }
             }
             completion(intentResponse)
         } else {
