@@ -100,4 +100,4 @@ touch Resources_mini/bin/magick-script
 touch Resources_mini/bin/mogrify
 touch Resources_mini/bin/montage
 touch Resources_mini/bin/stream
-
+touch Resources_mini/bin/lg2
