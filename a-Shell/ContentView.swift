@@ -40,6 +40,12 @@ struct Webview : UIViewRepresentable {
         if #available(iOS 16.4, *) {
             webView.isInspectable = true
         }
+        webView.allowsBackForwardNavigationGestures = true
+        if #available(iOS 15.0, *) {
+            webView.keyboardLayoutGuide.topAnchor.constraint(equalTo: webView.bottomAnchor).isActive = true
+            // This is necessary to allow the various edge constraints to engage.
+            webView.keyboardLayoutGuide.followsUndockedKeyboard = true
+        }
     }
     
     func makeUIView(context: Context) -> WebViewType {
@@ -64,16 +70,16 @@ struct ContentView: View {
     // https://stackoverflow.com/questions/56491881/move-textfield-up-when-thekeyboard-has-appeared-by-using-swiftui-ios
     // A publisher that combines all of the relevant keyboard changing notifications and maps them into a `CGFloat` representing the new height of the
     // keyboard rect.
-     private let keyboardChangePublisher = NotificationCenter.Publisher(center: .default,
+    private let keyboardChangePublisher = NotificationCenter.Publisher(center: .default,
                                                                        name: UIResponder.keyboardWillShowNotification)
         .merge(with: NotificationCenter.Publisher(center: .default,
                                                   name: UIResponder.keyboardWillChangeFrameNotification))
         .merge(with: NotificationCenter.Publisher(center: .default,
                                                   name: UIResponder.keyboardWillHideNotification)
-            // But we don't want to pass the keyboard rect from keyboardWillHide, so strip the userInfo out before
-            // passing the notification on.
+               // But we don't want to pass the keyboard rect from keyboardWillHide, so strip the userInfo out before
+               // passing the notification on.
             .map { Notification(name: $0.name, object: $0.object, userInfo: nil) })
-        // Now map the merged notification stream into a height value.
+    // Now map the merged notification stream into a height value.
         .map { (note) -> CGFloat in
             let height = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).size.height
             let width = (note.userInfo?[UIWindow.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero).size.width
@@ -99,25 +105,17 @@ struct ContentView: View {
                 return 40
             } // Floating keyboard not detected
             else { return 0 } // SwiftUI has done its job and returned the proper keyboard size.
-    }
+        }
     
     var body: some View {
-        /* if #available(iOS 14.0, *) {
-            // on iOS 14, it seems that the webview adapts to the size of the keyboard.
-            // Well, at least on the simulator.
-            webview.padding(.top, 0)
-        } else { */
-            // resize depending on keyboard. Specify size (.frame) instead of padding.
-            webview.onReceive(keyboardChangePublisher) {
-                self.keyboardHeight = $0
-                // NSLog("Bounds \(webview.webView.coordinateSpace.bounds)")
-                // NSLog("Screen \(UIScreen.main.bounds)")
-            }
-                .padding(.top, 0) // Important, to set the size of the view
-                .padding(.bottom, keyboardHeight)
-               // .padding(.bottom, webview.webView.intrinsicContentSize.width)
-        
-        // }
+        // resize depending on keyboard. Specify size (.frame) instead of padding.
+        webview.onReceive(keyboardChangePublisher) {
+            self.keyboardHeight = $0
+            // NSLog("Bounds \(webview.webView.coordinateSpace.bounds)")
+            // NSLog("Screen \(UIScreen.main.bounds)")
+        }
+        .padding(.top, 0) // Important, to set the size of the view
+        .padding(.bottom, keyboardHeight)
     }
 }
 

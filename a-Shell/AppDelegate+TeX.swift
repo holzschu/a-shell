@@ -9,14 +9,30 @@ import Foundation
 import UserNotifications
 import ios_system
 
-private let texmf_distResource = NSBundleResourceRequest(tags: ["texlive_2022_dist"])
-private let texmf_varResource = NSBundleResourceRequest(tags: ["texlive_2022_var"])
-private let texmf_dist_fontsResource = NSBundleResourceRequest(tags: ["texlive_2022_dist_fonts"])
-private let texmf_dist_fonts_vfResource = NSBundleResourceRequest(tags: ["texlive_2022_texmf_dist_fonts_vf"])
-private let texmf_dist_fonts_type1Resource = NSBundleResourceRequest(tags: ["texlive_2022_texmf_dist_fonts_type1"])
-private let texmf_dist_fonts_opentypeResource = NSBundleResourceRequest(tags: ["texlive_2022_texmf_dist_fonts_otf_ttf"])
+private let texmf_distResource = NSBundleResourceRequest(tags: ["texlive_dist"])
+private let texmf_varResource = NSBundleResourceRequest(tags: ["texlive_var"])
+private let texmf_dist_fontsResource = NSBundleResourceRequest(tags: ["texlive_dist_fonts"])
+private let texmf_dist_fonts_vfResource = NSBundleResourceRequest(tags: ["texlive_texmf_dist_fonts_vf"])
+private let texmf_dist_fonts_type1Resource = NSBundleResourceRequest(tags: ["texlive_texmf_dist_fonts_type1"])
+private let texmf_dist_fonts_opentypeResource = NSBundleResourceRequest(tags: ["texlive_texmf_dist_fonts_otf_ttf"])
 
 extension AppDelegate {
+
+    func debuggingTeXInstall(message: String) {
+        // For debugging the TeX install process. Ranges from silent (0) to "output info on screen" (2)
+        let level = 0
+        if (level >= 2) {
+            // Output on screen (all active windows):
+            for scene in UIApplication.shared.connectedScenes {
+                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                    delegate.outputToWebView(string: "TeX install: " + message + "\n")
+                }
+            }
+        }
+        if (level >= 1) {
+            NSLog("TeX install: " + message)
+        }
+    }
     
     func activateFakeTeXCommands() {
         if (!TeXEnabled) {
@@ -47,15 +63,22 @@ extension AppDelegate {
             // texlua asks if you want to install LuaTeX, but will be activated once TeX is enabled.
             replaceCommand("texlua", "luatex", true)
             replaceCommand("texluac", "luatex", true)
+            //
+            replaceCommand("uptex", "tex", true)
+            replaceCommand("uplatex", "tex", true)
+            replaceCommand("euptex", "tex", true)
+            replaceCommand("dvipdfmx", "tex", true)
+            replaceCommand("xdvipdfmx", "tex", true)
         }
         if (!TeXEnabled || !OpentypeEnabled) {
             replaceCommand("dvilualatex", "luatex", true)
             replaceCommand("dviluatex", "luatex", true)
             replaceCommand("lualatex", "luatex", true)
             replaceCommand("luatex", "luatex", true)
+            replaceCommand("xetex", "luatex", true)
+            replaceCommand("xelatex", "luatex", true)
         }
     }
-    
     
     override func observeValue(forKeyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         let texmf_dist_fonts_type1Size = 354116.0
@@ -72,7 +95,7 @@ extension AppDelegate {
             / (texmf_dist_fontsSize + texmf_dist_fonts_type1Size + texmf_dist_fonts_vf_Size + texmf_distSize + texmf_varSize)
 
         if (percentTeXDownloadComplete >= 100.0) {
-            NSLog("All resources have been downloaded: \(texmf_dist_fontsResource.progress.fractionCompleted)")
+            debuggingTeXInstall(message: "All resources have been downloaded: \(texmf_dist_fontsResource.progress.fractionCompleted)")
             downloadingTeX = false
             self.TeXEnabled = true
             addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
@@ -90,12 +113,12 @@ extension AppDelegate {
                     try (FileManager().createDirectory(at: localPath, withIntermediateDirectories: true))
                 }
                 catch {
-                    NSLog("Unable to create binary directory \(localPath.path): \(error)")
+                    debuggingTeXInstall(message: "Unable to create binary directory \(localPath.path): \(error)")
                 }
             }
             for script in TeXscripts {
                 let command = localPath.appendingPathComponent(script[0])
-                let location = "../texlive/2022/texmf-dist/" + script[1]
+                let location = "../texlive/2023/texmf-dist/" + script[1]
                 // fileExists doesn't work, because it follows symbolic links
                 do {
                     let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
@@ -112,11 +135,12 @@ extension AppDelegate {
                         try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
                     }
                     catch {
-                        NSLog("Unable to create symbolic link at \(command.path) to \(location): \(error)")
+                        debuggingTeXInstall(message: "Unable to create symbolic link at \(command.path) to \(location): \(error)")
                     }
                 }
             }
             if let installedTexVersion = UserDefaults.standard.string(forKey: "TeXVersion") {
+                // Not doing this for 2023 anymore. Keeping it for 2022.
                 if (installedTexVersion < "2022") {
                     // We have copied texlive/2021 to texlive/2022 in order to keep user-installed packages.
                     // We do a bit of cleanup to remove directories and files that are not included anymore:
@@ -129,7 +153,7 @@ extension AppDelegate {
                             }
                         }
                         catch {
-                            NSLog("Unable to remove directory at \(location): \(error)")
+                            debuggingTeXInstall(message: "Unable to remove directory at \(location): \(error)")
                             
                         }
                     }
@@ -141,17 +165,17 @@ extension AppDelegate {
                             }
                         }
                         catch {
-                            NSLog("Unable to remove file at \(location): \(error)")
-                            
+                            debuggingTeXInstall(message: "Unable to remove file at \(location): \(error)")
                         }
                     }
                 }
             }
-            UserDefaults.standard.setValue("2022", forKey: "TeXVersion")
+            UserDefaults.standard.setValue("2023", forKey: "TeXVersion")
         }
     }
     
     func copyContentsOfDirectory(at: URL, to: URL) {
+        debuggingTeXInstall(message: "copyContentOfDirectory: from \(at.path) to \(to.path)")
         if let archiveEnumerator = FileManager().enumerator(at: at, includingPropertiesForKeys: nil, errorHandler: nil) {
             for case let fileURL as URL in archiveEnumerator {
                 let filePath = fileURL.path
@@ -168,7 +192,7 @@ extension AppDelegate {
                     if (suffix.hasPrefix(at.path)) {
                         suffix.removeFirst(at.path.count)
                     } else {
-                        NSLog("Could not identify suffix for \(filePath) from \(at.path)")
+                        debuggingTeXInstall(message: "Could not identify suffix for \(filePath) from \(at.path)")
                         continue
                     }
                 }
@@ -178,7 +202,7 @@ extension AppDelegate {
                         try FileManager().createDirectory(at: localPositionURL, withIntermediateDirectories: true, attributes: nil)
                     }
                     catch {
-                        NSLog("copyContentOfDirectory: Could not create directory at \(fileURL.path) from \(localPositionURL.path)")
+                        debuggingTeXInstall(message: "copyContentOfDirectory: Could not create directory at \(fileURL.path) from \(localPositionURL.path)")
                     }
                 } else {
                     let localDirectory = localPositionURL.deletingLastPathComponent()
@@ -187,7 +211,7 @@ extension AppDelegate {
                             try FileManager().createDirectory(at: localDirectory, withIntermediateDirectories: true, attributes: nil)
                         }
                         catch {
-                            NSLog("copyContentOfDirectory: Could not create directory at \(fileURL.path) from \(localPositionURL.path)")
+                            debuggingTeXInstall(message: "copyContentOfDirectory: Could not create directory at \(fileURL.path) from \(localPositionURL.path)")
                         }
                     } else if !localDirectory.isDirectory {
                         do {
@@ -195,7 +219,7 @@ extension AppDelegate {
                             try FileManager().createDirectory(at: localDirectory, withIntermediateDirectories: true, attributes: nil)
                         }
                         catch {
-                            NSLog("copyContentOfDirectory: Could not remove file + create directory at \(fileURL.path) from \(localPositionURL.path)")
+                            debuggingTeXInstall(message: "copyContentOfDirectory: Could not remove file + create directory at \(fileURL.path) from \(localPositionURL.path)")
                         }
                     }
                     do {
@@ -203,13 +227,13 @@ extension AppDelegate {
                             try FileManager().copyItem(at: fileURL, to: localPositionURL)
                         } else if (!FileManager().contentsEqual(atPath: fileURL.path, andPath: localPositionURL.path)) {
                             // Both files exist, they're different. We copy the new one:
-                            // (necessary now that we copied texlive/2021 to texlive/2022)
+                            // (necessary now that we copied texlive/202x to texlive/202y)
                             try FileManager().removeItem(at: localPositionURL)
                             try FileManager().copyItem(at: fileURL, to: localPositionURL)
                         }
                     }
                     catch {
-                        NSLog("copyContentOfDirectory: Could not copy \(fileURL.path) to \(localPositionURL.path)")
+                        debuggingTeXInstall(message: "copyContentOfDirectory: Could not copy \(fileURL.path) to \(localPositionURL.path)")
                     }
                 }
             }
@@ -217,6 +241,7 @@ extension AppDelegate {
     }
     
     func copyContentFromResource(resource: NSBundleResourceRequest, path: String) {
+        debuggingTeXInstall(message: "copyContentFromResource: from \(resource) to \(path)")
         if let archiveFileLocation = resource.bundle.path(forResource: path, ofType: nil) {
             let archiveURL = URL(fileURLWithPath: archiveFileLocation)
             let libraryURL = try! FileManager().url(for: .libraryDirectory,
@@ -226,7 +251,7 @@ extension AppDelegate {
             let localURL = libraryURL.appendingPathComponent("texlive") // $HOME/Library/texlive
             copyContentsOfDirectory(at: archiveURL, to: localURL)
         } else {
-            NSLog("Could not get location for On-Demand Resource: \(resource) with path \(path)")
+            debuggingTeXInstall(message: "Could not get location for On-Demand Resource: \(resource) with path \(path)")
         }
     }
 
@@ -243,8 +268,8 @@ extension AppDelegate {
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
-        NSLog("Begin downloading texlive resources")
-        NSLog("Copying texlive into $LIBRARY")
+        debuggingTeXInstall(message: "Begin downloading texlive resources")
+        debuggingTeXInstall(message: "Copying texlive into $LIBRARY")
         let localURL = libraryURL.appendingPathComponent("texlive") // $HOME/Library/texlive
         // Create texlive:
         if (!createDirectory(localURL: localURL)) {
@@ -253,30 +278,35 @@ extension AppDelegate {
             self.TeXEnabled = false
             return
         }
-        // If tl2021 exists, move it to 2022:
-        // If 2022 already exists, this will fail.
-        let tl2021 = localURL.appendingPathComponent("2021")
-        let tl2022 = localURL.appendingPathComponent("2022")
-        if (FileManager().fileExists(atPath: tl2021.path) && !FileManager().fileExists(atPath: tl2022.path)) {
-            do {
-                try FileManager().moveItem(at: tl2021, to: tl2022)
-            }
-            catch {
-                NSLog("Error in copying texlive 2021 to texlive 2022: \(error)")
+        // If tl202x exists, move it to 2023:
+        // If 2023 already exists, this will fail.
+        let currenttl = localURL.appendingPathComponent("2023")
+        if let installedTexVersion = UserDefaults.standard.string(forKey: "TeXVersion") {
+            if (installedTexVersion != "2000") {
+                let installedtl = localURL.appendingPathComponent(installedTexVersion)
+                debuggingTeXInstall(message: "Copying \(installedtl) to \(currenttl)")
+                if (FileManager().fileExists(atPath: installedtl.path) && !FileManager().fileExists(atPath: currenttl.path)) {
+                    do {
+                        try FileManager().moveItem(at: installedtl, to: currenttl)
+                    }
+                    catch {
+                        debuggingTeXInstall(message: "Error in copying texlive \(installedtl) to texlive 2023: \(error)")
+                    }
+                }
             }
         }
-        // Create texlive/2022:
-        if (!FileManager().fileExists(atPath: tl2022.path)) {
-            if (!createDirectory(localURL: tl2022)) {
+        // Create texlive/202x:
+        if (!FileManager().fileExists(atPath: currenttl.path)) {
+            if (!createDirectory(localURL: currenttl)) {
                 downloadingTeX = false
                 UserDefaults.standard.set(false, forKey: "TeXEnabled")
                 self.TeXEnabled = false
                 return
             }
         }
-        //  Then copy $APPDIR/forbidden_2022/2022 (files we cannot include in On-Demand Resources)s:
-        if let forbidden = Bundle.main.resourceURL?.appendingPathComponent("forbidden_2022/2022") {
-            copyContentsOfDirectory(at: forbidden, to: tl2022)
+        //  Then copy $APPDIR/forbidden_2023/2023 (files we cannot include in On-Demand Resources)s:
+        if let forbidden = Bundle.main.resourceURL?.appendingPathComponent("forbidden_2023/2023") {
+            copyContentsOfDirectory(at: forbidden, to: currenttl)
         }
         // If ~/Library/texlive/2019 still exists (unlikely, but...) keep its texmf-local directory
         let tl2019 = localURL.appendingPathComponent("2019")
@@ -289,14 +319,14 @@ extension AppDelegate {
                     try FileManager().removeItem(at: tl2019)
                 }
                 catch {
-                    NSLog("Error in moving texmf-local to texlive: \(error)")
+                    debuggingTeXInstall(message: "Error in moving texmf-local to texlive: \(error)")
                 }
             } else {
                 do {
                     try FileManager().removeItem(at: tl2019)
                 }
                 catch {
-                    NSLog("Error in removing texlive/2019: \(error)")
+                    debuggingTeXInstall(message: "Error in removing texlive/2019: \(error)")
                 }
             }
         }
@@ -307,21 +337,22 @@ extension AppDelegate {
         }
         // We load resources sequentially to avoid clogging networks and servers:
         texmf_distResource.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
-        NSLog("Begin downloading texmf-dist resources")
+        debuggingTeXInstall(message: "Begin downloading texmf-dist resources")
         texmf_distResource.beginAccessingResources(completionHandler: { (error) in
             if let error = error {
                 var message = "Error in downloading texmf-dist files: "
                 message.append(error.localizedDescription)
-                NSLog(message) // Also show alert?
+                self.debuggingTeXInstall(message: message) // Also show alert?
                 downloadingTeX = false
                 UserDefaults.standard.set(false, forKey: "TeXEnabled")
                 self.TeXEnabled = false
+                texmf_distResource.endAccessingResources()
                 return
             } else {
-                NSLog("texmf-dist resource succesfully downloaded")
+                self.debuggingTeXInstall(message: "texmf-dist resource succesfully downloaded")
                 // link the sub-directories in the right place:
-                self.copyContentFromResource(resource: texmf_distResource, path: "texlive_2022_texmf_dist")
-                NSLog("Done copying texmf-dist resource")
+                self.copyContentFromResource(resource: texmf_distResource, path: "texlive_2023_texmf_dist")
+                self.debuggingTeXInstall(message: "Done copying texmf-dist resource")
                 // Release the resource:
                 texmf_distResource.endAccessingResources()
                 // Then texmf-var:
@@ -330,16 +361,16 @@ extension AppDelegate {
                     if let error = error {
                         var message = "Error in downloading texmf-var files: "
                         message.append(error.localizedDescription)
-                        NSLog(message) // Also show alert?
+                        self.debuggingTeXInstall(message: message) // Also show alert?
                         downloadingTeX = false
                         UserDefaults.standard.set(false, forKey: "TeXEnabled")
                         self.TeXEnabled = false
                         return
                     } else {
-                        NSLog("texmf-var resource succesfully downloaded")
+                        self.debuggingTeXInstall(message: "texmf-var resource succesfully downloaded")
                         // link the sub-directories in the right place:
-                        self.copyContentFromResource(resource: texmf_varResource, path: "texlive_2022_texmf_var")
-                        NSLog("Done copying texmf-var resource")
+                        self.copyContentFromResource(resource: texmf_varResource, path: "texlive_2023_texmf_var")
+                        self.debuggingTeXInstall(message: "Done copying texmf-var resource")
                         // Release the resource:
                         texmf_varResource.endAccessingResources()
                         // Then texmf-dist/fonts:
@@ -348,16 +379,16 @@ extension AppDelegate {
                             if let error = error {
                                 var message = "Error in downloading texmf-fonts files: "
                                 message.append(error.localizedDescription)
-                                NSLog(message) // Also show alert?
+                                self.debuggingTeXInstall(message: message) // Also show alert?
                                 downloadingTeX = false
                                 UserDefaults.standard.set(false, forKey: "TeXEnabled")
                                 self.TeXEnabled = false
                                 return
                             } else {
-                                NSLog("texmf-fonts resource succesfully downloaded")
+                                self.debuggingTeXInstall(message: "texmf-fonts resource succesfully downloaded")
                                 // link the sub-directories in the right place:
-                                self.copyContentFromResource(resource: texmf_dist_fontsResource, path: "texlive_2022_texmf_dist_fonts")
-                                NSLog("Done copying texmf-fonts resource")
+                                self.copyContentFromResource(resource: texmf_dist_fontsResource, path: "texlive_2023_texmf_dist_fonts")
+                                self.debuggingTeXInstall(message: "Done copying texmf-fonts resource")
                                 // Release the resource:
                                 texmf_dist_fontsResource.endAccessingResources()
                                 // Then texmf-dist/fonts/vf:
@@ -366,16 +397,16 @@ extension AppDelegate {
                                     if let error = error {
                                         var message = "Error in downloading texmf-fonts VF files: "
                                         message.append(error.localizedDescription)
-                                        NSLog(message) // Also show alert?
+                                        self.debuggingTeXInstall(message: message) // Also show alert?
                                         downloadingTeX = false
                                         UserDefaults.standard.set(false, forKey: "TeXEnabled")
                                         self.TeXEnabled = false
                                         return
                                     } else {
-                                        NSLog("texmf-fonts VF resource succesfully downloaded")
+                                        self.debuggingTeXInstall(message: "texmf-fonts VF resource succesfully downloaded")
                                         // link the sub-directories in the right place:
-                                        self.copyContentFromResource(resource: texmf_dist_fonts_vfResource, path: "texlive_2022_texmf_dist_fonts_vf")
-                                        NSLog("Done copying texmf-fonts VF resource")
+                                        self.copyContentFromResource(resource: texmf_dist_fonts_vfResource, path: "texlive_2023_texmf_dist_fonts_vf")
+                                        self.debuggingTeXInstall(message: "Done copying texmf-fonts VF resource")
                                         // Release the resource:
                                         texmf_dist_fonts_vfResource.endAccessingResources()
                                     }
@@ -387,16 +418,16 @@ extension AppDelegate {
                                     if let error = error {
                                         var message = "Error in downloading texmf-fonts Type1 files: "
                                         message.append(error.localizedDescription)
-                                        NSLog(message) // Also show alert?
+                                        self.debuggingTeXInstall(message: message) // Also show alert?
                                         downloadingTeX = false
                                         UserDefaults.standard.set(false, forKey: "TeXEnabled")
                                         self.TeXEnabled = false
                                         return
                                     } else {
-                                        NSLog("texmf-fonts Type1 resource succesfully downloaded")
+                                        self.debuggingTeXInstall(message: "texmf-fonts Type1 resource succesfully downloaded")
                                         // link the sub-directories in the right place:
-                                        self.copyContentFromResource(resource: texmf_dist_fonts_type1Resource, path: "texlive_2022_texmf_dist_fonts_type1")
-                                        NSLog("Done copying texmf-fonts Type1 resource")
+                                        self.copyContentFromResource(resource: texmf_dist_fonts_type1Resource, path: "texlive_2023_texmf_dist_fonts_type1")
+                                        self.debuggingTeXInstall(message: "Done copying texmf-fonts Type1 resource")
                                         // Release the resource:
                                         texmf_dist_fonts_type1Resource.endAccessingResources()
                                     }
@@ -419,7 +450,7 @@ extension AppDelegate {
         }
         // Remove all sub-directories of ~/Library/texlive/*/ except texmf-local.
         // return ; // for debugging TeX
-        NSLog("Deactivating TeX")
+        self.debuggingTeXInstall(message: "Deactivating TeX")
         // First, deactivate the commands:
         // De-activate the resources -- if they are already there:
         if (texmf_distResource.progress.fractionCompleted > 0) {
@@ -446,7 +477,7 @@ extension AppDelegate {
                                                 appropriateFor: nil,
                                                 create: true)
         let localURL = libraryURL.appendingPathComponent("texlive/")
-        for year in ["2019", "2021", "2022"] {
+        for year in ["2019", "2021", "2022", "2023"] {
             let yearDirectoryURL = localURL.appendingPathComponent(year)
             if (FileManager().fileExists(atPath: yearDirectoryURL.path) && yearDirectoryURL.isDirectory) {
                 do {
@@ -458,7 +489,7 @@ extension AppDelegate {
                     }
                 }
                 catch {
-                    NSLog("Error in removing directory from texlive/\(year): \(error)")
+                    self.debuggingTeXInstall(message: "Error in removing directory from texlive/\(year): \(error)")
                 }
             }
         }
@@ -470,7 +501,7 @@ extension AppDelegate {
                 try FileManager().removeItem(atPath: command)
             }
             catch {
-                NSLog("Unable to remove command at \(command)")
+                self.debuggingTeXInstall(message: "Unable to remove command at \(command)")
             }
         }
 
@@ -486,21 +517,21 @@ extension AppDelegate {
         // download the extensions: texlive, texmf-dist and texmf-dist-fonts
         // First, wait until TeX is done:
         texmf_dist_fonts_opentypeResource.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
-        NSLog("Begin downloading LuaTeX ")
+        self.debuggingTeXInstall(message: "Begin downloading LuaTeX ")
         texmf_dist_fonts_opentypeResource.beginAccessingResources(completionHandler: { (error) in
             if let error = error {
                 var message = "Error in downloading LuaTeX: "
                 message.append(error.localizedDescription)
-                NSLog(message)
+                self.debuggingTeXInstall(message: message)
                 downloadingOpentype = false
                 UserDefaults.standard.set(false, forKey: "TeXOpenType")
                 self.OpentypeEnabled = false
                 return
             } else {
-                NSLog("texmf-dist/fonts OpenType resource succesfully downloaded")
+                self.debuggingTeXInstall(message: "texmf-dist/fonts OpenType resource succesfully downloaded")
                 // link the sub-directories in the right place:
-                self.copyContentFromResource(resource: texmf_dist_fonts_opentypeResource, path: "texlive_2022_texmf_dist_fonts_otf_ttf")
-                NSLog("Done copying texmf-dist/fonts OpenType resource")
+                self.copyContentFromResource(resource: texmf_dist_fonts_opentypeResource, path: "texlive_2023_texmf_dist_fonts_otf_ttf")
+                self.debuggingTeXInstall(message: "Done copying texmf-dist/fonts OpenType resource")
                 // Release the resource:
                 texmf_dist_fonts_opentypeResource.endAccessingResources()
             }
@@ -511,13 +542,13 @@ extension AppDelegate {
             while (texmf_dist_fonts_opentypeResource.progress.fractionCompleted < 1.0) {
                 percentOpentypeDownloadComplete = texmf_dist_fonts_opentypeResource.progress.fractionCompleted
             }
-            NSLog("Opentype fonts have been downloaded.")
+            self.debuggingTeXInstall(message: "Opentype fonts have been downloaded.")
             downloadingOpentype = false
             self.OpentypeEnabled = true
             if (self.TeXEnabled) {
                 addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
             }
-            UserDefaults.standard.setValue("2022", forKey: "LuaTeXVersion")
+            UserDefaults.standard.setValue("2023", forKey: "LuaTeXVersion")
         }
     }
 
@@ -526,7 +557,7 @@ extension AppDelegate {
             return
         }
         // return ; // for debugging TeX
-        NSLog("Deactivating LuaTeX")
+        self.debuggingTeXInstall(message: "Deactivating LuaTeX")
         // First, deactivate the commands:
         // De-activate the resource:
         if (OpentypeEnabled || downloadingOpentype) {
@@ -540,7 +571,7 @@ extension AppDelegate {
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
-        let localURL = libraryURL.appendingPathComponent("texlive/2022/texmf-dist/fonts")
+        let localURL = libraryURL.appendingPathComponent("texlive/2023/texmf-dist/fonts")
         for file in ["opentype", "truetype"] {
             let localFileURL = localURL.appendingPathComponent(file)
             if (FileManager().fileExists(atPath: localFileURL.path)) {

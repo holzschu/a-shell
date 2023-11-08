@@ -7,5 +7,46 @@
 //
 
 import Foundation
+import TipKit
 
+@available(iOS 17.0, *)
+struct startInternalBrowser: Tip {
 
+    var title: Text {
+        Text("Use left-edge-swipe to go back, right-edge-swipe to go forward")
+    }
+    
+    var message: Text {
+        Text("")
+    }
+
+    var options: [TipOption] = [MaxDisplayCount(1)]
+}
+
+@available(iOS 17.0, *)
+struct endInternalBrowser: Tip {
+
+    var title: Text {
+        Text("Long press on screen to restore the keyboard")
+    }
+    
+    var message: Text {
+        Text("")
+    }
+
+   var options: [TipOption] = [MaxDisplayCount(1)]
+}
+
+@available(iOS 17.0, *)
+struct toolbarTip: Tip {
+
+    var title: Text {
+        Text("Extra keys: tab, control, escape, paste and the four arrows")
+    }
+    
+    var message: Text {
+        Text("")
+    }
+
+   var options: [TipOption] = [MaxDisplayCount(1)]
+}

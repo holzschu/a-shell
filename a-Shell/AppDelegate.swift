@@ -13,6 +13,7 @@ import UserNotifications
 import Compression
 import Intents // for shortcuts
 import AVFoundation // for media playback
+import TipKit // Display some helpful messages for users
 
 var downloadingTeX = false
 var percentTeXDownloadComplete = 0.0
@@ -21,6 +22,7 @@ var percentOpentypeDownloadComplete = 0.0
 let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
 // Need SDK install to be over before starting commands.
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
+let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
 
 @objcMembers
 @UIApplicationMain
@@ -324,6 +326,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("hideKeyboard", "hideKeyboard", true)
         replaceCommand("hideToolbar", "hideToolbar", true)
         replaceCommand("showToolbar", "showToolbar", true)
+        replaceCommand("openurl", "openurl_main", true)  // open URL in local windows
+        for browser in __known_browsers {
+            replaceCommand(browser, "openurl_main", true)  // open URL using this specific browser.
+            // required in case someone sets BROWSER to a particular value.
+            // Some packages will then call the command "browser".
+        }
         replaceCommand("deactivate", "deactivate", true) // deactivate Python virtual environments
         // Add these two as commands so they appear on the command list, even though we treat them internally:
         if (UIDevice.current.model.hasPrefix("iPad")) {
@@ -340,82 +348,94 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             if let installedTexVersion = UserDefaults.standard.string(forKey: "TeXVersion") {
                 let localURL = libraryURL.appendingPathComponent("texlive") // $HOME/Library/texlive
-                if (installedTexVersion == "2021") {
-                    // texlive 2021 already installed, move it to 2022 to keep installed packages:
-                    // (user cannot run TeX immediately since the format has changed)
-                    let tl2021 = localURL.appendingPathComponent("2021")
-                    let tl2022 = localURL.appendingPathComponent("2022")
+                let latestTexVersion = "2023"
+                let latesttl = localURL.appendingPathComponent(latestTexVersion)
+                // use installedTexVersion, move from installedTexVersion to latestVersion (in code)
+                if (installedTexVersion != latestTexVersion) && UserDefaults.standard.bool(forKey: "TeXEnabled") {
+                    // texlive 20xx is already installed, we move it to 20yy to keep installed packages.
+                    // (tlpkg will be confused, and the user cannot run TeX immediately since the format has changed)
+                    let installedtl = localURL.appendingPathComponent(installedTexVersion)
                     do {
-                        try FileManager().moveItem(at: tl2021, to: tl2022)
+                        try FileManager().moveItem(at: installedtl, to: latesttl)
                     }
                     catch {
-                        NSLog("Error in copying texlive 2021 to texlive 2022: \(error)")
+                        debuggingTeXInstall(message: "Error in copying texlive \(installedTexVersion) to texlive \(latestTexVersion): \(error)")
                     }
                     downloadTeX()
                     if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
-                        if (installedLuatexVersion <= "2021") {
+                        if (installedLuatexVersion <= latestTexVersion) {
                             downloadOpentype()
                         }
                     }
-                } else if (installedTexVersion >= "2022") {
+                } else if !FileManager().fileExists(atPath: latesttl.path) && UserDefaults.standard.bool(forKey: "TeXEnabled"){
+                    // For some reason, the installed version directory is not there. Re-download things.
+                    downloadTeX()
+                    if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
+                        if (installedLuatexVersion != "2000") && UserDefaults.standard.bool(forKey: "TeXOpenType") {
+                            downloadOpentype()
+                        }
+                    }
+                } else if (installedTexVersion >= latestTexVersion) && UserDefaults.standard.bool(forKey: "TeXEnabled") {
                     // We have TeX files already installed. Activate commands:
                     TeXEnabled = true;
                     addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
                     if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
-                        let openTypeDir = libraryURL.appendingPathComponent("texlive/2022/texmf-dist/fonts/opentype")
-                        if (installedLuatexVersion == "2022") &&
+                        let openTypeDir = libraryURL.appendingPathComponent("texlive/2023/texmf-dist/fonts/opentype")
+                        if (installedLuatexVersion >= latestTexVersion) &&
                             (FileManager().fileExists(atPath: openTypeDir.path)) {
                             OpentypeEnabled = true;
                             addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
                         }
                     }
-                    // Also do the binary scripts (install may have failed 1st time)
-                    let localPath = libraryURL.appendingPathComponent("bin") // $HOME/Library/bin
-                    for script in TeXscripts {
-                        let command = localPath.appendingPathComponent(script[0])
-                        let location = "../texlive/2022/texmf-dist/" + script[1]
-                        // fileExists doesn't work, because it follows symbolic links
-                        do {
-                            let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
-                            if (fileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
-                                // It's a symbolic link, does the destination exist?
-                                if (!FileManager().fileExists(atPath: command.path)) {
-                                    try FileManager().removeItem(at: command)
-                                    try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
-                                }
-                            }
-                        }
-                        catch {
-                            NSLog("Symbolic link attributes at \(command.path): \(error)")
-                            do {
+                    // Also copy latexmk over the wrong one (not anymore for 2023) (I hope)
+                    /* if let forbidden = Bundle.main.resourceURL?.appendingPathComponent("forbidden_2022/2022/texmf-dist/scripts/latexmk/latexmk.pl") {
+                     let latexmk = localURL.appendingPathComponent("2022/texmf-dist/scripts/latexmk/latexmk.pl")
+                     do {
+                     try FileManager().removeItem(at: latexmk)
+                     }
+                     catch {
+                     NSLog("Did not remove \(latexmk)")
+                     }
+                     do {
+                     try FileManager().copyItem(at: forbidden, to: latexmk)
+                     }
+                     catch {
+                     NSLog("Could not copy \(forbidden) to \(latexmk)")
+                     }
+                     } */
+                }
+            }
+            if UserDefaults.standard.bool(forKey: "TeXEnabled") {
+                // check the scripts and redo-them (install may have failed at some point).
+                let localPath = libraryURL.appendingPathComponent("bin") // $HOME/Library/bin
+                for script in TeXscripts {
+                    let command = localPath.appendingPathComponent(script[0])
+                    let location = "../texlive/2023/texmf-dist/" + script[1]
+                    // fileExists doesn't work, because it follows symbolic links
+                    do {
+                        let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
+                        if (fileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
+                            // It's a symbolic link, does the destination exist?
+                            if (!FileManager().fileExists(atPath: command.path)) {
+                                try FileManager().removeItem(at: command)
                                 try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
-                            }
-                            catch {
-                                NSLog("Unable to create symbolic link at \(command.path) to \(location): \(error)")
                             }
                         }
                     }
-                    // Also copy latexmk over the wrong one:
-                    if let forbidden = Bundle.main.resourceURL?.appendingPathComponent("forbidden_2022/2022/texmf-dist/scripts/latexmk/latexmk.pl") {
-                        let latexmk = localURL.appendingPathComponent("2022/texmf-dist/scripts/latexmk/latexmk.pl")
+                    catch {
+                        debuggingTeXInstall(message: "Symbolic link attributes at \(command.path): \(error)")
                         do {
-                            try FileManager().removeItem(at: latexmk)
+                            try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
                         }
                         catch {
-                            NSLog("Did not remove \(latexmk)")
-                        }
-                        do {
-                            try FileManager().copyItem(at: forbidden, to: latexmk)
-                        }
-                        catch {
-                            NSLog("Could not copy \(forbidden) to \(latexmk)")
+                            debuggingTeXInstall(message: "Unable to create symbolic link at \(command.path) to \(location): \(error)")
                         }
                     }
                 }
             }
             if (TeXEnabled) {
                 if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
-                    if (installedLuatexVersion >= "2022") {
+                    if (installedLuatexVersion >= "2023") {
                         // We have LuaTeX files already installed. Activate commands:
                         OpentypeEnabled = true;
                         addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
@@ -491,6 +511,54 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             if (!versionUpToDate || needToUpdateCFiles()) {
                 createCSDK()
             }
+            // help Sunpy too: https://github.com/sunpy/sunpy/pull/6166
+            setenv("SUNPY_NO_BUILD_ANA_EXTENSION", "1", 1)
+            // SUNPY_CONFIGDIR is ~/Library/Application Support/sunpy, by default, so it is OK.
+            // default sunpy config file, forces working_dir to ~/Documents/sunpy:
+            // data_manager.db has an issue with $HOME but not with ~.
+            let sunpyDirectory = libraryURL.appendingPathComponent("Application Support/sunpy")
+            let sunpyrcFile = sunpyDirectory.appendingPathComponent("sunpyrc")
+            if (!FileManager().fileExists(atPath: sunpyrcFile.path)) {
+                if (!FileManager().fileExists(atPath: sunpyDirectory.path)) {
+                    do {
+                        try FileManager().createDirectory(at: sunpyDirectory, withIntermediateDirectories: true)
+                    }
+                    catch {}
+                }
+                if (FileManager().fileExists(atPath: sunpyDirectory.path)) {
+                    let sunpyrcContent = """
+    ;;;;;;;;;;;;;;;;;;;
+    ; General Options ;
+    ;;;;;;;;;;;;;;;;;;;
+    [general]
+    
+    ; The SunPy working directory is the parent directory where all generated
+    ; and download files will be stored.
+    ; Default Value: <user's home directory>/sunpy
+    ; data_manager.db has an issue with $HOME but not with ~
+    working_dir = ~/Documents/sunpy
+    """
+                    let sunpyrcData: Data = sunpyrcContent.data(using: String.Encoding.utf8)!
+                    FileManager().createFile(atPath: sunpyrcFile.path, contents: sunpyrcData, attributes: nil)
+                }
+            }
+            do {
+                let documentsUrl = try FileManager().url(for: .documentDirectory,
+                                                         in: .userDomainMask,
+                                                         appropriateFor: nil,
+                                                         create: true)
+                let nltkData = documentsUrl.appendingPathComponent("nltk_data")
+                setenv("NLTK_DATA", nltkData.path, 1)
+                setenv("PIP_CONFIG_FILE", documentsUrl.appendingPathComponent(".config/pip/pip.conf").path, 1)
+                // Place downloaded files for sunpy in ~/Documents/sunpy
+                setenv("SUNPY_DOWNLOADDIR", documentsUrl.appendingPathComponent("sunpy").path, 1)
+            } catch { }
+            // PyProj options:
+            setenv("PYPROJ_GLOBAL_CONTEXT", "ON", 1) // This helps pyproj in cleaning up.
+            let projDir = URL(fileURLWithPath: Bundle.main.resourcePath!).appendingPathComponent("proj")
+            setenv("PROJ_LIB", projDir.path, 1)  // proj <= 9.1
+            setenv("PROJ_DATA", projDir.path, 1) // proj 9.1+
+            setenv("PROJ_NETWORK", "ON", 1)
         } // a-Shell mini
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
             installQueue.async{
@@ -572,6 +640,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(self.settingsChanged), name: UserDefaults.didChangeNotification, object: nil)
         // Also notification if user changes accessibility settings:
         NotificationCenter.default.addObserver(self, selector: #selector(self.voiceOverChanged), name:  UIAccessibility.voiceOverStatusDidChangeNotification, object: nil)
+        if #available(iOS 17.0, *) {
+            // No frequency control. Show all tips as soon as eligible (but only once)
+            try? Tips.configure([.displayFrequency(.immediate)])
+        }
         // Enable media playback:
         let audioSession = AVAudioSession.sharedInstance()
         do {

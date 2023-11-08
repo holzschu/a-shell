@@ -22,6 +22,16 @@ var currentDelegate: SceneDelegate? {
             }
         }
     }
+    // We haven't found a delegate so far, let's take the first scene:
+    // TODO: that's a bad sign, the sessionIndentifier should be the correct one.
+    // related to when a window is created, then closed
+    if (UIApplication.shared.connectedScenes.count > 0) {
+        if let scene = UIApplication.shared.connectedScenes.first {
+            if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                return delegate
+            }
+        }
+    }
     return nil
 }
 
@@ -186,7 +196,7 @@ Python3: Python Software Foundation, https://www.python.org/about/
 ssh, scp, sftp: OpenSSH, https://www.openssh.com
 tar: https://libarchive.org
 tree: http://mama.indstate.edu/users/ice/tree/
-TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2022.
+TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2023.
 Vim: Bram Moolenaar and the Vim community, https://www.vim.org
 Vim-session: Peter Odding, http://peterodding.com/code/vim/session
 webAssembly: wasmer.io and the wasi SDK https://github.com/WebAssembly/wasi-sdk
@@ -1243,6 +1253,10 @@ public func deactivate(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
         setenv("PATH", String(utf8String: oldPath), 1)
         unsetenv("_OLD_VIRTUAL_PATH")
     }
+    if let oldPrompt = getenv("_OLD_VIRTUAL_PS1") {
+        setenv("PS1", String(utf8String: oldPrompt), 1)
+        unsetenv("_OLD_VIRTUAL_PS1")
+    }
     unsetenv("VIRTUAL_ENV")
     return 0
 }
@@ -1421,6 +1435,120 @@ public func preview(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
     return 0
 }
 
+// Copied from ios_system, translated from Objective-C to Swift
+
+func __browser_app_url(inputUrl: URL, browser: String) -> URL {
+
+    let scheme = inputUrl.scheme
+    if (!(scheme == "http") && !(scheme == "https")) {
+        // Not an actual web link.
+        return inputUrl
+    }
+
+    if !(__known_browsers.contains(browser)) {
+        return inputUrl
+    }
+
+    if (browser == "safari") {
+        return inputUrl
+    }
+
+    let absSrcURLStr = inputUrl.absoluteString
+    
+    // browsers with the open-url scheme:
+    if ((browser == "firefox") || (browser == "brave") || (browser == "opera")) {
+        if let urlString = absSrcURLStr.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            return URL(string: browser + "://open-url?url=" + urlString)  ?? inputUrl
+        }
+    } else if (browser == "yandexbrowser") {
+        if let urlString = absSrcURLStr.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            return URL(string: "yandexbrowser-open-url://" + urlString) ?? inputUrl
+        }
+    } else if (browser == "googlechrome") {
+        var shortenedAbsSrcURLStr = absSrcURLStr
+        // googlechrome: replace "http" or "https" with "googlechrome"
+        if (shortenedAbsSrcURLStr.hasPrefix("http")) {
+            shortenedAbsSrcURLStr.removeFirst("http".count)
+        }
+        return URL(string: browser + shortenedAbsSrcURLStr) ?? inputUrl
+    }
+    return inputUrl
+}
+
+@_cdecl("openurl_main")
+public func openurl_main(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let usage = "Usage: openurl url\nYou can change the default browser with BROWSER env var:\n" + __known_browsers.joined(separator: ", ") + "\n"
+    
+    guard let args = convertCArguments(argc: argc, argv: argv) else {
+        fputs(usage, thread_stderr)
+        return -1
+    }
+    
+    let genericCall = (args[0] == "openurl")
+    
+    if ((argc < 2) || (args[1] == "-h") || (args[1] == "--help")) {
+        if (genericCall) {
+            fputs(usage, thread_stderr)
+        } else {
+            fputs("Usage: \(args[0]) url\n", thread_stderr)
+        }
+        return -1
+    }
+    
+    var browser = "safari"
+    if (genericCall) {
+        if let browserEnvVar = getenv("BROWSER") {
+            browser = (String(utf8String: browserEnvVar) ?? "safari").lowercased()
+        }
+    } else {
+        browser = args[0]
+    }
+    
+    var urlString = args[1]
+    // if there are several arguments, we assume they are part of a path and add escaped spaces
+    if (argc > 2) {
+        for i in 2...argc-1 {
+            urlString += " " + args[Int(i)]
+        }
+    }
+    // Transform everything to url-safe encoding:
+    var locationUrl: URL?
+    if (FileManager().fileExists(atPath: urlString)) {
+        locationUrl = URL(fileURLWithPath: urlString)
+    } else {
+        urlString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? urlString
+        locationUrl = URL(string: urlString)
+    }
+    guard locationUrl != nil else {
+        fputs("Invalid URL: \(urlString).\n", thread_stderr)
+        if (genericCall) {
+            fputs(usage, thread_stderr)
+        } else {
+            fputs("Usage: \(args[0]) url\n", thread_stderr)
+        }
+        return -1
+    }
+    if (browser == "internalbrowser") {
+        DispatchQueue.main.async() {
+            if let delegate = currentDelegate {
+                delegate.openURLInWindow(url: locationUrl!)
+            }
+        }
+    } else {
+        let browserAppUrl = __browser_app_url(inputUrl: locationUrl!, browser: browser)
+        DispatchQueue.main.async() {
+            if let delegate = currentDelegate {
+                delegate.windowScene?.open(browserAppUrl, options: .none)
+            }
+        }
+    }
+    return 0
+}
+
+
+//
+// Functions to call / text contacts and phone numbers
+//
 import Contacts
 
 private func fullName(contact: CNContact) -> String {
@@ -1784,3 +1912,4 @@ public func executeCommandAndWait(command: String) {
     ios_waitpid(pid)
     ios_releaseThreadId(pid)
 }
+

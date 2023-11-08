@@ -123,6 +123,24 @@ extension WKWebView {
         }
     }
 
+    @objc private func gobackkeyAction() {
+        if canGoBack {
+            let position = -1
+            if let backPageItem = backForwardList.item(at: position) {
+                go(to: backPageItem)
+            }
+        }
+    }
+    
+    @objc private func goforwardkeyAction() {
+        if canGoForward {
+            let position = 1
+            if let forwardPageItem = backForwardList.item(at: position) {
+                go(to: forwardPageItem)
+            }
+        }
+    }
+
 
     override open var keyCommands: [UIKeyCommand]? {
         // In case we need keyboard personalization for specific languages
@@ -142,13 +160,21 @@ extension WKWebView {
             UIKeyCommand(input: "+", modifierFlags:.command, action: #selector(increaseTextSize), discoverabilityTitle: "Bigger text"),
             UIKeyCommand(input: "-", modifierFlags:.command, action: #selector(decreaseTextSize), discoverabilityTitle: "Smaller text"),
             // Still required with external keyboards as of May 26, 2020: control-C maps to control-C
-            UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC))
+            UIKeyCommand(input: "c", modifierFlags:.control, action: #selector(insertC)),
+            // back/forward one page keys for internal browser:
+            UIKeyCommand(input: "[", modifierFlags: [.command, .shift], action: #selector(gobackkeyAction), discoverabilityTitle: "Previous page"),
+            UIKeyCommand(input: "]", modifierFlags: [.command, .shift], action: #selector(goforwardkeyAction), discoverabilityTitle: "Next page")
         ]
         let dKey = UIKeyCommand(input: "d", modifierFlags:.control, action: #selector(insertD))
         if #available(iOS 15.0, *) {
             dKey.wantsPriorityOverSystemBehavior = true
         }
         basicKeyCommands.append(dKey)
+        let aKey = UIKeyCommand(input: "a", modifierFlags:.command, action: #selector(selectAll_), discoverabilityTitle: "Select all")
+        if #available(iOS 15.0, *) {
+            aKey.wantsPriorityOverSystemBehavior = true
+        }
+        basicKeyCommands.append(aKey)
         /* Caps Lock remapped to escape: */
         if (UserDefaults.standard.bool(forKey: "escape_preference")) {
             // If we remapped caps-lock to escape, we need to disable caps-lock, at least with certain keyboards.
@@ -166,7 +192,11 @@ extension WKWebView {
                 }
             }
             // This one remaps capslock to escape, no discoverabilityTitle
-            basicKeyCommands.append(UIKeyCommand(input: "", modifierFlags:.alphaShift,  action: #selector(escapeAction)))
+            let capsLockKey = UIKeyCommand(input: "", modifierFlags:.alphaShift,  action: #selector(escapeAction))
+            if #available(iOS 15.0, *) {
+                capsLockKey.wantsPriorityOverSystemBehavior = true
+            }
+            basicKeyCommands.append(capsLockKey)
         } else if #available(iOS 15.0, *) {
             if let keyboardLanguage = self.textInputMode?.primaryLanguage {
                 // Is the keyboard language one of the multi-input languages? Chinese, Japanese, Korean and Hindi-Transliteration
@@ -205,6 +235,14 @@ extension WKWebView {
         evaluateJavaScript(commandString) { (result, error) in
             // if let error = error { print(error) }
             // if let result = result { print(result) }
+        }
+    }
+
+    @objc func selectAll_(_ sender: UIKeyCommand) {
+        let commandString = "window.term_.scrollPort_.selectAll();"
+        evaluateJavaScript(commandString) { (result, error) in
+            if let error = error { print(error) }
+            if let result = result { print(result) }
         }
     }
 

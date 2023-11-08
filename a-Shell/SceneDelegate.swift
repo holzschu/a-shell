@@ -14,6 +14,7 @@ import MobileCoreServices
 import Combine
 import AVKit // for media playback
 import AVFoundation // for media playback
+import TipKit // for helpful tips
 
 var messageHandlerAdded = false
 var inputFileURLBackup: URL?
@@ -39,6 +40,13 @@ struct javascriptCommand {
 
 var commandsStack: [javascriptCommand?] = []
 var resultStack: [Int32?] = []
+// Tips:
+@available(iOS 17, *)
+let myToolbarTip = toolbarTip()
+@available(iOS 17, *)
+let startInternalBrowserTip = startInternalBrowser()
+@available(iOS 17, *)
+let endInternalBrowserTip = endInternalBrowser()
 
 class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate {
     var window: UIWindow?
@@ -110,6 +118,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     let maxSubmenuLevels = 15
     var buttonRegex: [Int:String] = [:]
     var noneTag = -1
+    var bufferedOutput: String? = nil
+    var fontPicker = UIFontPickerViewController()
 
     // Create a document picker for directories.
     private let documentPicker =
@@ -160,7 +170,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     private func title(_ button: UIBarButtonItem) -> String? {
-        var title: String? = nil
         if let possibleTitles = button.possibleTitles {
             for attemptedTitle in possibleTitles {
                 if (attemptedTitle.count > 0) {
@@ -364,7 +373,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     fflush(stdout_file)
                 }
             }
-            close(stdout_pipe.fileHandleForWriting.fileDescriptor)
+            do {
+                try stdout_pipe.fileHandleForWriting.close()
+            }
+            catch {
+                NSLog("Error in closing stdout_pipe in insertCommand: \(error)")
+            }
         }
     }
     
@@ -531,6 +545,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 break
             case "cut":
                 commandString = "window.term_.onCut();"
+                break
+            case "selectAll":
+                commandString = "window.term_.scrollPort_.selectAll();"
                 break
             case "control":
                 controlOn = !controlOn;
@@ -1239,6 +1256,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         NSLog("WebAssembly command position: \(commandNumber)")
         while (commandsStack.count <= commandNumber) {
             commandsStack.append(nil)
+        }
+        while (resultStack.count <= commandNumber) {
             resultStack.append(nil)
         }
         // copy arguments:
@@ -1252,7 +1271,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         argumentString = argumentString + "]"
-        NSLog("Entered webAssemblyCommand: \(argumentString) at position: \(commandNumber) = \(commandsStack.count) ")
+        NSLog("Entered webAssemblyCommand: \(argumentString) at position: \(commandNumber) = \(commandsStack.count) results: \(resultStack.count)")
         // async functions don't work in WKWebView (so, no fetch, no WebAssembly.instantiateStreaming)
         // Instead, we load the file in swift and send the base64 version to JS
         let currentDirectory = FileManager().currentDirectoryPath
@@ -1298,7 +1317,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         webAssemblyCommand.thread_stderr_copy = thread_stderr
         webAssemblyCommand.webAssemblyGroup = DispatchGroup()
         webAssemblyCommand.originalCommand = argumentString
-        NSLog("Created webAssemblyCommand: \(argumentString) at position: \(commandNumber) stdout:\(thread_stdout) == \(fileno(thread_stdout))")
+        NSLog("Created webAssemblyCommand: \(argumentString) at position: \(commandNumber) stdout:\(fileno(thread_stdout))")
         if (commandsStack[commandNumber] == nil) {
             commandsStack[commandNumber] = webAssemblyCommand
             resultStack[commandNumber] = nil
@@ -1324,7 +1343,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     func executeWebAssemblyCommands() {
         // since we're multi-threaded, we could be executing this while executeWebAssembly() is still running. So we wait.
         //
-        NSLog("Starting executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack)")
+        NSLog("Starting executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack)")
         if (commandsStack.isEmpty) {
             NSLog("executeWebAssemblyCommands: empty stack")
             return
@@ -1414,7 +1433,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             
             command!.webAssemblyGroup?.leave()
         }
-        NSLog("Ended executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack)")
+        NSLog("Ended executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack)")
         
         executeWebAssemblyCommandsRunning = false
     }
@@ -1716,26 +1735,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     // Creates the iOS 13 Font picker, returns the name of the font selected.
     func pickFont() -> String? {
-        let rootVC = self.window?.rootViewController
-        
-        let fontPickerConfig = UIFontPickerViewController.Configuration()
-        fontPickerConfig.includeFaces = true
-        fontPickerConfig.filteredTraits = .traitMonoSpace
-        // Create the font picker
-        let fontPicker = UIFontPickerViewController(configuration: fontPickerConfig)
-        fontPicker.delegate = self
-        // Present the font picker
-        selectedFont = ""
-        // Main issue: the user can dismiss the fontPicker by sliding upwards.
-        // So we need to check if it was, indeed dismissed:
         DispatchQueue.main.sync {
+            let fontPickerConfig = UIFontPickerViewController.Configuration()
+            fontPickerConfig.includeFaces = true
+            fontPickerConfig.filteredTraits = .traitMonoSpace
+            // Create the font picker
+            fontPicker = UIFontPickerViewController(configuration: fontPickerConfig)
+            fontPicker.delegate = self
+            // Present the font picker
+            self.selectedFont = ""
+            // Main issue: the user can dismiss the fontPicker by sliding upwards.
+            // So we need to check if it was, indeed dismissed:
+            let rootVC = self.window?.rootViewController
             rootVC?.present(fontPicker, animated: true, completion: nil)
         }
         // Wait until fontPicker is dismissed or a font has been selected:
-        while (!fontPicker.isBeingDismissed && (selectedFont == "")) { }
-        // NSLog("Dismissed. selectedFont= \(selectedFont)")
-        DispatchQueue.main.sync {
-            fontPicker.dismiss(animated:true)
+        while (!self.fontPicker.isBeingDismissed) && (self.selectedFont == "") { }
+        DispatchQueue.main.async {
+            self.fontPicker.dismiss(animated:true)
         }
         if (selectedFont != "cancel") && (selectedFont != "") {
             return selectedFont
@@ -1745,6 +1762,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     func fontPickerViewControllerDidCancel(_ viewController: UIFontPickerViewController) {
         // User cancelled the font picker delegate
+        // NSLog("Cancelled font")
         selectedFont = "cancel"
     }
     
@@ -1753,11 +1771,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // We got a font!
         if let descriptor = viewController.selectedFontDescriptor {
             if let name = descriptor.fontAttributes[.family] as? String {
+                // NSLog("Selected font: \(name)")
                 // "Regular" variants of the font:
                 selectedFont = name
                 return
             } else if let name = descriptor.fontAttributes[.name] as? String {
                 // This is for Light, Medium, ExtraLight variants of the font:
+                // NSLog("Selected font: \(name)")
                 selectedFont = name
                 return
             }
@@ -1924,6 +1944,56 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    
+    @objc func goBackAction(_ sender: UIBarButtonItem) {
+        guard self.webView != nil else { return }
+        if self.webView!.canGoBack {
+            let position = -1
+            if let backPageItem = self.webView!.backForwardList.item(at: position) {
+                self.webView!.go(to: backPageItem)
+            }
+        }
+    }
+    
+    @objc func goForwardAction(_ sender: UIBarButtonItem) {
+        guard self.webView != nil else { return }
+        if self.webView!.canGoForward {
+            let position = 1
+            if let forwardPageItem = self.webView!.backForwardList.item(at: position) {
+                self.webView!.go(to: forwardPageItem)
+            }
+        }
+    }
+
+    
+    var backButton: UIBarButtonItem {
+        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .bold)
+        let backButton = UIBarButtonItem(image: UIImage(systemName: "chevron.left")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(goBackAction(_:)))
+        backButton.tintColor = .systemBlue
+        return backButton
+    }
+
+    var forwardButton: UIBarButtonItem {
+        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .bold)
+        let forwardButton = UIBarButtonItem(image: UIImage(systemName: "chevron.right")!.withConfiguration(configuration), style: .plain, target: self, action: #selector(goForwardAction(_:)))
+        forwardButton.tintColor = .systemBlue
+        return forwardButton
+    }
+
+    
+    func openURLInWindow(url: URL) {
+        // load URL on current window.
+        // Can't create back/forward buttons, so there's only the left-edge swipe to go back
+        
+        if (url.scheme == "file") {
+            // Create a directory URL:
+            let directoryURL = url.deletingLastPathComponent()
+            webView?.loadFileURL(url, allowingReadAccessTo: directoryURL)
+        } else {
+            webView?.load(URLRequest(url: url))
+        }
+    }
+    
     private func hideButton(tag: Int) -> Bool {
         if (tag == 0) { return false }
         if (tag == noneTag) { return true }
@@ -1948,6 +2018,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // We still allow them to be aliased.
         // We can't call exit through ios_system because it creates a new session
         // Also, we want to call it as soon as possible in case something went wrong
+        bufferedOutput = nil
         let arguments = command.components(separatedBy: " ")
         let actualCommand = aliasedCommand(arguments[0])
         if (actualCommand == "exit") {
@@ -2006,8 +2077,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         // "normal" commands can go through ios_system
         // We use a queue to allow the system to continue running (important for commands that interact with the system, such as "config -n" and "view".
-        // Test: moved the commandQueue *upwards* to help with pipe generation and StageManager (?)
-        // If that's the issue with StageManager, then should I move commandQueue *inside* these commands?
         commandQueue.async {
             // set up streams for feedback:
             // Create new pipes for our own stdout/stderr
@@ -2144,9 +2213,22 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 NSLog("Done executing command: \(command)")
                 NSLog("Current directory: \(FileManager().currentDirectoryPath)")
             }
-            close(stdin_pipe.fileHandleForReading.fileDescriptor)
+            stdin_pipe.fileHandleForReading.fileDescriptor
+            do {
+                try stdin_pipe.fileHandleForReading.close()
+                try stdin_pipe.fileHandleForWriting.close()
+            }
+            catch {
+                NSLog("Exception in closing stdin_pipe: \(error)")
+            }
             self.stdin_file_input = nil
-            close(tty_pipe.fileHandleForReading.fileDescriptor)
+            do {
+                try tty_pipe.fileHandleForReading.close()
+                try tty_pipe.fileHandleForWriting.close()
+            }
+            catch {
+                NSLog("Exception in closing tty_pipe: \(error)")
+            }
             self.tty_file_input = nil
             // Send info to the stdout handler that the command has finished:
             let writeOpen = fcntl(stdout_pipe.fileHandleForWriting.fileDescriptor, F_GETFD)
@@ -2158,7 +2240,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             // Experimental: If it works, try removing the 4 lines above
-            close(stdout_pipe.fileHandleForWriting.fileDescriptor)
+            do {
+                try stdout_pipe.fileHandleForWriting.close()
+                try stdout_pipe.fileHandleForReading.close()
+            }
+            catch {
+                NSLog("Exception in closing stdout_pipe: \(error)")
+            }
             if (self.closeAfterCommandTerminates) {
                 self.closeAfterCommandTerminates = false
                 let deviceModel = UIDevice.current.model
@@ -2605,7 +2693,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let fontLigature = terminalFontLigature ?? factoryFontLigature
             // Force writing all config to term. Used when we changed many parameters.
             let command1 = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.cursorShape = '\(cursorShape)'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
-            NSLog("resendConfiguration, command=\(command1)")
+            // NSLog("resendConfiguration, command=\(command1)")
             self.webView!.evaluateJavaScript(command1) { (result, error) in
                 /* if let error = error {
                     NSLog("Error in resendConfiguration, line = \(command1) error = \(error)")
@@ -2676,7 +2764,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         } else if (cmd.hasPrefix("resendCommand:")) {
             if (shortcutCommandReceived != nil) {
-                // NSLog("resendCommand for Shortcut, command=\(shortcutCommandReceived!)")
+                NSLog("resendCommand for Shortcut, command=\(shortcutCommandReceived!)")
                 executeCommand(command: shortcutCommandReceived!)
                 shortcutCommandReceived = nil
             } else {
@@ -2685,10 +2773,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // print("PrintedContent to be restored: \(windowPrintedContent.count)")
                 // print(windowPrintedContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r"))
                 let command = "window.promptMessage = '\(self.parsePrompt())'; \(windowHistory)  window.printedContent = \"\(windowPrintedContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r"))\"; window.commandRunning = '\(currentCommand)'; window.interactiveCommandRunning = isInteractive(window.commandRunning); if (window.commandRunning == '') { if (window.printedContent != '') { window.term_.io.print(window.printedContent); } else { window.printPrompt(); } updatePromptPosition(); } else { window.printedContent= ''; }"
-                // NSLog("resendCommand, command=\(command)")
+                NSLog("resendCommand, command=\(command)")
                 self.webView!.evaluateJavaScript(command) { (result, error) in
                     if let error = error {
-                        // NSLog("Error in resendCommand, line = \(command)")
+                        NSLog("Error in resendCommand, line = \(command)")
                         // print(error)
                     }
                     if let result = result {
@@ -2807,6 +2895,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if var commandSent = fileURL.absoluteString {
                     let prefix = fileURL.scheme ?? ""
                     commandSent.removeFirst(prefix.count + 1)
+                    if (commandSent.hasPrefix("//")) {
+                        commandSent.removeFirst("//".count)
+                    }
                     commandSent = commandSent.removingPercentEncoding!
                     // Set working directory to a safer place (also used by URL calls and extension shortcuts):
                     closeAfterCommandTerminates = false
@@ -2836,7 +2927,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     func scene(_ scene: UIScene, didUpdate userActivity: NSUserActivity) {
         NSLog("Scene, didUpdate: userActivity.activityType = \(userActivity.activityType)")
     }
-    
+
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
@@ -2888,6 +2979,32 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     showToolbar = true
                     self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
                 }
+                if #available(iOS 17, *) {
+                    // Do *not* show the toolbar tip if the user has already edited the toolbar
+                    // (you can't show an old user a new tip)
+                    if let documentsUrl = try? FileManager().url(for: .documentDirectory,
+                                                                 in: .userDomainMask,
+                                                                 appropriateFor: nil,
+                                                                 create: true) {
+                        let localConfigFile = documentsUrl.appendingPathComponent(".toolbarDefinition")
+                        if !FileManager().fileExists(atPath: localConfigFile.path) {
+                            NSLog("myToolbarTip status: \(myToolbarTip.status)")
+                            Task { @MainActor in
+                                for await shouldDisplay in myToolbarTip.shouldDisplayUpdates {
+                                    NSLog("myToolbarTip: \(shouldDisplay) status: \(myToolbarTip.status)")
+                                    if shouldDisplay {
+                                        if (self.webView != nil) {
+                                            let controller = TipUIPopoverViewController(myToolbarTip, sourceItem: self.webView!)
+                                            controller.popoverPresentationController?.canOverlapSourceViewRect = true
+                                            let rootVC = self.window?.rootViewController
+                                            rootVC?.present(controller, animated: false)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
             // We create a separate WkWebView for webAssembly:
             let config = WKWebViewConfiguration()
@@ -2927,7 +3044,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 terminalCursorShape = shape
             }
             if let ligature = UserDefaults.standard.value(forKey: "fontLigature") as? String {
-                terminalCursorShape = ligature
+                terminalFontLigature = ligature
             }
             // initialize command list for autocomplete:
             guard var commandsArray = commandsAsArray() as! [String]? else { return }
@@ -3055,21 +3172,25 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                 } else if ((fileURL.scheme ?? "").hasPrefix("ashell")) {
-                    NSLog("We received an URL: \(fileURL.absoluteString.removingPercentEncoding)") // received "ashell://ls"
+                    NSLog("We received an URL in willConnectTo: \(fileURL.absoluteString.removingPercentEncoding)") // received "ashell://ls"
                     // The window is not yet fully opened, so executeCommand might fail.
-                    // We use installQueue to be called once the window is ready.
                     var command = fileURL.absoluteString
-                    command.removeFirst((fileURL.scheme ?? "").count + 3)
+                    command.removeFirst((fileURL.scheme ?? "").count + 1)
+                    if (command.hasPrefix("//")) { // either ashell://command or ashell:command
+                        command.removeFirst("//".count)
+                    }
                     command = command.removingPercentEncoding!
                     closeAfterCommandTerminates = false
-                    installQueue.async {
-                        // Set the working directory to somewhere safe:
-                        // (but do not reset afterwards, since this is a new window)
-                        if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
-                            changeDirectory(path: groupUrl.path)
-                        }
-                        self.executeCommand(command: command)
+                    // We can't go through executeCommand because the window is not fully created yet.
+                    // Same reason we can't print the shortcut that is about to be executed.
+                    // Set the working directory to somewhere safe:
+                    // (but do not reset afterwards, since this is a new window)
+                    if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
+                        changeDirectory(path: groupUrl.path)
                     }
+                    // We wait until the window is fully initialized. This will be used when "resendCommand:" is triggered, at the end of window setting.
+                    NSLog("Setting shortcutCommandReceived to \(command)")
+                    shortcutCommandReceived = command
                 }
             }
             // Case 2: url to open is inside userActivity
@@ -3105,14 +3226,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // This can be either from open URL (ashell:command) or from Shortcuts
                     // Set working directory to a safer place (also used by shortcuts):
                     // But do not reset afterwards, since this is a new window
-                    // NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
+                    NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
                     if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
                         changeDirectory(path: groupUrl.path)
                     }
                     if let fileURL: NSURL = userActivity.userInfo!["url"] as? NSURL {
                         // single command:
                         if var commandSent = fileURL.absoluteString {
-                            commandSent.removeFirst((fileURL.scheme ?? "").count + 3)
+                            commandSent.removeFirst((fileURL.scheme ?? "").count + 1)
+                            if (commandSent.hasPrefix("//")) {
+                                commandSent.removeFirst("//".count)
+                            }
                             commandSent = commandSent.removingPercentEncoding!
                             closeAfterCommandTerminates = false
                             if let closeAtEnd = userActivity.userInfo!["closeAtEnd"] as? String {
@@ -3122,12 +3246,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             }
                             // We can't go through executeCommand because the window is not fully created yet.
                             // Same reason we can't print the shortcut that is about to be executed.
-                            // installQueue will be called after the .profile has been processed.
                             if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
                                 changeDirectory(path: groupUrl.path)
                                 NSLog("groupUrl: " + groupUrl.path)
                             }
                             // We wait until the window is fully initialized. This will be used when "resendCommand:" is triggered, at the end of window setting.
+                            NSLog("Setting shortcutCommandReceived to \(commandSent)")
                             shortcutCommandReceived = commandSent
                         }
                     }
@@ -3163,7 +3287,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Is it one of our URLs?
             let fileURL = urlContext.url
             if ((fileURL.scheme ?? "").hasPrefix("ashell")) {
-                NSLog("We received an URL: \(fileURL.absoluteString.removingPercentEncoding)") // received "ashell://ls"
+                NSLog("We received an URL in openURLContexts: \(fileURL.absoluteString.removingPercentEncoding)") // received "ashell://ls"
                 if (UIDevice.current.model.hasPrefix("iPad")) {
                     // iPad, so always open a new window to execute the command
                     let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.ExecuteCommand")
@@ -3173,7 +3297,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 } else {
                     // iPhone: create the command, send it to the window once it's created.
                     var command = fileURL.absoluteString
-                    command.removeFirst((fileURL.scheme ?? "").count + 3)
+                    command.removeFirst((fileURL.scheme ?? "").count + 1)
+                    if (command.hasPrefix("//")) {
+                        command.removeFirst("//".count)
+                    }
                     command = command.removingPercentEncoding!
                     installQueue.async {
                         if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
@@ -3472,6 +3599,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 showToolbar = true
                 self.webView!.addInputAccessoryView(toolbar: self.editorToolbar)
             }
+            if #available(iOS 17, *) {
+                NSLog("myToolbarTip status: \(myToolbarTip.status)")
+                if (myToolbarTip.shouldDisplay) {
+                    if (self.webView != nil) {
+                        let controller = TipUIPopoverViewController(myToolbarTip, sourceItem: self.webView!)
+                        controller.popoverPresentationController?.canOverlapSourceViewRect = true
+                        let rootVC = self.window?.rootViewController
+                        rootVC?.present(controller, animated: false)
+                    }
+                }
+            }
         }
         // If there is no userInfo and no stateRestorationActivity:
         // On the first run, one of these are null, so we return.
@@ -3545,8 +3683,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             var virtualEnvironmentGone = false
             for variable in environmentVariables {
                 let components = variable.split(separator:"=", maxSplits: 1)
+                if components.count <= 0 { continue }
                 let name = String(components[0])
-                let value = String(components[1])
+                var value = ""
+                if (components.count >= 2) {
+                    value = String(components[1])
+                }
                 if name == "HOME" { continue }
                 if name == "APPDIR" { continue }
                 // Don't override PATH, MANPATH, PERL5LIB...
@@ -3577,6 +3719,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // The virtual environment is not in the right place anymore, get the PATH variable back to the correct value
             if (virtualEnvironmentGone) {
                 unsetenv("_OLD_VIRTUAL_PATH")
+                unsetenv("_OLD_VIRTUAL_PS1")
             }
         }
         // Fix a specific bug introduced in 1.8.3:
@@ -3992,20 +4135,30 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
-    private func outputToWebView(string: String) {
+    func outputToWebView(string: String) {
         guard (webView != nil) else { return }
-        // Sanitize the output string to it can be sent to javascript:
-        let parsedString = string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
-        // iosNSLog("\(parsedString)")
-        // This may cause several \r in a row
-        let command = "window.term_.io.print(\"" + parsedString + "\");"
-        DispatchQueue.main.async {
-            self.webView!.evaluateJavaScript(command) { (result, error) in
-                if let error = error {
-                    NSLog("Error in print; offending line = \(parsedString), error = \(error)")
-                    // print(error)
+        if (webView?.url?.path == Bundle.main.resourcePath! + "/hterm.html") {
+            // Sanitize the output string to it can be sent to javascript:
+            let parsedString = string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
+            // NSLog("\(parsedString)")
+            // This may cause several \r in a row
+            let command = "window.term_.io.print(\"" + parsedString + "\");"
+            DispatchQueue.main.async {
+                self.webView!.evaluateJavaScript(command) { (result, error) in
+                    if let error = error {
+                        NSLog("Error in print; offending line = \(parsedString), error = \(error)")
+                        // print(error)
+                    }
+                    // if let result = result { print(result) }
                 }
-                // if let result = result { print(result) }
+            }
+        } else {
+            // NSLog("Current URL: \(webView?.url?.path)")
+            // NSLog("Not printing (because offline): \(string)")
+            if (bufferedOutput == nil) {
+                bufferedOutput = string
+            } else {
+                bufferedOutput! += string
             }
         }
     }
@@ -4825,6 +4978,9 @@ extension SceneDelegate: WKUIDelegate {
                 }
                 completionHandler("\(result)")
                 return
+            } else if (arguments[1] == "pickDirectory") {
+                completionHandler("\(FileManager().currentDirectoryPath)")
+                return
             }
         }
         // End of JavaScriptCore extensions
@@ -4872,6 +5028,32 @@ extension SceneDelegate: WKUIDelegate {
         // webView.allowDisplayingKeyboardWithoutUserAction()
     }
 
+
+    // Debugging navigation:
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        NSLog("navigationAction: \(navigationAction.request)")
+        if navigationAction.targetFrame == nil {
+            webView.stopLoading()
+            webView.load(navigationAction.request)
+        }
+        return nil
+    }
+    
+    func webView(_ webView: WKWebView,
+        decidePolicyFor navigationResponse: WKNavigationResponse,
+                 decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+        // NSLog("decidePolicyFor: ")
+        guard let statusCode
+                = (navigationResponse.response as? HTTPURLResponse)?.statusCode else {
+            NSLog("decidePolicyFor: no http status code to act on")
+            // if there's no http status code to act on, exit and allow navigation
+            decisionHandler(.allow)
+            return
+        }
+        decisionHandler(.allow)
+    }
+
+    
     // iOS 14: allow javascript evaluation
     func webView(_ webView: WKWebView,
           decidePolicyFor navigationAction: WKNavigationAction,
@@ -4881,5 +5063,74 @@ extension SceneDelegate: WKUIDelegate {
             preferences.allowsContentJavaScript = true // The default value is true, but let's make sure.
         }
         decisionHandler(.allow, preferences)
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        NSLog("finished loading, title= \(webView.title ?? "unknown"), url=\(webView.url?.path ?? "unknown"), navigation= \(navigation)")
+        if (webView.url?.path == Bundle.main.resourcePath! + "/wasm.html") {
+            return
+        }
+        if (webView.title != nil) && (webView.title != "") {
+            title = webView.title
+        } else {
+            title = webView.url?.lastPathComponent
+        }
+        if (webView.url?.path == Bundle.main.resourcePath! + "/hterm.html") {
+            // NSLog("Sending backlogged output: \(bufferedOutput)")
+            if (bufferedOutput != nil) {
+                if (currentCommand == "") {
+                    if #available(iOS 17, *) {
+                        Task { @MainActor in
+                            for await shouldDisplay in endInternalBrowserTip.shouldDisplayUpdates {
+                                NSLog("endInternalBrowserTip: \(shouldDisplay) status: \(endInternalBrowserTip.status)")
+                                if shouldDisplay {
+                                    let controller = TipUIPopoverViewController(endInternalBrowserTip, sourceItem: webView)
+                                    controller.popoverPresentationController?.canOverlapSourceViewRect = true
+                                    let rootVC = self.window?.rootViewController
+                                    rootVC?.present(controller, animated: false)
+                                }
+                            }
+                        }
+                    } else {
+                        bufferedOutput! += "\n(long press on screen to restore the keyboard)\n"
+                    }
+                }
+                // Same commands as in outputToWebView, but also update prompt while we're at it.
+                // TODO: through multiple back/forward, we could have bufferedOutput == "" and no prompt.
+                let parsedString = bufferedOutput!.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
+                var JScommand = "window.term_.io.print(\"" + parsedString + "\"); "
+                if (currentCommand == "") {
+                    // re-send one prompt because otherwise the terminal doesn't take keyboard input
+                    JScommand += "window.commandRunning = ''; window.promptMessage='\(self.parsePrompt())'; window.printPrompt(); window.updatePromptPosition();"
+                }
+                webView.evaluateJavaScript(JScommand) { (result, error) in
+                    if let error = error {
+                     NSLog("Error in executing JScommand = \(error)")
+                     }
+                     if let result = result {
+                     NSLog("Result of executing JScommand = \(result)")
+                     }
+                }
+                webView.focus()
+                // Does not work, but why?
+                webView.keyboardDisplayRequiresUserAction = true
+                bufferedOutput = ""
+            }
+        } else {
+            if #available(iOS 17, *) {
+                Task { @MainActor in
+                    for await shouldDisplay in startInternalBrowserTip.shouldDisplayUpdates {
+                        NSLog("startInternalBrowserTip: \(shouldDisplay) status: \(startInternalBrowserTip.status)")
+                        if shouldDisplay {
+                            let controller = TipUIPopoverViewController(startInternalBrowserTip, sourceItem: webView)
+                            controller.popoverPresentationController?.canOverlapSourceViewRect = true
+                            let rootVC = self.window?.rootViewController
+                            rootVC?.present(controller, animated: false)
+                        }
+                    }
+                }
+            }
+            bufferedOutput = ""
+        }
     }
 }
