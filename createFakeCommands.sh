@@ -144,4 +144,4 @@ touch Resources/bin/lualatex
 touch Resources/bin/luatex
 touch Resources/bin/texlua
 touch Resources/bin/texluac
-
+touch Resources/bin/lg2
