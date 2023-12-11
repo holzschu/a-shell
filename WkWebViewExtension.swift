@@ -116,33 +116,33 @@ extension WKWebView {
     }
 
     func focus() {
-        // NSLog("Received focus event")
+        NSLog("Received focus event")
         if (toolbarShouldBeShown) {
             showToolbar = true
         }
-        let command = "window.term_.onFocusChange_(true); window.term_.scrollPort_.isScrolledEnd = true;"
+        let command = "if (typeof window.term_ !== 'undefined') { window.term_.onFocusChange_(true); window.term_.scrollPort_.isScrolledEnd = true;};"
         self.evaluateJavaScript(command) { result, error in
             if let error = error {
-                // print("webView focus error: \(error)")
+                print("webView focus error: \(error)")
             }
             if let result = result {
-                // print("webView focus: \(result)")
+                print("webView focus: \(result)")
             }
         }
     }
     
     func blur() {
-        // NSLog("Received blur event")
+        NSLog("Received blur event")
         if (toolbarShouldBeShown) {
             // showToolbar = false
         }
-        let command = "window.term_.onFocusChange_(false)"
+        let command = "if (typeof window.term_ !== 'undefined') { window.term_.onFocusChange_(false); };"
         self.evaluateJavaScript(command) { result, error in
             if let error = error {
-                // print(error)
+                print("Error in executing \(command): \(error)")
             }
             if let result = result {
-                // print(result)
+                print(result)
             }
         }
     }
