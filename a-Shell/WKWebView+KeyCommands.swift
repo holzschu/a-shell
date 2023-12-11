@@ -241,7 +241,9 @@ extension WKWebView {
     @objc func selectAll_(_ sender: UIKeyCommand) {
         let commandString = "window.term_.scrollPort_.selectAll();"
         evaluateJavaScript(commandString) { (result, error) in
-            if let error = error { print(error) }
+            if let error = error { 
+                print("Error in executing \(commandString): \(error)")
+            }
             if let result = result { print(result) }
         }
     }

@@ -9,6 +9,24 @@
 import SwiftUI
 import WebKit
 
+// SwiftUI extension for fullscreen rendering
+enum ViewBehavior: Int {
+    case original
+    case ignoreSafeArea
+    case fullScreen
+}
+
+extension View {
+    @ViewBuilder
+    func `if`<Transform: View>(_ condition: Bool, transform: (Self) -> Transform) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
+}
+
 public var toolbarShouldBeShown = true
 public var useSystemToolbar = false
 public var showToolbar = true
@@ -64,6 +82,7 @@ struct Webview : UIViewRepresentable {
 struct ContentView: View {
     @State private var keyboardHeight: CGFloat = 0
     @State private var keyboardWidth: CGFloat = 0
+    @State private var viewBehavior: ViewBehavior = .fullScreen
     let webview = Webview()
     
     // Adapt window size to keyboard height, see:
@@ -115,7 +134,12 @@ struct ContentView: View {
             // NSLog("Screen \(UIScreen.main.bounds)")
         }
         .padding(.top, 0) // Important, to set the size of the view
-        .padding(.bottom, keyboardHeight)
+        .if(viewBehavior == .original || viewBehavior == .ignoreSafeArea) {
+            $0.padding(.bottom, keyboardHeight)
+        }
+        .if(viewBehavior == .ignoreSafeArea || viewBehavior == .fullScreen) {
+            $0.ignoresSafeArea(.container, edges: .bottom)
+        }
     }
 }
 

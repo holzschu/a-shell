@@ -23,19 +23,6 @@ struct startInternalBrowser: Tip {
     var options: [TipOption] = [MaxDisplayCount(1)]
 }
 
-@available(iOS 17.0, *)
-struct endInternalBrowser: Tip {
-
-    var title: Text {
-        Text("Long press on screen to restore the keyboard")
-    }
-    
-    var message: Text {
-        Text("")
-    }
-
-   var options: [TipOption] = [MaxDisplayCount(1)]
-}
 
 @available(iOS 17.0, *)
 struct toolbarTip: Tip {
