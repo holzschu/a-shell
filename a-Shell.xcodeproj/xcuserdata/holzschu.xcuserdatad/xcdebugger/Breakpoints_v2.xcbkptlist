@@ -776,5 +776,159 @@
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "724CF547-7A57-4E2A-BFD6-49F6AAA508CC"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WkWebViewExtension.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "68"
+            endingLineNumber = "68"
+            landmarkName = "keyboardDisplayRequiresUserAction"
+            landmarkType = "24">
+            <Locations>
+               <Location
+                  uuid = "724CF547-7A57-4E2A-BFD6-49F6AAA508CC - 95c5d99bde7e06c9"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "__C.WKWebView.keyboardDisplayRequiresUserAction.getter : Swift.Optional&lt;Swift.Bool&gt;"
+                  moduleName = "a-Shell"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/a-Shell/WkWebViewExtension.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "69"
+                  endingLineNumber = "69"
+                  offsetFromSymbolStart = "24">
+               </Location>
+               <Location
+                  uuid = "724CF547-7A57-4E2A-BFD6-49F6AAA508CC - 5da6dc9aa61ede6"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "__C.WKWebView.keyboardDisplayRequiresUserAction.getter : Swift.Optional&lt;Swift.Bool&gt;"
+                  moduleName = "a-Shell-noPython"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/a-Shell/WkWebViewExtension.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "69"
+                  endingLineNumber = "69"
+                  offsetFromSymbolStart = "20">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "FA6F084B-9F59-47A6-BBF5-2ED61782C0DA"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "ios_system"
+            moduleName = "">
+            <Locations>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "6DB358A3-F7BF-4972-BAFF-DE550D945695"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "a-Shell/ExtraCommands.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "1340"
+            endingLineNumber = "1340"
+            landmarkName = "changeDirectory(path:)"
+            landmarkType = "9">
+            <Locations>
+               <Location
+                  uuid = "6DB358A3-F7BF-4972-BAFF-DE550D945695 - 74bf7d1fa78af346"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "a_Shell.changeDirectory(path: Swift.String) -&gt; Swift.Bool"
+                  moduleName = "a-Shell"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell/ExtraCommands.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "1340"
+                  endingLineNumber = "1340"
+                  offsetFromSymbolStart = "6228">
+               </Location>
+               <Location
+                  uuid = "6DB358A3-F7BF-4972-BAFF-DE550D945695 - 693b24beacb71e56"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "a_Shell_mini.changeDirectory(path: Swift.String) -&gt; Swift.Bool"
+                  moduleName = "a-Shell-mini"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell/ExtraCommands.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "1340"
+                  endingLineNumber = "1340"
+                  offsetFromSymbolStart = "2664">
+               </Location>
+               <Location
+                  uuid = "6DB358A3-F7BF-4972-BAFF-DE550D945695 - 693b24beacb71e56"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "a_Shell_mini.changeDirectory(path: Swift.String) -&gt; Swift.Bool"
+                  moduleName = "a-Shell-mini"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell/ExtraCommands.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "1340"
+                  endingLineNumber = "1340"
+                  offsetFromSymbolStart = "2296">
+               </Location>
+               <Location
+                  uuid = "6DB358A3-F7BF-4972-BAFF-DE550D945695 - a4ce905051b858ae"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "a_Shell_noPython.changeDirectory(path: Swift.String) -&gt; Swift.Bool"
+                  moduleName = "a-Shell-noPython"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell/ExtraCommands.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "1340"
+                  endingLineNumber = "1340"
+                  offsetFromSymbolStart = "6458">
+               </Location>
+               <Location
+                  uuid = "6DB358A3-F7BF-4972-BAFF-DE550D945695 - 74bf7d1fa78af346"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "a_Shell.changeDirectory(path: Swift.String) -&gt; Swift.Bool"
+                  moduleName = "a-Shell"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell/ExtraCommands.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "1340"
+                  endingLineNumber = "1340"
+                  offsetFromSymbolStart = "5596">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
    </Breakpoints>
 </Bucket>
