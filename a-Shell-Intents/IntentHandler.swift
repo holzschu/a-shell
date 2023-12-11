@@ -298,6 +298,7 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
         }
         newPath = newPath + ":" + String(utf8String: getenv("PATH"))!
         setenv("PATH", newPath, 1)
+        //
         // End environment variables
         outputReceived = false
         var returnVal: Int32 = 0
@@ -382,5 +383,5 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
     }
         
     // Once resolution is completed, perform validation on the intent and provide confirmation (optional).
-
+    
 }
