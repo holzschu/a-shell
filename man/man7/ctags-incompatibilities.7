@@ -1,0 +1,220 @@
+.\" Man page generated from reStructuredText.
+.
+.TH CTAGS-INCOMPATIBILITIES 7 "" "0.0.0" "Universal-ctags"
+.SH NAME
+ctags-incompatibilities \- Incompatibilities between Universal-ctags and Exuberant-ctags
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH SYNOPSIS
+.nf
+\fBctags\fP [options] [file(s)]
+\fBetags\fP [options] [file(s)]
+.fi
+.sp
+.SH DESCRIPTION
+.sp
+This page describes major incompatible changes introduced to
+Universal\-ctags forked from Exuberant\-ctags.
+.SH INCOMPATIBILITIES IN COMMAND LINE INTERFACE
+.SS The order of application of patterns and extensions in \fB\-\-langmap\fP
+.sp
+When applying mappings for a name of given source file,
+Exuberant\-ctags tests file name patterns AFTER file extensions
+(\fBe\-map\-order\fP). Universal\-ctags does this differently; it tests file
+name patterns BEFORE file extensions (\fBu\-map\-order\fP).
+.sp
+This incompatible change is introduced to deal with the following
+situation:
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.IP \(bu 2
+"build.xml" as a source file,
+.IP \(bu 2
+The "Ant" parser declares it handles a file name pattern "build.xml", and
+.IP \(bu 2
+The "XML" parser declares it handles a file extension "xml".
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+Which parser should be used for parsing "build.xml"?  The assumption
+of Universal\-ctags is the user may want to use the "Ant" parser; the
+file name pattern it declares is more specific than the file extension
+that the "XML" parser declares. However, e\-map\-order chooses the "XML"
+parser.
+.sp
+So Universal\-ctags uses the u\-map\-order even though it introduces an
+incompatibility.
+.sp
+\fB\-\-list\-map\-extensions=language\fP and \fB\-\-list\-map\-patterns=language\fP
+options are helpful to verify and the file extensions and the file
+name patterns of given \fIlanguage\fP\&.
+.SS Remove \fB\-\-file\-tags\fP and \fB\-\-file\-scope\fP options
+.sp
+Even in Exuberant\-ctags, "\-\-file\-tags" is not documented in its man page.
+Instead of specifying "\-\-file\-tags" or "\-\-file\-tags=yes", use
+"\-\-extras=+f" or "\-\-extras=+{inputFile}".
+.sp
+Instead of specifying "\-\-file\-tags=no", use
+"\-\-extras=\-f" or "\-\-extras=\-{inputFile}".
+.sp
+Universal\-ctags introduces "F/fileScope" extra as the replacement for
+\fB\-\-file\-scope\fP option.
+.sp
+Instead of specifying "\-\-file\-tags" or "\-\-file\-tags=yes", use
+"\-\-extras=+F" or "\-\-extras=+{fileScope}".
+.sp
+Instead of specifying "\-\-file\-tags=no", use
+"\-\-extras=\-F" or "\-\-extras=\-{fileScope}".
+.SS Language and kind definitions
+.SS Language name defined with \fB\-\-langdef=name\fP option
+.sp
+The characters you can use are more restricted than Exuberant\-ctags.
+For more details, see the description of \fB\-\-langdef=name\fP in ctags\-optlib(7).
+.SS Obsoleting \fB\-\-<LANG>\-kinds\fP option
+.sp
+Some options have \fI<LANG>\fP as parameterized parts in their name like
+\fB\-\-foo\-<LANG>=...\fP or \fB\-\-<LANG>\-foo=...\fP\&. The most of all such
+options in Exuberant\-ctags have the former form, \fB\-\-foo\-<LANG>=...\fP\&.
+The exception is \fB\-\-<LANG>\-kinds\fP\&.
+.sp
+Universal\-ctags uses the former form for all \fI<LANG>\fP parameterized
+option. Use \fB\-\-kinds\-<LANG>\fP instead of \fB\-\-<LANG>\-kinds\fP in
+Universal\-ctags. \fB\-\-<LANG>\-kinds\fP still works but it will be
+removed in the future.
+.sp
+The former form may be friendly to shell completion engines.
+.SS Disallowing to define a kind with "file" as name
+.sp
+The kind name "file" is reserved.  Using it as part of kind spec in
+\fB\-\-regex\-<LANG>\fP option is now disallowed.
+.SS Disallowing to define a kind with "F" as letter
+.sp
+The kind letter "F" is reserved.  Using it as part of a kind spec in
+\fB\-\-regex\-<LANG>\fP option is now disallowed.
+.SS Disallowing to use other than alphabetical character as kind letter
+.sp
+Exuberant\-ctags accepts a character other than alphabetical character
+as kind letter in \fB\-\-regex\-<LANG>=...\fP option.  Universal\-ctags
+accepts only an alphabetical character.
+.SS Acceptable characters as parts of a kind name
+.sp
+Exuberant\-ctags accepts any character as a part of a kind name
+defined with \fB\-\-regex\-<LANG>=/regex/replacement/kind\-spec/\fP\&.
+.sp
+Universal\-ctags accepts only an alphabetical character as
+the initial letter of a kind name.
+Universal\-ctags accepts only an alphabetical character or
+numerical character as the rest letters.
+.sp
+An example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+\-\-regex\-Foo=/abstract +class +([a\-z]+)/\e1/a,abstract class/i
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Universal\-ctags rejects this because the kind name, "abstract class",
+includes a whitespace character.
+.sp
+This requirement is for making the output of Universal\-ctags follow
+the tags file format.
+.SS A combination of a kind letter and a kind name
+.sp
+In Universal\-ctags, the combination of
+a kind letter and a kind name must be unique in a language.
+.sp
+You cannot define more than one kind reusing a kind letter with
+different kind names. You cannot define more than one kind reusing a
+kind name with different kind letters.
+.sp
+An example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+\-\-regex\-Foo=/abstract +class +([a\-z]+)/\e1/a,abstractClass/i
+\-\-regex\-Foo=/attribute +([a\-z]+)/\e1/a,attribute/i
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Universal\-ctags rejects this because the kind letter, "a", used twice
+for defining a kind "abstractClass" and "attribute".
+.SH INCOMPATIBILITIES IN TAGS FILE FORMAT
+.SS Using numerical character in the name part of tag tagfield
+.sp
+The version 2 tags file format, the default output format of
+Exuberant\-ctags, accepts only alphabetical characters in the name part
+of tag tagfield.
+.sp
+Universal\-ctags introduces an exception to this specification; it may
+use numerical characters in addition to alphabetical characters as the
+letters other than initial letter of the name part.
+.sp
+The kinds "heading1", "heading2", and "heading3" in the HTML parser
+are the examples.
+.SS Truncating the pattern for long input lines
+.sp
+To prevent generating overly large tags files, a pattern field is
+truncated, by default, when its size exceeds 96 bytes. A different
+limit can be specified with \fB\-\-pattern\-length\-limit=N\fP\&. Specifying
+0 as \fIN\fP results no truncation as Exuberant\-ctags does not.
+.SH OPTION FILES LOADING AT STARTING UP TIME (PRELOAD FILES)
+.sp
+File paths for preload files are changed.
+Universal\-ctags doesn\(aqt load "~/.ctags" at starting up time.
+See "FILES" section of ctags(1).
+.SH KIND LETTERS AND NAMES
+.sp
+A kind letter "F" and a kind name "file" are reserved in the
+main part. A parser cannot have a kind conflicting with
+these reserved ones. Some incompatible changes are introduced
+to follow the above rule.
+.INDENT 0.0
+.IP \(bu 2
+Cobol\(aqs "file" kind is renamed to "fileDesc" because the
+kind name "file" is reserved.
+.IP \(bu 2
+Ruby\(aqs "F" (singletonMethod) is changed to "S".
+.IP \(bu 2
+SQL\(aqs "F" (field) is changed to "E".
+.UNINDENT
+.SH SEE ALSO
+.sp
+ctags(1), ctags\-optlib(7), and tags(5).
+.\" Generated by docutils manpage writer.
+.
