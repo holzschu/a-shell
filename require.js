@@ -33,7 +33,7 @@
     )).href;
   }
 
-  function load(id, pwd, suffix, asyn) {
+  function load(id, pwd, suffix) {
     var href, cached, request;
     // NOTE resolve href from id.
     href = config.resolve(id, pwd, suffix, resolve);
@@ -47,6 +47,28 @@
       t: undefined, // type
       u: href, // url
     };
+	  // Once jsc is loaded, we use it:
+	  if (typeof jsc !== 'undefined') {
+		  var path = new URL(href).pathname;
+		  var source;
+		  if (typeof cached.p == 'boolean') {
+		  	  return cached;
+		  }
+		  if (jsc.isFile(path)) {
+			  cached.s = source = jsc.readFile(path);
+			  cached.t = "file/text";
+			  var regex = /\.json$/;
+			  if (regex.test(href)) {
+				  cached.t = "application/json";
+			  }
+			  cached.p = true;
+			  cached.r = true;
+			  return cached;
+		  } else {
+			  cached.e = new Error("No such file: " + path);
+			  return null;
+		  }
+	  }
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
@@ -80,7 +102,6 @@
             }
             // iOS returns 0 for succesful sync http queries
             if ((request.status == 0) || ((request.status > 99) && (request.status < 400))) {
-              // console.log("Loaded: " + href); 
               cached.s = source = request.responseText;
               cached.t = request.getResponseHeader("Content-Type");
               	// iOS: ensure we get application/json set
@@ -89,21 +110,6 @@
 					cached.t = "application/json";
 				}
               done = function() { if (--loading < 0) res(cached); };
-              // NOTE Pre-load submodules if the request is asynchronous (request.$ is true).
-              if (request.$) {
-                // Remove comments from the source
-                source = source.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
-                // TODO Write a real parser that returns all modules that are preloadable.
-                pattern = /require\s*(?:\.\s*resolve\s*(?:\.\s*paths\s*)?)?\(\s*(?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\s*\)/g;
-                while((match = pattern.exec(source)) !== null) {
-                  // NOTE Only add modules to the loading-queue that are still pending.
-                  pwd2 = (new URL((match[1]||match[2])[0] == "." ? href : config.paths[0], config.root)).href;
-                  if ((tmp = load(match[1]||match[2], pwd2, true)).r) {
-                    loading++;
-                    tmp.p.then(done, done);
-                  }
-                }
-              }
               done();
             }
             else {
@@ -114,12 +120,12 @@
       });
     }
     // NOTE `request` is only defined if the module is requested for the first time.
-    if (request = request || (!asyn && cached.r)) {
+    if (request = request || cached.r) {
       try {
         request.abort();
-        request.$ = asyn;
+        request.$ = false; // all is synchronous // can probably remove this line now.
         // NOTE IE requires a true boolean value as third param.
-        request.open("GET", href, !!asyn);
+        request.open("GET", href, false);
         request.send();
       }
       catch (e) {
@@ -162,57 +168,89 @@
   }
 
   function factory(parent) {
-    function requireEngine(mode, id, asyn) {
-      function afterLoad(cached) {
-        var regex = /package\.json$/;
-        if (regex.test(cached.u) && !regex.test(id)) {
-          // iOS: content-type is not set, so we set it manually
-          var pkg = evaluate(cached, parent);
-          return typeof pkg.exports.main == "string" ?
-            (factory(pkg))(pkg.exports.main.replace(/^\.*\/*/, "./"), asyn): // */ (close comment for editor parsing)
-            pkg.exports;
-        }
-        else if (mode == 1)
-          return cached.u;
-        else if (mode == 2)
-          return [pwd.match(/.*\//)[0]];
-        else
-          return evaluate(cached, parent).exports;
-      }
+	  function requireEngine(mode, id) {
+		  function afterLoad(cached) {
+			  var regex = /package\.json$/;
+			  if (regex.test(cached.u) && !regex.test(id)) {
+				  // iOS: content-type is not set, so we set it manually
+				  var pkg = evaluate(cached, parent);
+				  return typeof pkg.exports.main == "string" ?
+					  (factory(pkg))(pkg.exports.main.replace(/^\.*\/*/, "./"), false): // */ (close comment for editor parsing)
+						  pkg.exports;
+					  }
+			  else if (mode == 1)
+				  return cached.u;
+			  else if (mode == 2)
+				  return [pwd.match(/.*\//)[0]];
+					  else
+					  return evaluate(cached, parent).exports;
+				  }
 
-      var pwd = (new URL(id[0] == "." ? (parent ? parent.uri : config.root) : config.paths[0], config.root)).href;
-      var cachedModule = load(id, pwd, "", false); // no suffix at all
-      	// "browser" modules must take priority over package.json 
-      	// This might be a larger issue: package.json contains (often) index.js
-      	// Could be: "replace index.js with browser.js" (if it exists)
-      	// Or: edit package.json in the few relevant cases.
-      if (cachedModule == null) {
-		 cachedModule = load(id, pwd, "/browser.js", false);
+		  // Enhancement: search for modules in ~/Library/node_modules before $APPDIR/node_modules.
+		  var cachedModule = null; 
+		  if (typeof window.homedir !== 'undefined') {
+			  var localroot = new URL("Library/", window.homedir);
+		      var localpwd = (new URL(id[0] == "." ? (parent ? parent.uri : localroot) : config.paths[0], localroot)).href;
+			  cachedModule = load(id, localpwd, ""); // no suffix at all
+			  // "browser" modules must take priority over package.json 
+			  // This might be a larger issue: package.json contains (often) index.js
+			  // Could be: "replace index.js with browser.js" (if it exists)
+			  // Or: edit package.json in the few relevant cases.
+			  if (cachedModule == null) {
+				  cachedModule = load(id, localpwd, "/browser.js");
+			  }
+			  if (cachedModule == null) {
+				  cachedModule = load(id, localpwd, "-browserify/index.js");
+			  }
+			  // package.json contains the name of the module
+			  if (cachedModule == null) {
+				  cachedModule = load(id, localpwd, "/package.json");
+			  }
+			  if (cachedModule == null) {
+				  cachedModule = load(id, localpwd, ".js");
+			  }
+			  if (cachedModule == null) {
+				  cachedModule = load(id, localpwd, "/index.js");
+			  }
+			  if (cachedModule == null) {
+				  cachedModule = load(id, localpwd, "/" + id + ".js");
+			  }
+		  }
+		  if (cachedModule == null) {
+			  var pwd = (new URL(id[0] == "." ? (parent ? parent.uri : config.root) : config.paths[0], config.root)).href;
+			  cachedModule = load(id, pwd, ""); // no suffix at all
+			  // "browser" modules must take priority over package.json 
+			  // This might be a larger issue: package.json contains (often) index.js
+			  // Could be: "replace index.js with browser.js" (if it exists)
+			  // Or: edit package.json in the few relevant cases.
+			  if (cachedModule == null) {
+				  cachedModule = load(id, pwd, "/browser.js");
+			  }
+			  if (cachedModule == null) {
+				  cachedModule = load(id, pwd, "-browserify/index.js");
+			  }
+			  // package.json contains the name of the module
+			  if (cachedModule == null) {
+				  cachedModule = load(id, pwd, "/package.json");
+			  }
+			  if (cachedModule == null) {
+				  cachedModule = load(id, pwd, ".js");
+			  }
+			  if (cachedModule == null) {
+				  cachedModule = load(id, pwd, "/index.js");
+			  }
+			  if (cachedModule == null) {
+				  cachedModule = load(id, pwd, "/" + id + ".js");
+			  }
+		  }
+		  if (cachedModule == null) {
+			  throw Error("Could not find module " + id)
+		  }
+		  return afterLoad(cachedModule); 
+		  /* return asyn ?
+		new Promise(function(res, rej) { load(id, pwd, "/index.js", asyn).p.then(afterLoad).then(res, rej); }):
+		afterLoad(load(id, pwd, "/index.js", asyn)); */
 	  }
-      if (cachedModule == null) {
-		 cachedModule = load(id, pwd, "-browserify/index.js", false);
-	  }
-	  	// package.json contains the name of the module
-      if (cachedModule == null) {
-		 cachedModule = load(id, pwd, "/package.json", false);
-	  }
-      if (cachedModule == null) {
-		 cachedModule = load(id, pwd, ".js", false);
-	  }
-      if (cachedModule == null) {
-		 cachedModule = load(id, pwd, "/index.js", false);
-	  }
-      if (cachedModule == null) {
-		 cachedModule = load(id, pwd, "/" + id + ".js", false);
-	  }
-      if (cachedModule == null) {
-      	  throw Error("Could not find module " + id)
-	  }
-      return afterLoad(cachedModule); 
-      /* return asyn ?
-        new Promise(function(res, rej) { load(id, pwd, "/index.js", asyn).p.then(afterLoad).then(res, rej); }):
-        afterLoad(load(id, pwd, "/index.js", asyn)); */
-    }
 
     var require = requireEngine.bind(undefined, 0);
     require.resolve = requireEngine.bind(require, 1);

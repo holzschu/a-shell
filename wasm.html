@@ -21,8 +21,6 @@
          }
 	   </style>
 	</head>
-
-	<!-- TODO: check if we can remove everything. contenteditable='false' has stopped the keyboard from adding autocomplete -->
 	<body autocapitalize='none' contenteditable='false' spellcheck='false' autocomplete='off' autocorrect='off'>
 		<div id='terminal' autofocus='true' autocapitalize='none' contenteditable='false' spellcheck='false' autocomplete='off' autocorrect='off' ></div>
 		<script>
@@ -43,7 +41,7 @@
 					return prompt("jsc\nreadFile\n" + path);
 				},
 				// jsc.readFileBase64(filePath: string): string	Open the file at filePath as a binary file, return the content encoded using Base64
-				readFile: function readFileBase64(path) {
+				readFileBase64: function readFileBase64(path) {
 					return prompt("jsc\nreadFileBase64\n" + path);
 				},
 				// jsc.writeFile(filePath: string, content: string): Result	Writes content to a UTF-8 file at filePath.
@@ -66,7 +64,7 @@
 				},
 				// jsc.listFiles(folderPath: string): string[]	Returns a list of the file names in the folder at folderPath.
 				listFiles: function listFiles(directory) {
-					var returnValue = prompt("jsc\nlistFiles\n" + path);
+					var returnValue = prompt("jsc\nlistFiles\n" + directory);
 					const entries = returnValue.split("\n");
 					if (entries[0].count == 0) {
 						throw new Error(entries[1]);
@@ -78,9 +76,9 @@
 					var returnValue = Number(prompt("jsc\nisFile\n" + path));
 					return (returnValue == 1);
 				},
-				// jsc.isFolder(folderPath: string): boolean	Returns true if there is a folder at folderPath, false if there is a file or nothing there.
-				isFolder: function isFolder(path) {
-					var returnValue = Number(prompt("jsc\nisFolder\n" + path));
+				// jsc.isDirectory(folderPath: string): boolean	Returns true if there is a folder at folderPath, false if there is a file or nothing there.
+				isDirectory: function isDirectory(path) {
+					var returnValue = Number(prompt("jsc\nisDirectory\n" + path));
 					return (returnValue == 1);
 				},
 				// jsc.makeFolder(folderPath: string): Result	Creates a folder at folderPath.
@@ -93,7 +91,7 @@
 					return (Number(returnValue));
 				},
 				// jsc.deleteFile(filePath: string): Result	Deletes the file at filePath.
-				delete: function deleteFile(path) {
+				deleteFile: function deleteFile(path) {
 					var returnValue = prompt("jsc\ndelete\n" + path);
 					const entries = returnValue.split("\n");
 					if (Number(entries[0]) == -1) {
@@ -142,6 +140,8 @@
 
 			console.log = println
 			console.error = print_error
+			window.appdir = (new URL(".", location.href)).href;
+			window.webkit.messageHandlers.aShell.postMessage('setHomeDir:');
 		</script>
 	</body>
 </html>

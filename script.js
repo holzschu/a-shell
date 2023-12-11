@@ -73,6 +73,36 @@ function disableAutocompleteMenu() {
 	lastOnlyDirectories = false;
 }
 
+function cleanupLastLine() {
+	// console.log("Before: " + window.printedContent);
+	// Clean up the last line (it can contain a lot of control characters, up arrow, down arrow, etc):
+	var lastNewline = window.printedContent.lastIndexOf("\n");
+	var lastLine = window.printedContent.substr(lastNewline +1 ); // skip past before-last \n
+	window.printedContent = window.printedContent.substr(0, lastNewline); // remove last \n
+	var emptyLastLine = false;
+	if (lastLine.length == 0) {
+		emptyLastLine = true;
+		lastNewline = window.printedContent.lastIndexOf("\n");
+		lastLine = window.printedContent.substr(lastNewline +1 ); // skip past before-last \n
+		window.printedContent = window.printedContent.substr(0, lastNewline); // remove last line
+	}
+	// console.log("Last line, before : " + lastLine);
+	if (window.commandRunning == '') {
+		lastLine = "\n\r\x1b[0m\x1b[39;49m" + window.promptMessage + window.term_.io.currentCommand ;
+	} else {
+		// promptMessage has been set in updatePromptPosition
+		lastLine = window.promptMessage + window.term_.io.currentCommand ;
+	}
+	// console.log("Last line, after : " + lastLine);
+	// This needs thinking. There's a "\n" missing after that.
+	window.printedContent += lastLine; 
+	if (emptyLastLine) {
+		window.printedContent += '\r\n';
+	}
+	// console.log("After: " + window.printedContent);
+
+}
+
 function isLetter(c) {
 	// TODO: extension for CJK characters (hard)
 	return (c.toLowerCase() != c.toUpperCase());
@@ -106,6 +136,17 @@ function printPrompt() {
 
 function updatePromptPosition() {
 	window.promptEnd = window.term_.screen_.cursorPosition.column;
+	var lastNewline = window.printedContent.lastIndexOf("\r");
+	var lastLine = window.printedContent.substr(lastNewline +1 ); // skip past last \n
+	if (lastLine.length == 0) { 
+		lastNewline = window.printedContent.lastIndexOf("\n");
+		lastLine = window.printedContent.substr(lastNewline +1 );
+	}
+	if ((lastLine.length == 1) && ((lastLine[0] == '\n') || (lastLine[0] == '\r'))) {
+		lastLine = '';
+	} else if (window.commandRunning != '') {
+		window.promptMessage = lastLine; // store current command prompt message.
+	}
 	// required because some commands can take several lines, especially on a phone.
 	window.promptLine = window.term_.screen_.cursorPosition.row;
 	window.promptScroll = window.term_.scrollPort_.getTopRowIndex();
@@ -715,7 +756,7 @@ function setupHterm() {
 				// window.webkit.messageHandlers.aShell.postMessage('Received character: ' + string + ' ' + string.length); // for debugging
 				if (io.currentCommand === '') { 
 					// new line, reset things: (required for commands inside commands)
-					updatePromptPosition(); 
+					updatePromptPosition();
 				}
 				var cursorPosition = term.screen_.cursorPosition.column - window.promptEnd;  // remove prompt length
 				switch (string) {
@@ -725,7 +766,7 @@ function setupHterm() {
 							pickCurrentValue();
 							break;
 						}
-						// Before executing command, move to end of line if not already there:
+						// Before executing command, move to end of line if not already there, and cleanup the line content:
 						// Compute how many lines should we move downward:
 						var beginCommand = io.currentCommand.slice(0, currentCommandCursorPosition); 
 						var lineCursor = Math.floor((lib.wc.strWidth(beginCommand) + window.promptEnd)/ term.screenSize.width);
@@ -734,6 +775,7 @@ function setupHterm() {
 							io.println('');
 						}
 						io.println('');
+						cleanupLastLine();
 						if (window.commandRunning != '') {
 							// The command takes care of the prompt. Just send the input data:
 							window.webkit.messageHandlers.aShell.postMessage('input:' + io.currentCommand + '\n');
@@ -757,11 +799,11 @@ function setupHterm() {
 							window.commandInsideCommandIndex = window.maxCommandInsideCommandIndex; 
 						} else {
 							if (io.currentCommand.length > 0) {
-								// Now is the time where we send the command to iOS: 
-								window.webkit.messageHandlers.aShell.postMessage('shell:' + io.currentCommand);
-								// and reinitialize:
+								// Reinitialize before sending:
 								window.commandRunning = io.currentCommand;
 								window.interactiveCommandRunning = isInteractive(window.commandRunning);
+								// ...and send the command to iOS: 
+								window.webkit.messageHandlers.aShell.postMessage('shell:' + io.currentCommand);
 								// remove temporarily stored command -- if any
 								if (window.maxCommandIndex < window.commandArray.length) {
 									window.commandArray.pop();
@@ -836,6 +878,7 @@ function setupHterm() {
 								}
 								io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
 								io.print(io.currentCommand);
+								cleanupLastLine();
 								currentCommandCursorPosition = io.currentCommand.length;
 							}
 						} else {
@@ -857,6 +900,7 @@ function setupHterm() {
 								}
 								io.currentCommand = window.commandArray[window.commandIndex]; 
 								io.print(io.currentCommand);
+								cleanupLastLine();
 								currentCommandCursorPosition = io.currentCommand.length;
 							} 
 						}
@@ -885,8 +929,9 @@ function setupHterm() {
 								}
 								io.currentCommand = window.commandInsideCommandArray[window.commandInsideCommandIndex]; 
 								io.print(io.currentCommand);
+								cleanupLastLine();
 								currentCommandCursorPosition = io.currentCommand.length;
-							}
+							} 
 						} else {
 							if (window.commandIndex < window.maxCommandIndex) {
 								var scrolledLines = window.promptScroll - term.scrollPort_.getTopRowIndex();
@@ -902,6 +947,7 @@ function setupHterm() {
 								}
 								io.currentCommand = window.commandArray[window.commandIndex]; 
 								io.print(io.currentCommand);
+								cleanupLastLine();
 								currentCommandCursorPosition = io.currentCommand.length;
 							}
 						}
@@ -1236,8 +1282,8 @@ function setupHterm() {
 		};
 		term.moveCursorPosition = function(y, x) {
 			// If currentCommand is empty, update prompt position (JS is asynchronous, position might have been computed before the end of the scroll)
-			if (io.currentCommand === '') { 
-				updatePromptPosition(); 
+			if (io.currentCommand === '') {
+				updatePromptPosition();
 			}
 			var scrolledLines = window.promptScroll - this.scrollPort_.getTopRowIndex();
 			var topRowCommand = window.promptLine + scrolledLines;
@@ -1316,10 +1362,10 @@ function setupHterm() {
 	term.decorate(document.querySelector('#terminal'));
 	term.installKeyboard();
 	window.term_ = term;
-	// Useful for console debugging.
-	console.log = println
-	console.warn = window.webkit.messageHandlers.aShell.postMessage
-	console.error = window.webkit.messageHandlers.aShell.postMessage
+	// Useful for console debugging. But it causes some errors in hterm_all
+	// console.log = println
+	// console.warn = window.webkit.messageHandlers.aShell.postMessage
+	// console.error = window.webkit.messageHandlers.aShell.postMessage
 	if (window.foregroundColor === undefined) {
 		window.webkit.messageHandlers.aShell.postMessage('resendConfiguration:');
 	}
@@ -2377,12 +2423,13 @@ hterm.Terminal.IO.prototype.writeUTF16 = function(string) {
     return;
   }
 
-  this.terminal_.interpret(string);
   // iOS: keep a copy of everything that has been sent to the screen, 
   // to restore terminal status later and resize.
   if (this.terminal_.isPrimaryScreen()) {
      window.printedContent += string;
   }
+ 
+  this.terminal_.interpret(string);
 };
 
 
@@ -2399,16 +2446,16 @@ hterm.Terminal.IO.prototype.writeUTF16 = function(string) {
  * @param {!hterm.VT.ParseState} parseState
  */
 hterm.VT.CSI['n'] = function(parseState) {
-  window.webkit.messageHandlers.aShell.postMessage('CPR request (n) ' + parseState.args);
+  // window.webkit.messageHandlers.aShell.postMessage('CPR request (n) ' + parseState.args);
   if (parseState.args[0] == 5) {
     this.terminal.io.sendString('\x1b0n');
   } else if (parseState.args[0] == 6) {
 	if ((window.commandRunning !== undefined) && (window.commandRunning != '') && (!window.duringResize)) {
 		window.interactiveCommandRunning = true;
+		const row = this.terminal.getCursorRow() + 1;
+		const col = this.terminal.getCursorColumn() + 1;
+		this.terminal.io.sendString('\x1b[' + row + ';' + col + 'R');
 	}
-    const row = this.terminal.getCursorRow() + 1;
-    const col = this.terminal.getCursorColumn() + 1;
-    this.terminal.io.sendString('\x1b[' + row + ';' + col + 'R');
   }
 };
 
@@ -2429,14 +2476,14 @@ hterm.VT.CSI['n'] = function(parseState) {
  * @param {!hterm.VT.ParseState} parseState
  */
 hterm.VT.CSI['?n'] = function(parseState) {
-  window.webkit.messageHandlers.aShell.postMessage('CPR request (?n) ' + parseState.args);
+  // window.webkit.messageHandlers.aShell.postMessage('CPR request (?n) ' + parseState.args);
   if (parseState.args[0] == 6) {
 	if ((window.commandRunning !== undefined) && (window.commandRunning != '') && (!window.duringResize)) {
 		window.interactiveCommandRunning = true;
+		const row = this.terminal.getCursorRow() + 1;
+		const col = this.terminal.getCursorColumn() + 1;
+		this.terminal.io.sendString('\x1b[' + row + ';' + col + 'R');
 	}
-    const row = this.terminal.getCursorRow() + 1;
-    const col = this.terminal.getCursorColumn() + 1;
-    this.terminal.io.sendString('\x1b[' + row + ';' + col + 'R');
   } else if (parseState.args[0] == 15) {
     this.terminal.io.sendString('\x1b[?11n');
   } else if (parseState.args[0] == 25) {
