@@ -2668,7 +2668,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             directoryForSorting = FileManager().currentDirectoryPath + "/" + directoryForSorting
                         }
                     }
-                    var localDirCompact = String(cString: ios_getBookmarkedVersion(directoryForSorting.utf8CString))
+                    let localDirCompact = String(cString: ios_getBookmarkedVersion(directoryForSorting.utf8CString))
                     filePaths = filePaths.sorted(by: { current, next in rankDirectory(dir:current, base: localDirCompact) > rankDirectory(dir:next, base: localDirCompact)})
                     // NSLog("after sorting: \(filePaths)")
                 }
