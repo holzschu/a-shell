@@ -63,11 +63,11 @@
 	<key>INIntentDefinitionNamespace</key>
 	<string>iwbZ8l</string>
 	<key>INIntentDefinitionSystemVersion</key>
-	<string>22F82</string>
+	<string>23A344</string>
 	<key>INIntentDefinitionToolsBuildVersion</key>
-	<string>14E222b</string>
+	<string>15C65</string>
 	<key>INIntentDefinitionToolsVersion</key>
-	<string>14.3</string>
+	<string>15.1</string>
 	<key>INIntents</key>
 	<array>
 		<dict>
@@ -375,10 +375,10 @@
 			<key>INIntentKeyParameter</key>
 			<string>fileName</string>
 			<key>INIntentLastParameterTag</key>
-			<integer>3</integer>
+			<integer>5</integer>
 			<key>INIntentManagedParameterCombinations</key>
 			<dict>
-				<key>fileName</key>
+				<key>fileName,errorIfNotFound</key>
 				<dict>
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
@@ -394,16 +394,18 @@
 			<string>GetFile</string>
 			<key>INIntentParameterCombinations</key>
 			<dict>
-				<key>fileName</key>
+				<key>fileName,errorIfNotFound</key>
 				<dict>
 					<key>INIntentParameterCombinationIsLinked</key>
+					<true/>
+					<key>INIntentParameterCombinationIsPrimary</key>
 					<true/>
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
 					<key>INIntentParameterCombinationTitle</key>
 					<string>Get ${fileName} from a-Shell</string>
 					<key>INIntentParameterCombinationTitleID</key>
-					<string>BKUcxZ</string>
+					<string>Qfisqk</string>
 				</dict>
 			</dict>
 			<key>INIntentParameters</key>
@@ -443,6 +445,56 @@
 					<integer>1</integer>
 					<key>INIntentParameterType</key>
 					<string>String</string>
+				</dict>
+				<dict>
+					<key>INIntentParameterConfigurable</key>
+					<true/>
+					<key>INIntentParameterDisplayName</key>
+					<string>Error if not found</string>
+					<key>INIntentParameterDisplayNameID</key>
+					<string>me3N9R</string>
+					<key>INIntentParameterDisplayPriority</key>
+					<integer>2</integer>
+					<key>INIntentParameterMetadata</key>
+					<dict>
+						<key>INIntentParameterMetadataDefaultValue</key>
+						<true/>
+						<key>INIntentParameterMetadataFalseDisplayName</key>
+						<string>false</string>
+						<key>INIntentParameterMetadataFalseDisplayNameID</key>
+						<string>fHyzxH</string>
+						<key>INIntentParameterMetadataTrueDisplayName</key>
+						<string>true</string>
+						<key>INIntentParameterMetadataTrueDisplayNameID</key>
+						<string>JAGmzw</string>
+					</dict>
+					<key>INIntentParameterName</key>
+					<string>errorIfNotFound</string>
+					<key>INIntentParameterPromptDialogs</key>
+					<array>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>Configuration</string>
+						</dict>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogFormatString</key>
+							<string>error if file not found?</string>
+							<key>INIntentParameterPromptDialogFormatStringID</key>
+							<string>WJSlGu</string>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>Primary</string>
+						</dict>
+					</array>
+					<key>INIntentParameterSupportsResolution</key>
+					<true/>
+					<key>INIntentParameterTag</key>
+					<integer>5</integer>
+					<key>INIntentParameterType</key>
+					<string>Boolean</string>
 				</dict>
 			</array>
 			<key>INIntentResponse</key>

@@ -21,6 +21,18 @@ import ios_system
 
 class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHandling, PutFileIntentHandling
 {
+    func resolveErrorIfNotFound(for intent: GetFileIntent, with completion: @escaping (INBooleanResolutionResult) -> Void) {
+        if let errorIfNotFound = intent.errorIfNotFound {
+            if (errorIfNotFound == true) {
+                completion(INBooleanResolutionResult.success(with: true))
+            } else {
+                completion(INBooleanResolutionResult.success(with: false))
+            }
+        } else {
+            completion(INBooleanResolutionResult.needsValue())
+        }
+    }
+    
     func resolveFile(for intent: PutFileIntent, with completion: @escaping ([INFileResolutionResult]) -> Void) {
         var result: [INFileResolutionResult] = []
         if let fileList = intent.file {
@@ -119,6 +131,7 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
         }
         if let fileNames = intent.fileName {
             // Sometimes, we get multiple lines (or a single line that ends with "\n")
+            let errorIfNotFound = intent.errorIfNotFound ?? true;
             if let fileName = fileNames.components(separatedBy: "\n").first {
                 FileManager().changeCurrentDirectoryPath(groupUrl.path)
                 if FileManager().fileExists(atPath: fileName) {
@@ -126,9 +139,12 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
                     let intentResponse = GetFileIntentResponse(code: .success, userActivity: nil)
                     intentResponse.file = INFile(fileURL: fileURL, filename: fileName, typeIdentifier: nil)
                     completion(intentResponse)
-                } else {
+                } else if (errorIfNotFound == true) {
                     let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
                     intentResponse.message = "File \(fileName) not found error"
+                    completion(intentResponse)
+                } else {
+                    let intentResponse = GetFileIntentResponse(code: .success, userActivity: nil)
                     completion(intentResponse)
                 }
                 return
