@@ -265,7 +265,7 @@
   config = config || new Object();
   config.paths = config.paths || ["./node_modules/"];
   config.resolve = config.resolve || resolve;
-  config.root = config.root || location.href;
+  config.root = config.root || window.appdir || location.href;
   require = factory(null);
   if (config.expose)
     self.require = require;

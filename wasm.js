@@ -94,7 +94,8 @@ function executeWebAssembly(bufferString, args, cwd, tty, env) {
 	catch (error) {
 		// WASI returns an error even in some cases where things went well. 
 		// We find the type of the error, and return the appropriate error message
-		if (error.code === 'undefined') {
+        console.log("Wasm error: " + error.message);
+        if (error.code === 'undefined') {
 			errorCode = 1; 
 			errorMessage = '\nwasm: ' + error + '\n';
 		} else if (error.code != null) { 

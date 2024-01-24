@@ -129,6 +129,7 @@ function printPrompt() {
 		window.commandRunning = '';
 		window.term_.io.currentCommand = '';
 		window.interactiveCommandRunning = false;
+		window.term_.reportFocus = false; // That was causing ^[[I sometimes
 	} else {
 		window.webkit.messageHandlers.aShell.postMessage('input:' + '\n');
 	}
@@ -848,6 +849,7 @@ function setupHterm() {
 						disableAutocompleteMenu();
 						break;
 					case String.fromCharCode(27) + "[A":  // Up arrow
+					case String.fromCharCode(27) + "OA":  // Up arrow
 					case String.fromCharCode(27) + "[1;3A":  // Alt-Up arrow
 					case String.fromCharCode(16):  // Ctrl+P
 						// popup menu being displayed, change it:
@@ -906,6 +908,7 @@ function setupHterm() {
 						}
 						break;
 					case String.fromCharCode(27) + "[B":  // Down arrow
+					case String.fromCharCode(27) + "OB":  // Up arrow
 					case String.fromCharCode(27) + "[1;3B":  // Alt-Down arrow
 					case String.fromCharCode(14):  // Ctrl+N
 						// popup menu being displayed, change it:
@@ -953,6 +956,7 @@ function setupHterm() {
 						}
 						break;
 					case String.fromCharCode(27) + "[D":  // Left arrow
+					case String.fromCharCode(27) + "OD":  // Left arrow
 					case String.fromCharCode(2):  // Ctrl+B
 						if (this.document_.getSelection().type == 'Range') {
 							// move cursor to start of selection
@@ -980,6 +984,7 @@ function setupHterm() {
 						}
 						break;
 					case String.fromCharCode(27) + "[C":  // Right arrow
+					case String.fromCharCode(27) + "OC":  // Left arrow
 					case String.fromCharCode(6):  // Ctrl+F
 						if (this.document_.getSelection().type == 'Range') {
 							// move cursor to end of selection

@@ -680,6 +680,7 @@ function initializeTerminalGestures() {
       // the selection.
       const selection = term_.document_.getSelection();
       if (!selection.isCollapsed) {
+		evt.preventDefault(); // iOS: prevent WKWebView from scrolling too.
         return;
       }
 		evt.preventDefault(); // iOS: prevent WKWebView from scrolling too.

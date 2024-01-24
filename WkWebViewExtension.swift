@@ -126,7 +126,7 @@ extension WKWebView {
                 print("webView focus error: \(error)")
             }
             if let result = result {
-                print("webView focus: \(result)")
+                // print("webView focus: \(result)")
             }
         }
     }
@@ -142,7 +142,7 @@ extension WKWebView {
                 print("Error in executing \(command): \(error)")
             }
             if let result = result {
-                print(result)
+                // print(result)
             }
         }
     }
