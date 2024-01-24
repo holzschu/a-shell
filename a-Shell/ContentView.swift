@@ -10,7 +10,7 @@ import SwiftUI
 import WebKit
 
 // SwiftUI extension for fullscreen rendering
-enum ViewBehavior: Int {
+public enum ViewBehavior: Int {
     case original
     case ignoreSafeArea
     case fullScreen
@@ -31,6 +31,10 @@ public var toolbarShouldBeShown = true
 public var useSystemToolbar = false
 public var showToolbar = true
 public var showKeyboardAtStartup = true
+// .fullScreen is too much for floating KB + toolbar, ignoreSafeArea seems to work,
+// automatic detection causes blank screen when switching back-forth
+// Make this a user-defined setup, with "ignoreSafeArea" the default.
+public var viewBehavior: ViewBehavior = .ignoreSafeArea
 
 struct Webview : UIViewRepresentable {
     typealias WebViewType = KBWebViewBase
@@ -82,7 +86,8 @@ struct Webview : UIViewRepresentable {
 struct ContentView: View {
     @State private var keyboardHeight: CGFloat = 0
     @State private var keyboardWidth: CGFloat = 0
-    @State private var viewBehavior: ViewBehavior = .fullScreen
+    // @State private var viewBehavior: ViewBehavior = .ignoreSafeArea
+    
     let webview = Webview()
     
     // Adapt window size to keyboard height, see:
@@ -130,14 +135,20 @@ struct ContentView: View {
         // resize depending on keyboard. Specify size (.frame) instead of padding.
         webview.onReceive(keyboardChangePublisher) {
             self.keyboardHeight = $0
+            // NSLog("keyboardHeight: \(keyboardHeight)")
             // NSLog("Bounds \(webview.webView.coordinateSpace.bounds)")
             // NSLog("Screen \(UIScreen.main.bounds)")
         }
         .padding(.top, 0) // Important, to set the size of the view
         .if(viewBehavior == .original || viewBehavior == .ignoreSafeArea) {
-            $0.padding(.bottom, keyboardHeight)
+            // If not displaying hterm and not displaying the keyboard, hide the space for the toolbar
+            if (webview.webView.url?.path != Bundle.main.resourcePath! + "/hterm.html") && (keyboardHeight <= 40) {
+                $0.padding(.bottom, 0)
+            } else {
+                $0.padding(.bottom, keyboardHeight)
+            }
         }
-        .if(viewBehavior == .ignoreSafeArea || viewBehavior == .fullScreen) {
+        .if((viewBehavior == .ignoreSafeArea || viewBehavior == .fullScreen)) {
             $0.ignoresSafeArea(.container, edges: .bottom)
         }
     }

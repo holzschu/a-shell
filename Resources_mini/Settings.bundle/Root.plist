@@ -104,6 +104,28 @@
 		</dict>
 		<dict>
 			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Screen space:</string>
+			<key>Key</key>
+			<string>screen_space</string>
+			<key>DefaultValue</key>
+			<string>default</string>
+			<key>Titles</key>
+			<array>
+				<string>Safer</string>
+				<string>Default</string>
+				<string>Maximum</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>safe</string>
+				<string>default</string>
+				<string>max</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
 			<string>Keep screen content between sessions</string>

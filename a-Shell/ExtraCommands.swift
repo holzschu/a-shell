@@ -1572,16 +1572,12 @@ public func openurl_main(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
         }
         return -1
     }
-    if (browser == "internalbrowser") {
+    if let delegate = currentDelegate {
         DispatchQueue.main.async {
-            if let delegate = currentDelegate {
+            if (browser == "internalbrowser") {
                 delegate.openURLInWindow(url: locationUrl!)
-            }
-        }
-    } else {
-        let browserAppUrl = __browser_app_url(inputUrl: locationUrl!, browser: browser)
-        DispatchQueue.main.async {
-            if let delegate = currentDelegate {
+            } else {
+                let browserAppUrl = __browser_app_url(inputUrl: locationUrl!, browser: browser)
                 delegate.windowScene?.open(browserAppUrl, options: .none)
             }
         }

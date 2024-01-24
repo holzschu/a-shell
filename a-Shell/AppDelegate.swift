@@ -294,6 +294,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["system_toolbar" : isM1iPad(modelName: UIDevice.current.modelName)])
         // What color should the keyboard and system toolbar be? (screen: same mode as the screen itself)
         UserDefaults.standard.register(defaults: ["toolbar_color" : "screen"])
+        UserDefaults.standard.register(defaults: ["screen_space" : "default"])
         UserDefaults.standard.register(defaults: ["restart_vim" : false])
         UserDefaults.standard.register(defaults: ["keep_content" : true])
         toolbarShouldBeShown = UserDefaults.standard.bool(forKey: "show_toolbar")
@@ -302,6 +303,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             useSystemToolbar = UserDefaults.standard.bool(forKey: "system_toolbar")
         } else {
             useSystemToolbar = false
+        }
+        let screenSpacePref = UserDefaults.standard.string(forKey: "screen_space")
+        if (screenSpacePref == "safe") {
+            viewBehavior = .original
+        } else if (screenSpacePref == "max") {
+            viewBehavior = .fullScreen
+        } else {
+            viewBehavior = .ignoreSafeArea
         }
         initializeEnvironment()
         joinMainThread = false
@@ -887,6 +896,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     }
                 }
             }
+        }
+        // How much of screen space should we use?
+        let screenSpacePref = UserDefaults.standard.string(forKey: "screen_space")
+        if (screenSpacePref == "safe") {
+            viewBehavior = .original
+        } else if (screenSpacePref == "max") {
+            viewBehavior = .fullScreen
+        } else {
+            viewBehavior = .ignoreSafeArea
         }
     }
     

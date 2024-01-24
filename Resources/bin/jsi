@@ -769,9 +769,9 @@ def runJS(content, inTermContext=False, recurseDepth=1,
     outFile.close()
 
     args = ["jsc"]
+    args.append(os.path.relpath(outFile.name))
     if inTermContext:
         args.append("--in-window")
-    args.append(os.path.relpath(outFile.name))
 
     output = subprocess.check_output(args)
     output = output.decode("utf-8").rstrip(" \r\n")
