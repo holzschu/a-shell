@@ -683,7 +683,6 @@ function initializeTerminalGestures() {
 		evt.preventDefault(); // iOS: prevent WKWebView from scrolling too.
         return;
       }
-		evt.preventDefault(); // iOS: prevent WKWebView from scrolling too.
 
       // If the start of a new gesture (we may have lost
       // the end of the previous):
