@@ -1529,7 +1529,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
         
     func printJscUsage() {
-        fputs("Usage: jsc [--in-window] [--silent] file.js\nExecutes JavaScript file.js.\n--in-window: runs inside the main window (can change terminal appearance or behaviour; use with caution).\n--silent: do not print the result of the JavaScript execution.\n", thread_stdout)
+        fputs("Usage: jsc file.js [--in-window] [--silent] [arguments]\nExecutes JavaScript file.js.\n--in-window: runs inside the main window (can change terminal appearance or behaviour; use with caution).\n--silent: do not print the result of the JavaScript execution.\nOther arguments are passed to the command through process.argv.", thread_stdout)
     }
     
     func executeJavascript(arguments: [String]?) {
@@ -5221,6 +5221,7 @@ extension SceneDelegate: WKUIDelegate {
                 }
                 return
             } else if (arguments[1] == "system") {
+                NSLog("Launch: \(self.thread_stdin_copy)  \(self.thread_stdin_copy) \(self.thread_stdin_copy)")
                 thread_stdin = self.thread_stdin_copy
                 thread_stdout = self.thread_stdout_copy
                 thread_stderr = self.thread_stderr_copy
@@ -5232,7 +5233,7 @@ extension SceneDelegate: WKUIDelegate {
                     // If there's already been an error (e.g. "command not found") no need to ask for more.
                     result = ios_getCommandStatus()
                 }
-                completionHandler("\(result)")
+                completionHandler("\(result)")  
                 return
             } else if (arguments[1] == "pickDirectory") {
                 completionHandler("\(FileManager().currentDirectoryPath)")
