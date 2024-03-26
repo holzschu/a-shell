@@ -52,6 +52,21 @@ public func clear(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<I
     return 0
 }
 
+@_cdecl("isForeground")
+public func isForeground(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let opaquePointer = OpaquePointer(ios_getContext())
+    guard let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) else { return 0 }
+    let currentSessionIdentifier = String(cString: stringPointer)
+    for scene in UIApplication.shared.connectedScenes {
+        if (scene.session.persistentIdentifier == currentSessionIdentifier) {
+            // dash expects 0 for success, 1 for failure
+            return (scene.activationState == .foregroundActive) ? 0 : 1
+        }
+    }
+    return 1
+}
+
+
 @_cdecl("wasm")
 public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let args = convertCArguments(argc: argc, argv: argv)

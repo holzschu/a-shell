@@ -156,6 +156,8 @@
 				<dict>
 					<key>UILaunchStoryboardName</key>
 					<string>LaunchScreen</string>
+					<key>UISceneClassName</key>
+					<string>SceneDelegate</string>
 					<key>UISceneConfigurationName</key>
 					<string>Default Configuration</string>
 					<key>UISceneDelegateClassName</key>
@@ -167,6 +169,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
 	<key>UIFileSharingEnabled</key>

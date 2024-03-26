@@ -16,6 +16,13 @@
 		<string>dhiflM:N:nsuw</string>
 		<string>file</string>
 	</array>
+	<key>basename</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>basename_main</string>
+		<string></string>
+		<string>none</string>
+	</array>
 	<key>bc</key>
 	<array>
 		<string>bc_ios.framework/bc_ios</string>
@@ -113,6 +120,13 @@
 		<string>dig_main</string>
 		<string></string>
 		<string>no</string>
+	</array>
+	<key>dirname</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>dirname_main</string>
+		<string></string>
+		<string>none</string>
 	</array>
 	<key>du</key>
 	<array>
@@ -484,6 +498,27 @@
 		<string>sshkeygen_main</string>
 		<string>ABHLQXceghiklopquvxyC:D:E:F:G:I:J:K:M:N:O:P:R:S:T:V:W:Z:a:b:f:g:j:m:n:r:s:t:z:</string>
 		<string>file</string>
+	</array>
+	<key>ssh-agent</key>
+	<array>
+		<string>ssh_agent.framework/ssh_agent</string>
+		<string>main</string>
+		<string>cDdksE:a:O:P:t:</string>
+		<string>none</string>
+	</array>
+	<key>ssh-add</key>
+	<array>
+		<string>ssh_agent.framework/ssh_agent</string>
+		<string>ssh_add_main</string>
+		<string>vkKlLcdDTxXE:e:M:m:qs:S:t:</string>
+		<string>none</string>
+	</array>
+	<key>expr</key>
+	<array>
+		<string>ssh_agent.framework/ssh_agent</string>
+		<string>expr_main</string>
+		<string>e</string>
+		<string>none</string>
 	</array>
 	<key>sort</key>
 	<array>

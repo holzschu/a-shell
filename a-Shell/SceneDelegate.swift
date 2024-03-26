@@ -3944,6 +3944,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if name == "PERL_MB_OPT" { continue }
                 if name == "PERL_MM_OPT" { continue }
                 if name == "TERMINFO" { continue }
+                // Do not restore SSH_AUTH_SOCK, since ssh-agent is not running anymore.
+                if name == "SSH_AUTH_SOCK" {
+                    unlink(value); // close the old socket
+                    continue
+                }
                 if (name == "TERM") && (value == "dumb") { continue }
                 // Env vars that are files:
                 if (value.hasPrefix("/") && (!value.contains(":"))) {
@@ -3960,6 +3965,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
                 // NSLog("setenv \(components[0]) \(components[1])")
+                // These are user-defined environment variables, we keep them:
                 setenv(name, value, 1)
             }
             // The virtual environment is not in the right place anymore, get the PATH variable back to the correct value

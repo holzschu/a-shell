@@ -318,6 +318,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("history", "history", true)
         replaceCommand("help", "help", true)
         replaceCommand("clear", "clear", true)
+        replaceCommand("isForeground", "isForeground", true)
         replaceCommand("credits", "credits", true)
         replaceCommand("pickFolder", "pickFolder", true)
         replaceCommand("config", "config", true)
