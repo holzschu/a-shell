@@ -24,7 +24,7 @@ Usage: pkg [install name] [remove name] [list] [search expression]
   list: list all installed packages
   search: lists packages matching expression
 
-  pkg will search for packages on $PKG_SERVER, if it set, and https://github.com/holzschu/a-Shell-commands otherwise
+  pkg will search for packages on $PKG_SERVER, if it set, and https://raw.githubusercontent.com/holzschu/a-Shell-commands/master/ otherwise
 EOF
 }
 

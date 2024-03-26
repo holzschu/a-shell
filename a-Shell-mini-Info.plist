@@ -120,7 +120,7 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>a-Shell mini would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>a-Shell mini would like to access to your photo library to upload images</string>
+	<string>a-Shell mini would like to access to your photo library to view images</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
 		<key>iCloud.AsheKube.app.a-Shell</key>
@@ -163,6 +163,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
 	<key>UIFileSharingEnabled</key>

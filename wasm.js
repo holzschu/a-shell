@@ -94,7 +94,7 @@ function executeWebAssembly(bufferString, args, cwd, tty, env) {
 	catch (error) {
 		// WASI returns an error even in some cases where things went well. 
 		// We find the type of the error, and return the appropriate error message
-		// This line must be commented on release.
+		// This line must be commented on release (it breaks tlmgr):
 		// console.log("Wasm error: " + error.message + " Error code: " + error.code);
         if (error.code === 'undefined') {
 			errorCode = 1; 

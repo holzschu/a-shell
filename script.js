@@ -2754,3 +2754,38 @@ hterm.ScrollPort.prototype.selectAll = function() {
   this.selection.sync();
 };
 
+/**
+ * Handler for scroll events.
+ *
+ * The onScroll event fires when scrollArea's scrollTop property changes.  This
+ * may be due to the user manually move the scrollbar, or a programmatic change.
+ *
+ * @param {!Event} e
+ */
+hterm.ScrollPort.prototype.onScroll_ = function(e) {
+	// If the user has selected something, exit. Let them continue
+	// the selection.
+	const selection = term_.document_.getSelection();
+	if (!selection.isCollapsed) {
+		// evt.preventDefault(); // iOS: prevent WKWebView from scrolling too.
+		return;
+	}
+
+    const screenSize = this.getScreenSize();
+    if (screenSize.width != this.lastScreenWidth_ ||
+    screenSize.height != this.lastScreenHeight_) {
+        // This event may also fire during a resize (but before the resize event!).
+        // This happens when the browser moves the scrollbar as part of the resize.
+        // In these cases, we want to ignore the scroll event and let onResize
+        // handle things.  If we don't, then we end up scrolling to the wrong
+        // position after a resize.
+        this.resize();
+        return;
+    }
+
+    this.redraw_();
+    this.publish('scroll', {
+        scrollPort: this
+    });
+};
+

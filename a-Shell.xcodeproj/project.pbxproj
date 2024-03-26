@@ -13,6 +13,8 @@
 		2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
 		220C524D26D637540062F673 /* unrar.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220C524C26D637500062F673 /* unrar.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		220C524E26D6375A0062F673 /* unrar.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220C524C26D637500062F673 /* unrar.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		221642752B7C05CB00043766 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		221642762B7C05EE00043766 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22178EA5257A7A79008EB2B4 /* node_modules in Resources */ = {isa = PBXBuildFile; fileRef = 22178EA4257A7A77008EB2B4 /* node_modules */; };
 		22178EAE257AA717008EB2B4 /* Library in Resources */ = {isa = PBXBuildFile; fileRef = 22178EAD257AA715008EB2B4 /* Library */; };
 		22178EBC257AAE20008EB2B4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF322C93DBF00069497 /* Assets.xcassets */; };
@@ -538,9 +540,13 @@
 		224A91692ADD0999006DB9CC /* multimarkdown.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227318AC28F02E170027A736 /* multimarkdown.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A916B2ADD0999006DB9CC /* a-Shell-mini-Intents.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22178EF8257BBBA4008EB2B4 /* a-Shell-mini-Intents.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		224A916C2ADD0999006DB9CC /* a-Shell-mini-IntentsUI.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22178F01257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		224DF74C2B76429B00F13C58 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2250FDAC281D29A7007C25D1 /* terminfo in Resources */ = {isa = PBXBuildFile; fileRef = 22B114762817CEA200A5BF16 /* terminfo */; };
 		225177C8231663430084B9C1 /* ListPythonFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 225177C7231663430084B9C1 /* ListPythonFiles.swift */; };
 		2253E950295B0D0A00EBE1F3 /* defaultToolbar.txt in Resources */ = {isa = PBXBuildFile; fileRef = 22E337EB2949F4CD00A8F76C /* defaultToolbar.txt */; };
+		225479342B73B77C005041FF /* ssh_cmdA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225478B52B7380A5005041FF /* ssh_cmdA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		225479352B73B790005041FF /* ssh_cmdA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225478B52B7380A5005041FF /* ssh_cmdA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		225479362B73BE06005041FF /* ssh_cmdA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225478B52B7380A5005041FF /* ssh_cmdA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2256FE5B2A94BD0C00127A21 /* Library in Resources */ = {isa = PBXBuildFile; fileRef = 2256FE5A2A94BCE900127A21 /* Library */; };
 		225BF07A2A02753B00EEC45B /* xdvipdfmx.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225BF0792A02752900EEC45B /* xdvipdfmx.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		225F45AC282A4B2D0010E698 /* kpathseaA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F45A8282A4B090010E698 /* kpathseaA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -901,8 +907,10 @@
 				224A90692ADD0999006DB9CC /* ios_system.xcframework in Embed Frameworks */,
 				224A906B2ADD0999006DB9CC /* awk.xcframework in Embed Frameworks */,
 				224A906C2ADD0999006DB9CC /* curl_ios.xcframework in Embed Frameworks */,
+				221642762B7C05EE00043766 /* ssh_agent.xcframework in Embed Frameworks */,
 				224A906D2ADD0999006DB9CC /* files.xcframework in Embed Frameworks */,
 				224A906E2ADD0999006DB9CC /* shell.xcframework in Embed Frameworks */,
+				225479362B73BE06005041FF /* ssh_cmdA.xcframework in Embed Frameworks */,
 				224A906F2ADD0999006DB9CC /* ssh_cmd.xcframework in Embed Frameworks */,
 				224A90702ADD0999006DB9CC /* tar.xcframework in Embed Frameworks */,
 				224A90712ADD0999006DB9CC /* text.xcframework in Embed Frameworks */,
@@ -964,6 +972,7 @@
 				229D24A4257931E4004A78AC /* files.xcframework in Embed Frameworks */,
 				229D24A7257931E4004A78AC /* shell.xcframework in Embed Frameworks */,
 				229D24A8257931E4004A78AC /* ssh_cmd.xcframework in Embed Frameworks */,
+				225479342B73B77C005041FF /* ssh_cmdA.xcframework in Embed Frameworks */,
 				229D24A9257931E4004A78AC /* tar.xcframework in Embed Frameworks */,
 				229D24AA257931E4004A78AC /* text.xcframework in Embed Frameworks */,
 				22BA51D5258E479300923893 /* mandoc.xcframework in Embed Frameworks */,
@@ -1214,6 +1223,7 @@
 				2221211E2885AFD6003F4FB7 /* python3_ios-Cryptodome.Util._strxor.xcframework in Embed Frameworks */,
 				2232245F289695B2001BAE04 /* pico.framework in Embed Frameworks */,
 				227318AE28F02E2F0027A736 /* multimarkdown.framework in Embed Frameworks */,
+				221642752B7C05CB00043766 /* ssh_agent.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1260,6 +1270,7 @@
 				22458B2025B34A1400EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework in Embed Frameworks */,
 				22DC1F962570139D0068004E /* files.xcframework in Embed Frameworks */,
 				22DC1F992570139D0068004E /* shell.xcframework in Embed Frameworks */,
+				225479352B73B790005041FF /* ssh_cmdA.xcframework in Embed Frameworks */,
 				22DC1F9A2570139D0068004E /* ssh_cmd.xcframework in Embed Frameworks */,
 				22DC1F9B2570139D0068004E /* tar.xcframework in Embed Frameworks */,
 				22DC1F9C2570139D0068004E /* text.xcframework in Embed Frameworks */,
@@ -1612,6 +1623,7 @@
 				221FA4322A1C9ACE00463D5B /* libproj.xcframework in Embed Frameworks */,
 				221FA4352A1C9CE800463D5B /* libspatialindex_c.xcframework in Embed Frameworks */,
 				221FA4362A1C9CE800463D5B /* libspatialindex.xcframework in Embed Frameworks */,
+				224DF74C2B76429B00F13C58 /* ssh_agent.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1877,6 +1889,7 @@
 		223E61AA250A5338002BF41F /* pythonA-_cffi_backend.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_cffi_backend.xcframework"; path = "cpython/XcFrameworks/pythonA-_cffi_backend.xcframework"; sourceTree = SOURCE_ROOT; };
 		223E61B1250F9944002BF41F /* pythonA-_argon2_cffi_bindings._ffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_argon2_cffi_bindings._ffi.xcframework"; path = "cpython/XcFrameworks/pythonA-_argon2_cffi_bindings._ffi.xcframework"; sourceTree = SOURCE_ROOT; };
 		223E61B2250F9954002BF41F /* python3_ios-_argon2_cffi_bindings._ffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-_argon2_cffi_bindings._ffi.xcframework"; path = "cpython/XcFrameworks/python3_ios-_argon2_cffi_bindings._ffi.xcframework"; sourceTree = SOURCE_ROOT; };
+		223EF3432B97490600A8ED5A /* sshd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = sshd.xcframework; path = xcfs/.build/artifacts/xcfs/sshd.xcframework; sourceTree = "<group>"; };
 		223FB59D272FE7C00090A885 /* python3_ios-PIL_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-PIL_all.xcframework"; path = "cpython/XcFrameworks/python3_ios-PIL_all.xcframework"; sourceTree = "<group>"; };
 		223FB59E272FE7C90090A885 /* pythonA-PIL_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-PIL_all.xcframework"; path = "cpython/XcFrameworks/pythonA-PIL_all.xcframework"; sourceTree = "<group>"; };
 		223FB5A1272FE8490090A885 /* pythonA-lxml_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-lxml_all.xcframework"; path = "cpython/XcFrameworks/pythonA-lxml_all.xcframework"; sourceTree = "<group>"; };
@@ -1901,7 +1914,9 @@
 		224A91702ADD0999006DB9CC /* a-Shell-noPython.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "a-Shell-noPython.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		224A91712ADD09A4006DB9CC /* a-Shell-mini copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "a-Shell-mini copy-Info.plist"; path = "/Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell-mini copy-Info.plist"; sourceTree = "<absolute>"; };
 		224D10BA22CB247900A234EE /* hterm.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = hterm.html; sourceTree = "<group>"; };
+		224DF74B2B76428800F13C58 /* ssh_agent.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_agent.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_agent.xcframework; sourceTree = "<group>"; };
 		225177C7231663430084B9C1 /* ListPythonFiles.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListPythonFiles.swift; sourceTree = "<group>"; };
+		225478B52B7380A5005041FF /* ssh_cmdA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_cmdA.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_cmdA.xcframework; sourceTree = "<group>"; };
 		2256FE5A2A94BCE900127A21 /* Library */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Library; path = cpython/regular/Library; sourceTree = "<group>"; };
 		225823702A9624E9009FBBDC /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Intents.strings"; sourceTree = "<group>"; };
 		225823712A9624FA009FBBDC /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
@@ -2079,8 +2094,8 @@
 		22DC1F7C2570109A0068004E /* calc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = calc.xcframework; path = xcfs/.build/artifacts/xcfs/calc.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F7D257010A90068004E /* task.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = task.xcframework; path = xcfs/.build/artifacts/xcfs/task.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F7E257010BC0068004E /* lex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lex.xcframework; path = xcfs/.build/artifacts/xcfs/lex.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F822570120E0068004E /* libssh2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libssh2.xcframework; path = xcfs/.build/artifacts/xcfs/libssh2.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F83257012190068004E /* openssl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = openssl.xcframework; path = xcfs/.build/artifacts/xcfs/openssl.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F822570120E0068004E /* libssh2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libssh2.xcframework; path = xcfs/.build/artifacts/xcfs/libssh2/libssh2.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F83257012190068004E /* openssl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = openssl.xcframework; path = xcfs/.build/artifacts/xcfs/openssl/openssl.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F86257012B70068004E /* ar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ar.xcframework; path = xcfs/.build/artifacts/xcfs/ar.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F89257012F50068004E /* files.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = files.xcframework; path = xcfs/.build/artifacts/xcfs/files.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F8B257012F50068004E /* ssh_cmd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_cmd.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_cmd.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2843,6 +2858,9 @@
 				22DC1F89257012F50068004E /* files.xcframework */,
 				22DC1F90257012F50068004E /* shell.xcframework */,
 				22DC1F8B257012F50068004E /* ssh_cmd.xcframework */,
+				225478B52B7380A5005041FF /* ssh_cmdA.xcframework */,
+				224DF74B2B76428800F13C58 /* ssh_agent.xcframework */,
+				223EF3432B97490600A8ED5A /* sshd.xcframework */,
 				22DC1F8D257012F50068004E /* tar.xcframework */,
 				22DC1F8F257012F50068004E /* text.xcframework */,
 			);
@@ -3731,7 +3749,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 383;
+				CURRENT_PROJECT_VERSION = 394;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3752,7 +3770,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.12.7;
+				MARKETING_VERSION = 1.13.0;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3777,7 +3795,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 383;
+				CURRENT_PROJECT_VERSION = 394;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3798,7 +3816,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.12.7;
+				MARKETING_VERSION = 1.13.0;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3823,7 +3841,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 383;
+				CURRENT_PROJECT_VERSION = 394;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3844,7 +3862,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.12.7;
+				MARKETING_VERSION = 1.13.0;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3874,7 +3892,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 383;
+				CURRENT_PROJECT_VERSION = 394;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3895,7 +3913,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.12.7;
+				MARKETING_VERSION = 1.13.0;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
