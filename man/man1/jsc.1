@@ -2,7 +2,7 @@
 .SH NAME
 jsc \- Execute JavaScript
 .SH SYNOPSIS
-\fBjsc\fP [ --in-window ] \fIfilename\fP
+\fBjsc\fP \fIfilename\fP [ --in-window ] [--silent] [arguments]
 .br
 \fBjsc_core\fP \fIfilename\fP
 .SH DESCRIPTION
@@ -21,6 +21,12 @@ Run the contents of the given file in the same
 WkWebView as the terminal GUI.
 If this option is given, the terminal can be
 accessed through the \fIterm_\fP global variable.
+.TP
+\fB--silent\fP
+Do not print the result of the command on the 
+standard output.
+.TP
+Other arguments are passed to the JavaScript interpreter through \fIprocess.argv\fP, except when \fI--in-window\fP is specified.
 .SS Extensions
 Both commands offer access to the file system with the following functions:
 .TP
