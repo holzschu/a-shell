@@ -13,6 +13,9 @@
 		2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
 		220C524D26D637540062F673 /* unrar.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220C524C26D637500062F673 /* unrar.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		220C524E26D6375A0062F673 /* unrar.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220C524C26D637500062F673 /* unrar.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		220F36522BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
+		220F36532BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
+		220F36552BC7FADA00842FEE /* llvmDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 220F36542BC7FAD800842FEE /* llvmDictionary.plist */; };
 		221642752B7C05CB00043766 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		221642762B7C05EE00043766 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22178EA5257A7A79008EB2B4 /* node_modules in Resources */ = {isa = PBXBuildFile; fileRef = 22178EA4257A7A77008EB2B4 /* node_modules */; };
@@ -361,7 +364,6 @@
 		2221216A2885AFF6003F4FB7 /* pythonA-Cryptodome.PublicKey._x25519.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 222120D02885AF8E003F4FB7 /* pythonA-Cryptodome.PublicKey._x25519.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2221216B2885AFF6003F4FB7 /* pythonA-Cryptodome.Util._cpuid_c.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 222120B32885AF8A003F4FB7 /* pythonA-Cryptodome.Util._cpuid_c.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2221216C2885AFF6003F4FB7 /* pythonA-Cryptodome.Util._strxor.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 222120B42885AF8A003F4FB7 /* pythonA-Cryptodome.Util._strxor.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		2221F24329FD58B600E34960 /* forbidden_2023 in Resources */ = {isa = PBXBuildFile; fileRef = 2221F24229FD58A300E34960 /* forbidden_2023 */; };
 		22239BF2250293840069E539 /* pythonA-_bz2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239BAE250293700069E539 /* pythonA-_bz2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22239BFA250293840069E539 /* pythonA-_crypt.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239BEC250293740069E539 /* pythonA-_crypt.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22239BFC250293840069E539 /* pythonA-_ctypes_test.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239BDA250293730069E539 /* pythonA-_ctypes_test.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -471,7 +473,6 @@
 		224A90452ADD0999006DB9CC /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC422D2026E003985D6 /* UIDevice+Name.swift */; };
 		224A90462ADD0999006DB9CC /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
 		224A90472ADD0999006DB9CC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EF122C93DBC00069497 /* ContentView.swift */; };
-		224A90482ADD0999006DB9CC /* AppDelegate+TeX.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226013022320403D00AEB059 /* AppDelegate+TeX.swift */; };
 		224A90492ADD0999006DB9CC /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
 		224A904A2ADD0999006DB9CC /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		224A904B2ADD0999006DB9CC /* listTeXscripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221DA54B26F7688100BEA92A /* listTeXscripts.swift */; };
@@ -555,7 +556,6 @@
 		225F45AF282A4B2D0010E698 /* pdftexA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F45AA282A4B090010E698 /* pdftexA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		225F45B0282A4B2D0010E698 /* texlua53A.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F45AB282A4B090010E698 /* texlua53A.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		226012EF231D239500AEB059 /* texCommandsDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 226012EE231D238B00AEB059 /* texCommandsDictionary.plist */; };
-		226013032320403D00AEB059 /* AppDelegate+TeX.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226013022320403D00AEB059 /* AppDelegate+TeX.swift */; };
 		22601307232195AD00AEB059 /* luatexCommandsDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 22601306232195A100AEB059 /* luatexCommandsDictionary.plist */; };
 		2263E34429FFC8770096EFBF /* perlC.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2263E34329FFC8590096EFBF /* perlC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22675A15271C24B200459BEF /* listTeXscripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221DA54B26F7688100BEA92A /* listTeXscripts.swift */; };
@@ -571,12 +571,6 @@
 		2275AFAF26CA9B8B00B5BE45 /* ffprobe.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2275AFAB26CA9B6D00B5BE45 /* ffprobe.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227722EB239D1FA00020037E /* task in Resources */ = {isa = PBXBuildFile; fileRef = 227722EA239D1F9F0020037E /* task */; };
 		22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F6625700F7E0068004E /* luatex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		227A434629FD206300548D77 /* texlive_2023_texmf_dist in Resources */ = {isa = PBXBuildFile; fileRef = 227A434429FD202300548D77 /* texlive_2023_texmf_dist */; settings = {ASSET_TAGS = (texlive_dist, ); }; };
-		227A434729FD206300548D77 /* texlive_2023_texmf_dist_fonts in Resources */ = {isa = PBXBuildFile; fileRef = 227A434129FD202100548D77 /* texlive_2023_texmf_dist_fonts */; settings = {ASSET_TAGS = (texlive_dist_fonts, ); }; };
-		227A434829FD206300548D77 /* texlive_2023_texmf_dist_fonts_otf_ttf in Resources */ = {isa = PBXBuildFile; fileRef = 227A434529FD202300548D77 /* texlive_2023_texmf_dist_fonts_otf_ttf */; settings = {ASSET_TAGS = (texlive_texmf_dist_fonts_otf_ttf, ); }; };
-		227A434929FD206300548D77 /* texlive_2023_texmf_dist_fonts_type1 in Resources */ = {isa = PBXBuildFile; fileRef = 227A434329FD202200548D77 /* texlive_2023_texmf_dist_fonts_type1 */; settings = {ASSET_TAGS = (texlive_texmf_dist_fonts_type1, ); }; };
-		227A434A29FD206300548D77 /* texlive_2023_texmf_dist_fonts_vf in Resources */ = {isa = PBXBuildFile; fileRef = 227A434029FD202100548D77 /* texlive_2023_texmf_dist_fonts_vf */; settings = {ASSET_TAGS = (texlive_texmf_dist_fonts_vf, ); }; };
-		227A434B29FD206300548D77 /* texlive_2023_texmf_var in Resources */ = {isa = PBXBuildFile; fileRef = 227A434229FD202200548D77 /* texlive_2023_texmf_var */; settings = {ASSET_TAGS = (texlive_var, ); }; };
 		228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		228E13F725C95F430065D825 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
@@ -628,7 +622,6 @@
 		229D247F257931E4004A78AC /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC422D2026E003985D6 /* UIDevice+Name.swift */; };
 		229D2480257931E4004A78AC /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
 		229D2481257931E4004A78AC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EF122C93DBC00069497 /* ContentView.swift */; };
-		229D2482257931E4004A78AC /* AppDelegate+TeX.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226013022320403D00AEB059 /* AppDelegate+TeX.swift */; };
 		229D2483257931E4004A78AC /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
 		229D2484257931E4004A78AC /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		229D2489257931E4004A78AC /* man in Resources */ = {isa = PBXBuildFile; fileRef = 22365230249A39AA00221868 /* man */; };
@@ -1645,6 +1638,8 @@
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC822D24703003985D6 /* WkWebViewExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WkWebViewExtension.swift; sourceTree = SOURCE_ROOT; };
 		220C524C26D637500062F673 /* unrar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = unrar.xcframework; path = xcfs/.build/artifacts/xcfs/unrar.xcframework; sourceTree = "<group>"; };
+		220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		220F36542BC7FAD800842FEE /* llvmDictionary.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = llvmDictionary.plist; path = Resources/llvmDictionary.plist; sourceTree = "<group>"; };
 		22108D6A2338BE9D003D7556 /* texlive_2019_texmf-dist_fonts_type1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_type1"; path = "ODR/texlive_2019_texmf-dist_fonts_type1"; sourceTree = "<group>"; };
 		22178EA4257A7A77008EB2B4 /* node_modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node_modules; path = Resources_mini/node_modules; sourceTree = "<group>"; };
 		22178EAD257AA715008EB2B4 /* Library */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Library; path = Resources_mini/Library; sourceTree = "<group>"; };
@@ -1933,7 +1928,6 @@
 		226012FA231EFB5200AEB059 /* texlive_2019_texmf-dist_fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts"; path = "ODR/texlive_2019_texmf-dist_fonts"; sourceTree = "<group>"; };
 		226012FB231EFB5300AEB059 /* texlive_2019_texmf-dist */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist"; path = "ODR/texlive_2019_texmf-dist"; sourceTree = "<group>"; };
 		226012FC231EFB5300AEB059 /* texlive */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive; path = ODR/texlive; sourceTree = "<group>"; };
-		226013022320403D00AEB059 /* AppDelegate+TeX.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+TeX.swift"; sourceTree = "<group>"; };
 		22601304232190BE00AEB059 /* texlive_2019_texmf-dist_fonts_otf_ttf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_otf_ttf"; path = "ODR/texlive_2019_texmf-dist_fonts_otf_ttf"; sourceTree = "<group>"; };
 		22601306232195A100AEB059 /* luatexCommandsDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = luatexCommandsDictionary.plist; path = Resources/luatexCommandsDictionary.plist; sourceTree = "<group>"; };
 		2263E34329FFC8590096EFBF /* perlC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlC.xcframework; path = xcfs/.build/artifacts/xcfs/perlC.xcframework; sourceTree = "<group>"; };
@@ -2411,6 +2405,7 @@
 		22984EE122C93DBC00069497 = {
 			isa = PBXGroup;
 			children = (
+				220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */,
 				223FC3CA2611F9C300CDC89F /* wasm.html */,
 				2220059F2871EF3300DC7A23 /* Intents.intentdefinition */,
 				22BF6242231589DB00FEA585 /* Settings.bundle */,
@@ -2447,7 +2442,6 @@
 				2208ACBB22CCE529003985D6 /* Util */,
 				22B1B83322CBC53700F7C452 /* a-Shell.entitlements */,
 				22984EED22C93DBC00069497 /* AppDelegate.swift */,
-				226013022320403D00AEB059 /* AppDelegate+TeX.swift */,
 				22D23117231940B2005B0C12 /* ExtraCommands.swift */,
 				22984EEF22C93DBC00069497 /* SceneDelegate.swift */,
 				22984EF122C93DBC00069497 /* ContentView.swift */,
@@ -2750,6 +2744,7 @@
 				221FA4382A1CA00400463D5B /* proj */,
 				229F51142473BBC90053AC03 /* commandDictionary.plist */,
 				22B1B81622CB9E4800F7C452 /* extraCommandsDictionary.plist */,
+				220F36542BC7FAD800842FEE /* llvmDictionary.plist */,
 				22DF4FEE26E25AEA00E5A0F5 /* texmf.cnf */,
 				226012EE231D238B00AEB059 /* texCommandsDictionary.plist */,
 				22601306232195A100AEB059 /* luatexCommandsDictionary.plist */,
@@ -3159,6 +3154,7 @@
 				223FC3CB2611F9C400CDC89F /* wasm.html in Resources */,
 				229BAF4322E8A73A00C2269B /* hterm_all.js in Resources */,
 				22EA905B266696A800CC9B88 /* wasm.js in Resources */,
+				220F36522BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */,
 				22EA905F266698ED00CC9B88 /* script.js in Resources */,
 				22BF623E23157F2400FEA585 /* cacert.pem in Resources */,
 				22DF4FEF26E25AEF00E5A0F5 /* texmf.cnf in Resources */,
@@ -3168,14 +3164,8 @@
 				22984EF722C93DBF00069497 /* Preview Assets.xcassets in Resources */,
 				22BD476923044D33007248EC /* vim in Resources */,
 				2242B075232293E7002A20FC /* bin in Resources */,
+				220F36552BC7FADA00842FEE /* llvmDictionary.plist in Resources */,
 				22178EBC257AAE20008EB2B4 /* Assets.xcassets in Resources */,
-				2221F24329FD58B600E34960 /* forbidden_2023 in Resources */,
-				227A434629FD206300548D77 /* texlive_2023_texmf_dist in Resources */,
-				227A434729FD206300548D77 /* texlive_2023_texmf_dist_fonts in Resources */,
-				227A434829FD206300548D77 /* texlive_2023_texmf_dist_fonts_otf_ttf in Resources */,
-				227A434929FD206300548D77 /* texlive_2023_texmf_dist_fonts_type1 in Resources */,
-				227A434A29FD206300548D77 /* texlive_2023_texmf_dist_fonts_vf in Resources */,
-				227A434B29FD206300548D77 /* texlive_2023_texmf_var in Resources */,
 				221FA4392A1CA00D00463D5B /* proj in Resources */,
 				2256FE5B2A94BD0C00127A21 /* Library in Resources */,
 			);
@@ -3201,6 +3191,7 @@
 				223FC3C32611F57D00CDC89F /* wasm.html in Resources */,
 				229D2491257931E4004A78AC /* hterm_all.js in Resources */,
 				22EA905C266696CA00CC9B88 /* wasm.js in Resources */,
+				220F36532BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */,
 				229D248C257931E4004A78AC /* require.js in Resources */,
 				22AAB16829E99C4900975EFD /* require_jscore.js in Resources */,
 				22AAB16929E99C4D00975EFD /* url-polyfill.js in Resources */,
@@ -3268,7 +3259,6 @@
 				224A90452ADD0999006DB9CC /* UIDevice+Name.swift in Sources */,
 				224A90462ADD0999006DB9CC /* String+C.swift in Sources */,
 				224A90472ADD0999006DB9CC /* ContentView.swift in Sources */,
-				224A90482ADD0999006DB9CC /* AppDelegate+TeX.swift in Sources */,
 				224A90492ADD0999006DB9CC /* WkWebViewExtension.swift in Sources */,
 				224A904A2ADD0999006DB9CC /* URL+isDirectory.swift in Sources */,
 				224A904B2ADD0999006DB9CC /* listTeXscripts.swift in Sources */,
@@ -3293,7 +3283,6 @@
 				2208ACBF22CCE57E003985D6 /* String+C.swift in Sources */,
 				22984EF222C93DBC00069497 /* ContentView.swift in Sources */,
 				891608902713056B00CED1C9 /* KBWebViewBase.m in Sources */,
-				226013032320403D00AEB059 /* AppDelegate+TeX.swift in Sources */,
 				2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */,
 				22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */,
 			);
@@ -3316,7 +3305,6 @@
 				229D247F257931E4004A78AC /* UIDevice+Name.swift in Sources */,
 				229D2480257931E4004A78AC /* String+C.swift in Sources */,
 				229D2481257931E4004A78AC /* ContentView.swift in Sources */,
-				229D2482257931E4004A78AC /* AppDelegate+TeX.swift in Sources */,
 				229D2483257931E4004A78AC /* WkWebViewExtension.swift in Sources */,
 				229D2484257931E4004A78AC /* URL+isDirectory.swift in Sources */,
 				22675A15271C24B200459BEF /* listTeXscripts.swift in Sources */,
@@ -3749,7 +3737,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 394;
+				CURRENT_PROJECT_VERSION = 397;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3770,7 +3758,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.13.0;
+				MARKETING_VERSION = 1.13.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3795,7 +3783,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 394;
+				CURRENT_PROJECT_VERSION = 397;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3816,7 +3804,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.13.0;
+				MARKETING_VERSION = 1.13.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3841,7 +3829,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 394;
+				CURRENT_PROJECT_VERSION = 397;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3862,7 +3850,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.13.0;
+				MARKETING_VERSION = 1.13.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3892,7 +3880,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 394;
+				CURRENT_PROJECT_VERSION = 397;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3913,7 +3901,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.13.0;
+				MARKETING_VERSION = 1.13.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
