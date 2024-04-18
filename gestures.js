@@ -169,8 +169,9 @@ function initializeTerminalGestures() {
 
   // Commands like less and vim generally use an alternate screen
   // to display content.
+  // Sometimes, term_ is using the alternate screen with no command running. 
   const isUsingAlternateScreen = () => {
-    return !term_.isPrimaryScreen();
+    return ((!term_.isPrimaryScreen()) && (window.commandRunning.length > 0));
   };
 
   const moveCursor = (dx, dy) => {
