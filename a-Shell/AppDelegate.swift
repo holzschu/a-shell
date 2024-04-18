@@ -27,8 +27,6 @@ let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", 
 @objcMembers
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    var TeXEnabled = false;
-    var OpentypeEnabled = false;
     // to update Python distribution at each version update
     var versionUpToDate = true
     var libraryFilesUpToDate = true
@@ -57,18 +55,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
     
-    func needToUpdateCFiles() -> Bool {
-        // Check that the C SDK files are present:
-        let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                in: .userDomainMask,
-                                                appropriateFor: nil,
-                                                create: true)
-        // NSLog("Library file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path))")
-        // NSLog("Header file exists: \(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path))")
-        return !(FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/libwasi-emulated-mman.a").path)
-         && FileManager().fileExists(atPath: libraryURL.appendingPathComponent("usr/include/stdio.h").path))
-    }
-    
     func versionNumberIncreased() -> Bool {
         // do it with UserDefaults, not storing in files
         UserDefaults.standard.register(defaults: ["versionInstalled" : "0.0"])
@@ -90,168 +76,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             ((majorInstalled == majorCurrent) && (minorInstalled < minorCurrent)) ||
             ((majorInstalled == majorCurrent) && (minorInstalled == minorCurrent) &&
                 (buildNumberInstalled < currentBuildInt))
-    }
-    
-    func needToRemovePython37Files() -> Bool {
-            // Check that the old python files are present:
-            let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                    in: .userDomainMask,
-                                                    appropriateFor: nil,
-                                                    create: true)
-        let fileLocation = libraryURL.appendingPathComponent(PythonFiles[0])
-        // fileExists(atPath:) will answer false, because the linked file does not exist.
-        do {
-            _ = try FileManager().attributesOfItem(atPath: fileLocation.path)
-            return true
-        }
-        catch {
-            // The file does not exist, we already cleaned up Python3.7
-            return false
-        }
-    }
-
-    func createCSDK() {
-        // This operation copies the C SDK from $APPDIR to $HOME/Library and creates the *.a libraries
-        // (we can't ship with .a libraries because of the AppStore rules, but we can ship with *.o
-        // object files, provided they are in WASM format.
-        installQueue.async{
-            // Use a queue so it does not take time at startup:
-            NSLog("Starting creating C SDK")
-            let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                    in: .userDomainMask,
-                                                    appropriateFor: nil,
-                                                    create: true)
-            // usr/lib/wasm32-wasi
-            var localURL = libraryURL.appendingPathComponent("usr/lib/wasm32-wasi") // $HOME/Library/usr/lib/wasm32-wasi
-            do {
-                if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
-                    try FileManager().removeItem(at: localURL)
-                }
-                if (!FileManager().fileExists(atPath: localURL.path)) {
-                    try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
-                }
-            } catch {
-                NSLog("Error in creating C SDK directory \(localURL): \(error)")
-                return
-            }
-            // usr/lib/clang/14.0.0/lib/wasi/
-            localURL = libraryURL.appendingPathComponent("usr/lib/clang/14.0.0/lib/wasi/") // $HOME/Library/usr/lib/clang/14.0.0/lib/wasi/
-            do {
-                if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
-                    try FileManager().removeItem(at: localURL)
-                }
-                if (!FileManager().fileExists(atPath: localURL.path)) {
-                    try FileManager().createDirectory(atPath: localURL.path, withIntermediateDirectories: true)
-                }
-            } catch {
-                NSLog("Error in creating C SDK directory \(localURL): \(error)")
-                return
-            }
-            let linkedCDirectories = ["usr/include",
-                                      "usr/share",
-                                      "usr/lib/wasm32-wasi/crt1.o",
-                                      "usr/lib/wasm32-wasi/libc.imports",
-                                      "usr/lib/clang/14.0.0/include",
-            ]
-            let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!)
-            
-            for linkedObject in linkedCDirectories {
-                let bundleFile = bundleUrl.appendingPathComponent(linkedObject)
-                if (!FileManager().fileExists(atPath: bundleFile.path)) {
-                    NSLog("createCSDK: requested file \(bundleFile.path) does not exist")
-                    continue
-                }
-                // Symbolic links are both faster to create and use less disk space.
-                // We just have to make sure the destination exists
-                let homeFile = libraryURL.appendingPathComponent(linkedObject)
-                do {
-                    let firstFileAttribute = try FileManager().attributesOfItem(atPath: homeFile.path)
-                    if (firstFileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
-                        // It's a symbolic link, does the destination exist?
-                        let destination = try! FileManager().destinationOfSymbolicLink(atPath: homeFile.path)
-                        if (!FileManager().fileExists(atPath: destination)) {
-                            try! FileManager().removeItem(at: homeFile)
-                            try! FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
-                        }
-                    } else {
-                        // Not a symbolic link, replace:
-                        try! FileManager().removeItem(at: homeFile)
-                        try! FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
-                    }
-                }
-                catch {
-                    // The file does not exist, and maybe the directory doesn't either:
-                    let localDirectory = homeFile.deletingLastPathComponent()
-                    if (!FileManager().fileExists(atPath: localDirectory.path)) {
-                        try! FileManager().createDirectory(atPath: localDirectory.path, withIntermediateDirectories: true)
-                    }
-                    do {
-                        try FileManager().createSymbolicLink(at: homeFile, withDestinationURL: bundleFile)
-                    }
-                    catch {
-                        NSLog("Can't create file: \(homeFile.path): \(error)")
-                    }
-                }
-            }
-            // Now create the empty libraries:
-            let emptyLibraries = [
-                // m rt pthread crypt util xnet resolv dl
-                "lib/wasm32-wasi/libcrypt.a",
-                "lib/wasm32-wasi/libdl.a",
-                "lib/wasm32-wasi/libm.a",
-                "lib/wasm32-wasi/libpthread.a",
-                "lib/wasm32-wasi/libresolv.a",
-                "lib/wasm32-wasi/librt.a",
-                "lib/wasm32-wasi/libutil.a",
-                "lib/wasm32-wasi/libxnet.a"]
-            ios_switchSession("wasiSDKLibrariesCreation")
-            for library in emptyLibraries {
-                let libraryFileURL = libraryURL.appendingPathComponent("/usr/" + library)
-                if (!FileManager().fileExists(atPath: libraryFileURL.path)) {
-                    executeCommandAndWait(command: "ar crs " + libraryURL.path + "/usr/" + library)
-                }
-            }
-            // One of the libraries is in a different folder:
-            let libraryFileURL = libraryURL.appendingPathComponent("/usr/lib/clang/14.0.0/lib/wasi/libclang_rt.builtins-wasm32.a")
-            if (FileManager().fileExists(atPath: libraryFileURL.path)) {
-                try! FileManager().removeItem(at: libraryFileURL)
-            }
-            let rootDir = Bundle.main.resourcePath!
-            executeCommandAndWait(command: "ar cq " + libraryFileURL.path + " " + rootDir + "/usr/src/libclang_rt.builtins-wasm32/*")
-            executeCommandAndWait(command: "ranlib " + libraryFileURL.path)
-            let libraries = ["libc", "libc++", "libc++abi", "libc-printscan-long-double", "libc-printscan-no-floating-point", "libwasi-emulated-mman", "libwasi-emulated-signal", "libwasi-emulated-process-clocks"]
-            for library in libraries {
-                let libraryFileURL = libraryURL.appendingPathComponent("usr/lib/wasm32-wasi/" + library + ".a")
-                if (FileManager().fileExists(atPath: libraryFileURL.path)) {
-                    do { try FileManager().removeItem(at: libraryFileURL) }
-                    catch { NSLog("Can't remove \(libraryFileURL.path)")}
-                }
-                executeCommandAndWait(command: "ar cq " + libraryFileURL.path + " " + rootDir + "/usr/src/" + library + "/*")
-                executeCommandAndWait(command: "ranlib " + libraryFileURL.path)
-            }
-            NSLog("Finished creating C SDK") // Approx 2 seconds
-        }
-    }
-    
-    func removePython37Files() {
-        // This operation removes the copy of the Python 3.7 directory that was kept in $HOME/Library.
-        NSLog("Removing python 3.7 files")
-        let documentsUrl = try! FileManager().url(for: .documentDirectory,
-                                                  in: .userDomainMask,
-                                                  appropriateFor: nil,
-                                                  create: true)
-        let homeUrl = documentsUrl.deletingLastPathComponent().appendingPathComponent("Library")
-        let fileList = PythonFiles
-        for fileName in fileList {
-            let homeFile = homeUrl.appendingPathComponent(fileName)
-            do {
-                try FileManager().removeItem(at: homeFile)
-            }
-            catch {
-                NSLog("Can't remove file: \(homeFile.path): \(error)")
-            }
-        }
-        self.libraryFilesUpToDate = true
     }
     
     func isM1iPad(modelName: String) -> Bool {
@@ -280,12 +104,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         NSLog("Application didFinishLaunchingWithOptions \(launchOptions)")
         // Store variables in User Defaults:
-        if (appVersion != "a-Shell-mini") {
-            UserDefaults.standard.register(defaults: ["TeXEnabled" : false])
-            UserDefaults.standard.register(defaults: ["TeXOpenType" : false])
-            UserDefaults.standard.register(defaults: ["TeXVersion" : "2000"])
-            UserDefaults.standard.register(defaults: ["LuaTeXVersion" : "2000"])
-        }
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
@@ -348,118 +166,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("newWindow", "clear", true)
         }
         replaceCommand("exit", "clear", true)
-        // for debugging TeX issues:
+        // Called when installing/uninstalling LLVM or texlive distribution:
+        if (appVersion != "a-Shell-mini") {
+            replaceCommand("updateCommands", "updateCommands", true)
+            // "updateCommands" is also called at startup:
+            var argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "updateCommands".toCString()!)]
+            updateCommands(argc: 1, argv: UnsafeMutablePointer(mutating: argv));
+        }
+        // for debugging TeX issues / installing a new distribution
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
-        if (appVersion != "a-Shell-mini") {
-            if let installedTexVersion = UserDefaults.standard.string(forKey: "TeXVersion") {
-                let localURL = libraryURL.appendingPathComponent("texlive") // $HOME/Library/texlive
-                let latestTexVersion = "2023"
-                let latesttl = localURL.appendingPathComponent(latestTexVersion)
-                // use installedTexVersion, move from installedTexVersion to latestVersion (in code)
-                if (installedTexVersion != latestTexVersion) && UserDefaults.standard.bool(forKey: "TeXEnabled") {
-                    // texlive 20xx is already installed, we move it to 20yy to keep installed packages.
-                    // (tlpkg will be confused, and the user cannot run TeX immediately since the format has changed)
-                    let installedtl = localURL.appendingPathComponent(installedTexVersion)
-                    do {
-                        try FileManager().moveItem(at: installedtl, to: latesttl)
-                    }
-                    catch {
-                        debuggingTeXInstall(message: "Error in copying texlive \(installedTexVersion) to texlive \(latestTexVersion): \(error)")
-                    }
-                    downloadTeX()
-                    if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
-                        if (installedLuatexVersion <= latestTexVersion) {
-                            downloadOpentype()
-                        }
-                    }
-                } else if !FileManager().fileExists(atPath: latesttl.path) && UserDefaults.standard.bool(forKey: "TeXEnabled"){
-                    // For some reason, the installed version directory is not there. Re-download things.
-                    downloadTeX()
-                    if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
-                        if (installedLuatexVersion != "2000") && UserDefaults.standard.bool(forKey: "TeXOpenType") {
-                            downloadOpentype()
-                        }
-                    }
-                } else if (installedTexVersion >= latestTexVersion) && UserDefaults.standard.bool(forKey: "TeXEnabled") {
-                    // We have TeX files already installed. Activate commands:
-                    TeXEnabled = true;
-                    addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
-                    if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
-                        let openTypeDir = libraryURL.appendingPathComponent("texlive/2023/texmf-dist/fonts/opentype")
-                        if (installedLuatexVersion >= latestTexVersion) &&
-                            (FileManager().fileExists(atPath: openTypeDir.path)) {
-                            OpentypeEnabled = true;
-                            addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
-                        }
-                    }
-                    // Also copy latexmk over the wrong one (not anymore for 2023) (I hope)
-                    /* if let forbidden = Bundle.main.resourceURL?.appendingPathComponent("forbidden_2022/2022/texmf-dist/scripts/latexmk/latexmk.pl") {
-                     let latexmk = localURL.appendingPathComponent("2022/texmf-dist/scripts/latexmk/latexmk.pl")
-                     do {
-                     try FileManager().removeItem(at: latexmk)
-                     }
-                     catch {
-                     NSLog("Did not remove \(latexmk)")
-                     }
-                     do {
-                     try FileManager().copyItem(at: forbidden, to: latexmk)
-                     }
-                     catch {
-                     NSLog("Could not copy \(forbidden) to \(latexmk)")
-                     }
-                     } */
-                }
-            }
-            if UserDefaults.standard.bool(forKey: "TeXEnabled") {
-                // check the scripts and redo-them (install may have failed at some point).
-                let localPath = libraryURL.appendingPathComponent("bin") // $HOME/Library/bin
-                for script in TeXscripts {
-                    let command = localPath.appendingPathComponent(script[0])
-                    let location = "../texlive/2023/texmf-dist/" + script[1]
-                    // fileExists doesn't work, because it follows symbolic links
-                    do {
-                        let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
-                        if (fileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
-                            // It's a symbolic link, does the destination exist?
-                            if (!FileManager().fileExists(atPath: command.path)) {
-                                try FileManager().removeItem(at: command)
-                                try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
-                            }
-                        }
-                    }
-                    catch {
-                        debuggingTeXInstall(message: "Symbolic link attributes at \(command.path): \(error)")
-                        do {
-                            try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
-                        }
-                        catch {
-                            debuggingTeXInstall(message: "Unable to create symbolic link at \(command.path) to \(location): \(error)")
-                        }
-                    }
-                }
-            }
-            if (TeXEnabled) {
-                if let installedLuatexVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion") {
-                    if (installedLuatexVersion >= "2023") {
-                        // We have LuaTeX files already installed. Activate commands:
-                        OpentypeEnabled = true;
-                        addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
-                    }
-                }
-            }
-            activateFakeTeXCommands()
-            if (!TeXEnabled && UserDefaults.standard.bool(forKey: "TeXEnabled")) {
-                downloadTeX();
-            }
-            if (!OpentypeEnabled && UserDefaults.standard.bool(forKey: "TeXOpenType")) {
-                downloadOpentype();
-            }
-        }
         numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
         setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
@@ -518,9 +238,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             appDependentPath = documentsUrl.appendingPathComponent("perl5").appendingPathComponent("bin").path + ":" + appDependentPath
             setenv("PATH", appDependentPath, 1)
             setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man:" + documentsUrl.appendingPathComponent("perl5").appendingPathComponent("man").path, 1)
-            if (!versionUpToDate || needToUpdateCFiles()) {
-                createCSDK()
-            }
             // help Sunpy too: https://github.com/sunpy/sunpy/pull/6166
             setenv("SUNPY_NO_BUILD_ANA_EXTENSION", "1", 1)
             // SUNPY_CONFIGDIR is ~/Library/Application Support/sunpy, by default, so it is OK.
@@ -569,7 +286,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             setenv("PROJ_LIB", projDir.path, 1)  // proj <= 9.1
             setenv("PROJ_DATA", projDir.path, 1) // proj 9.1+
             setenv("PROJ_NETWORK", "ON", 1)
-        } // a-Shell mini
+        } // end a-Shell mini
+        // Switch installed Python packages from 3.9 to 3.11:
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
             installQueue.async{
                 ios_switchSession("wasiSDKLibrariesCreation")
@@ -578,17 +296,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 executeCommandAndWait(command: "mv " + libraryURL.path + "/lib/python3.9/site-packages/* " + libraryURL.path + "/lib/python3.11/site-packages/")
                 // Erase the directory
                 executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/lib/python3.9/")
-            }
-        } else if (needToRemovePython37Files()) {
-            installQueue.async{
-                ios_switchSession("wasiSDKLibrariesCreation")
-                // Remove files and directories created with Python 3.7
-                self.removePython37Files()
-                // Move all remaining packages to $HOME/Library/lib/python3.9/site-packages/
-                executeCommandAndWait(command: "mkdir -p " + libraryURL.path + "/lib/python3.11/site-packages/")
-                executeCommandAndWait(command: "mv " + libraryURL.path + "/lib/python3.7/site-packages/* " + libraryURL.path + "/lib/python3.11/site-packages/")
-                // Erase the directory
-                executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/lib/python3.7/")
             }
         }
         if (!versionUpToDate) {
@@ -754,38 +461,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @objc func settingsChanged() {
         // UserDefaults.didChangeNotification is called every time the window becomes active
         // We only act if things have really changed.
-        if (appVersion != "a-Shell-mini") {
-            // Don't look at TeX settings if running a-Shell mini
-            let userSettingsTeX = UserDefaults.standard.bool(forKey: "TeXEnabled")
-            // something changed with TeX settings
-            if (userSettingsTeX) {
-                if (userSettingsTeX != TeXEnabled) {
-                    // it was not enabled before, it is requested: we download it
-                    downloadTeX()
-                }
-            } else {
-                let TeXVersion = UserDefaults.standard.string(forKey: "TeXVersion")
-                if (TeXVersion != "2000") {
-                    // it is disabled: make sure it has been removed:
-                    disableTeX()
-                    UserDefaults.standard.setValue("2000", forKey: "TeXVersion")
-                }
-            }
-            let userSettingsOpentype = UserDefaults.standard.bool(forKey: "TeXOpenType")
-            if (userSettingsOpentype) {
-                if (userSettingsOpentype != OpentypeEnabled) {
-                    // it was not enabled before, it is requested: we download it
-                    downloadOpentype()
-                }
-            } else {
-                let LuaTeXVersion = UserDefaults.standard.string(forKey: "LuaTeXVersion")
-                if (LuaTeXVersion != "2000") {
-                    // it was enabled before, it was disabled: we remove it
-                    disableOpentype()
-                    UserDefaults.standard.setValue("2000", forKey: "LuaTeXVersion")
-                }
-            }
-        }// a-Shell mini
         // bookmarks management, copied from zshmarks: https://github.com/jocelynmallon/zshmarks
         let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
         if (zshmarks) {
