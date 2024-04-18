@@ -118,7 +118,7 @@ extension AppDelegate {
             }
             for script in TeXscripts {
                 let command = localPath.appendingPathComponent(script[0])
-                let location = "../texlive/2023/texmf-dist/" + script[1]
+                let location = "../texlive/2024/texmf-dist/" + script[1]
                 // fileExists doesn't work, because it follows symbolic links
                 do {
                     let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
@@ -170,7 +170,7 @@ extension AppDelegate {
                     }
                 }
             }
-            UserDefaults.standard.setValue("2023", forKey: "TeXVersion")
+            UserDefaults.standard.setValue("2024", forKey: "TeXVersion")
         }
     }
     
@@ -278,9 +278,9 @@ extension AppDelegate {
             self.TeXEnabled = false
             return
         }
-        // If tl202x exists, move it to 2023:
-        // If 2023 already exists, this will fail.
-        let currenttl = localURL.appendingPathComponent("2023")
+        // If tl202x exists, move it to 2024:
+        // If 2024 already exists, this will fail.
+        let currenttl = localURL.appendingPathComponent("2024")
         if let installedTexVersion = UserDefaults.standard.string(forKey: "TeXVersion") {
             if (installedTexVersion != "2000") {
                 let installedtl = localURL.appendingPathComponent(installedTexVersion)
@@ -290,7 +290,7 @@ extension AppDelegate {
                         try FileManager().moveItem(at: installedtl, to: currenttl)
                     }
                     catch {
-                        debuggingTeXInstall(message: "Error in copying texlive \(installedtl) to texlive 2023: \(error)")
+                        debuggingTeXInstall(message: "Error in copying texlive \(installedtl) to texlive 2024: \(error)")
                     }
                 }
             }
@@ -305,9 +305,10 @@ extension AppDelegate {
             }
         }
         //  Then copy $APPDIR/forbidden_2023/2023 (files we cannot include in On-Demand Resources)s:
-        if let forbidden = Bundle.main.resourceURL?.appendingPathComponent("forbidden_2023/2023") {
-            copyContentsOfDirectory(at: forbidden, to: currenttl)
-        }
+        // Removed for 2024, TODO: remove the code before release
+        // if let forbidden = Bundle.main.resourceURL?.appendingPathComponent("forbidden_2023/2023") {
+            // copyContentsOfDirectory(at: forbidden, to: currenttl)
+        // }
         // If ~/Library/texlive/2019 still exists (unlikely, but...) keep its texmf-local directory
         let tl2019 = localURL.appendingPathComponent("2019")
         if (FileManager().fileExists(atPath: tl2019.path)) {
@@ -548,7 +549,7 @@ extension AppDelegate {
             if (self.TeXEnabled) {
                 addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
             }
-            UserDefaults.standard.setValue("2023", forKey: "LuaTeXVersion")
+            UserDefaults.standard.setValue("2024", forKey: "LuaTeXVersion")
         }
     }
 
