@@ -1,4 +1,4 @@
-# $Id: TLPSRC.pm 66204 2023-02-26 22:10:41Z karl $
+# $Id: TLPSRC.pm 67326 2023-06-11 15:34:16Z karl $
 # TeXLive::TLPSRC.pm - module for handling tlpsrc files
 # Copyright 2007-2023 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
@@ -14,7 +14,7 @@ use TeXLive::TLUtils;
 use TeXLive::TLPOBJ;
 use TeXLive::TLTREE;
 
-my $svnrev = '$Revision: 66204 $';
+my $svnrev = '$Revision: 67326 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -113,6 +113,14 @@ sub from_file {
   for my $line (@lines) {
     $lineno++;
     
+    # remove end of line comments
+    # we require "<space>#" because since we don't want an embedded # in
+    # long descriptions, as in urls, to be a comment.
+    # Do this *before* we check for continuation lines: A line
+    #      .... # foobar \
+    # should *not* be treated as continuation line.
+    $line =~ s/\s+#.*$//;
+
     # we allow continuation lines in tlpsrc files, i.e., lines ending with \.
     if ($line =~ /^(.*)\\$/) {
       $savedline .= $1;
@@ -779,6 +787,7 @@ they are concatenated into C<foobar>.  The backslash and the newline are
 removed; no other whitespace is added or removed.
 
 Comment lines begin with a # and continue to the end of the line.
+Within a line, a # that is preceded by whitespace is also a comment.
 
 Blank lines are ignored.
 

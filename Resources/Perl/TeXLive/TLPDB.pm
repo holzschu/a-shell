@@ -1,13 +1,13 @@
-# $Id: TLPDB.pm 65964 2023-02-20 17:13:02Z karl $
+# $Id: TLPDB.pm 70573 2024-03-10 21:37:05Z karl $
 # TeXLive::TLPDB.pm - tlpdb plain text database files.
-# Copyright 2007-2023 Norbert Preining
+# Copyright 2007-2024 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
 use strict; use warnings;
 package TeXLive::TLPDB;
 
-my $svnrev = '$Revision: 65964 $';
+my $svnrev = '$Revision: 70573 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -1658,42 +1658,11 @@ sub install_package_files {
     # place from where files should be installed
     if (!_install_data ($tmpdir, \@installfiles, $reloc, \@installfiles,
                         $self)) {
-      tlwarn("TLPDB::install_package_files: couldn't install_data files: "
+      tlwarn("TLPDB::install_package_files: couldn't _install_data files: "
              . "@installfiles\n"); 
       next;
     }
-    if ($reloc) {
-      if ($self->setting("usertree")) {
-        $tlpobj->cancel_reloc_prefix;
-      } else {
-        $tlpobj->replace_reloc_prefix;
-      }
-      $tlpobj->relocated(0);
-    }
-    my $tlpod = $self->root . "/tlpkg/tlpobj";
-    mkdirhier( $tlpod );
-    open(TMP,">$tlpod/".$tlpobj->name.".tlpobj") or
-      die("Cannot open tlpobj file for ".$tlpobj->name);
-    $tlpobj->writeout(\*TMP);
-    close(TMP);
-    $self->add_tlpobj($tlpobj);
-    $self->save;
-    TeXLive::TLUtils::announce_execute_actions("enable", $tlpobj);
-    # do the postinstallation actions
-    #
-    # Run the post installation code in the postaction tlpsrc entries
-    # in case we are on w32 and the admin did install for himself only
-    # we switch off admin mode
-    if (wndws() && admin() && !$self->option("w32_multi_user")) {
-      non_admin();
-    }
-    # for now desktop_integration maps to both installation
-    # of desktop shortcuts and menu items, but we can split them later
-    &TeXLive::TLUtils::do_postaction("install", $tlpobj,
-      $self->option("file_assocs"),
-      $self->option("desktop_integration"),
-      $self->option("desktop_integration"),
-      $self->option("post_code"));
+    _post_install_package ($self, $tlpobj);
 
     # remember that we installed this package correctly
     $ret++;
@@ -1701,12 +1670,14 @@ sub install_package_files {
   return $ret;
 }
 
-
+
 =pod
 
 =item C<< $tlpdb->install_package($pkg, $dest_tlpdb [, $tag]) >>
 
-Installs the package $pkg into $dest_tlpdb.
+Installs the package $pkg into $dest_tlpdb. Returns a reference to the
+package, or undef if failure.
+
 If C<$tag> is present and the tlpdb is virtual, tries to install $pkg
 from the repository tagged with $tag.
 
@@ -1721,7 +1692,7 @@ sub install_package {
       } else {
         tlwarn("TLPDB::install_package: package $pkg not found"
                . " in repository $tag\n");
-        return;
+        return undef;
       }
     } else {
       my ($maxtag, $maxrev, $maxtlp, $maxtlpdb)
@@ -1735,7 +1706,7 @@ sub install_package {
     }
     return $self->not_virtual_install_package($pkg, $totlpdb);
   }
-  return;
+  return undef;
 }
 
 sub not_virtual_install_package {
@@ -1882,55 +1853,73 @@ sub not_virtual_install_package {
     if (!$real_opt_doc) {
       $tlpobj->clear_docfiles;
     }
-    # if a package is relocatable we have to cancel the reloc prefix
-    # and unset the relocated setting
-    # before we save it to the local tlpdb
-    if ($tlpobj->relocated) {
-      if ($totlpdb->setting("usertree")) {
-        $tlpobj->cancel_reloc_prefix;
-      } else {
-        $tlpobj->replace_reloc_prefix;
-      }
-      $tlpobj->relocated(0);
-    }
-    # we have to write out the tlpobj file since it is contained in the
-    # archives (.tar.xz) but at DVD install time we don't have them
-    my $tlpod = $totlpdb->root . "/tlpkg/tlpobj";
-    mkdirhier($tlpod);
-    my $count = 0;
-    my $tlpobj_file = ">$tlpod/" . $tlpobj->name . ".tlpobj";
-    until (open(TMP, $tlpobj_file)) {
-      # The open might fail for no good reason on Windows.
-      # Try again for a while, but not forever.
-      if ($count++ == 100) { die "$0: open($tlpobj_file) failed: $!"; }
-      select (undef, undef, undef, .1);  # sleep briefly
-    }
-    $tlpobj->writeout(\*TMP);
-    close(TMP);
-    $totlpdb->add_tlpobj($tlpobj);
-    $totlpdb->save;
-    # compute the return value
-    TeXLive::TLUtils::announce_execute_actions("enable", $tlpobj);
-    # do the postinstallation actions
-    #
-    # Run the post installation code in the postaction tlpsrc entries
-    # in case we are on w32 and the admin did install for himself only
-    # we switch off admin mode
-    if (wndws() && admin() && !$totlpdb->option("w32_multi_user")) {
-      non_admin();
-    }
-    # for now desktop_integration maps to both installation
-    # of desktop shortcuts and menu items, but we can split them later
-    &TeXLive::TLUtils::do_postaction("install", $tlpobj,
-      $totlpdb->option("file_assocs"),
-      $totlpdb->option("desktop_integration"),
-      $totlpdb->option("desktop_integration"),
-      $totlpdb->option("post_code"));
+    _post_install_pkg ($totlpdb, $tlpobj);
   }
   return 1;
 }
 
-#
+# In TLPDB, Do post-install stuff for TLPOBJ:
+# - cancel relocation stuff
+# - write the tlpobj
+# - handle post-installation actions
+# 
+sub _post_install_pkg {
+  my ($tlpdb,$tlpobj) = @_;
+  
+  # if a package is relocatable we have to cancel the reloc prefix
+  # and unset the relocated setting
+  # before we save it to the local tlpdb
+  if ($tlpobj->relocated) {
+    if ($tlpdb->setting("usertree")) {
+      $tlpobj->cancel_reloc_prefix;
+    } else {
+      $tlpobj->replace_reloc_prefix;
+    }
+    $tlpobj->relocated(0);
+  }
+  # we have to write out the tlpobj file since it is contained in the
+  # archives (.tar.xz) but at DVD install time we don't have them
+  my $tlpod = $tlpdb->root . "/tlpkg/tlpobj";
+  mkdirhier($tlpod);
+  my $count = 0;
+  my $tlpobj_file = ">$tlpod/" . $tlpobj->name . ".tlpobj";
+  until (open(TMP, $tlpobj_file)) {
+    # The open might fail for no good reason on Windows.
+    # Try again for a while, but not forever.
+    if ($count++ == 100) { die "$0: open($tlpobj_file) failed: $!"; }
+    select(undef, undef, undef, .1);  # sleep briefly
+  }
+  $tlpobj->writeout(\*TMP);
+  close(TMP);
+  $tlpdb->add_tlpobj($tlpobj);
+  $tlpdb->save;
+  #
+  # do postinstallation actions.
+  #
+  # Remember to do any postactions, including recording whether files
+  # have changed.
+  TeXLive::TLUtils::announce_execute_actions("enable", $tlpobj);
+  #
+  # If this was context, remember to do its cache.
+  if ($tlpobj->name eq "context") {
+    TeXLive::TLUtils::announce_execute_actions("context-cache", $tlpobj);
+  }
+  #  
+  # Run the post installation code in the postaction tlpsrc entries
+  # in case we are on w32 and the admin did install for himself only
+  # we switch off admin mode
+  if (wndws() && admin() && !$tlpdb->option("w32_multi_user")) {
+    non_admin();
+  }
+  # for now desktop_integration maps to both installation
+  # of desktop shortcuts and menu items, but we can split them if need be.
+  &TeXLive::TLUtils::do_postaction("install", $tlpobj,
+    $tlpdb->option("file_assocs"),
+    $tlpdb->option("desktop_integration"),
+    $tlpdb->option("desktop_integration"),
+    $tlpdb->option("post_code"));
+}
+
 # _install_data
 # actually does the installation work
 # returns 1 on success and 0 on error
@@ -1939,7 +1928,7 @@ sub not_virtual_install_package {
 # otherwise it is a tlpdb from where to install
 #
 sub _install_data {
-  my ($self, $what, $reloc, $filelistref, $totlpdb, $whatsize, $whatcheck) = @_;
+  my ($self, $what, $reloc, $filelistref, $totlpdb, $whatsize, $whatcheck) =@_;
 
   my $target = $totlpdb->root;
   my $tempdir = TeXLive::TLUtils::tl_tmpdir();
@@ -1997,6 +1986,7 @@ sub _install_data {
   }
 }
 
+
 =pod
 
 =item << $tlpdb->remove_package($pkg, %options) >>
@@ -2014,7 +2004,9 @@ sub remove_package {
   my $tlp = $localtlpdb->get_package($pkg);
   my $usertree = $localtlpdb->setting("usertree");
   if (!defined($tlp)) {
-    tlwarn ("TLPDB: package not present, so nothing to remove: $pkg\n");
+    # we should not be called.
+    tlwarn ("TLPDB::remove_package: package not present, ",
+            "so nothing to remove: $pkg\n");
   } else {
     my $currentarch = $self->platform();
     if ($pkg eq "texlive.infra" || $pkg eq "texlive.infra.$currentarch") {
@@ -2025,8 +2017,10 @@ sub remove_package {
     my $Master = $localtlpdb->root;
     chdir ($Master) || die "chdir($Master) failed: $!";
     my @files = $tlp->all_files;
+    #
     # also remove the .tlpobj file
     push @files, "tlpkg/tlpobj/$pkg.tlpobj";
+    #
     # and the ones from src/doc splitting
     if (-r "tlpkg/tlpobj/$pkg.source.tlpobj") {
       push @files, "tlpkg/tlpobj/$pkg.source.tlpobj";
@@ -2107,17 +2101,39 @@ sub remove_package {
         0, # tlpdbopt_desktop_integration, desktop part
         $localtlpdb->option("post_code"));
     }
-    # 
-    my @removals = &TeXLive::TLUtils::removed_dirs (@goodfiles);
+    # we want to check whether we can actually remove files
+    # there might be various reasons that this fails, like texmf-dist
+    # directory suddently becoming ro (for whatever definition of
+    # suddenly).
+    my (%by_dirs, %removed_dirs) = &TeXLive::TLUtils::all_dirs_and_removed_dirs (@goodfiles);
+    my @removals = keys %removed_dirs;
+
+    # we have already check for the existence of the dirs returned
+    for my $d (keys %by_dirs) {
+      if (! &TeXLive::TLUtils::dir_writable($d)) {
+        tlwarn("TLPDB::remove_package: directories are not writable, cannot remove files: $d\n");
+        return 0;
+      }
+    }
+
     # now do the removal
     for my $entry (@goodfiles) {
-      unlink $entry;
+      # sometimes the files might not be there: 1) we remove .tlpobj
+      # explicitly above; 2) we're called from tl-update-containers
+      # to update the network tlpdb, and that doesn't have an expanded
+      # texmf-dist.
+      next unless -e $entry;
+      #
+      unlink($entry)
+      || tlwarn("TLPDB::remove_package: Could not unlink $entry: $!\n");
     }
     for my $d (@removals) {
-      rmdir $d;
+      rmdir($d)
+      || tlwarn("TLPDB::remove_package: Could not rmdir $d: $!\n")
     }
     $localtlpdb->remove_tlpobj($pkg);
     TeXLive::TLUtils::announce_execute_actions("disable", $tlp);
+    
     # should we save at each removal???
     # advantage: the tlpdb actually reflects what is installed
     # disadvantage: removing a collection calls the save routine several times
@@ -2136,6 +2152,7 @@ sub remove_package {
     # files are already removed.
     # Again, desktop integration maps to desktop and menu links
     if (!$opts{'nopostinstall'}) {
+      debug(" TLPDB::remove_package: running remove postinstall\n");
       &TeXLive::TLUtils::do_postaction("remove", $tlp,
         $localtlpdb->option("file_assocs"),
         $localtlpdb->option("desktop_integration"),
@@ -2531,7 +2548,7 @@ The purpose of virtual databases is to collect several data sources
 and present them in one way. The normal functions will always return
 the best candidate for the set of functions.
 
-More docs to be written someday, maybe.
+More docs to be written if there is any demand.
 
 =over 4
 
@@ -3000,4 +3017,4 @@ GNU General Public License Version 2 or later.
 ### tab-width: 2
 ### indent-tabs-mode: nil
 ### End:
-# vim:set tabstop=2 expandtab autoindent: #
+# vim:set tabstop=2 shiftwidth=2 expandtab autoindent: #

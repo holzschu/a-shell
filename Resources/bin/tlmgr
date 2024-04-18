@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 69653 2024-01-31 21:52:46Z karl $
+# $Id: tlmgr.pl 70671 2024-03-17 01:10:09Z karl $
 # Copyright 2008-2024 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
@@ -8,8 +8,8 @@
 
 use strict; use warnings;
 
-my $svnrev = '$Revision: 69653 $';
-my $datrev = '$Date: 2024-01-31 22:52:46 +0100 (Wed, 31 Jan 2024) $';
+my $svnrev = '$Revision: 70671 $';
+my $datrev = '$Date: 2024-03-17 02:10:09 +0100 (Sun, 17 Mar 2024) $';
 my $tlmgrrevision;
 my $tlmgrversion;
 my $prg;
@@ -150,6 +150,9 @@ my %action_specification = (
     },
     "run-post" => 1,
     "function" => \&action_backup
+  },
+  "bug" => {
+    "function" => \&action_bug
   },
   "candidates" => {
     "run-post" => 0,
@@ -1855,10 +1858,9 @@ sub action_search {
   return ($F_OK | $F_NOPOSTACTION);
 }
 
-sub search_tlpdb {
+sub _search_tlpdb {
   my ($tlpdb, $what, $dofile, $dodesc, $inword) = @_;
-  my $retfile = '';
-  my $retdesc = '';
+  my %pkgs;
   foreach my $pkg ($tlpdb->list_packages) {
     my $tlp = $tlpdb->get_package($pkg);
     
@@ -1866,9 +1868,8 @@ sub search_tlpdb {
     if ($dofile) {
       my @ret = search_pkg_files($tlp, $what);
       if (@ret) {
-        $retfile .= "$pkg:\n";
         foreach (@ret) {
-          $retfile .= "\t$_\n";
+          $pkgs{$pkg}{'files'}{$_} = 1;
         }
       }
     }
@@ -1876,28 +1877,43 @@ sub search_tlpdb {
     # no options or --all -> search package names/descriptions
     if ($dodesc) {
       next if ($pkg =~ m/\./);
-      my $matched = search_pkg_desc($tlp, $what, $inword);
-      $retdesc .= "$matched\n" if ($matched);
+      my $t = "$pkg\n";
+      $t = $t . $tlp->shortdesc . "\n" if (defined($tlp->shortdesc));
+      $t = $t . $tlp->longdesc . "\n" if (defined($tlp->longdesc));
+      $t = $t . $tlp->cataloguedata->{'topics'} . "\n" if (defined($tlp->cataloguedata->{'topics'}));
+      my $pat = $what;
+      $pat = '\W' . $what . '\W' if ($inword);
+      my $matched = "";
+      if ($t =~ m/$pat/i) {
+        my $shortdesc = $tlp->shortdesc || "";
+        $pkgs{$pkg}{'desc'} = $shortdesc;
+      }
+    }
+  }
+  return \%pkgs;
+}
+
+
+sub search_tlpdb {
+  my ($tlpdb, $what, $dofile, $dodesc, $inword) = @_;
+  my $fndptr = _search_tlpdb($tlpdb, $what, $dofile, $dodesc, $inword);
+  # first report on $pkg - $shortdesc found
+  my $retfile = '';
+  my $retdesc = '';
+  for my $pkg (sort keys %$fndptr) {
+    if ($fndptr->{$pkg}{'desc'}) {
+      $retdesc .= "$pkg - " . $fndptr->{$pkg}{'desc'} . "\n";
+    }
+  }
+  for my $pkg (sort keys %$fndptr) {
+    if ($fndptr->{$pkg}{'files'}) {
+      $retfile .= "$pkg:\n";
+      for my $f (keys %{$fndptr->{$pkg}{'files'}}) {
+        $retfile .= "\t$f\n";
+      }
     }
   }
   return($retfile, $retdesc);
-}
-
-sub search_pkg_desc {
-  my ($tlp, $what, $inword) = @_;
-  my $pkg = $tlp->name;
-  my $t = "$pkg\n";
-  $t = $t . $tlp->shortdesc . "\n" if (defined($tlp->shortdesc));
-  $t = $t . $tlp->longdesc . "\n" if (defined($tlp->longdesc));
-  $t = $t . $tlp->cataloguedata->{'topics'} . "\n" if (defined($tlp->cataloguedata->{'topics'}));
-  my $pat = $what;
-  $pat = '\W' . $what . '\W' if ($inword);
-  my $matched = "";
-  if ($t =~ m/$pat/i) {
-    my $shortdesc = $tlp->shortdesc || "";
-    $matched .= "$pkg - $shortdesc";
-  }
-  return $matched;
 }
 
 sub search_pkg_files {
@@ -5032,10 +5048,10 @@ sub action_platform {
         print "    $a\n";
       }
     }
-    print "Already installed platforms are marked with (i)\n";
-    print "You can add new platforms with: tlmgr platform add PLAT1 PLAT2...\n";
-    print "You can remove platforms with: tlmgr platform remove PLAT1 PLAT2...\n";
-    print "You can set the active platform with: tlmgr platform set PLAT\n";
+    print "Already installed platforms are marked with (i).\n";
+    print "Add new platforms with: tlmgr platform add PLAT1 PLAT2...\n";
+    print "Remove platforms with:  tlmgr platform remove PLAT1 PLAT2...\n";
+    print "Set the active platform with: tlmgr platform set PLAT\n";
     return ($F_OK | $F_NOPOSTACTION);
 
   } elsif ($what =~ m/^add$/i) {
@@ -5070,7 +5086,8 @@ sub action_platform {
                 }
               }
             } else {
-              tlwarn("$prg: action platform add, cannot find package $pkg.$a\n");
+              tlwarn("$prg: action platform add: package $pkg does not exist",
+                     " for platform: $a\n");
               $ret |= $F_WARNING;
             }
           }
@@ -6934,6 +6951,151 @@ sub action_shell {
 }
 
 
+#  BUG
+# bug-reporting info, possibly interactive
+# 
+sub action_bug {
+  sub prompt_it {
+    my ($q, $required, $default) = @_;
+    print "$q ";
+    my $ans = <STDIN>;
+    if (!defined($ans)) {
+      if ($required) {
+        return $F_ERROR, "";
+      } else {
+        return $F_OK, $default;
+      }
+    }
+    chomp($ans);
+    return $F_OK, $ans;
+  }
+  my ($ans) = @ARGV;
+  init_local_db();
+  if (!$ans) {
+    my $ok;
+    ($ok, $ans) = prompt_it("Package or file to report a bug against:", 1);
+    if ($ok == $F_ERROR) {
+      print "Bailing out!\n";
+      return $F_ERROR;
+    }
+  }
+  # first search for packages that match $ans, and if not search for files
+  my $tlp = $localtlpdb->get_package($ans);
+  if ($tlp) {
+    return issue_bug_info_for_package($tlp);
+  }
+  # we are still here, so search for a file that matches
+  my $fndptr = _search_tlpdb($localtlpdb, $ans,
+    1, # search files,
+    1, # search descriptions
+    1  # don't search within words
+  );
+  my @deschit;
+  for my $pkg (sort keys %$fndptr) {
+    if ($fndptr->{$pkg}{'desc'}) {
+      push @deschit, [$pkg, "$pkg (" . $fndptr->{$pkg}{'desc'} . ")\n"] ;
+      # delete files if we found it already via description (which
+      # includes package name) since we don't want to show the same
+      # package twice times, and the files hit will be mostly based on the
+      # directory name.
+      delete $fndptr->{$pkg}{'files'};
+    } elsif ($pkg eq "00texlive.image") { # never a good match
+        delete $fndptr->{$pkg}{'files'};
+    }
+  }
+  my @filehit;
+  for my $pkg (sort keys %$fndptr) {
+    if ($fndptr->{$pkg}{'files'}) {
+      push @filehit, [$pkg, "$pkg\n\t"
+                      . join("\n\t", sort keys %{$fndptr->{$pkg}{'files'}})
+                      . "\n"];
+    }
+  }
+  my $nr_total_hit = $#deschit + 1 + $#filehit + 1;
+  my $pkg;
+  if ($nr_total_hit > 1) {
+    my $n = 1;
+    my $ndigits = $#deschit < 10 ? "1" : "2";
+    if ($#deschit >= 0) {
+      print "\nPackage matches (alphabetical):\n";
+      for my $i (0..$#deschit) {
+        printf "%" . $ndigits . "d %s", $n, $deschit[$i][1];
+        $n++;
+      }
+    }
+    if ($#filehit >= 0) {
+      print "\nFile matches (alphabetical by package):\n";
+      $ndigits = $n + $#filehit < 10 ? "1" : "2";
+      for my $i (0..$#filehit) {
+        printf "%" . $ndigits . "d %s", $n, $filehit[$i][1];
+        $n++;
+      }
+    }
+    print "\nSelect a package: ";
+    my $pkgidx = <STDIN>;
+    $pkgidx = "" if ! defined ($pkgidx); # if they hit eof
+    chomp($pkgidx);
+    if ($pkgidx !~ /^\d+$/) {
+      print "$prg: Not a positive integer, exiting: $pkgidx\n";
+      return $F_ERROR;
+    }
+    $pkgidx = int($pkgidx);
+    if (!defined($pkgidx) or $pkgidx < 1 or $pkgidx > $nr_total_hit) {
+      print "$prg: number out of range, exiting: $pkgidx\n";
+      return $F_ERROR;
+    }
+    # print "#deschit = $#deschit, #filehit = $#filehit, pkgidx = $pkgidx\n";
+    if ($pkgidx <= $#deschit + 1) {
+      $pkg = $deschit[$pkgidx - 1][0];
+    } else {
+      $pkg = $filehit[$pkgidx - 1 - $#deschit - 1][0];
+    }
+  } elsif ($nr_total_hit == 1) {
+    if ($#deschit == 0) {
+      $pkg = $deschit[0][0];
+    } else {
+      $pkg = $filehit[0][0];
+    }
+  } else {
+    print "$prg: Nothing found for: $ans\n";
+    return $F_OK;
+  }
+  $tlp = $localtlpdb->get_package($pkg);
+  return issue_bug_info_for_package($tlp);
+}
+
+sub issue_bug_info_for_package {
+  my $tlp = shift;
+  print "Package:        ", $tlp->name, "\n";
+  if (defined($tlp->cataloguedata->{'ctan'})) {
+    print "CTAN page:      https://ctan.org/pkg/" . $tlp->name . "\n";
+    print "CTAN directory: https://mirror.ctan.org"
+          . $tlp->cataloguedata->{'ctan'} . "\n";
+  }
+  my $output = '';
+  if (defined($tlp->cataloguedata->{'contact-bugs'})) {
+    $output .= "Bug contact:    " . $tlp->cataloguedata->{'contact-bugs'}
+               . "\n";
+  }
+  my $other_output = '';
+  for my $k (keys %{$tlp->cataloguedata}) {
+    if ($k =~ m/^contact-/) {
+      next if ($k eq 'contact-bugs');
+      $other_output .= "$k: " . $tlp->cataloguedata->{$k} . "\n";
+    }
+  }
+  if ($other_output) {
+    $output .= "\nOther contact points:\n$other_output\n";
+  }
+  if ($output) {
+    print $output;
+  } else {
+    print "No other information was found.\n";
+  }
+  return $F_OK;
+}
+
+
 
 # Subroutines galore.
 #
@@ -7473,12 +7635,17 @@ FROZEN_MSG
   # save remote database if it is a net location
   # make sure that the writeout of the tlpdb is done in UNIX mode
   # since otherwise the checksum will change.
+  # For the main tlnet and tlcontrib, both of which are distributed
+  # via mirror.ctan, we make sure that we have only one hashed version
+  # of the tlpdb saved locally.
   if (!$local_copy_tlpdb_used && $location =~ m;^(https?|ftp)://;) {
     my $loc_digest = TeXLive::TLCrypto::tl_short_digest($location);
     my $loc_copy_of_remote_tlpdb =
       ($is_main ? 
         "$Master/$InfraLocation/texlive.tlpdb.main.$loc_digest" :
-        "$Master/$InfraLocation/texlive.tlpdb.$loc_digest");
+        ($location =~ m;texlive/tlcontrib/?$; ?
+          "$Master/$InfraLocation/texlive.tlpdb.tlcontrib.$loc_digest" :
+          "$Master/$InfraLocation/texlive.tlpdb.$loc_digest"));
     my $tlfh;
     if (!open($tlfh, ">:unix", $loc_copy_of_remote_tlpdb)) {
       # that should be only a debug statement, since a user without
@@ -7493,6 +7660,13 @@ FROZEN_MSG
       # are used $Master/$InfraLocation/texlive.tlpdb.main.$loc_digest
       if ($is_main) {
         for my $fn (<"$Master/$InfraLocation/texlive.tlpdb.main.*">) {
+          next if ($fn eq $loc_copy_of_remote_tlpdb);
+          unlink($fn);
+        }
+      }
+      # Do the same for tlcontrib, which is also distributed via mirror.
+      if ($location =~ m;texlive/tlcontrib/?$;) {
+        for my $fn (<"$Master/$InfraLocation/texlive.tlpdb.tlcontrib.*">) {
           next if ($fn eq $loc_copy_of_remote_tlpdb);
           unlink($fn);
         }
@@ -7817,6 +7991,10 @@ sub clear_old_backups {
 # check for updates to tlcritical packages
 #
 sub check_for_critical_updates {
+  # iOS: don't check for critical updates (they're about the binaries, and we did it ourselves)
+  # But remember to update the Perl modules at each yearly release.
+  return ();
+  #
   my ($localtlpdb, $mediatlpdb) = @_;
 
   my $criticalupdate = 0;
@@ -7824,21 +8002,26 @@ sub check_for_critical_updates {
     $localtlpdb, @CriticalPackagesList);
   my @critical_upd;
   for my $pkg (sort @critical) {
+    print "Checking $pkg\n";
     my $tlp = $localtlpdb->get_package($pkg);
     if (!defined($tlp)) {
       # that should not happen, we expanded in the localtlpdb so why
       # should it not be present, any anyway, those are so fundamental
       # so they have to be there
+      print "$pkg not found\n";
       tlwarn("\n$prg: Fundamental package $pkg not present, uh oh, goodbye");
       die "Should not happen, $pkg not found";
     }
     my $localrev = $tlp->revision;
     my $mtlp = $mediatlpdb->get_package($pkg);
     if (!defined($mtlp)) {
+      print "$pkg is not present\n";
       debug("Surprising, $pkg not present in remote tlpdb.\n");
       next;
     }
+    print "so far, so good";
     my $remoterev = $mtlp->revision;
+    print "revisions: $remoterev > $localrev\n";
     push (@critical_upd, $pkg) if ($remoterev > $localrev);
   }
   return(@critical_upd);
@@ -7974,6 +8157,11 @@ repository (typically useful when updating from CTAN).
 
 Display detailed information about a package I<what>, such as the installation
 status and description, of searches for I<what> in all packages.
+
+=item C<tlmgr bug> I<what>
+
+Display available bug-reporting information for I<what>, a package or
+file name.
 
 =back
 
@@ -8269,6 +8457,16 @@ performed are written to the terminal.
 =back
 
 =back
+
+=head2 bug [I<search-string>]
+
+Searches for I<search-string> (prompted for, if not given) as a package
+name and in package descriptions, as complete words, and in filenames,
+as any substring, and outputs bug-reporting and other information for
+the package selected from the results.
+
+The search is equivalent to C<tlmgr search --word --file> I<search-string>.
+Thus, I<search-string> is interpreted as a (Perl) regular expression.
 
 =head2 candidates I<pkg>
 
@@ -10368,7 +10566,7 @@ This script and its documentation were written for the TeX Live
 distribution (L<https://tug.org/texlive>) and both are licensed under the
 GNU General Public License Version 2 or later.
 
-$Id: tlmgr.pl 69653 2024-01-31 21:52:46Z karl $
+$Id: tlmgr.pl 70671 2024-03-17 01:10:09Z karl $
 =cut
 
 # test HTML version: pod2html --cachedir=/tmp tlmgr.pl >/tmp/tlmgr.html

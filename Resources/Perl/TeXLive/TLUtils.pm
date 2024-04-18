@@ -1,6 +1,6 @@
-# $Id: TLUtils.pm 66420 2023-03-07 08:30:26Z preining $
+# $Id: TLUtils.pm 70794 2024-03-28 01:16:33Z karl $
 # TeXLive::TLUtils.pm - the inevitable utilities for TeX Live.
-# Copyright 2007-2023 Norbert Preining, Reinhard Kotucha
+# Copyright 2007-2024 Norbert Preining, Reinhard Kotucha
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
@@ -8,7 +8,7 @@ use strict; use warnings;
 
 package TeXLive::TLUtils;
 
-my $svnrev = '$Revision: 66420 $';
+my $svnrev = '$Revision: 70794 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -41,6 +41,7 @@ C<TeXLive::TLUtils> - TeX Live infrastructure miscellany
   TeXLive::TLUtils::wsystem($msg,@args);
   TeXLive::TLUtils::xsystem(@args);
   TeXLive::TLUtils::run_cmd($cmd [, @envvars ]);
+  TeXLive::TLUtils::run_cmd_with_log($cmd, $logfn);
   TeXLive::TLUtils::system_pipe($prog, $infile, $outfile, $removeIn, @args);
   TeXLive::TLUtils::diskfree($path);
   TeXLive::TLUtils::get_user_home();
@@ -59,6 +60,8 @@ C<TeXLive::TLUtils> - TeX Live infrastructure miscellany
   TeXLive::TLUtils::copy($file, $target_dir);
   TeXLive::TLUtils::touch(@files);
   TeXLive::TLUtils::collapse_dirs(@files);
+  TeXLive::TLUtils::all_dirs_and_removed_dirs(@files);
+  TeXLive::TLUtils::dirs_of_files(@files);
   TeXLive::TLUtils::removed_dirs(@files);
   TeXLive::TLUtils::download_file($path, $destination);
   TeXLive::TLUtils::setup_programs($bindir, $platform);
@@ -78,6 +81,7 @@ C<TeXLive::TLUtils> - TeX Live infrastructure miscellany
   TeXLive::TLUtils::time_estimate($totalsize, $donesize, $starttime)
   TeXLive::TLUtils::install_packages($from_tlpdb,$media,$to_tlpdb,$what,$opt_src, $opt_doc, $retry, $continue);
   TeXLive::TLUtils::do_postaction($how, $tlpobj, $do_fileassocs, $do_menu, $do_desktop, $do_script);
+  TeXLive::TLUtils::update_context_cache($plat_bindir);
   TeXLive::TLUtils::announce_execute_actions($how, @executes, $what);
   TeXLive::TLUtils::add_symlinks($root, $arch, $sys_bin, $sys_man, $sys_info);
   TeXLive::TLUtils::remove_symlinks($root, $arch, $sys_bin, $sys_man, $sys_info);
@@ -143,7 +147,8 @@ our $PERL_SINGLE_QUOTE; # we steal code from Text::ParseWords
 # We use myriad global and package-global variables, unfortunately.
 # To avoid "used only once" warnings, we must use the variable names again.
 # 
-# This ugly repetition in the BEGIN block works with all Perl versions.
+# This ugly repetition in the BEGIN block works with all Perl versions;
+# cleaner/fancier ways of handling this don't.
 BEGIN {
   $::LOGFILE = $::LOGFILE;
   $::LOGFILENAME = $::LOGFILENAME;
@@ -160,6 +165,7 @@ BEGIN {
   $::machinereadable = $::machinereadable;
   $::no_execute_actions = $::no_execute_actions;
   $::regenerate_all_formats = $::regenerate_all_formats;
+  $::context_cache_update_needed = $::context_cache_update_needed;
   #
   $JSON::false = $JSON::false;
   $JSON::true = $JSON::true;
@@ -210,6 +216,8 @@ BEGIN {
     &copy
     &touch
     &collapse_dirs
+    &all_dirs_and_removed_dirs
+    &dirs_of_files
     &removed_dirs
     &install_package
     &install_packages
@@ -242,6 +250,7 @@ BEGIN {
     &wsystem
     &xsystem
     &run_cmd
+    &run_cmd_with_log
     &system_pipe
     &diskfree
     &get_user_home
@@ -772,8 +781,9 @@ sub xsystem {
 
 =item C<run_cmd($cmd, @envvars)>
 
-Run shell command C<$cmd> and captures its output. Returns a list with CMD's
-output as the first element and the return value (exit code) as second.
+Run shell command C<$cmd> and captures its standard output (not standard
+error). Returns a list with CMD's output as the first element and its
+return value (exit code) as second.
 
 If given, C<@envvars> is a list of environment variable name / value
 pairs set in C<%ENV> for the call and reset to their original value (or
@@ -808,6 +818,36 @@ sub run_cmd {
   }
   return ($output,$retval);
 }
+
+=item C<run_cmd_with_log($cmd, $logfn)>
+
+Run shell command C<$cmd> and captures both standard output and standard
+error (as one string), passing them to C<$logfn>. The return value is
+the exit status of C<$cmd>. Environment variable overrides cannot be
+passed. (This is used for running special post-installation commands in
+install-tl and tlmgr.)
+
+The C<info> function is called to report what is happening.
+
+=cut
+
+sub run_cmd_with_log {
+  my ($cmd,$logfn) = @_;
+  
+  info ("running $cmd ...");
+  my ($out,$ret) = TeXLive::TLUtils::run_cmd ("$cmd 2>&1");
+  if ($ret == 0) {
+    info ("done\n");
+  } else {
+    info ("failed\n");
+    tlwarn ("$0: $cmd failed (status $ret): $!\n");
+    $ret = 1;
+  }
+  &$logfn ($out); # log the output
+  
+  return $ret;
+} # run_cmd_with_log
+
 
 =item C<system_pipe($prog, $infile, $outfile, $removeIn, @extraargs)>
 
@@ -1622,30 +1662,14 @@ sub collapse_dirs {
   return @ret;
 }
 
-=item C<removed_dirs(@files)>
+=item C<dirs_of_files(@files)>
 
-Returns all the directories from which all content will be removed.
-
-Here is the idea:
-
-=over 4
-
-=item create a hashes by_dir listing all files that should be removed
-   by directory, i.e., key = dir, value is list of files
-
-=item for each of the dirs (keys of by_dir and ordered deepest first)
-   check that all actually contained files are removed
-   and all the contained dirs are in the removal list. If this is the
-   case put that directory into the removal list
-
-=item return this removal list
-
-=back
+Returns all the directories in which at least one of the given
+files reside.
 =cut
 
-sub removed_dirs {
+sub dirs_of_files {
   my (@files) = @_;
-  my %removed_dirs;
   my %by_dir;
 
   # construct hash of all directories mentioned, values are lists of the
@@ -1670,6 +1694,21 @@ sub removed_dirs {
     push (@a, $abs_f);
     $by_dir{$d} = \@a;
   }
+
+  return %by_dir;
+}
+
+=item C<all_dirs_and_removed_dirs(@files)>
+
+Returns all the directories for files and those from which all
+content will be removed.
+
+=cut
+
+sub all_dirs_and_removed_dirs {
+  my (@files) = @_;
+  my %removed_dirs;
+  my %by_dir = dirs_of_files(@files);
 
   # for each of our directories, see if we are removing everything in
   # the directory.  if so, return the directory; else return the
@@ -1706,8 +1745,36 @@ sub removed_dirs {
       $removed_dirs{$d} = 1;
     }
   }
+  return (%by_dir, %removed_dirs);
+}
+
+=item C<removed_dirs(@files)>
+
+Returns all the directories from which all content will be removed.
+
+Here is the idea:
+
+=over 4
+
+=item create a hashes by_dir listing all files that should be removed
+   by directory, i.e., key = dir, value is list of files
+
+=item for each of the dirs (keys of by_dir and ordered deepest first)
+   check that all actually contained files are removed
+   and all the contained dirs are in the removal list. If this is the
+   case put that directory into the removal list
+
+=item return this removal list
+
+=back
+=cut
+
+sub removed_dirs {
+  my (@files) = @_;
+  my (%by_dir, %removed_dirs) = all_dirs_and_removed_dirs(@files);
   return keys %removed_dirs;
 }
+
 
 =item C<time_estimate($totalsize, $donesize, $starttime)>
 
@@ -2175,6 +2242,10 @@ sub _do_postaction_shortcut {
   return 1;
 }
 
+=item C<parse_into_keywords>
+
+=cut
+
 sub parse_into_keywords {
   my ($str, @keys) = @_;
   my @words = quotewords('\s+', 0, $str);
@@ -2199,25 +2270,100 @@ sub parse_into_keywords {
   return($error, %ret);
 }
 
-=item C<announce_execute_actions($how, $tlpobj, $what)>
+=item C<update_context_cache($bindir,$progext,$run_postinst_cmd)>
 
-Announces that the actions given in C<$tlpobj> should be executed
-after all packages have been unpacked. C<$what> provides 
-additional information.
+Run the ConTeXt cache generation commands, using C<$bindir> and
+C<$progext> to check if commands can be run. Use the function reference
+C<$run_postinst_cmd> to actually run the commands. The return status is
+zero if all succeeded, nonzero otherwise. If the main ConTeXt program
+(C<luametatex>) cannot be run at all, the return status is zero.
+
+Functions C<info> and C<debug> are called with status reports.
+
+=cut
+
+sub update_context_cache {
+  my ($bindir,$progext,$run_postinst_cmd) = @_;
+  
+  my $errcount = 0;
+
+  # The story here is that in 2023, the provided lmtx binary for
+  # x86_64-linux was too new to run on the system where we build TL.
+  # (luametatex: /lib64/libm.so.6: version `GLIBC_2.23' not found)
+  # So we have to try running the binary to see if it works, not just
+  # test for its existence. And since it exits nonzero given no args, we
+  # have to specify --version. Hope it keeps working like that ...
+  # 
+  # If lmtx is not runnable, don't consider that an error, since nothing
+  # can be done about it.
+  my $lmtx = "$bindir/luametatex$progext";
+  if (TeXLive::TLUtils::system_ok("$lmtx --version")) {
+    info("setting up ConTeXt caches: ");
+    $errcount += &$run_postinst_cmd("mtxrun --generate");
+    #
+    # If mtxrun failed, don't bother trying more.
+    if ($errcount == 0) {
+      $errcount += &$run_postinst_cmd("context --luatex --generate");
+      #
+      # This is for finding fonts by font name (the --generate suffices
+      # for file name). Although ConTeXt does some automatic cache
+      # regeneration, Hans advises that this manual reload can help, and
+      # should be no harm.
+      # https://wiki.contextgarden.net/Use_the_fonts_you_want
+      # https://wiki.contextgarden.net/Mtxrun#base and #fonts
+      $errcount += &$run_postinst_cmd("mtxrun --script fonts --reload");
+      #
+      # If context succeeded too, try luajittex. Missing on some platforms.
+      # Although we build luajittex normally, instead of importing the
+      # binary, so testing for file existence should suffice, we may as
+      # well test execution since it's just as easy.
+      # 
+      if ($errcount == 0) {
+        my $luajittex = "$bindir/luajittex$progext";
+        if (TeXLive::TLUtils::system_ok("$luajittex --version")) {
+          $errcount += &$run_postinst_cmd("context --luajittex --generate");
+        } else {
+          debug("skipped luajittex cache setup, can't run $luajittex\n");
+        }
+      }
+    }
+  }
+  return $errcount;
+}
+
+=item C<announce_execute_actions($how, [$tlpobj[, $what]])>
+
+Announces (records) that the actions, usually given in C<$tlpobj> (but
+can be omitted for global actions), should be executed after all
+packages have been unpacked. The optional C<$what> depends on the
+action, e.g., a parse_AddFormat_line reference for formats; not sure if
+it's used for anything else.
+
+This is called for every package that gets installed.
 
 =cut
 
 sub announce_execute_actions {
-  my ($type, $tlp, $what) = @_;
-  # do simply return immediately if execute actions are suppressed
+  my ($type,$tlp,$what) = @_;
+  # return immediately if execute actions are suppressed
   return if $::no_execute_actions;
-
+  
+  # since we're called for every package with "enable",
+  # it's not helpful to report that again.
+  if ($type ne "enable") {
+    my $forpkg = $tlp ? ("for " . $tlp->name) : "no package";
+    debug("announce_execute_actions: given $type ($forpkg)\n");
+  }
   if (defined($type) && ($type eq "regenerate-formats")) {
     $::regenerate_all_formats = 1;
     return;
   }
   if (defined($type) && ($type eq "files-changed")) {
     $::files_changed = 1;
+    return;
+  }
+  if (defined($type) && ($type eq "context-cache")) {
+    $::context_cache_update_needed = 1;
     return;
   }
   if (defined($type) && ($type eq "rebuild-format")) {
@@ -2229,17 +2375,18 @@ sub announce_execute_actions {
   if (!defined($type) || (($type ne "enable") && ($type ne "disable"))) {
     die "announce_execute_actions: enable or disable, not type $type";
   }
-  my (@maps, @formats, @dats);
   if ($tlp->runfiles || $tlp->srcfiles || $tlp->docfiles) {
     $::files_changed = 1;
   }
-  $what = "map format hyphen" if (!defined($what));
+  #
+  $what = "map format hyphen" if (!defined($what)); # do all by default
   foreach my $e ($tlp->executes) {
     if ($e =~ m/^add((Mixed|Kanji)?Map)\s+([^\s]+)\s*$/) {
       # save the refs as we have another =~ grep in the following lines
       my $a = $1;
       my $b = $3;
       $::execute_actions{$type}{'maps'}{$b} = $a if ($what =~ m/map/);
+
     } elsif ($e =~ m/^AddFormat\s+(.*)\s*$/) {
       my %r = TeXLive::TLUtils::parse_AddFormat_line("$1");
       if (defined($r{"error"})) {
@@ -2248,6 +2395,7 @@ sub announce_execute_actions {
         $::execute_actions{$type}{'formats'}{$r{'name'}} = \%r
           if ($what =~ m/format/);
       }
+
     } elsif ($e =~ m/^AddHyphen\s+(.*)\s*$/) {
       my %r = TeXLive::TLUtils::parse_AddHyphen_line("$1");
       if (defined($r{"error"})) {
@@ -2256,6 +2404,7 @@ sub announce_execute_actions {
         $::execute_actions{$type}{'hyphens'}{$r{'name'}} = \%r
           if ($what =~ m/hyphen/);
       }
+
     } else {
       tlwarn("Unknown execute $e in ", $tlp->name, "\n");
     }
@@ -2680,23 +2829,26 @@ sub untar {
   # quoting issues.
   # so fall back on chdir in Perl.
   #
+  # iOS: It's safer to use the tar -C option on iOS.
+  # Using chdir() is basically asking for trouble with our system.
   debug("TLUtils::untar: unpacking $tarfile in $targetdir\n");
-  my $cwd = cwd();
-  chdir($targetdir) || die "chdir($targetdir) failed: $!";
+  # my $cwd = cwd();
+  # chdir($targetdir) || die "chdir($targetdir) failed: $!";
 
   # on w32 don't extract file modified time, because AV soft can open
   # files in the mean time causing time stamp modification to fail
-  my $taropt = wndws() ? "xmf" : "xf";
-  if (system($tar, $taropt, $tarfile) != 0) {
-    tlwarn("TLUtils::untar: $tar $taropt $tarfile failed (in $targetdir)\n");
+  # my $taropt = wndws() ? "xmf" : "xf";
+  my $taropt = "-xf";
+  my $tardir = "-C";
+  if (system($tar, $tardir, $targetdir, $taropt, $tarfile) != 0) {
+    tlwarn("TLUtils::untar: $tar $tardir $targetdir $taropt $tarfile failed (in $targetdir)\n");
     $ret = 0;
   } else {
     $ret = 1;
   }
-  # iOS, debug
-  # unlink($tarfile) if $remove_tarfile;
+  unlink($tarfile) if $remove_tarfile;
 
-  chdir($cwd) || die "chdir($cwd) failed: $!";
+  # chdir($cwd) || die "chdir($cwd) failed: $!";
   return $ret;
 }
 
@@ -4208,6 +4360,7 @@ false.
 =cut
 
 sub setup_persistent_downloads {
+  my $certs = shift;
   if ($TeXLive::TLDownload::net_lib_avail) {
     ddebug("setup_persistent_downloads has net_lib_avail set\n");
     if ($::tldownload_server) {
@@ -4215,10 +4368,10 @@ sub setup_persistent_downloads {
         debug("stop retrying to initialize LWP after 10 failures\n");
         return 0;
       } else {
-        $::tldownload_server->reinit();
+        $::tldownload_server->reinit(certificates => $certs);
       }
     } else {
-      $::tldownload_server = TeXLive::TLDownload->new;
+      $::tldownload_server = TeXLive::TLDownload->new(certificates => $certs);
     }
     if (!defined($::tldownload_server)) {
       ddebug("TLUtils:setup_persistent_downloads: failed to get ::tldownload_server\n");
@@ -4732,29 +4885,30 @@ sub report_tlpdb_differences {
 
   if (defined($ret{'removed_packages'})) {
     info ("removed packages from A to B:\n");
-    for my $f (@{$ret{'removed_packages'}}) {
+    for my $f (sort @{$ret{'removed_packages'}}) {
       info ("  $f\n");
     }
   }
   if (defined($ret{'added_packages'})) {
     info ("added packages from A to B:\n");
-    for my $f (@{$ret{'added_packages'}}) {
+    for my $f (sort @{$ret{'added_packages'}}) {
       info ("  $f\n");
     }
   }
   if (defined($ret{'different_packages'})) {
     info ("different packages from A to B:\n");
-    for my $p (keys %{$ret{'different_packages'}}) {
+    for my $p (sort keys %{$ret{'different_packages'}}) {
       info ("  $p\n");
-      for my $k (keys %{$ret{'different_packages'}->{$p}}) {
+      for my $k (sort keys %{$ret{'different_packages'}->{$p}}) {
         if ($k eq "revision") {
           info("    revision differ: $ret{'different_packages'}->{$p}->{$k}\n");
         } elsif ($k eq "removed" || $k eq "added") {
           info("    $k files:\n");
-          for my $f (@{$ret{'different_packages'}->{$p}->{$k}}) {
+          for my $f (sort @{$ret{'different_packages'}->{$p}->{$k}}) {
             info("      $f\n");
           }
         } else {
+          # e.g., fmttriggers; don't bother making a nice report.
           info("  unknown differ $k\n");
         }
       }
@@ -5291,4 +5445,4 @@ GNU General Public License Version 2 or later.
 ### tab-width: 2
 ### indent-tabs-mode: nil
 ### End:
-# vim:set tabstop=2 expandtab: #
+# vim:set tabstop=2 shiftwidth=2 expandtab: #

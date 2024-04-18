@@ -1,6 +1,6 @@
-# $Id: TLDownload.pm 61372 2021-12-21 22:46:16Z karl $
+# $Id: TLDownload.pm 69646 2024-01-31 18:17:20Z karl $
 # TeXLive::TLDownload.pm - module for abstracting the download modes
-# Copyright 2009-2021 Norbert Preining
+# Copyright 2009-2024 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
@@ -11,7 +11,7 @@ package TeXLive::TLDownload;
 use TeXLive::TLUtils;
 use TeXLive::TLConfig;
 
-my $svnrev = '$Revision: 61372 $';
+my $svnrev = '$Revision: 69646 $';
 my $_modulerevision;
 if ($svnrev =~ m/: ([0-9]+) /) {
   $_modulerevision = $1;
@@ -40,10 +40,11 @@ if ($@) {
 sub new
 {
   my $class = shift;
+  my %params = @_;
   my $self = {};
   $self->{'initcount'} = 0;
   bless $self, $class;
-  $self->reinit();
+  $self->reinit(defined($params{'certificates'}) ? $params{'certificates'} : "");
   return $self;
 }
 
@@ -52,6 +53,7 @@ sub new
 
 sub reinit {
   my $self = shift;
+  my $certs = shift;
   
   # Irritatingly, as of around version 6.52, when env_proxy is set, LWP
   # started unconditionally complaining if the environment contains
@@ -66,6 +68,14 @@ sub reinit {
   my @env_proxy = ();
   if (grep { /_proxy/i } keys %ENV ) {
     @env_proxy = ("env_proxy", 1);
+  }
+  #
+  # Set HTTPS_CA_FILE to the TL provided certificate bundle
+  # for systems that don't have a system-wide certificate bundle
+  # in particular MacOS.
+  if ((! exists $ENV{'HTTPS_CA_FILE'}) && $certs) {
+    debug("Setting env var HTTPS_CA_FILE to " . $certs ."\n");
+    $ENV{'HTTPS_CA_FILE'} = $certs
   }
   #
   my $ua = LWP::UserAgent->new(
