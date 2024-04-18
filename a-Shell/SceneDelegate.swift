@@ -1529,7 +1529,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
         
     func printJscUsage() {
-        fputs("Usage: jsc file.js [--in-window] [--silent] [arguments]\nExecutes JavaScript file.js.\n--in-window: runs inside the main window (can change terminal appearance or behaviour; use with caution).\n--silent: do not print the result of the JavaScript execution.\nOther arguments are passed to the command through process.argv.", thread_stdout)
+        fputs("Usage: jsc file.js [--in-window] [--silent] [arguments]\n       jsc --reset\nExecutes JavaScript file.js.\n--in-window: runs inside the main window (can change terminal appearance or behaviour; use with caution).\n--silent: do not print the result of the JavaScript execution.\nOther arguments are passed to the command through process.argv.\njsc --reset: forces a restart of the JavaScript engine.\n", thread_stdout)
     }
     
     func executeJavascript(arguments: [String]?) {
@@ -1542,6 +1542,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return
         }
         let command = arguments![1]
+        if (command == "--reset") {
+            DispatchQueue.main.async {
+                NSLog("reloaded wasmWebView after an error")
+                self.wasmWebView?.reload()
+            }
+            return
+        }
+        if ((command == "--help") || (command == "-h")) {
+            printJscUsage()
+            return
+        }
         var silent = false
         var jscWebView = wasmWebView
         var process_args = "process.argv = [";
@@ -2295,7 +2306,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             var stdout_pipe = Pipe()
             counter = 0
             self.stdout_file = fdopen(stdout_pipe.fileHandleForWriting.fileDescriptor, "w")
-            while (self.stdout_file == nil) && (counter > 5) {
+            while (self.stdout_file == nil) && (counter < 5) {
                 self.outputToWebView(string: "Could not create an output stream, retrying (\(counter+1))\n")
                 stdout_pipe = Pipe()
                 self.stdout_file = fdopen(stdout_pipe.fileHandleForWriting.fileDescriptor, "w")
@@ -2401,8 +2412,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 NSLog("Done executing command: \(command)")
                 NSLog("Current directory: \(FileManager().currentDirectoryPath)")
             }
-            stdin_pipe.fileHandleForReading.fileDescriptor
             do {
+                fclose(self.stdin_file)
                 try stdin_pipe.fileHandleForReading.close()
                 try stdin_pipe.fileHandleForWriting.close()
             }
@@ -2411,6 +2422,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             self.stdin_file_input = nil
             do {
+                fclose(self.tty_file)
                 try tty_pipe.fileHandleForReading.close()
                 try tty_pipe.fileHandleForWriting.close()
             }
@@ -2429,6 +2441,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Experimental: If it works, try removing the 4 lines above
             do {
+                fclose(self.stdout_file)
                 try stdout_pipe.fileHandleForWriting.close()
                 try stdout_pipe.fileHandleForReading.close()
             }
@@ -3334,7 +3347,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 configFileUrl = configFileUrl.appendingPathComponent(configFileName)
                 // A big issue is that, at this point, the window does not exist yet. So stdin, stdout, stderr also do not exist.
                 if (FileManager().fileExists(atPath: configFileUrl.path)) {
-                    // Avoid interference with C SDK creation by interpreting .profile in installQueue:
                     installQueue.async {
                         do {
                             let contentOfFile = try String(contentsOf: configFileUrl, encoding: String.Encoding.utf8)
@@ -4391,7 +4403,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (webView?.url?.path == Bundle.main.resourcePath! + "/hterm.html") {
             // Sanitize the output string to it can be sent to javascript:
             let parsedString = string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
-            // NSLog("\(parsedString)")
+            NSLog("outputToWebView: \(parsedString)")
             // This may cause several \r in a row
             let command = "window.term_.io.print(\"" + parsedString + "\");"
             DispatchQueue.main.async {
