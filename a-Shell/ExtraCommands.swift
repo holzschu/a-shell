@@ -124,9 +124,6 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
         
         if (argc == 1) {
             delegate.printText(string: helpText)
-            if (!UserDefaults.standard.bool(forKey: "TeXEnabled")) {
-                delegate.printText(string: "\nTo install TeX, just type any tex command and follow the instructions (same with luatex).\n")
-            }
             let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
             let bashmarks = UserDefaults.standard.bool(forKey: "bashmarks")
             if (zshmarks && bashmarks) {
@@ -212,7 +209,7 @@ Python3: Python Software Foundation, https://www.python.org/about/
 ssh, scp, sftp: OpenSSH, https://www.openssh.com
 tar: https://libarchive.org
 tree: http://mama.indstate.edu/users/ice/tree/
-TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2023.
+TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2024.
 Vim: Bram Moolenaar and the Vim community, https://www.vim.org
 Vim-session: Peter Odding, http://peterodding.com/code/vim/session
 webAssembly: wasmer.io and the wasi SDK https://github.com/WebAssembly/wasi-sdk
@@ -226,67 +223,6 @@ bashmarks-style bookmarks inspired by bashmarks: https://github.com/huyng/bashma
     return 0
 }
 
-
-@_cdecl("tex")
-public func tex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
-    let command = argv![0]
-    if (downloadingTeX) {
-        let percentString = String(format: "%.02f", percentTeXDownloadComplete)
-        fputs("Currently updating the TeX distribution. (" + percentString + " % complete)\n", thread_stderr)
-        fputs( command, thread_stderr)
-        fputs(" will be activated as soon as the download is finished.\n", thread_stderr)
-        return 0
-    }
-    fputs(command, thread_stderr)
-    fputs(" requires the TeX distribution, which is not currently installed.\nDo you want to download and install it? (1.3 GB) (y/N)", thread_stderr)
-    fflush(thread_stderr)
-    var byte: Int8 = 0
-    _ = read(fileno(thread_stdin), &byte, 1)
-    if (byte == 121) || (byte == 89) {
-        fputs("Downloading the TeX distribution, this may take some time...\n", thread_stderr)
-        fputs("(you can  remove it later using Settings)\n", thread_stderr)
-        UserDefaults.standard.set(true, forKey: "TeXEnabled")
-        return 0
-    }
-    return 0
-}
-
-@_cdecl("luatex")
-public func luatex(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
-    let command = argv![0]
-    if (downloadingTeX) {
-        let percentString = String(format: "%.02f", percentTeXDownloadComplete)
-        fputs("Currently updating the TeX distribution. (" + percentString + " % complete)\n", thread_stderr)
-    }
-    if (downloadingOpentype) {
-        let percentString = String(format: "%.02f", 100.0 * percentOpentypeDownloadComplete)
-        fputs("Currently updating the LuaTeX extension. (" + percentString + " % complete)\n", thread_stderr)
-        fputs( command, thread_stderr)
-        fputs(" will be activated as soon as the download is finished.\n", thread_stderr)
-        return 0
-    }
-    fputs(command, thread_stderr)
-    if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
-        fputs(" requires the LuaTeX extension on top of the TeX distribution\nDo you want to download and install them? (0.3 GB) (y/N)", thread_stderr)
-    } else {
-        fputs(" requires the TeX distribution, which is not currently installed, along with the LuaTeX extension.\nDo you want to download and install them? (1.8 GB) (y/N)", thread_stderr)
-    }
-    fflush(thread_stderr)
-    var byte: Int8 = 0
-    _ = read(fileno(thread_stdin), &byte, 1)
-    if (byte == 121) || (byte == 89) {
-        if (UserDefaults.standard.bool(forKey: "TeXEnabled")) {
-            fputs("Downloading the LuaTeX extension, this may take some time...", thread_stderr)
-        } else {
-            fputs("Downloading the TeX distribution with LuaTeX extension, this may take some time...", thread_stderr)
-            UserDefaults.standard.set(true, forKey: "TeXEnabled")
-        }
-        UserDefaults.standard.set(true, forKey: "TeXOpenType")
-        fputs("\n(you can  remove them later using Settings)\n", thread_stderr)
-        return 0
-    }
-    return 0
-}
 
 @_cdecl("pickFolder")
 public func pickFolder(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
@@ -1791,6 +1727,139 @@ public func startInteractive() {
         }
     }
 }
+
+@_cdecl("needLLVM")
+public func needLLVM(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    fputs("In order to use \(args[0]), you need to install or update the C SDK with 'pkg install llvm'.\n", thread_stderr)
+    return 0
+}
+
+@_cdecl("needTeX")
+public func needTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                            in: .userDomainMask,
+                                            appropriateFor: nil,
+                                            create: true)
+    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2023/texmf-dist/tex/plain/base/plain.tex")
+    if (FileManager().fileExists(atPath: texliveTestFile.path)) {
+        fputs("You currently have texlive-2023 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2024 with 'pkg install texlive'.\n", thread_stderr)
+    } else {
+        fputs("In order to use \(args[0]), you need to install the texlive distribution with 'pkg install texlive'.\n", thread_stderr)
+    }
+    return 0
+}
+
+@_cdecl("needLuaTeX")
+public func needLuaTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                            in: .userDomainMask,
+                                            appropriateFor: nil,
+                                            create: true)
+    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2024/texmf-dist/tex/plain/base/plain.tex")
+    if (FileManager().fileExists(atPath: texliveTestFile.path)) {
+        fputs("In order to use \(args[0]), you need to install the OpenType/TrueType fonts with 'pkg install texlive_fonts'.\n", thread_stderr)
+    } else {
+        fputs("In order to to use \(args[0]), you need to install the texlive distribution 'pkg install texlive' and the OpenType/TrueType fonts with 'pkg install texlive_fonts'.\n", thread_stderr)
+    }
+    return 0
+}
+
+@_cdecl("updateCommands")
+public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    // Small function to activate or deactivate C and TeX commands after installing the auxiliary files
+    let usage = "Small command to update the list of commands available after installing or removing LLVM (C/C++) or TeX auxiliary files.\n"
+    
+    guard let args = convertCArguments(argc: argc, argv: argv) else {
+        fputs(usage, thread_stderr)
+        return -1
+    }
+    
+    if (argc >= 2) {
+        fputs(usage, thread_stderr)
+        return -1
+    }
+    
+    let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                            in: .userDomainMask,
+                                            appropriateFor: nil,
+                                            create: true)
+    // LLVM C SDK: check that ~/Library/usr/lib/clang/14.0.0 exists. If yes, activate LLVMcommands. Otherwise, activate fake LLVM commands.
+    let headerUrl = libraryURL.appendingPathComponent("usr/lib/clang/14.0.0/include/float.h")
+    if FileManager().fileExists(atPath: headerUrl.path) {
+        addCommandList(Bundle.main.path(forResource: "llvmDictionary", ofType: "plist"))
+    } else {
+        for command in ["llvm-dis", "opt", "llvm-link", "lli", "llc", "lld", "ld", "ar", "ranlib", "wasm-ld", "lld-link", "ld.lld", "ld64.lld", "clang", "clang++"] {
+            // All these commands use "main", so "false" so as not to replace all "main" commands:
+            replaceCommand(command, "needLLVM", false)
+        }
+    }
+    // texlive files:
+    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2024/texmf-dist/tex/plain/base/plain.tex")
+    if FileManager().fileExists(atPath: texliveTestFile.path) {
+        addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
+        // LuaTeX and XeTeX: extra fonts files:
+        let luatexTestFile = libraryURL.appendingPathComponent("texlive/2024/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf")
+        if FileManager().fileExists(atPath: luatexTestFile.path) {
+            addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
+        } else {
+            for command in ["dvilualatex", "dviluatex", "lualatex", "luatex", "luahbtex", "xetex", "xelatex"] {
+                // All these commands use "main", so "false" so as not to replace all "main" commands:
+                replaceCommand(command, "needLuaTeX", false)
+            }
+        }
+        // Create all the TeX scripts commands:
+        let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                   in: .userDomainMask,
+                                                   appropriateFor: nil,
+                                                   create: true)
+        let localPath = libraryURL.appendingPathComponent("bin") // $HOME/Library/bin
+        if (!FileManager().fileExists(atPath: localPath.path)) {
+            do {
+                try (FileManager().createDirectory(at: localPath, withIntermediateDirectories: true))
+            }
+            catch {
+                NSLog("Unable to create binary directory \(localPath.path): \(error)")
+            }
+        }
+        for script in TeXscripts {
+            let command = localPath.appendingPathComponent(script[0])
+            let location = "../texlive/2024/texmf-dist/" + script[1]
+            // fileExists doesn't work, because it follows symbolic links
+            do {
+                let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
+                if (fileAttribute[FileAttributeKey.type] as? String == FileAttributeType.typeSymbolicLink.rawValue) {
+                    // It's a symbolic link, does the destination exist?
+                    if (!FileManager().fileExists(atPath: command.path)) {
+                        try FileManager().removeItem(at: command)
+                        try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
+                    }
+                }
+            }
+            catch {
+                do {
+                    try FileManager().createSymbolicLink(atPath: command.path, withDestinationPath: location)
+                }
+                catch {
+                    NSLog("Unable to create symbolic link at \(command.path) to \(location): \(error)")
+                }
+            }
+        }
+    } else {
+        for command in ["amstex", "bibtex", "cslatex", "csplain", "eplain", "etex", "jadetex", "latex", "makeindex", "mex", "mllatex", "mltex", "pdfcslatex", "pdfcsplain", "pdfetex", "pdfjadetex", "pdflatex", "pdfmex", "pdftex", "pdfxmltex", "tex", "texsis", "utf8mex", "xmltex", "texlua", "texluac", "dvipdfmx", "xdvipdfmx", "euptex", "uptex", "uplatex"] {
+            // All these commands use "main", so "false" so as not to replace all "main" commands:
+            replaceCommand(command, "needTeX", false)
+        }
+        for command in ["dvilualatex", "dviluatex", "lualatex", "luatex", "luahbtex", "xetex", "xelatex"] {
+            // All these commands use "main", so "false" so as not to replace all "main" commands:
+            replaceCommand(command, "needLuaTeX", false)
+        }
+    }
+    return 0
+}
+
 
 // Used both by z and by auto-complete for directories
 public func rankDirectory(dir: String, base: String?) -> Int {
