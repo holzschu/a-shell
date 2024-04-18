@@ -704,9 +704,31 @@ function setupHterm() {
 		const io = this.io.push();
 		io.onVTKeystroke = (string) => {
 			if (window.controlOn) {
+				// on-screen control is On
 				// produce string = control + character 
-				var charcode = string.toUpperCase().charCodeAt(0);
-				string = String.fromCharCode(charcode - 64);
+				// Replace on-screen-control + arrow with alt + arrow (already present in code)
+				switch (string) {
+					case String.fromCharCode(27) + "[A":  // Up arrow
+					case String.fromCharCode(27) + "OA":  // Up arrow
+						string = String.fromCharCode(27) + "[1;3A";  // Alt-Up arrow
+						break;
+					case String.fromCharCode(27) + "[B":  // Down arrow
+					case String.fromCharCode(27) + "OB":  // Down arrow
+						string = String.fromCharCode(27) + "[1;3B";  // Alt-Down arrow
+						break;
+					case String.fromCharCode(27) + "[D":  // Left arrow
+					case String.fromCharCode(27) + "OD":  // Left arrow
+						string = String.fromCharCode(27) + "[1;3D";  // Alt-left arrow
+						break;
+					case String.fromCharCode(27) + "[C":  // Right arrow
+					case String.fromCharCode(27) + "OC":  // Right arrow
+						string = String.fromCharCode(27) + "[1;3C";  // Alt-right arrow
+						break;
+					default:
+						// default case: just take the first character and remove 64:
+						var charcode = string.toUpperCase().charCodeAt(0);
+						string = String.fromCharCode(charcode - 64);
+				}
 				window.controlOn = false;
 				window.webkit.messageHandlers.aShell.postMessage('controlOff');
 			}
@@ -908,7 +930,7 @@ function setupHterm() {
 						}
 						break;
 					case String.fromCharCode(27) + "[B":  // Down arrow
-					case String.fromCharCode(27) + "OB":  // Up arrow
+					case String.fromCharCode(27) + "OB":  // Down arrow
 					case String.fromCharCode(27) + "[1;3B":  // Alt-Down arrow
 					case String.fromCharCode(14):  // Ctrl+N
 						// popup menu being displayed, change it:
@@ -984,7 +1006,7 @@ function setupHterm() {
 						}
 						break;
 					case String.fromCharCode(27) + "[C":  // Right arrow
-					case String.fromCharCode(27) + "OC":  // Left arrow
+					case String.fromCharCode(27) + "OC":  // Right arrow
 					case String.fromCharCode(6):  // Ctrl+F
 						if (this.document_.getSelection().type == 'Range') {
 							// move cursor to end of selection
@@ -1799,15 +1821,17 @@ hterm.Terminal.prototype.syncCursorPosition_ = function() {
       `${cursorRowIndex - topRowIndex} + ` +
       `${this.scrollPort_.visibleRowTopMargin}px`);
     
-  // screen_.cursorPosition.column = the position of the current char in the string. It's not equal to the cursor position when there are emojis, so we recompute each time:
-  let substr = lib.wc.substr(this.screen_.rowsArray[this.screen_.cursorPosition.row].innerText, 0, this.screen_.cursorPosition.column);
-  let actualCursorPosition = screenWidth(substr); 
-  this.setCssVar('cursor-offset-col', actualCursorPosition);
+	// screen_.cursorPosition.column = the position of the current char in the string. It's not equal to the cursor position when there are emojis, so we recompute each time:
+	// Sometimes, substr is empty. So we just compute the delta (by how much we should move *back*)
+	let substr = lib.wc.substr(this.screen_.rowsArray[this.screen_.cursorPosition.row].innerText, 0, this.screen_.cursorPosition.column);
+	let delta = substr.length - screenWidth(substr);
+	let actualCursorPosition =   this.screen_.cursorPosition.column - delta;
+	this.setCssVar('cursor-offset-col', actualCursorPosition);
 
-  this.cursorNode_.setAttribute('title',
-                                '(' + actualCursorPosition +
-                                ', ' + this.screen_.cursorPosition.row +
-                                ')');
+	this.cursorNode_.setAttribute('title',
+		'(' + actualCursorPosition +
+		', ' + this.screen_.cursorPosition.row +
+		')');
 
   // Update the caret for a11y purposes unless FindBar has focus which it should
   // keep.
