@@ -198,7 +198,7 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
 
     // Commands that do not require interaction, access to local library files, access to local configuration files, access to JS...
     // Also imageMagick commands since I have added ImageMagick configuration files. Not python by default, but users can force it.
-    let localCommands = ["awk", "calc", "cat", "chflags", "chksum", "chmod", "compress", "cp", "curl", "date", "diff", "dig", "du", "echo", "egrep", "env", "fgrep", "find", "grep", "gunzip", "gzip", "head", "host", "ifconfig", "lex", "link", "ln", "ls", "lua", "luac", "md5", "mkdir", "mv", "nc", "nslookup", "openurl", "pbcopy", "pbpaste",  "ping", "printenv", "pwd", "readlink", "rm", "rmdir", "say", "scp", "setenv", "sftp", "sort", "stat", "sum", "tail", "tar", "tee", "touch", "tr", "true", "uname", "uncompress", "uniq", "unlink", "unsetenv", "uptime", "wc", "whoami", "whois", "xargs", "xxd", "convert", "identify"]
+    let localCommands = ["awk", "calc", "cat", "chflags", "chksum", "chmod", "compress", "cp", "curl", "date", "diff", "dig", "du", "echo", "egrep", "env", "fgrep", "find", "grep", "gunzip", "gzip", "head", "host", "ifconfig", "lex", "link", "ln", "ls", "lua", "luac", "md5", "mkdir", "mv", "nc", "nslookup", "openurl", "pbcopy", "pbpaste",  "ping", "printenv", "pwd", "readlink", "rm", "rmdir", "say", "scp", "setenv", "sftp", "sort", "stat", "sum", "tail", "tar", "tee", "touch", "tr", "true", "uname", "uncompress", "uniq", "unlink", "unsetenv", "uptime", "wc", "whoami", "whois", "xargs", "xxd", "convert", "identify", "basename", "dirname", "expr"]
 
     func handle(intent: ExecuteCommandIntent, completion: @escaping (ExecuteCommandIntentResponse) -> Void) {
         if let commands = intent.command {
@@ -272,8 +272,14 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
         // Get file for stdout/stderr that can be written to
         let stdin_pipe = Pipe()
         let stdin_file = fdopen(stdin_pipe.fileHandleForReading.fileDescriptor, "r")
+        // Get file for stdout/stderr that can be written to.
+        // Added sageguarding in pipe creation fails:
         let stdout_pipe = Pipe()
         let stdout_file = fdopen(stdout_pipe.fileHandleForWriting.fileDescriptor, "w")
+        if (stdout_file == nil) {
+            NSLog("Unable to create an output stream. I give up.")
+            return -1
+        }
         // Call the following functions when data is written to stdout/stderr.
         stdout_pipe.fileHandleForReading.readabilityHandler = self.onStdout
         // "normal" commands can go through ios_system
@@ -312,9 +318,8 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
             newPath = newPath + ":" + groupUrl.appendingPathComponent("Library").appendingPathComponent("bin").path
             newPath = newPath + ":" + groupUrl.appendingPathComponent("bin").path
         }
-        newPath = newPath + ":" + String(utf8String: getenv("PATH"))!
-        setenv("PATH", newPath, 1)
-        //
+        // We don't add the default PATH because 1) it's useless and 2) it causes PATH to add to itself infinitely.
+        setenv("PATH", newPath.toCString(), 1)
         // End environment variables
         outputReceived = false
         var returnVal: Int32 = 0
@@ -342,11 +347,13 @@ class IntentHandler: INExtension, ExecuteCommandIntentHandling, GetFileIntentHan
         }
         // Experimental: If it works, try removing the 4 lines above
         do {
+            fclose(stdout_file)
+            fclose(stdin_file)
             try stdout_pipe.fileHandleForWriting.close()
             try stdin_pipe.fileHandleForReading.close()
         }
         catch {
-            NSLog("Error in closing pipes in Extension: \(error)")
+            NSLog("Error in closing pipes in MyExtension: \(error.localizedDescription)")
         }
         return returnVal
     }
