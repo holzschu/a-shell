@@ -15,6 +15,7 @@ import Combine
 import AVKit // for media playback
 import AVFoundation // for media playback
 import TipKit // for helpful tips
+import SwiftTerm
 
 var messageHandlerAdded = false
 var inputFileURLBackup: URL?
@@ -50,7 +51,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var window: UIWindow?
     var screen: UIScreen?
     var windowScene: UIWindowScene?
+#if WebView_Version
     var webView: Webview.WebViewType?
+#else
+    var termView: TerminalView?
+#endif
     var wasmWebView: WKWebView? // webView for executing wasm
     var contentView: ContentView?
     var history: [String] = []
@@ -187,6 +192,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 title.removeLast("\\n".count)
                 sendCarriageReturn = true
             }
+#if WebView_Version
             if (webView?.url?.path == Bundle.main.resourcePath! + "/hterm.html") {
                 DispatchQueue.main.async {
                     self.webView?.evaluateJavaScript("window.term_.io.onVTKeystroke(\"" + title + "\");") { (result, error) in
@@ -230,6 +236,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
             }
+#else
+            self.termView?.insertText(title)
+#endif
         }
     }
     
@@ -553,11 +562,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (title == "paste") {
                 if let pastedString = UIPasteboard.general.string {
                     // NSLog("Sending text to paste: \(pastedString)")
+#if WebView_Version
                     webView?.paste(pastedString)
+#else
+                    self.termView?.insertText(pastedString)
+#endif
                 }
                 return
             }
             var commandString: String? = nil
+#if WebView_Version
             if (webView?.url?.path == Bundle.main.resourcePath! + "/hterm.html") {
                 // Terminal window using hterm.org, use window.term_.io.onVTKeystroke
                 switch (title) {
@@ -647,6 +661,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // if let result = result { print(result) }
                 }
             }
+#endif
         }
     }
     
@@ -3067,6 +3082,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+#if WebView_Version
     private var webContentView: UIView? {
         for subview in (webView?.scrollView.subviews)! {
             if subview.classForCoder.description() == "WKContentView" {
@@ -3079,6 +3095,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         return nil
     }
+#endif
     
     func storeBookmark(fileURL: URL) {
         // Store the bookmark for this object:
@@ -3215,6 +3232,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             NSLog("Setting identifier to \(session.persistentIdentifier)")
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+#if WebView_Version
             webView = contentView?.webview.webView
             // add a contentController that is specific to each webview
             webView?.configuration.userContentController = WKUserContentController()
@@ -3225,18 +3243,27 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if #available(iOS 16.0, *) {
                 webView?.isFindInteractionEnabled = true
             }
+#else
+            termView = contentView?.termview.view
+#endif
             if (!toolbarShouldBeShown) {
                 showToolbar = false
+#if WebView_Version
                 self.webView?.addInputAccessoryView(toolbar: self.emptyToolbar)
+#endif
             } else {
                 generateToolbarButtons()
                 if (useSystemToolbar) {
                     showToolbar = false
+#if WebView_Version
                     self.webView?.inputAssistantItem.leadingBarButtonGroups = self.leftButtonGroups
                     self.webView?.inputAssistantItem.trailingBarButtonGroups = self.rightButtonGroups
+#endif
                 } else {
                     showToolbar = true
+#if WebView_Version
                     self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
+#endif
                 }
                 if #available(iOS 17, *) {
                     // Do *not* show the toolbar tip if the user has already edited the toolbar
@@ -4403,7 +4430,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (webView?.url?.path == Bundle.main.resourcePath! + "/hterm.html") {
             // Sanitize the output string to it can be sent to javascript:
             let parsedString = string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
-            NSLog("outputToWebView: \(parsedString)")
+            // NSLog("outputToWebView: \(parsedString)")
             // This may cause several \r in a row
             let command = "window.term_.io.print(\"" + parsedString + "\");"
             DispatchQueue.main.async {

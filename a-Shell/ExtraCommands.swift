@@ -1684,10 +1684,12 @@ public func stopInteractive() {
     DispatchQueue.main.async {
         if let delegate = currentDelegate {
             delegate.resignFirstResponder()
+#if WebView_Version
             delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = false;") { (result, error) in
                 // if let error = error { print(error) }
                 // if let result = result { print(result) }
             }
+#endif
         }
     }
 }
@@ -1695,6 +1697,7 @@ public func stopInteractive() {
 @_cdecl("storeInteractive")
 public func storeInteractive() -> Int32 {
     var returnValue:Int32 = -1;
+#if WebView_Version
     var waitingForAnswer = true
     DispatchQueue.main.async {
         if let delegate = currentDelegate {
@@ -1712,11 +1715,13 @@ public func storeInteractive() -> Int32 {
         if (thread_stderr != nil) { fflush(thread_stderr) }
     }
     // NSLog("Returning from storeInteractive, result= \(returnValue)")
+#endif
     return returnValue;
 }
 
 @_cdecl("startInteractive")
 public func startInteractive() {
+#if WebView_Version
     DispatchQueue.main.async {
         if let delegate = currentDelegate {
             delegate.resignFirstResponder()
@@ -1726,6 +1731,7 @@ public func startInteractive() {
             }
         }
     }
+#endif
 }
 
 @_cdecl("needLLVM")
@@ -2008,6 +2014,7 @@ public func rehash(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         }
     }
     commandsArray.sort() // make sure it's in alphabetical order
+#if WebView_Version
     var javascriptCommand = "commandList = ["
     for command in commandsArray {
         javascriptCommand += "\"" + command + "\", "
@@ -2024,6 +2031,7 @@ public func rehash(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             }
         }
     }
+#endif
     return 0
 }
 

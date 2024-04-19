@@ -10,7 +10,6 @@
 		2203367A28C4B8070027664C /* pico.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2232245E289695A9001BAE04 /* pico.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2208ACBF22CCE57E003985D6 /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
 		2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC422D2026E003985D6 /* UIDevice+Name.swift */; };
-		2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
 		220C524D26D637540062F673 /* unrar.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220C524C26D637500062F673 /* unrar.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		220C524E26D6375A0062F673 /* unrar.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220C524C26D637500062F673 /* unrar.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		220F36522BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
@@ -472,8 +471,6 @@
 		224A90442ADD0999006DB9CC /* WKWebView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22BF62282314223D00FEA585 /* WKWebView+KeyCommands.swift */; };
 		224A90452ADD0999006DB9CC /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC422D2026E003985D6 /* UIDevice+Name.swift */; };
 		224A90462ADD0999006DB9CC /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
-		224A90472ADD0999006DB9CC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EF122C93DBC00069497 /* ContentView.swift */; };
-		224A90492ADD0999006DB9CC /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
 		224A904A2ADD0999006DB9CC /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		224A904B2ADD0999006DB9CC /* listTeXscripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221DA54B26F7688100BEA92A /* listTeXscripts.swift */; };
 		224A904D2ADD0999006DB9CC /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
@@ -605,7 +602,6 @@
 		2294AA32254DA389008C1490 /* pythonA-matplotlib.ft2font.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294AA27254DA378008C1490 /* pythonA-matplotlib.ft2font.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
-		22984EF222C93DBC00069497 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EF122C93DBC00069497 /* ContentView.swift */; };
 		22984EF722C93DBF00069497 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF622C93DBF00069497 /* Preview Assets.xcassets */; };
 		22984EFA22C93DBF00069497 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF822C93DBF00069497 /* LaunchScreen.storyboard */; };
 		2299F0E4271DDE99007A32C1 /* pythonA-numpy_all.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2299F0E3271DDE95007A32C1 /* pythonA-numpy_all.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -621,8 +617,6 @@
 		229D247E257931E4004A78AC /* WKWebView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22BF62282314223D00FEA585 /* WKWebView+KeyCommands.swift */; };
 		229D247F257931E4004A78AC /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC422D2026E003985D6 /* UIDevice+Name.swift */; };
 		229D2480257931E4004A78AC /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
-		229D2481257931E4004A78AC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EF122C93DBC00069497 /* ContentView.swift */; };
-		229D2483257931E4004A78AC /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
 		229D2484257931E4004A78AC /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		229D2489257931E4004A78AC /* man in Resources */ = {isa = PBXBuildFile; fileRef = 22365230249A39AA00221868 /* man */; };
 		229D248C257931E4004A78AC /* require.js in Resources */ = {isa = PBXBuildFile; fileRef = 22E1B539243DF63E00EA8FBD /* require.js */; };
@@ -771,6 +765,11 @@
 		22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		22C9814F24CADA45006C103E /* python3_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22C9814E24CADA42006C103E /* python3_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		22D92C1B2BD272A800B733A5 /* ContentViewTerm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D92C1A2BD272A800B733A5 /* ContentViewTerm.swift */; };
+		22D92C1C2BD272A800B733A5 /* ContentViewTerm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D92C1A2BD272A800B733A5 /* ContentViewTerm.swift */; };
+		22D92C1D2BD272A800B733A5 /* ContentViewTerm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D92C1A2BD272A800B733A5 /* ContentViewTerm.swift */; };
+		22D92C212BD28A7500B733A5 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 22D92C202BD28A7500B733A5 /* SwiftTerm */; };
+		22D92C232BD28A7F00B733A5 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 22D92C222BD28A7F00B733A5 /* SwiftTerm */; };
 		22DC1F4B25700ECC0068004E /* python3_ios-cryptography.hazmat.bindings._openssl.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F4925700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._openssl.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F4C25700ECC0068004E /* python3_ios-cryptography.hazmat.bindings._padding.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F4A25700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._padding.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F5525700ED90068004E /* pythonA-cryptography.hazmat.bindings._openssl.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F4125700E8C0068004E /* pythonA-cryptography.hazmat.bindings._openssl.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -2067,6 +2066,9 @@
 		22CD01CA26F07B8F00C635B9 /* texlive_2021_texmf_dist_fonts_vf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2021_texmf_dist_fonts_vf; path = ODR/texlive_2021_texmf_dist_fonts_vf; sourceTree = "<group>"; };
 		22CD01CB26F07B8F00C635B9 /* texlive_2021_texmf_dist_fonts_type1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2021_texmf_dist_fonts_type1; path = ODR/texlive_2021_texmf_dist_fonts_type1; sourceTree = "<group>"; };
 		22D23117231940B2005B0C12 /* ExtraCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraCommands.swift; sourceTree = "<group>"; };
+		22D92C1A2BD272A800B733A5 /* ContentViewTerm.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentViewTerm.swift; sourceTree = "<group>"; };
+		22D92C1E2BD2898900B733A5 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = "../../../Library/Developer/Xcode/DerivedData/a-Shell-cqzslwtkcqgoxebelvqiwwgwwgej/SourcePackages/checkouts/SwiftTerm/Package.swift"; sourceTree = "<group>"; };
+		22D92C1F2BD2899C00B733A5 /* SwiftTerm */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = SwiftTerm; path = "/Users/holzschu/Library/Developer/Xcode/DerivedData/a-Shell-cqzslwtkcqgoxebelvqiwwgwwgej/SourcePackages/checkouts/SwiftTerm"; sourceTree = "<absolute>"; };
 		22DC1F4025700E8B0068004E /* pythonA-cryptography.hazmat.bindings._padding.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-cryptography.hazmat.bindings._padding.xcframework"; path = "cpython/XcFrameworks/pythonA-cryptography.hazmat.bindings._padding.xcframework"; sourceTree = SOURCE_ROOT; };
 		22DC1F4125700E8C0068004E /* pythonA-cryptography.hazmat.bindings._openssl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-cryptography.hazmat.bindings._openssl.xcframework"; path = "cpython/XcFrameworks/pythonA-cryptography.hazmat.bindings._openssl.xcframework"; sourceTree = SOURCE_ROOT; };
 		22DC1F4925700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._openssl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-cryptography.hazmat.bindings._openssl.xcframework"; path = "cpython/XcFrameworks/python3_ios-cryptography.hazmat.bindings._openssl.xcframework"; sourceTree = SOURCE_ROOT; };
@@ -2155,6 +2157,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22D92C212BD28A7500B733A5 /* SwiftTerm in Frameworks */,
 				228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2163,6 +2166,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22D92C232BD28A7F00B733A5 /* SwiftTerm in Frameworks */,
 				228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2445,6 +2449,7 @@
 				22D23117231940B2005B0C12 /* ExtraCommands.swift */,
 				22984EEF22C93DBC00069497 /* SceneDelegate.swift */,
 				22984EF122C93DBC00069497 /* ContentView.swift */,
+				22D92C1A2BD272A800B733A5 /* ContentViewTerm.swift */,
 				2208ACC822D24703003985D6 /* WkWebViewExtension.swift */,
 				22BF62282314223D00FEA585 /* WKWebView+KeyCommands.swift */,
 				8916088F2713056A00CED1C9 /* KBWebViewBase.h */,
@@ -2708,6 +2713,8 @@
 				221FA4332A1C9CD700463D5B /* libspatialindex_c.xcframework */,
 				221FA4342A1C9CD700463D5B /* libspatialindex.xcframework */,
 				22AD8722246EBFFB00F415DE /* IntentsUI.framework */,
+				22D92C1E2BD2898900B733A5 /* Package.swift */,
+				22D92C1F2BD2899C00B733A5 /* SwiftTerm */,
 			);
 			name = Frameworks;
 			sourceTree = SOURCE_ROOT;
@@ -2952,6 +2959,7 @@
 			);
 			name = "a-Shell";
 			packageProductDependencies = (
+				22D92C202BD28A7500B733A5 /* SwiftTerm */,
 			);
 			productName = "a-Shell";
 			productReference = 22984EEA22C93DBC00069497 /* a-Shell.app */;
@@ -2975,6 +2983,7 @@
 			);
 			name = "a-Shell-mini";
 			packageProductDependencies = (
+				22D92C222BD28A7F00B733A5 /* SwiftTerm */,
 			);
 			productName = "a-Shell";
 			productReference = 229D25A6257931E4004A78AC /* a-Shell-mini.app */;
@@ -3067,6 +3076,7 @@
 			);
 			mainGroup = 22984EE122C93DBC00069497;
 			packageReferences = (
+				22D92C192BD265CE00B733A5 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
 			);
 			productRefGroup = 22984EEB22C93DBC00069497 /* Products */;
 			projectDirPath = "";
@@ -3258,8 +3268,7 @@
 				224A90442ADD0999006DB9CC /* WKWebView+KeyCommands.swift in Sources */,
 				224A90452ADD0999006DB9CC /* UIDevice+Name.swift in Sources */,
 				224A90462ADD0999006DB9CC /* String+C.swift in Sources */,
-				224A90472ADD0999006DB9CC /* ContentView.swift in Sources */,
-				224A90492ADD0999006DB9CC /* WkWebViewExtension.swift in Sources */,
+				22D92C1D2BD272A800B733A5 /* ContentViewTerm.swift in Sources */,
 				224A904A2ADD0999006DB9CC /* URL+isDirectory.swift in Sources */,
 				224A904B2ADD0999006DB9CC /* listTeXscripts.swift in Sources */,
 			);
@@ -3281,9 +3290,8 @@
 				22BF62292314223D00FEA585 /* WKWebView+KeyCommands.swift in Sources */,
 				2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */,
 				2208ACBF22CCE57E003985D6 /* String+C.swift in Sources */,
-				22984EF222C93DBC00069497 /* ContentView.swift in Sources */,
+				22D92C1B2BD272A800B733A5 /* ContentViewTerm.swift in Sources */,
 				891608902713056B00CED1C9 /* KBWebViewBase.m in Sources */,
-				2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */,
 				22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3304,8 +3312,7 @@
 				229D247E257931E4004A78AC /* WKWebView+KeyCommands.swift in Sources */,
 				229D247F257931E4004A78AC /* UIDevice+Name.swift in Sources */,
 				229D2480257931E4004A78AC /* String+C.swift in Sources */,
-				229D2481257931E4004A78AC /* ContentView.swift in Sources */,
-				229D2483257931E4004A78AC /* WkWebViewExtension.swift in Sources */,
+				22D92C1C2BD272A800B733A5 /* ContentViewTerm.swift in Sources */,
 				229D2484257931E4004A78AC /* URL+isDirectory.swift in Sources */,
 				22675A15271C24B200459BEF /* listTeXscripts.swift in Sources */,
 			);
@@ -4101,6 +4108,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		22D92C192BD265CE00B733A5 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		22D92C202BD28A7500B733A5 /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 22D92C192BD265CE00B733A5 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+		22D92C222BD28A7F00B733A5 /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 22D92C192BD265CE00B733A5 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 22984EE222C93DBC00069497 /* Project object */;
 }

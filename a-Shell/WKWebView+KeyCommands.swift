@@ -6,6 +6,8 @@
 //  Copyright © 2019 AsheKube. All rights reserved.
 //
 
+#if WebView_Version
+
 import Foundation
 import UIKit
 import WebKit
@@ -303,3 +305,4 @@ extension WKWebView {
 
     
 }
+#endif

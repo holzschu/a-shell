@@ -6,6 +6,8 @@
 //  Copyright © 2019 AsheKube. All rights reserved.
 //
 
+#if WebView_Version
+
 import SwiftUI
 import WebKit
 
@@ -161,3 +163,4 @@ struct ContentView_Previews: PreviewProvider {
         }
     }
 }
+#endif
