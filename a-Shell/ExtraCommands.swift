@@ -1203,9 +1203,6 @@ public func hideKeyboard(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
             delegate.hideKeyboard()
         }
     }
-    /* if let delegate = currentDelegate {
-        delegate.hideKeyboard()
-    } */
     return 0
 }
 
