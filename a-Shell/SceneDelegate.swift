@@ -4403,7 +4403,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (webView?.url?.path == Bundle.main.resourcePath! + "/hterm.html") {
             // Sanitize the output string to it can be sent to javascript:
             let parsedString = string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
-            NSLog("outputToWebView: \(parsedString)")
+            // NSLog("outputToWebView: \(parsedString)")
             // This may cause several \r in a row
             let command = "window.term_.io.print(\"" + parsedString + "\");"
             DispatchQueue.main.async {
