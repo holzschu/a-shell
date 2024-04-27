@@ -3021,14 +3021,6 @@
 		22984EE222C93DBC00069497 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				KnownAssetTags = (
-					texlive_dist,
-					texlive_dist_fonts,
-					texlive_texmf_dist_fonts_otf_ttf,
-					texlive_texmf_dist_fonts_type1,
-					texlive_texmf_dist_fonts_vf,
-					texlive_var,
-				);
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = AsheKube;
@@ -3420,6 +3412,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 353;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -3428,10 +3421,12 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.12.2;
+				OTHER_CODE_SIGN_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.a-Shell-mini-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				SUPPORTS_MACCATALYST = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -3445,6 +3440,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 353;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -3453,10 +3449,12 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.12.2;
+				OTHER_CODE_SIGN_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.a-Shell-mini-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				SUPPORTS_MACCATALYST = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -3737,7 +3735,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 397;
+				CURRENT_PROJECT_VERSION = 400;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3758,7 +3756,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.13.1;
+				MARKETING_VERSION = 1.14.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3783,7 +3781,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 397;
+				CURRENT_PROJECT_VERSION = 400;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3804,7 +3802,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.13.1;
+				MARKETING_VERSION = 1.14.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3829,7 +3827,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 397;
+				CURRENT_PROJECT_VERSION = 400;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3850,7 +3848,8 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.13.1;
+				MARKETING_VERSION = 1.14.1;
+				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3880,7 +3879,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 397;
+				CURRENT_PROJECT_VERSION = 400;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3901,7 +3900,8 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.13.1;
+				MARKETING_VERSION = 1.14.1;
+				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
