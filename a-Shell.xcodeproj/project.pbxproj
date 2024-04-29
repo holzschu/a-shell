@@ -16,6 +16,10 @@
 		220F36522BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
 		220F36532BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
 		220F36552BC7FADA00842FEE /* llvmDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 220F36542BC7FAD800842FEE /* llvmDictionary.plist */; };
+		2213DCB62BDE6F45008BD5F2 /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 2213DCB52BDE6F45008BD5F2 /* Kitura */; };
+		2213DCB82BDE7316008BD5F2 /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
+		2213DCB92BDF6B71008BD5F2 /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
+		2213DCBD2BDF6E1A008BD5F2 /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 2213DCBC2BDF6E1A008BD5F2 /* Kitura */; };
 		221642752B7C05CB00043766 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		221642762B7C05EE00043766 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22178EA5257A7A79008EB2B4 /* node_modules in Resources */ = {isa = PBXBuildFile; fileRef = 22178EA4257A7A77008EB2B4 /* node_modules */; };
@@ -1641,6 +1645,7 @@
 		220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		220F36542BC7FAD800842FEE /* llvmDictionary.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = llvmDictionary.plist; path = Resources/llvmDictionary.plist; sourceTree = "<group>"; };
 		22108D6A2338BE9D003D7556 /* texlive_2019_texmf-dist_fonts_type1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_type1"; path = "ODR/texlive_2019_texmf-dist_fonts_type1"; sourceTree = "<group>"; };
+		2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */ = {isa = PBXFileReference; lastKnownFileType = file; path = localCertificate.pfx; sourceTree = "<group>"; };
 		22178EA4257A7A77008EB2B4 /* node_modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node_modules; path = Resources_mini/node_modules; sourceTree = "<group>"; };
 		22178EAD257AA715008EB2B4 /* Library */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Library; path = Resources_mini/Library; sourceTree = "<group>"; };
 		22178EC2257AF55E008EB2B4 /* a-Shell-mini-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "a-Shell-mini-Info.plist"; sourceTree = "<group>"; };
@@ -2155,6 +2160,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2213DCBD2BDF6E1A008BD5F2 /* Kitura in Frameworks */,
 				228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2163,6 +2169,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2213DCB62BDE6F45008BD5F2 /* Kitura in Frameworks */,
 				228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2715,6 +2722,7 @@
 		22B1B81A22CB9E5500F7C452 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */,
 				22E337EB2949F4CD00A8F76C /* defaultToolbar.txt */,
 				22B114762817CEA200A5BF16 /* terminfo */,
 				227A433F29FD1FEF00548D77 /* Texlive 2023 */,
@@ -2952,6 +2960,7 @@
 			);
 			name = "a-Shell";
 			packageProductDependencies = (
+				2213DCBC2BDF6E1A008BD5F2 /* Kitura */,
 			);
 			productName = "a-Shell";
 			productReference = 22984EEA22C93DBC00069497 /* a-Shell.app */;
@@ -2975,6 +2984,7 @@
 			);
 			name = "a-Shell-mini";
 			packageProductDependencies = (
+				2213DCB52BDE6F45008BD5F2 /* Kitura */,
 			);
 			productName = "a-Shell";
 			productReference = 229D25A6257931E4004A78AC /* a-Shell-mini.app */;
@@ -3059,6 +3069,7 @@
 			);
 			mainGroup = 22984EE122C93DBC00069497;
 			packageReferences = (
+				2213DCB42BDE6F45008BD5F2 /* XCRemoteSwiftPackageReference "Kitura" */,
 			);
 			productRefGroup = 22984EEB22C93DBC00069497 /* Products */;
 			projectDirPath = "";
@@ -3160,6 +3171,7 @@
 				22178EBC257AAE20008EB2B4 /* Assets.xcassets in Resources */,
 				221FA4392A1CA00D00463D5B /* proj in Resources */,
 				2256FE5B2A94BD0C00127A21 /* Library in Resources */,
+				2213DCB92BDF6B71008BD5F2 /* localCertificate.pfx in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3167,6 +3179,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2213DCB82BDE7316008BD5F2 /* localCertificate.pfx in Resources */,
 				22B114772817CEA400A5BF16 /* terminfo in Resources */,
 				22178ECA257B9FD1008EB2B4 /* Settings.bundle in Resources */,
 				2231A51E258923DD00B5EDFD /* ImageMagick-7 in Resources */,
@@ -4101,6 +4114,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2213DCB42BDE6F45008BD5F2 /* XCRemoteSwiftPackageReference "Kitura" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Kitura/Kitura";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2213DCB52BDE6F45008BD5F2 /* Kitura */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2213DCB42BDE6F45008BD5F2 /* XCRemoteSwiftPackageReference "Kitura" */;
+			productName = Kitura;
+		};
+		2213DCBC2BDF6E1A008BD5F2 /* Kitura */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2213DCB42BDE6F45008BD5F2 /* XCRemoteSwiftPackageReference "Kitura" */;
+			productName = Kitura;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 22984EE222C93DBC00069497 /* Project object */;
 }

@@ -14,6 +14,7 @@ import Compression
 import Intents // for shortcuts
 import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
+import Kitura // for our local server for WebAssembly
 
 var downloadingTeX = false
 var percentTeXDownloadComplete = 0.0
@@ -30,7 +31,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // to update Python distribution at each version update
     var versionUpToDate = true
     var libraryFilesUpToDate = true
-    let moveFilesQueue = DispatchQueue(label: "moveFiles", qos: .utility) // low priority
+    let localServerQueue = DispatchQueue(label: "moveFiles", qos: .userInteractive) // high priority, but not blocking
+    let localServer = Router()
 
     // Which version of the app are we running? a-Shell, a-Shell-mini, a-Shell-pro...? (no spaces in name)
     var appVersion: String? {
@@ -166,6 +168,41 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("newWindow", "clear", true)
         }
         replaceCommand("exit", "clear", true)
+        // Start our local server:
+        localServer.get("/*") { request, response, next in
+            // NSLog("request received: \(request.matchedPath)")
+            let filePath = Bundle.main.resourcePath! + request.matchedPath
+            if (FileManager().fileExists(atPath: filePath) && !URL(fileURLWithPath: filePath).isDirectory) {
+                // These headers get us a "crossOriginIsolated == true;" on OSX Safari
+                response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
+                response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+                response.headers["Cross-Origin-Resource-Policy"] =  "same-origin"
+                response.headers["Content-Type"] = "text/html"
+                do {
+                    try response.send(fileName: Bundle.main.resourcePath! + request.matchedPath)
+                }
+                catch {
+                    response.statusCode = .forbidden
+                    response.send("Loading \(request.matchedPath) failed")
+                }
+            } else {
+                response.statusCode = .notFound
+                response.send("")
+            }
+            next()
+        }
+        let sslConfig =  SSLConfig(withChainFilePath: Bundle.main.resourcePath! + "/localCertificate.pfx",
+                                   withPassword: "password",
+                                   usingSelfSignedCerts: true)
+        // Kitura.addHTTPServer(onPort: 8080, with: localServer)
+        Kitura.addHTTPServer(onPort: 8080, with: localServer, withSSL: sslConfig)
+        localServerQueue.async{
+            while (true) {
+                NSLog("Starting our server:")
+                Kitura.run()
+                NSLog("Kitura server has been interrupted. Restarting.")
+            }
+        }
         // Called when installing/uninstalling LLVM or texlive distribution:
         if (appVersion != "a-Shell-mini") {
             replaceCommand("updateCommands", "updateCommands", true)

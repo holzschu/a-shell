@@ -15,6 +15,9 @@ import Combine
 import AVKit // for media playback
 import AVFoundation // for media playback
 import TipKit // for helpful tips
+// For creating websockets
+import Foundation
+import Network
 
 var messageHandlerAdded = false
 var inputFileURLBackup: URL?
@@ -3039,6 +3042,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                       create: true)
             let homeurl = documentsUrl.deletingLastPathComponent();
             wasmWebView?.evaluateJavaScript("window.homedir = '\(homeurl)';")
+            
         } /* else if (cmd.hasPrefix("JS Error:")) {
             // When debugging JS, output warning/error messages to a file.
             let file = "jsError.txt"
@@ -3276,7 +3280,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             let wasmFilePath = Bundle.main.path(forResource: "wasm", ofType: "html")
             wasmWebView?.isOpaque = false
-            wasmWebView?.loadFileURL(URL(fileURLWithPath: wasmFilePath!), allowingReadAccessTo: URL(fileURLWithPath: wasmFilePath!))
+            // wasmWebView?.loadFileURL(URL(fileURLWithPath: wasmFilePath!), allowingReadAccessTo: URL(fileURLWithPath: wasmFilePath!))
+            wasmWebView?.load(URLRequest(url: URL(string: "https://localhost:8080/wasm.html")!))
             wasmWebView?.configuration.userContentController = WKUserContentController()
             wasmWebView?.configuration.userContentController.add(self, name: "aShell")
             wasmWebView?.navigationDelegate = self
@@ -4518,6 +4523,10 @@ extension SceneDelegate: WKUIDelegate {
         rootVC?.present(alertController, animated: true, completion: nil)
     }
     
+    func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        let cred = URLCredential(trust: challenge.protectionSpace.serverTrust!)
+        completionHandler(.useCredential, cred)
+    }
     
     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo,
                  completionHandler: @escaping (Bool) -> Void) {
@@ -5326,6 +5335,7 @@ extension SceneDelegate: WKUIDelegate {
             decisionHandler(.allow)
             return
         }
+        NSLog("decidePolicyFor: status code: \(statusCode)")
         decisionHandler(.allow)
     }
 
