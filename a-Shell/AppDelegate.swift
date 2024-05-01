@@ -14,7 +14,8 @@ import Compression
 import Intents // for shortcuts
 import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
-import Kitura // for our local server for WebAssembly
+import Vapor // for our local server for WebAssembly
+import NIOSSL // for TLS (https) authentification
 
 var downloadingTeX = false
 var percentTeXDownloadComplete = 0.0
@@ -32,7 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var versionUpToDate = true
     var libraryFilesUpToDate = true
     let localServerQueue = DispatchQueue(label: "moveFiles", qos: .userInteractive) // high priority, but not blocking
-    let localServer = Router()
+    let localServerApp = Application()
 
     // Which version of the app are we running? a-Shell, a-Shell-mini, a-Shell-pro...? (no spaces in name)
     var appVersion: String? {
@@ -168,40 +169,77 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("newWindow", "clear", true)
         }
         replaceCommand("exit", "clear", true)
-        // Start our local server:
-        localServer.get("/*") { request, response, next in
-            // NSLog("request received: \(request.matchedPath)")
-            let filePath = Bundle.main.resourcePath! + request.matchedPath
-            if (FileManager().fileExists(atPath: filePath) && !URL(fileURLWithPath: filePath).isDirectory) {
-                // These headers get us a "crossOriginIsolated == true;" on OSX Safari
-                response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
-                response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-                response.headers["Cross-Origin-Resource-Policy"] =  "same-origin"
-                response.headers["Content-Type"] = "text/html"
-                do {
-                    try response.send(fileName: Bundle.main.resourcePath! + request.matchedPath)
+        do {
+            // Vapor prints a lot of info on the console. No need to add ours.
+            // TODO: create webSocket
+            // TODO: restart localServerApp.server if unable to connect --> how?
+            localServerApp.http.server.configuration.hostname = "127.0.0.1"
+            localServerApp.http.server.configuration.port = 8443
+            localServerApp.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
+                certificateChain: try NIOSSLCertificate.fromPEMFile(Bundle.main.resourcePath! + "/localCertificate.pem").map { .certificate($0) },
+                privateKey: .file(Bundle.main.resourcePath! + "/localCertificateKey.pem")
+            )
+            localServerApp.get("**") { request -> Response in
+                let urlPath = request.url.path
+                // Load ~/Library/node_modules first if it exists:
+                // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
+                let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                        in: .userDomainMask,
+                                                        appropriateFor: nil,
+                                                        create: true)
+                let localFilePath = libraryURL.path + urlPath
+                let rootFilePath = Bundle.main.resourcePath! + urlPath
+                var fileName: String? = nil
+                if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
+                    fileName = localFilePath
+                } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
+                    fileName = rootFilePath
                 }
-                catch {
-                    response.statusCode = .forbidden
-                    response.send("Loading \(request.matchedPath) failed")
+                if (fileName != nil) {
+                    var headers = HTTPHeaders()
+                    if (urlPath.hasSuffix(".html")) {
+                        headers.add(name: .contentType, value: "text/html")
+                    } else if (urlPath.hasSuffix(".js")) {
+                        headers.add(name: .contentType, value: "application/javascript")
+                    }
+                    // These headers get us a "crossOriginIsolated == true;"
+                    headers.add(name: "Cross-Origin-Embedder-Policy", value: "require-corp")
+                    headers.add(name: "Cross-Origin-Opener-Policy", value: "same-origin")
+                    headers.add(name: "Cross-Origin-Resource-Policy", value: "same-origin")
+                    do {
+                        let body = try String(contentsOfFile: fileName!)
+                        // NSLog("Returned \(urlPath) with \(fileName!)")
+                        return Response(status: .ok, headers: headers, body: Response.Body(stringLiteral: body))
+                    }
+                    catch {
+                        // NSLog("File: \(urlPath) could not access")
+                        return Response(status: .forbidden)
+                    }
                 }
-            } else {
-                response.statusCode = .notFound
-                response.send("")
+                // NSLog("\(urlPath): not found")
+                return Response(status: .notFound)
             }
-            next()
+            // TODO: make that one webSocket for each WkWebView (id by UUID?)
+            localServerApp.webSocket("comm") { req, ws in
+                // commWebSocket works in two directions: sending signal that each command is done, sending syscall requests to the system.
+                NSLog("webSocket connected. \(req.url)")
+                ws.onText { ws, text in
+                    NSLog("webSocket received: \(text)")
+                    if (text.hasPrefix("executeWebAssemblyWorkerDone:")) {
+                        var errorString = text
+                        errorString.removeFirst("executeWebAssemblyWorkerDone:".count)
+                        // TODO: parse the error
+                        currentDispatchGroup?.leave()
+                    } else if (text.hasPrefix("libc\n")) {
+                        // system call handled locally:
+                        NSLog("websocket received: \(text)")
+                    }
+                }
+            }
+            try localServerApp.server.start()
         }
-        let sslConfig =  SSLConfig(withChainFilePath: Bundle.main.resourcePath! + "/localCertificate.pfx",
-                                   withPassword: "password",
-                                   usingSelfSignedCerts: true)
-        // Kitura.addHTTPServer(onPort: 8080, with: localServer)
-        Kitura.addHTTPServer(onPort: 8080, with: localServer, withSSL: sslConfig)
-        localServerQueue.async{
-            while (true) {
-                NSLog("Starting our server:")
-                Kitura.run()
-                NSLog("Kitura server has been interrupted. Restarting.")
-            }
+        catch {
+            NSLog("Unable to start the vapor server: \(error)")
         }
         // Called when installing/uninstalling LLVM or texlive distribution:
         if (appVersion != "a-Shell-mini") {

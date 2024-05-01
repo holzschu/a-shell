@@ -15,9 +15,6 @@ import Combine
 import AVKit // for media playback
 import AVFoundation // for media playback
 import TipKit // for helpful tips
-// For creating websockets
-import Foundation
-import Network
 
 var messageHandlerAdded = false
 var inputFileURLBackup: URL?
@@ -30,6 +27,8 @@ var stdinString: String = ""
 var lastKey: Character?
 var lastKeyTime: Date = Date(timeIntervalSinceNow: 0)
 var directoriesUsed: [String:Int] = [:]
+var currentDispatchGroup: DispatchGroup? = nil
+
 
 // Experimental: execute JS & webAssembly commands in reverse order, so they can be piped.
 struct javascriptCommand {
@@ -1444,6 +1443,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             javascriptRunning = true
             let javascriptGroup = DispatchGroup()
             javascriptGroup.enter()
+            currentDispatchGroup = javascriptGroup;
             DispatchQueue.main.async {
                 self.thread_stdin_copy = command!.thread_stdin_copy
                 self.thread_stdout_copy = command!.thread_stdout_copy
@@ -1500,7 +1500,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                     self.javascriptRunning = false
-                    javascriptGroup.leave()
+                    // javascriptGroup.leave() // This is now triggered by the websocket
                 }
             }
             // force synchronization:
@@ -1516,7 +1516,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Do not close thread_stdin because if it's a pipe, processes could still be writing into it
             // fclose(thread_stdin)
-            
+            // Wait until the command is done, signal is sent by websocket
             command!.webAssemblyGroup?.leave()
         }
         NSLog("Ended executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack)")
@@ -3066,7 +3066,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         } */ else {
             // Usually debugging information
-            NSLog("JavaScript message: \(message.body)")
+            // NSLog("JavaScript message: \(message.body)")
             // print("JavaScript message: \(message.body)")
         }
     }
@@ -3281,7 +3281,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let wasmFilePath = Bundle.main.path(forResource: "wasm", ofType: "html")
             wasmWebView?.isOpaque = false
             // wasmWebView?.loadFileURL(URL(fileURLWithPath: wasmFilePath!), allowingReadAccessTo: URL(fileURLWithPath: wasmFilePath!))
-            wasmWebView?.load(URLRequest(url: URL(string: "https://localhost:8080/wasm.html")!))
+            wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8443/wasm.html")!))
             wasmWebView?.configuration.userContentController = WKUserContentController()
             wasmWebView?.configuration.userContentController.add(self, name: "aShell")
             wasmWebView?.navigationDelegate = self
@@ -4616,7 +4616,7 @@ extension SceneDelegate: WKUIDelegate {
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
         // communication with libc from webAssembly:
         let arguments = prompt.components(separatedBy: "\n")
-        // NSLog("prompt: \(prompt)")
+        NSLog("prompt: \(prompt)")
         // NSLog("thread_stdin_copy: \(thread_stdin_copy)")
         // NSLog("thread_stdout_copy: \(thread_stdout_copy)")
         let title = arguments[0]
@@ -4679,6 +4679,7 @@ extension SceneDelegate: WKUIDelegate {
                                         data.append(contentsOf: [value])
                                     }
                                 }
+                                // NSLog("writing \(String(decoding: data, as: UTF8.self)) to fd \(fd)")
                                 // let returnValue = write(fd, data, numValues)
                                 let file = FileHandle(fileDescriptor: fd)
                                 do {
@@ -4780,6 +4781,7 @@ extension SceneDelegate: WKUIDelegate {
                     }
                 }
                 if (data != nil) {
+                    NSLog("libc/read, sending string with \(data!.base64EncodedString().count) bytes")
                     completionHandler("\(data!.base64EncodedString())")
                 } else {
                     completionHandler("") // Did not read anything
