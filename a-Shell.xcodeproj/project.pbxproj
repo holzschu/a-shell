@@ -16,10 +16,7 @@
 		220F36522BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
 		220F36532BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
 		220F36552BC7FADA00842FEE /* llvmDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 220F36542BC7FAD800842FEE /* llvmDictionary.plist */; };
-		2213DCB62BDE6F45008BD5F2 /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 2213DCB52BDE6F45008BD5F2 /* Kitura */; };
-		2213DCB82BDE7316008BD5F2 /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
-		2213DCB92BDF6B71008BD5F2 /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
-		2213DCBD2BDF6E1A008BD5F2 /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 2213DCBC2BDF6E1A008BD5F2 /* Kitura */; };
+		2213DCC32BDFEF8F008BD5F2 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 2213DCC22BDFEF8F008BD5F2 /* Vapor */; };
 		221642752B7C05CB00043766 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		221642762B7C05EE00043766 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22178EA5257A7A79008EB2B4 /* node_modules in Resources */ = {isa = PBXBuildFile; fileRef = 22178EA4257A7A77008EB2B4 /* node_modules */; };
@@ -414,6 +411,9 @@
 		22239C60250293970069E539 /* python3_ios-_xxtestfuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B9B2502935A0069E539 /* python3_ios-_xxtestfuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22239C6E250293980069E539 /* python3_ios-syslog.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B86250293580069E539 /* python3_ios-syslog.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22239C71250293980069E539 /* python3_ios-xxlimited.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B962502935A0069E539 /* python3_ios-xxlimited.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		222BE55B2BE2D512002E4272 /* wasm_withWorker.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248A2BE12FEE003A8031 /* wasm_withWorker.js */; };
+		222BE55C2BE2D519002E4272 /* wasm_worker_wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */; };
+		222BE5882BE90EFD002E4272 /* wasm_worker_wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 222BE5872BE90EFC002E4272 /* wasm_worker_wasm.js */; };
 		2230F40A257D47D100810B07 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2230F400257D479900810B07 /* Assets.xcassets */; };
 		2231A5122588D93800B5EDFD /* magick.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2231A5072588D8D100B5EDFD /* magick.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2231A5162588D94100B5EDFD /* magick.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2231A5072588D8D100B5EDFD /* magick.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -554,6 +554,7 @@
 		225479362B73BE06005041FF /* ssh_cmdA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225478B52B7380A5005041FF /* ssh_cmdA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2256FE5B2A94BD0C00127A21 /* Library in Resources */ = {isa = PBXBuildFile; fileRef = 2256FE5A2A94BCE900127A21 /* Library */; };
 		225BF07A2A02753B00EEC45B /* xdvipdfmx.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225BF0792A02752900EEC45B /* xdvipdfmx.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		225DE1882C0DE7F800A1A19F /* lldb.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225DE1862C0DE54C00A1A19F /* lldb.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		225F45AC282A4B2D0010E698 /* kpathseaA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F45A8282A4B090010E698 /* kpathseaA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		225F45AD282A4B2D0010E698 /* luahbtexA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F45A7282A4B090010E698 /* luahbtexA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		225F45AE282A4B2D0010E698 /* luatexA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F45A9282A4B090010E698 /* luatexA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -567,6 +568,54 @@
 		226AD81E23436B7A00E5D672 /* UIViewController+showAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226AD81D23436B7A00E5D672 /* UIViewController+showAlert.swift */; };
 		226ED97E2725453D005976B4 /* pythonA-pandas_all.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 226ED97D2725452A005976B4 /* pythonA-pandas_all.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		226ED97F2725454E005976B4 /* python3_ios-pandas_all.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 226ED97C27254515005976B4 /* python3_ios-pandas_all.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		226FBC662C0F0BC200400751 /* JetBrainsMono-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC562C0F0BBF00400751 /* JetBrainsMono-SemiBoldItalic.ttf */; };
+		226FBC672C0F0BC200400751 /* JetBrainsMono-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC562C0F0BBF00400751 /* JetBrainsMono-SemiBoldItalic.ttf */; };
+		226FBC682C0F0BC200400751 /* JetBrainsMono-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC562C0F0BBF00400751 /* JetBrainsMono-SemiBoldItalic.ttf */; };
+		226FBC692C0F0BC200400751 /* JetBrainsMono-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC572C0F0BBF00400751 /* JetBrainsMono-ExtraBold.ttf */; };
+		226FBC6A2C0F0BC200400751 /* JetBrainsMono-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC572C0F0BBF00400751 /* JetBrainsMono-ExtraBold.ttf */; };
+		226FBC6B2C0F0BC200400751 /* JetBrainsMono-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC572C0F0BBF00400751 /* JetBrainsMono-ExtraBold.ttf */; };
+		226FBC6C2C0F0BC200400751 /* JetBrainsMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC582C0F0BBF00400751 /* JetBrainsMono-Bold.ttf */; };
+		226FBC6D2C0F0BC200400751 /* JetBrainsMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC582C0F0BBF00400751 /* JetBrainsMono-Bold.ttf */; };
+		226FBC6E2C0F0BC200400751 /* JetBrainsMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC582C0F0BBF00400751 /* JetBrainsMono-Bold.ttf */; };
+		226FBC6F2C0F0BC200400751 /* JetBrainsMono-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC592C0F0BBF00400751 /* JetBrainsMono-MediumItalic.ttf */; };
+		226FBC702C0F0BC200400751 /* JetBrainsMono-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC592C0F0BBF00400751 /* JetBrainsMono-MediumItalic.ttf */; };
+		226FBC712C0F0BC200400751 /* JetBrainsMono-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC592C0F0BBF00400751 /* JetBrainsMono-MediumItalic.ttf */; };
+		226FBC722C0F0BC200400751 /* JetBrainsMono-LightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5A2C0F0BBF00400751 /* JetBrainsMono-LightItalic.ttf */; };
+		226FBC732C0F0BC200400751 /* JetBrainsMono-LightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5A2C0F0BBF00400751 /* JetBrainsMono-LightItalic.ttf */; };
+		226FBC742C0F0BC200400751 /* JetBrainsMono-LightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5A2C0F0BBF00400751 /* JetBrainsMono-LightItalic.ttf */; };
+		226FBC752C0F0BC200400751 /* JetBrainsMono-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5B2C0F0BC000400751 /* JetBrainsMono-SemiBold.ttf */; };
+		226FBC762C0F0BC200400751 /* JetBrainsMono-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5B2C0F0BC000400751 /* JetBrainsMono-SemiBold.ttf */; };
+		226FBC772C0F0BC200400751 /* JetBrainsMono-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5B2C0F0BC000400751 /* JetBrainsMono-SemiBold.ttf */; };
+		226FBC782C0F0BC200400751 /* JetBrainsMono-ThinItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5C2C0F0BC000400751 /* JetBrainsMono-ThinItalic.ttf */; };
+		226FBC792C0F0BC200400751 /* JetBrainsMono-ThinItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5C2C0F0BC000400751 /* JetBrainsMono-ThinItalic.ttf */; };
+		226FBC7A2C0F0BC200400751 /* JetBrainsMono-ThinItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5C2C0F0BC000400751 /* JetBrainsMono-ThinItalic.ttf */; };
+		226FBC7B2C0F0BC200400751 /* JetBrainsMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5D2C0F0BC000400751 /* JetBrainsMono-Italic.ttf */; };
+		226FBC7C2C0F0BC200400751 /* JetBrainsMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5D2C0F0BC000400751 /* JetBrainsMono-Italic.ttf */; };
+		226FBC7D2C0F0BC200400751 /* JetBrainsMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5D2C0F0BC000400751 /* JetBrainsMono-Italic.ttf */; };
+		226FBC7E2C0F0BC200400751 /* JetBrainsMono-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5E2C0F0BC000400751 /* JetBrainsMono-BoldItalic.ttf */; };
+		226FBC7F2C0F0BC200400751 /* JetBrainsMono-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5E2C0F0BC000400751 /* JetBrainsMono-BoldItalic.ttf */; };
+		226FBC802C0F0BC200400751 /* JetBrainsMono-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5E2C0F0BC000400751 /* JetBrainsMono-BoldItalic.ttf */; };
+		226FBC812C0F0BC200400751 /* JetBrainsMono-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5F2C0F0BC000400751 /* JetBrainsMono-Thin.ttf */; };
+		226FBC822C0F0BC200400751 /* JetBrainsMono-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5F2C0F0BC000400751 /* JetBrainsMono-Thin.ttf */; };
+		226FBC832C0F0BC200400751 /* JetBrainsMono-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC5F2C0F0BC000400751 /* JetBrainsMono-Thin.ttf */; };
+		226FBC842C0F0BC200400751 /* JetBrainsMono-ExtraLightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC602C0F0BC100400751 /* JetBrainsMono-ExtraLightItalic.ttf */; };
+		226FBC852C0F0BC200400751 /* JetBrainsMono-ExtraLightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC602C0F0BC100400751 /* JetBrainsMono-ExtraLightItalic.ttf */; };
+		226FBC862C0F0BC200400751 /* JetBrainsMono-ExtraLightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC602C0F0BC100400751 /* JetBrainsMono-ExtraLightItalic.ttf */; };
+		226FBC872C0F0BC200400751 /* JetBrainsMono-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC612C0F0BC100400751 /* JetBrainsMono-Light.ttf */; };
+		226FBC882C0F0BC200400751 /* JetBrainsMono-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC612C0F0BC100400751 /* JetBrainsMono-Light.ttf */; };
+		226FBC892C0F0BC200400751 /* JetBrainsMono-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC612C0F0BC100400751 /* JetBrainsMono-Light.ttf */; };
+		226FBC8A2C0F0BC200400751 /* JetBrainsMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC622C0F0BC100400751 /* JetBrainsMono-Regular.ttf */; };
+		226FBC8B2C0F0BC200400751 /* JetBrainsMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC622C0F0BC100400751 /* JetBrainsMono-Regular.ttf */; };
+		226FBC8C2C0F0BC200400751 /* JetBrainsMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC622C0F0BC100400751 /* JetBrainsMono-Regular.ttf */; };
+		226FBC8D2C0F0BC200400751 /* JetBrainsMono-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC632C0F0BC100400751 /* JetBrainsMono-Medium.ttf */; };
+		226FBC8E2C0F0BC200400751 /* JetBrainsMono-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC632C0F0BC100400751 /* JetBrainsMono-Medium.ttf */; };
+		226FBC8F2C0F0BC200400751 /* JetBrainsMono-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC632C0F0BC100400751 /* JetBrainsMono-Medium.ttf */; };
+		226FBC902C0F0BC200400751 /* JetBrainsMono-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC642C0F0BC100400751 /* JetBrainsMono-ExtraLight.ttf */; };
+		226FBC912C0F0BC200400751 /* JetBrainsMono-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC642C0F0BC100400751 /* JetBrainsMono-ExtraLight.ttf */; };
+		226FBC922C0F0BC200400751 /* JetBrainsMono-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC642C0F0BC100400751 /* JetBrainsMono-ExtraLight.ttf */; };
+		226FBC932C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC652C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf */; };
+		226FBC942C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC652C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf */; };
+		226FBC952C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 226FBC652C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf */; };
 		227318AD28F02E290027A736 /* multimarkdown.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227318AC28F02E170027A736 /* multimarkdown.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227318AE28F02E2F0027A736 /* multimarkdown.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227318AC28F02E170027A736 /* multimarkdown.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2275AFAC26CA9B8300B5BE45 /* ffmpeg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2275AFAA26CA9B6D00B5BE45 /* ffmpeg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -575,6 +624,12 @@
 		2275AFAF26CA9B8B00B5BE45 /* ffprobe.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2275AFAB26CA9B6D00B5BE45 /* ffprobe.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227722EB239D1FA00020037E /* task in Resources */ = {isa = PBXBuildFile; fileRef = 227722EA239D1F9F0020037E /* task */; };
 		22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F6625700F7E0068004E /* luatex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		227B24842BE01ED5003A8031 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
+		227B24852BE01ED5003A8031 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
+		227B24862BE033DE003A8031 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
+		227B24872BE033E1003A8031 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
+		227B24892BE033F3003A8031 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 227B24882BE033F3003A8031 /* Vapor */; };
+		227B248C2BE12FF1003A8031 /* wasm_withWorker.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248A2BE12FEE003A8031 /* wasm_withWorker.js */; };
 		228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		228E13F725C95F430065D825 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
@@ -1621,6 +1676,7 @@
 				221FA4352A1C9CE800463D5B /* libspatialindex_c.xcframework in Embed Frameworks */,
 				221FA4362A1C9CE800463D5B /* libspatialindex.xcframework in Embed Frameworks */,
 				224DF74C2B76429B00F13C58 /* ssh_agent.xcframework in Embed Frameworks */,
+				225DE1882C0DE7F800A1A19F /* lldb.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1876,6 +1932,7 @@
 		22239BEC250293740069E539 /* pythonA-_crypt.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_crypt.xcframework"; path = "cpython/XcFrameworks/pythonA-_crypt.xcframework"; sourceTree = SOURCE_ROOT; };
 		22239BED250293740069E539 /* pythonA-_ctypes.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_ctypes.xcframework"; path = "cpython/XcFrameworks/pythonA-_ctypes.xcframework"; sourceTree = SOURCE_ROOT; };
 		22239BEE250293740069E539 /* pythonA-xxlimited.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-xxlimited.xcframework"; path = "cpython/XcFrameworks/pythonA-xxlimited.xcframework"; sourceTree = SOURCE_ROOT; };
+		222BE5872BE90EFC002E4272 /* wasm_worker_wasm.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = wasm_worker_wasm.js; path = Resources_mini/wasm_worker_wasm.js; sourceTree = "<group>"; };
 		2230F400257D479900810B07 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2231A5072588D8D100B5EDFD /* magick.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = magick.xcframework; path = xcfs/.build/artifacts/xcfs/magick.xcframework; sourceTree = SOURCE_ROOT; };
 		2231A51D258923D900B5EDFD /* ImageMagick-7 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ImageMagick-7"; path = "Resources/ImageMagick-7"; sourceTree = "<group>"; };
@@ -1923,6 +1980,7 @@
 		225823722A962517009FBBDC /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/MainInterface.strings"; sourceTree = "<group>"; };
 		225823732A962527009FBBDC /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/MainInterface.strings"; sourceTree = "<group>"; };
 		225BF0792A02752900EEC45B /* xdvipdfmx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xdvipdfmx.xcframework; path = xcfs/.build/artifacts/xcfs/xdvipdfmx.xcframework; sourceTree = "<group>"; };
+		225DE1862C0DE54C00A1A19F /* lldb.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lldb.xcframework; path = xcfs/.build/artifacts/xcfs/lldb.xcframework; sourceTree = "<group>"; };
 		225F45A52828FB300010E698 /* forbidden_2022 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = forbidden_2022; path = ODR/forbidden_2022; sourceTree = "<group>"; };
 		225F45A7282A4B090010E698 /* luahbtexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luahbtexA.xcframework; path = xcfs/.build/artifacts/xcfs/luahbtexA.xcframework; sourceTree = "<group>"; };
 		225F45A8282A4B090010E698 /* kpathseaA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpathseaA.xcframework; path = xcfs/.build/artifacts/xcfs/kpathseaA.xcframework; sourceTree = "<group>"; };
@@ -1941,6 +1999,22 @@
 		226B3B4A26F27E330007C281 /* forbidden */ = {isa = PBXFileReference; lastKnownFileType = folder; name = forbidden; path = ODR/forbidden; sourceTree = "<group>"; };
 		226ED97C27254515005976B4 /* python3_ios-pandas_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-pandas_all.xcframework"; path = "cpython/XcFrameworks/python3_ios-pandas_all.xcframework"; sourceTree = "<group>"; };
 		226ED97D2725452A005976B4 /* pythonA-pandas_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-pandas_all.xcframework"; path = "cpython/XcFrameworks/pythonA-pandas_all.xcframework"; sourceTree = "<group>"; };
+		226FBC562C0F0BBF00400751 /* JetBrainsMono-SemiBoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-SemiBoldItalic.ttf"; path = "JetBrainsMono/JetBrainsMono-SemiBoldItalic.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC572C0F0BBF00400751 /* JetBrainsMono-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-ExtraBold.ttf"; path = "JetBrainsMono/JetBrainsMono-ExtraBold.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC582C0F0BBF00400751 /* JetBrainsMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-Bold.ttf"; path = "JetBrainsMono/JetBrainsMono-Bold.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC592C0F0BBF00400751 /* JetBrainsMono-MediumItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-MediumItalic.ttf"; path = "JetBrainsMono/JetBrainsMono-MediumItalic.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC5A2C0F0BBF00400751 /* JetBrainsMono-LightItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-LightItalic.ttf"; path = "JetBrainsMono/JetBrainsMono-LightItalic.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC5B2C0F0BC000400751 /* JetBrainsMono-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-SemiBold.ttf"; path = "JetBrainsMono/JetBrainsMono-SemiBold.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC5C2C0F0BC000400751 /* JetBrainsMono-ThinItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-ThinItalic.ttf"; path = "JetBrainsMono/JetBrainsMono-ThinItalic.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC5D2C0F0BC000400751 /* JetBrainsMono-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-Italic.ttf"; path = "JetBrainsMono/JetBrainsMono-Italic.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC5E2C0F0BC000400751 /* JetBrainsMono-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-BoldItalic.ttf"; path = "JetBrainsMono/JetBrainsMono-BoldItalic.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC5F2C0F0BC000400751 /* JetBrainsMono-Thin.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-Thin.ttf"; path = "JetBrainsMono/JetBrainsMono-Thin.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC602C0F0BC100400751 /* JetBrainsMono-ExtraLightItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-ExtraLightItalic.ttf"; path = "JetBrainsMono/JetBrainsMono-ExtraLightItalic.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC612C0F0BC100400751 /* JetBrainsMono-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-Light.ttf"; path = "JetBrainsMono/JetBrainsMono-Light.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC622C0F0BC100400751 /* JetBrainsMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-Regular.ttf"; path = "JetBrainsMono/JetBrainsMono-Regular.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC632C0F0BC100400751 /* JetBrainsMono-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-Medium.ttf"; path = "JetBrainsMono/JetBrainsMono-Medium.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC642C0F0BC100400751 /* JetBrainsMono-ExtraLight.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-ExtraLight.ttf"; path = "JetBrainsMono/JetBrainsMono-ExtraLight.ttf"; sourceTree = SOURCE_ROOT; };
+		226FBC652C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "JetBrainsMono-ExtraBoldItalic.ttf"; path = "JetBrainsMono/JetBrainsMono-ExtraBoldItalic.ttf"; sourceTree = SOURCE_ROOT; };
 		227318AC28F02E170027A736 /* multimarkdown.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = multimarkdown.framework; path = xcfs/.build/artifacts/xcfs/multimarkdown.framework; sourceTree = "<group>"; };
 		2275AFAA26CA9B6D00B5BE45 /* ffmpeg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffmpeg.xcframework; path = xcfs/.build/artifacts/xcfs/ffmpeg.xcframework; sourceTree = "<group>"; };
 		2275AFAB26CA9B6D00B5BE45 /* ffprobe.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffprobe.xcframework; path = xcfs/.build/artifacts/xcfs/ffprobe.xcframework; sourceTree = "<group>"; };
@@ -1951,6 +2025,10 @@
 		227A434329FD202200548D77 /* texlive_2023_texmf_dist_fonts_type1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist_fonts_type1; path = ODR/texlive_2023_texmf_dist_fonts_type1; sourceTree = "<group>"; };
 		227A434429FD202300548D77 /* texlive_2023_texmf_dist */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist; path = ODR/texlive_2023_texmf_dist; sourceTree = "<group>"; };
 		227A434529FD202300548D77 /* texlive_2023_texmf_dist_fonts_otf_ttf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist_fonts_otf_ttf; path = ODR/texlive_2023_texmf_dist_fonts_otf_ttf; sourceTree = "<group>"; };
+		227B24822BE01ED2003A8031 /* localCertificate.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = localCertificate.pem; sourceTree = "<group>"; };
+		227B24832BE01ED3003A8031 /* localCertificateKey.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = localCertificateKey.pem; sourceTree = "<group>"; };
+		227B248A2BE12FEE003A8031 /* wasm_withWorker.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_withWorker.js; sourceTree = "<group>"; };
+		227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_worker_wasm.js; sourceTree = "<group>"; };
 		228E13F225C95F2D0065D825 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = xcfs/.build/artifacts/xcfs/ios_system.xcframework; sourceTree = "<group>"; };
 		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIColor+hexString.swift"; path = "Util/UIColor+hexString.swift"; sourceTree = SOURCE_ROOT; };
 		22942C3F263F15B1004BEA41 /* perl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perl.xcframework; path = xcfs/.build/artifacts/xcfs/perl.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2160,7 +2238,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2213DCBD2BDF6E1A008BD5F2 /* Kitura in Frameworks */,
+				2213DCC32BDFEF8F008BD5F2 /* Vapor in Frameworks */,
 				228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2169,8 +2247,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2213DCB62BDE6F45008BD5F2 /* Kitura in Frameworks */,
 				228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */,
+				227B24892BE033F3003A8031 /* Vapor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2386,6 +2464,29 @@
 			name = "Python3 frameworks";
 			sourceTree = "<group>";
 		};
+		226FBC152C0F0B5900400751 /* font */ = {
+			isa = PBXGroup;
+			children = (
+				226FBC582C0F0BBF00400751 /* JetBrainsMono-Bold.ttf */,
+				226FBC5E2C0F0BC000400751 /* JetBrainsMono-BoldItalic.ttf */,
+				226FBC572C0F0BBF00400751 /* JetBrainsMono-ExtraBold.ttf */,
+				226FBC652C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf */,
+				226FBC642C0F0BC100400751 /* JetBrainsMono-ExtraLight.ttf */,
+				226FBC602C0F0BC100400751 /* JetBrainsMono-ExtraLightItalic.ttf */,
+				226FBC5D2C0F0BC000400751 /* JetBrainsMono-Italic.ttf */,
+				226FBC612C0F0BC100400751 /* JetBrainsMono-Light.ttf */,
+				226FBC5A2C0F0BBF00400751 /* JetBrainsMono-LightItalic.ttf */,
+				226FBC632C0F0BC100400751 /* JetBrainsMono-Medium.ttf */,
+				226FBC592C0F0BBF00400751 /* JetBrainsMono-MediumItalic.ttf */,
+				226FBC622C0F0BC100400751 /* JetBrainsMono-Regular.ttf */,
+				226FBC5B2C0F0BC000400751 /* JetBrainsMono-SemiBold.ttf */,
+				226FBC562C0F0BBF00400751 /* JetBrainsMono-SemiBoldItalic.ttf */,
+				226FBC5F2C0F0BC000400751 /* JetBrainsMono-Thin.ttf */,
+				226FBC5C2C0F0BC000400751 /* JetBrainsMono-ThinItalic.ttf */,
+			);
+			path = font;
+			sourceTree = "<group>";
+		};
 		22720AB323898AB5005BEB9E /* Python */ = {
 			isa = PBXGroup;
 			children = (
@@ -2418,6 +2519,7 @@
 				22BF6242231589DB00FEA585 /* Settings.bundle */,
 				22B1B81A22CB9E5500F7C452 /* Resources */,
 				229D25BE25793675004A78AC /* Resources_mini */,
+				226FBC152C0F0B5900400751 /* font */,
 				22984EEC22C93DBC00069497 /* a-Shell */,
 				22AD8719246EBFFA00F415DE /* a-Shell-Intents */,
 				22AD8724246EBFFC00F415DE /* a-Shell-IntentsUI */,
@@ -2479,6 +2581,7 @@
 		229D25BE25793675004A78AC /* Resources_mini */ = {
 			isa = PBXGroup;
 			children = (
+				222BE5872BE90EFC002E4272 /* wasm_worker_wasm.js */,
 				2230F400257D479900810B07 /* Assets.xcassets */,
 				22178EC9257B9FCD008EB2B4 /* Settings.bundle */,
 				22178EC2257AF55E008EB2B4 /* a-Shell-mini-Info.plist */,
@@ -2722,6 +2825,10 @@
 		22B1B81A22CB9E5500F7C452 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				227B248A2BE12FEE003A8031 /* wasm_withWorker.js */,
+				227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */,
+				227B24822BE01ED2003A8031 /* localCertificate.pem */,
+				227B24832BE01ED3003A8031 /* localCertificateKey.pem */,
 				2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */,
 				22E337EB2949F4CD00A8F76C /* defaultToolbar.txt */,
 				22B114762817CEA200A5BF16 /* terminfo */,
@@ -2828,6 +2935,7 @@
 				22DC1F7625700FD20068004E /* lli.xcframework */,
 				22DC1F7225700FD10068004E /* nm.xcframework */,
 				22DC1F7325700FD20068004E /* opt.xcframework */,
+				225DE1862C0DE54C00A1A19F /* lldb.xcframework */,
 			);
 			name = LLVM;
 			sourceTree = SOURCE_ROOT;
@@ -2960,7 +3068,7 @@
 			);
 			name = "a-Shell";
 			packageProductDependencies = (
-				2213DCBC2BDF6E1A008BD5F2 /* Kitura */,
+				2213DCC22BDFEF8F008BD5F2 /* Vapor */,
 			);
 			productName = "a-Shell";
 			productReference = 22984EEA22C93DBC00069497 /* a-Shell.app */;
@@ -2984,7 +3092,7 @@
 			);
 			name = "a-Shell-mini";
 			packageProductDependencies = (
-				2213DCB52BDE6F45008BD5F2 /* Kitura */,
+				227B24882BE033F3003A8031 /* Vapor */,
 			);
 			productName = "a-Shell";
 			productReference = 229D25A6257931E4004A78AC /* a-Shell-mini.app */;
@@ -3069,7 +3177,7 @@
 			);
 			mainGroup = 22984EE122C93DBC00069497;
 			packageReferences = (
-				2213DCB42BDE6F45008BD5F2 /* XCRemoteSwiftPackageReference "Kitura" */,
+				2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */,
 			);
 			productRefGroup = 22984EEB22C93DBC00069497 /* Products */;
 			projectDirPath = "";
@@ -3107,29 +3215,45 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				226FBC952C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf in Resources */,
 				224A904F2ADD0999006DB9CC /* terminfo in Resources */,
 				224A90502ADD0999006DB9CC /* Settings.bundle in Resources */,
 				224A90512ADD0999006DB9CC /* ImageMagick-7 in Resources */,
+				226FBC742C0F0BC200400751 /* JetBrainsMono-LightItalic.ttf in Resources */,
 				224A90522ADD0999006DB9CC /* Library in Resources */,
+				226FBC832C0F0BC200400751 /* JetBrainsMono-Thin.ttf in Resources */,
 				224A90532ADD0999006DB9CC /* node_modules in Resources */,
 				224A90542ADD0999006DB9CC /* man in Resources */,
+				226FBC862C0F0BC200400751 /* JetBrainsMono-ExtraLightItalic.ttf in Resources */,
 				224A90552ADD0999006DB9CC /* usr in Resources */,
+				226FBC6E2C0F0BC200400751 /* JetBrainsMono-Bold.ttf in Resources */,
+				226FBC8C2C0F0BC200400751 /* JetBrainsMono-Regular.ttf in Resources */,
+				226FBC922C0F0BC200400751 /* JetBrainsMono-ExtraLight.ttf in Resources */,
+				226FBC7A2C0F0BC200400751 /* JetBrainsMono-ThinItalic.ttf in Resources */,
 				224A90562ADD0999006DB9CC /* commandDictionary.plist in Resources */,
+				226FBC772C0F0BC200400751 /* JetBrainsMono-SemiBold.ttf in Resources */,
+				226FBC682C0F0BC200400751 /* JetBrainsMono-SemiBoldItalic.ttf in Resources */,
 				224A90572ADD0999006DB9CC /* defaultToolbar.txt in Resources */,
 				224A90582ADD0999006DB9CC /* gestures.js in Resources */,
 				224A90592ADD0999006DB9CC /* bin in Resources */,
+				226FBC712C0F0BC200400751 /* JetBrainsMono-MediumItalic.ttf in Resources */,
 				224A905A2ADD0999006DB9CC /* task in Resources */,
 				224A905B2ADD0999006DB9CC /* hterm.html in Resources */,
 				224A905C2ADD0999006DB9CC /* wasm.html in Resources */,
+				226FBC892C0F0BC200400751 /* JetBrainsMono-Light.ttf in Resources */,
+				226FBC8F2C0F0BC200400751 /* JetBrainsMono-Medium.ttf in Resources */,
 				224A905D2ADD0999006DB9CC /* hterm_all.js in Resources */,
 				224A905E2ADD0999006DB9CC /* wasm.js in Resources */,
 				224A905F2ADD0999006DB9CC /* require.js in Resources */,
+				226FBC6B2C0F0BC200400751 /* JetBrainsMono-ExtraBold.ttf in Resources */,
 				224A90602ADD0999006DB9CC /* require_jscore.js in Resources */,
 				224A90612ADD0999006DB9CC /* url-polyfill.js in Resources */,
 				224A90622ADD0999006DB9CC /* script.js in Resources */,
+				226FBC802C0F0BC200400751 /* JetBrainsMono-BoldItalic.ttf in Resources */,
 				224A90632ADD0999006DB9CC /* cacert.pem in Resources */,
 				224A90642ADD0999006DB9CC /* LaunchScreen.storyboard in Resources */,
 				224A90652ADD0999006DB9CC /* Preview Assets.xcassets in Resources */,
+				226FBC7D2C0F0BC200400751 /* JetBrainsMono-Italic.ttf in Resources */,
 				224A90662ADD0999006DB9CC /* Assets.xcassets in Resources */,
 				224A90672ADD0999006DB9CC /* vim in Resources */,
 			);
@@ -3139,27 +3263,45 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				227B24842BE01ED5003A8031 /* localCertificate.pem in Resources */,
+				227B24852BE01ED5003A8031 /* localCertificateKey.pem in Resources */,
+				222BE55B2BE2D512002E4272 /* wasm_withWorker.js in Resources */,
+				226FBC872C0F0BC200400751 /* JetBrainsMono-Light.ttf in Resources */,
+				222BE55C2BE2D519002E4272 /* wasm_worker_wasm.js in Resources */,
+				226FBC692C0F0BC200400751 /* JetBrainsMono-ExtraBold.ttf in Resources */,
 				22FFB44429E88AE80054F01F /* url-polyfill.js in Resources */,
 				22FFB44229E87D950054F01F /* require_jscore.js in Resources */,
 				22365231249A39AC00221868 /* man in Resources */,
 				2250FDAC281D29A7007C25D1 /* terminfo in Resources */,
 				22942C42264037B9004BEA41 /* Perl in Resources */,
+				226FBC6C2C0F0BC200400751 /* JetBrainsMono-Bold.ttf in Resources */,
 				2231A522258923E200B5EDFD /* ImageMagick-7 in Resources */,
 				229F51152473BBCA0053AC03 /* commandDictionary.plist in Resources */,
+				226FBC752C0F0BC200400751 /* JetBrainsMono-SemiBold.ttf in Resources */,
 				22E337EC2949F4CF00A8F76C /* defaultToolbar.txt in Resources */,
 				22B257BA267691E4006C2B31 /* gestures.js in Resources */,
 				22372B722448E85D0033FE07 /* usr in Resources */,
 				22E1B53A243DF64000EA8FBD /* require.js in Resources */,
 				22484B062434F11F00D6BDDA /* node_modules in Resources */,
 				227722EB239D1FA00020037E /* task in Resources */,
+				226FBC722C0F0BC200400751 /* JetBrainsMono-LightItalic.ttf in Resources */,
 				22BF6243231589EC00FEA585 /* Settings.bundle in Resources */,
 				229BAF4222E8A73A00C2269B /* hterm.html in Resources */,
 				223FC3CB2611F9C400CDC89F /* wasm.html in Resources */,
+				226FBC7E2C0F0BC200400751 /* JetBrainsMono-BoldItalic.ttf in Resources */,
+				226FBC842C0F0BC200400751 /* JetBrainsMono-ExtraLightItalic.ttf in Resources */,
 				229BAF4322E8A73A00C2269B /* hterm_all.js in Resources */,
+				226FBC932C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf in Resources */,
 				22EA905B266696A800CC9B88 /* wasm.js in Resources */,
 				220F36522BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */,
+				226FBC6F2C0F0BC200400751 /* JetBrainsMono-MediumItalic.ttf in Resources */,
+				226FBC662C0F0BC200400751 /* JetBrainsMono-SemiBoldItalic.ttf in Resources */,
 				22EA905F266698ED00CC9B88 /* script.js in Resources */,
+				226FBC8D2C0F0BC200400751 /* JetBrainsMono-Medium.ttf in Resources */,
+				226FBC7B2C0F0BC200400751 /* JetBrainsMono-Italic.ttf in Resources */,
+				226FBC782C0F0BC200400751 /* JetBrainsMono-ThinItalic.ttf in Resources */,
 				22BF623E23157F2400FEA585 /* cacert.pem in Resources */,
+				226FBC902C0F0BC200400751 /* JetBrainsMono-ExtraLight.ttf in Resources */,
 				22DF4FEF26E25AEF00E5A0F5 /* texmf.cnf in Resources */,
 				226012EF231D239500AEB059 /* texCommandsDictionary.plist in Resources */,
 				22601307232195AD00AEB059 /* luatexCommandsDictionary.plist in Resources */,
@@ -3168,10 +3310,11 @@
 				22BD476923044D33007248EC /* vim in Resources */,
 				2242B075232293E7002A20FC /* bin in Resources */,
 				220F36552BC7FADA00842FEE /* llvmDictionary.plist in Resources */,
+				226FBC8A2C0F0BC200400751 /* JetBrainsMono-Regular.ttf in Resources */,
 				22178EBC257AAE20008EB2B4 /* Assets.xcassets in Resources */,
+				226FBC812C0F0BC200400751 /* JetBrainsMono-Thin.ttf in Resources */,
 				221FA4392A1CA00D00463D5B /* proj in Resources */,
 				2256FE5B2A94BD0C00127A21 /* Library in Resources */,
-				2213DCB92BDF6B71008BD5F2 /* localCertificate.pfx in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3179,11 +3322,18 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2213DCB82BDE7316008BD5F2 /* localCertificate.pfx in Resources */,
+				227B248C2BE12FF1003A8031 /* wasm_withWorker.js in Resources */,
+				226FBC762C0F0BC200400751 /* JetBrainsMono-SemiBold.ttf in Resources */,
 				22B114772817CEA400A5BF16 /* terminfo in Resources */,
 				22178ECA257B9FD1008EB2B4 /* Settings.bundle in Resources */,
+				226FBC942C0F0BC200400751 /* JetBrainsMono-ExtraBoldItalic.ttf in Resources */,
+				226FBC732C0F0BC200400751 /* JetBrainsMono-LightItalic.ttf in Resources */,
+				226FBC822C0F0BC200400751 /* JetBrainsMono-Thin.ttf in Resources */,
 				2231A51E258923DD00B5EDFD /* ImageMagick-7 in Resources */,
+				226FBC6A2C0F0BC200400751 /* JetBrainsMono-ExtraBold.ttf in Resources */,
 				22178EAE257AA717008EB2B4 /* Library in Resources */,
+				226FBC8E2C0F0BC200400751 /* JetBrainsMono-Medium.ttf in Resources */,
+				226FBC852C0F0BC200400751 /* JetBrainsMono-ExtraLightItalic.ttf in Resources */,
 				22178EA5257A7A79008EB2B4 /* node_modules in Resources */,
 				229D2489257931E4004A78AC /* man in Resources */,
 				229D25C22579369B004A78AC /* usr in Resources */,
@@ -3192,20 +3342,32 @@
 				22B257BB267691E4006C2B31 /* gestures.js in Resources */,
 				229D25C42579369B004A78AC /* bin in Resources */,
 				229D248E257931E4004A78AC /* task in Resources */,
+				226FBC8B2C0F0BC200400751 /* JetBrainsMono-Regular.ttf in Resources */,
 				229D2490257931E4004A78AC /* hterm.html in Resources */,
 				223FC3C32611F57D00CDC89F /* wasm.html in Resources */,
+				226FBC7C2C0F0BC200400751 /* JetBrainsMono-Italic.ttf in Resources */,
+				226FBC882C0F0BC200400751 /* JetBrainsMono-Light.ttf in Resources */,
+				226FBC6D2C0F0BC200400751 /* JetBrainsMono-Bold.ttf in Resources */,
+				226FBC702C0F0BC200400751 /* JetBrainsMono-MediumItalic.ttf in Resources */,
 				229D2491257931E4004A78AC /* hterm_all.js in Resources */,
 				22EA905C266696CA00CC9B88 /* wasm.js in Resources */,
 				220F36532BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */,
 				229D248C257931E4004A78AC /* require.js in Resources */,
 				22AAB16829E99C4900975EFD /* require_jscore.js in Resources */,
 				22AAB16929E99C4D00975EFD /* url-polyfill.js in Resources */,
+				226FBC7F2C0F0BC200400751 /* JetBrainsMono-BoldItalic.ttf in Resources */,
+				226FBC672C0F0BC200400751 /* JetBrainsMono-SemiBoldItalic.ttf in Resources */,
 				22EA905E266698E000CC9B88 /* script.js in Resources */,
 				229D2492257931E4004A78AC /* cacert.pem in Resources */,
 				229D2495257931E4004A78AC /* LaunchScreen.storyboard in Resources */,
+				226FBC912C0F0BC200400751 /* JetBrainsMono-ExtraLight.ttf in Resources */,
+				226FBC792C0F0BC200400751 /* JetBrainsMono-ThinItalic.ttf in Resources */,
+				222BE5882BE90EFD002E4272 /* wasm_worker_wasm.js in Resources */,
 				229D2497257931E4004A78AC /* Preview Assets.xcassets in Resources */,
 				2230F40A257D47D100810B07 /* Assets.xcassets in Resources */,
 				229D2499257931E4004A78AC /* vim in Resources */,
+				227B24862BE033DE003A8031 /* localCertificate.pem in Resources */,
+				227B24872BE033E1003A8031 /* localCertificateKey.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3748,7 +3910,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 400;
+				CURRENT_PROJECT_VERSION = 403;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3794,7 +3956,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 400;
+				CURRENT_PROJECT_VERSION = 403;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3840,7 +4002,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 400;
+				CURRENT_PROJECT_VERSION = 404;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3892,7 +4054,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 400;
+				CURRENT_PROJECT_VERSION = 404;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4116,26 +4278,26 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		2213DCB42BDE6F45008BD5F2 /* XCRemoteSwiftPackageReference "Kitura" */ = {
+		2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Kitura/Kitura";
+			repositoryURL = "https://github.com/vapor/vapor.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 3.0.1;
+				minimumVersion = 4.94.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		2213DCB52BDE6F45008BD5F2 /* Kitura */ = {
+		2213DCC22BDFEF8F008BD5F2 /* Vapor */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2213DCB42BDE6F45008BD5F2 /* XCRemoteSwiftPackageReference "Kitura" */;
-			productName = Kitura;
+			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
+			productName = Vapor;
 		};
-		2213DCBC2BDF6E1A008BD5F2 /* Kitura */ = {
+		227B24882BE033F3003A8031 /* Vapor */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2213DCB42BDE6F45008BD5F2 /* XCRemoteSwiftPackageReference "Kitura" */;
-			productName = Kitura;
+			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
+			productName = Vapor;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

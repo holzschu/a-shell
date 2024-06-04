@@ -25,6 +25,16 @@ let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) /
 // Need SDK install to be over before starting commands.
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
+let localServerApp = Application()
+
+// Which version of the app are we running? a-Shell, a-Shell-mini, a-Shell-pro...? (no spaces in name)
+var appVersion: String? {
+    // Bundle.main.infoDictionary?["CFBundleDisplayName"] = a-Shell
+    // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.a-Shell
+    // Bundle.main.infoDictionary?["CFBundleName"] = a-Shell
+    NSLog("appVersion returns: \(Bundle.main.infoDictionary?["CFBundleName"])")
+    return Bundle.main.infoDictionary?["CFBundleName"] as? String
+}
 
 @objcMembers
 @UIApplicationMain
@@ -33,16 +43,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var versionUpToDate = true
     var libraryFilesUpToDate = true
     let localServerQueue = DispatchQueue(label: "moveFiles", qos: .userInteractive) // high priority, but not blocking
-    let localServerApp = Application()
 
-    // Which version of the app are we running? a-Shell, a-Shell-mini, a-Shell-pro...? (no spaces in name)
-    var appVersion: String? {
-        // Bundle.main.infoDictionary?["CFBundleDisplayName"] = a-Shell
-        // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.a-Shell
-        // Bundle.main.infoDictionary?["CFBundleName"] = a-Shell
-        return Bundle.main.infoDictionary?["CFBundleName"] as? String
-    }
-    
     func createDirectory(localURL: URL) -> Bool {
         do {
             if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
@@ -171,10 +172,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("exit", "clear", true)
         do {
             // Vapor prints a lot of info on the console. No need to add ours.
-            // TODO: create webSocket
             // TODO: restart localServerApp.server if unable to connect --> how?
             localServerApp.http.server.configuration.hostname = "127.0.0.1"
-            localServerApp.http.server.configuration.port = 8443
+            if (appVersion != "a-Shell-mini") {
+                localServerApp.http.server.configuration.port = 8443
+            } else {
+                localServerApp.http.server.configuration.port = 8334
+            }
             localServerApp.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
                 certificateChain: try NIOSSLCertificate.fromPEMFile(Bundle.main.resourcePath! + "/localCertificate.pem").map { .certificate($0) },
                 privateKey: .file(Bundle.main.resourcePath! + "/localCertificateKey.pem")
@@ -190,48 +194,75 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 let localFilePath = libraryURL.path + urlPath
                 let rootFilePath = Bundle.main.resourcePath! + urlPath
                 var fileName: String? = nil
+                NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
                 if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
                     fileName = localFilePath
                 } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
                     fileName = rootFilePath
                 }
+                NSLog("file found: \(fileName)")
                 if (fileName != nil) {
                     var headers = HTTPHeaders()
                     if (urlPath.hasSuffix(".html")) {
                         headers.add(name: .contentType, value: "text/html")
                     } else if (urlPath.hasSuffix(".js")) {
                         headers.add(name: .contentType, value: "application/javascript")
+                    } else if (urlPath.hasSuffix(".wasm")) {
+                        NSLog("setting the header to application/wasm")
+                        headers.add(name: .contentType, value: "application/wasm")
                     }
                     // These headers get us a "crossOriginIsolated == true;"
                     headers.add(name: "Cross-Origin-Embedder-Policy", value: "require-corp")
                     headers.add(name: "Cross-Origin-Opener-Policy", value: "same-origin")
                     headers.add(name: "Cross-Origin-Resource-Policy", value: "same-origin")
                     do {
-                        let body = try String(contentsOfFile: fileName!)
-                        // NSLog("Returned \(urlPath) with \(fileName!)")
-                        return Response(status: .ok, headers: headers, body: Response.Body(stringLiteral: body))
+                        // Binary access to the file, because we could be serving WASM files
+                        let body = try Data(contentsOf: URL(fileURLWithPath: fileName!))
+                        NSLog("Returned \(urlPath) with \(fileName!)")
+                        return Response(status: .ok, headers: headers, body: Response.Body(data: body))
                     }
                     catch {
-                        // NSLog("File: \(urlPath) could not access")
+                        NSLog("File: \(fileName) could not access: \(error).")
                         return Response(status: .forbidden)
                     }
                 }
-                // NSLog("\(urlPath): not found")
+                NSLog("\(urlPath): not found")
                 return Response(status: .notFound)
             }
-            // TODO: make that one webSocket for each WkWebView (id by UUID?)
+            // No way to ID a webSocket by the UUID.
             localServerApp.webSocket("comm") { req, ws in
                 // commWebSocket works in two directions: sending signal that each command is done, sending syscall requests to the system.
                 NSLog("webSocket connected. \(req.url)")
                 ws.onText { ws, text in
                     NSLog("webSocket received: \(text)")
                     if (text.hasPrefix("executeWebAssemblyWorkerDone:")) {
-                        var errorString = text
-                        errorString.removeFirst("executeWebAssemblyWorkerDone:".count)
-                        // TODO: parse the error
-                        currentDispatchGroup?.leave()
+                        var errorMessage = text
+                        errorMessage.removeFirst("executeWebAssemblyWorkerDone:".count)
+                        // parse the error:
+                        let components = errorMessage.components(separatedBy: "\n");
+                        let uuid = components[0]
+                        let returnCode = components[1]
+                        errorMessage.removeFirst(uuid.count + returnCode.count + 2)
+                        for scene in UIApplication.shared.connectedScenes {
+                            if (scene.session.persistentIdentifier == uuid) {
+                                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                                    delegate.endWebAssemblyCommand(error: Int32(returnCode) ?? 0, message: errorMessage)
+                                    return
+                                }
+                            }
+                        }
+                        NSLog("No delegates found for \(uuid)!")
+                        // We haven't found a delegate so far, so we terminate WASM in all delegates:
+                        /*
+                        if (UIApplication.shared.connectedScenes.count > 0) {
+                            if let scene = UIApplication.shared.connectedScenes.first {
+                                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                                    delegate.endWebAssemblyCommand(error: Int32(returnCode) ?? 0, message: errorMessage)
+                                }
+                            }
+                        } */
                     } else if (text.hasPrefix("libc\n")) {
-                        // system call handled locally:
+                        // debug (for now):
                         NSLog("websocket received: \(text)")
                     }
                 }
@@ -245,7 +276,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             replaceCommand("updateCommands", "updateCommands", true)
             // "updateCommands" is also called at startup:
-            var argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "updateCommands".toCString()!)]
+            let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "updateCommands".toCString()!)]
             updateCommands(argc: 1, argv: UnsafeMutablePointer(mutating: argv));
         }
         // for debugging TeX issues / installing a new distribution
@@ -297,7 +328,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
-            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments
+            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 -fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
             // TeX variables (for tlmgr to work) = only when installing from scratch
             // default texmf.cnf available:
             // setenv("TEXMFCNF", Bundle.main.resourcePath!, 1)

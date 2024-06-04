@@ -15,6 +15,7 @@ import Combine
 import AVKit // for media playback
 import AVFoundation // for media playback
 import TipKit // for helpful tips
+import Vapor // for our local server for WebAssembly
 
 var messageHandlerAdded = false
 var inputFileURLBackup: URL?
@@ -27,8 +28,6 @@ var stdinString: String = ""
 var lastKey: Character?
 var lastKeyTime: Date = Date(timeIntervalSinceNow: 0)
 var directoriesUsed: [String:Int] = [:]
-var currentDispatchGroup: DispatchGroup? = nil
-
 
 // Experimental: execute JS & webAssembly commands in reverse order, so they can be piped.
 struct javascriptCommand {
@@ -122,6 +121,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var fontPicker = UIFontPickerViewController()
     var navigationType: WKNavigationType = .other
     var lastUsedPrompt = "$"
+    // for when a webAssembly command returns:
+    var currentDispatchGroup: DispatchGroup? = nil
+    var errorCode:Int32 = 0
+    var errorMessage: String = ""
 
     // Create a document picker for directories.
     private let documentPicker =
@@ -1389,7 +1392,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         environmentAsJSDictionary += "}"
         let base64string = buffer.base64EncodedString()
-        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + currentDirectory + "\", \(ios_isatty(STDIN_FILENO)), " + environmentAsJSDictionary + ")"
+        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + currentDirectory + "\", \(ios_isatty(STDIN_FILENO)), " + environmentAsJSDictionary + ", \"\(self.persistentIdentifier!)\");"
         
         var webAssemblyCommand = javascriptCommand()
         webAssemblyCommand.jsCommand = javascript
@@ -1421,12 +1424,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return (resultStack[commandNumber]!)
     }
     
+    func endWebAssemblyCommand(error: Int32, message: String) {
+        if (executeWebAssemblyCommandsRunning) {
+            errorCode = error
+            errorMessage = message
+            currentDispatchGroup?.leave()
+        }
+    }
+    
     func executeWebAssemblyCommands() {
         // since we're multi-threaded, we could be executing this while executeWebAssembly() is still running. So we wait.
         var wasmEndedWithError = false;
-        NSLog("Starting executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack)")
+        // NSLog("Starting executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack)")
         if (commandsStack.isEmpty) {
-            NSLog("executeWebAssemblyCommands: empty stack")
+            // NSLog("executeWebAssemblyCommands: empty stack")
             return
         }
         if (executeWebAssemblyCommandsRunning) {
@@ -1439,7 +1450,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 continue
             }
             let position = commandsStack.count
-            var errorCode:Int32 = 0
             javascriptRunning = true
             let javascriptGroup = DispatchGroup()
             javascriptGroup.enter()
@@ -1450,62 +1460,21 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.thread_stderr_copy = command!.thread_stderr_copy
                 stdinString = "" // reinitialize stdin
                 NSLog("Executing \(command!.originalCommand) in executeWebAssComm, position= \(commandsStack.count)")
-                self.wasmWebView?.evaluateJavaScript(command!.jsCommand) { (result, error) in
-                    NSLog("webassembly command returned: \(result)")
-                    if let error = error {
-                        if (self.thread_stderr_copy != nil) {
-                            let userInfo = (error as NSError).userInfo
-                            fputs("wasm: Error ", self.thread_stderr_copy)
-                            // WKJavaScriptExceptionSourceURL is hterm.html, of course.
-                            if let file = userInfo["WKJavaScriptExceptionSourceURL"] as? String {
-                                fputs("in file " + file + " ", self.thread_stderr_copy)
-                            }
-                            if let line = userInfo["WKJavaScriptExceptionLineNumber"] as? Int32 {
-                                fputs("at line \(line)", self.thread_stderr_copy)
-                            }
-                            if let column = userInfo["WKJavaScriptExceptionColumnNumber"] as? Int32 {
-                                fputs(", column \(column): ", self.thread_stderr_copy)
-                            } else {
-                                fputs(": ", self.thread_stderr_copy)
-                            }
-                            if let message = userInfo["WKJavaScriptExceptionMessage"] as? String {
-                                fputs(message + "\n", self.thread_stderr_copy)
-                            } else if let message = userInfo["NSLocalizedDescription"] as? String {
-                                fputs(message + "\n", self.thread_stderr_copy)
-                            }
-                            fflush(self.thread_stderr_copy)
-                        }
-                        print(error)
-                        errorCode = -1
-                        wasmEndedWithError = true;
-                    }
-                    if let result = result {
-                        // executeWebAssembly sends back stdout and stderr as two Strings:
-                        if let array = result as? NSMutableArray {
-                            if let code = array[0] as? Int32 {
-                                // return value from program
-                                errorCode = code
-                            }
-                            if let errorMessage = array[1] as? String {
-                                // webAssembly compile error:
-                                if (self.thread_stderr_copy != nil) {
-                                    NSLog("Wasm error: \(errorMessage)")
-                                    fputs(errorMessage, self.thread_stderr_copy);
-                                }
-                            }
-                        } else if let string = result as? String {
-                            if (self.thread_stdout_copy != nil) {
-                                fputs(string, self.thread_stdout_copy);
-                            }
-                        }
-                    }
-                    self.javascriptRunning = false
+                self.wasmWebView?.evaluateJavaScript(command!.jsCommand)
                     // javascriptGroup.leave() // This is now triggered by the websocket
-                }
             }
             // force synchronization:
             javascriptGroup.wait()
             resultStack[position] = errorCode
+            if (errorMessage.count > 0) {
+                wasmEndedWithError = true
+                // webAssembly compile error:
+                if (self.thread_stderr_copy != nil) {
+                    NSLog("Wasm error: \(errorMessage)")
+                    fputs(errorMessage, self.thread_stderr_copy);
+                }
+            }
+            self.javascriptRunning = false
 
             if (thread_stdin_copy == nil) {
                 // Strangely, the letters typed after ^D do not appear on screen. We force two carriage return to get the prompt visible:
@@ -2605,8 +2574,29 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Because wasm is running asynchronously, we can have thread_stdin closed while wasm is still running
             // I would like to have a way to kill webassembly commands
             if (javascriptRunning && (thread_stdin_copy != nil)) {
+                wasmWebView?.evaluateJavaScript("inputString += '\(command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\r", with: "\\n"))'; commandIsRunning;") { (result, error) in
+                    // if let error = error { print(error) }
+                    if let result = result as? Bool {
+                        if (!result) {
+                            self.endWebAssemblyCommand(error: 0, message: "")
+                        }
+                    }
+                }
                 stdinString += command
+                NSLog("command sent: \(command)")
                 return
+            }
+            if (!javascriptRunning && executeWebAssemblyCommandsRunning) {
+                // There seems to be cases where the webassembly command did not terminate properly.
+                // We catch it here:
+                wasmWebView?.evaluateJavaScript("commandIsRunning;") { (result, error) in
+                    // if let error = error { print(error) }
+                    if let result = result as? Bool {
+                        if (!result) {
+                            self.endWebAssemblyCommand(error: 0, message: "")
+                        }
+                    }
+                }
             }
             guard let data = command.data(using: .utf8) else { return }
             if (command == endOfTransmission) {
@@ -2646,8 +2636,28 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             var command = cmd
             command.removeFirst("inputInteractive:".count)
             if (javascriptRunning && (thread_stdin_copy != nil)) {
+                wasmWebView?.evaluateJavaScript("inputString += '\(command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\r", with: "\\n"))'; commandIsRunning;") { (result, error) in
+                    // if let error = error { print(error) }
+                    if let result = result as? Bool {
+                        if (!result) {
+                            self.endWebAssemblyCommand(error: 0, message: "")
+                        }
+                    }
+                }
                 stdinString += command
                 return
+            }
+            if (!javascriptRunning && executeWebAssemblyCommandsRunning) {
+                // There seems to be cases where the webassembly command did not terminate properly.
+                // We catch it here:
+                wasmWebView?.evaluateJavaScript("commandIsRunning;") { (result, error) in
+                    // if let error = error { print(error) }
+                    if let result = result as? Bool {
+                        if (!result) {
+                            self.endWebAssemblyCommand(error: 0, message: "")
+                        }
+                    }
+                }
             }
             guard let data = command.data(using: .utf8) else { return }
             guard stdin_file_input != nil else { return }
@@ -3280,8 +3290,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             let wasmFilePath = Bundle.main.path(forResource: "wasm", ofType: "html")
             wasmWebView?.isOpaque = false
-            // wasmWebView?.loadFileURL(URL(fileURLWithPath: wasmFilePath!), allowingReadAccessTo: URL(fileURLWithPath: wasmFilePath!))
-            wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8443/wasm.html")!))
+            if (appVersion != "a-Shell-mini") {
+                wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8443/wasm.html")!))
+            } else {
+                wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8334/wasm.html")!))
+            }
             wasmWebView?.configuration.userContentController = WKUserContentController()
             wasmWebView?.configuration.userContentController.add(self, name: "aShell")
             wasmWebView?.navigationDelegate = self
@@ -3991,11 +4004,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 unsetenv("_OLD_VIRTUAL_PS1")
             }
         }
-        // Fix a specific bug introduced in 1.8.3:
+        // Change in the default value for this variable:
         if let compileOptionsC = getenv("CCC_OVERRIDE_OPTIONS") {
             if let compileOptions = String(utf8String: compileOptionsC) {
-                if (compileOptions.isEqual("#^--target")) {
-                    setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1)
+                if (compileOptions.isEqual("#^--target") || compileOptions.isEqual("#^--target=wasm32-wasi")) {
+                    setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 -fwasm-exceptions +-lunwind", 1)
                 }
             }
         }
@@ -4616,7 +4629,7 @@ extension SceneDelegate: WKUIDelegate {
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
         // communication with libc from webAssembly:
         let arguments = prompt.components(separatedBy: "\n")
-        NSLog("prompt: \(prompt)")
+        // NSLog("prompt: \(prompt)")
         // NSLog("thread_stdin_copy: \(thread_stdin_copy)")
         // NSLog("thread_stdout_copy: \(thread_stdout_copy)")
         let title = arguments[0]
@@ -4706,7 +4719,7 @@ extension SceneDelegate: WKUIDelegate {
  */
                                 }
                                 file.write(data)
-                                // NSLog("writing \(String(decoding: data, as: UTF8.self)) to fd \(fd)")
+                                // NSLog("wrote \(String(decoding: data, as: UTF8.self)) to fd \(fd)")
                                 returnValue = numValues
                             }
                         }
@@ -4781,7 +4794,7 @@ extension SceneDelegate: WKUIDelegate {
                     }
                 }
                 if (data != nil) {
-                    NSLog("libc/read, sending string with \(data!.base64EncodedString().count) bytes")
+                    // NSLog("libc/read, sending string with \(data!.base64EncodedString().count) bytes")
                     completionHandler("\(data!.base64EncodedString())")
                 } else {
                     completionHandler("") // Did not read anything
@@ -4790,7 +4803,7 @@ extension SceneDelegate: WKUIDelegate {
             } else if (arguments[1] == "fstat") {
                 if let fd = fileDescriptor(input: arguments[2]) {
                     let buf = stat.init()
-                    var pbuf = UnsafeMutablePointer<stat>.allocate(capacity: 1)
+                    let pbuf = UnsafeMutablePointer<stat>.allocate(capacity: 1)
                     pbuf.initialize(to: buf)
                     let returnValue = fstat(fd, pbuf)
                     if (returnValue == 0) {
@@ -4805,13 +4818,15 @@ extension SceneDelegate: WKUIDelegate {
                 return
             } else if (arguments[1] == "stat") {
                 let buf = stat.init()
-                var pbuf = UnsafeMutablePointer<stat>.allocate(capacity: 1)
+                let pbuf = UnsafeMutablePointer<stat>.allocate(capacity: 1)
                 pbuf.initialize(to: buf)
-                let returnValue = stat(arguments[2].toCString(), pbuf)
+                // NSLog("stat: " + arguments[2])
+                let returnValue = stat(arguments[2].utf8CString, pbuf)
                 if (returnValue == 0) {
-                    // NSLog("Mode: \(arguments[2]) = \(pbuf.pointee.st_mode)")
+                    // NSLog("Mode: \(arguments[2]) = \(pbuf.pointee.st_mode) stat= \(pbuf.pointee)")
                     completionHandler("\(pbuf.pointee)")
                 } else {
+                    // NSLog("Error: \(arguments[2]) = " + String(cString: strerror(errno)))
                     completionHandler("\(-errno)")
                     errno = 0
                 }
@@ -4824,11 +4839,14 @@ extension SceneDelegate: WKUIDelegate {
                     for item in items {
                         returnString = returnString + item + "\n"
                     }
-                    completionHandler(returnString)
+                    // NSLog("readdir worked, returned: \(returnString)")
+                    completionHandler(returnString.data(using: .utf8)?.base64EncodedString())
                 }
                 catch {
                     let error = (error as NSError)
+                    // NSLog("readdir failed, returned: \(error)")
                     if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        // NSLog("underlying error: \(underlyingError)")
                         completionHandler("\(-underlyingError.code)")
                     } else {
                         completionHandler("\(-error.code)")
@@ -4999,6 +5017,8 @@ extension SceneDelegate: WKUIDelegate {
                 }
                 return
             } else if (arguments[1] == "system") {
+                // NSLog("launching command: \(arguments[2])")
+                // NSLog("Launch: \(self.thread_stdin_copy)  \(self.thread_stdout_copy) \(self.thread_stderr_copy)")
                 thread_stdin = self.thread_stdin_copy
                 thread_stdout = self.thread_stdout_copy
                 thread_stderr = self.thread_stderr_copy
@@ -5250,7 +5270,7 @@ extension SceneDelegate: WKUIDelegate {
                 }
                 return
             } else if (arguments[1] == "system") {
-                NSLog("Launch: \(self.thread_stdin_copy)  \(self.thread_stdin_copy) \(self.thread_stdin_copy)")
+                // NSLog("Launch: \(self.thread_stdin_copy)  \(self.thread_stdin_copy) \(self.thread_stdin_copy)")
                 thread_stdin = self.thread_stdin_copy
                 thread_stdout = self.thread_stdout_copy
                 thread_stderr = self.thread_stderr_copy
@@ -5317,7 +5337,7 @@ extension SceneDelegate: WKUIDelegate {
 
     // Debugging navigation:
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-        NSLog("navigationAction: \(navigationAction.request)")
+        // NSLog("navigationAction: \(navigationAction.request)")
         if navigationAction.targetFrame == nil {
             webView.stopLoading()
             webView.load(navigationAction.request)
@@ -5328,16 +5348,16 @@ extension SceneDelegate: WKUIDelegate {
     func webView(_ webView: WKWebView,
         decidePolicyFor navigationResponse: WKNavigationResponse,
                  decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
-        NSLog("decidePolicyFor WKNavigationResponse: \(navigationResponse)")
-        NSLog("webView.url?.path: \(webView.url?.path)")
+        // NSLog("decidePolicyFor WKNavigationResponse: \(navigationResponse)")
+        // NSLog("webView.url?.path: \(webView.url?.path)")
         guard let statusCode
                 = (navigationResponse.response as? HTTPURLResponse)?.statusCode else {
-            NSLog("decidePolicyFor: no http status code to act on")
+            // NSLog("decidePolicyFor: no http status code to act on")
             // if there's no http status code to act on, exit and allow navigation
             decisionHandler(.allow)
             return
         }
-        NSLog("decidePolicyFor: status code: \(statusCode)")
+        // NSLog("decidePolicyFor: status code: \(statusCode)")
         decisionHandler(.allow)
     }
 
@@ -5347,7 +5367,7 @@ extension SceneDelegate: WKUIDelegate {
           decidePolicyFor navigationAction: WKNavigationAction,
               preferences: WKWebpagePreferences,
               decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void) {
-        NSLog("decidePolicyFor WKNavigationAction, navigationType= \(navigationAction.navigationType)")
+        // NSLog("decidePolicyFor WKNavigationAction, navigationType= \(navigationAction.navigationType)")
         navigationType = navigationAction.navigationType
         if #available(iOS 14.0, *) {
             preferences.allowsContentJavaScript = true // The default value is true, but let's make sure.
@@ -5358,7 +5378,7 @@ extension SceneDelegate: WKUIDelegate {
             webView.evaluateJavaScript("window.printedContent",
                                        completionHandler: { (printedContent: Any?, error: Error?) in
                 if let error = error {
-                    NSLog("Error in capturing terminal content: \(error.localizedDescription)")
+                    // NSLog("Error in capturing terminal content: \(error.localizedDescription)")
                     // print(error)
                 }
                 // NSLog("captured printedContent: \(printedContent)")
@@ -5385,7 +5405,7 @@ extension SceneDelegate: WKUIDelegate {
     }
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        NSLog("finished loading, title= \(webView.title ?? "unknown"), url=\(webView.url?.path ?? "unknown"), navigation= \(navigation)")
+        // NSLog("finished loading, title= \(webView.title ?? "unknown"), url=\(webView.url?.path ?? "unknown"), navigation= \(navigation)")
         if (webView.url?.path == Bundle.main.resourcePath! + "/wasm.html") {
             return
         }
@@ -5395,7 +5415,7 @@ extension SceneDelegate: WKUIDelegate {
             title = webView.url?.lastPathComponent
         }
         if (webView.url?.path == Bundle.main.resourcePath! + "/hterm.html") {
-            NSLog("Opening hterm.html")
+            // NSLog("Opening hterm.html")
             // if (navigationType == .backForward) && (currentCommand == "") {
             if (navigationType == .backForward) {
                 // reset JS history before reload:

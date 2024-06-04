@@ -66,7 +66,6 @@ public func isForeground(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
     return 1
 }
 
-
 @_cdecl("wasm")
 public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let args = convertCArguments(argc: argc, argv: argv)
@@ -1773,12 +1772,16 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
     let usage = "Small command to update the list of commands available after installing or removing LLVM (C/C++) or TeX auxiliary files.\n"
     
     guard let args = convertCArguments(argc: argc, argv: argv) else {
-        fputs(usage, thread_stderr)
+        if (thread_stderr != nil) {
+            fputs(usage, thread_stderr)
+        }
         return -1
     }
     
     if (argc >= 2) {
-        fputs(usage, thread_stderr)
+        if (thread_stderr != nil) {
+            fputs(usage, thread_stderr)
+        }
         return -1
     }
     
@@ -1787,7 +1790,7 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
                                             appropriateFor: nil,
                                             create: true)
     // LLVM C SDK: check that ~/Library/usr/lib/clang/14.0.0 exists. If yes, activate LLVMcommands. Otherwise, activate fake LLVM commands.
-    let headerUrl = libraryURL.appendingPathComponent("usr/lib/clang/14.0.0/include/float.h")
+    let headerUrl = libraryURL.appendingPathComponent("usr/lib/clang/18/include/float.h")
     if FileManager().fileExists(atPath: headerUrl.path) {
         addCommandList(Bundle.main.path(forResource: "llvmDictionary", ofType: "plist"))
     } else {
