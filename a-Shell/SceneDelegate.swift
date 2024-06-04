@@ -1414,7 +1414,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         webAssemblyCommand.webAssemblyGroup?.enter()
         webAssemblyCommand.webAssemblyGroup?.wait()
         
-        if (fileno(webAssemblyCommand.thread_stdout_copy) != fileno(stdout_file)) {
+        if (stdout_file != nil && fileno(webAssemblyCommand.thread_stdout_copy) != fileno(stdout_file)) {
             fclose(webAssemblyCommand.thread_stdout_copy)
         }
         
