@@ -702,18 +702,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
     
-    func application(_ application: UIApplication, handle intent: INIntent, completionHandler: @escaping (INIntentResponse) -> Void) {
-          
-        let response: INIntentResponse
+    func application(_ application: UIApplication, handlerFor intent: INIntent) -> Any? {
 
-        if let commandIntent = intent as? ExecuteCommandIntent {
-            NSLog("Received an intent at the application level: \(commandIntent)")
-            response = INStartWorkoutIntentResponse(code: .success, userActivity: nil)
+        switch intent {
+        case is GetFileIntent:
+            return GetFileIntentHandler(application: application)
+        case is PutFileIntent:
+            return PutFileIntentHandler(application: application)
+        case is ExecuteCommandIntent:
+            return ExecuteCommandIntentHandler(application: application)
+        default:
+            return nil
         }
-        else {
-            response = INStartWorkoutIntentResponse(code: .failure, userActivity: nil)
-        }
-        completionHandler(response)
+        
     }
     
 }

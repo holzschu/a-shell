@@ -63,11 +63,11 @@
 	<key>INIntentDefinitionNamespace</key>
 	<string>iwbZ8l</string>
 	<key>INIntentDefinitionSystemVersion</key>
-	<string>23A344</string>
+	<string>23F79</string>
 	<key>INIntentDefinitionToolsBuildVersion</key>
-	<string>15C65</string>
+	<string>15F31d</string>
 	<key>INIntentDefinitionToolsVersion</key>
-	<string>15.1</string>
+	<string>15.4</string>
 	<key>INIntents</key>
 	<array>
 		<dict>
@@ -84,10 +84,10 @@
 			<key>INIntentKeyParameter</key>
 			<string>command</string>
 			<key>INIntentLastParameterTag</key>
-			<integer>21</integer>
+			<integer>22</integer>
 			<key>INIntentManagedParameterCombinations</key>
 			<dict>
-				<key>command,openWindow,keepGoing</key>
+				<key>command,runInApp,keepGoing</key>
 				<dict>
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
@@ -103,7 +103,7 @@
 			<string>ExecuteCommand</string>
 			<key>INIntentParameterCombinations</key>
 			<dict>
-				<key>command,openWindow</key>
+				<key>command,runInApp</key>
 				<dict>
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
@@ -112,7 +112,7 @@
 					<key>INIntentParameterCombinationTitleID</key>
 					<string>41sJlD</string>
 				</dict>
-				<key>command,openWindow,keepGoing</key>
+				<key>command,runInApp,keepGoing</key>
 				<dict>
 					<key>INIntentParameterCombinationIsLinked</key>
 					<true/>
@@ -181,70 +181,12 @@
 				<dict>
 					<key>INIntentParameterConfigurable</key>
 					<true/>
-					<key>INIntentParameterCustomDisambiguation</key>
-					<true/>
-					<key>INIntentParameterDisplayName</key>
-					<string>Open the app to execute the commands?</string>
-					<key>INIntentParameterDisplayNameID</key>
-					<string>JJgpB5</string>
-					<key>INIntentParameterDisplayPriority</key>
-					<integer>2</integer>
-					<key>INIntentParameterEnumType</key>
-					<string>Enum</string>
-					<key>INIntentParameterEnumTypeNamespace</key>
-					<string>iwbZ8l</string>
-					<key>INIntentParameterMetadata</key>
-					<dict>
-						<key>INIntentParameterMetadataDefaultValue</key>
-						<string>default</string>
-					</dict>
-					<key>INIntentParameterName</key>
-					<string>openWindow</string>
-					<key>INIntentParameterPromptDialogs</key>
-					<array>
-						<dict>
-							<key>INIntentParameterPromptDialogCustom</key>
-							<true/>
-							<key>INIntentParameterPromptDialogType</key>
-							<string>Primary</string>
-						</dict>
-						<dict>
-							<key>INIntentParameterPromptDialogCustom</key>
-							<true/>
-							<key>INIntentParameterPromptDialogFormatString</key>
-							<string>There are ${count} options matching ‘${openWindow}’.</string>
-							<key>INIntentParameterPromptDialogFormatStringID</key>
-							<string>0ltuRO</string>
-							<key>INIntentParameterPromptDialogType</key>
-							<string>DisambiguationIntroduction</string>
-						</dict>
-						<dict>
-							<key>INIntentParameterPromptDialogCustom</key>
-							<true/>
-							<key>INIntentParameterPromptDialogFormatString</key>
-							<string>Just to confirm, you wanted ‘${openWindow}’?</string>
-							<key>INIntentParameterPromptDialogFormatStringID</key>
-							<string>4yCt8L</string>
-							<key>INIntentParameterPromptDialogType</key>
-							<string>Confirmation</string>
-						</dict>
-					</array>
-					<key>INIntentParameterSupportsResolution</key>
-					<true/>
-					<key>INIntentParameterTag</key>
-					<integer>4</integer>
-					<key>INIntentParameterType</key>
-					<string>Integer</string>
-				</dict>
-				<dict>
-					<key>INIntentParameterConfigurable</key>
-					<true/>
 					<key>INIntentParameterDisplayName</key>
 					<string>Keep going after an error</string>
 					<key>INIntentParameterDisplayNameID</key>
 					<string>2PGaCe</string>
 					<key>INIntentParameterDisplayPriority</key>
-					<integer>3</integer>
+					<integer>2</integer>
 					<key>INIntentParameterMetadata</key>
 					<dict>
 						<key>INIntentParameterMetadataFalseDisplayName</key>
@@ -281,6 +223,66 @@
 					<true/>
 					<key>INIntentParameterTag</key>
 					<integer>9</integer>
+					<key>INIntentParameterType</key>
+					<string>Boolean</string>
+				</dict>
+				<dict>
+					<key>INIntentParameterConfigurable</key>
+					<true/>
+					<key>INIntentParameterCustomDisambiguation</key>
+					<true/>
+					<key>INIntentParameterDisplayName</key>
+					<string>Run In App</string>
+					<key>INIntentParameterDisplayNameID</key>
+					<string>JJgpB5</string>
+					<key>INIntentParameterDisplayPriority</key>
+					<integer>3</integer>
+					<key>INIntentParameterMetadata</key>
+					<dict>
+						<key>INIntentParameterMetadataFalseDisplayName</key>
+						<string>false</string>
+						<key>INIntentParameterMetadataFalseDisplayNameID</key>
+						<string>Lsxf29</string>
+						<key>INIntentParameterMetadataTrueDisplayName</key>
+						<string>true</string>
+						<key>INIntentParameterMetadataTrueDisplayNameID</key>
+						<string>fHnvZA</string>
+					</dict>
+					<key>INIntentParameterName</key>
+					<string>runInApp</string>
+					<key>INIntentParameterPromptDialogs</key>
+					<array>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogFormatString</key>
+							<string>Should I run this command in the app?</string>
+							<key>INIntentParameterPromptDialogFormatStringID</key>
+							<string>Nt9iXK</string>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>Primary</string>
+						</dict>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogFormatString</key>
+							<string>Just to confirm, you wanted ‘${runInApp}’?</string>
+							<key>INIntentParameterPromptDialogFormatStringID</key>
+							<string>4yCt8L</string>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>Confirmation</string>
+						</dict>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>Configuration</string>
+						</dict>
+					</array>
+					<key>INIntentParameterSupportsResolution</key>
+					<true/>
+					<key>INIntentParameterTag</key>
+					<integer>22</integer>
 					<key>INIntentParameterType</key>
 					<string>Boolean</string>
 				</dict>

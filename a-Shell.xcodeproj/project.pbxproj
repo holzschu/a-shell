@@ -27,7 +27,6 @@
 		22178F08257BBBA6008EB2B4 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22178F06257BBBA6008EB2B4 /* MainInterface.storyboard */; };
 		22178F0C257BBBA6008EB2B4 /* a-Shell-mini-IntentsUI.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22178F01257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		22178F0F257BBBA6008EB2B4 /* a-Shell-mini-Intents.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22178EF8257BBBA4008EB2B4 /* a-Shell-mini-Intents.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		22178F30257BBD6B008EB2B4 /* IntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AD871A246EBFFB00F415DE /* IntentHandler.swift */; };
 		22178F34257BBD72008EB2B4 /* IntentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AD8725246EBFFD00F415DE /* IntentViewController.swift */; };
 		22178F38257BBDA0008EB2B4 /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
 		22178F3C257BBE80008EB2B4 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229F51142473BBC90053AC03 /* commandDictionary.plist */; };
@@ -772,7 +771,6 @@
 		22AAB16829E99C4900975EFD /* require_jscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44129E87D920054F01F /* require_jscore.js */; };
 		22AAB16929E99C4D00975EFD /* url-polyfill.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44329E88AE60054F01F /* url-polyfill.js */; };
 		22AAB16F29EEC5FD00975EFD /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229D25C025793699004A78AC /* commandDictionary.plist */; };
-		22AD871B246EBFFB00F415DE /* IntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AD871A246EBFFB00F415DE /* IntentHandler.swift */; };
 		22AD8723246EBFFC00F415DE /* IntentsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22AD8722246EBFFB00F415DE /* IntentsUI.framework */; };
 		22AD8726246EBFFD00F415DE /* IntentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AD8725246EBFFD00F415DE /* IntentViewController.swift */; };
 		22AD8729246EBFFD00F415DE /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22AD8727246EBFFD00F415DE /* MainInterface.storyboard */; };
@@ -888,6 +886,15 @@
 		22F8A582287C8DEA009C7ED1 /* python3_ios-_lzma.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F8A57D287C8C13009C7ED1 /* python3_ios-_lzma.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22FFB44229E87D950054F01F /* require_jscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44129E87D920054F01F /* require_jscore.js */; };
 		22FFB44429E88AE80054F01F /* url-polyfill.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44329E88AE60054F01F /* url-polyfill.js */; };
+		6BD953662BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
+		6BD953672BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
+		6BD953682BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
+		6BD9536A2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953692BFFCC4000C2508F /* GetFileIntentHandler.swift */; };
+		6BD9536B2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953692BFFCC4000C2508F /* GetFileIntentHandler.swift */; };
+		6BD9536C2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953692BFFCC4000C2508F /* GetFileIntentHandler.swift */; };
+		6BD9536E2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
+		6BD9536F2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
+		6BD953702BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		891608902713056B00CED1C9 /* KBWebViewBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 8916088E2713056900CED1C9 /* KBWebViewBase.m */; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 /* End PBXBuildFile section */
@@ -1969,7 +1976,6 @@
 		2249368026E0F0510053F014 /* luahbtex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luahbtex.xcframework; path = xcfs/.build/artifacts/xcfs/luahbtex.xcframework; sourceTree = "<group>"; };
 		2249368126E0F05A0053F014 /* kpsewhich.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpsewhich.xcframework; path = xcfs/.build/artifacts/xcfs/kpsewhich.xcframework; sourceTree = "<group>"; };
 		224A91702ADD0999006DB9CC /* a-Shell-noPython.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "a-Shell-noPython.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		224A91712ADD09A4006DB9CC /* a-Shell-mini copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "a-Shell-mini copy-Info.plist"; path = "/Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell-mini copy-Info.plist"; sourceTree = "<absolute>"; };
 		224D10BA22CB247900A234EE /* hterm.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = hterm.html; sourceTree = "<group>"; };
 		224DF74B2B76428800F13C58 /* ssh_agent.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_agent.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_agent.xcframework; sourceTree = "<group>"; };
 		225177C7231663430084B9C1 /* ListPythonFiles.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListPythonFiles.swift; sourceTree = "<group>"; };
@@ -2082,7 +2088,6 @@
 		229F51142473BBC90053AC03 /* commandDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = commandDictionary.plist; path = Resources/commandDictionary.plist; sourceTree = "<group>"; };
 		22A7AFB8238B2CAE00C51E06 /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources/usr; sourceTree = "<group>"; };
 		22AD8718246EBFFA00F415DE /* a-Shell-Intents.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "a-Shell-Intents.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
-		22AD871A246EBFFB00F415DE /* IntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentHandler.swift; sourceTree = "<group>"; };
 		22AD871C246EBFFB00F415DE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		22AD8721246EBFFB00F415DE /* a-Shell-IntentsUI.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "a-Shell-IntentsUI.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		22AD8722246EBFFB00F415DE /* IntentsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IntentsUI.framework; path = System/Library/Frameworks/IntentsUI.framework; sourceTree = SDKROOT; };
@@ -2204,6 +2209,9 @@
 		22F8A57E287C8C1E009C7ED1 /* pythonA-_lzma.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_lzma.xcframework"; path = "cpython/XcFrameworks/pythonA-_lzma.xcframework"; sourceTree = "<group>"; };
 		22FFB44129E87D920054F01F /* require_jscore.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = require_jscore.js; sourceTree = "<group>"; };
 		22FFB44329E88AE60054F01F /* url-polyfill.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "url-polyfill.js"; sourceTree = "<group>"; };
+		6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PutFileIntentHandler.swift; sourceTree = "<group>"; };
+		6BD953692BFFCC4000C2508F /* GetFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetFileIntentHandler.swift; sourceTree = "<group>"; };
+		6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecuteCommandIntentHandler.swift; sourceTree = "<group>"; };
 		8916088D2713056800CED1C9 /* a-Shell-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "a-Shell-Bridging-Header.h"; sourceTree = "<group>"; };
 		8916088E2713056900CED1C9 /* KBWebViewBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KBWebViewBase.m; sourceTree = "<group>"; };
 		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
@@ -2527,7 +2535,6 @@
 				22178F03257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI */,
 				22984EEB22C93DBC00069497 /* Products */,
 				22B1B80D22CB9A5A00F7C452 /* Frameworks */,
-				224A91712ADD09A4006DB9CC /* a-Shell-mini copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2566,6 +2573,9 @@
 				22984EF522C93DBF00069497 /* Preview Content */,
 				8916088D2713056800CED1C9 /* a-Shell-Bridging-Header.h */,
 				223A1C1B2A5EDCA700B1B9AD /* Tips.swift */,
+				6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */,
+				6BD953692BFFCC4000C2508F /* GetFileIntentHandler.swift */,
+				6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */,
 			);
 			path = "a-Shell";
 			sourceTree = "<group>";
@@ -2761,7 +2771,6 @@
 			isa = PBXGroup;
 			children = (
 				22AD873F246EDD2E00F415DE /* a-Shell-Intents.entitlements */,
-				22AD871A246EBFFB00F415DE /* IntentHandler.swift */,
 				22AD871C246EBFFB00F415DE /* Info.plist */,
 			);
 			path = "a-Shell-Intents";
@@ -3396,7 +3405,6 @@
 			files = (
 				22178F38257BBDA0008EB2B4 /* String+C.swift in Sources */,
 				2220059C2871EF3300DC7A23 /* Intents.intentdefinition in Sources */,
-				22178F30257BBD6B008EB2B4 /* IntentHandler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3418,14 +3426,17 @@
 				224A903D2ADD0999006DB9CC /* KBWebViewBase.m in Sources */,
 				224A903E2ADD0999006DB9CC /* Tips.swift in Sources */,
 				224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */,
+				6BD9536C2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
 				224A90402ADD0999006DB9CC /* Intents.intentdefinition in Sources */,
 				224A90412ADD0999006DB9CC /* UIColor+hexString.swift in Sources */,
 				224A90422ADD0999006DB9CC /* UIViewController+showAlert.swift in Sources */,
 				224A90432ADD0999006DB9CC /* ListPythonFiles.swift in Sources */,
+				6BD953682BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */,
 				224A90442ADD0999006DB9CC /* WKWebView+KeyCommands.swift in Sources */,
 				224A90452ADD0999006DB9CC /* UIDevice+Name.swift in Sources */,
 				224A90462ADD0999006DB9CC /* String+C.swift in Sources */,
 				224A90472ADD0999006DB9CC /* ContentView.swift in Sources */,
+				6BD953702BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */,
 				224A90492ADD0999006DB9CC /* WkWebViewExtension.swift in Sources */,
 				224A904A2ADD0999006DB9CC /* URL+isDirectory.swift in Sources */,
 				224A904B2ADD0999006DB9CC /* listTeXscripts.swift in Sources */,
@@ -3441,14 +3452,17 @@
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
 				223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				222005982871EF3300DC7A23 /* Intents.intentdefinition in Sources */,
+				6BD9536A2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
 				2291286722D9DAC40004A5EA /* UIColor+hexString.swift in Sources */,
 				226AD81E23436B7A00E5D672 /* UIViewController+showAlert.swift in Sources */,
 				221DA54C26F7688100BEA92A /* listTeXscripts.swift in Sources */,
 				225177C8231663430084B9C1 /* ListPythonFiles.swift in Sources */,
+				6BD953662BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */,
 				22BF62292314223D00FEA585 /* WKWebView+KeyCommands.swift in Sources */,
 				2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */,
 				2208ACBF22CCE57E003985D6 /* String+C.swift in Sources */,
 				22984EF222C93DBC00069497 /* ContentView.swift in Sources */,
+				6BD9536E2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */,
 				891608902713056B00CED1C9 /* KBWebViewBase.m in Sources */,
 				2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */,
 				22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */,
@@ -3464,14 +3478,17 @@
 				22675A16271C24F400459BEF /* KBWebViewBase.m in Sources */,
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				229D2479257931E4004A78AC /* SceneDelegate.swift in Sources */,
+				6BD9536B2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
 				2220059B2871EF3300DC7A23 /* Intents.intentdefinition in Sources */,
 				229D247B257931E4004A78AC /* UIColor+hexString.swift in Sources */,
 				229D247C257931E4004A78AC /* UIViewController+showAlert.swift in Sources */,
 				229D247D257931E4004A78AC /* ListPythonFiles.swift in Sources */,
+				6BD953672BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */,
 				229D247E257931E4004A78AC /* WKWebView+KeyCommands.swift in Sources */,
 				229D247F257931E4004A78AC /* UIDevice+Name.swift in Sources */,
 				229D2480257931E4004A78AC /* String+C.swift in Sources */,
 				229D2481257931E4004A78AC /* ContentView.swift in Sources */,
+				6BD9536F2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */,
 				229D2483257931E4004A78AC /* WkWebViewExtension.swift in Sources */,
 				229D2484257931E4004A78AC /* URL+isDirectory.swift in Sources */,
 				22675A15271C24B200459BEF /* listTeXscripts.swift in Sources */,
@@ -3484,7 +3501,6 @@
 			files = (
 				22AD8741246F1CD700F415DE /* String+C.swift in Sources */,
 				222005992871EF3300DC7A23 /* Intents.intentdefinition in Sources */,
-				22AD871B246EBFFB00F415DE /* IntentHandler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3690,6 +3706,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 358;
 				DEAD_CODE_STRIPPING = NO;
@@ -3718,6 +3735,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRIP_INSTALLED_PRODUCT = NO;
 				STRIP_STYLE = debugging;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -3738,6 +3756,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 358;
 				DEAD_CODE_STRIPPING = NO;
@@ -3766,6 +3785,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRIP_INSTALLED_PRODUCT = NO;
 				STRIP_STYLE = debugging;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
