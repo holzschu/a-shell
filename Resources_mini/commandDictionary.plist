@@ -891,5 +891,12 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>rclone</key>
+	<array>
+		<string>rclone.framework/rclone</string>
+		<string>Rclone_mainMain</string>
+		<string></string>
+		<string>file</string>
+	</array>
 </dict>
 </plist>

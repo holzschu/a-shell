@@ -107,5 +107,12 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>lldb</key>
+	<array>
+		<string>lldb.framework/lldb</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 </dict>
 </plist>

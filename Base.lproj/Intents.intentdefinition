@@ -19,7 +19,7 @@
 			<array>
 				<dict>
 					<key>INEnumValueDisplayName</key>
-					<string>default (depend on commands)</string>
+					<string>Choose</string>
 					<key>INEnumValueDisplayNameID</key>
 					<string>N556Rd</string>
 					<key>INEnumValueName</key>
@@ -47,11 +47,21 @@
 				</dict>
 				<dict>
 					<key>INEnumValueDisplayName</key>
-					<string>yes</string>
+					<string>no (run in the background)</string>
 					<key>INEnumValueDisplayNameID</key>
-					<string>EzhjO7</string>
+					<string>wp8oER</string>
 					<key>INEnumValueIndex</key>
 					<integer>3</integer>
+					<key>INEnumValueName</key>
+					<string>background</string>
+				</dict>
+				<dict>
+					<key>INEnumValueDisplayName</key>
+					<string>yes</string>
+					<key>INEnumValueDisplayNameID</key>
+					<string>Tc54Zu</string>
+					<key>INEnumValueIndex</key>
+					<integer>4</integer>
 					<key>INEnumValueName</key>
 					<string>open</string>
 				</dict>
@@ -63,11 +73,11 @@
 	<key>INIntentDefinitionNamespace</key>
 	<string>iwbZ8l</string>
 	<key>INIntentDefinitionSystemVersion</key>
-	<string>23F79</string>
+	<string>23E224</string>
 	<key>INIntentDefinitionToolsBuildVersion</key>
-	<string>15F31d</string>
+	<string>15E204a</string>
 	<key>INIntentDefinitionToolsVersion</key>
-	<string>15.4</string>
+	<string>15.3</string>
 	<key>INIntents</key>
 	<array>
 		<dict>
@@ -84,7 +94,7 @@
 			<key>INIntentKeyParameter</key>
 			<string>command</string>
 			<key>INIntentLastParameterTag</key>
-			<integer>22</integer>
+			<integer>23</integer>
 			<key>INIntentManagedParameterCombinations</key>
 			<dict>
 				<key>command,runInApp,keepGoing</key>
@@ -181,12 +191,96 @@
 				<dict>
 					<key>INIntentParameterConfigurable</key>
 					<true/>
+					<key>INIntentParameterCustomDisambiguation</key>
+					<true/>
+					<key>INIntentParameterDisplayName</key>
+					<string>Open the app to execute the command?</string>
+					<key>INIntentParameterDisplayNameID</key>
+					<string>JJgpB5</string>
+					<key>INIntentParameterDisplayPriority</key>
+					<integer>2</integer>
+					<key>INIntentParameterEnumType</key>
+					<string>Enum</string>
+					<key>INIntentParameterEnumTypeNamespace</key>
+					<string>iwbZ8l</string>
+					<key>INIntentParameterMetadata</key>
+					<dict>
+						<key>INIntentParameterMetadataDefaultValue</key>
+						<string>default</string>
+					</dict>
+					<key>INIntentParameterName</key>
+					<string>runInApp</string>
+					<key>INIntentParameterPromptDialogs</key>
+					<array>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogFormatString</key>
+							<string>Should I run this command in the app?</string>
+							<key>INIntentParameterPromptDialogFormatStringID</key>
+							<string>Nt9iXK</string>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>Primary</string>
+						</dict>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogFormatString</key>
+							<string>Just to confirm, you wanted ‘${runInApp}’?</string>
+							<key>INIntentParameterPromptDialogFormatStringID</key>
+							<string>4yCt8L</string>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>Confirmation</string>
+						</dict>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>Configuration</string>
+						</dict>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogFormatString</key>
+							<string>Open the app to execute the commands?</string>
+							<key>INIntentParameterPromptDialogFormatStringID</key>
+							<string>DzYwiJ</string>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>DisambiguationIntroduction</string>
+						</dict>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogFormatString</key>
+							<string>Open the app to execute the commands?</string>
+							<key>INIntentParameterPromptDialogFormatStringID</key>
+							<string>p8DzgZ</string>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>DisambiguationSelection</string>
+						</dict>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>SubsequentIntroduction</string>
+						</dict>
+					</array>
+					<key>INIntentParameterSupportsResolution</key>
+					<true/>
+					<key>INIntentParameterTag</key>
+					<integer>23</integer>
+					<key>INIntentParameterType</key>
+					<string>Integer</string>
+				</dict>
+				<dict>
+					<key>INIntentParameterConfigurable</key>
+					<true/>
 					<key>INIntentParameterDisplayName</key>
 					<string>Keep going after an error</string>
 					<key>INIntentParameterDisplayNameID</key>
 					<string>2PGaCe</string>
 					<key>INIntentParameterDisplayPriority</key>
-					<integer>2</integer>
+					<integer>3</integer>
 					<key>INIntentParameterMetadata</key>
 					<dict>
 						<key>INIntentParameterMetadataFalseDisplayName</key>
@@ -223,66 +317,6 @@
 					<true/>
 					<key>INIntentParameterTag</key>
 					<integer>9</integer>
-					<key>INIntentParameterType</key>
-					<string>Boolean</string>
-				</dict>
-				<dict>
-					<key>INIntentParameterConfigurable</key>
-					<true/>
-					<key>INIntentParameterCustomDisambiguation</key>
-					<true/>
-					<key>INIntentParameterDisplayName</key>
-					<string>Run In App</string>
-					<key>INIntentParameterDisplayNameID</key>
-					<string>JJgpB5</string>
-					<key>INIntentParameterDisplayPriority</key>
-					<integer>3</integer>
-					<key>INIntentParameterMetadata</key>
-					<dict>
-						<key>INIntentParameterMetadataFalseDisplayName</key>
-						<string>false</string>
-						<key>INIntentParameterMetadataFalseDisplayNameID</key>
-						<string>Lsxf29</string>
-						<key>INIntentParameterMetadataTrueDisplayName</key>
-						<string>true</string>
-						<key>INIntentParameterMetadataTrueDisplayNameID</key>
-						<string>fHnvZA</string>
-					</dict>
-					<key>INIntentParameterName</key>
-					<string>runInApp</string>
-					<key>INIntentParameterPromptDialogs</key>
-					<array>
-						<dict>
-							<key>INIntentParameterPromptDialogCustom</key>
-							<true/>
-							<key>INIntentParameterPromptDialogFormatString</key>
-							<string>Should I run this command in the app?</string>
-							<key>INIntentParameterPromptDialogFormatStringID</key>
-							<string>Nt9iXK</string>
-							<key>INIntentParameterPromptDialogType</key>
-							<string>Primary</string>
-						</dict>
-						<dict>
-							<key>INIntentParameterPromptDialogCustom</key>
-							<true/>
-							<key>INIntentParameterPromptDialogFormatString</key>
-							<string>Just to confirm, you wanted ‘${runInApp}’?</string>
-							<key>INIntentParameterPromptDialogFormatStringID</key>
-							<string>4yCt8L</string>
-							<key>INIntentParameterPromptDialogType</key>
-							<string>Confirmation</string>
-						</dict>
-						<dict>
-							<key>INIntentParameterPromptDialogCustom</key>
-							<true/>
-							<key>INIntentParameterPromptDialogType</key>
-							<string>Configuration</string>
-						</dict>
-					</array>
-					<key>INIntentParameterSupportsResolution</key>
-					<true/>
-					<key>INIntentParameterTag</key>
-					<integer>22</integer>
 					<key>INIntentParameterType</key>
 					<string>Boolean</string>
 				</dict>
