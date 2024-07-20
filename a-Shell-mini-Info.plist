@@ -53,8 +53,6 @@
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleGetInfoString</key>
-	<string></string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -144,13 +142,6 @@
 		<string>ExecuteCommandIntent</string>
 		<string>GetFileIntent</string>
 		<string>PutFileIntent</string>
-	</array>
-	<key>UIAppFonts</key>
-	<array>
-		<string>JetBrainsMono-Regular.ttf</string>
-		<string>JetBrainsMono-Medium.ttf</string>
-		<string>JetBrainsMono-Bold.ttf</string>
-		<string>JetBrainsMono-Light.ttf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

@@ -4,133 +4,99 @@ Tarp.require({expose: true});
 if (typeof window !== 'undefined') {
 	window.global = window;
 }
-// and a Buffer variable
+// and Buffer and process variables
 var Buffer = require('buffer').Buffer;
 var process = require('process');
-
-// Functions to deal with WebAssembly:
-// These should load a wasm program: http://andrewsweeney.net/post/llvm-to-wasm/
-/* Array of bytes to base64 string decoding */
-// Modules for @wasmer:
-const WASI = require('@wasmer/wasi/lib').WASI;
-const browserBindings = require('@wasmer/wasi/lib/bindings/browser').default;
-const WasmFs = require('@wasmer/wasmfs').WasmFs;
-var TTYstring = '';
-// Experiment: don't call lowerI64Imports, see if that works.
-// const lowerI64Imports = require("@wasmer/wasm-transformer").lowerI64Imports
-
-function b64ToUint6 (nChr) {
-
-	return nChr > 64 && nChr < 91 ?
-		nChr - 65
-		: nChr > 96 && nChr < 123 ?
-		nChr - 71
-		: nChr > 47 && nChr < 58 ?
-		nChr + 4
-		: nChr === 43 ?
-		62
-		: nChr === 47 ?
-		63
-		:
-		0;
-
-}
-
-function base64DecToArr (sBase64, nBlockSize) {
-	var
-	sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ""), nInLen = sB64Enc.length,
-		nOutLen = nBlockSize ? Math.ceil((nInLen * 3 + 1 >>> 2) / nBlockSize) * nBlockSize : nInLen * 3 + 1 >>> 2, aBytes = new Uint8Array(nOutLen);
-
-	for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++) {
-		nMod4 = nInIdx & 3;
-		nUint24 |= b64ToUint6(sB64Enc.charCodeAt(nInIdx)) << 18 - 6 * nMod4;
-		if (nMod4 === 3 || nInLen - nInIdx === 1) {
-			for (nMod3 = 0; nMod3 < 3 && nOutIdx < nOutLen; nMod3++, nOutIdx++) {
-				aBytes[nOutIdx] = nUint24 >>> (16 >>> nMod3 & 24) & 255;
-			}
-			nUint24 = 0;
-		}
-	}
-	return aBytes;
-}
-
-// bufferString: program in base64 format
-// args: arguments (argv[argc])
-// stdinBuffer: standard input
-// cwd: current working directory
-function executeWebAssemblyWorker(bufferString, args, cwd, tty, env) {
-	// Input: base64 encoded binary wasm file
-	if (typeof window !== 'undefined') {
-		if (!('WebAssembly' in window)) {
-			window.webkit.messageHandlers.aShell.postMessage('WebAssembly not supported');
-			return;
-		}
-	}
-	var arrayBuffer = base64DecToArr(bufferString); 
-	// Experiment: don't call lowerI64Imports, see if that works.
-	const loweredWasmBytes = arrayBuffer; // lowerI64Imports(arrayBuffer);
-	var errorMessage = '';
-	var errorCode = 0; 
-	// TODO: link with other libraries/frameworks? impossible, I guess.
-	// TODO: keyboard input (directly from onkeypress)
-	try {
-		const wasmFs = new WasmFs(); // local file system. Used less often.
-		let wasi = new WASI({
-			preopens: {'.': cwd, '/': '/'},
-			args: args,
-			env: env,
-			bindings: {
-				...browserBindings,
-				fs: wasmFs.fs,
-			}
-		})
-		wasi.args = args
-		if (tty != 1) {
-			wasi.bindings.isTTY = (fd) => false;
-		}
-		const module = new WebAssembly.Module(loweredWasmBytes); 
-		const instance = new WebAssembly.Instance(module, wasi.getImports(module));
-		wasi.start(instance);
-	}
-	catch (error) {
-		// WASI returns an error even in some cases where things went well. 
-		// We find the type of the error, and return the appropriate error message
-		// This line must be commented on release (it breaks tlmgr):
-		// console.log("Wasm error: " + error.message + " Error code: " + error.code);
-        if (error.code === 'undefined') {
-			errorCode = 1; 
-			errorMessage = '\nwasm: ' + error + '\n';
-		} else if (error.code != null) { 
-			// Numerical error code. Send the return code back to Swift.
-			errorCode = error.code;
-		} else {
-			errorCode = 1; 
-		}
-	}
-	return [errorCode, errorMessage];
-}
-// Everything above this line can be removed.
-// TODO: "you are free to check this hypothesis..."
-
-const sab = new SharedArrayBuffer(8192);
+// (we don't use "require" anymore, but JavaScript files calling JSC might need it)
+// This file handles communication between the system and
+// the WebWorker in charge of executing WebAssembly.
+// Everything related to WebAssembly is in wasm_worker_wasm.js
+const sab = new SharedArrayBuffer(8196);
 const sharedArray = new Int32Array(sab)
 const wasmWorker = new Worker("wasm_worker_wasm.js");
-const encoder = new TextEncoder();
+var inputString = ''; // stores keyboard input
+var commandIsRunning = false;
 
-function executeWebAssembly(bufferString, args, cwd, tty, env) {
-	console.log("Sending");
-	wasmWorker.postMessage([bufferString, args, cwd, tty, env, sab]);
-	
-	wasmWorker.onmessage =(e) => {
-		if (e.data[0] == "prompt") {
-			let result = prompt(e.data[1]);
-			let bytes2 = encoder.encode(result);
-			for (var i = 0; i < result.length; i++) {
-				sharedArray[i+1] = bytes2[i];
-			}
-			Atomics.store(sharedArray, 0, result.length + 1);
-			Atomics.notify(sharedArray, 0, 1);
-		} 
+function wakeUpWorker(chunkSize) {
+	const d = new Date();
+	let resultStorage = -1;
+	let resultNotify = -1;
+	let tries = 0;
+	resultStorage = Atomics.store(sharedArray, 0, chunkSize + 1);
+	resultNotify = Atomics.notify(sharedArray, 0);
+
+	while ((resultStorage !=  chunkSize +1) && (resultNotify != 0) && (tries < 10)) {
+		resultStorage = Atomics.store(sharedArray, 0, chunkSize + 1);
+		resultNotify = Atomics.notify(sharedArray, 0);
+		tries += 1;
 	}
 }
 
+function executeWebAssembly(bufferString, args, cwd, tty, env) {
+	inputString = '';
+	commandIsRunning = true;
+	// create a webWorker to run webAssembly code:
+	wasmWorker.postMessage([bufferString, args, cwd, tty, env, sab]);
+	let result = "";
+	
+	// Dealing with communications with the system:
+	wasmWorker.onmessage =(e) => {
+		// system calls go through the "prompt()" command
+		// Easiest way to make it synchronous
+		if (e.data[0] == "prompt") {
+			sharedArray[0] = 0;
+			Atomics.store(sharedArray, 0, 0);
+			result = prompt(e.data[1]);
+			// Sending the data to the worker by slices of 2047 bytes:
+			// (need to keep one for length of each chunk)
+			// The CPU side has already truncated data at ^D.
+			let chunkSize = result.length;
+			if (chunkSize > 8192) chunkSize = 8192;
+			let chunk = result.substring(0, chunkSize);
+			for (var i = 0, j = 1; i < chunkSize; i+=4, j++) {
+				sharedArray[j] = chunk.charCodeAt(i) 
+					| (chunk.charCodeAt(i+1) << 8)
+					| (chunk.charCodeAt(i+2) << 16)
+				    | (chunk.charCodeAt(i+3) << 24);
+			}
+			result = result.substring(chunkSize);
+			wakeUpWorker(chunkSize);
+		} else if (e.data[0] == "keyboard") { // keyboard input
+			let length = Number(e.data[1]);
+			result = inputString.substring(0, length); // send what was asked
+			let chunkSize = result.length;
+			if (chunkSize > 2047) chunkSize = 2047;
+			let chunk = result.substring(0, chunkSize);
+			for (var i = 0; i < chunkSize; i++) {
+				sharedArray[i+1] = chunk.charCodeAt(i);
+				// cut after ^D if present, only send up to ^D
+				if (chunk.charCodeAt(i) == 4)
+					break;
+			}
+			chunkSize = chunk.length;
+			result = result.substring(chunkSize);
+			inputString = inputString.substring(chunkSize); // remove what's already been sent
+			Atomics.store(sharedArray, 0, chunkSize + 1);
+			Atomics.notify(sharedArray, 0);
+		} else if (e.data[0] == "sendNextChunk") {
+			sharedArray[0] = 0;
+			Atomics.store(sharedArray, 0, 0);
+			let chunkSize = result.length;
+			if (chunkSize > 8192) chunkSize = 8192;
+			let chunk = result.substring(0, chunkSize);
+			for (var i = 0, j=1; i < chunkSize; i+=4, j++) {
+				sharedArray[j] = chunk.charCodeAt(i) 
+					| (chunk.charCodeAt(i+1) << 8)
+					| (chunk.charCodeAt(i+2) << 16)
+				    | (chunk.charCodeAt(i+3) << 24);
+			}
+			result = result.substring(chunkSize);
+			wakeUpWorker(chunkSize);
+		} else if (e.data[0] == "commandTerminated") {
+			// We need the "command is finished" signal to be in sync with the printing, 
+			// so it uses the same signal transmission system:
+			commandIsRunning = false;
+			prompt("libc\ncommandTerminated\n" + e.data[1] + "\n" + e.data[2]);
+		}
+	}
+}

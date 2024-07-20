@@ -19,7 +19,7 @@ import ios_system
 // "<myApp> John saying hello"
 // "Search for messages in <myApp>"
 
-class GetFileIntentHandler: NSObject, GetFileIntentHandling
+class GetFileIntentHandler: INExtension, GetFileIntentHandling
 {
     
     let application: UIApplication
@@ -59,7 +59,7 @@ class GetFileIntentHandler: NSObject, GetFileIntentHandling
     
     // GetFileIntent
     func handle(intent: GetFileIntent, completion: @escaping (GetFileIntentResponse) -> Void) {
-        guard let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.com.mdbraber.a-Shell") else {
+        guard let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") else {
             completion(GetFileIntentResponse(code: .failureRequiringAppLaunch, userActivity: nil))
             return
         }

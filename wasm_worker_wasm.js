@@ -1,15 +1,14 @@
+// Load the "require" function:
 importScripts("require.js");
 // make the "require" function available to all
 Tarp.require({expose: true});
 // Have a global variable:
-var global = [];
+var global = self;
 var sharedArray;
 const decoder = new TextDecoder();
 // and a Buffer variable
 var Buffer = require('buffer').Buffer;
 var process = require('process');
-const webSocket = new WebSocket("wss://127.0.0.1:8443/comm");
-webSocket.binaryType = 'arraybuffer';
 
 // Functions to deal with WebAssembly:
 // These should load a wasm program: http://andrewsweeney.net/post/llvm-to-wasm/
@@ -56,22 +55,76 @@ function base64DecToArr (sBase64, nBlockSize) {
 	return aBytes;
 }
 
-function prompt(string) {
+function bytesToBase64(bytes) {
+  const binString = Array.from(bytes, (byte) =>
+    String.fromCodePoint(byte),
+  ).join("");
+  return btoa(binString);
+}
+
+
+function interactiveKeyboardInput(inputLength) {
 	// Send a request to the outside:
 	Atomics.store(sharedArray, 0, 0);
 	sharedArray[0] = 0;
+	postMessage(["keyboard", inputLength]);
+	// Freeze ourselves until the response is ready:
+	Atomics.wait(sharedArray, 0, 0);
+	result = '';
+	// Decode the response (by slices of 2047 bytes):
+	let length = sharedArray[0] - 1;
+	while (length >= 0) {
+		let bytes = new Int8Array(length);
+		for (let i = 0; i < length; i++) {
+			result += String.fromCharCode(sharedArray[i+1]);
+		}
+		if (length == 2047) {
+			// wait for the next chunk:
+			// Need to tell it to send the next chunk!
+			Atomics.store(sharedArray, 0, 0);
+			sharedArray[0] = 0;
+			postMessage(["sendNextChunk"]);
+			Atomics.wait(sharedArray, 0, 0, 10000);
+			length = sharedArray[0] - 1;
+		} else {
+			break;
+		}
+	}
+	// Need to base64-encode in case there are emojis or other utf-8 characters:
+	return bytesToBase64(new TextEncoder().encode(result));
+}
+
+function prompt(string) {
+	// Send a request to the outside:
+	sharedArray[0] = 0;
+	Atomics.store(sharedArray, 0, 0);
 	postMessage(["prompt", string]);
 	// Freeze ourselves until the response is ready:
-	Atomics.wait(sharedArray, 0, 0, 10000);
-	webSocket.send("libc: done waiting");
-	// Decode the response:
+	let reason = Atomics.wait(sharedArray, 0, 0, 500);
+	result = '';
+	// Decode the response (by slices of 8192 bytes):
 	let length = sharedArray[0] - 1;
-	let bytes = new Int8Array(length);
-	for (let i = 0; i < length; i++) {
-		bytes[i] = sharedArray[i+1];
+	while (length >= 0) {
+		let bytes = new Int8Array(length);
+		for (let i = 0, j=1; i < length; i+=4, j++) {
+			bytes[i  ] = sharedArray[j] & 0xFF;
+			bytes[i+1] = (sharedArray[j] >>  8) & 0xFF;
+			bytes[i+2] = (sharedArray[j] >> 16) & 0xFF;
+			bytes[i+3] = (sharedArray[j] >> 24) & 0xFF;
+		}
+		result += decoder.decode(bytes);
+		if (length == 8192) {
+			// wait for the next chunk:
+			// Need to tell it to send the next chunk!
+			sharedArray[0] = 0;
+			Atomics.store(sharedArray, 0, 0);
+			postMessage(["sendNextChunk"]);
+			let reason = Atomics.wait(sharedArray, 0, 0, 10000);
+			length = sharedArray[0] - 1;
+		} else {
+			break;
+		}
 	}
-	let result = decoder.decode(bytes);
-	webSocket.send("libc:" + result);
 	return result;
 }
 
@@ -93,7 +146,6 @@ function executeWebAssemblyWorker(bufferString, args, cwd, tty, env) {
 	var errorMessage = '';
 	var errorCode = 0; 
 	// TODO: link with other libraries/frameworks? impossible, I guess.
-	// TODO: keyboard input (directly from onkeypress)
 	try {
 		const wasmFs = new WasmFs(); // local file system. Used less often.
 		let wasi = new WASI({
@@ -118,17 +170,19 @@ function executeWebAssemblyWorker(bufferString, args, cwd, tty, env) {
 		// We find the type of the error, and return the appropriate error message
 		// This line must be commented on release (it breaks tlmgr):
 		// console.log("Wasm error: " + error.message + " Error code: " + error.code);
-        if (error.code === 'undefined') {
+        if (error.code === undefined) {
 			errorCode = 1; 
-			errorMessage = '\nwasm: ' + error + '\n';
+			errorMessage = 'wasm: ' + error;
 		} else if (error.code != null) { 
 			// Numerical error code. Send the return code back to Swift.
 			errorCode = error.code;
+			if (errorCode > 0) 
+				errorMessage = error.message;
 		} else {
 			errorCode = 1; 
 		}
 	}
-	webSocket.send("executeWebAssemblyWorkerDone:" + errorCode + "\n" + errorMessage);
+	postMessage(["commandTerminated", errorCode, errorMessage]);
 }
 
 onmessage = (e) => {

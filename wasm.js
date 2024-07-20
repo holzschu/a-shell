@@ -96,7 +96,7 @@ function executeWebAssembly(bufferString, args, cwd, tty, env) {
 		// We find the type of the error, and return the appropriate error message
 		// This line must be commented on release (it breaks tlmgr):
 		// console.log("Wasm error: " + error.message + " Error code: " + error.code);
-        if (error.code === 'undefined') {
+        if (error.code === undefined) {
 			errorCode = 1; 
 			errorMessage = '\nwasm: ' + error + '\n';
 		} else if (error.code != null) { 
