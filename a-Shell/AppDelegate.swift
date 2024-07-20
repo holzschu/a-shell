@@ -17,10 +17,6 @@ import TipKit // Display some helpful messages for users
 import Vapor // for our local server for WebAssembly
 import NIOSSL // for TLS (https) authentification
 
-var downloadingTeX = false
-var percentTeXDownloadComplete = 0.0
-var downloadingOpentype = false
-var percentOpentypeDownloadComplete = 0.0
 let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
 // Need SDK install to be over before starting commands.
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
@@ -173,7 +169,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         do {
             // Vapor prints a lot of info on the console. No need to add ours.
             // TODO: restart localServerApp.server if unable to connect --> how?
+            // No websocket support for now: it's not needed for a-Shell
             localServerApp.http.server.configuration.hostname = "127.0.0.1"
+            // Make sure the servers for the different apps don't interfere with each other:
             if (appVersion != "a-Shell-mini") {
                 localServerApp.http.server.configuration.port = 8443
             } else {
@@ -228,44 +226,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
                 NSLog("\(urlPath): not found")
                 return Response(status: .notFound)
-            }
-            // No way to ID a webSocket by the UUID.
-            localServerApp.webSocket("comm") { req, ws in
-                // commWebSocket works in two directions: sending signal that each command is done, sending syscall requests to the system.
-                NSLog("webSocket connected. \(req.url)")
-                ws.onText { ws, text in
-                    NSLog("webSocket received: \(text)")
-                    if (text.hasPrefix("executeWebAssemblyWorkerDone:")) {
-                        var errorMessage = text
-                        errorMessage.removeFirst("executeWebAssemblyWorkerDone:".count)
-                        // parse the error:
-                        let components = errorMessage.components(separatedBy: "\n");
-                        let uuid = components[0]
-                        let returnCode = components[1]
-                        errorMessage.removeFirst(uuid.count + returnCode.count + 2)
-                        for scene in UIApplication.shared.connectedScenes {
-                            if (scene.session.persistentIdentifier == uuid) {
-                                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                                    delegate.endWebAssemblyCommand(error: Int32(returnCode) ?? 0, message: errorMessage)
-                                    return
-                                }
-                            }
-                        }
-                        NSLog("No delegates found for \(uuid)!")
-                        // We haven't found a delegate so far, so we terminate WASM in all delegates:
-                        /*
-                        if (UIApplication.shared.connectedScenes.count > 0) {
-                            if let scene = UIApplication.shared.connectedScenes.first {
-                                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                                    delegate.endWebAssemblyCommand(error: Int32(returnCode) ?? 0, message: errorMessage)
-                                }
-                            }
-                        } */
-                    } else if (text.hasPrefix("libc\n")) {
-                        // debug (for now):
-                        NSLog("websocket received: \(text)")
-                    }
-                }
             }
             try localServerApp.server.start()
         }
@@ -328,7 +288,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
-            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 -fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
+            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 x  ^-fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
             // TeX variables (for tlmgr to work) = only when installing from scratch
             // default texmf.cnf available:
             // setenv("TEXMFCNF", Bundle.main.resourcePath!, 1)
@@ -703,7 +663,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func application(_ application: UIApplication, handlerFor intent: INIntent) -> Any? {
-
         switch intent {
         case is GetFileIntent:
             return GetFileIntentHandler(application: application)
@@ -714,7 +673,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         default:
             return nil
         }
-        
     }
     
 }

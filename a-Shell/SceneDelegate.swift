@@ -16,6 +16,7 @@ import AVKit // for media playback
 import AVFoundation // for media playback
 import TipKit // for helpful tips
 import Vapor // for our local server for WebAssembly
+import WasmInterpreter
 
 var messageHandlerAdded = false
 var inputFileURLBackup: URL?
@@ -1332,7 +1333,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // self.webView?.accessibilityLabel = ""
         }
     }
-    
+
     func executeWebAssembly(arguments: [String]?) -> Int32 {
         guard (arguments != nil) else { return -1 }
         guard (arguments!.count >= 2) else { return -1 } // There must be at least one command
@@ -1392,7 +1393,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         environmentAsJSDictionary += "}"
         let base64string = buffer.base64EncodedString()
-        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + currentDirectory + "\", \(ios_isatty(STDIN_FILENO)), " + environmentAsJSDictionary + ", \"\(self.persistentIdentifier!)\");"
+        let javascript = "executeWebAssembly(\"\(base64string)\", " + argumentString + ", \"" + currentDirectory + "\", \(ios_isatty(STDIN_FILENO)), " + environmentAsJSDictionary + ");"
         
         var webAssemblyCommand = javascriptCommand()
         webAssemblyCommand.jsCommand = javascript
@@ -1437,7 +1438,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         var wasmEndedWithError = false;
         // NSLog("Starting executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack)")
         if (commandsStack.isEmpty) {
-            // NSLog("executeWebAssemblyCommands: empty stack")
+            NSLog("executeWebAssemblyCommands: empty stack")
             return
         }
         if (executeWebAssemblyCommandsRunning) {
@@ -1461,7 +1462,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 stdinString = "" // reinitialize stdin
                 NSLog("Executing \(command!.originalCommand) in executeWebAssComm, position= \(commandsStack.count)")
                 self.wasmWebView?.evaluateJavaScript(command!.jsCommand)
-                    // javascriptGroup.leave() // This is now triggered by the websocket
+                    // javascriptGroup.leave() // This is now triggered by a prompt() call
             }
             // force synchronization:
             javascriptGroup.wait()
@@ -1471,7 +1472,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // webAssembly compile error:
                 if (self.thread_stderr_copy != nil) {
                     NSLog("Wasm error: \(errorMessage)")
-                    fputs(errorMessage, self.thread_stderr_copy);
+                    fputs(errorMessage + "\n", self.thread_stderr_copy);
                 }
             }
             self.javascriptRunning = false
@@ -1485,7 +1486,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Do not close thread_stdin because if it's a pipe, processes could still be writing into it
             // fclose(thread_stdin)
-            // Wait until the command is done, signal is sent by websocket
+            // Wait until the command is done, signal is sent by prompt()
             command!.webAssemblyGroup?.leave()
         }
         NSLog("Ended executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack)")
@@ -1516,7 +1517,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let command = arguments![1]
         if (command == "--reset") {
             DispatchQueue.main.async {
-                NSLog("reloaded wasmWebView after an error")
+                NSLog("reloading wasmWebView (on purpose)")
                 self.wasmWebView?.reload()
             }
             return
@@ -1527,7 +1528,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         var silent = false
         var jscWebView = wasmWebView
-        var process_args = "process.argv = [";
+        var process_args = "var process = process ?? {}; process.argv = [";
         for argument in arguments! {
             if ((argument == "--in-window") && (jscWebView == wasmWebView)) {
                 jscWebView = webView
@@ -1538,7 +1539,36 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         process_args += "];"
+        // Also add the environment to the process variable:
+        process_args += "process.env = {";
+        if let localEnvironment = environmentAsArray() {
+            for variable in localEnvironment {
+                if let envVar = variable as? String {
+                    // Let's not carry environment variables with quotes:
+                    if (envVar.contains("\"")) {
+                        continue
+                    }
+                    let components = envVar.components(separatedBy:"=")
+                    if (components.count <= 1) {
+                        continue
+                    }
+                    let name = components[0]
+                    var value = envVar
+                    if (value.count > name.count + 1) {
+                        value.removeFirst(name.count + 1)
+                    } else {
+                        continue
+                    }
+                    value = value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\n", with: "\\n")
+                    // NSLog("envVar: \(envVar) name: \(name) value: \(value)")
+                    process_args += "\"" + name + "\"" + ":" + "\"" + value + "\",\n"
+                }
+            }
+        }
+        process_args += "};"
+        let currentDirectory = FileManager().currentDirectoryPath
         // let fileName = FileManager().currentDirectoryPath + "/" + command
+        NSLog("filename: \(command)")
         let fileName = command.hasPrefix("/") ? command : currentDirectory + "/" + command
         thread_stdin_copy = thread_stdin
         thread_stdout_copy = thread_stdout
@@ -1563,7 +1593,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (jscWebView == wasmWebView) {
                 javascript = process_args + fileContent
             }
-            if #available(iOS 15.0, *) {
+            if #available(iOS 15.0, *), false {
                 // Execution of asynchronous JS code, while still waiting for the result
                 Task { @MainActor in
                     do {
@@ -2697,7 +2727,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 tty_file_input?.write(data)
             }
-            ios_switchSession(savedSession)
+            // We can get a session context that is not a valid UUID (InExtension, shSession...)
+            // In that case, don't switch back to it:
+            if let stringPointer = UnsafeMutablePointer<CChar>(OpaquePointer(savedSession)) {
+                let savedSessionIdentifier = String(cString: stringPointer)
+                if let uuid = UUID(uuidString: savedSessionIdentifier) {
+                    ios_switchSession(savedSession)
+                    ios_setContext(savedSession)
+                }
+            }
         } else if (cmd.hasPrefix("listBookmarks:") || cmd.hasPrefix("listBookmarksDir:")) {
             let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
             // let groupNamesDictionary = UserDefaults(suiteName: "group.AsheKube.a-Shell")?.dictionary(forKey: "bookmarkNames")
@@ -2925,7 +2963,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let fontLigature = terminalFontLigature ?? factoryFontLigature
             // Force writing all config to term. Used when we changed many parameters.
             let command1 = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.cursorShape = '\(cursorShape)'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
-            // NSLog("resendConfiguration, command=\(command1)")
+            NSLog("resendConfiguration, command=\(command1)")
             self.webView!.evaluateJavaScript(command1) { (result, error) in
                 /* if let error = error {
                     NSLog("Error in resendConfiguration, line = \(command1) error = \(error)")
@@ -3714,7 +3752,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 exitCommand += "\n"
                 if let data = exitCommand.data(using: .utf8) {
                     ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
                     ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                     if (stdin_file_input != nil) {
                         stdin_file_input?.write(data)
@@ -3921,6 +3959,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     NSLog("set previousDirectory to \(previousDirectory)")
                     // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
                     ios_switchSession(self.persistentIdentifier?.toCString())
+                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
                     changeDirectory(path: previousDirectory) // call cd_main and checks secured bookmarked URLs
                 }
             }
@@ -3945,6 +3984,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     NSLog("set currentDirectory to \(currentDirectory)")
                     // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
                     ios_switchSession(self.persistentIdentifier?.toCString())
+                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
                     changeDirectory(path: currentDirectory) // call cd_main and checks secured bookmarked URLs
                 }
             }
@@ -4008,7 +4048,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if let compileOptionsC = getenv("CCC_OVERRIDE_OPTIONS") {
             if let compileOptions = String(utf8String: compileOptionsC) {
                 if (compileOptions.isEqual("#^--target") || compileOptions.isEqual("#^--target=wasm32-wasi")) {
-                    setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 -fwasm-exceptions +-lunwind", 1)
+                    setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind", 1)
                 }
             }
         }
@@ -4420,7 +4460,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         guard (webView != nil) else { return }
         if (webView?.url?.path == Bundle.main.resourcePath! + "/hterm.html") {
             // Sanitize the output string to it can be sent to javascript:
-            let parsedString = string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r")
+            let parsedString = string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r").replacingOccurrences(of: endOfTransmission, with: "")
             // NSLog("outputToWebView: \(parsedString)")
             // This may cause several \r in a row
             let command = "window.term_.io.print(\"" + parsedString + "\");"
@@ -4487,7 +4527,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 stdout_active = false
             }
         } else if let string = String(data: data, encoding: String.Encoding.ascii) {
-            NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII: \(string)")
+            // NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII: \(string)")
+            NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII.");
             outputToWebView(string: string)
             if (string.contains(endOfTransmission)) {
                 stdout_active = false
@@ -4638,6 +4679,7 @@ extension SceneDelegate: WKUIDelegate {
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             if (arguments[1] == "open") {
+                // NSLog("opening file: \(arguments[2])")
                 let rights = Int32(arguments[3]) ?? 577;
                 var returnValue:Int32 = 0
                 if (rights & O_CREAT != 0) {
@@ -4690,6 +4732,9 @@ extension SceneDelegate: WKUIDelegate {
                                 for c in 0...numValues-1 {
                                     if let value = UInt8(values[c]) {
                                         data.append(contentsOf: [value])
+                                        if (value == 0) {
+                                            break;
+                                        }
                                     }
                                 }
                                 // NSLog("writing \(String(decoding: data, as: UTF8.self)) to fd \(fd)")
@@ -4797,6 +4842,7 @@ extension SceneDelegate: WKUIDelegate {
                     // NSLog("libc/read, sending string with \(data!.base64EncodedString().count) bytes")
                     completionHandler("\(data!.base64EncodedString())")
                 } else {
+                    // NSLog("libc_read: Sending nil string")
                     completionHandler("") // Did not read anything
                 }
                 return
@@ -4946,9 +4992,9 @@ extension SceneDelegate: WKUIDelegate {
                     // this might fail if a link points to
                     let error = (error as NSError)
                     if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
-                        completionHandler("\(-underlyingError.code)")
+                        completionHandler("\n\(-underlyingError.code)")
                     } else {
-                        completionHandler("\(-error.code)")
+                        completionHandler("\n\(-error.code)")
                     }
                 }
                 return
@@ -5135,6 +5181,11 @@ extension SceneDelegate: WKUIDelegate {
                     }
                 }
                 completionHandler("\(-EBADF)") // invalid file descriptor
+                return
+            } else if (arguments[1] == "commandTerminated") {
+                let returnCode = arguments[2]
+                self.endWebAssemblyCommand(error: Int32(returnCode) ?? 0, message: arguments[3])
+                completionHandler("done")
                 return
             }
             // Not one of our commands:
@@ -5337,7 +5388,7 @@ extension SceneDelegate: WKUIDelegate {
 
     // Debugging navigation:
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-        // NSLog("navigationAction: \(navigationAction.request)")
+        NSLog("navigationAction: \(navigationAction.request)")
         if navigationAction.targetFrame == nil {
             webView.stopLoading()
             webView.load(navigationAction.request)
@@ -5348,8 +5399,8 @@ extension SceneDelegate: WKUIDelegate {
     func webView(_ webView: WKWebView,
         decidePolicyFor navigationResponse: WKNavigationResponse,
                  decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
-        // NSLog("decidePolicyFor WKNavigationResponse: \(navigationResponse)")
-        // NSLog("webView.url?.path: \(webView.url?.path)")
+        NSLog("decidePolicyFor WKNavigationResponse: \(navigationResponse)")
+        NSLog("webView.url?.path: \(webView.url?.path)")
         guard let statusCode
                 = (navigationResponse.response as? HTTPURLResponse)?.statusCode else {
             // NSLog("decidePolicyFor: no http status code to act on")

@@ -11,6 +11,8 @@ import Foundation
 import UIKit
 import ios_system
 
+var runningInExtension = false
+
 var currentDelegate: SceneDelegate? {
     let opaquePointer = OpaquePointer(ios_getContext())
     guard let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) else { return nil }
@@ -68,13 +70,18 @@ public func isForeground(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
 
 @_cdecl("wasm")
 public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
-    let args = convertCArguments(argc: argc, argv: argv)
-    if let delegate = currentDelegate {
-        return delegate.executeWebAssembly(arguments: args)
+    if (runningInExtension) {
+        fputs("webAssembly commands are not available \"In Extension\".\n", thread_stderr)
+        finishedPreparingWebAssemblyCommand();
+        return -1
+    } else {
+        let args = convertCArguments(argc: argc, argv: argv)
+        if let delegate = currentDelegate {
+            return delegate.executeWebAssembly(arguments: args)
+        }
+        return 0
     }
-    return 0
 }
-
 
 @_cdecl("executeWebAssemblyCommands")
 public func executeWebAssemblyCommands() {
@@ -85,9 +92,16 @@ public func executeWebAssemblyCommands() {
 
 @_cdecl("jsc_internal")
 public func jsc(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
-    let args = convertCArguments(argc: argc, argv: argv)
-    if let delegate = currentDelegate {
-        delegate.executeJavascript(arguments: args)
+    if (runningInExtension) {
+        // If running "in extension" or "in the background", execute JS using JavaScriptCore
+        // This reliably works, but it's slower:
+        return jsc_core(argc: argc, argv: argv)
+    } else {
+        // Inside the main app, use WkWebView:evaluateJavaScript (faster)
+        let args = convertCArguments(argc: argc, argv: argv)
+        if let delegate = currentDelegate {
+            delegate.executeJavascript(arguments: args)
+        }
     }
     return 0
 }
@@ -1680,6 +1694,9 @@ public func text(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
 
 @_cdecl("stopInteractive")
 public func stopInteractive() {
+    if (runningInExtension) {
+        return
+    }
     DispatchQueue.main.async {
         if let delegate = currentDelegate {
             delegate.resignFirstResponder()
@@ -1693,6 +1710,9 @@ public func stopInteractive() {
 
 @_cdecl("storeInteractive")
 public func storeInteractive() -> Int32 {
+    if (runningInExtension) {
+        return 0
+    }
     var returnValue:Int32 = -1;
     var waitingForAnswer = true
     DispatchQueue.main.async {
@@ -1716,6 +1736,9 @@ public func storeInteractive() -> Int32 {
 
 @_cdecl("startInteractive")
 public func startInteractive() {
+    if (runningInExtension) {
+        return
+    }
     DispatchQueue.main.async {
         if let delegate = currentDelegate {
             delegate.resignFirstResponder()
@@ -1730,7 +1753,7 @@ public func startInteractive() {
 @_cdecl("needLLVM")
 public func needLLVM(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
-    fputs("In order to use \(args[0]), you need to install or update the C SDK with 'pkg install llvm'.\n", thread_stderr)
+    fputs("In order to use \(args[0]), you need to install or update the C SDK with 'pkg install llvm-18'.\n", thread_stderr)
     return 0
 }
 
@@ -1794,7 +1817,8 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
     if FileManager().fileExists(atPath: headerUrl.path) {
         addCommandList(Bundle.main.path(forResource: "llvmDictionary", ofType: "plist"))
     } else {
-        for command in ["llvm-dis", "opt", "llvm-link", "lli", "llc", "lld", "ld", "ar", "ranlib", "wasm-ld", "lld-link", "ld.lld", "ld64.lld", "clang", "clang++"] {
+        // "llvm-dis", "opt", "llvm-link", "lli", "llc": bitcode-based commands. Removed now.
+        for command in ["lld", "ld", "ar", "ranlib", "wasm-ld", "lld-link", "ld.lld", "ld64.lld", "clang", "clang++"] {
             // All these commands use "main", so "false" so as not to replace all "main" commands:
             replaceCommand(command, "needLLVM", false)
         }
@@ -2039,4 +2063,5 @@ public func executeCommandAndWait(command: String) {
     ios_waitpid(pid)
     ios_releaseThreadId(pid)
 }
+
 

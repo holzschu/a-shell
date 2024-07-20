@@ -77,8 +77,10 @@ struct Webview : UIViewRepresentable {
     func updateUIView(_ uiView: WebViewType, context: Context) {
         if (uiView.url != nil) { return } // Already loaded the page
         let htermFilePath = Bundle.main.path(forResource: "hterm", ofType: "html")
+        let htermURL = URL(fileURLWithPath: htermFilePath!)
+        let directoryURL = htermURL.deletingLastPathComponent()
         uiView.isOpaque = false
-        uiView.loadFileURL(URL(fileURLWithPath: htermFilePath!), allowingReadAccessTo: URL(fileURLWithPath: htermFilePath!))
+        uiView.loadFileURL(htermURL, allowingReadAccessTo: directoryURL)
     }
 }
 
