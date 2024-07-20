@@ -2,41 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>llvm-dis</key>
-	<array>
-		<string>dis.framework/dis</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>opt</key>
-	<array>
-		<string>opt.framework/opt</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>llvm-link</key>
-	<array>
-		<string>link.framework/link</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>lli</key>
-	<array>
-		<string>lli.framework/lli</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>llc</key>
-	<array>
-		<string>llc.framework/llc</string>
-		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
 	<key>lld</key>
 	<array>
 		<string>lld.framework/lld</string>

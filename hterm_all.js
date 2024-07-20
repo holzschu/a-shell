@@ -17473,7 +17473,7 @@ hterm.Terminal.prototype.displayImage = function(options, onLoad, onError) {
   }
 
   // Has the user approved image display yet?
-  if (this.allowImagesInline !== true) {
+  if (!this.allowImagesInline == true) {
     this.newLine();
     const row = this.getRowNode(this.scrollbackRows_.length +
                                 this.getCursorRow() - 1);

@@ -14,15 +14,23 @@ import Compression
 import Intents // for shortcuts
 import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
+import Vapor // for our local server for WebAssembly
+import NIOSSL // for TLS (https) authentification
 
-var downloadingTeX = false
-var percentTeXDownloadComplete = 0.0
-var downloadingOpentype = false
-var percentOpentypeDownloadComplete = 0.0
 let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
 // Need SDK install to be over before starting commands.
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
+let localServerApp = Application()
+
+// Which version of the app are we running? a-Shell, a-Shell-mini, a-Shell-pro...? (no spaces in name)
+var appVersion: String? {
+    // Bundle.main.infoDictionary?["CFBundleDisplayName"] = a-Shell
+    // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.a-Shell
+    // Bundle.main.infoDictionary?["CFBundleName"] = a-Shell
+    NSLog("appVersion returns: \(Bundle.main.infoDictionary?["CFBundleName"])")
+    return Bundle.main.infoDictionary?["CFBundleName"] as? String
+}
 
 @objcMembers
 @UIApplicationMain
@@ -30,16 +38,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // to update Python distribution at each version update
     var versionUpToDate = true
     var libraryFilesUpToDate = true
-    let moveFilesQueue = DispatchQueue(label: "moveFiles", qos: .utility) // low priority
+    let localServerQueue = DispatchQueue(label: "moveFiles", qos: .userInteractive) // high priority, but not blocking
 
-    // Which version of the app are we running? a-Shell, a-Shell-mini, a-Shell-pro...? (no spaces in name)
-    var appVersion: String? {
-        // Bundle.main.infoDictionary?["CFBundleDisplayName"] = a-Shell
-        // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.a-Shell
-        // Bundle.main.infoDictionary?["CFBundleName"] = a-Shell
-        return Bundle.main.infoDictionary?["CFBundleName"] as? String
-    }
-    
     func createDirectory(localURL: URL) -> Bool {
         do {
             if (FileManager().fileExists(atPath: localURL.path) && !localURL.isDirectory) {
@@ -166,11 +166,77 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("newWindow", "clear", true)
         }
         replaceCommand("exit", "clear", true)
+        do {
+            // Vapor prints a lot of info on the console. No need to add ours.
+            // TODO: restart localServerApp.server if unable to connect --> how?
+            // No websocket support for now: it's not needed for a-Shell
+            localServerApp.http.server.configuration.hostname = "127.0.0.1"
+            // Make sure the servers for the different apps don't interfere with each other:
+            if (appVersion != "a-Shell-mini") {
+                localServerApp.http.server.configuration.port = 8443
+            } else {
+                localServerApp.http.server.configuration.port = 8334
+            }
+            localServerApp.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
+                certificateChain: try NIOSSLCertificate.fromPEMFile(Bundle.main.resourcePath! + "/localCertificate.pem").map { .certificate($0) },
+                privateKey: .file(Bundle.main.resourcePath! + "/localCertificateKey.pem")
+            )
+            localServerApp.get("**") { request -> Response in
+                let urlPath = request.url.path
+                // Load ~/Library/node_modules first if it exists:
+                // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
+                let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                        in: .userDomainMask,
+                                                        appropriateFor: nil,
+                                                        create: true)
+                let localFilePath = libraryURL.path + urlPath
+                let rootFilePath = Bundle.main.resourcePath! + urlPath
+                var fileName: String? = nil
+                NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
+                if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
+                    fileName = localFilePath
+                } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
+                    fileName = rootFilePath
+                }
+                NSLog("file found: \(fileName)")
+                if (fileName != nil) {
+                    var headers = HTTPHeaders()
+                    if (urlPath.hasSuffix(".html")) {
+                        headers.add(name: .contentType, value: "text/html")
+                    } else if (urlPath.hasSuffix(".js")) {
+                        headers.add(name: .contentType, value: "application/javascript")
+                    } else if (urlPath.hasSuffix(".wasm")) {
+                        NSLog("setting the header to application/wasm")
+                        headers.add(name: .contentType, value: "application/wasm")
+                    }
+                    // These headers get us a "crossOriginIsolated == true;"
+                    headers.add(name: "Cross-Origin-Embedder-Policy", value: "require-corp")
+                    headers.add(name: "Cross-Origin-Opener-Policy", value: "same-origin")
+                    headers.add(name: "Cross-Origin-Resource-Policy", value: "same-origin")
+                    do {
+                        // Binary access to the file, because we could be serving WASM files
+                        let body = try Data(contentsOf: URL(fileURLWithPath: fileName!))
+                        NSLog("Returned \(urlPath) with \(fileName!)")
+                        return Response(status: .ok, headers: headers, body: Response.Body(data: body))
+                    }
+                    catch {
+                        NSLog("File: \(fileName) could not access: \(error).")
+                        return Response(status: .forbidden)
+                    }
+                }
+                NSLog("\(urlPath): not found")
+                return Response(status: .notFound)
+            }
+            try localServerApp.server.start()
+        }
+        catch {
+            NSLog("Unable to start the vapor server: \(error)")
+        }
         // Called when installing/uninstalling LLVM or texlive distribution:
         if (appVersion != "a-Shell-mini") {
             replaceCommand("updateCommands", "updateCommands", true)
             // "updateCommands" is also called at startup:
-            var argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "updateCommands".toCString()!)]
+            let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "updateCommands".toCString()!)]
             updateCommands(argc: 1, argv: UnsafeMutablePointer(mutating: argv));
         }
         // for debugging TeX issues / installing a new distribution
@@ -222,7 +288,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
-            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasi", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments
+            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 x  ^-fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
             // TeX variables (for tlmgr to work) = only when installing from scratch
             // default texmf.cnf available:
             // setenv("TEXMFCNF", Bundle.main.resourcePath!, 1)
@@ -596,18 +662,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
     
-    func application(_ application: UIApplication, handle intent: INIntent, completionHandler: @escaping (INIntentResponse) -> Void) {
-          
-        let response: INIntentResponse
-
-        if let commandIntent = intent as? ExecuteCommandIntent {
-            NSLog("Received an intent at the application level: \(commandIntent)")
-            response = INStartWorkoutIntentResponse(code: .success, userActivity: nil)
+    func application(_ application: UIApplication, handlerFor intent: INIntent) -> Any? {
+        switch intent {
+        case is GetFileIntent:
+            return GetFileIntentHandler(application: application)
+        case is PutFileIntent:
+            return PutFileIntentHandler(application: application)
+        case is ExecuteCommandIntent:
+            return ExecuteCommandIntentHandler(application: application)
+        default:
+            return nil
         }
-        else {
-            response = INStartWorkoutIntentResponse(code: .failure, userActivity: nil)
-        }
-        completionHandler(response)
     }
     
 }

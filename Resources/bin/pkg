@@ -31,7 +31,7 @@ EOF
 list() {
 	if [ -d ~/Documents/.pkg ]
 	then
-		ls -1 ~/Documents/.pkg/	
+		$APPDIR/bin/ls -1 ~/Documents/.pkg/	
 	else
 		echo No packages installed yet
 	fi
@@ -41,10 +41,10 @@ search() {
 	echo Packages available:
 	if [ -z $1 ]
 	then
-		curl -L $server/list --silent
+		$APPDIR/bin/curl -L $server/list --silent
 	else
 		expression=$1
-		curl -L $server/list --silent | grep $expression
+		$APPDIR/bin/curl -L $server/list --silent | $APPDIR/bin/grep $expression
 	fi
 }
 
@@ -55,7 +55,7 @@ install() {
 		then
 			echo Processing $name
 		fi
-		curl -L $server/list --silent | grep ^$name > ~/tmp/packageList
+		$APPDIR/bin/curl -L $server/list --silent | $APPDIR/bin/grep ^$name > ~/tmp/packageList
 		length=`wc -l < ~/tmp/packageList`
 		if [ $length -eq 0 ]
 		then
@@ -64,11 +64,11 @@ install() {
 		then
 			packageName=`cat ~/tmp/packageList`
 			echo Downloading $packageName
-			curl -L $server/packages/$packageName -o ~/tmp/$packageName --silent
-			chmod +x ~/tmp/$packageName
-			sh ~/tmp/$packageName
-			rm ~/tmp/$packageName
-			rehash
+			$APPDIR/bin/curl -L $server/packages/$packageName -o ~/tmp/$packageName --silent
+			$APPDIR/bin/chmod +x ~/tmp/$packageName
+			$APPDIR/bin/sh ~/tmp/$packageName
+			$APPDIR/bin/rm ~/tmp/$packageName
+			$APPDIR/bin/rehash
 			echo Done
 		else
 			packageFound=0
@@ -77,11 +77,11 @@ install() {
 				if [ $packageName = $name ]
 				then
 					echo Downloading $packageName
-					curl -L $server/packages/$packageName -o ~/tmp/$packageName --silent
-					chmod +x ~/tmp/$packageName
-					sh ~/tmp/$packageName
-					rm ~/tmp/$packageName
-					rehash
+					$APPDIR/bin/curl -L $server/packages/$packageName -o ~/tmp/$packageName --silent
+					$APPDIR/bin/chmod +x ~/tmp/$packageName
+					$APPDIR/bin/sh ~/tmp/$packageName
+					$APPDIR/bin/rm ~/tmp/$packageName
+					$APPDIR/bin/rehash
 					packageFound=1
 					echo Done
 					break
@@ -90,10 +90,10 @@ install() {
 			if [ $packageFound -eq 0 ]
 			then
 				echo Package name $name unclear. Did you mean:
-				cat ~/tmp/packageList
+				$APPDIR/bin/cat ~/tmp/packageList
 			fi
 		fi
-		rm ~/tmp/packageList
+		$APPDIR/bin/rm ~/tmp/packageList
 	done
 }
 
@@ -107,10 +107,11 @@ remove() {
 		if [ -f ~/Documents/.pkg/$name ]
 		then
 			echo Removing $name
-			sh ~/Documents/.pkg/$name
-			rm ~/Documents/.pkg/$name
-			mandocdb ~/Library/man
-			rehash
+			$APPDIR/bin/sh ~/Documents/.pkg/$name
+			$APPDIR/bin/rm ~/Documents/.pkg/$name
+			# mandocdb complains if it's called with $APPDIR/bin/
+			\mandocdb ~/Library/man/
+			$APPDIR/bin/rehash
 			echo Done
 		else
 			echo Package $name was not installed by pkg. Cannot remove it.

@@ -577,6 +577,7 @@ function setupHterm() {
 	term.prefs_.set('audible-bell-sound', '');
 	term.prefs_.set('receive-encoding', 'utf-8'); 
 	term.prefs_.set('meta-sends-escape', 'false'); 
+	term.prefs_.set('allow-images-inline', true);
 
 	term.setReverseWraparound(true);
 	term.setWraparound(true);
@@ -2583,9 +2584,8 @@ lib.PreferenceManager.prototype.setSync = function(
  *     Defaults to an empty string if not specified.
  */
 // iOS edit: added a backup font in case the requested font cannot be loaded. It has to be hardcoded.
-hterm.ScrollPort.prototype.setFontFamily = function(
-    fontFamily, smoothing = '') {
-  this.screen_.style.fontFamily = fontFamily + ", Menlo, monospace";
+hterm.ScrollPort.prototype.setFontFamily = function(fontFamily, smoothing = '') {
+	this.screen_.style.fontFamily = fontFamily + ", Menlo, monospace";
   this.screen_.style.webkitFontSmoothing = smoothing;
 
   this.syncCharacterSize();
