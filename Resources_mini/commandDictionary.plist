@@ -16,6 +16,13 @@
 		<string>dhiflM:N:nsuw</string>
 		<string>file</string>
 	</array>
+	<key>base64</key>
+	<array>
+		<string>files.framework/files</string>
+		<string>base64_main</string>
+		<string>edtl</string>
+		<string>file</string>
+	</array>
 	<key>basename</key>
 	<array>
 		<string>shell.framework/shell</string>
@@ -888,13 +895,6 @@
 	<array>
 		<string>multimarkdown.framework/multimarkdown</string>
 		<string>main</string>
-		<string></string>
-		<string>file</string>
-	</array>
-	<key>rclone</key>
-	<array>
-		<string>rclone.framework/rclone</string>
-		<string>Rclone_mainMain</string>
 		<string></string>
 		<string>file</string>
 	</array>
