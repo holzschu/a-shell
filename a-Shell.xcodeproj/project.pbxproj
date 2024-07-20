@@ -410,7 +410,6 @@
 		22239C60250293970069E539 /* python3_ios-_xxtestfuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B9B2502935A0069E539 /* python3_ios-_xxtestfuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22239C6E250293980069E539 /* python3_ios-syslog.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B86250293580069E539 /* python3_ios-syslog.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22239C71250293980069E539 /* python3_ios-xxlimited.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22239B962502935A0069E539 /* python3_ios-xxlimited.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		2224F2A52C2490CA00E0BA40 /* rclone.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2224F2A42C24909400E0BA40 /* rclone.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		222BE55B2BE2D512002E4272 /* wasm_withWorker.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248A2BE12FEE003A8031 /* wasm_withWorker.js */; };
 		222BE55C2BE2D519002E4272 /* wasm_worker_wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */; };
 		2230F40A257D47D100810B07 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2230F400257D479900810B07 /* Assets.xcassets */; };
@@ -1233,7 +1232,6 @@
 				2232245F289695B2001BAE04 /* pico.framework in Embed Frameworks */,
 				227318AE28F02E2F0027A736 /* multimarkdown.framework in Embed Frameworks */,
 				221642752B7C05CB00043766 /* ssh_agent.xcframework in Embed Frameworks */,
-				2224F2A52C2490CA00E0BA40 /* rclone.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
