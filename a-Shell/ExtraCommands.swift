@@ -71,7 +71,7 @@ public func isForeground(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
 @_cdecl("wasm")
 public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     if (runningInExtension) {
-        fputs("webAssembly commands are not available \"In Extension\".\n", thread_stderr)
+        fputs("JIT webAssembly is not available \"In Extension\". Try \"wasm3\".\n", thread_stderr)
         finishedPreparingWebAssemblyCommand();
         return -1
     } else {

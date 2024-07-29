@@ -141,7 +141,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("pickFolder", "pickFolder", true)
         replaceCommand("config", "config", true)
         replaceCommand("keepDirectoryAfterShortcut", "keepDirectoryAfterShortcut", true)
-        replaceCommand("wasm", "wasm", true)
+        replaceCommand("wasm", "wasm", true) // Apple's Wasm JIT interpreter. Faster than Wasm3 on CPU-intensive tasks, handles exceptions
         replaceCommand("jsc", "jsc_internal", false)  // use our own jsc instead of ios_system jsc. Keep the original version
         replaceCommand("call", "call", true)  // call a contact
         replaceCommand("text", "text", true)  // send a text to a contact
@@ -288,7 +288,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
-            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 x  ^-fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
+            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
             // TeX variables (for tlmgr to work) = only when installing from scratch
             // default texmf.cnf available:
             // setenv("TEXMFCNF", Bundle.main.resourcePath!, 1)

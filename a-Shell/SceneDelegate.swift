@@ -16,9 +16,7 @@ import AVKit // for media playback
 import AVFoundation // for media playback
 import TipKit // for helpful tips
 import Vapor // for our local server for WebAssembly
-import WasmInterpreter
 
-var messageHandlerAdded = false
 var inputFileURLBackup: URL?
 
 let factoryFontSize = Float(13)
@@ -4732,9 +4730,6 @@ extension SceneDelegate: WKUIDelegate {
                                 for c in 0...numValues-1 {
                                     if let value = UInt8(values[c]) {
                                         data.append(contentsOf: [value])
-                                        if (value == 0) {
-                                            break;
-                                        }
                                     }
                                 }
                                 // NSLog("writing \(String(decoding: data, as: UTF8.self)) to fd \(fd)")
