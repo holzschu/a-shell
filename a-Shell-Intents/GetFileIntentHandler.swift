@@ -24,7 +24,7 @@ class GetFileIntentHandler: INExtension, GetFileIntentHandling
     
     let application: UIApplication
     
-    init(application: UIApplication) {
+        init(application: UIApplication) {
         self.application = application
     }
     
@@ -71,8 +71,23 @@ class GetFileIntentHandler: INExtension, GetFileIntentHandling
                 if FileManager().fileExists(atPath: fileName) {
                     let fileURL = URL(fileURLWithPath: fileName)
                     let intentResponse = GetFileIntentResponse(code: .success, userActivity: nil)
-                    intentResponse.file = INFile(fileURL: fileURL, filename: fileName, typeIdentifier: nil)
-                    completion(intentResponse)
+                    do {
+                        if #available(iOS 18.0, *) {
+                            // Address a bug in iOS 18 that deletes the file when showing it
+                            // but only if it was created with putFile.
+                            if let urlData = try? Data(contentsOf: fileURL) {
+                                intentResponse.file = INFile(data: urlData, filename: fileName, typeIdentifier: nil)
+                            } else if (errorIfNotFound == true) {
+                                let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
+                                intentResponse.message = "Could not read content of file \(fileName)."
+                                completion(intentResponse)
+                                return
+                            }
+                        } else {
+                            intentResponse.file = INFile(fileURL: fileURL, filename: fileName, typeIdentifier: nil)
+                        }
+                        completion(intentResponse)
+                    }
                 } else if (errorIfNotFound == true) {
                     let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
                     intentResponse.message = "File \(fileName) not found error"

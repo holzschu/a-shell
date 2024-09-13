@@ -81,10 +81,10 @@ class PutFileIntentHandler: INExtension, PutFileIntentHandling
                             return
                         }
                         if (FileManager().fileExists(atPath: localURL.path) && (intent.overwrite == 1)) {
+                            try FileManager().setAttributes([.immutable : false], ofItemAtPath: localURL.path)
                             try FileManager().removeItem(at: localURL)
                         }
                         try FileManager().copyItem(at: distantURL, to: localURL)
-                        
                         if (isSecuredURL) {
                             distantURL.stopAccessingSecurityScopedResource()
                         }
