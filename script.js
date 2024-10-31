@@ -110,11 +110,21 @@ function isLetter(c) {
 
 // Required because printedContent now arrives after the first prompt has been printed.
 function setWindowContent(string) {
+	if (window.printedContent != '') {
+		return;
+	}
 	window.term_.wipeContents();
 	window.printedContent = '';
 	window.term_.io.print(string);
-	printPrompt();
-	io.currentCommand = '';
+	if (!string.endsWith(window.promptMessage)) {
+		printPrompt();
+	} else {
+		// If the string ends with the prompt, no need to print it again.
+		window.commandRunning = '';
+		window.interactiveCommandRunning = false;
+		window.term_.reportFocus = false; // That was causing ^[[I sometimes
+	}
+	window.term_.io.currentCommand = '';
 }
 
 function printPrompt() {
