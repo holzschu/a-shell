@@ -63,11 +63,11 @@
 	<key>INIntentDefinitionNamespace</key>
 	<string>iwbZ8l</string>
 	<key>INIntentDefinitionSystemVersion</key>
-	<string>23A344</string>
+	<string>23G80</string>
 	<key>INIntentDefinitionToolsBuildVersion</key>
-	<string>15C65</string>
+	<string>16A242d</string>
 	<key>INIntentDefinitionToolsVersion</key>
-	<string>15.1</string>
+	<string>16.0</string>
 	<key>INIntents</key>
 	<array>
 		<dict>
@@ -375,10 +375,10 @@
 			<key>INIntentKeyParameter</key>
 			<string>fileName</string>
 			<key>INIntentLastParameterTag</key>
-			<integer>5</integer>
+			<integer>7</integer>
 			<key>INIntentManagedParameterCombinations</key>
 			<dict>
-				<key>fileName,errorIfNotFound</key>
+				<key>fileName,errorIfNotFound,copyFile</key>
 				<dict>
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
@@ -394,18 +394,16 @@
 			<string>GetFile</string>
 			<key>INIntentParameterCombinations</key>
 			<dict>
-				<key>fileName,errorIfNotFound</key>
+				<key>fileName,errorIfNotFound,copyFile</key>
 				<dict>
 					<key>INIntentParameterCombinationIsLinked</key>
-					<true/>
-					<key>INIntentParameterCombinationIsPrimary</key>
 					<true/>
 					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
 					<true/>
 					<key>INIntentParameterCombinationTitle</key>
 					<string>Get ${fileName} from a-Shell</string>
 					<key>INIntentParameterCombinationTitleID</key>
-					<string>Qfisqk</string>
+					<string>vH0brs</string>
 				</dict>
 			</dict>
 			<key>INIntentParameters</key>
@@ -493,6 +491,54 @@
 					<true/>
 					<key>INIntentParameterTag</key>
 					<integer>5</integer>
+					<key>INIntentParameterType</key>
+					<string>Boolean</string>
+				</dict>
+				<dict>
+					<key>INIntentParameterConfigurable</key>
+					<true/>
+					<key>INIntentParameterDisplayName</key>
+					<string>(as a copy)</string>
+					<key>INIntentParameterDisplayNameID</key>
+					<string>iyshAF</string>
+					<key>INIntentParameterDisplayPriority</key>
+					<integer>3</integer>
+					<key>INIntentParameterMetadata</key>
+					<dict>
+						<key>INIntentParameterMetadataFalseDisplayName</key>
+						<string>false</string>
+						<key>INIntentParameterMetadataFalseDisplayNameID</key>
+						<string>swf9DK</string>
+						<key>INIntentParameterMetadataTrueDisplayName</key>
+						<string>true</string>
+						<key>INIntentParameterMetadataTrueDisplayNameID</key>
+						<string>TBJT0J</string>
+					</dict>
+					<key>INIntentParameterName</key>
+					<string>copyFile</string>
+					<key>INIntentParameterPromptDialogs</key>
+					<array>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>Configuration</string>
+						</dict>
+						<dict>
+							<key>INIntentParameterPromptDialogCustom</key>
+							<true/>
+							<key>INIntentParameterPromptDialogFormatString</key>
+							<string>Get the file as a copy? (avoids deletion bug with iOS 18)</string>
+							<key>INIntentParameterPromptDialogFormatStringID</key>
+							<string>rOKYAZ</string>
+							<key>INIntentParameterPromptDialogType</key>
+							<string>Primary</string>
+						</dict>
+					</array>
+					<key>INIntentParameterSupportsResolution</key>
+					<true/>
+					<key>INIntentParameterTag</key>
+					<integer>7</integer>
 					<key>INIntentParameterType</key>
 					<string>Boolean</string>
 				</dict>
