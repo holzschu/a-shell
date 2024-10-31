@@ -1324,11 +1324,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {
             // clear entire display: ^[[2J
             // position cursor on top line: ^[[1;1H 
-            self.webView?.evaluateJavaScript("window.term_.io.print('" + self.escape + "[2J'); window.term_.io.print('" + self.escape + "[1;1H'); ") { (result, error) in
+            self.webView?.evaluateJavaScript("window.term_.io.print('" + self.escape + "[2J'); window.term_.io.print('" + self.escape + "[1;1H'); window.printedContent = ''; ") { (result, error) in
                 // if let error = error { print(error) }
                 // if let result = result { print(result) }
             }
             // self.webView?.accessibilityLabel = ""
+            // Store window.printedContent as new:
+            self.windowPrintedContent = "";
         }
     }
 
@@ -2063,6 +2065,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             guard (avplayer != nil) else {
                 return -1
             }
+            if #available(iOS 14.2, *) {
+                // Doesn't do anything, should start PiP when going to background:
+                // Works differently on iPhones and iPads?
+                avcontroller!.canStartPictureInPictureAutomaticallyFromInline = true
+            }
+            avcontroller!.allowsPictureInPicturePlayback = true
             avcontroller!.delegate = self
             avControllerPiPEnabled = false
             avplayer?.allowsExternalPlayback = true
@@ -3040,10 +3048,45 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if (currentCommand == "") {
                     // Q: need to wait until configuration files are loaded?
                     // window.printedContent = '\(windowPrintedContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r"))';
-                    print("PrintedContent to be restored: \(windowPrintedContent.count)")
+                    // print("PrintedContent to be restored: \(windowPrintedContent.count)")
                     // print("\(windowPrintedContent)")
                     // print("End PrintedContent.")
                     // print(windowPrintedContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r"))
+                    // Version 1.15.7+: check if old commands need to be updated, print message about it.
+                    let documentsUrl = try! FileManager().url(for: .documentDirectory,
+                                                              in: .userDomainMask,
+                                                              appropriateFor: nil,
+                                                              create: true)
+                    let unzipPath = documentsUrl.appendingPathComponent("bin/unzip.wasm3").path
+                    var mustUpdateZip = false
+                    if (FileManager().fileExists(atPath: unzipPath)) {
+                        do {
+                            let unzipFileSize = try FileManager().attributesOfItem(atPath: unzipPath)[.size] as! UInt64
+                            if (unzipFileSize != 196161) {
+                                mustUpdateZip = true
+                            }
+                        }
+                        catch {  }
+                    }
+                    let xzPath = documentsUrl.appendingPathComponent("bin/xz.wasm3").path
+                    var mustUpdateXz = false
+                    if (FileManager().fileExists(atPath: xzPath)) {
+                        do {
+                            let xzFileSize = try FileManager().attributesOfItem(atPath: unzipPath)[.size] as! UInt64
+                            if (xzFileSize != 196301) {
+                                mustUpdateXz = true
+                            }
+                        }
+                        catch {  }
+                    }
+                    if (mustUpdateZip && mustUpdateXz) {
+                        windowPrintedContent += "\n\rYou have installed the zip and xz commands.\n\ra-Shell has made incompatible changes with this version.\n\rYou should re-install them with `pkg install zip` and `pkg install xz`.\n"
+                    } else if (mustUpdateZip) {
+                        windowPrintedContent += "\n\rYou have installed the zip/unzip commands.\n\ra-Shell has made incompatible changes with this version.\n\rYou should re-install them with `pkg install zip`.\n"
+                    } else if (mustUpdateXz) {
+                        windowPrintedContent += "\n\rYou have installed the xz/xzdec commands.\n\ra-Shell has made incompatible changes with this version.\n\rYou should re-install them with `pkg install xz`.\n"
+                    }
+                    // When should I remove this warning? October 2026? 
                     let command = "window.promptMessage = '\(self.parsePrompt())'; \(windowHistory)  window.printedContent = \"\(windowPrintedContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n"))\"; window.commandRunning = '\(currentCommand)'; window.interactiveCommandRunning = isInteractive(window.commandRunning); if (window.printedContent != '') { window.term_.wipeContents(); let content=window.printedContent; window.printedContent=''; window.term_.io.print(content); } else { window.printPrompt(); } updatePromptPosition();"
                     // NSLog("resendCommand, command=\(command)")
                     self.webView!.evaluateJavaScript(command) { (result, error) in
@@ -3275,6 +3318,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if #available(iOS 16.0, *) {
                 webView?.isFindInteractionEnabled = true
             }
+            // Is the app opened from a Shortcut?
+            var startedFromShortcut = false
+            for userActivity in connectionOptions.userActivities {
+                if (userActivity.activityType == "AsheKube.app.a-Shell.ExecuteCommand") {
+                    startedFromShortcut = true
+                    break
+                }
+            }
             if (!toolbarShouldBeShown) {
                 showToolbar = false
                 self.webView?.addInputAccessoryView(toolbar: self.emptyToolbar)
@@ -3289,24 +3340,27 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
                 }
                 if #available(iOS 17, *) {
-                    // Do *not* show the toolbar tip if the user has already edited the toolbar
-                    // (you can't show an old user a new tip)
-                    if let documentsUrl = try? FileManager().url(for: .documentDirectory,
-                                                                 in: .userDomainMask,
-                                                                 appropriateFor: nil,
-                                                                 create: true) {
-                        let localConfigFile = documentsUrl.appendingPathComponent(".toolbarDefinition")
-                        if !FileManager().fileExists(atPath: localConfigFile.path) {
-                            NSLog("myToolbarTip status: \(myToolbarTip.status)")
-                            Task { @MainActor in
-                                for await shouldDisplay in myToolbarTip.shouldDisplayUpdates {
-                                    NSLog("myToolbarTip: \(shouldDisplay) status: \(myToolbarTip.status)")
-                                    if shouldDisplay {
-                                        if (self.webView != nil) {
-                                            let controller = TipUIPopoverViewController(myToolbarTip, sourceItem: self.webView!)
-                                            controller.popoverPresentationController?.canOverlapSourceViewRect = true
-                                            let rootVC = self.window?.rootViewController
-                                            rootVC?.present(controller, animated: false)
+                    // Do not show the toolbar tip if the app has been started from a Shortcut:
+                    if (!startedFromShortcut) {
+                        // Do *not* show the toolbar tip if the user has already edited the toolbar
+                        // (you can't show an old user a new tip)
+                        if let documentsUrl = try? FileManager().url(for: .documentDirectory,
+                                                                     in: .userDomainMask,
+                                                                     appropriateFor: nil,
+                                                                     create: true) {
+                            let localConfigFile = documentsUrl.appendingPathComponent(".toolbarDefinition")
+                            if !FileManager().fileExists(atPath: localConfigFile.path) {
+                                NSLog("myToolbarTip status: \(myToolbarTip.status)")
+                                Task { @MainActor in
+                                    for await shouldDisplay in myToolbarTip.shouldDisplayUpdates {
+                                        NSLog("myToolbarTip: \(shouldDisplay) status: \(myToolbarTip.status)")
+                                        if shouldDisplay {
+                                            if (self.webView != nil) {
+                                                let controller = TipUIPopoverViewController(myToolbarTip, sourceItem: self.webView!)
+                                                controller.popoverPresentationController?.canOverlapSourceViewRect = true
+                                                let rootVC = self.window?.rootViewController
+                                                rootVC?.present(controller, animated: false)
+                                            }
                                         }
                                     }
                                 }
@@ -3433,11 +3487,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Was this window created with a purpose?
             // Case 1: url to open is inside urlContexts
-            // NSLog("connectionOptions.urlContexts: \(connectionOptions.urlContexts.first)")
+            NSLog("connectionOptions.urlContexts: \(connectionOptions.urlContexts.first)")
             if let urlContext = connectionOptions.urlContexts.first {
                 // let sendingAppID = urlContext.options.sourceApplication
                 let fileURL = urlContext.url
-                // NSLog("url from urlContexts = \(fileURL)")
+                NSLog("url from urlContexts = \(fileURL)")
                 if (fileURL.isFileURL) {
                     let isReadableWithoutSecurity = FileManager().isReadableFile(atPath: fileURL.path)
                     let isSecuredURL = fileURL.startAccessingSecurityScopedResource()
@@ -3484,7 +3538,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                 } else if ((fileURL.scheme ?? "").hasPrefix("ashell")) {
-                    NSLog("We received an URL in willConnectTo: \(fileURL.absoluteString.removingPercentEncoding)") // received "ashell://ls"
+                    // NSLog("We received an URL in willConnectTo: \(fileURL.absoluteString.removingPercentEncoding)") // received "ashell://ls"
                     // The window is not yet fully opened, so executeCommand might fail.
                     var command = fileURL.absoluteString
                     command.removeFirst((fileURL.scheme ?? "").count + 1)
@@ -3511,8 +3565,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             for userActivity in connectionOptions.userActivities {
                 // NSLog("Found userActivity: \(userActivity)")
                 // NSLog("Type: \(userActivity.activityType)")
-                // NSLog("URL: \(userActivity.userInfo!["url"])")
-                // NSLog("UserInfo: \(userActivity.userInfo!)")
+                // These two lines cause a crash in iOS 18:
+                // NSLog("URL: \(userActivity.userInfo?["url"])")
+                // NSLog("UserInfo: \(userActivity.userInfo)")
                 if (userActivity.activityType == "AsheKube.app.a-Shell.EditDocument") {
                     self.closeAfterCommandTerminates = true
                     window.makeKeyAndVisible() // We need it a 2nd time for keyboard to resize itself.
@@ -3538,7 +3593,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // This can be either from open URL (ashell:command) or from Shortcuts
                     // Set working directory to a safer place (also used by shortcuts):
                     // But do not reset afterwards, since this is a new window
-                    NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
+                    // This line causes a crash in iOS 18:
+                    // NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
                     if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
                         changeDirectory(path: groupUrl.path)
                     }
@@ -4131,27 +4187,30 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Should we restore window content?
         if UserDefaults.standard.bool(forKey: "keep_content") {
             if var terminalData = userInfo["terminal"] as? String {
+                // print("printedContent we received = \(terminalData) End")
                 if (terminalData.contains(";Thanks for flying Vim")) {
                     // Rest of a Vim session; skip everything until next prompt.
                     let components = terminalData.components(separatedBy: ";Thanks for flying Vim")
                     terminalData = String(components.last ?? "")
                 }
-                // Also skip to first prompt:
-                if (terminalData.contains("$ ")) {
+                // Also skip to first prompt (unless it ends with a prompt):
+                if (terminalData.contains("$ ")) && (!terminalData.hasSuffix("$ ")) {
                     if let index = terminalData.firstIndex(of: "$") {
                         terminalData = String(terminalData.suffix(from: index))
                     }
                 }
                 // print("printedContent restored = \(terminalData.count) End")
+                // print("printedContent restored = \(terminalData) End")
                 webView!.evaluateJavaScript("window.setWindowContent",
                                             completionHandler: { (function: Any?, error: Error?) in
-                    if (error != nil) || (function == nil) {
-                        NSLog("function does not exist, set window.printedContent")
-                        // resendCommend will print this on screen
+                    if (error == nil) {
+                        // If the function exists, we do get an error "JS returned a result of an unexpected type"
+                        // NSLog("function does not exist, set window.printedContent: function= \(function) error: \(error).")
+                        // resendCommand will print this on screen
                         self.windowPrintedContent = terminalData
                     } else {
                         // The function is defined, we are here *after* JS initialization:
-                        NSLog("function does exist, calling window.setWindowContent")
+                        // NSLog("function does exist, calling window.setWindowContent")
                         let javascriptCommand = "window.promptMessage='\(self.parsePrompt())'; window.setWindowContent(\"" + terminalData.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\r", with: "\\r").replacingOccurrences(of: "\n", with: "\\n\\r") + "\");"
                         self.webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
                             /* if error != nil {
@@ -4526,13 +4585,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         } else if let string = String(data: data, encoding: String.Encoding.ascii) {
             // NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII: \(string)")
-            NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII.");
+            // NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII.");
             outputToWebView(string: string)
             if (string.contains(endOfTransmission)) {
                 stdout_active = false
             }
         } else {
-            NSLog("Couldn't convert data in stdout: \(data)")
+            // NSLog("Couldn't convert data in stdout: \(data)")
         }
     }
 }
@@ -4544,8 +4603,19 @@ extension SceneDelegate: AVPlayerViewControllerDelegate {
     }
     
     func playerViewControllerWillStopPictureInPicture(_ playerViewController: AVPlayerViewController) {
-        NSLog("playerViewControllerWillStartPictureInPicture")
+        NSLog("playerViewControllerWillStopPictureInPicture")
         avControllerPiPEnabled = false
+    }
+    
+    func playerViewControllerRestoreUserInterfaceForPictureInPictureStop(_ playerViewController: AVPlayerViewController) async {
+        NSLog("playerViewControllerRestoreUserInterfaceForPictureInPictureStop")
+    }
+    
+    func playerViewController(_ playerViewController: AVPlayerViewController,
+                              restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+        present(playerViewController, animated: false) {
+            completionHandler(true)
+        }
     }
 }
 
@@ -4674,6 +4744,9 @@ extension SceneDelegate: WKUIDelegate {
         let title = arguments[0]
         if (title == "libc") {
             // Make sure we are on the right iOS session. This resets the current working directory.
+            if (arguments[1] != "read") && (arguments[1] != "write") {
+                NSLog("prompt: \(prompt.replacingOccurrences(of: "\n", with: " "))")
+            }
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             if (arguments[1] == "open") {
@@ -4880,12 +4953,12 @@ extension SceneDelegate: WKUIDelegate {
                     for item in items {
                         returnString = returnString + item + "\n"
                     }
-                    // NSLog("readdir worked, returned: \(returnString)")
+                    // NSLog("readdir worked on \(arguments[2]), returned: \(returnString.count) bytes")
                     completionHandler(returnString.data(using: .utf8)?.base64EncodedString())
                 }
                 catch {
                     let error = (error as NSError)
-                    // NSLog("readdir failed, returned: \(error)")
+                    //  NSLog("readdir failed, returned: \(error)")
                     if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
                         // NSLog("underlying error: \(underlyingError)")
                         completionHandler("\(-underlyingError.code)")
@@ -5121,8 +5194,10 @@ extension SceneDelegate: WKUIDelegate {
                         var time = UnsafeMutablePointer<Darwin.timespec>.allocate(capacity: 2)
                         time[0] = atime
                         time[1] = mtime
+                        // NSLog("utimensat, atime: \(atime) mtime: \(mtime)")
                         let returnVal = utimensat(fd, path, time, flag)
                         if (returnVal != 0) {
+                            // NSLog("Error: " + String(cString: strerror(errno)))
                             completionHandler("\(-errno)")
                             errno = 0
                         } else {
@@ -5158,6 +5233,7 @@ extension SceneDelegate: WKUIDelegate {
                             var time = UnsafeMutablePointer<timeval>.allocate(capacity: 2)
                             time[0] = atime
                             time[1] = mtime
+                            // NSLog("futimes, atime: \(atime) mtime: \(mtime)")
                             let returnVal = futimes(fd, time)
                             if (returnVal != 0) {
                                 completionHandler("\(-errno)")

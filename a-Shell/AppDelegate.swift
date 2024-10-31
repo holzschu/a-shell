@@ -28,7 +28,9 @@ var appVersion: String? {
     // Bundle.main.infoDictionary?["CFBundleDisplayName"] = a-Shell
     // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.a-Shell
     // Bundle.main.infoDictionary?["CFBundleName"] = a-Shell
-    NSLog("appVersion returns: \(Bundle.main.infoDictionary?["CFBundleName"])")
+    // Bundle.main.infoDictionary["CFBundleShortVersionString"] = 1.15.2
+    // Bundle.main.infoDictionary["CFBundleVersion"] = 422
+    // NSLog("appVersion returns: \(Bundle.main.infoDictionary?["CFBundleName"])")
     return Bundle.main.infoDictionary?["CFBundleName"] as? String
 }
 
@@ -192,13 +194,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 let localFilePath = libraryURL.path + urlPath
                 let rootFilePath = Bundle.main.resourcePath! + urlPath
                 var fileName: String? = nil
-                NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
+                // NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
                 if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
                     fileName = localFilePath
                 } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
                     fileName = rootFilePath
                 }
-                NSLog("file found: \(fileName)")
+                // NSLog("file found: \(fileName)")
                 if (fileName != nil) {
                     var headers = HTTPHeaders()
                     if (urlPath.hasSuffix(".html")) {
@@ -206,7 +208,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     } else if (urlPath.hasSuffix(".js")) {
                         headers.add(name: .contentType, value: "application/javascript")
                     } else if (urlPath.hasSuffix(".wasm")) {
-                        NSLog("setting the header to application/wasm")
+                        // NSLog("setting the header to application/wasm")
                         headers.add(name: .contentType, value: "application/wasm")
                     }
                     // These headers get us a "crossOriginIsolated == true;"
@@ -216,7 +218,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     do {
                         // Binary access to the file, because we could be serving WASM files
                         let body = try Data(contentsOf: URL(fileURLWithPath: fileName!))
-                        NSLog("Returned \(urlPath) with \(fileName!)")
+                        // NSLog("Returned \(urlPath) with \(fileName!)")
                         return Response(status: .ok, headers: headers, body: Response.Body(data: body))
                     }
                     catch {
@@ -224,11 +226,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                         return Response(status: .forbidden)
                     }
                 }
-                NSLog("\(urlPath): not found")
+                // NSLog("\(urlPath): not found")
                 return Response(status: .notFound)
             }
             try localServerApp.server.start()
-        }
+    }
         catch {
             NSLog("Unable to start the vapor server: \(error)")
         }
@@ -236,8 +238,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             replaceCommand("updateCommands", "updateCommands", true)
             // "updateCommands" is also called at startup:
-            let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "updateCommands".toCString()!)]
-            updateCommands(argc: 1, argv: UnsafeMutablePointer(mutating: argv));
+            updateCommands(argc: 1, argv: nil);
         }
         // for debugging TeX issues / installing a new distribution
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
@@ -247,6 +248,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 appropriateFor: nil,
                                                 create: true)
         numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
+        //  = a-Shell
+        setenv("APPNAME", Bundle.main.infoDictionary?["CFBundleName"] as! String, 1)  // a-Shell or a-Shell-mini
+        setenv("APPVERSION", Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String, 1) // 1.15.2
+        setenv("APPBUILDNUMBER", Bundle.main.infoDictionary?["CFBundleVersion"] as! String, 1) // 422
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
         setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
         setenv("COLORTERM", "truecolor", 1) // tell programs that we can display 16-bit colors (required by Python package rich).
@@ -390,6 +395,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Compiled files: ~/Library/__pycache__
         setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path.toCString(), 1)
         setenv("PYTHONUSERBASE", libraryURL.path.toCString(), 1)
+        setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":").toCString(), 1)
         checkBookmarks() // activate all bookmarks in the app
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
@@ -663,6 +669,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func application(_ application: UIApplication, handlerFor intent: INIntent) -> Any? {
+        // copied from settingsChanged(), as that function is not called when a Shortcut is
+        // launched and the app is not running.
+        let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
+        if (zshmarks) {
+            replaceCommand("showmarks", "showmarks", true) //
+            replaceCommand("jump", "jump", true) // go to bookmark
+            replaceCommand("bookmark", "bookmark", true) // add bookmark for current directory
+            replaceCommand("deletemark", "deletemark", true) // delete bookmark (might be dangerous)
+            replaceCommand("renamemark", "renamemark", true) // rename bookmark
+        }
+        let bashmarks = UserDefaults.standard.bool(forKey: "bashmarks")
+        if (bashmarks) {
+            replaceCommand("l", "showmarks", true) //
+            replaceCommand("p", "showmarks", true) //
+            replaceCommand("g", "jump", true) // go to bookmark
+            replaceCommand("s", "bookmark", true) // add bookmark for current directory
+            replaceCommand("d", "deletemark", true) // delete bookmark (might be dangerous)
+            replaceCommand("r", "renamemark", true) // rename bookmark
+        }
+
         switch intent {
         case is GetFileIntent:
             return GetFileIntentHandler(application: application)

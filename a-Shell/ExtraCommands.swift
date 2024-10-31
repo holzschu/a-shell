@@ -1792,21 +1792,7 @@ public func needLuaTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
 @_cdecl("updateCommands")
 public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     // Small function to activate or deactivate C and TeX commands after installing the auxiliary files
-    let usage = "Small command to update the list of commands available after installing or removing LLVM (C/C++) or TeX auxiliary files.\n"
-    
-    guard let args = convertCArguments(argc: argc, argv: argv) else {
-        if (thread_stderr != nil) {
-            fputs(usage, thread_stderr)
-        }
-        return -1
-    }
-    
-    if (argc >= 2) {
-        if (thread_stderr != nil) {
-            fputs(usage, thread_stderr)
-        }
-        return -1
-    }
+    // Don't convert arguments, it only causes issues.
     
     let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                             in: .userDomainMask,
