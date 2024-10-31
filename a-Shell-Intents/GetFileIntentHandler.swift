@@ -55,7 +55,23 @@ class GetFileIntentHandler: INExtension, GetFileIntentHandling
         }
         completion(result)
     }
-
+    
+    // GetFileIntent
+    func resolveCopyFile(for intent: GetFileIntent, with completion: @escaping (INBooleanResolutionResult) -> Void) {
+        if let copyDataFile = intent.copyFile {
+            if (copyDataFile == true) {
+                completion(INBooleanResolutionResult.success(with: true))
+            } else {
+                completion(INBooleanResolutionResult.success(with: false))
+            }
+        } else {
+            if #available(iOS 18.0, *) {
+                completion(INBooleanResolutionResult.success(with: true))
+            } else {
+                completion(INBooleanResolutionResult.success(with: false))
+            }
+        }
+    }
     
     // GetFileIntent
     func handle(intent: GetFileIntent, completion: @escaping (GetFileIntentResponse) -> Void) {
@@ -66,28 +82,26 @@ class GetFileIntentHandler: INExtension, GetFileIntentHandling
         if let fileNames = intent.fileName {
             // Sometimes, we get multiple lines (or a single line that ends with "\n")
             let errorIfNotFound = intent.errorIfNotFound ?? true;
+            let copyData = intent.copyFile ?? false;
             if let fileName = fileNames.components(separatedBy: "\n").first {
                 FileManager().changeCurrentDirectoryPath(groupUrl.path)
                 if FileManager().fileExists(atPath: fileName) {
                     let fileURL = URL(fileURLWithPath: fileName)
                     let intentResponse = GetFileIntentResponse(code: .success, userActivity: nil)
-                    do {
-                        if #available(iOS 18.0, *) {
-                            // Address a bug in iOS 18 that deletes the file when showing it
-                            // but only if it was created with putFile.
-                            if let urlData = try? Data(contentsOf: fileURL) {
-                                intentResponse.file = INFile(data: urlData, filename: fileName, typeIdentifier: nil)
-                            } else if (errorIfNotFound == true) {
-                                let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
-                                intentResponse.message = "Could not read content of file \(fileName)."
-                                completion(intentResponse)
-                                return
-                            }
-                        } else {
-                            intentResponse.file = INFile(fileURL: fileURL, filename: fileName, typeIdentifier: nil)
+                    if (copyData == true) {
+                        // Address a bug in iOS 18.0 that deletes the file when showing it
+                        // (but only if it was created with putFile).
+                        // return the data contained in the file
+                        if let urlData = try? Data(contentsOf: fileURL) {
+                            // INFile(data:) causes a crash for large files. At that point, what can we do?
+                            intentResponse.file = INFile(data: urlData, filename: fileName, typeIdentifier: nil)
+                            completion(intentResponse)
+                            return
                         }
-                        completion(intentResponse)
                     }
+                    intentResponse.file = INFile(fileURL: fileURL, filename: fileName, typeIdentifier: nil)
+                    completion(intentResponse)
+                    return
                 } else if (errorIfNotFound == true) {
                     let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
                     intentResponse.message = "File \(fileName) not found error"

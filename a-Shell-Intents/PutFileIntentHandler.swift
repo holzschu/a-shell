@@ -93,11 +93,27 @@ class PutFileIntentHandler: INExtension, PutFileIntentHandling
                         intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
                         intentResponse.error = "Could not create file \(file.filename): \(error.localizedDescription)"
                         completion(intentResponse)
+                        return
+                    }
+                } else if (file.data.count > 0) {
+                    do {
+                        if (FileManager().fileExists(atPath: localURL.path) && (intent.overwrite == 1)) {
+                            try FileManager().setAttributes([.immutable : false], ofItemAtPath: localURL.path)
+                            try FileManager().removeItem(at: localURL)
+                        }
+                        FileManager().createFile(atPath: localURL.path, contents: file.data, attributes: nil)
+                    }
+                    catch {
+                        intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
+                        intentResponse.error = "Could not create file from data \(file.filename): \(error.localizedDescription)"
+                        completion(intentResponse)
+                        return
                     }
                 } else {
                     intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
                     intentResponse.error = "Could not access file \(file.filename)."
                     completion(intentResponse)
+                    return
                 }
             }
             completion(intentResponse)
