@@ -232,12 +232,12 @@ _ = Package(
         .binaryTarget(
             name: "freetype",
             url: "https://github.com/holzschu/Python-aux/releases/download/1.0/freetype.xcframework.zip",
-            checksum: "f547dd4944465e889e944cf809662af66109bc35fe09b88f231f0e2228e8aba4"
+            checksum: "8fdf22c7911a2ea47c60df723a0ee268bd5606a1153023f338b3e6395149089e"
         ),
         .binaryTarget(
             name: "harfbuzz",
             url: "https://github.com/holzschu/Python-aux/releases/download/1.0/harfbuzz.xcframework.zip",
-            checksum: "d28dc80e57df750f1ae62f48785297c031874e33328888ccba96b1496b39a031"
+            checksum: "9a983795826d1662ba354f563b19a7b980e4c744138b3afb68491991e2c8a66a"
         ),
         // Perl and make (single-architecture xcframeworks... for now)
         .binaryTarget(
