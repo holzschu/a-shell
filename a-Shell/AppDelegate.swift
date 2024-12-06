@@ -430,6 +430,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Also notification if user changes accessibility settings:
         NotificationCenter.default.addObserver(self, selector: #selector(self.voiceOverChanged), name:  UIAccessibility.voiceOverStatusDidChangeNotification, object: nil)
         if #available(iOS 17.0, *) {
+            // For debugging tips (either  one):
+            // try? Tips.resetDatastore()
+            // Tips.showAllTipsForTesting()
             // No frequency control. Show all tips as soon as eligible (but only once)
             try? Tips.configure([.displayFrequency(.immediate)])
         }

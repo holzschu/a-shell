@@ -3072,7 +3072,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     var mustUpdateXz = false
                     if (FileManager().fileExists(atPath: xzPath)) {
                         do {
-                            let xzFileSize = try FileManager().attributesOfItem(atPath: unzipPath)[.size] as! UInt64
+                            let xzFileSize = try FileManager().attributesOfItem(atPath: xzPath)[.size] as! UInt64
                             if (xzFileSize != 196301) {
                                 mustUpdateXz = true
                             }
@@ -3101,7 +3101,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // reset, so that we don't send it twice:
                     windowPrintedContent = ""
                     // scroll to the bottom of the webview: https://stackoverflow.com/questions/51659208/how-to-programmatically-scroll-ios-wkwebview-swift-4
-                    let scrollPoint = CGPoint(x: 0, y: webView!.scrollView.contentSize.height - webView!.frame.size.height)
+                    let scrollPoint = CGPoint(x: 0, y: max(webView!.scrollView.contentSize.height - webView!.frame.size.height, 0))
                     webView?.scrollView.setContentOffset(scrollPoint, animated: true)
                 } else {
                     NSLog("commandRunning= \(currentCommand)")
@@ -3360,6 +3360,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                 controller.popoverPresentationController?.canOverlapSourceViewRect = true
                                                 let rootVC = self.window?.rootViewController
                                                 rootVC?.present(controller, animated: false)
+                                            }
+                                        }  else {
+                                            let rootVC = self.window?.rootViewController
+                                            if let controller = rootVC?.presentedViewController {
+                                                if controller is TipUIPopoverViewController {
+                                                    controller.dismiss(animated: false)
+                                                }
                                             }
                                         }
                                     }
@@ -5528,7 +5535,7 @@ extension SceneDelegate: WKUIDelegate {
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         // NSLog("finished loading, title= \(webView.title ?? "unknown"), url=\(webView.url?.path ?? "unknown"), navigation= \(navigation)")
-        if (webView.url?.path == Bundle.main.resourcePath! + "/wasm.html") {
+        if (webView.url?.path == "/wasm.html") {
             return
         }
         if (webView.title != nil) && (webView.title != "") {
@@ -5574,6 +5581,13 @@ extension SceneDelegate: WKUIDelegate {
                             controller.popoverPresentationController?.canOverlapSourceViewRect = true
                             let rootVC = self.window?.rootViewController
                             rootVC?.present(controller, animated: false)
+                        } else {
+                            let rootVC = self.window?.rootViewController
+                            if let controller = rootVC?.presentedViewController {
+                                if controller is TipUIPopoverViewController {
+                                    controller.dismiss(animated: false)
+                                }
+                            }
                         }
                     }
                 }

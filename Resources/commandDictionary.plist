@@ -821,6 +821,13 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>magick</key>
+	<array>
+		<string>magick.framework/magick</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>magick-script</key>
 	<array>
 		<string>magick.framework/magick</string>

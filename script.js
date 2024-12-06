@@ -2823,3 +2823,21 @@ hterm.ScrollPort.prototype.onScroll_ = function(e) {
     });
 };
 
+/**
+ * Handle pasted data.
+ *
+ * @param {string} data The pasted data.
+ */
+hterm.Terminal.prototype.onPasteData_ = function(data) {
+	data = data.replace(/\n/mg, '\r ');
+	// We strip out most escape sequences as they can cause issues (like
+	// inserting an \x1b[201~ midstream).  We pass through whitespace
+	// though: 0x08:\b 0x09:\t 0x0a:\n 0x0d:\r.
+	// This matches xterm behavior.
+	// eslint-disable-next-line no-control-regex
+	const filter = (data) => data.replace(/[\x00-\x07\x0b-\x0c\x0e-\x1f]/g, '');
+	data = filter(data);
+
+	this.io.sendString(data);
+};
+
