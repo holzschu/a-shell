@@ -4075,6 +4075,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if name == "PERL_MB_OPT" { continue }
                 if name == "PERL_MM_OPT" { continue }
                 if name == "TERMINFO" { continue }
+                // Don't override APPVERSION and others:
+                if name == "APPNAME" { continue }
+                if name == "APPVERSION" { continue }
+                if name == "APPBUILDNUMBER" { continue }
                 // Do not restore SSH_AUTH_SOCK, since ssh-agent is not running anymore.
                 if name == "SSH_AUTH_SOCK" {
                     unlink(value); // close the old socket
