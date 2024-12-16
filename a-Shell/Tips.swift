@@ -35,5 +35,5 @@ struct toolbarTip: Tip {
         Text("")
     }
 
-   var options: [TipOption] = [MaxDisplayCount(1)]
+    var options: [TipOption] = [MaxDisplayCount(1)]
 }

@@ -28,7 +28,9 @@ var appVersion: String? {
     // Bundle.main.infoDictionary?["CFBundleDisplayName"] = a-Shell
     // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.a-Shell
     // Bundle.main.infoDictionary?["CFBundleName"] = a-Shell
-    NSLog("appVersion returns: \(Bundle.main.infoDictionary?["CFBundleName"])")
+    // Bundle.main.infoDictionary["CFBundleShortVersionString"] = 1.15.2
+    // Bundle.main.infoDictionary["CFBundleVersion"] = 422
+    // NSLog("appVersion returns: \(Bundle.main.infoDictionary?["CFBundleName"])")
     return Bundle.main.infoDictionary?["CFBundleName"] as? String
 }
 
@@ -141,7 +143,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("pickFolder", "pickFolder", true)
         replaceCommand("config", "config", true)
         replaceCommand("keepDirectoryAfterShortcut", "keepDirectoryAfterShortcut", true)
-        replaceCommand("wasm", "wasm", true)
+        replaceCommand("wasm", "wasm", true) // Apple's Wasm JIT interpreter. Faster than Wasm3 on CPU-intensive tasks, handles exceptions
         replaceCommand("jsc", "jsc_internal", false)  // use our own jsc instead of ios_system jsc. Keep the original version
         replaceCommand("call", "call", true)  // call a contact
         replaceCommand("text", "text", true)  // send a text to a contact
@@ -192,13 +194,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 let localFilePath = libraryURL.path + urlPath
                 let rootFilePath = Bundle.main.resourcePath! + urlPath
                 var fileName: String? = nil
-                NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
+                // NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
                 if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
                     fileName = localFilePath
                 } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
                     fileName = rootFilePath
                 }
-                NSLog("file found: \(fileName)")
+                // NSLog("file found: \(fileName)")
                 if (fileName != nil) {
                     var headers = HTTPHeaders()
                     if (urlPath.hasSuffix(".html")) {
@@ -206,7 +208,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     } else if (urlPath.hasSuffix(".js")) {
                         headers.add(name: .contentType, value: "application/javascript")
                     } else if (urlPath.hasSuffix(".wasm")) {
-                        NSLog("setting the header to application/wasm")
+                        // NSLog("setting the header to application/wasm")
                         headers.add(name: .contentType, value: "application/wasm")
                     }
                     // These headers get us a "crossOriginIsolated == true;"
@@ -216,7 +218,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     do {
                         // Binary access to the file, because we could be serving WASM files
                         let body = try Data(contentsOf: URL(fileURLWithPath: fileName!))
-                        NSLog("Returned \(urlPath) with \(fileName!)")
+                        // NSLog("Returned \(urlPath) with \(fileName!)")
                         return Response(status: .ok, headers: headers, body: Response.Body(data: body))
                     }
                     catch {
@@ -224,11 +226,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                         return Response(status: .forbidden)
                     }
                 }
-                NSLog("\(urlPath): not found")
+                // NSLog("\(urlPath): not found")
                 return Response(status: .notFound)
             }
             try localServerApp.server.start()
-        }
+    }
         catch {
             NSLog("Unable to start the vapor server: \(error)")
         }
@@ -236,8 +238,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             replaceCommand("updateCommands", "updateCommands", true)
             // "updateCommands" is also called at startup:
-            let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "updateCommands".toCString()!)]
-            updateCommands(argc: 1, argv: UnsafeMutablePointer(mutating: argv));
+            updateCommands(argc: 1, argv: nil);
         }
         // for debugging TeX issues / installing a new distribution
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
@@ -247,6 +248,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 appropriateFor: nil,
                                                 create: true)
         numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
+        //  = a-Shell
+        setenv("APPNAME", Bundle.main.infoDictionary?["CFBundleName"] as! String, 1)  // a-Shell or a-Shell-mini
+        setenv("APPVERSION", Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String, 1) // 1.15.2
+        setenv("APPBUILDNUMBER", Bundle.main.infoDictionary?["CFBundleVersion"] as! String, 1) // 422
         setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
         setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
         setenv("COLORTERM", "truecolor", 1) // tell programs that we can display 16-bit colors (required by Python package rich).
@@ -288,7 +293,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
-            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 x  ^-fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
+            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
             // TeX variables (for tlmgr to work) = only when installing from scratch
             // default texmf.cnf available:
             // setenv("TEXMFCNF", Bundle.main.resourcePath!, 1)
@@ -390,6 +395,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Compiled files: ~/Library/__pycache__
         setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path.toCString(), 1)
         setenv("PYTHONUSERBASE", libraryURL.path.toCString(), 1)
+        setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":").toCString(), 1)
         checkBookmarks() // activate all bookmarks in the app
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
@@ -424,6 +430,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Also notification if user changes accessibility settings:
         NotificationCenter.default.addObserver(self, selector: #selector(self.voiceOverChanged), name:  UIAccessibility.voiceOverStatusDidChangeNotification, object: nil)
         if #available(iOS 17.0, *) {
+            // For debugging tips (either  one):
+            // try? Tips.resetDatastore()
+            // Tips.showAllTipsForTesting()
             // No frequency control. Show all tips as soon as eligible (but only once)
             try? Tips.configure([.displayFrequency(.immediate)])
         }
@@ -663,6 +672,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func application(_ application: UIApplication, handlerFor intent: INIntent) -> Any? {
+        // copied from settingsChanged(), as that function is not called when a Shortcut is
+        // launched and the app is not running.
+        let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
+        if (zshmarks) {
+            replaceCommand("showmarks", "showmarks", true) //
+            replaceCommand("jump", "jump", true) // go to bookmark
+            replaceCommand("bookmark", "bookmark", true) // add bookmark for current directory
+            replaceCommand("deletemark", "deletemark", true) // delete bookmark (might be dangerous)
+            replaceCommand("renamemark", "renamemark", true) // rename bookmark
+        }
+        let bashmarks = UserDefaults.standard.bool(forKey: "bashmarks")
+        if (bashmarks) {
+            replaceCommand("l", "showmarks", true) //
+            replaceCommand("p", "showmarks", true) //
+            replaceCommand("g", "jump", true) // go to bookmark
+            replaceCommand("s", "bookmark", true) // add bookmark for current directory
+            replaceCommand("d", "deletemark", true) // delete bookmark (might be dangerous)
+            replaceCommand("r", "renamemark", true) // rename bookmark
+        }
+
         switch intent {
         case is GetFileIntent:
             return GetFileIntentHandler(application: application)

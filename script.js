@@ -110,11 +110,21 @@ function isLetter(c) {
 
 // Required because printedContent now arrives after the first prompt has been printed.
 function setWindowContent(string) {
+	if (window.printedContent != '') {
+		return;
+	}
 	window.term_.wipeContents();
 	window.printedContent = '';
 	window.term_.io.print(string);
-	printPrompt();
-	io.currentCommand = '';
+	if (!string.endsWith(window.promptMessage)) {
+		printPrompt();
+	} else {
+		// If the string ends with the prompt, no need to print it again.
+		window.commandRunning = '';
+		window.interactiveCommandRunning = false;
+		window.term_.reportFocus = false; // That was causing ^[[I sometimes
+	}
+	window.term_.io.currentCommand = '';
 }
 
 function printPrompt() {
@@ -2811,5 +2821,23 @@ hterm.ScrollPort.prototype.onScroll_ = function(e) {
     this.publish('scroll', {
         scrollPort: this
     });
+};
+
+/**
+ * Handle pasted data.
+ *
+ * @param {string} data The pasted data.
+ */
+hterm.Terminal.prototype.onPasteData_ = function(data) {
+	data = data.replace(/\n/mg, '\r ');
+	// We strip out most escape sequences as they can cause issues (like
+	// inserting an \x1b[201~ midstream).  We pass through whitespace
+	// though: 0x08:\b 0x09:\t 0x0a:\n 0x0d:\r.
+	// This matches xterm behavior.
+	// eslint-disable-next-line no-control-regex
+	const filter = (data) => data.replace(/[\x00-\x07\x0b-\x0c\x0e-\x1f]/g, '');
+	data = filter(data);
+
+	this.io.sendString(data);
 };
 

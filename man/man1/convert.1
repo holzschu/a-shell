@@ -3,11 +3,11 @@
 convert \- convert between image formats as well as resize an image, blur, crop, despeckle, dither, draw on, flip, join, re-sample, and much more.
 .SH SYNOPSIS
 .TP
-\fBconvert\fP [\fIinput-options\fP] \fIinput-file\fP [\fIoutput-options\fP] \fIoutput-file\fP
+\fBmagick convert\fP [\fIinput-options\fP] \fIinput-file\fP [\fIoutput-options\fP] \fIoutput-file\fP
 .SH OVERVIEW
 The \fBconvert\fP program is a member of the ImageMagick(1) suite of tools.  Use it to convert between image formats as well as resize an image, blur, crop, despeckle, dither, draw on, flip, join, re-sample, and much more.  
 
-For more information about the convert command, point your browser to http://imagemagick.org/script/convert.php.
+For more information about the convert command, point your browser to file:///usr/local/share/doc/ImageMagick-7/www/convert.html or https://imagemagick.org/script/convert.php.
 .SH DESCRIPTION
 Image Settings:
   \-adjoin              join images into a single multi-image file
@@ -190,6 +190,9 @@ Image Operators:
   \-identify            identify the format and characteristics of the image
   \-ift                 implements the inverse discrete Fourier transform (DFT)
   \-implode amount      implode image pixels about the center
+  \-integral            calculate the sum of values (pixel values) in the image
+  \-interpolative-resize geometry
+                       resize image using interpolation
   \-kmeans geometry     K means color reduction
   \-lat geometry        local adaptive thresholding
   \-layers method       optimize or compare image layers
@@ -252,6 +255,7 @@ Image Operators:
                        lightness rescaling using sigmoidal contrast enhancement
   \-sketch geometry     simulate a pencil sketch
   \-solarize threshold  negate all pixels above the threshold level
+  \-sort-pixels         sort each scanline in ascending order of intensity
   \-sparse-color method args
                         fill in a image based on a few color points
   \-splice geometry     splice the background color into the image
@@ -332,6 +336,4 @@ By default, the image format of `file' is determined by its magic number.  To sp
 ImageMagick(1)
 
 .SH COPYRIGHT
-\fBCopyright (C) 1999-2020 ImageMagick Studio LLC.\fP 
-
-Additional copyrights and licenses apply to this software, see $APPDIR/ImageMagick-7/doc/LICENSE or http://imagemagick.org/script/license.php
+\fBCopyright (C) 1999 ImageMagick Studio LLC. Additional copyrights and licenses apply to this software, see file:///usr/local/share/doc/ImageMagick-7/www/license.html or https://imagemagick.org/script/license.php\fP

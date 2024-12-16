@@ -13,6 +13,7 @@
 		2208ACC922D24703003985D6 /* WkWebViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC822D24703003985D6 /* WkWebViewExtension.swift */; };
 		220C524D26D637540062F673 /* unrar.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220C524C26D637500062F673 /* unrar.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		220C524E26D6375A0062F673 /* unrar.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220C524C26D637500062F673 /* unrar.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		220F18882C7C81ED007090F8 /* blink.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220F18872C7C81D7007090F8 /* blink.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		220F36522BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
 		220F36532BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
 		220F36552BC7FADA00842FEE /* llvmDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 220F36542BC7FAD800842FEE /* llvmDictionary.plist */; };
@@ -543,6 +544,7 @@
 		224A91692ADD0999006DB9CC /* multimarkdown.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227318AC28F02E170027A736 /* multimarkdown.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A916B2ADD0999006DB9CC /* a-Shell-mini-Intents.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22178EF8257BBBA4008EB2B4 /* a-Shell-mini-Intents.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		224A916C2ADD0999006DB9CC /* a-Shell-mini-IntentsUI.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22178F01257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		224C24FA2C94238900DE430E /* blink.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220F18872C7C81D7007090F8 /* blink.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224DF74C2B76429B00F13C58 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2250FDAC281D29A7007C25D1 /* terminfo in Resources */ = {isa = PBXBuildFile; fileRef = 22B114762817CEA200A5BF16 /* terminfo */; };
 		225177C8231663430084B9C1 /* ListPythonFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 225177C7231663430084B9C1 /* ListPythonFiles.swift */; };
@@ -582,6 +584,7 @@
 		227B24872BE033E1003A8031 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
 		227B24892BE033F3003A8031 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 227B24882BE033F3003A8031 /* Vapor */; };
 		227B248C2BE12FF1003A8031 /* wasm_withWorker.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248A2BE12FEE003A8031 /* wasm_withWorker.js */; };
+		227BB5AE2C4BA34D003AD902 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 227BB5AD2C4BA34D003AD902 /* Vapor */; };
 		228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		228E13F725C95F430065D825 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
@@ -1232,6 +1235,7 @@
 				2232245F289695B2001BAE04 /* pico.framework in Embed Frameworks */,
 				227318AE28F02E2F0027A736 /* multimarkdown.framework in Embed Frameworks */,
 				221642752B7C05CB00043766 /* ssh_agent.xcframework in Embed Frameworks */,
+				220F18882C7C81ED007090F8 /* blink.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1627,6 +1631,7 @@
 				221FA4352A1C9CE800463D5B /* libspatialindex_c.xcframework in Embed Frameworks */,
 				221FA4362A1C9CE800463D5B /* libspatialindex.xcframework in Embed Frameworks */,
 				224DF74C2B76429B00F13C58 /* ssh_agent.xcframework in Embed Frameworks */,
+				224C24FA2C94238900DE430E /* blink.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1647,7 +1652,8 @@
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC822D24703003985D6 /* WkWebViewExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WkWebViewExtension.swift; sourceTree = SOURCE_ROOT; };
-		220C524C26D637500062F673 /* unrar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = unrar.xcframework; path = xcfs/.build/artifacts/xcfs/unrar.xcframework; sourceTree = "<group>"; };
+		220C524C26D637500062F673 /* unrar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = unrar.xcframework; path = xcfs/.build/artifacts/xcfs/unrar/unrar.xcframework; sourceTree = "<group>"; };
+		220F18872C7C81D7007090F8 /* blink.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = blink.xcframework; path = xcfs/.build/artifacts/xcfs/blink.xcframework; sourceTree = "<group>"; };
 		220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		220F36542BC7FAD800842FEE /* llvmDictionary.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = llvmDictionary.plist; path = Resources/llvmDictionary.plist; sourceTree = "<group>"; };
 		22108D6A2338BE9D003D7556 /* texlive_2019_texmf-dist_fonts_type1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_type1"; path = "ODR/texlive_2019_texmf-dist_fonts_type1"; sourceTree = "<group>"; };
@@ -1663,8 +1669,8 @@
 		22178F09257BBBA6008EB2B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		22178F21257BBC8A008EB2B4 /* a-Shell-mini-Intents.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell-mini-Intents.entitlements"; sourceTree = "<group>"; };
 		22178F22257BBCAE008EB2B4 /* a-Shell-mini-IntentsUI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell-mini-IntentsUI.entitlements"; sourceTree = "<group>"; };
-		2219EDC92A023F17008C66F2 /* xetex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xetex.xcframework; path = xcfs/.build/artifacts/xcfs/xetex.xcframework; sourceTree = "<group>"; };
-		2219EDCA2A023F17008C66F2 /* xetexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xetexA.xcframework; path = xcfs/.build/artifacts/xcfs/xetexA.xcframework; sourceTree = "<group>"; };
+		2219EDC92A023F17008C66F2 /* xetex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xetex.xcframework; path = xcfs/.build/artifacts/xcfs/xetex/xetex.xcframework; sourceTree = "<group>"; };
+		2219EDCA2A023F17008C66F2 /* xetexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xetexA.xcframework; path = xcfs/.build/artifacts/xcfs/xetexA/xetexA.xcframework; sourceTree = "<group>"; };
 		221DA54B26F7688100BEA92A /* listTeXscripts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = listTeXscripts.swift; sourceTree = "<group>"; };
 		221FA42B2A1C9A9D00463D5B /* libgdal.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libgdal.xcframework; path = "cpython/Python-aux/libgdal.xcframework"; sourceTree = "<group>"; };
 		221FA42C2A1C9A9D00463D5B /* libgeos_c.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libgeos_c.xcframework; path = "cpython/Python-aux/libgeos_c.xcframework"; sourceTree = "<group>"; };
@@ -1885,19 +1891,19 @@
 		2224F2A42C24909400E0BA40 /* rclone.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = rclone.framework; path = xcfs/.build/artifacts/xcfs/rclone.framework; sourceTree = "<group>"; };
 		222BE5872BE90EFC002E4272 /* wasm_worker_wasm.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = wasm_worker_wasm.js; path = Resources_mini/wasm_worker_wasm.js; sourceTree = "<group>"; };
 		2230F400257D479900810B07 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		2231A5072588D8D100B5EDFD /* magick.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = magick.xcframework; path = xcfs/.build/artifacts/xcfs/magick.xcframework; sourceTree = SOURCE_ROOT; };
+		2231A5072588D8D100B5EDFD /* magick.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = magick.xcframework; path = xcfs/.build/artifacts/xcfs/magick/magick.xcframework; sourceTree = SOURCE_ROOT; };
 		2231A51D258923D900B5EDFD /* ImageMagick-7 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ImageMagick-7"; path = "Resources/ImageMagick-7"; sourceTree = "<group>"; };
 		2232245E289695A9001BAE04 /* pico.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = pico.framework; path = xcfs/.build/artifacts/xcfs/pico.framework; sourceTree = "<group>"; };
-		2234FB14266F765A00702AD1 /* lg2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lg2.xcframework; path = xcfs/.build/artifacts/xcfs/lg2.xcframework; sourceTree = "<group>"; };
+		2234FB14266F765A00702AD1 /* lg2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lg2.xcframework; path = xcfs/.build/artifacts/xcfs/lg2/lg2.xcframework; sourceTree = "<group>"; };
 		22365230249A39AA00221868 /* man */ = {isa = PBXFileReference; lastKnownFileType = folder; path = man; sourceTree = "<group>"; };
 		22372B712448E85C0033FE07 /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources/usr; sourceTree = "<group>"; };
-		2237DC3028549CB8003E4738 /* jq.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = jq.xcframework; path = xcfs/.build/artifacts/xcfs/jq.xcframework; sourceTree = "<group>"; };
+		2237DC3028549CB8003E4738 /* jq.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = jq.xcframework; path = xcfs/.build/artifacts/xcfs/jq/jq.xcframework; sourceTree = "<group>"; };
 		223A1C1B2A5EDCA700B1B9AD /* Tips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tips.swift; sourceTree = "<group>"; };
 		223E61A9250A5320002BF41F /* python3_ios-_cffi_backend.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-_cffi_backend.xcframework"; path = "cpython/XcFrameworks/python3_ios-_cffi_backend.xcframework"; sourceTree = SOURCE_ROOT; };
 		223E61AA250A5338002BF41F /* pythonA-_cffi_backend.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_cffi_backend.xcframework"; path = "cpython/XcFrameworks/pythonA-_cffi_backend.xcframework"; sourceTree = SOURCE_ROOT; };
 		223E61B1250F9944002BF41F /* pythonA-_argon2_cffi_bindings._ffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-_argon2_cffi_bindings._ffi.xcframework"; path = "cpython/XcFrameworks/pythonA-_argon2_cffi_bindings._ffi.xcframework"; sourceTree = SOURCE_ROOT; };
 		223E61B2250F9954002BF41F /* python3_ios-_argon2_cffi_bindings._ffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-_argon2_cffi_bindings._ffi.xcframework"; path = "cpython/XcFrameworks/python3_ios-_argon2_cffi_bindings._ffi.xcframework"; sourceTree = SOURCE_ROOT; };
-		223EF3432B97490600A8ED5A /* sshd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = sshd.xcframework; path = xcfs/.build/artifacts/xcfs/sshd.xcframework; sourceTree = "<group>"; };
+		223EF3432B97490600A8ED5A /* sshd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = sshd.xcframework; path = xcfs/.build/artifacts/xcfs/sshd/sshd.xcframework; sourceTree = "<group>"; };
 		223FB59D272FE7C00090A885 /* python3_ios-PIL_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-PIL_all.xcframework"; path = "cpython/XcFrameworks/python3_ios-PIL_all.xcframework"; sourceTree = "<group>"; };
 		223FB59E272FE7C90090A885 /* pythonA-PIL_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-PIL_all.xcframework"; path = "cpython/XcFrameworks/pythonA-PIL_all.xcframework"; sourceTree = "<group>"; };
 		223FB5A1272FE8490090A885 /* pythonA-lxml_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-lxml_all.xcframework"; path = "cpython/XcFrameworks/pythonA-lxml_all.xcframework"; sourceTree = "<group>"; };
@@ -1906,43 +1912,43 @@
 		223FC3CA2611F9C300CDC89F /* wasm.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = wasm.html; sourceTree = "<group>"; };
 		2242B074232293E5002A20FC /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bin; path = Resources/bin; sourceTree = "<group>"; };
 		2242B07623229BA4002A20FC /* luatexfiles */ = {isa = PBXFileReference; lastKnownFileType = folder; name = luatexfiles; path = ODR/luatexfiles; sourceTree = "<group>"; };
-		2243B1B02840ADAB00588B51 /* vimproc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = vimproc.xcframework; path = xcfs/.build/artifacts/xcfs/vimproc.xcframework; sourceTree = "<group>"; };
-		2243B1B4284278DC00588B51 /* dashA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashA.xcframework; path = xcfs/.build/artifacts/xcfs/dashA.xcframework; sourceTree = "<group>"; };
-		2243B1B5284278DC00588B51 /* dashC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashC.xcframework; path = xcfs/.build/artifacts/xcfs/dashC.xcframework; sourceTree = "<group>"; };
-		2243B1B6284278DC00588B51 /* dashD.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashD.xcframework; path = xcfs/.build/artifacts/xcfs/dashD.xcframework; sourceTree = "<group>"; };
-		2243B1B7284278DD00588B51 /* dashE.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashE.xcframework; path = xcfs/.build/artifacts/xcfs/dashE.xcframework; sourceTree = "<group>"; };
-		2243B1B8284278DD00588B51 /* dashB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashB.xcframework; path = xcfs/.build/artifacts/xcfs/dashB.xcframework; sourceTree = "<group>"; };
-		2243B1B9284278E700588B51 /* dash.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dash.xcframework; path = xcfs/.build/artifacts/xcfs/dash.xcframework; sourceTree = "<group>"; };
+		2243B1B02840ADAB00588B51 /* vimproc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = vimproc.xcframework; path = xcfs/.build/artifacts/xcfs/vimproc/vimproc.xcframework; sourceTree = "<group>"; };
+		2243B1B4284278DC00588B51 /* dashA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashA.xcframework; path = xcfs/.build/artifacts/xcfs/dashA/dashA.xcframework; sourceTree = "<group>"; };
+		2243B1B5284278DC00588B51 /* dashC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashC.xcframework; path = xcfs/.build/artifacts/xcfs/dashC/dashC.xcframework; sourceTree = "<group>"; };
+		2243B1B6284278DC00588B51 /* dashD.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashD.xcframework; path = xcfs/.build/artifacts/xcfs/dashD/dashD.xcframework; sourceTree = "<group>"; };
+		2243B1B7284278DD00588B51 /* dashE.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashE.xcframework; path = xcfs/.build/artifacts/xcfs/dashE/dashE.xcframework; sourceTree = "<group>"; };
+		2243B1B8284278DD00588B51 /* dashB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashB.xcframework; path = xcfs/.build/artifacts/xcfs/dashB/dashB.xcframework; sourceTree = "<group>"; };
+		2243B1B9284278E700588B51 /* dash.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dash.xcframework; path = xcfs/.build/artifacts/xcfs/dash/dash.xcframework; sourceTree = "<group>"; };
 		22458B1925B349BF00EC4023 /* python3_ios-zmq.backend.cffi._cffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-zmq.backend.cffi._cffi.xcframework"; path = "cpython/XcFrameworks/python3_ios-zmq.backend.cffi._cffi.xcframework"; sourceTree = SOURCE_ROOT; };
 		22458B1F25B34A1100EC4023 /* pythonA-zmq.backend.cffi._cffi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-zmq.backend.cffi._cffi.xcframework"; path = "cpython/XcFrameworks/pythonA-zmq.backend.cffi._cffi.xcframework"; sourceTree = SOURCE_ROOT; };
 		22484B052434F11E00D6BDDA /* node_modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node_modules; path = Resources/node_modules; sourceTree = "<group>"; };
-		2249367F26E0F03F0053F014 /* makeindex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = makeindex.xcframework; path = xcfs/.build/artifacts/xcfs/makeindex.xcframework; sourceTree = "<group>"; };
-		2249368026E0F0510053F014 /* luahbtex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luahbtex.xcframework; path = xcfs/.build/artifacts/xcfs/luahbtex.xcframework; sourceTree = "<group>"; };
-		2249368126E0F05A0053F014 /* kpsewhich.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpsewhich.xcframework; path = xcfs/.build/artifacts/xcfs/kpsewhich.xcframework; sourceTree = "<group>"; };
+		2249367F26E0F03F0053F014 /* makeindex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = makeindex.xcframework; path = xcfs/.build/artifacts/xcfs/makeindex/makeindex.xcframework; sourceTree = "<group>"; };
+		2249368026E0F0510053F014 /* luahbtex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luahbtex.xcframework; path = xcfs/.build/artifacts/xcfs/luahbtex/luahbtex.xcframework; sourceTree = "<group>"; };
+		2249368126E0F05A0053F014 /* kpsewhich.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpsewhich.xcframework; path = xcfs/.build/artifacts/xcfs/kpsewhich/kpsewhich.xcframework; sourceTree = "<group>"; };
 		224A91702ADD0999006DB9CC /* a-Shell-noPython.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "a-Shell-noPython.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		224D10BA22CB247900A234EE /* hterm.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = hterm.html; sourceTree = "<group>"; };
-		224DF74B2B76428800F13C58 /* ssh_agent.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_agent.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_agent.xcframework; sourceTree = "<group>"; };
+		224DF74B2B76428800F13C58 /* ssh_agent.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_agent.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_agent/ssh_agent.xcframework; sourceTree = "<group>"; };
 		225177C7231663430084B9C1 /* ListPythonFiles.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListPythonFiles.swift; sourceTree = "<group>"; };
-		225478B52B7380A5005041FF /* ssh_cmdA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_cmdA.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_cmdA.xcframework; sourceTree = "<group>"; };
+		225478B52B7380A5005041FF /* ssh_cmdA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_cmdA.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_cmdA/ssh_cmdA.xcframework; sourceTree = "<group>"; };
 		2256FE5A2A94BCE900127A21 /* Library */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Library; path = cpython/regular/Library; sourceTree = "<group>"; };
 		225823702A9624E9009FBBDC /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Intents.strings"; sourceTree = "<group>"; };
 		225823712A9624FA009FBBDC /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
 		225823722A962517009FBBDC /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/MainInterface.strings"; sourceTree = "<group>"; };
 		225823732A962527009FBBDC /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/MainInterface.strings"; sourceTree = "<group>"; };
-		225BF0792A02752900EEC45B /* xdvipdfmx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xdvipdfmx.xcframework; path = xcfs/.build/artifacts/xcfs/xdvipdfmx.xcframework; sourceTree = "<group>"; };
+		225BF0792A02752900EEC45B /* xdvipdfmx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xdvipdfmx.xcframework; path = xcfs/.build/artifacts/xcfs/xdvipdfmx/xdvipdfmx.xcframework; sourceTree = "<group>"; };
 		225F45A52828FB300010E698 /* forbidden_2022 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = forbidden_2022; path = ODR/forbidden_2022; sourceTree = "<group>"; };
-		225F45A7282A4B090010E698 /* luahbtexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luahbtexA.xcframework; path = xcfs/.build/artifacts/xcfs/luahbtexA.xcframework; sourceTree = "<group>"; };
-		225F45A8282A4B090010E698 /* kpathseaA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpathseaA.xcframework; path = xcfs/.build/artifacts/xcfs/kpathseaA.xcframework; sourceTree = "<group>"; };
-		225F45A9282A4B090010E698 /* luatexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luatexA.xcframework; path = xcfs/.build/artifacts/xcfs/luatexA.xcframework; sourceTree = "<group>"; };
-		225F45AA282A4B090010E698 /* pdftexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = pdftexA.xcframework; path = xcfs/.build/artifacts/xcfs/pdftexA.xcframework; sourceTree = "<group>"; };
-		225F45AB282A4B090010E698 /* texlua53A.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = texlua53A.xcframework; path = xcfs/.build/artifacts/xcfs/texlua53A.xcframework; sourceTree = "<group>"; };
+		225F45A7282A4B090010E698 /* luahbtexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luahbtexA.xcframework; path = xcfs/.build/artifacts/xcfs/luahbtexA/luahbtexA.xcframework; sourceTree = "<group>"; };
+		225F45A8282A4B090010E698 /* kpathseaA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpathseaA.xcframework; path = xcfs/.build/artifacts/xcfs/kpathseaA/kpathseaA.xcframework; sourceTree = "<group>"; };
+		225F45A9282A4B090010E698 /* luatexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luatexA.xcframework; path = xcfs/.build/artifacts/xcfs/luatexA/luatexA.xcframework; sourceTree = "<group>"; };
+		225F45AA282A4B090010E698 /* pdftexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = pdftexA.xcframework; path = xcfs/.build/artifacts/xcfs/pdftexA/pdftexA.xcframework; sourceTree = "<group>"; };
+		225F45AB282A4B090010E698 /* texlua53A.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = texlua53A.xcframework; path = xcfs/.build/artifacts/xcfs/texlua53A/texlua53A.xcframework; sourceTree = "<group>"; };
 		226012EE231D238B00AEB059 /* texCommandsDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = texCommandsDictionary.plist; path = Resources/texCommandsDictionary.plist; sourceTree = "<group>"; };
 		226012FA231EFB5200AEB059 /* texlive_2019_texmf-dist_fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts"; path = "ODR/texlive_2019_texmf-dist_fonts"; sourceTree = "<group>"; };
 		226012FB231EFB5300AEB059 /* texlive_2019_texmf-dist */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist"; path = "ODR/texlive_2019_texmf-dist"; sourceTree = "<group>"; };
 		226012FC231EFB5300AEB059 /* texlive */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive; path = ODR/texlive; sourceTree = "<group>"; };
 		22601304232190BE00AEB059 /* texlive_2019_texmf-dist_fonts_otf_ttf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "texlive_2019_texmf-dist_fonts_otf_ttf"; path = "ODR/texlive_2019_texmf-dist_fonts_otf_ttf"; sourceTree = "<group>"; };
 		22601306232195A100AEB059 /* luatexCommandsDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = luatexCommandsDictionary.plist; path = Resources/luatexCommandsDictionary.plist; sourceTree = "<group>"; };
-		2263E34329FFC8590096EFBF /* perlC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlC.xcframework; path = xcfs/.build/artifacts/xcfs/perlC.xcframework; sourceTree = "<group>"; };
+		2263E34329FFC8590096EFBF /* perlC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlC.xcframework; path = xcfs/.build/artifacts/xcfs/perlC/perlC.xcframework; sourceTree = "<group>"; };
 		2266A7242872BE63006C4982 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Intents.strings; sourceTree = "<group>"; };
 		226AD81D23436B7A00E5D672 /* UIViewController+showAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+showAlert.swift"; sourceTree = "<group>"; };
 		226B3B4A26F27E330007C281 /* forbidden */ = {isa = PBXFileReference; lastKnownFileType = folder; name = forbidden; path = ODR/forbidden; sourceTree = "<group>"; };
@@ -1950,8 +1956,8 @@
 		226ED97D2725452A005976B4 /* pythonA-pandas_all.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-pandas_all.xcframework"; path = "cpython/XcFrameworks/pythonA-pandas_all.xcframework"; sourceTree = "<group>"; };
 		226FBED72C1257B000400751 /* jsc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = jsc.swift; sourceTree = "<group>"; };
 		227318AC28F02E170027A736 /* multimarkdown.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = multimarkdown.framework; path = xcfs/.build/artifacts/xcfs/multimarkdown.framework; sourceTree = "<group>"; };
-		2275AFAA26CA9B6D00B5BE45 /* ffmpeg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffmpeg.xcframework; path = xcfs/.build/artifacts/xcfs/ffmpeg.xcframework; sourceTree = "<group>"; };
-		2275AFAB26CA9B6D00B5BE45 /* ffprobe.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffprobe.xcframework; path = xcfs/.build/artifacts/xcfs/ffprobe.xcframework; sourceTree = "<group>"; };
+		2275AFAA26CA9B6D00B5BE45 /* ffmpeg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffmpeg.xcframework; path = xcfs/.build/artifacts/xcfs/ffmpeg/ffmpeg.xcframework; sourceTree = "<group>"; };
+		2275AFAB26CA9B6D00B5BE45 /* ffprobe.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffprobe.xcframework; path = xcfs/.build/artifacts/xcfs/ffprobe/ffprobe.xcframework; sourceTree = "<group>"; };
 		227722EA239D1F9F0020037E /* task */ = {isa = PBXFileReference; lastKnownFileType = folder; name = task; path = Resources/task; sourceTree = "<group>"; };
 		227A434029FD202100548D77 /* texlive_2023_texmf_dist_fonts_vf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist_fonts_vf; path = ODR/texlive_2023_texmf_dist_fonts_vf; sourceTree = "<group>"; };
 		227A434129FD202100548D77 /* texlive_2023_texmf_dist_fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist_fonts; path = ODR/texlive_2023_texmf_dist_fonts; sourceTree = "<group>"; };
@@ -1963,9 +1969,9 @@
 		227B24832BE01ED3003A8031 /* localCertificateKey.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = localCertificateKey.pem; sourceTree = "<group>"; };
 		227B248A2BE12FEE003A8031 /* wasm_withWorker.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_withWorker.js; sourceTree = "<group>"; };
 		227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_worker_wasm.js; sourceTree = "<group>"; };
-		228E13F225C95F2D0065D825 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = xcfs/.build/artifacts/xcfs/ios_system.xcframework; sourceTree = "<group>"; };
+		228E13F225C95F2D0065D825 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = xcfs/.build/artifacts/xcfs/ios_system/ios_system.xcframework; sourceTree = "<group>"; };
 		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIColor+hexString.swift"; path = "Util/UIColor+hexString.swift"; sourceTree = SOURCE_ROOT; };
-		22942C3F263F15B1004BEA41 /* perl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perl.xcframework; path = xcfs/.build/artifacts/xcfs/perl.xcframework; sourceTree = SOURCE_ROOT; };
+		22942C3F263F15B1004BEA41 /* perl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perl.xcframework; path = xcfs/.build/artifacts/xcfs/perl/perl.xcframework; sourceTree = SOURCE_ROOT; };
 		22942C41264037AB004BEA41 /* Perl */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Perl; path = Resources/Perl; sourceTree = "<group>"; };
 		2294A9BE254C19D0008C1490 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = "cpython/Python-aux/freetype.xcframework"; sourceTree = SOURCE_ROOT; };
 		2294A9C0254C1A05008C1490 /* python3_ios-kiwisolver.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-kiwisolver.xcframework"; path = "cpython/XcFrameworks/python3_ios-kiwisolver.xcframework"; sourceTree = SOURCE_ROOT; };
@@ -2063,13 +2069,13 @@
 		22B1B83322CBC53700F7C452 /* a-Shell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell.entitlements"; sourceTree = "<group>"; };
 		22B257B9267691E2006C2B31 /* gestures.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = gestures.js; sourceTree = "<group>"; };
 		22B30BD6287389EF001E3ACF /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Intents.strings; sourceTree = "<group>"; };
-		22BA51D0258E476A00923893 /* mandoc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = mandoc.xcframework; path = xcfs/.build/artifacts/xcfs/mandoc.xcframework; sourceTree = SOURCE_ROOT; };
+		22BA51D0258E476A00923893 /* mandoc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = mandoc.xcframework; path = xcfs/.build/artifacts/xcfs/mandoc/mandoc.xcframework; sourceTree = SOURCE_ROOT; };
 		22BD476823044D17007248EC /* vim */ = {isa = PBXFileReference; lastKnownFileType = folder; name = vim; path = Resources/vim; sourceTree = "<group>"; };
-		22BD97AF2A077D21005FA036 /* xdvipdfmxA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xdvipdfmxA.xcframework; path = xcfs/.build/artifacts/xcfs/xdvipdfmxA.xcframework; sourceTree = "<group>"; };
-		22BD97B12A0B77AC005FA036 /* euptex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = euptex.xcframework; path = xcfs/.build/artifacts/xcfs/euptex.xcframework; sourceTree = "<group>"; };
-		22BD97B22A0B77AC005FA036 /* euptexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = euptexA.xcframework; path = xcfs/.build/artifacts/xcfs/euptexA.xcframework; sourceTree = "<group>"; };
-		22BD97B52A0BB913005FA036 /* ptexencA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ptexencA.xcframework; path = xcfs/.build/artifacts/xcfs/ptexencA.xcframework; sourceTree = "<group>"; };
-		22BD97B62A0BB913005FA036 /* ptexenc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ptexenc.xcframework; path = xcfs/.build/artifacts/xcfs/ptexenc.xcframework; sourceTree = "<group>"; };
+		22BD97AF2A077D21005FA036 /* xdvipdfmxA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xdvipdfmxA.xcframework; path = xcfs/.build/artifacts/xcfs/xdvipdfmxA/xdvipdfmxA.xcframework; sourceTree = "<group>"; };
+		22BD97B12A0B77AC005FA036 /* euptex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = euptex.xcframework; path = xcfs/.build/artifacts/xcfs/euptex/euptex.xcframework; sourceTree = "<group>"; };
+		22BD97B22A0B77AC005FA036 /* euptexA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = euptexA.xcframework; path = xcfs/.build/artifacts/xcfs/euptexA/euptexA.xcframework; sourceTree = "<group>"; };
+		22BD97B52A0BB913005FA036 /* ptexencA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ptexencA.xcframework; path = xcfs/.build/artifacts/xcfs/ptexencA/ptexencA.xcframework; sourceTree = "<group>"; };
+		22BD97B62A0BB913005FA036 /* ptexenc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ptexenc.xcframework; path = xcfs/.build/artifacts/xcfs/ptexenc/ptexenc.xcframework; sourceTree = "<group>"; };
 		22BF62282314223D00FEA585 /* WKWebView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WKWebView+KeyCommands.swift"; sourceTree = "<group>"; };
 		22BF623D23157F1400FEA585 /* cacert.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = cacert.pem; sourceTree = "<group>"; };
 		22BF6242231589DB00FEA585 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
@@ -2087,41 +2093,42 @@
 		22DC1F4125700E8C0068004E /* pythonA-cryptography.hazmat.bindings._openssl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "pythonA-cryptography.hazmat.bindings._openssl.xcframework"; path = "cpython/XcFrameworks/pythonA-cryptography.hazmat.bindings._openssl.xcframework"; sourceTree = SOURCE_ROOT; };
 		22DC1F4925700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._openssl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-cryptography.hazmat.bindings._openssl.xcframework"; path = "cpython/XcFrameworks/python3_ios-cryptography.hazmat.bindings._openssl.xcframework"; sourceTree = SOURCE_ROOT; };
 		22DC1F4A25700EBC0068004E /* python3_ios-cryptography.hazmat.bindings._padding.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-cryptography.hazmat.bindings._padding.xcframework"; path = "cpython/XcFrameworks/python3_ios-cryptography.hazmat.bindings._padding.xcframework"; sourceTree = SOURCE_ROOT; };
-		22DC1F6425700F7E0068004E /* bibtex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bibtex.xcframework; path = xcfs/.build/artifacts/xcfs/bibtex.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F6525700F7E0068004E /* kpathsea.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpathsea.xcframework; path = xcfs/.build/artifacts/xcfs/kpathsea.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F6625700F7E0068004E /* luatex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luatex.xcframework; path = xcfs/.build/artifacts/xcfs/luatex.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F6725700F7E0068004E /* pdftex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = pdftex.xcframework; path = xcfs/.build/artifacts/xcfs/pdftex.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F6825700F7E0068004E /* texlua53.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = texlua53.xcframework; path = xcfs/.build/artifacts/xcfs/texlua53.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F6F25700FD10068004E /* lld.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lld.xcframework; path = xcfs/.build/artifacts/xcfs/lld.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F7125700FD10068004E /* clang.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = clang.xcframework; path = xcfs/.build/artifacts/xcfs/clang.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F7225700FD10068004E /* nm.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = nm.xcframework; path = xcfs/.build/artifacts/xcfs/nm.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F7525700FD20068004E /* libLLVM.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libLLVM.xcframework; path = xcfs/.build/artifacts/xcfs/libLLVM.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F7C2570109A0068004E /* calc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = calc.xcframework; path = xcfs/.build/artifacts/xcfs/calc.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F7D257010A90068004E /* task.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = task.xcframework; path = xcfs/.build/artifacts/xcfs/task.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F7E257010BC0068004E /* lex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lex.xcframework; path = xcfs/.build/artifacts/xcfs/lex.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F6425700F7E0068004E /* bibtex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bibtex.xcframework; path = xcfs/.build/artifacts/xcfs/bibtex/bibtex.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F6525700F7E0068004E /* kpathsea.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpathsea.xcframework; path = xcfs/.build/artifacts/xcfs/kpathsea/kpathsea.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F6625700F7E0068004E /* luatex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luatex.xcframework; path = xcfs/.build/artifacts/xcfs/luatex/luatex.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F6725700F7E0068004E /* pdftex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = pdftex.xcframework; path = xcfs/.build/artifacts/xcfs/pdftex/pdftex.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F6825700F7E0068004E /* texlua53.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = texlua53.xcframework; path = xcfs/.build/artifacts/xcfs/texlua53/texlua53.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F6F25700FD10068004E /* lld.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lld.xcframework; path = xcfs/.build/artifacts/xcfs/lld/lld.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F7125700FD10068004E /* clang.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = clang.xcframework; path = xcfs/.build/artifacts/xcfs/clang/clang.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F7225700FD10068004E /* nm.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = nm.xcframework; path = xcfs/.build/artifacts/xcfs/nm/nm.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F7525700FD20068004E /* libLLVM.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libLLVM.xcframework; path = xcfs/.build/artifacts/xcfs/libLLVM/libLLVM.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F7C2570109A0068004E /* calc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = calc.xcframework; path = xcfs/.build/artifacts/xcfs/calc/calc.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F7D257010A90068004E /* task.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = task.xcframework; path = xcfs/.build/artifacts/xcfs/task/task.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F7E257010BC0068004E /* lex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lex.xcframework; path = xcfs/.build/artifacts/xcfs/lex/lex.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F822570120E0068004E /* libssh2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libssh2.xcframework; path = xcfs/.build/artifacts/xcfs/libssh2/libssh2.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F83257012190068004E /* openssl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = openssl.xcframework; path = xcfs/.build/artifacts/xcfs/openssl/openssl.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F86257012B70068004E /* ar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ar.xcframework; path = xcfs/.build/artifacts/xcfs/ar.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F89257012F50068004E /* files.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = files.xcframework; path = xcfs/.build/artifacts/xcfs/files.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F8B257012F50068004E /* ssh_cmd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_cmd.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_cmd.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F8D257012F50068004E /* tar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = tar.xcframework; path = xcfs/.build/artifacts/xcfs/tar.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F8E257012F50068004E /* awk.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = awk.xcframework; path = xcfs/.build/artifacts/xcfs/awk.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F8F257012F50068004E /* text.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = text.xcframework; path = xcfs/.build/artifacts/xcfs/text.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F90257012F50068004E /* shell.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = shell.xcframework; path = xcfs/.build/artifacts/xcfs/shell.xcframework; sourceTree = SOURCE_ROOT; };
-		22DC1F91257012F50068004E /* curl_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = curl_ios.xcframework; path = xcfs/.build/artifacts/xcfs/curl_ios.xcframework; sourceTree = SOURCE_ROOT; };
-		22DE173D2653DC960031A029 /* make.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = make.xcframework; path = xcfs/.build/artifacts/xcfs/make.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F86257012B70068004E /* ar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ar.xcframework; path = xcfs/.build/artifacts/xcfs/ar/ar.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F89257012F50068004E /* files.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = files.xcframework; path = xcfs/.build/artifacts/xcfs/files/files.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F8B257012F50068004E /* ssh_cmd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ssh_cmd.xcframework; path = xcfs/.build/artifacts/xcfs/ssh_cmd/ssh_cmd.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F8D257012F50068004E /* tar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = tar.xcframework; path = xcfs/.build/artifacts/xcfs/tar/tar.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F8E257012F50068004E /* awk.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = awk.xcframework; path = xcfs/.build/artifacts/xcfs/awk/awk.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F8F257012F50068004E /* text.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = text.xcframework; path = xcfs/.build/artifacts/xcfs/text/text.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F90257012F50068004E /* shell.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = shell.xcframework; path = xcfs/.build/artifacts/xcfs/shell/shell.xcframework; sourceTree = SOURCE_ROOT; };
+		22DC1F91257012F50068004E /* curl_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = curl_ios.xcframework; path = xcfs/.build/artifacts/xcfs/curl_ios/curl_ios.xcframework; sourceTree = SOURCE_ROOT; };
+		22DE173D2653DC960031A029 /* make.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = make.xcframework; path = xcfs/.build/artifacts/xcfs/make/make.xcframework; sourceTree = SOURCE_ROOT; };
 		22DF4FEE26E25AEA00E5A0F5 /* texmf.cnf */ = {isa = PBXFileReference; lastKnownFileType = text; name = texmf.cnf; path = Resources/texmf.cnf; sourceTree = "<group>"; };
 		22E1B539243DF63E00EA8FBD /* require.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = require.js; sourceTree = "<group>"; };
+		22E2F7E62CD67C5C0079534C /* iwasm.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = iwasm.framework; path = xcfs/.build/artifacts/xcfs/iwasm.framework; sourceTree = "<group>"; };
 		22E337EB2949F4CD00A8F76C /* defaultToolbar.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = defaultToolbar.txt; sourceTree = "<group>"; };
-		22E9F57D2558468E00673D11 /* network_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = network_ios.xcframework; path = xcfs/.build/artifacts/xcfs/network_ios.xcframework; sourceTree = SOURCE_ROOT; };
-		22E9F583255846A500673D11 /* lua_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lua_ios.xcframework; path = xcfs/.build/artifacts/xcfs/lua_ios.xcframework; sourceTree = SOURCE_ROOT; };
-		22E9F5A0255846F300673D11 /* vim.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = vim.xcframework; path = xcfs/.build/artifacts/xcfs/vim.xcframework; sourceTree = SOURCE_ROOT; };
-		22E9F5A52558470600673D11 /* bc_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bc_ios.xcframework; path = xcfs/.build/artifacts/xcfs/bc_ios.xcframework; sourceTree = SOURCE_ROOT; };
+		22E9F57D2558468E00673D11 /* network_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = network_ios.xcframework; path = xcfs/.build/artifacts/xcfs/network_ios/network_ios.xcframework; sourceTree = SOURCE_ROOT; };
+		22E9F583255846A500673D11 /* lua_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lua_ios.xcframework; path = xcfs/.build/artifacts/xcfs/lua_ios/lua_ios.xcframework; sourceTree = SOURCE_ROOT; };
+		22E9F5A0255846F300673D11 /* vim.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = vim.xcframework; path = xcfs/.build/artifacts/xcfs/vim/vim.xcframework; sourceTree = SOURCE_ROOT; };
+		22E9F5A52558470600673D11 /* bc_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bc_ios.xcframework; path = xcfs/.build/artifacts/xcfs/bc_ios/bc_ios.xcframework; sourceTree = SOURCE_ROOT; };
 		22EA905A266696A700CC9B88 /* wasm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm.js; sourceTree = "<group>"; };
 		22EA905D266698DD00CC9B88 /* script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = script.js; sourceTree = "<group>"; };
-		22F20174264E81E1004FBA5C /* perlA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlA.xcframework; path = xcfs/.build/artifacts/xcfs/perlA.xcframework; sourceTree = SOURCE_ROOT; };
-		22F20177265260B7004FBA5C /* perlB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlB.xcframework; path = xcfs/.build/artifacts/xcfs/perlB.xcframework; sourceTree = SOURCE_ROOT; };
-		22F75D40265FA3500056AFD2 /* xxd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xxd.xcframework; path = xcfs/.build/artifacts/xcfs/xxd.xcframework; sourceTree = SOURCE_ROOT; };
+		22F20174264E81E1004FBA5C /* perlA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlA.xcframework; path = xcfs/.build/artifacts/xcfs/perlA/perlA.xcframework; sourceTree = SOURCE_ROOT; };
+		22F20177265260B7004FBA5C /* perlB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlB.xcframework; path = xcfs/.build/artifacts/xcfs/perlB/perlB.xcframework; sourceTree = SOURCE_ROOT; };
+		22F75D40265FA3500056AFD2 /* xxd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xxd.xcframework; path = xcfs/.build/artifacts/xcfs/xxd/xxd.xcframework; sourceTree = SOURCE_ROOT; };
 		22F75D46265FFEE30056AFD2 /* python3_ios-pyfftw.pyfftw.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-pyfftw.pyfftw.xcframework"; path = "cpython/XcFrameworks/python3_ios-pyfftw.pyfftw.xcframework"; sourceTree = SOURCE_ROOT; };
 		22F75D47265FFEF50056AFD2 /* python3_ios-wordcloud.query_integral_image.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-wordcloud.query_integral_image.xcframework"; path = "cpython/XcFrameworks/python3_ios-wordcloud.query_integral_image.xcframework"; sourceTree = SOURCE_ROOT; };
 		22F75D48265FFF020056AFD2 /* python3_ios-regex._regex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "python3_ios-regex._regex.xcframework"; path = "cpython/XcFrameworks/python3_ios-regex._regex.xcframework"; sourceTree = SOURCE_ROOT; };
@@ -2162,6 +2169,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				224A904D2ADD0999006DB9CC /* ios_system.xcframework in Frameworks */,
+				227BB5AE2C4BA34D003AD902 /* Vapor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2169,8 +2177,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2213DCC32BDFEF8F008BD5F2 /* Vapor in Frameworks */,
 				228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */,
+				2213DCC32BDFEF8F008BD5F2 /* Vapor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2690,6 +2698,8 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22E2F7E62CD67C5C0079534C /* iwasm.framework */,
+				220F18872C7C81D7007090F8 /* blink.xcframework */,
 				2224F2A42C24909400E0BA40 /* rclone.framework */,
 				227318AC28F02E170027A736 /* multimarkdown.framework */,
 				2232245E289695A9001BAE04 /* pico.framework */,
@@ -2948,6 +2958,7 @@
 			);
 			name = "a-Shell-noPython";
 			packageProductDependencies = (
+				227BB5AD2C4BA34D003AD902 /* Vapor */,
 			);
 			productName = "a-Shell";
 			productReference = 224A91702ADD0999006DB9CC /* a-Shell-noPython.app */;
@@ -3558,7 +3569,7 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 358;
+				CURRENT_PROJECT_VERSION = 440;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3566,6 +3577,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
+					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = "a-Shell-mini copy-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -3578,7 +3590,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.12.3;
+				MARKETING_VERSION = 1.15.9;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3608,7 +3620,7 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 358;
+				CURRENT_PROJECT_VERSION = 440;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -3616,6 +3628,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
+					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = "a-Shell-mini copy-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -3628,7 +3641,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.12.3;
+				MARKETING_VERSION = 1.15.9;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3775,19 +3788,23 @@
 		22984EFF22C93DBF00069497 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 417;
+				CURRENT_PROJECT_VERSION = 445;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				ENABLE_ON_DEMAND_RESOURCES = NO;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/xcfs/.build/artifacts/xcfs",
 				);
 				INFOPLIST_FILE = "a-Shell/Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -3801,7 +3818,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.15.1;
+				MARKETING_VERSION = 1.15.10;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3821,19 +3838,23 @@
 		22984F0022C93DBF00069497 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 417;
+				CURRENT_PROJECT_VERSION = 445;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				ENABLE_ON_DEMAND_RESOURCES = NO;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/xcfs/.build/artifacts/xcfs",
 				);
 				INFOPLIST_FILE = "a-Shell/Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -3847,7 +3868,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.15.1;
+				MARKETING_VERSION = 1.15.10;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -3872,14 +3893,16 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 413;
+				CURRENT_PROJECT_VERSION = 445;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				ENABLE_ON_DEMAND_RESOURCES = NO;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
+					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -3893,7 +3916,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.14.1;
+				MARKETING_VERSION = 1.15.10;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
@@ -3924,14 +3947,16 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 413;
+				CURRENT_PROJECT_VERSION = 445;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				ENABLE_ON_DEMAND_RESOURCES = NO;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
+					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -3945,7 +3970,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.14.1;
+				MARKETING_VERSION = 1.15.10;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
@@ -4165,6 +4190,11 @@
 			productName = Vapor;
 		};
 		227B24882BE033F3003A8031 /* Vapor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
+			productName = Vapor;
+		};
+		227BB5AD2C4BA34D003AD902 /* Vapor */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
 			productName = Vapor;

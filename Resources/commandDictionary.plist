@@ -821,6 +821,13 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>magick</key>
+	<array>
+		<string>magick.framework/magick</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>magick-script</key>
 	<array>
 		<string>magick.framework/magick</string>
@@ -957,6 +964,20 @@
 	<key>multimarkdown</key>
 	<array>
 		<string>multimarkdown.framework/multimarkdown</string>
+		<string>main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>wasm3</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>wasm3</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>blink</key>
+	<array>
+		<string>blink.framework/blink</string>
 		<string>main</string>
 		<string></string>
 		<string>file</string>
