@@ -1263,7 +1263,7 @@ function setupHterm() {
 						printPrompt();
 						io.print(io.currentCommand);
 						// move cursor back to beginning of the line
-						io.print(`\x1b[${window.promptMessage.length + 1}G`);
+						io.print(`\x1b[${window.promptEnd + 1}G`);
 						break;
 					case String.fromCharCode(23):  // Ctrl+W: kill the word behind point
 						disableAutocompleteMenu();
