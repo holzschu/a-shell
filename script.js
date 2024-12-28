@@ -1265,6 +1265,7 @@ function setupHterm() {
 						// move cursor back to beginning of the line
 						io.print(`\x1b[${window.promptMessage.length + 1}G`);
 						break;
+					case String.fromCharCode(27) + String.fromCharCode(127):  // Alt-delete key from iOS keyboard
 					case String.fromCharCode(23):  // Ctrl+W: kill the word behind point
 						disableAutocompleteMenu();
 						deleteBackward();
