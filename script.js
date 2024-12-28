@@ -1255,8 +1255,12 @@ function setupHterm() {
 					case String.fromCharCode(21):  // Ctrl-U: kill from cursor to beginning of the line
 						disableAutocompleteMenu();
 						if (currentCommandCursorPosition > 0) { // prompt.length
-							// clear entire line and move cursor to beginning of the line
-							io.print('\x1b[2K\x1b[G');
+							// move cursor back to beginning of the line
+							const scrolledLines = window.promptScroll - this.scrollPort_.getTopRowIndex();
+							const topRowCommand = window.promptLine + scrolledLines;
+							io.print('\x1b[' + (topRowCommand + 1) + ';0H');
+							// clear cursor to end of display
+							io.print('\x1b[0J');
 							// backup remaining characters
 							const remaining = io.currentCommand.slice(currentCommandCursorPosition);
 							// redraw prompt
