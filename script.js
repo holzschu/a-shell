@@ -1254,16 +1254,21 @@ function setupHterm() {
 						break;
 					case String.fromCharCode(21):  // Ctrl-U: kill from cursor to beginning of the line
 						disableAutocompleteMenu();
-						// clear entire line and move cursor to beginning of the line
-						io.print('\x1b[2K\x1b[G');
-						io.currentCommand = io.currentCommand
-							.slice(currentCommandCursorPosition);
-						currentCommandCursorPosition = 0;
-						// redraw command line
-						printPrompt();
-						io.print(io.currentCommand);
-						// move cursor back to beginning of the line
-						io.print(`\x1b[${window.promptEnd + 1}G`);
+						if (currentCommandCursorPosition > 0) { // prompt.length
+							// clear entire line and move cursor to beginning of the line
+							io.print('\x1b[2K\x1b[G');
+							// backup remaining characters
+							const remaining = io.currentCommand.slice(currentCommandCursorPosition);
+							// redraw prompt
+							printPrompt();  // This erases the entire io.currentCommand
+							updatePromptPosition();
+							// restore and draw remaining characters
+							io.currentCommand = remaining
+							io.print(io.currentCommand);
+							// move cursor back to beginning of the line
+							io.print(`\x1b[${window.promptEnd + 1}G`);
+							currentCommandCursorPosition = 0;
+						}
 						break;
 					case String.fromCharCode(23):  // Ctrl+W: kill the word behind point
 						disableAutocompleteMenu();
