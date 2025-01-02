@@ -1265,12 +1265,23 @@ function setupHterm() {
 						// move cursor back to beginning of the line
 						io.print(`\x1b[${window.promptMessage.length + 1}G`);
 						break;
-					case String.fromCharCode(23):  // Ctrl+W: kill the word behind point
+					case String.fromCharCode(27) + String.fromCharCode(127):  // Alt-delete key from iOS keyboard: kill the word behind point
 						disableAutocompleteMenu();
 						deleteBackward();
 						while (currentCommandCursorPosition > 0) {
 							const currentChar = io.currentCommand[currentCommandCursorPosition - 1];
 							if (!isLetter(currentChar)) {
+								break;
+							}
+							deleteBackward();
+						}
+						break;
+					case String.fromCharCode(23):  // Ctrl+W: kill the word behind point, using white space as a word boundary
+						disableAutocompleteMenu();
+						deleteBackward();
+						while (currentCommandCursorPosition > 0) {
+							const currentChar = io.currentCommand[currentCommandCursorPosition - 1];
+							if (currentChar === ' ') {
 								break;
 							}
 							deleteBackward();
