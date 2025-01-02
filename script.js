@@ -1212,7 +1212,7 @@ function setupHterm() {
 						}
 						break;
 					case String.fromCharCode(27) + "[3~":  // Delete key
-					case String.fromCharCode(4):  // Ctrl-D: deleter character after cursor 
+					case String.fromCharCode(4):  // Ctrl-D: delete character after cursor
 						disableAutocompleteMenu();
 						if (currentCommandCursorPosition < io.currentCommand.length) {
 							var currentChar = io.currentCommand[currentCommandCursorPosition];
