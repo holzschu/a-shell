@@ -3990,188 +3990,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // On the first run, one of these are null, so we return.
         guard (scene.session.stateRestorationActivity != nil) else { return }
         guard let userInfo = scene.session.stateRestorationActivity!.userInfo else { return }
-        // If a command is already running, we don't restore directories, etc: they probably are still valid
-        if (currentCommand != "") { return }
-        NSLog("Restoring history, previousDir, currentDir:")
-        if let historyData = userInfo["history"] {
-            history = historyData as! [String]
-        } else {
-            history = UserDefaults.standard.array(forKey: "history") as? [String] ?? []
-        }
-        directoriesUsed = UserDefaults.standard.dictionary(forKey: "directoriesUsed") as? [String:Int] ?? [:]
-        // NSLog("set history to \(history)")
-        // NSLog("set directoriesUsed to \(directoriesUsed)")
-        windowHistory = "window.commandArray = ["
-        for command in history {
-            windowHistory += "\"" + command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\", "
-        }
-        windowHistory += "]; window.commandIndex = \(history.count); window.maxCommandIndex = \(history.count); "
-        // webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
-        //     if error != nil {
-        //         NSLog("Error in recreating history, line = \(javascriptCommand)")
-        //         print(error)
-        //     }
-        //     if let result = result { print("Recreating history: \(result), line= \(javascriptCommand)") }
-        // }
-        if let previousDirectoryData = userInfo["prev_wd"] {
-            if let previousDirectory = previousDirectoryData as? String {
-                NSLog("got previousDirectory as \(previousDirectory)")
-                if (FileManager().fileExists(atPath: previousDirectory) && FileManager().isReadableFile(atPath: previousDirectory)) {
-                    NSLog("set previousDirectory to \(previousDirectory)")
-                    // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
-                    ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
-                    changeDirectory(path: previousDirectory) // call cd_main and checks secured bookmarked URLs
-                }
-            }
-        }
-        if let currentDirectoryData = userInfo["cwd"] {
-            if var currentDirectory = currentDirectoryData as? String {
-                NSLog("got currentDirectory as \(currentDirectory)")
-                if (!FileManager().fileExists(atPath: currentDirectory) || !FileManager().isReadableFile(atPath: currentDirectory)) {
-                    // The directory does not exist anymore (often home directory, changes after reinstall)
-                    do {
-                        currentDirectory = try FileManager().url(for: .documentDirectory,
-                                                                 in: .userDomainMask,
-                                                                 appropriateFor: nil,
-                                                                 create: true).path
-                        NSLog("reset currentDirectory to \(currentDirectory)")
-                    }
-                    catch {
-                        NSLog("Could not get currentDirectory from FileManager()")
-                    }
-                }
-                if (FileManager().fileExists(atPath: currentDirectory) && FileManager().isReadableFile(atPath: currentDirectory)) {
-                    NSLog("set currentDirectory to \(currentDirectory)")
-                    // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
-                    ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
-                    changeDirectory(path: currentDirectory) // call cd_main and checks secured bookmarked URLs
-                }
-            }
-        }
-        // We restore the environment variables to their previous values.
-        // Useful for virtual Python environments
-        // If the app was reinstalled, paths to files are not valid anymore, so we don't set them.
-        // We never touch system environment variables like HOME and APPDIR.
-        var path = String(utf8String: getenv( "PATH"))
-        var pathChanged = false
-        if let environmentVariables = userInfo["environ"] as? [String] {
-            var virtualEnvironmentGone = false
-            for variable in environmentVariables {
-                let components = variable.split(separator:"=", maxSplits: 1)
-                if components.count <= 0 { continue }
-                let name = String(components[0])
-                var value = ""
-                if (components.count >= 2) {
-                    value = String(components[1])
-                }
-                if name == "HOME" { continue }
-                if name == "APPDIR" { continue }
-                // Don't override PATH, MANPATH, PERL5LIB...
-                // PATH itself will be dealt with separately
-                if (value.hasPrefix("/") && (value.contains(":"))) { continue }
-                // Don't override PERL_MB_OPT, PERL_MM_OPT, TERMINFO either:
-                if name == "PERL_MB_OPT" { continue }
-                if name == "PERL_MM_OPT" { continue }
-                if name == "TERMINFO" { continue }
-                // Don't override APPVERSION and others:
-                if name == "APPNAME" { continue }
-                if name == "APPVERSION" { continue }
-                if name == "APPBUILDNUMBER" { continue }
-                // Do not restore SSH_AUTH_SOCK, since ssh-agent is not running anymore.
-                if name == "SSH_AUTH_SOCK" {
-                    unlink(value); // close the old socket
-                    continue
-                }
-                if (name == "TERM") && (value == "dumb") { continue }
-                // Env vars that are files:
-                if (value.hasPrefix("/") && (!value.contains(":"))) {
-                    // This variable might be a file or directory. Check it exists first:
-                    if (!FileManager().fileExists(atPath: value)) {
-                        // NSLog("Skipping \(name) = \(value) (not here)")
-                        if (name == "VIRTUAL_ENV") {
-                            // We had a virtual environment set, but pointing to a directory that no longer exists
-                            // Since _OLD_VIRTUAL_PATH is usually before VIRTUAL_ENV in the list of variables,
-                            // it has already been set by now. We set this boolean to erase it.
-                            virtualEnvironmentGone = true
-                        }
-                        continue
-                    }
-                }
-                // NSLog("setenv \(components[0]) \(components[1])")
-                // These are user-defined environment variables, we keep them:
-                setenv(name, value, 1)
-            }
-            // The virtual environment is not in the right place anymore, get the PATH variable back to the correct value
-            if (virtualEnvironmentGone) {
-                unsetenv("_OLD_VIRTUAL_PATH")
-                unsetenv("_OLD_VIRTUAL_PS1")
-            }
-        }
-        // Change in the default value for this variable:
-        if let compileOptionsC = getenv("CCC_OVERRIDE_OPTIONS") {
-            if let compileOptions = String(utf8String: compileOptionsC) {
-                if (compileOptions.isEqual("#^--target") || compileOptions.isEqual("#^--target=wasm32-wasi")) {
-                    setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind", 1)
-                }
-            }
-        }
-        // Only restore the parts of PATH that are not the main path (before and after),
-        // and make sure that each directory exists.
-        if let beforePath = userInfo["beforePath"] as? String {
-            let components = beforePath.components(separatedBy: ":")
-            var prefix:String = ""
-            for dir in components {
-                if (dir.count == 0) { continue } // empty string, can happen.
-                if (prefix.contains(dir + ":")) { continue } // Don't add a directory more than once.
-                if (FileManager().fileExists(atPath: dir)) {
-                    prefix = prefix + dir + ":"
-                }
-            }
-            if (prefix.count > 0) {
-                if (path == nil) {
-                    path = prefix
-                } else {
-                    path = prefix + path!
-                }
-                pathChanged = true
-            }
-        }
-        if let afterPath = userInfo["afterPath"] as? String {
-            let components = afterPath.components(separatedBy: ":")
-            var suffix:String = ""
-            for dir in components {
-                // Don't add a string more than once:
-                if (dir.count == 0) { continue } // empty string, can happen.
-                if (suffix.isEqual(":" + dir)) { continue }
-                if (suffix.contains(":" + dir + ":")) { continue }
-                if (path != nil) {
-                    if (path!.contains(dir + ":")) { continue } // Don't add a string that is already in path
-                }
-                if (FileManager().fileExists(atPath: dir)) {
-                    suffix = suffix + ":" + dir
-                }
-            }
-            if (suffix.count > 0) {
-                if (path == nil) {
-                    path = suffix
-                } else {
-                    if (!path!.hasSuffix(":") && !suffix.hasPrefix(":")) {
-                        path = path! + ":" + suffix
-                    } else {
-                        if (path!.hasSuffix(":") && suffix.hasPrefix(":")) {
-                            path!.removeLast()
-                        }
-                        path = path! + suffix
-                    }
-                }
-                pathChanged = true
-            }
-        }
-        if (pathChanged) {
-            setenv("PATH", path, 1)
-        }
         // Window preferences, stored on a per-session basis:
         if let fontSize = userInfo["fontSize"] as? Float {
             terminalFontSize = fontSize
@@ -4194,6 +4012,191 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         if let fontLigature = userInfo["fontLigature"] as? String {
             terminalFontLigature = fontLigature
+        }
+        // If a command is already running, we don't restore directories, etc: they probably are still valid
+        if (currentCommand != "") { return }
+        // If the user doesn't want us to restore content, we also don't restore directories and history:
+        if UserDefaults.standard.bool(forKey: "keep_content") {
+            NSLog("Restoring history, previousDir, currentDir:")
+            if let historyData = userInfo["history"] {
+                history = historyData as! [String]
+            } else {
+                history = UserDefaults.standard.array(forKey: "history") as? [String] ?? []
+            }
+            directoriesUsed = UserDefaults.standard.dictionary(forKey: "directoriesUsed") as? [String:Int] ?? [:]
+            // NSLog("set history to \(history)")
+            // NSLog("set directoriesUsed to \(directoriesUsed)")
+            windowHistory = "window.commandArray = ["
+            for command in history {
+                windowHistory += "\"" + command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\", "
+            }
+            windowHistory += "]; window.commandIndex = \(history.count); window.maxCommandIndex = \(history.count); "
+            // webView!.evaluateJavaScript(javascriptCommand) { (result, error) in
+            //     if error != nil {
+            //         NSLog("Error in recreating history, line = \(javascriptCommand)")
+            //         print(error)
+            //     }
+            //     if let result = result { print("Recreating history: \(result), line= \(javascriptCommand)") }
+            // }
+            if let previousDirectoryData = userInfo["prev_wd"] {
+                if let previousDirectory = previousDirectoryData as? String {
+                    NSLog("got previousDirectory as \(previousDirectory)")
+                    if (FileManager().fileExists(atPath: previousDirectory) && FileManager().isReadableFile(atPath: previousDirectory)) {
+                        NSLog("set previousDirectory to \(previousDirectory)")
+                        // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
+                        ios_switchSession(self.persistentIdentifier?.toCString())
+                        ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                        changeDirectory(path: previousDirectory) // call cd_main and checks secured bookmarked URLs
+                    }
+                }
+            }
+            if let currentDirectoryData = userInfo["cwd"] {
+                if var currentDirectory = currentDirectoryData as? String {
+                    NSLog("got currentDirectory as \(currentDirectory)")
+                    if (!FileManager().fileExists(atPath: currentDirectory) || !FileManager().isReadableFile(atPath: currentDirectory)) {
+                        // The directory does not exist anymore (often home directory, changes after reinstall)
+                        do {
+                            currentDirectory = try FileManager().url(for: .documentDirectory,
+                                                                     in: .userDomainMask,
+                                                                     appropriateFor: nil,
+                                                                     create: true).path
+                            NSLog("reset currentDirectory to \(currentDirectory)")
+                        }
+                        catch {
+                            NSLog("Could not get currentDirectory from FileManager()")
+                        }
+                    }
+                    if (FileManager().fileExists(atPath: currentDirectory) && FileManager().isReadableFile(atPath: currentDirectory)) {
+                        NSLog("set currentDirectory to \(currentDirectory)")
+                        // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
+                        ios_switchSession(self.persistentIdentifier?.toCString())
+                        ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                        changeDirectory(path: currentDirectory) // call cd_main and checks secured bookmarked URLs
+                    }
+                }
+            }
+            // We restore the environment variables to their previous values.
+            // Useful for virtual Python environments
+            // If the app was reinstalled, paths to files are not valid anymore, so we don't set them.
+            // We never touch system environment variables like HOME and APPDIR.
+            var path = String(utf8String: getenv( "PATH"))
+            var pathChanged = false
+            if let environmentVariables = userInfo["environ"] as? [String] {
+                var virtualEnvironmentGone = false
+                for variable in environmentVariables {
+                    let components = variable.split(separator:"=", maxSplits: 1)
+                    if components.count <= 0 { continue }
+                    let name = String(components[0])
+                    var value = ""
+                    if (components.count >= 2) {
+                        value = String(components[1])
+                    }
+                    if name == "HOME" { continue }
+                    if name == "APPDIR" { continue }
+                    // Don't override PATH, MANPATH, PERL5LIB...
+                    // PATH itself will be dealt with separately
+                    if (value.hasPrefix("/") && (value.contains(":"))) { continue }
+                    // Don't override PERL_MB_OPT, PERL_MM_OPT, TERMINFO either:
+                    if name == "PERL_MB_OPT" { continue }
+                    if name == "PERL_MM_OPT" { continue }
+                    if name == "TERMINFO" { continue }
+                    // Don't override APPVERSION and others:
+                    if name == "APPNAME" { continue }
+                    if name == "APPVERSION" { continue }
+                    if name == "APPBUILDNUMBER" { continue }
+                    // Do not restore SSH_AUTH_SOCK, since ssh-agent is not running anymore.
+                    if name == "SSH_AUTH_SOCK" {
+                        unlink(value); // close the old socket
+                        continue
+                    }
+                    if (name == "TERM") && (value == "dumb") { continue }
+                    // Env vars that are files:
+                    if (value.hasPrefix("/") && (!value.contains(":"))) {
+                        // This variable might be a file or directory. Check it exists first:
+                        if (!FileManager().fileExists(atPath: value)) {
+                            // NSLog("Skipping \(name) = \(value) (not here)")
+                            if (name == "VIRTUAL_ENV") {
+                                // We had a virtual environment set, but pointing to a directory that no longer exists
+                                // Since _OLD_VIRTUAL_PATH is usually before VIRTUAL_ENV in the list of variables,
+                                // it has already been set by now. We set this boolean to erase it.
+                                virtualEnvironmentGone = true
+                            }
+                            continue
+                        }
+                    }
+                    // NSLog("setenv \(components[0]) \(components[1])")
+                    // These are user-defined environment variables, we keep them:
+                    setenv(name, value, 1)
+                }
+                // The virtual environment is not in the right place anymore, get the PATH variable back to the correct value
+                if (virtualEnvironmentGone) {
+                    unsetenv("_OLD_VIRTUAL_PATH")
+                    unsetenv("_OLD_VIRTUAL_PS1")
+                }
+            }
+            // Change in the default value for this variable:
+            if let compileOptionsC = getenv("CCC_OVERRIDE_OPTIONS") {
+                if let compileOptions = String(utf8String: compileOptionsC) {
+                    if (compileOptions.isEqual("#^--target") || compileOptions.isEqual("#^--target=wasm32-wasi")) {
+                        setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind", 1)
+                    }
+                }
+            }
+            // Only restore the parts of PATH that are not the main path (before and after),
+            // and make sure that each directory exists.
+            if let beforePath = userInfo["beforePath"] as? String {
+                let components = beforePath.components(separatedBy: ":")
+                var prefix:String = ""
+                for dir in components {
+                    if (dir.count == 0) { continue } // empty string, can happen.
+                    if (prefix.contains(dir + ":")) { continue } // Don't add a directory more than once.
+                    if (FileManager().fileExists(atPath: dir)) {
+                        prefix = prefix + dir + ":"
+                    }
+                }
+                if (prefix.count > 0) {
+                    if (path == nil) {
+                        path = prefix
+                    } else {
+                        path = prefix + path!
+                    }
+                    pathChanged = true
+                }
+            }
+            if let afterPath = userInfo["afterPath"] as? String {
+                let components = afterPath.components(separatedBy: ":")
+                var suffix:String = ""
+                for dir in components {
+                    // Don't add a string more than once:
+                    if (dir.count == 0) { continue } // empty string, can happen.
+                    if (suffix.isEqual(":" + dir)) { continue }
+                    if (suffix.contains(":" + dir + ":")) { continue }
+                    if (path != nil) {
+                        if (path!.contains(dir + ":")) { continue } // Don't add a string that is already in path
+                    }
+                    if (FileManager().fileExists(atPath: dir)) {
+                        suffix = suffix + ":" + dir
+                    }
+                }
+                if (suffix.count > 0) {
+                    if (path == nil) {
+                        path = suffix
+                    } else {
+                        if (!path!.hasSuffix(":") && !suffix.hasPrefix(":")) {
+                            path = path! + ":" + suffix
+                        } else {
+                            if (path!.hasSuffix(":") && suffix.hasPrefix(":")) {
+                                path!.removeLast()
+                            }
+                            path = path! + suffix
+                        }
+                    }
+                    pathChanged = true
+                }
+            }
+            if (pathChanged) {
+                setenv("PATH", path, 1)
+            }
         }
         // Should we restore window content?
         if UserDefaults.standard.bool(forKey: "keep_content") {
