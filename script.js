@@ -795,6 +795,7 @@ function setupHterm() {
 				var cursorPosition = term.screen_.cursorPosition.column - window.promptEnd;  // remove prompt length
 				switch (string) {
 					case '\r':
+					case '\n':
 						if (autocompleteOn) {
 							// Autocomplete menu being displayed + press return: select what's visible and remove
 							pickCurrentValue();
