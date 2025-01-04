@@ -415,7 +415,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             }
         }
-        // print("Available fonts: \(UIFont.familyNames)");
+        // print("Available fonts (families): \(UIFont.familyNames)");
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
 #if false // Disabling request for notifications, since we do not use it.
         let center = UNUserNotificationCenter.current()

@@ -116,6 +116,9 @@
         <message name="ImageDoesNotHaveAnAlphaChannel">
           image does not have an alpha channel
         </message>
+        <message name="ImageDoesNotHaveAMaskChannel">
+          image does not have an mask channel
+        </message>
         <message name="ImageDoesNotHaveAThumbnail">
           image does not have a EXIF thumbnail
         </message>
@@ -217,6 +220,9 @@
       <error>
         <message name="IncludeElementNestedTooDeeply">
           include element nested too deeply
+        </message>
+        <message name="PolicyValidationException">
+          security policy failed to validate
         </message>
       </error>
       <warning>
@@ -676,6 +682,9 @@
         <message name="KernelWidthMustBeAnOddNumber">
           kernel width must be an odd number
         </message>
+        <message name="LabelExpected">
+          label expected
+        </message>
         <message name="MapImageRequired">
           map image required
         </message>
@@ -697,6 +706,9 @@
         </message>
         <message name="MustSpecifyAnImageName">
           must specify an image name
+        </message>
+        <message name="MustSpecifyImageDepth">
+          must specify image depth
         </message>
         <message name="MustSpecifyImageSize">
           must specify image size
@@ -1042,6 +1054,9 @@
           <message name="PixelCacheAllocationFailed">
             pixel cache allocation failed
           </message>
+          <message name="TimeLimitExceeded">
+            time limit exceeded
+          </message>
           <message name="TooManyExceptions">
             too many exceptions
           </message>
@@ -1071,9 +1086,6 @@
           </message>
         </error>
         <fatalerror>
-          <message name="TimeLimitExceeded">
-            time limit exceeded
-          </message>
           <message name="UnableToAllocateDashPattern">
             unable to allocate dash pattern
           </message>
@@ -1132,6 +1144,9 @@
         <warning>
           <message name="MemoryAllocationFailed">
             memory allocation failed
+          </message>
+          <message name="ProfileSizeExceedsLimit">
+            profile size exceeds limit
           </message>
         </warning>
       </limit>
@@ -1467,11 +1482,11 @@
         load images
       </message>
     </Load>
-    <Magnfiy>
+    <Magnify>
       <message name="Image">
-        magnfiy image
+        magnify image
       </message>
-    </Magnfiy>
+    </Magnify>
     <MedianFilter>
       <message name="Image">
         filter image with neighborhood ranking

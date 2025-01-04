@@ -10,8 +10,595 @@
     version CDATA #IMPLIED weight CDATA #REQUIRED>
 ]>
 <!--
-  ImageMagick font configuration.
+ImageMagick font configuration for iOS system fonts (04/01/2025).
+Partially copied from type-apple.xml, partially edited by hand using the fonts in /System/Library/Fonts/*
 -->
 <typemap>
-   <include file="type-ghostscript.xml" />
+  <type
+     format="ttf"
+     name="AcademyEngraved"
+     fullname="Academy Engraved LET"
+     family="Academy Engraved LET"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/AppFonts/AcademyEngraved.ttf"
+     />
+  <type
+     format="otf"
+     name="AppleGothic"
+     fullname="Apple Gothic"
+     family="Apple Gothic"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/AppFonts/AppleGothic.otf"
+	  />
+  <type
+     format="ttf"
+     name="AppleSymbols"
+     fullname="Apple Symbols"
+     family="Apple Symbols"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/Core/AppleSymbols.ttf"
+     />
+  <type
+     format="ttf"
+     name="ArialRoundedB"
+     fullname="Arial Rounded MT Bold"
+     family="Arial Rounded Bold"
+     style="Normal"
+     weight="Bold"
+     glyphs="/System/Library/Fonts/CoreAddition/ArialRoundedMTBold.ttf"
+     />
+  <type
+     format="ttf"
+     name="ArialBI"
+     fullname="Arial Bold Italic"
+     family="Arial"
+     weight="Bold"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreAddition/ArialBoldItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="ArialB"
+     fullname="Arial Bold"
+     family="Arial"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreAddition/ArialBold.ttf"
+     />
+  <type
+     format="ttf"
+     name="ArialI"
+     fullname="Arial Italic"
+     family="Arial"
+     weight="Normal"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreAddition/ArialItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="Arial"
+     fullname="Arial"
+     family="Arial"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreAddition/Arial.ttf"
+     />
+  <type
+     format="otf"
+     name="Asphalt"
+     fullname="Asphalt Medium"
+     family="Asphalt"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreUI/AsphaltMedium.otf"
+     />
+  <type
+     format="otf"
+     name="Balega"
+     fullname="Balega Regular"
+     family="Balega"
+     glyphs="/System/Library/Fonts/CoreUI/BalegaRegular.otf"
+     />
+  <type
+     format="otf"
+     name="BebasNeue"
+     fullname="Bebas Neue"
+     family="Bebas Neue"
+     glyphs="/System/Library/Fonts/CoreUI/BebasNeue.otf"
+     />
+  <type
+     format="otf"
+     name="FaktSlabStencilPro"
+     fullname="Fakt Slab Stencil Pro medium"
+     family="FaktSlab Stencil Pro"
+     glyphs="/System/Library/Fonts/CoreUI/FaktSlabStencilPro-medium.otf"
+     />
+  <type
+     format="otf"
+     name="JournalSans"
+     fullname="Journal Sans Inline"
+     family="Journal Sans Inline"
+     glyphs="/System/Library/Fonts/CoreUI/JournalSansInline.otf"
+     />
+  <type
+     format="otf"
+     name="SignPainter"
+     fullname="Sign Painter Semibold"
+     family="Sign Painter"
+     weight="DemiBold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreUI/SignPainter-Semibold.otf"
+     />
+  <type
+     format="otf"
+     name="TheHandSerif"
+     fullname="TheHandSerif Semibold"
+     family="TheHandSerif"
+     weight="DemiBold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreUI/TheHandSerif-semibold.otf"
+     />
+  <type
+     format="ttf"
+     name="DearJoe"
+     fullname="DearJoe small semibold"
+     family="DearJoe"
+     weight="DemiBold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreUI/DearJoe-small-semibold.ttf"
+     />
+  <type
+     format="ttf"
+     name="BodoniOrnaments"
+     fullname="Bodoni Ornaments"
+     family="Bodoni Ornaments"
+     glyphs="/System/Library/Fonts/AppFonts/Bodoni-Ornaments.ttf"
+     />
+  <type
+     format="ttf"
+     name="Bodoni72Smallcaps"
+     fullname="Bodoni 72 Smallcaps"
+     family="Bodoni 72 Smallcaps"
+     glyphs="/System/Library/Fonts/AppFonts/Bodoni72-Book-SmallCaps.ttf"
+     />
+  <type
+     format="ttf"
+     name="BradleyHand"
+     fullname="Bradley Hand"
+     family="Bradley Hand"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/AppFonts/BradleyHand-Bold.ttf"
+     />
+  <type
+     format="ttf"
+     name="Chalkduster"
+     fullname="Chalkduster"
+     family="Chalkduster"
+     glyphs="/System/Library/Fonts/AppFonts/Chalkduster.ttf"
+     />
+  <type
+     format="ttf"
+     name="CourierNewBI"
+     fullname="Courier New Bold Italic"
+     family="Courier New"
+     weight="Bold"
+     style="Italic"
+     glyphs="/System/Library/Fonts/Core/CourierNewBoldItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="CourierNewB"
+     fullname="Courier New Bold"
+     family="Courier New"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/Core/CourierNewBold.ttf"
+     />
+  <type
+     format="ttf"
+     name="CourierNewI"
+     fullname="Courier New Italic"
+     family="Courier New"
+     weight="Normal"
+     style="Italic"
+     glyphs="/System/Library/Fonts/Core/CourierNewItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="CourierNew"
+     fullname="Courier New"
+     family="Courier New"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/Core/CourierNew.ttf"
+     />	  
+  <type
+     format="ttf"
+     name="DINAlternate"
+     fullname="DIN Alternate"
+     family="DIN Alternate"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/Core/DINAlternate-bold.ttf"
+     />	  
+  <type
+     format="ttf"
+     name="DINCondensed"
+     fullname="DIN Condensed"
+     family="DIN Condensed"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/Core/DINCondensed-bold.ttf"
+     />	  
+  <type
+     format="ttf"
+     name="GeorgiaBI"
+     fullname="Georgia Bold Italic"
+     family="Georgia"
+     weight="Bold"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreAddition/GeorgiaBoldItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="GeorgiaB"
+     fullname="Georgia Bold"
+     family="Georgia"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreAddition/GeorgiaBold.ttf"
+     />
+  <type
+     format="ttf"
+     name="GeorgiaI"
+     fullname="Georgia Italic"
+     family="Georgia"
+     weight="Normal"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreAddition/GeorgiaItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="Georgia"
+     fullname="Georgia"
+     family="Georgia"
+     glyphs="/System/Library/Fonts/CoreAddition/Georgia.ttf"
+     />
+  <type
+     format="ttf"
+     name="Impact"
+     fullname="Impact"
+     family="Impact"
+     glyphs="/System/Library/Fonts/CoreAddition/Impact.ttf"
+     />
+  <type
+     format="ttf"
+     name="Kefa"
+     fullname="Kefa"
+     family="Kefa"
+     glyphs="/System/Library/Fonts/Core/Kefa.ttf"
+     />	  
+  <type
+     format="ttf"
+     name="KhmerSangamMN"
+     fullname="Khmer Sangam MN"
+     family="Khmer Sangam MN"
+     glyphs="/System/Library/Fonts/Core/KhmerSangamMN.ttf"
+     />	  
+  <type
+     format="ttf"
+     name="LaoSangamMN"
+     fullname="Lao Sangam MN"
+     family="Lao Sangam MN"
+     glyphs="/System/Library/Fonts/Core/LaoSangamMN.ttf"
+     />	  
+  <type
+     format="ttf"
+     name="MarkerFelt"
+     fullname="Marker Felt"
+     family="Marker Felt"
+     glyphs="/System/Library/Fonts/AppFonts/MarkerFeltThin.ttf"
+     />
+  <type
+     format="ttf"
+     name="MarkerFeltThin"
+     fullname="Marker Felt"
+     family="Marker Felt"
+     glyphs="/System/Library/Fonts/AppFonts/MarkerFeltThin.ttf"
+     />
+  <type
+     format="ttf"
+     name="MarkerFeltWide"
+     fullname="Marker Felt"
+     family="Marker Felt"
+     weight="Bold"
+     glyphs="/System/Library/Fonts/AppFonts/MarkerFeltWide.ttf"
+     />
+  <type
+     format="ttf"
+     name="Mishafi"
+     fullname="Mishafi"
+     family="Mishafi"
+     glyphs="/System/Library/Fonts/AppFonts/Mishafi.ttf"
+     />
+  <type
+     format="ttf"
+     name="NewYork"
+     fullname="New York"
+     family="New York"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/Core/NewYork.ttf"
+     />
+  <type
+     format="ttf"
+     name="NewYorkItalix"
+     fullname="New York Italic"
+     family="New York"
+     weight="Normal"
+     style="Italic"
+     glyphs="/System/Library/Fonts/Core/NewYorkItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="Party"
+     fullname="Party LET"
+     family="Party LET"
+     glyphs="/System/Library/Fonts/AppFonts/PartyLET.ttf"
+     />
+  <type
+     format="otf"
+     name="SchemeBold"
+     fullname="Scheme Bold"
+     family="Scheme"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreUI/SchemeBold.otf"
+     />
+  <type
+     format="ttf"
+     name="SFUIMono"
+     fullname="SF Mono"
+     family="SF Mono"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/Core/SFUIMono.ttf"
+     />
+  <type
+     format="ttf"
+     name="SFUIMonoItalic"
+     fullname="SF Mono Italic"
+     family="SF Mono"
+     style="Italic"
+     weight="Normal"
+     glyphs="/System/Library/Fonts/Core/SFUIMonoItalic.ttf"
+     />
+  <type
+     format="otf"
+     name="SFUISymbols"
+     fullname="SF Symbols"
+     family="SF Symbols"
+     glyphs="/System/Library/Fonts/Core/SFUISymbols-Regular.otf"
+     />
+  <type
+     format="ttf"
+     name="SFUI"
+     fullname="San Francisco"
+     family="San Francisco"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreUI/SFUI.ttf"
+     />
+  <type
+     format="ttf"
+     name="SFUIItalic"
+     fullname="San Francisco Italic"
+     family="San Francisco"
+     weight="Normal"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreUI/SFUIItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="SFUIRounded"
+     fullname="SF Rounded"
+     family="San Francisco"
+     style="Rounded"
+     glyphs="/System/Library/Fonts/CoreUI/SFUIRounded.ttf"
+     />
+  <type
+     format="ttf"
+     name="SFCompact"
+     fullname="SF Compact"
+     family="SF Compact"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/Watch/SFCompact.ttf"
+     />
+  <type
+     format="ttf"
+     name="SFCompactItalic"
+     fullname="SF Compact Italic"
+     family="SF Compact"
+     weight="Normal"
+     style="Italic"
+     glyphs="/System/Library/Fonts/Watch/SFCompactItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="SFCompactRounded"
+     fullname="SF Compact Rounded"
+     family="SF Compact"
+     style="Rounded"
+     glyphs="/System/Library/Fonts/Watch/SFCompactRounded.ttf"
+     />
+  <type
+     format="otf"
+     name="STIXGeneralBolIta"
+     fullname="STIX General Bold Italic"
+     family="STIX"
+     weight="Bold"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreAddition/STIXGeneralBolIta.otf"
+     />
+  <type
+     format="otf"
+     name="STIXGeneralBol"
+     fullname="STIX General Bold"
+     family="STIX"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreAddition/STIXGeneralBol.otf"
+     />
+  <type
+     format="otf"
+     name="STIXGeneralItalic"
+     fullname="STIX General Italic"
+     family="STIX"
+     weight="Normal"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreAddition/STIXGeneralItalic.otf"
+     />
+  <type
+     format="otf"
+     name="STIXGeneral"
+     fullname="STIX General"
+     family="STIX"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreAddition/STIXGeneral.otf"
+     />
+  <type
+     format="ttf"
+     name="Symbol"
+     fullname="Symbol"
+     family="Symbol"
+     glyphs="/System/Library/Fonts/Core/Symbol.ttf"
+     />
+  <type
+     format="ttf"
+     name="TimesNewRoman"
+     fullname="Times New Roman"
+     family="Times New Roman"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/Core/TimesNewRoman.ttf"
+	  />
+  <type
+     format="ttf"
+     name="TimesNewRomanBI"
+     fullname="Times New Roman Bold Italic"
+     family="Times New Roman"
+     weight="Bold"
+     style="Italic"
+     glyphs="/System/Library/Fonts/Core/TimesNewRomanBoldItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="TimesNewRomanB"
+     fullname="Times New Roman Bold"
+     family="Times New Roman"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/Core/TimesNewRomanBold.ttf"
+     />
+  <type
+     format="ttf"
+     name="TimesNewRomanI"
+     fullname="Times New Roman Italic"
+     family="Times New Roman"
+     weight="Normal"
+     style="Italic"
+     glyphs="/System/Library/Fonts/Core/TimesNewRomanItalic.ttf"
+	  />
+  <type
+     format="ttf"
+     name="Trebuchet"
+     fullname="Trebuchet MS"
+     family="Trebuchet"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreUI/TrebuchetMS.ttf"
+     />
+  <type
+     format="ttf"
+     name="TrebuchetMSBI"
+     fullname="Trebuchet MS Bold Italic"
+     family="Trebuchet"
+     weight="Bold"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreUI/TrebuchetMSBoldItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="TrebuchetMSB"
+     fullname="Trebuchet MS Bold"
+     family="Trebuchet"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreUI/TrebuchetMSBold.ttf"
+     />
+  <type
+     format="ttf"
+     name="TrebuchetMSI"
+     fullname="Trebuchet MS Italic"
+     family="Trebuchet"
+     weight="Normal"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreUI/TrebuchetMSItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="VerdanaBI"
+     fullname="Verdana Bold Italic"
+     family="Verdana"
+     weight="Bold"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreAddition/VerdanaBoldItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="VerdanaB"
+     fullname="Verdana Bold"
+     family="Verdana"
+     weight="Bold"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreAddition/VerdanaBold.ttf"
+     />
+  <type
+     format="ttf"
+     name="VerdanaI"
+     fullname="Verdana Italic"
+     family="Verdana"
+     weight="Normal"
+     style="Italic"
+     glyphs="/System/Library/Fonts/CoreAddition/VerdanaItalic.ttf"
+     />
+  <type
+     format="ttf"
+     name="Verdana"
+     fullname="Verdana"
+     family="Verdana"
+     weight="Normal"
+     style="Normal"
+     glyphs="/System/Library/Fonts/CoreAddition/Verdana.ttf"
+     />
+  <type
+     format="ttf"
+     name="ZapfDingbats"
+     fullname="Zapf Dingbats"
+     family="Zapf Dingbats"
+     glyphs="/System/Library/Fonts/Core/ZapfDingbats.ttf"
+     />
+  <type
+     format="ttf"
+     name="Zapfino"
+     fullname="Zapfino"
+     family="Zapfino"
+     glyphs="/System/Library/Fonts/AppFonts/Zapfino.ttf"
+     />
 </typemap>

@@ -763,7 +763,11 @@
   <mime type="image/x-adobe-dng" acronym="DNG" description="Digital Negative" priority="100" pattern="*.dng" />
   <mime type="image/x-canon-crw" description="Canon RaW" data-type="string" offset="0" magic="II\x1a\x00\x00\x00HEAPCCDR" priority="50" />
   <mime type="image/x-canon-crw" acronym="CRW" description="Canon RaW" priority="100" pattern="*.crw" />
+  <mime type="image/x-canon-cr2" description="Canon Raw 2" data-type="string" offset="0" magic="MM\x00\x2a\x00\x10\x00\x00RC\x02" priority="50" />
+  <mime type="image/x-canon-cr2" description="Canon Raw 2" data-type="string" offset="0" magic="II\x2a\x00\x10\x00\x00\x00CR\x02" priority="50" />
   <mime type="image/x-canon-cr2" acronym="CR2" description="Canon Raw 2" priority="100" pattern="*.cr2" />
+  <mime type="image/x-canon-cr3" description="Canon Raw 3" data-type="string" offset="4" magic="ftypcrx " priority="50" />
+  <mime type="image/x-canon-cr3" acronym="CR3" description="Canon Raw 3" priority="100" pattern="*.cr3" />
   <mime type="image/x-fuji-raf" description="RAw Format" data-type="string" offset="0" magic="FUJIFILMCCD-RAW " priority="50" />
   <mime type="image/x-fuji-raf" acronym="RAF" description="RAw Format" priority="100" pattern="*.raf" />
   <mime type="image/x-kodak-dcr" acronym="DCR" description="Digital Camera Raw" priority="100" pattern="*.dcr" />
@@ -775,7 +779,9 @@
   <mime type="image/x-olympus-orf" description="Olympus Raw Format" data-type="string" offset="0" magic="IIRO\x08\x00\x00\x00" priority="50" />
   <mime type="image/x-olympus-orf" acronym="ORF" description="Olympus Raw Format" priority="100" pattern="*.orf" />
   <mime type="image/x-panasonic-raw" description="Panasonic raw image" data-type="string" offset="0" magic="IIU\x00\x08\x00\x00\x00" priority="50" />
-  <mime type="image/x-panasonic-raw" description="Panasonic raw image" priority="100" pattern="*.raw" />
+  <mime type="image/x-panasonic-raw" acronym="RAW" description="Panasonic raw image" priority="100" pattern="*.raw" />
+  <mime type="image/x-panasonic-rw2" description="Panasonic raw2 image" data-type="string" offset="0" magic="IIU\x00\x18\x00\x00\x00" priority="50" />
+  <mime type="image/x-panasonic-rw2" acronym="RW2" description="Panasonic raw2 image" priority="100" pattern="*.rw2" />
   <mime type="image/x-pentax-pef" acronym="PEF" description="Pentax Electronic Format" priority="100" pattern="*.pef" />
   <mime type="image/x-sigma-x3f" description="X3 Foveon" data-type="string" offset="0" magic="FOVb" priority="50" />
   <mime type="image/x-sigma-x3f" acronym="X3F" description="X3 Foveon" priority="100" pattern="*.x3f" />
@@ -827,6 +833,7 @@
   <mime type="image/x-gzeps" description="EPS image (gzip-compressed)" priority="100" pattern="*.epsi.gz" />
   <mime type="image/x-gzeps" description="EPS image (gzip-compressed)" priority="100" pattern="*.epsf.gz" />
   <mime type="image/x-ico" acronym="ICO" description="Windows Icon" priority="100" pattern="*.ico" />
+  <mime type="image/x-icon" acronym="ICO" description="Windows Icon" priority="100" pattern="*.ico" />
   <mime type="image/x-icns" description="MacOS X icon" data-type="string" offset="0" magic="icns" priority="50" />
   <mime type="image/x-icns" description="MacOS X icon" priority="100" pattern="*.icns" />
   <mime type="image/x-iff" description="IFF image" priority="100" pattern="*.iff" />
@@ -1142,4 +1149,7 @@
   <mime type="application/x-t602" description="T602 document" priority="100" pattern="*.602" />
   <mime type="application/x-cisco-vpn-settings" description="Cisco VPN Settings" data-type="string" offset="0" magic="[main]" priority="50" />
   <mime type="application/x-cisco-vpn-settings" description="Cisco VPN Settings" priority="100" pattern="*.pcf" />
+  <mime type="image/apng" acronym="APNG" description="PNG image" priority="100" pattern="*.apng" />
+  <mime type="image/avif" acronym="AVIF" description="AVIF image" priority="100" pattern="*.avif" />
+  <mime type="image/webp" acronym="WEBP" description="Web/P image" priority="100" pattern="*.webp" />
 </mimemap>
