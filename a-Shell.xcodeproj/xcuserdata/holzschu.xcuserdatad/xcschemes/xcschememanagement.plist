@@ -22,7 +22,7 @@
 		<key>a-Shell-mini copy.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>6</integer>
+			<integer>8</integer>
 		</dict>
 		<key>a-Shell-mini-Intents.xcscheme_^#shared#^_</key>
 		<dict>
@@ -34,10 +34,25 @@
 			<key>orderHint</key>
 			<integer>5</integer>
 		</dict>
+		<key>a-Shell-newPython.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>7</integer>
+		</dict>
+		<key>a-Shell-noPython copy.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>7</integer>
+		</dict>
 		<key>a-Shell-simulator.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>6</integer>
+		</dict>
+		<key>a-Shell-test.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>7</integer>
 		</dict>
 		<key>a-Shell.xcscheme_^#shared#^_</key>
 		<dict>
@@ -53,6 +68,11 @@
 			<true/>
 		</dict>
 		<key>22178F00257BBBA5008EB2B4</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>223AF1442D8B2E1900A4A62D</key>
 		<dict>
 			<key>primary</key>
 			<true/>
