@@ -422,6 +422,13 @@
 		<string>n</string>
 		<string>file</string>
 	</array>
+	<key>realpath</key>
+	<array>
+		<string>shell.framework/shell</string>
+		<string>realpath_main</string>
+		<string>q</string>
+		<string>file</string>
+	</array>
 	<key>rlogin</key>
 	<array>
 		<string>network_ios.framework/network_ios</string>
