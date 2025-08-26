@@ -69,6 +69,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var thread_stdout_copy: UnsafeMutablePointer<FILE>? = nil
     var thread_stderr_copy: UnsafeMutablePointer<FILE>? = nil
     // var keyboardTimer: Timer!
+    var timer = Timer()               // timer for scheduled execution of commands
+    var scheduledCommand = ""         // the command that is scheduled to run
+    var scheduleInterval: Float = 0.0       // the interval for execution
+    var lastExecution: Date = .distantPast  // the last time the command was executed
+    var nextExecution: Date = .distantFuture  // the next time the command is scheduled to be executed
     private let commandQueue = DispatchQueue(label: "executeCommand", qos: .utility) // low priority, for executing commands
     private var javascriptRunning = false // We can't execute JS while we are already executing JS.
     private var executeWebAssemblyCommandsRunning = false // We can't execute JS while we are already executing JS.
@@ -124,6 +129,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var currentDispatchGroup: DispatchGroup? = nil
     var errorCode:Int32 = 0
     var errorMessage: String = ""
+    var extraBytes: Data? = nil
 
     // Create a document picker for directories.
     private let documentPicker =
@@ -1422,7 +1428,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             fclose(webAssemblyCommand.thread_stdout_copy)
         }
         
-        return (resultStack[commandNumber]!)
+        // if resultStack[commandNumber] does not exist, something went wrong.
+        // Don't crash, but raise the issue.
+        return (resultStack[commandNumber] ?? -1)
     }
     
     func endWebAssemblyCommand(error: Int32, message: String) {
@@ -1438,7 +1446,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         var wasmEndedWithError = false;
         // NSLog("Starting executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack)")
         if (commandsStack.isEmpty) {
-            NSLog("executeWebAssemblyCommands: empty stack")
+            // NSLog("executeWebAssemblyCommands: empty stack")
             return
         }
         if (executeWebAssemblyCommandsRunning) {
@@ -2131,6 +2139,104 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return -1
         }
     }
+
+    func stopRepeating() {
+        DispatchQueue.main.async {
+            self.timer.invalidate()
+            self.lastExecution = .distantPast
+            self.nextExecution = .distantFuture
+            self.scheduledCommand = ""
+            self.scheduleInterval = 0
+        }
+    }
+    
+    func showRepeatingCommand() {
+        if (!self.timer.isValid) {
+            fputs("No currently scheduled command\n", thread_stdout)
+            return
+        }
+        fputs("Scheduled command: \(scheduledCommand)\nRepeat every: \(scheduleInterval) seconds\n", thread_stdout)
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeStyle = .medium
+        if #available(iOS 15, *) {
+            if (lastExecution != .distantPast) {
+                fputs("Last executed at: \(dateFormatter.string(from: lastExecution)).\n", thread_stdout)
+            } else {
+                fputs("Not executed yet.\n", thread_stdout)
+            }
+            if (nextExecution != .distantFuture) {
+                while (self.nextExecution <= .now) {
+                    self.nextExecution += TimeInterval(scheduleInterval)
+                }
+                let delay = nextExecution.timeIntervalSinceNow
+                let formattedDelay = String(format: "%.2f", delay)
+                fputs("Next execution at: \(dateFormatter.string(from: nextExecution)), in \(formattedDelay) seconds\n", thread_stdout)
+            }
+        }
+    }
+    
+    func repeatCommand(interval: Float, command: String) {
+        // These are all local input-output streams that also send to the window.
+        // If multiple commands are running, things are going to be messy.
+        DispatchQueue.main.async {
+            if (self.timer.isValid) {
+                self.timer.invalidate()
+            }
+            self.scheduledCommand = command
+            self.scheduleInterval = interval
+            self.lastExecution = .distantPast
+            if #available(iOS 15, *) {
+                self.nextExecution = .now + TimeInterval(interval)
+            }
+            self.timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(interval), repeats: true) { _ in
+                if (!self.stdout_active) {
+                    let stdout_pipe = Pipe()
+                    stdout_pipe.fileHandleForReading.readabilityHandler = self.onStdout
+                    let stdout_file = fdopen(stdout_pipe.fileHandleForWriting.fileDescriptor, "w")
+                    if (stdout_file != nil) {
+                        // we need to have a stdin, even if we won't use it.
+                        let stdin_pipe = Pipe()
+                        let stdin_file = fdopen(stdin_pipe.fileHandleForReading.fileDescriptor, "r")
+                        ios_switchSession(self.persistentIdentifier?.toCString())
+                        ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                        ios_setStreams(stdin_file, stdout_file, stdout_file)
+                        // don't run the scheduled command if another command is already running
+                        // (either one from the user or another run of the scheduled command)
+                        // This is to avoid messy screens, and to avoid system overload if the
+                        // scheduled command takes longer to complete than the interval.
+                        self.stdout_active = true
+                        if #available(iOS 15, *) {
+                            self.lastExecution = .now
+                            self.nextExecution += TimeInterval(interval)
+                        }
+                        let pid = ios_fork()
+                        _ = ios_system(command)
+                        ios_waitpid(pid)
+                        fflush(thread_stdout)
+                        let closeTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) {_ in
+                            fflush(thread_stdout)
+                            do {
+                                try stdout_pipe.fileHandleForWriting.close()
+                                try stdout_pipe.fileHandleForReading.close()
+                                // These need to be reset to nil, otherwise it won't work:
+                                thread_stdin = nil
+                                thread_stdout = nil
+                                thread_stderr = nil
+                                self.stdout_active = false
+                            }
+                            catch {
+                                NSLog("Error in closing stdout_pipe in repeatCommand: \(error)")
+                            }
+                        }
+                    } else {
+                        NSLog("Unable to open stdout_pipe in repeatCommand")
+                    }
+                }
+            }
+            self.timer.fire()
+        }
+    }
+
     
     func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
         let rootVC = self.window?.rootViewController
@@ -2443,11 +2549,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (writeOpen >= 0) {
                 // Pipe is still open, send information to close it, once all output has been processed.
                 stdout_pipe.fileHandleForWriting.write(self.endOfTransmission.data(using: .utf8)!)
+                fflush(thread_stdout)
                 while (self.stdout_active) {
-                    fflush(thread_stdout)
+                   fflush(thread_stdout)
                 }
             }
-            // Experimental: If it works, try removing the 4 lines above
             do {
                 fclose(self.stdout_file)
                 try stdout_pipe.fileHandleForWriting.close()
@@ -2768,8 +2874,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
                 // print(key)
-                // escape spaces, replace "\r" in filenames with "?"
-                javascriptCommand += "\"~" + key.replacingOccurrences(of: " ", with: "\\ ") + "/\", "
+                // escape spaces, replace spaces in filenames with "\ " (after parsing by JS, so "\\\\" for "\" and "\\ " for " ".
+                javascriptCommand += "\"~" + key.replacingOccurrences(of: " ", with: "\\\\\\ ") + "/\", "
             }
             // We need to re-escapce spaces for string comparison to work in JS:
             javascriptCommand += "]; lastDirectory = \"~bookmarkNames\"; lastOnlyDirectories= \(onlyDirectories); updateFileMenu(); "
@@ -3487,7 +3593,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             }
                         }
                         catch {
-                            NSLog("Could not load .profile: \(error.localizedDescription)")
+                            NSLog("Could not load initialization file \(configFileName): \(error.localizedDescription)")
                         }
                     }
                 }
@@ -4093,12 +4199,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                     if name == "HOME" { continue }
                     if name == "APPDIR" { continue }
-                    // Don't override PATH, MANPATH, PERL5LIB...
+                    // Don't override PATH, MANPATH, PERL5LIB, TZ...
                     // PATH itself will be dealt with separately
                     if (value.hasPrefix("/") && (value.contains(":"))) { continue }
                     // Don't override PERL_MB_OPT, PERL_MM_OPT, TERMINFO either:
                     if name == "PERL_MB_OPT" { continue }
                     if name == "PERL_MM_OPT" { continue }
+                    if name == "TZ" { continue }
                     if name == "TERMINFO" { continue }
                     // Don't override APPVERSION and others:
                     if name == "APPNAME" { continue }
@@ -4547,6 +4654,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else {
             // NSLog("Current URL: \(webView?.url?.path)")
             // NSLog("Not printing (because offline): \(string)")
+            // When debugging Jupyter:
+            print(string)
             if (bufferedOutput == nil) {
                 bufferedOutput = string
             } else {
@@ -4587,25 +4696,69 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     private func onStdout(_ stdout: FileHandle) {
         if (!stdout_active) { return }
-        let data = stdout.availableData
+        var data = stdout.availableData
+        if (extraBytes != nil) {
+            data = extraBytes! + data
+            extraBytes = nil
+        }
         guard (data.count > 0) else {
             return
         }
-        if let string = String(data: data, encoding: String.Encoding.utf8) {
+        if let string = String(data: data, encoding: .utf8) {
             // NSLog("UTF8 string: \(string)")
             outputToWebView(string: string)
             if (string.contains(endOfTransmission)) {
-                stdout_active = false
-            }
-        } else if let string = String(data: data, encoding: String.Encoding.ascii) {
-            // NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII: \(string)")
-            // NSLog("Couldn't convert data in stdout using UTF-8, resorting to ASCII.");
-            outputToWebView(string: string)
-            if (string.contains(endOfTransmission)) {
+                // NSLog("Received ^D, stopping writing")
                 stdout_active = false
             }
         } else {
-            // NSLog("Couldn't convert data in stdout: \(data)")
+            // Unable to convert to UTF8. Usually because the data block cuts in the middle of an UTF8 character.
+            // We cut at the closest character, and store the end of the data block to append at the beginning
+            // of the next block.
+            // This might cause "combined" emojis to be split
+            let max = data.count
+            var conversionFound = false
+            for i in 0...max-1 {
+                if let string = String(data: data.prefix(max - i), encoding: .utf8) {
+                    conversionFound = true
+                    outputToWebView(string: string)
+                    if (string.contains(endOfTransmission)) {
+                        stdout_active = false
+                    } else {
+                        extraBytes = data.suffix(i)
+                    }
+                    break
+                }
+            }
+            // With some commands (pdflatex), UTF8 decoding of the output didn't work.
+            // In the tests, .isoLatin1 worked, .ascii didn't.
+            // This selection of encodings covers all non-Unicode. Tested on iOS 16 and iOS 18.
+            if (!conversionFound) {
+                for encoding in [String.Encoding.isoLatin1, .isoLatin2, .iso2022JP, .japaneseEUC, .macOSRoman, .shiftJIS, .windowsCP1250, .nonLossyASCII, .ascii] {
+                    if let string = String(data: data, encoding: encoding) {
+                        conversionFound = true
+                        outputToWebView(string: string)
+                        if (string.contains(endOfTransmission)) {
+                            stdout_active = false
+                        }
+                        break
+                    }
+                }
+            }
+            // Last resort solution: go through the data, byte by byte.
+            // We lose multi-byte UTF8 decoding, but we won't have it anyway.
+            if (!conversionFound) {
+                // NSLog("Couldn't convert data in stdout using any encoding, resorting to raw decoding.");
+                var outputString = ""
+                data.forEach { character in
+                    let characterEncoded = String(Character(UnicodeScalar(character)))
+                    outputString += characterEncoded
+                    if (characterEncoded == endOfTransmission) {
+                        stdout_active = false
+                    }
+                }
+                outputToWebView(string: outputString)
+            }
         }
     }
 }
@@ -5473,7 +5626,7 @@ extension SceneDelegate: WKUIDelegate {
 
     // Debugging navigation:
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-        NSLog("navigationAction: \(navigationAction.request)")
+        // NSLog("navigationAction: \(navigationAction.request)")
         if navigationAction.targetFrame == nil {
             webView.stopLoading()
             webView.load(navigationAction.request)
@@ -5484,8 +5637,8 @@ extension SceneDelegate: WKUIDelegate {
     func webView(_ webView: WKWebView,
         decidePolicyFor navigationResponse: WKNavigationResponse,
                  decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
-        NSLog("decidePolicyFor WKNavigationResponse: \(navigationResponse)")
-        NSLog("webView.url?.path: \(webView.url?.path)")
+        // NSLog("decidePolicyFor WKNavigationResponse: \(navigationResponse)")
+        // NSLog("webView.url?.path: \(webView.url?.path)")
         guard let statusCode
                 = (navigationResponse.response as? HTTPURLResponse)?.statusCode else {
             // NSLog("decidePolicyFor: no http status code to act on")

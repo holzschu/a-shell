@@ -15,16 +15,17 @@ var runningInExtension = false
 
 var currentDelegate: SceneDelegate? {
     let opaquePointer = OpaquePointer(ios_getContext())
-    guard let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) else { return nil }
-    let currentSessionIdentifier = String(cString: stringPointer)
-    for scene in UIApplication.shared.connectedScenes {
-        if (scene.session.persistentIdentifier == currentSessionIdentifier) {
-            if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                return delegate
+    if let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) {
+        let currentSessionIdentifier = String(cString: stringPointer)
+        for scene in UIApplication.shared.connectedScenes {
+            if (scene.session.persistentIdentifier == currentSessionIdentifier) {
+                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                    return delegate
+                }
             }
         }
     }
-    // We haven't found a delegate so far, let's take the first scene:
+    // We haven't found a delegate so far, or opaquePointer was nil, so let's take the first scene:
     // TODO: that's a bad sign, the sessionIndentifier should be the correct one.
     // related to when a window is created, then closed
     if (UIApplication.shared.connectedScenes.count > 0) {
@@ -146,7 +147,8 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
             } else if (bashmarks) {
                 delegate.printText(string: "\n- bookmark the current directory with \"s <name>\", and access it later with \"cd ~name\" or \"g <name>\".\n- l or p: show current list of bookmarks\n- r <name1> <name2>: rename a bookmark.\n- d <name>: delete a bookmark\n")
             }
-            delegate.printText(string: "\nSupport: e-mail (another_shell@icloud.com), Twitter (@a_Shell_iOS), github (https://github.com/holzschu/a-shell/issues) and Discord (https://discord.gg/cvYnZm69Gy).\n")
+            delegate.printText(string: "\nUser guide: https://bianshen00009.gitbook.io/a-guide-to-a-shell/")
+            delegate.printText(string: "\nSupport: e-mail (another_shell@icloud.com), Bluesky (@a-shell-ios.bsky.social‬), github (https://github.com/holzschu/a-shell/issues) and Discord (https://discord.gg/cvYnZm69Gy).\n")
             delegate.printText(string: "\nFor a full list of commands, type help -l\n")
         } else {
             guard let argV = argv?[1] else {
@@ -222,7 +224,7 @@ Python3: Python Software Foundation, https://www.python.org/about/
 ssh, scp, sftp: OpenSSH, https://www.openssh.com
 tar: https://libarchive.org
 tree: http://mama.indstate.edu/users/ice/tree/
-TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2024.
+TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2025.
 Vim: Bram Moolenaar and the Vim community, https://www.vim.org
 Vim-session: Peter Odding, http://peterodding.com/code/vim/session
 webAssembly: wasmer.io and the wasi SDK https://github.com/WebAssembly/wasi-sdk
@@ -1764,11 +1766,14 @@ public func needTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
                                             in: .userDomainMask,
                                             appropriateFor: nil,
                                             create: true)
-    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2023/texmf-dist/tex/plain/base/plain.tex")
-    if (FileManager().fileExists(atPath: texliveTestFile.path)) {
-        fputs("You currently have texlive-2023 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2024 with 'pkg install texlive'.\n", thread_stderr)
+    let texliveTestFile2023 = libraryURL.appendingPathComponent("texlive/2023/texmf-dist/tex/plain/base/plain.tex")
+    let texliveTestFile2024 = libraryURL.appendingPathComponent("texlive/2024/texmf-dist/tex/plain/base/plain.tex")
+    if (FileManager().fileExists(atPath: texliveTestFile2023.path)) {
+        fputs("You currently have texlive-2023 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2025 with 'pkg install texlive-2025'.\n", thread_stderr)
+    } else if (FileManager().fileExists(atPath: texliveTestFile2024.path)) {
+        fputs("You currently have texlive-2024 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2025 with 'pkg install texlive-2025'.\n", thread_stderr)
     } else {
-        fputs("In order to use \(args[0]), you need to install the texlive distribution with 'pkg install texlive'.\n", thread_stderr)
+        fputs("In order to use \(args[0]), you need to install the texlive distribution with 'pkg install texlive-2025'.\n", thread_stderr)
     }
     return 0
 }
@@ -1780,11 +1785,11 @@ public func needLuaTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
                                             in: .userDomainMask,
                                             appropriateFor: nil,
                                             create: true)
-    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2024/texmf-dist/tex/plain/base/plain.tex")
+    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/tex/plain/base/plain.tex")
     if (FileManager().fileExists(atPath: texliveTestFile.path)) {
-        fputs("In order to use \(args[0]), you need to install the OpenType/TrueType fonts with 'pkg install texlive_fonts'.\n", thread_stderr)
+        fputs("In order to use \(args[0]), you need to install the OpenType/TrueType fonts with 'pkg install texlive_fonts-2025'.\n", thread_stderr)
     } else {
-        fputs("In order to to use \(args[0]), you need to install the texlive distribution 'pkg install texlive' and the OpenType/TrueType fonts with 'pkg install texlive_fonts'.\n", thread_stderr)
+        fputs("In order to to use \(args[0]), you need to install the texlive distribution 'pkg install texlive-2025' and the OpenType/TrueType fonts with 'pkg install texlive_fonts-2025'.\n", thread_stderr)
     }
     return 0
 }
@@ -1810,11 +1815,11 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
         }
     }
     // texlive files:
-    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2024/texmf-dist/tex/plain/base/plain.tex")
+    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/tex/plain/base/plain.tex")
     if FileManager().fileExists(atPath: texliveTestFile.path) {
         addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // LuaTeX and XeTeX: extra fonts files:
-        let luatexTestFile = libraryURL.appendingPathComponent("texlive/2024/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf")
+        let luatexTestFile = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf")
         if FileManager().fileExists(atPath: luatexTestFile.path) {
             addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
         } else {
@@ -1839,7 +1844,7 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
         }
         for script in TeXscripts {
             let command = localPath.appendingPathComponent(script[0])
-            let location = "../texlive/2024/texmf-dist/" + script[1]
+            let location = "../texlive/2025/texmf-dist/" + script[1]
             // fileExists doesn't work, because it follows symbolic links
             do {
                 let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
@@ -2036,6 +2041,46 @@ public func rehash(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
                 // if let result = result as? Int32 {  }
             }
         }
+    }
+    return 0
+}
+
+@_cdecl("repeatCommand")
+public func repeatCommand(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    let usageString = "usage: repeatCommand interval command\n    Executes the command \"command\" every \"interval\" seconds.\nusage: repeatCommand\n    Shows the current running command, interval, last time it was executed and next scheduled execution.\nusage: repeatCommand --stop\n    Stops the repetition.\n"
+    if (args.count == 2) && ((args[1] == "-h") || (args[1] == "--help") || (args[1] == "-help")) {
+        fputs(usageString, thread_stdout)
+        return -1
+    }
+    if (args.count == 2) && ((args[1] == "-stop") || (args[1] == "--stop") || (args[1] == "-end") || (args[1] == "--end")) {
+        if let delegate = currentDelegate {
+            delegate.stopRepeating()
+        }
+        return 0
+    }
+    if (args.count == 1) {
+        if let delegate = currentDelegate {
+            delegate.showRepeatingCommand()
+            return 0
+        }
+    }
+    if (args.count < 3) {
+        fputs(usageString, thread_stderr)
+        return -1
+    }
+    if let interval = Float(args[1]) {
+        var command = ""
+        for i in 2..<args.count {
+            command += args[i] + " "
+        }
+        if let delegate = currentDelegate {
+            delegate.repeatCommand(interval: interval, command: command)
+        }
+    } else {
+        fputs("repeatCommand: unable to convert argument to time interval: \(args[1]).\n",thread_stderr)
+        fputs(usageString, thread_stderr)
+        return -1
     }
     return 0
 }

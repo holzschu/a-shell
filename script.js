@@ -581,7 +581,8 @@ function setupHterm() {
 	term.prefs_.set('cursor-color', window.cursorColor);
 	term.prefs_.set('cursor-blink', false); 
 	term.prefs_.set('enable-clipboard-notice', false); 
-	term.prefs_.set('use-default-window-copy', true); 
+	term.prefs_.set('use-default-window-copy', false); // true: works but adds \r at each new line. 
+	// false, but with our own copySelectionToClipboard: works.
 	term.prefs_.set('clear-selection-after-copy', true); 
 	term.prefs_.set('copy-on-select', false);
 	term.prefs_.set('audible-bell-sound', '');
@@ -2298,16 +2299,31 @@ hterm.Terminal.prototype.onCopy_ = function(e) {
 		this.onCut(e);
 		return;
 	}
-	if (!this.useDefaultWindowCopy) {
+	// iOS 26: the useDefaultWindowCopy setting is not set by iOS
+	// Beta issue or iOS != iPadOS issue?
+	// if (!this.useDefaultWindowCopy) {
 		e.preventDefault();
 		setTimeout(this.copySelectionToClipboard.bind(this), 0);
-	}
+	// }
 	// iOS: clear selection after copy
 	if (this.clearSelectionAfterCopy) {
 		var selection = this.getDocument().getSelection();
 		setTimeout(selection.collapseToEnd.bind(selection), 50);
 	}  	
 };
+
+/**
+ * Copy the specified text to the system clipboard.
+ *
+ * We'll create selections on demand based on the content to copy.
+ *
+ * @param {!Document} document The document with the selection to copy.
+ * @param {string} str The string data to copy out.
+ * @return {!Promise<void>}
+ */
+hterm.copySelectionToClipboard = function(document, str) {
+	window.webkit.messageHandlers.aShell.postMessage('copy:' + str); // copy the text to the iOS clipboard. 
+}
 
 /**
  * Set the width of the terminal, resizing the UI to match.

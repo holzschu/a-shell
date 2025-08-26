@@ -151,6 +151,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("view", "preview_main", true)
         replaceCommand("z", "z_command", true) // change directory based on frequencys
         replaceCommand("rehash", "rehash", true) // update list of commands for auto-complete
+        replaceCommand("repeatCommand", "repeatCommand", true)
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
         replaceCommand("hideKeyboard", "hideKeyboard", true)
@@ -290,7 +291,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
         appDependentPath = String(utf8String: getenv("PATH")) ?? ""
-        if (appVersion != "a-Shell-mini") {
+        // TODO: REMOVE BEFORE RELEASE
+        if ((appVersion != "a-Shell-mini") || true) {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
             setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
@@ -357,6 +359,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             setenv("PROJ_LIB", projDir.path, 1)  // proj <= 9.1
             setenv("PROJ_DATA", projDir.path, 1) // proj 9.1+
             setenv("PROJ_NETWORK", "ON", 1)
+            setenv("QUTIP_NUM_PROCESSES", "1", 1) // number of processors in qutip
         } // end a-Shell mini
         // Switch installed Python packages from 3.9 to 3.11:
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
@@ -395,6 +398,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Compiled files: ~/Library/__pycache__
         setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path.toCString(), 1)
         setenv("PYTHONUSERBASE", libraryURL.path.toCString(), 1)
+        // Frameworks in $APPDIR/Frameworks:
+        setenv("DYLD_FRAMEWORK_PATH", URL(fileURLWithPath: Bundle.main.resourcePath!).appendingPathComponent("Frameworks").path.toCString(), 1)
         setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":").toCString(), 1)
         checkBookmarks() // activate all bookmarks in the app
         // iCloud abilities:
