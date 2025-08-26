@@ -111,7 +111,7 @@ use_id_file() {
     }
   done
   printf '%s: INFO: Source of key(s) to be installed: "%s"\n' "ssh-copy-id" "$PUB_ID_FILE" >&2
-  GET_ID="cat \"$PUB_ID_FILE\""
+  GET_ID="cat $PUB_ID_FILE"
 }
 
 if [ -n "$SSH_AUTH_SOCK" ] && ssh-add -L >/dev/null 2>&1 ; then
@@ -345,7 +345,7 @@ else
   exit 1
 fi
 
-REMOTE_VERSION=$($SSH -v -o PreferredAuthentications=',' -o ControlPath=none "$@" 2>&1 |
+REMOTE_VERSION=$($SSH -v -o PreferredAuthentications=',' -o ControlPath=none -o StrictHostKeyChecking=no "$@" 2>&1 |
                  sed -ne 's/.*remote software version //p')
 
 # shellcheck disable=SC2029
