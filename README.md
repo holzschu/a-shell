@@ -70,13 +70,13 @@ Both kind of shortcuts run by default in the same specific directory, `$SHORTCUT
 
 a-Shell has several programming languages installed: Python, Lua, JS, C, C++ and TeX. 
 
-For C and C++, you compile your programs with `clang program.c` and it produces a webAssembly file. You can then execute it with `wasm a.out`. You can also link multiple object files together, make a static library with `ar`, etc. Once you are satisfied with your program, if you move it to a directory in the `$PATH` (e.g. `~/Documents/bin`) and rename it `program.wasm`, it will be executed if you type `program` on the command line. 
+For C and C++, you compile your programs with `clang program.c` and it produces a webAssembly file. You can then execute it with either `wasm a.out` or `a.out`. You can also link multiple object files together, make a static library with `ar`, etc. Once you are satisfied with your program, if you move it to a directory in the `$PATH` (e.g. `~/Documents/bin`), it will be executed if you type `program` on the command line. 
 
 You can also cross-compile programs on your main computer using our specific [WASI-sdk](https://github.com/holzschu/wasi-sdk), and transfer the WebAssembly file to your iPad or iPhone. 
 
-Precompiled WebAssembly commands specific for a-Shell are available here: https://github.com/holzschu/a-Shell-commands These include `zip`, `unzip`, `xz`, `ffmpeg`... You install them on your iPad by downloading them and placing them in the `$PATH`. 
+Precompiled WebAssembly commands specific for a-Shell are available here: https://github.com/holzschu/a-Shell-commands These include `zip`, `unzip`, `xz`, `ffmpeg`... You install them on your iPad using the `pkg` command: `pkg install zip`.
 
-We have the limitations of WebAssembly: no sockets, no forks, no interactive user input (piping input from other commands with `command | wasm program.wasm` works fine). 
+We have the limitations of WebAssembly: no sockets, no forks (we do have interactive user input, now). Piping input from other commands with `command | wasm program.wasm` works fine. 
 
 For Python, you can install more packages with `pip install packagename`, but only if they are pure Python. The C compiler is not yet able to produce dynamic libraries that could be used by Python. 
 
