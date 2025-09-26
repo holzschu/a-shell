@@ -70,13 +70,13 @@ a-ShellはApple Shortcutsと互換性があり、ユーザーにシェルの完�
 
 a-Shellには、Python、Lua、JS、C、C++、TeXなどのいくつかのプログラミング言語がインストールされています。
 
-CおよびC++では、プログラムを`clang program.c`でコンパイルし、WebAssemblyファイルが生成されます。その後、`wasm a.out`で実行できます。また、複数のオブジェクトファイルをリンクしたり、`ar`で静的ライブラリを作成したりすることもできます。プログラムに満足したら、それを`$PATH`内のディレクトリに移動させ（例：`~/Documents/bin`）、`program.wasm`に名前を変更すると、コマンドラインで`program`と入力すると実行されるようになります。
+CおよびC++では、プログラムを`clang program.c`でコンパイルし、WebAssemblyファイルが生成されます。その後、`wasm a.out`か`a.out`かどちらかで実行できます。また、複数のオブジェクトファイルをリンクしたり、`ar`で静的ライブラリを作成したりすることもできます。プログラムに満足したら、それを`$PATH`内のディレクトリ（例：`~/Documents/bin`）に移動させると、コマンドラインで`program`と入力すると実行されるようになります。
 
 また、メインコンピューターで私たち独自の[WASI-sdk](https://github.com/holzschu/wasi-sdk)を使用してプログラムをクロスコンパイルし、WebAssemblyファイルをiPadやiPhoneに転送することもできます。
 
-a-Shell専用のコンパイル済みWebAssemblyコマンドは https://github.com/holzschu/a-Shell-commands で入手可能です。これには`zip`、`unzip`、`xz`、`ffmpeg`などが含まれます。これらはダウンロードして`$PATH`に配置することでiPadにインストールできます。
+a-Shell専用のコンパイル済みWebAssemblyコマンドは https://github.com/holzschu/a-Shell-commands で入手可能です。これには`zip`、`unzip`、`xz`、`ffmpeg`などが含まれます。これらは`pkg`コマンドを使って`pkg install zip`のようにしてiPadにインストールできます。
 
-ソケットなし、フォークなし、対話的なユーザー入力なし（他のコマンドからの入力を`command | wasm program.wasm`でパイプすることは問題ありません）といったWebAssemblyの制約があります。
+ソケットなし、フォークなし（現在では対話的なユーザー入力はあり）といったWebAssemblyの制約があります。他のコマンドからの入力を`command | wasm program.wasm`でパイプすることは問題ありません。
 
 Pythonでは、`pip install packagename`を使用して追加のパッケージをインストールできますが、それらが純粋なPythonである場合に限られます。CコンパイラはまだPythonで使用できる動的ライブラリを生成することができません。
 
