@@ -1916,6 +1916,10 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
       '  display: block;' +
       '  height: var(--hterm-charsize-height);' +
       '  line-height: var(--hterm-charsize-height);' +
+      // Adding `will-change` and `transform` is a workaround for a WebKit redraw issue.
+      // https://github.com/holzschu/a-shell/issues/906
+      '  will-change: transform;' +
+      '  transform: translateZ(0);' +
       '}');
   doc.head.appendChild(style);
 
