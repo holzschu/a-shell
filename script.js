@@ -747,8 +747,10 @@ function setupHterm() {
 			// always post keyboard input to TTY:
 			window.webkit.messageHandlers.aShell.postMessage('inputTTY:' + string);
 			// If help() is running in iPython, then it stops being interactive.
+			// Q: why not necessary with python in v3.13?
 			var helpRunning = false;
-			if (window.commandRunning.startsWith("ipython") || window.commandRunning.startsWith("isympy")) {
+			if (window.commandRunning.startsWith("ipython") 
+				|| window.commandRunning.startsWith("isympy")) {
 				var lastNewline = window.printedContent.lastIndexOf("\n");
 				var lastLine = window.printedContent.substr(lastNewline + 1); // 1 to skip \n.
 				lastLine = lastLine.replace(/(\r\n|\n|\r|\n\r)/gm,""); // skip past \r and \n, if any
@@ -756,17 +758,6 @@ function setupHterm() {
 					helpRunning = true;
 				} else if (lastLine.includes("Do you really want to exit ([y]/n)?")) {
 					helpRunning = true;
-				}
-			}
-			// Easiest way to handle the case where Python (non-interactive) starts help, which starts less, which 
-			// changes the status to interactive, but does not reset it when leaving.
-			// TODO: adress the larger issue where a non-interactive command starts an interactive command.
-			if (window.commandRunning.startsWith("python")) {
-				var lastNewline = window.printedContent.lastIndexOf("\n");
-				var lastLine = window.printedContent.substr(lastNewline + 1); // 1 to skip \n.
-				lastLine = lastLine.replace(/(\r\n|\n|\r|\n\r)/gm,""); // skip past \r and \n, if any
-				if ((lastLine.startsWith("help>")) || (lastLine.startsWith(">>>"))) {
-					window.interactiveCommandRunning = false;
 				}
 			}
 
@@ -1916,6 +1907,10 @@ hterm.ScrollPort.prototype.paintIframeContents_ = function() {
       '  display: block;' +
       '  height: var(--hterm-charsize-height);' +
       '  line-height: var(--hterm-charsize-height);' +
+      // Adding `will-change` and `transform` is a workaround for a WebKit redraw issue.
+      // https://github.com/holzschu/a-shell/issues/906
+      '  will-change: transform;' +
+      '  transform: translateZ(0);' +
       '}');
   doc.head.appendChild(style);
 
