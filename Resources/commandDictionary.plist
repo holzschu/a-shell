@@ -44,6 +44,13 @@
 		<string>benstuv</string>
 		<string>file</string>
 	</array>
+	<key>cbc</key>
+	<array>
+		<string>cbc.framework/cbc</string>
+		<string>main</string>
+		<string></string>
+		<string>none</string>
+	</array>
 	<key>cd</key>
 	<array>
 		<string>SELF</string>
@@ -389,28 +396,21 @@
 	</array>
 	<key>python3</key>
 	<array>
-		<string>python3_ios.framework/python3_ios</string>
+		<string>Python.framework/Python</string>
 		<string>Py_BytesMain</string>
 		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
 		<string>file</string>
 	</array>
-	<key>python3.9</key>
+	<key>python3.13</key>
 	<array>
-		<string>python3_ios.framework/python3_ios</string>
-		<string>Py_BytesMain</string>
-		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
-		<string>file</string>
-	</array>
-	<key>python3.11</key>
-	<array>
-		<string>python3_ios.framework/python3_ios</string>
+		<string>Python.framework/Python</string>
 		<string>Py_BytesMain</string>
 		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
 		<string>file</string>
 	</array>
 	<key>python</key>
 	<array>
-		<string>python3_ios.framework/python3_ios</string>
+		<string>Python.framework/Python</string>
 		<string>Py_BytesMain</string>
 		<string>3bBc:dEhiJm:OQ:RsStuUvVW:xX?</string>
 		<string>file</string>

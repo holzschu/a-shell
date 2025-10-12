@@ -16,12 +16,21 @@ import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
 import Vapor // for our local server for WebAssembly
 import NIOSSL // for TLS (https) authentification
+// import ExtensionFoundation
 
 let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
 // Need SDK install to be over before starting commands.
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
-let localServerApp = Application()
+
+// @available(iOS 26, *)
+// private var globalMonitor: AppExtensionPoint.Monitor?
+// @available(iOS 26, *)
+// private(set) var currentIdentity: AppExtensionIdentity?
+// @available(iOS 26, *)
+// var webServerProcess: AppExtensionProcess?
+// @available(iOS 26, *)
+// var webServerConnection: NSXPCConnection?
 
 // Which version of the app are we running? a-Shell, a-Shell-mini, a-Shell-pro...? (no spaces in name)
 var appVersion: String? {
@@ -41,6 +50,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var versionUpToDate = true
     var libraryFilesUpToDate = true
     let localServerQueue = DispatchQueue(label: "moveFiles", qos: .userInteractive) // high priority, but not blocking
+    // TODO: find the opposite of @available
+    var localServerApp: Application?
 
     func createDirectory(localURL: URL) -> Bool {
         do {
@@ -83,6 +94,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func isM1iPad(modelName: String) -> Bool {
         // modelName for M1 iPad: iPad13,x for x in [4-17] (covers 11" and 12.9" iPad Pro and Air 5th gen)
         // modelName for M2 iPad: iPad14,x for x in [3-6]
+        // modelName for M3 iPad: iPad15,x for x in [3-6]
+        // modelName for M4 iPad: iPad16,x for x in [3-6]
         var deviceName = UIDevice.current.modelName
         if (deviceName.hasPrefix("iPad13,")) {
             deviceName.removeFirst("iPad13,".count)
@@ -98,19 +111,118 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     return true
                 }
             }
+        } else if (deviceName.hasPrefix("iPad15,") || deviceName.hasPrefix("iPad16,")) {
+            if let minor = Int(deviceName) {
+                if (minor >= 3) && (minor <= 6) {
+                    return true
+                }
+            }
         }
         return false
     }
     
+    func startLocalWebServer() async {
+        // Running the server in an extension: the process is started here, but the extension code is not running.
+        // if #available(iOS 26, *) {
+        //     do {
+        //         let monitor = try await AppExtensionPoint.Monitor(appExtensionPoint: .localWebServerExtension)
+        //         currentIdentity = monitor.identities.first
+        //         if let currentIdentity = currentIdentity {
+        //             // NSLog("localWebServerIdentity: \(currentIdentity)")
+        //             // run local web server in extension
+        //             let localWebServerConfig = AppExtensionProcess.Configuration(appExtensionIdentity: currentIdentity, onInterruption: { // NSLog("localWebServer was terminated") })
+        //             webServerProcess = try await AppExtensionProcess(configuration: localWebServerConfig)
+        //             NSLog("localWebServerProcess started: \(String(describing: webServerProcess))")
+        //             webServerConnection = try webServerProcess?.makeXPCConnection()
+        //             NSLog("connection: \(String(describing: webServerConnection))")
+        //             NSLog("localWebServerProcess status: \(String(describing: webServerProcess))")
+        //         }
+        //         globalMonitor = monitor
+        //         return
+        //     }
+        //     catch {
+        //         NSLog("Unable to start the localwebserver extension: \(error.localizedDescription).")
+        //     }
+        // }
+        // before iOS 26, or extenstion not starting: webserver running in app, now with async version
+        do {
+            localServerApp = try await Application.make()
+            // Vapor prints a lot of info on the console. No need to add ours.
+            // TODO: restart localServerApp.server if unable to connect --> how?
+            // No websocket support for now: it's not needed for a-Shell
+            localServerApp?.http.server.configuration.hostname = "127.0.0.1"
+            // Make sure the servers for the different apps don't interfere with each other:
+            if (appVersion != "a-Shell-mini") {
+                localServerApp?.http.server.configuration.port = 8443
+            } else {
+                localServerApp?.http.server.configuration.port = 8334
+            }
+            localServerApp?.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
+                certificateChain: try NIOSSLCertificate.fromPEMFile(Bundle.main.resourcePath! + "/localCertificate.pem").map { .certificate($0) },
+                privateKey: try NIOSSLPrivateKeySource.privateKey(NIOSSLPrivateKey(file: Bundle.main.resourcePath! + "/localCertificateKey.pem", format: .pem))
+            )
+            localServerApp?.get("**") { request -> Response in
+                let urlPath = request.url.path
+                // Load ~/Library/node_modules first if it exists:
+                // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
+                let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                        in: .userDomainMask,
+                                                        appropriateFor: nil,
+                                                        create: true)
+                let localFilePath = libraryURL.path + urlPath
+                let rootFilePath = Bundle.main.resourcePath! + urlPath
+                var fileName: String? = nil
+                // NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
+                if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
+                    fileName = localFilePath
+                } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
+                    fileName = rootFilePath
+                }
+                // NSLog("file found: \(fileName)")
+                if (fileName != nil) {
+                    var headers = HTTPHeaders()
+                    if (urlPath.hasSuffix(".html")) {
+                        headers.add(name: .contentType, value: "text/html")
+                    } else if (urlPath.hasSuffix(".js")) {
+                        headers.add(name: .contentType, value: "application/javascript")
+                    } else if (urlPath.hasSuffix(".wasm")) {
+                        // NSLog("setting the header to application/wasm")
+                        headers.add(name: .contentType, value: "application/wasm")
+                    }
+                    // These headers get us a "crossOriginIsolated == true;"
+                    headers.add(name: "Cross-Origin-Embedder-Policy", value: "require-corp")
+                    headers.add(name: "Cross-Origin-Opener-Policy", value: "same-origin")
+                    headers.add(name: "Cross-Origin-Resource-Policy", value: "same-origin")
+                    do {
+                        // Binary access to the file, because we could be serving WASM files
+                        let body = try Data(contentsOf: URL(fileURLWithPath: fileName!))
+                        // NSLog("Returned \(urlPath) with \(fileName!)")
+                        return Response(status: .ok, headers: headers, body: Response.Body(data: body))
+                    }
+                    catch {
+                        NSLog("File: \(String(describing: fileName)) could not access: \(error).")
+                        return Response(status: .forbidden)
+                    }
+                }
+                // NSLog("\(urlPath): not found")
+                return Response(status: .notFound)
+            }
+            try localServerApp?.server.start()
+        }
+        catch {
+            NSLog("Unable to start the vapor server: \(error)")
+        }
+    }
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        NSLog("Application didFinishLaunchingWithOptions \(launchOptions)")
+        NSLog("Application didFinishLaunchingWithOptions \(String(describing: launchOptions))")
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
         UserDefaults.standard.register(defaults: ["show_toolbar" : true])
-        // Use the system toolbar is the default for iPad M1 and M2, but not for the other models:
+        // Use the system toolbar is the default for iPad M1 and above, but not for the other models:
         UserDefaults.standard.register(defaults: ["system_toolbar" : isM1iPad(modelName: UIDevice.current.modelName)])
         // What color should the keyboard and system toolbar be? (screen: same mode as the screen itself)
         UserDefaults.standard.register(defaults: ["toolbar_color" : "screen"])
@@ -169,72 +281,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("newWindow", "clear", true)
         }
         replaceCommand("exit", "clear", true)
-        do {
-            // Vapor prints a lot of info on the console. No need to add ours.
-            // TODO: restart localServerApp.server if unable to connect --> how?
-            // No websocket support for now: it's not needed for a-Shell
-            localServerApp.http.server.configuration.hostname = "127.0.0.1"
-            // Make sure the servers for the different apps don't interfere with each other:
-            if (appVersion != "a-Shell-mini") {
-                localServerApp.http.server.configuration.port = 8443
-            } else {
-                localServerApp.http.server.configuration.port = 8334
-            }
-            localServerApp.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
-                certificateChain: try NIOSSLCertificate.fromPEMFile(Bundle.main.resourcePath! + "/localCertificate.pem").map { .certificate($0) },
-                privateKey: .file(Bundle.main.resourcePath! + "/localCertificateKey.pem")
-            )
-            localServerApp.get("**") { request -> Response in
-                let urlPath = request.url.path
-                // Load ~/Library/node_modules first if it exists:
-                // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
-                let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                        in: .userDomainMask,
-                                                        appropriateFor: nil,
-                                                        create: true)
-                let localFilePath = libraryURL.path + urlPath
-                let rootFilePath = Bundle.main.resourcePath! + urlPath
-                var fileName: String? = nil
-                // NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
-                if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
-                    fileName = localFilePath
-                } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
-                    fileName = rootFilePath
-                }
-                // NSLog("file found: \(fileName)")
-                if (fileName != nil) {
-                    var headers = HTTPHeaders()
-                    if (urlPath.hasSuffix(".html")) {
-                        headers.add(name: .contentType, value: "text/html")
-                    } else if (urlPath.hasSuffix(".js")) {
-                        headers.add(name: .contentType, value: "application/javascript")
-                    } else if (urlPath.hasSuffix(".wasm")) {
-                        // NSLog("setting the header to application/wasm")
-                        headers.add(name: .contentType, value: "application/wasm")
-                    }
-                    // These headers get us a "crossOriginIsolated == true;"
-                    headers.add(name: "Cross-Origin-Embedder-Policy", value: "require-corp")
-                    headers.add(name: "Cross-Origin-Opener-Policy", value: "same-origin")
-                    headers.add(name: "Cross-Origin-Resource-Policy", value: "same-origin")
-                    do {
-                        // Binary access to the file, because we could be serving WASM files
-                        let body = try Data(contentsOf: URL(fileURLWithPath: fileName!))
-                        // NSLog("Returned \(urlPath) with \(fileName!)")
-                        return Response(status: .ok, headers: headers, body: Response.Body(data: body))
-                    }
-                    catch {
-                        NSLog("File: \(fileName) could not access: \(error).")
-                        return Response(status: .forbidden)
-                    }
-                }
-                // NSLog("\(urlPath): not found")
-                return Response(status: .notFound)
-            }
-            try localServerApp.server.start()
-    }
-        catch {
-            NSLog("Unable to start the vapor server: \(error)")
-        }
         // Called when installing/uninstalling LLVM or texlive distribution:
         if (appVersion != "a-Shell-mini") {
             replaceCommand("updateCommands", "updateCommands", true)
@@ -286,13 +332,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Help aiohttp install itself:
         setenv("YARL_NO_EXTENSIONS", "1", 1)
         setenv("MULTIDICT_NO_EXTENSIONS", "1", 1)
+        setenv("AIOHTTP_NO_EXTENSIONS", "1", 1)
         // This one is not required, but it helps:
         setenv("DISABLE_SQLALCHEMY_CEXT", "1", 1)
-        // Do we have the wasi C SDK in place?
         versionUpToDate = !versionNumberIncreased()
         appDependentPath = String(utf8String: getenv("PATH")) ?? ""
-        // TODO: REMOVE BEFORE RELEASE
-        if ((appVersion != "a-Shell-mini") || true) {
+        if (appVersion != "a-Shell-mini") {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
             setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
@@ -355,28 +400,47 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             } catch { }
             // PyProj options:
             setenv("PYPROJ_GLOBAL_CONTEXT", "ON", 1) // This helps pyproj in cleaning up.
-            let projDir = URL(fileURLWithPath: Bundle.main.resourcePath!).appendingPathComponent("proj")
-            setenv("PROJ_LIB", projDir.path, 1)  // proj <= 9.1
-            setenv("PROJ_DATA", projDir.path, 1) // proj 9.1+
+            let projDirPath = Bundle.main.resourcePath! + "/proj"
+            setenv("PROJ_LIB", projDirPath, 1)  // proj <= 9.1
+            setenv("PROJ_DATA", projDirPath, 1) // proj 9.1+
             setenv("PROJ_NETWORK", "ON", 1)
             setenv("QUTIP_NUM_PROCESSES", "1", 1) // number of processors in qutip
-        } // end a-Shell mini
-        // Switch installed Python packages from 3.9 to 3.11:
+            let seabornData = libraryURL.appendingPathComponent("seaborn-data")
+            setenv("SEABORN_DATA", seabornData.path, 1)
+            let sklearnData = libraryURL.appendingPathComponent("scikit_learn_data")
+            setenv("SCIKIT_LEARN_DATA", sklearnData.path, 1)
+            let statsmodelsData = libraryURL.appendingPathComponent("statsmodels_data")
+            setenv("STATSMODELS_DATA", statsmodelsData.path, 1)
+            let pysalData = libraryURL.appendingPathComponent("pysal_data")
+            setenv("PYSALDATA", pysalData.path, 1)
+        } // end !a-Shell mini
+        // Switch installed Python packages from 3.9 to 3.13:
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
             installQueue.async{
-                ios_switchSession("wasiSDKLibrariesCreation")
+                ios_switchSession("filesCleanup")
                 // Move all site-packages to $HOME/Library/lib/python3.11/site-packages/
-                executeCommandAndWait(command: "mkdir -p " + libraryURL.path + "/lib/python3.11/site-packages/")
+                executeCommandAndWait(command: "mkdir -p " + libraryURL.path + "/lib/python3.13/site-packages/")
                 executeCommandAndWait(command: "mv " + libraryURL.path + "/lib/python3.9/site-packages/* " + libraryURL.path + "/lib/python3.11/site-packages/")
                 // Erase the directory
                 executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/lib/python3.9/")
+            }
+        }
+        // Switch installed Python packages from 3.11 to 3.13:
+        if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.11/site-packages/")) {
+            installQueue.async{
+                ios_switchSession("filesCleanup")
+                // Move all site-packages to $HOME/Library/lib/python3.11/site-packages/
+                executeCommandAndWait(command: "mkdir -p " + libraryURL.path + "/lib/python3.13/site-packages/")
+                executeCommandAndWait(command: "mv " + libraryURL.path + "/lib/python3.11/site-packages/* " + libraryURL.path + "/lib/python3.13/site-packages/")
+                // Erase the directory
+                executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/lib/python3.11/")
             }
         }
         if (!versionUpToDate) {
             installQueue.async{
                 // The version number changed, so the App has been re-installed. Clean all pre-compiled Python files:
                 NSLog("Cleaning __pycache__ and .cpan/build")
-                ios_switchSession("wasiSDKLibrariesCreation")
+                ios_switchSession("filesCleanup")
                 if (FileManager().fileExists(atPath: libraryURL.path + "/__pycache__")) {
                     executeCommandAndWait(command: "rm -rf " + libraryURL.path + "/__pycache__/*")
                 }
@@ -384,6 +448,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     // Also clean all CPAN build directories (they aren't valid anymore)    :
                     executeCommandAndWait(command: "rm -rf " + documentsUrl.appendingPathComponent(".cpan").path + "/build/*")
                 }
+                // Also clean up the ~/tmp directory, it tends to build up
+                executeCommandAndWait(command: "rm -rf " + NSTemporaryDirectory() + "/*")
             }
         }
         // Now set the version number to the current version:
@@ -393,14 +459,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.set(currentBuild, forKey: "buildNumber")
         self.versionUpToDate = true
         // Main Python install: $APPDIR/Library/lib/python3.x
-        let bundleUrl = URL(fileURLWithPath: Bundle.main.resourcePath!).appendingPathComponent("Library")
-        setenv("PYTHONHOME", bundleUrl.path.toCString(), 1)
+        setenv("PYTHONHOME", Bundle.main.resourcePath! + "/Library", 1)
         // Compiled files: ~/Library/__pycache__
-        setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path.toCString(), 1)
-        setenv("PYTHONUSERBASE", libraryURL.path.toCString(), 1)
-        // Frameworks in $APPDIR/Frameworks:
-        setenv("DYLD_FRAMEWORK_PATH", URL(fileURLWithPath: Bundle.main.resourcePath!).appendingPathComponent("Frameworks").path.toCString(), 1)
-        setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":").toCString(), 1)
+        setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path, 1)
+        setenv("PYTHONUSERBASE", libraryURL.path, 1)
+        setenv("PYTHON_HISTORY", documentsUrl.appendingPathComponent(".python_history").path, 1)
+        setenv("PYZMQ_BACKEND", "cffi", 1)
+        // Frameworks are in $APPDIR/Frameworks:
+        setenv("DYLD_FRAMEWORK_PATH", Bundle.main.resourcePath! + "/Frameworks", 1)
+        setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
         checkBookmarks() // activate all bookmarks in the app
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
@@ -422,14 +489,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         // print("Available fonts (families): \(UIFont.familyNames)");
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
-#if false // Disabling request for notifications, since we do not use it.
-        let center = UNUserNotificationCenter.current()
-        // Request permission to display alerts and play sounds.
-        center.requestAuthorization(options: [.alert, .sound])
-        { (granted, error) in
-            // Enable or disable features based on authorization.
-        }
-#endif
         // Detect changes in user settings (preferences):
         NotificationCenter.default.addObserver(self, selector: #selector(self.settingsChanged), name: UserDefaults.didChangeNotification, object: nil)
         // Also notification if user changes accessibility settings:
@@ -470,6 +529,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Use this method to select a configuration to create the new scene with.
         // Also the function called when a shortcut starts the App.
         NSLog("application configurationForConnecting connectingSceneSession \(connectingSceneSession)")
+        Task {
+            await startLocalWebServer()
+        }
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
 

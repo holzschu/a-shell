@@ -15,7 +15,6 @@ import Combine
 import AVKit // for media playback
 import AVFoundation // for media playback
 import TipKit // for helpful tips
-import Vapor // for our local server for WebAssembly
 
 var inputFileURLBackup: URL?
 
@@ -997,6 +996,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         button = UIBarButtonItem(title: buttonParts[0], style: .plain, target: self, action: action)
                         button!.target = self
                     }
+                    
                     if (button == nil) { continue }
                     // Sanitize the button title before storing it:
                     if (buttonParts[1] == "insertString") {
@@ -1054,27 +1054,27 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     @objc func longPressAction(_ sender: UILongPressGestureRecognizer) {
         // If up-down-left-right buttons are currently being pressed, activate multi-action arrows (instead of hide keyboard)
-        // get the location of the press event:
+        NSLog("Entered longPressAction, sender= \(sender)")
         if (sender.state == .ended) {
             continuousButtonAction = false
             return
         }
-        let location = sender.location(in: sender.view)
         if (sender.state == .began) {
-            // NSLog("long press detected: \(location)")
-            // NSLog("sender of long press: \(sender)")
+            // NSLog("sender of long press: \(sender)") // it's a button, now
             for button in editorToolbar.items! {
-                if let buttonView = button.value(forKey: "view") as? UIView {
-                    if (location.x >= buttonView.frame.minX) && (location.x <= buttonView.frame.maxX) {
-                        // NSLog("Long press on button: \(button)")
-                        continuousButtonAction = true
-                        commandQueue.async {
-                            // this function contains a sleep() call.
-                            // We need to prevent the entire program from sleeping,
-                            // so we run it in a queue.
-                            self.continuousButtonAction(button)
+                // long-press == repeat action only for arrows. For anything else, it's remove keyboard.
+                if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right") {
+                    if let buttonView = button.value(forKey: "view") as? UIView {
+                        if (buttonView == sender.view) {
+                            continuousButtonAction = true
+                            commandQueue.async {
+                                // this function contains a sleep() call.
+                                // We need to prevent the entire program from sleeping,
+                                // so we run it in a queue.
+                                self.continuousButtonAction(button)
+                            }
+                            return
                         }
-                        return
                     }
                 }
             }
@@ -1082,7 +1082,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (continuousButtonAction) {
             return
         }
-        // Not on any button, must be a hidekeyboard event:
+        // Not on any arrow button, must be a hidekeyboard event:
         hideKeyboard()
     }
     
@@ -1097,12 +1097,19 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     // the paste command is difficult to create with long press.
     // Possible additions: undo/redo buttons
     public lazy var editorToolbar: UIToolbar = {
-        var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: (self.webView?.bounds.width)!, height: toolbarHeight))
+        var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: screenWidth - 20, height: toolbarHeight))
         toolbar.tintColor = .label
         toolbar.items = leftButtonGroup
-        toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
+        if #available(iOS 26, *) {
+            // liquid glass makes the buttons larger, we can't have a middle space on small screens
+            if (screenWidth > 400) || (leftButtonGroup.count + rightButtonGroup.count < 8) {
+                toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
+            }
+        } else {
+            toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
+        }
         toolbar.items?.append(contentsOf: rightButtonGroup)
-        // Long press gesture recognsizer:
+        // Long press gesture recognizer (for when the toolbar is pressed):
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
         longPressGesture.minimumPressDuration = 1.0 // 1 second press
         longPressGesture.allowableMovement = 15 // 15 points
@@ -2621,6 +2628,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                 button.isHidden = !(button.tag == self.noneTag)
                             }
                         }
+                        if #available(iOS 26, *) {
+                            // fix for an iOS 26 bug: the buttons won't reappear unless I force a redraw of the toolbar.
+                            self.editorToolbar.items?.append(UIBarButtonItem(title: "Hi", style: .plain, target: self, action: nil))
+                            self.editorToolbar.items?.removeLast()
+                        }
+                        // Now the longPressGesture doesn't work, but that's another story.
                     }
                 }
             }
@@ -3075,7 +3088,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let fontLigature = terminalFontLigature ?? factoryFontLigature
             // Force writing all config to term. Used when we changed many parameters.
             let command1 = "window.foregroundColor = '" + foregroundColor.toHexString() + "'; window.backgroundColor = '" + backgroundColor.toHexString() + "'; window.cursorColor = '" + cursorColor.toHexString() + "'; window.cursorShape = '\(cursorShape)'; window.fontSize = '\(fontSize)' ; window.fontFamily = '\(fontName)';"
-            NSLog("resendConfiguration, command=\(command1)")
+            // NSLog("resendConfiguration, command=\(command1)")
             self.webView!.evaluateJavaScript(command1) { (result, error) in
                 /* if let error = error {
                     NSLog("Error in resendConfiguration, line = \(command1) error = \(error)")
@@ -3143,6 +3156,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // print(error)
                 }
                 // if let result = result { print(result) }
+            }
+            // Add long-press gesture to the buttons:
+            if (!useSystemToolbar) {
+                for button in editorToolbar.items! {
+                    if let buttonView = button.value(forKey: "view") as? UIView {
+                        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
+                        longPressGesture.minimumPressDuration = 1.0 // 1 second press
+                        longPressGesture.allowableMovement = 15 // 15 points
+                        longPressGesture.delegate = self
+                        buttonView.addGestureRecognizer(longPressGesture)
+                    }
+                }
             }
         } else if (cmd.hasPrefix("resendCommand:")) {
             if (shortcutCommandReceived != nil) {
@@ -5303,6 +5328,27 @@ extension SceneDelegate: WKUIDelegate {
                 thread_stdin = self.thread_stdin_copy
                 thread_stdout = self.thread_stdout_copy
                 thread_stderr = self.thread_stderr_copy
+                if let editor_env = ios_getenv("EDITOR") {
+                    let editor = String(cString: editor_env)
+                    if (arguments[2].hasPrefix(editor + " ")) {
+                        // a Wasm command (nnn) is trying to start the editor on a file.
+                        // We need to be smart
+                        // TODO: do this for all interactive commands.
+                        completionHandler("0") // this returns to WebAssembly, then we leave the command:
+                        let commandBeforeEdit = self.currentCommand
+                        // executeCommandAndWait does not work, executeCommand works (but it prints one extra prompt)
+                        // DispatchQueue works, it also works if we use a Timer, or both.
+                        DispatchQueue.main.async {
+                            self.executeCommand(command: arguments[2])
+                            self.executeCommand(command: commandBeforeEdit)
+                        }
+                        wasmWebView?.evaluateJavaScript("inputString += 'q';") { (result, error) in
+                            if let error = error { print(error) }
+                        }
+                        stdinString += "q" // It takes around 0.2 seconds for the command to end
+                        return
+                    }
+                }
                 let pid = ios_fork()
                 var result = ios_system(arguments[2])
                 ios_waitpid(pid)

@@ -12,14 +12,20 @@ import UIKit
 import ios_system
 
 var runningInExtension = false
+// Multiple calls to currentDelegate (through waitpid(..., W_NOHANG) cost us memory and time.
+var cachedDelegate: SceneDelegate? = nil
 
 var currentDelegate: SceneDelegate? {
     let opaquePointer = OpaquePointer(ios_getContext())
     if let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) {
         let currentSessionIdentifier = String(cString: stringPointer)
+        if (cachedDelegate?.persistentIdentifier == currentSessionIdentifier) {
+            return cachedDelegate
+        }
         for scene in UIApplication.shared.connectedScenes {
             if (scene.session.persistentIdentifier == currentSessionIdentifier) {
                 if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                    cachedDelegate = delegate
                     return delegate
                 }
             }
@@ -31,6 +37,7 @@ var currentDelegate: SceneDelegate? {
     if (UIApplication.shared.connectedScenes.count > 0) {
         if let scene = UIApplication.shared.connectedScenes.first {
             if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                cachedDelegate = delegate
                 return delegate
             }
         }
@@ -159,7 +166,7 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
             if (arg == "-l") {
                 guard var commandsArray = commandsAsArray() as! [String]? else { return 0 }
                 // Also scan PATH for executable files:
-                let executablePath = String(cString: getenv("PATH"))
+                let executablePath = String(cString: ios_getenv("PATH"))
                 for directory in executablePath.components(separatedBy: ":") {
                     if (directory.count == 0) { continue } // Empty directory (::), don't read it.
                     do {
@@ -744,12 +751,12 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
     let commandName = String(cString: commandNameC)
     let usage = "Usage: " + commandName + " (show all bookmarks) \n" + commandName + " shortName (show bookmark for shortName)\n"
     // let groupNamesDictionary = UserDefaults(suiteName: "group.AsheKube.a-Shell")?.dictionary(forKey: "bookmarkNames")
-    var storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+    let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
     // if (groupNamesDictionary != nil) {
     //    storedNamesDictionary.merge(groupNamesDictionary!, uniquingKeysWith: { (current, _) in current })
     // }
     // let groupBookmarksDictionary = UserDefaults(suiteName: "group.AsheKube.a-Shell")?.dictionary(forKey: "fileBookmarks")
-    var storedBookmarksDictionary =  UserDefaults.standard.dictionary(forKey: "fileBookmarks") ?? [:]
+    let storedBookmarksDictionary =  UserDefaults.standard.dictionary(forKey: "fileBookmarks") ?? [:]
     // if (groupBookmarksDictionary != nil) {
     //    storedBookmarksDictionary.merge(groupBookmarksDictionary!, uniquingKeysWith: { (current, _) in current })
     // }
@@ -835,12 +842,12 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
 public func checkBookmarks() {
     // At startup, go through list of bookmarks, check that they are still valid, remove them otherwise
     // and add "home", "shortcuts" and "group".
-    var storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+    let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
     // let groupNamesDictionary = UserDefaults(suiteName: "group.AsheKube.a-Shell")?.dictionary(forKey: "bookmarkNames")
     // if (groupNamesDictionary != nil) {
     //     storedNamesDictionary.merge(groupNamesDictionary!, uniquingKeysWith: { (current, _) in current })
     // }
-    var storedBookmarksDictionary = UserDefaults.standard.dictionary(forKey: "fileBookmarks") ?? [:]
+    let storedBookmarksDictionary = UserDefaults.standard.dictionary(forKey: "fileBookmarks") ?? [:]
     // let groupBookmarksDictionary = UserDefaults(suiteName: "group.AsheKube.a-Shell")?.dictionary(forKey: "fileBookmarks")
     // if (groupBookmarksDictionary != nil) {
     //     storedBookmarksDictionary.merge(groupBookmarksDictionary!, uniquingKeysWith: { (current, _) in current })
@@ -921,7 +928,7 @@ public func renamemark(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
     }
     let commandName = String(cString: commandNameC)
     let usage = "Usage: " + commandName + " oldName newName\n"
-    var storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+    let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
     // let groupNamesDictionary = UserDefaults(suiteName: "group.AsheKube.a-Shell")?.dictionary(forKey: "bookmarkNames")
     // if (groupNamesDictionary != nil) {
     //     storedNamesDictionary.merge(groupNamesDictionary!, uniquingKeysWith: { (current, _) in current })
@@ -982,7 +989,7 @@ public func bookmark(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointe
     } else {
         name = fileURL.lastPathComponent
     }
-    var storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+    let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
     // let groupNamesDictionary = UserDefaults(suiteName: "group.AsheKube.a-Shell")?.dictionary(forKey: "bookmarkNames")
     // if (groupNamesDictionary != nil) {
     //     storedNamesDictionary.merge(groupNamesDictionary!, uniquingKeysWith: { (current, _) in current })
@@ -1021,7 +1028,7 @@ public func deletemark(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
     }
     let commandName = String(cString: commandNameC)
     let usage = "Usage: " + commandName + " name [name1 name2 name3...] or " + commandName + " --all\n"
-    var storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+    let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
     // let groupNamesDictionary = UserDefaults(suiteName: "group.AsheKube.a-Shell")?.dictionary(forKey: "bookmarkNames")
     // if (groupNamesDictionary != nil) {
     //     storedNamesDictionary.merge(groupNamesDictionary!, uniquingKeysWith: { (current, _) in current })
@@ -1413,7 +1420,9 @@ public func jump(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
         if (fileExists && !isDirectory.boolValue) {
             // it's a file: edit it with default editor:
             // TODO: customize editor
-            executeCommandAndWait(command: "vim " + pathString.replacingOccurrences(of: " ", with: "\\ "))
+            if let delegate = currentDelegate {
+                delegate.executeCommand(command: "vim " + pathString.replacingOccurrences(of: " ", with: "\\ "))
+            }
         } else {
             // probably a stale bookmark:
             fputs("jump: bookmark for \(name) is no longer valid.\n", thread_stderr)
@@ -1507,7 +1516,7 @@ public func openurl_main(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
     
     var browser = "safari"
     if (genericCall) {
-        if let browserEnvVar = getenv("BROWSER") {
+        if let browserEnvVar = ios_getenv("BROWSER") {
             browser = (String(utf8String: browserEnvVar) ?? "safari").lowercased()
         }
     } else {
@@ -2002,7 +2011,7 @@ public func rehash(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     // First get list of builtin commnds:
     guard var commandsArray = commandsAsArray() as! [String]? else { return -1 }
     // Then scan PATH for executable files:
-    let executablePath = String(cString: getenv("PATH"))
+    let executablePath = String(cString: ios_getenv("PATH"))
     // NSLog("\(executablePath)")
     for directory in executablePath.components(separatedBy: ":") {
         if (directory == "") {

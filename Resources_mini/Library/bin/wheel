@@ -1,8 +1,7 @@
-#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.11
-# -*- coding: utf-8 -*-
-import re
+#!/Users/holzschu/src/Xcode_iPad/a-Shell/cpython/Library/bin/python3.13
 import sys
 from wheel.cli import main
 if __name__ == '__main__':
-    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    if sys.argv[0].endswith('.exe'):
+        sys.argv[0] = sys.argv[0][:-4]
     sys.exit(main())

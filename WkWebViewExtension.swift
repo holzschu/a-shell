@@ -3,6 +3,7 @@
 //
 //  Created by Robots & Pencils on 2016-03-10.
 //  https://robotsandpencils.com/blog/swift-swizzling-adding-a-custom-toolbar-to-wkwebview/
+//  https://robopress.robotsandpencils.com/swift-swizzling-wkwebview-168d7e657106
 //
 import Foundation
 import WebKit
@@ -125,9 +126,9 @@ extension WKWebView {
             if let error = error {
                 print("webView focus error: \(error)")
             }
-            if let result = result {
+            // if let result = result {
                 // print("webView focus: \(result)")
-            }
+            // }
         }
     }
     
