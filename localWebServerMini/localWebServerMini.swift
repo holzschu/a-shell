@@ -1,5 +1,5 @@
 //
-//  localWebServer.swift
+//  localWebServerMini.swift
 //  localWebServer
 //
 //  Created by Nicolas Holzschuch on 12/10/2025.
@@ -49,19 +49,15 @@ extension localWebServerExtension {
 @main
 class localWebServer: localWebServerExtension {
     required init() {
-        NSLog("Entered localWebServer init")
+        NSLog("Entered localWebServerMini init")
         do {
-            localServerApp = Application.init()
+            localServerApp = try await Application.make()
             // Vapor prints a lot of info on the console. No need to add ours.
             // TODO: restart localServerApp.server if unable to connect --> how?
             // No websocket support for now: it's not needed for a-Shell
             localServerApp?.http.server.configuration.hostname = "127.0.0.1"
             // Make sure the servers for the different apps don't interfere with each other:
-            localServerApp?.http.server.configuration.port = 8443 // a-Shell (not mini)
-            NSLog("Bundle.main.resourcePath: \(Bundle.main.resourcePath)")
-            var mainAppUrl = URL(fileURLWithPath: Bundle.main.resourcePath!)
-            mainAppUrl = mainAppUrl.deletingLastPathComponent().deletingLastPathComponent()
-            NSLog("mainAppUrl: \(mainAppUrl)")
+            localServerApp?.http.server.configuration.port = 8334 // a-Shell mini
             localServerApp?.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
                 certificateChain: try NIOSSLCertificate.fromPEMFile(Bundle.main.resourcePath! + "/localCertificate.pem").map { .certificate($0) },
                 privateKey: try NIOSSLPrivateKeySource.privateKey(NIOSSLPrivateKey(file: Bundle.main.resourcePath! + "/localCertificateKey.pem", format: .pem))
@@ -75,15 +71,15 @@ class localWebServer: localWebServerExtension {
                                                         appropriateFor: nil,
                                                         create: true)
                 let localFilePath = libraryURL.path + urlPath
-                let rootFilePath = mainAppUrl.appending(path: urlPath).path
+                let rootFilePath = Bundle.main.resourcePath! + urlPath
                 var fileName: String? = nil
-                NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
+                // NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
                 if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
                     fileName = localFilePath
                 } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
                     fileName = rootFilePath
                 }
-                NSLog("file found: \(fileName)")
+                // NSLog("file found: \(fileName)")
                 if (fileName != nil) {
                     var headers = HTTPHeaders()
                     if (urlPath.hasSuffix(".html")) {
@@ -101,7 +97,7 @@ class localWebServer: localWebServerExtension {
                     do {
                         // Binary access to the file, because we could be serving WASM files
                         let body = try Data(contentsOf: URL(fileURLWithPath: fileName!))
-                        NSLog("Returned \(urlPath) with \(fileName!)")
+                        // NSLog("Returned \(urlPath) with \(fileName!)")
                         return Response(status: .ok, headers: headers, body: Response.Body(data: body))
                     }
                     catch {
@@ -109,19 +105,18 @@ class localWebServer: localWebServerExtension {
                         return Response(status: .forbidden)
                     }
                 }
-                NSLog("\(urlPath): not found")
+                // NSLog("\(urlPath): not found")
                 return Response(status: .notFound)
             }
             try localServerApp?.server.start()
         }
         catch {
             NSLog("Unable to start the vapor server: \(error)")
-            exit(0) // for release, not for debugging
         }
     }
 
     @AppExtensionPoint.Bind
     var boundExtensionPoint: AppExtensionPoint {
-        AppExtensionPoint.Identifier(host: "AsheKube.app.a-Shell", name: "localWebServer")
+        AppExtensionPoint.Identifier(host: "AsheKube.app.a-Shell-mini", name: "localWebServer")
     }
 }

@@ -956,6 +956,14 @@
 		22FB8FC02E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
 		22FB8FC12E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
 		22FB8FC22E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
+		22FB8FD82E9D104300FDF274 /* localWebServerMini.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 22FB8FD12E9D104200FDF274 /* localWebServerMini.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		22FB8FDF2E9D151500FDF274 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 22FB8FDE2E9D151500FDF274 /* Vapor */; };
+		22FB8FE12E9D152000FDF274 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 22FB8FE02E9D152000FDF274 /* Vapor */; };
+		22FB8FE22E9D154D00FDF274 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
+		22FB8FE32E9D1EBB00FDF274 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
+		22FB8FE42E9D1EBB00FDF274 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
+		22FB8FE52E9D1EC100FDF274 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
+		22FB8FE62E9D1EC100FDF274 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
 		22FFB44229E87D950054F01F /* require_jscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44129E87D920054F01F /* require_jscore.js */; };
 		22FFB44429E88AE80054F01F /* url-polyfill.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44329E88AE60054F01F /* url-polyfill.js */; };
 		6BD953662BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
@@ -1020,6 +1028,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 22FB8F9C2E9B9BC400FDF274;
 			remoteInfo = localWebServer;
+		};
+		22FB8FD62E9D104300FDF274 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 22FB8FD02E9D104200FDF274;
+			remoteInfo = localWebServerMini;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1880,11 +1895,22 @@
 		};
 		22DF68CF2A5E98CE00F5EEAD /* Embed ExtensionKit Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
 			dstSubfolderSpec = 16;
 			files = (
 				22FB8FA42E9B9BC500FDF274 /* localWebServer.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22FB8FDD2E9D104300FDF274 /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				22FB8FD82E9D104300FDF274 /* localWebServerMini.appex in Embed ExtensionKit Extensions */,
 			);
 			name = "Embed ExtensionKit Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2718,6 +2744,7 @@
 		22F75D40265FA3500056AFD2 /* xxd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xxd.xcframework; path = xcfs/.build/artifacts/xcfs/xxd/xxd.xcframework; sourceTree = SOURCE_ROOT; };
 		22FB8F9D2E9B9BC400FDF274 /* localWebServer.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = localWebServer.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensionPoint.swift; sourceTree = "<group>"; };
+		22FB8FD12E9D104200FDF274 /* localWebServerMini.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = localWebServerMini.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		22FFB44129E87D920054F01F /* require_jscore.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = require_jscore.js; sourceTree = "<group>"; };
 		22FFB44329E88AE60054F01F /* url-polyfill.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "url-polyfill.js"; sourceTree = "<group>"; };
 		6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PutFileIntentHandler.swift; sourceTree = "<group>"; };
@@ -2736,10 +2763,18 @@
 			);
 			target = 22FB8F9C2E9B9BC400FDF274 /* localWebServer */;
 		};
+		22FB8FD92E9D104300FDF274 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 22FB8FD02E9D104200FDF274 /* localWebServerMini */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		22FB8F9E2E9B9BC400FDF274 /* localWebServer */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (22FB8FA72E9B9BC600FDF274 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = localWebServer; sourceTree = "<group>"; };
+		22FB8FD22E9D104200FDF274 /* localWebServerMini */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (22FB8FD92E9D104300FDF274 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = localWebServerMini; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2806,6 +2841,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22FB8FDF2E9D151500FDF274 /* Vapor in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22FB8FCE2E9D104200FDF274 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22FB8FE12E9D152000FDF274 /* Vapor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2886,6 +2930,7 @@
 				22178EF9257BBBA4008EB2B4 /* a-Shell-mini-Intents */,
 				22178F03257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI */,
 				22FB8F9E2E9B9BC400FDF274 /* localWebServer */,
+				22FB8FD22E9D104200FDF274 /* localWebServerMini */,
 				22984EEB22C93DBC00069497 /* Products */,
 				22B1B80D22CB9A5A00F7C452 /* Frameworks */,
 				2271BAFE2D8B064D00A809E5 /* a-Shell-noPython copy-Info.plist */,
@@ -2904,6 +2949,7 @@
 				22178F01257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI.appex */,
 				224A91702ADD0999006DB9CC /* a-Shell-noPython.app */,
 				22FB8F9D2E9B9BC400FDF274 /* localWebServer.appex */,
+				22FB8FD12E9D104200FDF274 /* localWebServerMini.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3932,12 +3978,14 @@
 				229D2488257931E4004A78AC /* Resources */,
 				229D24A1257931E4004A78AC /* Embed Frameworks */,
 				22178EEF257BBB6E008EB2B4 /* Embed App Extensions */,
+				22FB8FDD2E9D104300FDF274 /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				22178F0B257BBBA6008EB2B4 /* PBXTargetDependency */,
 				22178F0E257BBBA6008EB2B4 /* PBXTargetDependency */,
+				22FB8FD72E9D104300FDF274 /* PBXTargetDependency */,
 			);
 			name = "a-Shell-mini";
 			packageProductDependencies = (
@@ -3999,9 +4047,33 @@
 			);
 			name = localWebServer;
 			packageProductDependencies = (
+				22FB8FDE2E9D151500FDF274 /* Vapor */,
 			);
 			productName = localWebServer;
 			productReference = 22FB8F9D2E9B9BC400FDF274 /* localWebServer.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
+		22FB8FD02E9D104200FDF274 /* localWebServerMini */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 22FB8FDA2E9D104300FDF274 /* Build configuration list for PBXNativeTarget "localWebServerMini" */;
+			buildPhases = (
+				22FB8FCD2E9D104200FDF274 /* Sources */,
+				22FB8FCE2E9D104200FDF274 /* Frameworks */,
+				22FB8FCF2E9D104200FDF274 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				22FB8FD22E9D104200FDF274 /* localWebServerMini */,
+			);
+			name = localWebServerMini;
+			packageProductDependencies = (
+				22FB8FE02E9D152000FDF274 /* Vapor */,
+			);
+			productName = localWebServerMini;
+			productReference = 22FB8FD12E9D104200FDF274 /* localWebServerMini.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
 /* End PBXNativeTarget section */
@@ -4031,6 +4103,9 @@
 						CreatedOnToolsVersion = 11.4.1;
 					};
 					22FB8F9C2E9B9BC400FDF274 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					22FB8FD02E9D104200FDF274 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
@@ -4065,6 +4140,7 @@
 				22178F00257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI */,
 				224A90352ADD0999006DB9CC /* a-Shell-noPython */,
 				22FB8F9C2E9B9BC400FDF274 /* localWebServer */,
+				22FB8FD02E9D104200FDF274 /* localWebServerMini */,
 			);
 		};
 /* End PBXProject section */
@@ -4218,6 +4294,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22FB8FE32E9D1EBB00FDF274 /* localCertificate.pem in Resources */,
+				22FB8FE42E9D1EBB00FDF274 /* localCertificateKey.pem in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22FB8FCF2E9D104200FDF274 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22FB8FE52E9D1EC100FDF274 /* localCertificate.pem in Resources */,
+				22FB8FE62E9D1EC100FDF274 /* localCertificateKey.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4352,6 +4439,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		22FB8FCD2E9D104200FDF274 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22FB8FE22E9D154D00FDF274 /* URL+isDirectory.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -4391,6 +4486,11 @@
 			isa = PBXTargetDependency;
 			target = 22FB8F9C2E9B9BC400FDF274 /* localWebServer */;
 			targetProxy = 22FB8FA22E9B9BC500FDF274 /* PBXContainerItemProxy */;
+		};
+		22FB8FD72E9D104300FDF274 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 22FB8FD02E9D104200FDF274 /* localWebServerMini */;
+			targetProxy = 22FB8FD62E9D104300FDF274 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -4777,7 +4877,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 496;
+				CURRENT_PROJECT_VERSION = 498;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4828,7 +4928,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 496;
+				CURRENT_PROJECT_VERSION = 498;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4878,7 +4978,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 496;
+				CURRENT_PROJECT_VERSION = 498;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4933,7 +5033,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 496;
+				CURRENT_PROJECT_VERSION = 498;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -5095,7 +5195,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = localWebServer/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = localWebServer;
+				INFOPLIST_KEY_CFBundleDisplayName = localWebServerExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 AsheKube. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -5105,7 +5205,7 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.localWebServer";
+				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.localWebServerExtension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -5131,7 +5231,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = localWebServer/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = localWebServer;
+				INFOPLIST_KEY_CFBundleDisplayName = localWebServerExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 AsheKube. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -5141,7 +5241,76 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.localWebServer";
+				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.localWebServerExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		22FB8FDB2E9D104300FDF274 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = localWebServerMini/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = localWebServerMini;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 AsheKube. All rights reserved.";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.localWebServerMini";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		22FB8FDC2E9D104300FDF274 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = localWebServerMini/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = localWebServerMini;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 AsheKube. All rights reserved.";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.localWebServerMini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -5237,6 +5406,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		22FB8FDA2E9D104300FDF274 /* Build configuration list for PBXNativeTarget "localWebServerMini" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				22FB8FDB2E9D104300FDF274 /* Debug */,
+				22FB8FDC2E9D104300FDF274 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -5262,6 +5440,16 @@
 			productName = Vapor;
 		};
 		227BB5AD2C4BA34D003AD902 /* Vapor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
+			productName = Vapor;
+		};
+		22FB8FDE2E9D151500FDF274 /* Vapor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
+			productName = Vapor;
+		};
+		22FB8FE02E9D152000FDF274 /* Vapor */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
 			productName = Vapor;

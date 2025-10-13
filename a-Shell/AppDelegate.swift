@@ -16,26 +16,26 @@ import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
 import Vapor // for our local server for WebAssembly
 import NIOSSL // for TLS (https) authentification
-// import ExtensionFoundation
+import ExtensionFoundation
 
 let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
 // Need SDK install to be over before starting commands.
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
 
-// @available(iOS 26, *)
-// private var globalMonitor: AppExtensionPoint.Monitor?
-// @available(iOS 26, *)
-// private(set) var currentIdentity: AppExtensionIdentity?
-// @available(iOS 26, *)
-// var webServerProcess: AppExtensionProcess?
-// @available(iOS 26, *)
-// var webServerConnection: NSXPCConnection?
+@available(iOS 26, *)
+private var globalMonitor: AppExtensionPoint.Monitor?
+@available(iOS 26, *)
+private(set) var currentIdentity: AppExtensionIdentity?
+@available(iOS 26, *)
+var webServerProcess: AppExtensionProcess?
+@available(iOS 26, *)
+var webServerConnection: NSXPCConnection?
 
 // Which version of the app are we running? a-Shell, a-Shell-mini, a-Shell-pro...? (no spaces in name)
 var appVersion: String? {
     // Bundle.main.infoDictionary?["CFBundleDisplayName"] = a-Shell
-    // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.a-Shell
+    // Bundle.main.infoDictionary?["CFBundleIdentifier"] = AsheKube.app.a-Shell
     // Bundle.main.infoDictionary?["CFBundleName"] = a-Shell
     // Bundle.main.infoDictionary["CFBundleShortVersionString"] = 1.15.2
     // Bundle.main.infoDictionary["CFBundleVersion"] = 422
@@ -122,28 +122,32 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func startLocalWebServer() async {
-        // Running the server in an extension: the process is started here, but the extension code is not running.
-        // if #available(iOS 26, *) {
-        //     do {
-        //         let monitor = try await AppExtensionPoint.Monitor(appExtensionPoint: .localWebServerExtension)
-        //         currentIdentity = monitor.identities.first
-        //         if let currentIdentity = currentIdentity {
-        //             // NSLog("localWebServerIdentity: \(currentIdentity)")
-        //             // run local web server in extension
-        //             let localWebServerConfig = AppExtensionProcess.Configuration(appExtensionIdentity: currentIdentity, onInterruption: { // NSLog("localWebServer was terminated") })
-        //             webServerProcess = try await AppExtensionProcess(configuration: localWebServerConfig)
-        //             NSLog("localWebServerProcess started: \(String(describing: webServerProcess))")
-        //             webServerConnection = try webServerProcess?.makeXPCConnection()
-        //             NSLog("connection: \(String(describing: webServerConnection))")
-        //             NSLog("localWebServerProcess status: \(String(describing: webServerProcess))")
-        //         }
-        //         globalMonitor = monitor
-        //         return
-        //     }
-        //     catch {
-        //         NSLog("Unable to start the localwebserver extension: \(error.localizedDescription).")
-        //     }
-        // }
+        // Running the server in an extension: the process is started here, the extension is running, but it won't work
+        // for a local web server
+        if (false) { // Disabled for now. Useful reference for later use of extensions
+            if #available(iOS 26, *) {
+                do {
+                    let monitor = try await AppExtensionPoint.Monitor(appExtensionPoint: .localWebServerExtension)
+                    currentIdentity = monitor.identities.first
+                    if let currentIdentity = currentIdentity {
+                        NSLog("localWebServerIdentity:")
+                        NSLog("\(currentIdentity)")
+                        // run local web server in extension
+                        let localWebServerConfig = AppExtensionProcess.Configuration(appExtensionIdentity: currentIdentity, onInterruption: { NSLog("localWebServer was terminated") })
+                        webServerProcess = try await AppExtensionProcess(configuration: localWebServerConfig)
+                        NSLog("localWebServerProcess started: \(String(describing: webServerProcess))")
+                        webServerConnection = try webServerProcess?.makeXPCConnection()
+                        NSLog("connection: \(String(describing: webServerConnection))")
+                        NSLog("localWebServerProcess status: \(String(describing: webServerProcess))")
+                    }
+                    globalMonitor = monitor
+                    return
+                }
+                catch {
+                    NSLog("Unable to start the localwebserver extension: \(error.localizedDescription).")
+                }
+            }
+        }
         // before iOS 26, or extenstion not starting: webserver running in app, now with async version
         do {
             localServerApp = try await Application.make()
