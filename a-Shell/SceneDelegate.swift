@@ -3516,7 +3516,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if #available(iOS 16.4, *) {
                 wasmWebView?.isInspectable = true
             }
-            let wasmFilePath = Bundle.main.path(forResource: "wasm", ofType: "html")
             wasmWebView?.isOpaque = false
             if (appVersion != "a-Shell-mini") {
                 wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8443/wasm.html")!))
@@ -5684,12 +5683,43 @@ extension SceneDelegate: WKUIDelegate {
         decidePolicyFor navigationResponse: WKNavigationResponse,
                  decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
         // NSLog("decidePolicyFor WKNavigationResponse: \(navigationResponse)")
-        // NSLog("webView.url?.path: \(webView.url?.path)")
+        // NSLog("decidePolicyFor, url requested: \((navigationResponse.response as? HTTPURLResponse)?.url)")
+        // NSLog("decidePolicyFor, webView.url?.path: \(webView.url?.path)")
         guard let statusCode
                 = (navigationResponse.response as? HTTPURLResponse)?.statusCode else {
             // NSLog("decidePolicyFor: no http status code to act on")
             // if there's no http status code to act on, exit and allow navigation
             decisionHandler(.allow)
+            return
+        }
+        if statusCode >= 400 {
+            if let requestedUrl = (navigationResponse.response as? HTTPURLResponse)?.url {
+                if (!requestedUrl.isFileURL
+                    && requestedUrl.host == "127.0.0.1"
+                    && requestedUrl.path == "/wasm.html") {
+                    NSLog("failed to load wasm.html, restarting the server")
+                    // if statusCode != 200..299 restart the server.
+                    decisionHandler(.cancel)
+                    Task {
+                        await startLocalWebServer()
+                    }
+                    // and reload the web page on all wasmWebView for all open scenes.
+                    for scene in UIApplication.shared.connectedScenes {
+                        if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                            delegate.wasmWebView?.reload()
+                            var port = 8334
+                            if (appVersion != "a-Shell-mini") {
+                                port = 8443
+                            }
+                            if (delegate.webView?.url?.host == "127.0.0.1") && (delegate.webView?.url?.port == port) {
+                                delegate.webView?.reload()
+                            }
+                        }
+                    }
+                    return
+                }
+            }
+            decisionHandler(.cancel)
             return
         }
         // NSLog("decidePolicyFor: status code: \(statusCode)")
