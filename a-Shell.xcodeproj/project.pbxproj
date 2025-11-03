@@ -17,7 +17,6 @@
 		220F36522BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
 		220F36532BC458C900842FEE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */; };
 		220F36552BC7FADA00842FEE /* llvmDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 220F36542BC7FAD800842FEE /* llvmDictionary.plist */; };
-		2213DCC32BDFEF8F008BD5F2 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 2213DCC22BDFEF8F008BD5F2 /* Vapor */; };
 		221642752B7C05CB00043766 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		221642762B7C05EE00043766 /* ssh_agent.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 224DF74B2B76428800F13C58 /* ssh_agent.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22178EA5257A7A79008EB2B4 /* node_modules in Resources */ = {isa = PBXBuildFile; fileRef = 22178EA4257A7A77008EB2B4 /* node_modules */; };
@@ -208,9 +207,7 @@
 		227B24852BE01ED5003A8031 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
 		227B24862BE033DE003A8031 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
 		227B24872BE033E1003A8031 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
-		227B24892BE033F3003A8031 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 227B24882BE033F3003A8031 /* Vapor */; };
 		227B248C2BE12FF1003A8031 /* wasm_withWorker.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248A2BE12FEE003A8031 /* wasm_withWorker.js */; };
-		227BB5AE2C4BA34D003AD902 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 227BB5AD2C4BA34D003AD902 /* Vapor */; };
 		228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		228E13F725C95F430065D825 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
@@ -953,12 +950,14 @@
 		22F75D41265FA3970056AFD2 /* xxd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D40265FA3500056AFD2 /* xxd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F75D42265FA3A30056AFD2 /* xxd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D40265FA3500056AFD2 /* xxd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F8457F266FDB7C00A0BF11 /* lg2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2234FB14266F765A00702AD1 /* lg2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F87DB12EB8A998003251CC /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 22F87DB02EB8A998003251CC /* Kitura */; };
+		22F87DB32EB8A9A3003251CC /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 22F87DB22EB8A9A3003251CC /* Kitura */; };
+		22F87DB62EB8B3B7003251CC /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
+		22F87DB72EB8B3C6003251CC /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
 		22FB8FAB2E9BA7E900FDF274 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		22FB8FC02E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
 		22FB8FC12E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
 		22FB8FC22E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
-		22FB8FDF2E9D151500FDF274 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 22FB8FDE2E9D151500FDF274 /* Vapor */; };
-		22FB8FE12E9D152000FDF274 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 22FB8FE02E9D152000FDF274 /* Vapor */; };
 		22FB8FE22E9D154D00FDF274 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		22FB8FE32E9D1EBB00FDF274 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
 		22FB8FE42E9D1EBB00FDF274 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
@@ -2766,7 +2765,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				224A904D2ADD0999006DB9CC /* ios_system.xcframework in Frameworks */,
-				227BB5AE2C4BA34D003AD902 /* Vapor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2774,8 +2772,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22F87DB12EB8A998003251CC /* Kitura in Frameworks */,
 				228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */,
-				2213DCC32BDFEF8F008BD5F2 /* Vapor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2783,8 +2781,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22F87DB32EB8A9A3003251CC /* Kitura in Frameworks */,
 				228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */,
-				227B24892BE033F3003A8031 /* Vapor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2808,7 +2806,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22FB8FDF2E9D151500FDF274 /* Vapor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2816,7 +2813,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22FB8FE12E9D152000FDF274 /* Vapor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3905,7 +3901,6 @@
 			);
 			name = "a-Shell-noPython";
 			packageProductDependencies = (
-				227BB5AD2C4BA34D003AD902 /* Vapor */,
 			);
 			productName = "a-Shell";
 			productReference = 224A91702ADD0999006DB9CC /* a-Shell-noPython.app */;
@@ -3929,7 +3924,7 @@
 			);
 			name = "a-Shell";
 			packageProductDependencies = (
-				2213DCC22BDFEF8F008BD5F2 /* Vapor */,
+				22F87DB02EB8A998003251CC /* Kitura */,
 			);
 			productName = "a-Shell";
 			productReference = 22984EEA22C93DBC00069497 /* a-Shell.app */;
@@ -3953,7 +3948,7 @@
 			);
 			name = "a-Shell-mini";
 			packageProductDependencies = (
-				227B24882BE033F3003A8031 /* Vapor */,
+				22F87DB22EB8A9A3003251CC /* Kitura */,
 			);
 			productName = "a-Shell";
 			productReference = 229D25A6257931E4004A78AC /* a-Shell-mini.app */;
@@ -4011,7 +4006,6 @@
 			);
 			name = localWebServer;
 			packageProductDependencies = (
-				22FB8FDE2E9D151500FDF274 /* Vapor */,
 			);
 			productName = localWebServer;
 			productReference = 22FB8F9D2E9B9BC400FDF274 /* localWebServer.appex */;
@@ -4034,7 +4028,6 @@
 			);
 			name = localWebServerMini;
 			packageProductDependencies = (
-				22FB8FE02E9D152000FDF274 /* Vapor */,
 			);
 			productName = localWebServerMini;
 			productReference = 22FB8FD12E9D104200FDF274 /* localWebServerMini.appex */;
@@ -4090,7 +4083,7 @@
 			);
 			mainGroup = 22984EE122C93DBC00069497;
 			packageReferences = (
-				2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */,
+				22F87DAF2EB8A8C9003251CC /* XCRemoteSwiftPackageReference "Kitura" */,
 			);
 			productRefGroup = 22984EEB22C93DBC00069497 /* Products */;
 			projectDirPath = "";
@@ -4165,6 +4158,7 @@
 				22D1335D2E61E35B00E76E2E /* Library in Resources */,
 				227B24842BE01ED5003A8031 /* localCertificate.pem in Resources */,
 				227B24852BE01ED5003A8031 /* localCertificateKey.pem in Resources */,
+				22F87DB72EB8B3C6003251CC /* localCertificate.pfx in Resources */,
 				222BE55B2BE2D512002E4272 /* wasm_withWorker.js in Resources */,
 				222BE55C2BE2D519002E4272 /* wasm_worker_wasm.js in Resources */,
 				22FFB44429E88AE80054F01F /* url-polyfill.js in Resources */,
@@ -4235,6 +4229,7 @@
 				229D2499257931E4004A78AC /* vim in Resources */,
 				227B24862BE033DE003A8031 /* localCertificate.pem in Resources */,
 				227B24872BE033E1003A8031 /* localCertificateKey.pem in Resources */,
+				22F87DB62EB8B3B7003251CC /* localCertificate.pfx in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4831,7 +4826,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 508;
+				CURRENT_PROJECT_VERSION = 509;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4882,7 +4877,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 508;
+				CURRENT_PROJECT_VERSION = 509;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4932,7 +4927,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 508;
+				CURRENT_PROJECT_VERSION = 509;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4987,7 +4982,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 508;
+				CURRENT_PROJECT_VERSION = 509;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -5374,41 +5369,26 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */ = {
+		22F87DAF2EB8A8C9003251CC /* XCRemoteSwiftPackageReference "Kitura" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/vapor/vapor.git";
+			repositoryURL = "https://github.com/Kitura/Kitura";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 4.94.1;
+				minimumVersion = 3.0.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		2213DCC22BDFEF8F008BD5F2 /* Vapor */ = {
+		22F87DB02EB8A998003251CC /* Kitura */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
-			productName = Vapor;
+			package = 22F87DAF2EB8A8C9003251CC /* XCRemoteSwiftPackageReference "Kitura" */;
+			productName = Kitura;
 		};
-		227B24882BE033F3003A8031 /* Vapor */ = {
+		22F87DB22EB8A9A3003251CC /* Kitura */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
-			productName = Vapor;
-		};
-		227BB5AD2C4BA34D003AD902 /* Vapor */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
-			productName = Vapor;
-		};
-		22FB8FDE2E9D151500FDF274 /* Vapor */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
-			productName = Vapor;
-		};
-		22FB8FE02E9D152000FDF274 /* Vapor */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2213DCC12BDFEF8F008BD5F2 /* XCRemoteSwiftPackageReference "vapor" */;
-			productName = Vapor;
+			package = 22F87DAF2EB8A8C9003251CC /* XCRemoteSwiftPackageReference "Kitura" */;
+			productName = Kitura;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
