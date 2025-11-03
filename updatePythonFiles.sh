@@ -83,12 +83,18 @@ do
 	find $directory -type f -name direct_url.json -exec sed -i bak  "s/file:.*packages/${APP}/g" {} \; -print
 	find $directory -type f -name direct_url.jsonbak -delete
 	# Change the supported platform so "pip check" accepts it:
-	# This needs to be ios_14_0_arm64 ... on iOS 26 devices, and ios_14_arm64 on iOS 16.
-	# It has to be the result of distutils.util.get_platform() (see https://peps.python.org/pep-0425/ )
-	# The first line duplicates the line with -macosx_* and replaces macosx with ios_14_0_, 
-	# the second line replaces the -macosx_* with ios_14_
-	find $directory -type f -name WHEEL -exec sed -i bak "/-macosx.*/{p;s//-ios_14_0_arm64_iphoneos/;}" {} \;
-	find $directory -type f -name WHEEL -exec sed -i bak "s/-macosx.*/-ios_14_arm64_iphoneos/g" {} \;
+	for wheelFile in `find $directory -type f -name WHEEL` 
+	do
+		# This needs to be ios_14_0_arm64 ... on iOS 26 devices, and ios_14_arm64 on iOS 16.
+		# It has to be the result of distutils.util.get_platform() (see https://peps.python.org/pep-0425/ )
+		# The call to awk makes sure the file ends with a newline
+		# The first call to sed duplicates the line with -macosx_* and replaces macosx with ios_14_0_, 
+		# the second line replaces the -macosx_* with ios_14_
+		awk 1 $wheelFile > /tmp/ensureNewLine
+		mv /tmp/ensureNewLine $wheelFile
+		sed -i bak "/-macosx.*/{p;s//-ios_14_0_arm64_iphoneos/;}" $wheelFile
+		sed -i bak "s/-macosx.*/-ios_14_arm64_iphoneos/g" $wheelFile
+	done
 	find $directory -type f -name WHEELbak -delete
 	# File that contains the itms-service URL (forbidden):
 	rm $directory/lib/python3.13/test/test_urlparse.py.orig
