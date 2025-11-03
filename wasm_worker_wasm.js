@@ -8,7 +8,7 @@ var sharedArray;
 const decoder = new TextDecoder();
 // and a Buffer variable
 var Buffer = require('buffer').Buffer;
-// var process = require('process');
+var process = require('process');
 
 // Functions to deal with WebAssembly:
 // These should load a wasm program: http://andrewsweeney.net/post/llvm-to-wasm/

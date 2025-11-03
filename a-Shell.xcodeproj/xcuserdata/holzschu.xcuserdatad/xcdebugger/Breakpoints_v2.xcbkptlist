@@ -300,6 +300,15 @@
             symbolName = "addchstr"
             moduleName = "">
             <Locations>
+               <Location
+                  uuid = "093E9EED-5497-48EB-B83F-9866FDE55C4B - d62c7cf34370de00"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "addchstr"
+                  moduleName = "libncurses.5.4.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
@@ -313,6 +322,20 @@
             symbolName = "crash_handler"
             moduleName = "">
             <Locations>
+               <Location
+                  uuid = "30F43FE1-4566-4598-8DC9-6BB86066644E - c3e12084ba14e828"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "crash_handler"
+                  moduleName = "ios_system"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/ios_system/ios_system.m"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "584"
+                  endingLineNumber = "584">
+               </Location>
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
@@ -326,19 +349,42 @@
             symbolName = "errno_to_wasi"
             moduleName = "">
             <Locations>
+               <Location
+                  uuid = "8D49BC18-BE38-4687-84F5-C40F451FF5CB - 48bcb6d38030809e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "errno_to_wasi"
+                  moduleName = "shell"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/holzschu/src/Xcode_iPad/ios_system/wasm3/source/m3_api_wasi.c"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "110"
+                  endingLineNumber = "110">
+               </Location>
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
          <BreakpointContent
-            uuid = "DCDDA4A5-1DB0-48CC-9F1E-33E148FB20E3"
+            uuid = "CD98EEFE-E62F-405B-A993-982CA5EA89DE"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            symbolName = "printPrompt"
+            symbolName = "malloc_error_break"
             moduleName = "">
             <Locations>
+               <Location
+                  uuid = "CD98EEFE-E62F-405B-A993-982CA5EA89DE - 9d096611641b4e7c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "malloc_error_break"
+                  moduleName = "libsystem_malloc.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
