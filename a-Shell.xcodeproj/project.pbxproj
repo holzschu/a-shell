@@ -191,6 +191,8 @@
 		22675A15271C24B200459BEF /* listTeXscripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221DA54B26F7688100BEA92A /* listTeXscripts.swift */; };
 		22675A16271C24F400459BEF /* KBWebViewBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 8916088E2713056900CED1C9 /* KBWebViewBase.m */; };
 		226AD81E23436B7A00E5D672 /* UIViewController+showAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226AD81D23436B7A00E5D672 /* UIViewController+showAlert.swift */; };
+		226B0BF82E9FD5DD00B14A3F /* openrsync.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 226B0BF72E9FD5C300B14A3F /* openrsync.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		226B0BF92E9FD5F200B14A3F /* openrsync.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 226B0BF72E9FD5C300B14A3F /* openrsync.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		226FBED82C1257B000400751 /* jsc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226FBED72C1257B000400751 /* jsc.swift */; };
 		226FBED92C1257B000400751 /* jsc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226FBED72C1257B000400751 /* jsc.swift */; };
 		226FBEDA2C1257B000400751 /* jsc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226FBED72C1257B000400751 /* jsc.swift */; };
@@ -951,12 +953,10 @@
 		22F75D41265FA3970056AFD2 /* xxd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D40265FA3500056AFD2 /* xxd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F75D42265FA3A30056AFD2 /* xxd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D40265FA3500056AFD2 /* xxd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F8457F266FDB7C00A0BF11 /* lg2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2234FB14266F765A00702AD1 /* lg2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22FB8FA42E9B9BC500FDF274 /* localWebServer.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 22FB8F9D2E9B9BC400FDF274 /* localWebServer.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		22FB8FAB2E9BA7E900FDF274 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		22FB8FC02E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
 		22FB8FC12E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
 		22FB8FC22E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
-		22FB8FD82E9D104300FDF274 /* localWebServerMini.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 22FB8FD12E9D104200FDF274 /* localWebServerMini.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		22FB8FDF2E9D151500FDF274 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 22FB8FDE2E9D151500FDF274 /* Vapor */; };
 		22FB8FE12E9D152000FDF274 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 22FB8FE02E9D152000FDF274 /* Vapor */; };
 		22FB8FE22E9D154D00FDF274 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
@@ -1021,20 +1021,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 22AD8717246EBFFA00F415DE;
 			remoteInfo = "a-Shell-Intents";
-		};
-		22FB8FA22E9B9BC500FDF274 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 22FB8F9C2E9B9BC400FDF274;
-			remoteInfo = localWebServer;
-		};
-		22FB8FD62E9D104300FDF274 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 22FB8FD02E9D104200FDF274;
-			remoteInfo = localWebServerMini;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1344,6 +1330,7 @@
 				227318AE28F02E2F0027A736 /* multimarkdown.framework in Embed Frameworks */,
 				221642752B7C05CB00043766 /* ssh_agent.xcframework in Embed Frameworks */,
 				220F18882C7C81ED007090F8 /* blink.xcframework in Embed Frameworks */,
+				226B0BF92E9FD5F200B14A3F /* openrsync.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1447,6 +1434,7 @@
 				22BD97B72A0BB92C005FA036 /* ptexenc.xcframework in Embed Frameworks */,
 				22BD97B82A0BB92C005FA036 /* ptexencA.xcframework in Embed Frameworks */,
 				221FA42F2A1C9ACE00463D5B /* libgdal.xcframework in Embed Frameworks */,
+				226B0BF82E9FD5DD00B14A3F /* openrsync.framework in Embed Frameworks */,
 				221FA4302A1C9ACE00463D5B /* libgeos_c.xcframework in Embed Frameworks */,
 				221FA4312A1C9ACE00463D5B /* libgeos.xcframework in Embed Frameworks */,
 				221FA4322A1C9ACE00463D5B /* libproj.xcframework in Embed Frameworks */,
@@ -1893,28 +1881,6 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		22DF68CF2A5E98CE00F5EEAD /* Embed ExtensionKit Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 12;
-			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
-			dstSubfolderSpec = 16;
-			files = (
-				22FB8FA42E9B9BC500FDF274 /* localWebServer.appex in Embed ExtensionKit Extensions */,
-			);
-			name = "Embed ExtensionKit Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		22FB8FDD2E9D104300FDF274 /* Embed ExtensionKit Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
-			dstSubfolderSpec = 16;
-			files = (
-				22FB8FD82E9D104300FDF274 /* localWebServerMini.appex in Embed ExtensionKit Extensions */,
-			);
-			name = "Embed ExtensionKit Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -2008,6 +1974,7 @@
 		2263E34329FFC8590096EFBF /* perlC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlC.xcframework; path = xcfs/.build/artifacts/xcfs/perlC/perlC.xcframework; sourceTree = "<group>"; };
 		2266A7242872BE63006C4982 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Intents.strings; sourceTree = "<group>"; };
 		226AD81D23436B7A00E5D672 /* UIViewController+showAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+showAlert.swift"; sourceTree = "<group>"; };
+		226B0BF72E9FD5C300B14A3F /* openrsync.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = openrsync.framework; path = xcfs/.build/artifacts/xcfs/openrsync.framework; sourceTree = "<group>"; };
 		226B3B4A26F27E330007C281 /* forbidden */ = {isa = PBXFileReference; lastKnownFileType = folder; name = forbidden; path = ODR/forbidden; sourceTree = "<group>"; };
 		226FBED72C1257B000400751 /* jsc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = jsc.swift; sourceTree = "<group>"; };
 		2271BAFE2D8B064D00A809E5 /* a-Shell-noPython copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "a-Shell-noPython copy-Info.plist"; path = "/Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell-noPython copy-Info.plist"; sourceTree = "<absolute>"; };
@@ -3083,6 +3050,7 @@
 				221FA4332A1C9CD700463D5B /* libspatialindex_c.xcframework */,
 				221FA4342A1C9CD700463D5B /* libspatialindex.xcframework */,
 				22AD8722246EBFFB00F415DE /* IntentsUI.framework */,
+				226B0BF72E9FD5C300B14A3F /* openrsync.framework */,
 			);
 			name = Frameworks;
 			sourceTree = SOURCE_ROOT;
@@ -3952,14 +3920,12 @@
 				22984EE822C93DBC00069497 /* Resources */,
 				22B1B81522CB9D6500F7C452 /* Embed Frameworks */,
 				22AD8731246EBFFD00F415DE /* Embed App Extensions */,
-				22DF68CF2A5E98CE00F5EEAD /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				22AD872C246EBFFD00F415DE /* PBXTargetDependency */,
 				22AD872F246EBFFD00F415DE /* PBXTargetDependency */,
-				22FB8FA32E9B9BC500FDF274 /* PBXTargetDependency */,
 			);
 			name = "a-Shell";
 			packageProductDependencies = (
@@ -3978,14 +3944,12 @@
 				229D2488257931E4004A78AC /* Resources */,
 				229D24A1257931E4004A78AC /* Embed Frameworks */,
 				22178EEF257BBB6E008EB2B4 /* Embed App Extensions */,
-				22FB8FDD2E9D104300FDF274 /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				22178F0B257BBBA6008EB2B4 /* PBXTargetDependency */,
 				22178F0E257BBBA6008EB2B4 /* PBXTargetDependency */,
-				22FB8FD72E9D104300FDF274 /* PBXTargetDependency */,
 			);
 			name = "a-Shell-mini";
 			packageProductDependencies = (
@@ -4482,16 +4446,6 @@
 			target = 22AD8717246EBFFA00F415DE /* a-Shell-Intents */;
 			targetProxy = 22AD872E246EBFFD00F415DE /* PBXContainerItemProxy */;
 		};
-		22FB8FA32E9B9BC500FDF274 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 22FB8F9C2E9B9BC400FDF274 /* localWebServer */;
-			targetProxy = 22FB8FA22E9B9BC500FDF274 /* PBXContainerItemProxy */;
-		};
-		22FB8FD72E9D104300FDF274 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 22FB8FD02E9D104200FDF274 /* localWebServerMini */;
-			targetProxy = 22FB8FD62E9D104300FDF274 /* PBXContainerItemProxy */;
-		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -4877,7 +4831,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 498;
+				CURRENT_PROJECT_VERSION = 508;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4928,7 +4882,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 498;
+				CURRENT_PROJECT_VERSION = 508;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4978,7 +4932,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 498;
+				CURRENT_PROJECT_VERSION = 508;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -5033,7 +4987,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 498;
+				CURRENT_PROJECT_VERSION = 508;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -5262,6 +5216,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = localWebServerMini/Info.plist;
@@ -5297,6 +5252,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = localWebServerMini/Info.plist;

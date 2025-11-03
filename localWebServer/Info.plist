@@ -5,7 +5,7 @@
 	<key>EXAppExtensionAttributes</key>
 	<dict>
 		<key>EXExtensionPointIdentifier</key>
-		<string>com.example.example-extension</string>
+		<string>AsheKube.app.a-Shell.localWebServer</string>
 	</dict>
 </dict>
 </plist>
