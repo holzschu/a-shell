@@ -1,0 +1,368 @@
+.\"
+.\" Copyright (c) 2019 Kristaps Dzonsons <kristaps@bsd.lv>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate$
+.Dt OPENRSYNC 1
+.Os
+.Sh NAME
+.Nm openrsync
+.Nd synchronise local and remote files
+.Sh SYNOPSIS
+.Nm openrsync
+.Op Fl aDgIJlnOoprtVvx
+.Op Fl e Ar program
+.Op Fl -address Ns = Ns Ar sourceaddr
+.Op Fl -compare-dest Ns = Ns Ar directory
+.Op Fl -contimeout Ns = Ns Ar seconds
+.Op Fl -del
+.Op Fl -exclude Ar pattern
+.Op Fl -exclude-from Ns = Ns Ar file
+.Op Fl -include Ar pattern
+.Op Fl -include-from Ns = Ns Ar file
+.Op Fl -max-size Ns = Ns size
+.Op Fl -min-size Ns = Ns size
+.Op Fl -no-motd
+.Op Fl -numeric-ids
+.Op Fl -port Ns = Ns Ar service
+.Op Fl -rsync-path Ns = Ns Ar program
+.Op Fl -size-only
+.Op Fl -timeout Ns = Ns Ar seconds
+.Ar source ...
+.Ar directory
+.Sh DESCRIPTION
+The
+.Nm
+utility synchronises files in the destination
+.Ar directory
+with one or more
+.Ar source
+files.
+Either the
+.Ar source
+or the destination
+.Ar directory
+may be remote,
+but not both.
+The arguments are as follows:
+.Bl -tag -width Ds
+.It Fl a , -archive
+Shorthand for
+.Fl Dgloprt .
+.It Fl -address Ns = Ns Ar sourceaddr
+When connecting to an rsync daemon, use
+.Ar sourceaddr
+as the source address for connections, which is useful on machines with
+multiple interfaces.
+.It Fl -compare-dest Ns = Ns Ar directory
+Use directory as an alternate base directory to compare files against on the
+destination machine.
+If file in
+.Ar directory
+is found and identical to the sender's file, the file will not be transferred.
+Multiple
+.Fl -compare-dest
+directories may be provided.
+If
+.Ar directory
+is a relative path, it is relative to the destination directory.
+.It Fl -contimeout Ns = Ns Ar seconds
+Set the connection timeout in seconds.
+Exit if no connection established within the specified time.
+The default is 0, which means no timeout.
+.It Fl D
+Also transfer device and special files.
+Shorthand for
+.Fl -devices -specials .
+.It Fl -del , -delete
+Delete files in
+.Ar directory
+not found in
+.Ar source
+directories.
+Only applicable with
+.Fl r .
+.It Fl e Ar program , Fl -rsh Ns = Ns Ar program
+Specify alternative communication program, defaults to
+.Xr ssh 1 .
+.It Fl -exclude Ar pattern
+Exclude files matching
+.Em pattern .
+.It Fl -exclude-from Ns = Ns Ar file
+Load
+.Em patterns
+and
+.Em rules
+from
+.Em file .
+.It Fl -devices
+Also transfer device files.
+.It Fl g , -group
+Set the group name to match the source.
+For example, group
+.Qq kristaps
+with ID 1000 on a remote server is matched to group
+.Qq kristaps
+on the local machine with ID 2000.
+If
+.Fl -numeric-ids
+is also given or if the remote group name is unknown on the local machine,
+set the numeric group ID to match the source instead.
+.It Fl I , -ignore-times
+Do not skip based on file size and modification time.
+.It Fl -include Ar pattern
+Include files matching
+.Em pattern .
+.It Fl -include-from Ns = Ns Ar file
+Load
+.Em patterns
+and
+.Em rules
+from
+.Em file .
+.It Fl J , -omit-link-times
+Don't set symlink modification times to match the source.
+.It Fl l , -links
+Also transfer symbolic links.
+The link is transferred as a standalone file: if the destination does
+not exist, it will be broken.
+.It Fl -max-size Ar size
+Don't transfer any file that is larger than
+.Ar size
+bytes.
+Alternatively
+.Ar size
+may instead use a multiplier, as documented in
+.Xr scan_scaled 3 ,
+to specify the size.
+.It Fl -min-size Ar size
+Don't transfer any file that is smaller than
+.Ar size
+bytes.
+See
+.Fl -max-size
+on the definition of size.
+.It Fl n , -dry-run
+Do not actually modify the destination.
+Mainly useful in combination with
+.Fl v .
+.It Fl -no-motd
+Do not display the Message of the Day.
+.It Fl -numeric-ids
+Ignore user and group names, use numeric user and group IDs only.
+Has no effect unless
+.Fl g
+or
+.Fl o
+is also given.
+.It Fl O , -omit-dir-times
+Don't set directory modification times to match the source.
+.It Fl o , -owner
+Set the user name to match the source, with similar matching logic as for
+.Fl g .
+If
+.Fl -numeric-ids
+is also given or if the remote user name is unknown on the local machine,
+set the numeric user ID to match the source instead.
+Only works if run as root.
+.It Fl p , -perms
+Set destination file or directory permissions to match the source when
+it is updated.
+.It Fl -port Ns = Ns Ar service
+Specify an alternative TCP port number.
+The
+.Ar service
+can be given as a decimal integer or as a name to be looked up in the
+.Xr services 5
+database.
+The default is
+.Dq rsync .
+.It Fl r , -recursive
+If
+.Ar source
+designates a directory, synchronise the directory and the entire subtree
+connected at that point.
+If
+.Ar source
+ends with a slash, only the subtree is synchronised, not the
+.Ar source
+directory itself.
+If
+.Ar source
+is a file, this has no effect.
+.It Fl -rsync-path Ns = Ns Ar program
+Run
+.Ar program
+on the remote host instead of the default
+.Pa rsync .
+.It Fl -size-only
+Skip files based only on size, don't check timestamp.
+.It Fl -specials
+Also transfer fifo and unix domain socket files.
+.It Fl -timeout Ns = Ns Ar seconds
+Set the I/O timeout in seconds.
+Exit if no data was transferred for the specified time.
+The default is 0, which means no timeout.
+.It Fl t , -times
+Set destination file and directory modification time to match the source
+when it is updated or created.
+.It Fl V , -version
+Print version and exit.
+.It Fl v , -verbose
+Increase verbosity.
+Specify once for files being transferred, twice for specific status,
+thrice for per-file transfer information, and four times for per-file
+breakdowns.
+.It Fl x
+Do not cross filesystem boundaries.
+If this option is repeated, all mount point directories from the copy are
+omitted.
+Otherwise, it includes an empty directory at each mount point it encounters.
+.El
+.Pp
+A remote
+.Ar source
+or
+.Ar directory
+has the syntax
+.Ar host : Ns Ar path
+for connecting via
+.Xr ssh 1 ,
+or
+.Cm rsync Ns :// Ns Ar host Ns / Ns Ar path
+or
+.Ar host Ns :: Ns Ar path
+for connecting to a remote daemon.
+Subsequent to the first remote
+.Ar source ,
+the host may be dropped to become just
+.Pf : Ar path
+or
+.Pf :: Ar path .
+.Pp
+For connecting to a remote daemon with
+.Cm rsync Ns :// Ns Ar host
+or
+.Ar host Ns :: Ns Ar path ,
+the first path component is interpreted as a
+.Qq module :
+.Ar host Ns :: Ns Ar module Ns / Ns Ar path .
+This only applies to the first
+.Ar source
+invocation; subsequent to that, the module should not be specified.
+.Pp
+By default, new destination files and directories are given the current
+time and the source file permissions.
+Updated files retain their existing permissions.
+It is an error if updated files have their file types change (e.g.,
+updating a directory with a file).
+.Pp
+At this time,
+.Ar source
+may only consist of regular files, directories
+.Pq only with Fl r ,
+or symbolic links
+.Pq only with Fl l .
+The destination
+.Ar directory
+must be a directory and is created if not found.
+.\" .Sh PATTERNS AND RULES
+.\" .Sh ENVIRONMENT
+.\" .Sh FILES
+.Sh EXIT STATUS
+The
+.Nm
+utility exits 0 on success, 1 if an error occurs, or 2 if the remote
+protocol version is older than the local protocol version.
+.Sh EXAMPLES
+A common invocation of
+.Nm
+is for archiving from a remote host to the local computer:
+.Pp
+.Dl % openrsync -av --delete remote:rpath /local/path
+.Pp
+This will update the contents of
+.Pa /local/path/rpath
+with those on the remote server.
+Switching remote and local wil update the remote contents instead:
+.Pp
+.Dl % openrsync -av --delete /local/path remote:rpath
+.Pp
+All examples use
+.Fl t
+so that destination files inherit the source time.
+If not changed, subsequent invocations of
+.Nm
+will then consider the file up to date and not transfer block hashes.
+.Pp
+To update the out-of-date remote files
+.Pa host:dest/bar
+and
+.Pa host:dest/baz
+with the local
+.Pa ../src/bar
+and
+.Pa ../src/baz :
+.Pp
+.Dl % openrsync -t ../src/bar ../src/baz host:dest
+.Pp
+To update the out-of-date local files
+.Pa bar
+and
+.Pa baz
+with the remote files
+.Pa host:src/bar
+and
+.Pa host:src/baz :
+.Pp
+.Dl % openrsync -t host:src/bar :src/baz \&.
+.Pp
+To update the out-of-date local files
+.Pa ../dest/bar
+and
+.Pa ../dest/baz
+with
+.Pa bar
+and
+.Pa baz :
+.Pp
+.Dl % openrsync -t bar baz ../dest
+.Pp
+To update the out-of-date remote files in
+.Pa host:dest
+on a remote host running
+.Nm
+with the local host running
+.Xr rsync 1 :
+.Pp
+.Dl % rsync --rsync-path openrsync -t ../dest/* host:dest
+.\" .Sh DIAGNOSTICS
+.Sh SEE ALSO
+.Xr ssh 1
+.Sh STANDARDS
+.Nm
+is compatible with rsync protocol version 27
+as supported by the samba.org implementation of rsync.
+.Sh HISTORY
+The
+.Nm
+utility has been available since
+.Ox 6.5 .
+.Sh AUTHORS
+The
+.Nm
+utility was written by
+.An Kristaps Dzonsons Aq Mt kristaps@bsd.lv .
+.\" .Sh CAVEATS
+.\" .Sh BUGS
