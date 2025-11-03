@@ -14,15 +14,16 @@ import Compression
 import Intents // for shortcuts
 import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
-import Vapor // for our local server for WebAssembly
+import Kitura // for our local server for WebAssembly
 import NIOSSL // for TLS (https) authentification
 // import ExtensionFoundation // disabled for now
 
 let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
+let localServerQueue = DispatchQueue(label: "moveFiles", qos: .userInteractive) // high priority, but not blocking
 // Need SDK install to be over before starting commands.
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
-var localServerApp: Application?
+var localServerApp = Router()
 
 #if false
 @available(iOS 26, *)
@@ -35,100 +36,88 @@ var webServerProcess: AppExtensionProcess?
 var webServerConnection: NSXPCConnection?
 #endif
 
-func startLocalWebServer() async {
+func startLocalWebServer() {
     // Running the server in an extension: the process is started here, the extension is running, but it won't work
     // for a local web server
 #if false // Disabled for now. Useful reference for later use of iOS extensions
-        if #available(iOS 26, *) {
-            do {
-                let monitor = try await AppExtensionPoint.Monitor(appExtensionPoint: .localWebServerExtension)
-                currentIdentity = monitor.identities.first
-                if let currentIdentity = currentIdentity {
-                    NSLog("localWebServerIdentity:")
-                    NSLog("\(currentIdentity)")
-                    // run local web server in extension
-                    let localWebServerConfig = AppExtensionProcess.Configuration(appExtensionIdentity: currentIdentity, onInterruption: { NSLog("localWebServer was terminated") })
-                    webServerProcess = try await AppExtensionProcess(configuration: localWebServerConfig)
-                    NSLog("localWebServerProcess started: \(String(describing: webServerProcess))")
-                    webServerConnection = try webServerProcess?.makeXPCConnection()
-                    NSLog("connection: \(String(describing: webServerConnection))")
-                    NSLog("localWebServerProcess status: \(String(describing: webServerProcess))")
-                }
-                globalMonitor = monitor
-                return
+    if #available(iOS 26, *) {
+        do {
+            let monitor = try await AppExtensionPoint.Monitor(appExtensionPoint: .localWebServerExtension)
+            currentIdentity = monitor.identities.first
+            if let currentIdentity = currentIdentity {
+                NSLog("localWebServerIdentity:")
+                NSLog("\(currentIdentity)")
+                // run local web server in extension
+                let localWebServerConfig = AppExtensionProcess.Configuration(appExtensionIdentity: currentIdentity, onInterruption: { NSLog("localWebServer was terminated") })
+                webServerProcess = try await AppExtensionProcess(configuration: localWebServerConfig)
+                NSLog("localWebServerProcess started: \(String(describing: webServerProcess))")
+                webServerConnection = try webServerProcess?.makeXPCConnection()
+                NSLog("connection: \(String(describing: webServerConnection))")
+                NSLog("localWebServerProcess status: \(String(describing: webServerProcess))")
             }
-            catch {
-                NSLog("Unable to start the localwebserver extension: \(error.localizedDescription).")
-            }
+            globalMonitor = monitor
+            return
         }
+        catch {
+            NSLog("Unable to start the localwebserver extension: \(error.localizedDescription).")
+        }
+    }
 #endif
     // before iOS 26, or extenstion not starting: webserver running in app, now with async version
-    do {
-        localServerApp = try await Application.make()
-        // Vapor prints a lot of info on the console. No need to add ours.
-        // TODO: restart localServerApp.server if unable to connect --> how?
-        // No websocket support for now: it's not needed for a-Shell
-        localServerApp?.http.server.configuration.hostname = "127.0.0.1"
-        // Make sure the servers for the different apps don't interfere with each other:
-        if (appVersion != "a-Shell-mini") {
-            localServerApp?.http.server.configuration.port = 8443
+    localServerApp.get("/*") { request, response, next in
+        // NSLog("Kitura request received: \(request.matchedPath)")
+        // Load ~/Library/node_modules first if it exists:
+        // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
+        let libraryURL = try! FileManager().url(for: .libraryDirectory,
+                                                in: .userDomainMask,
+                                                appropriateFor: nil,
+                                                create: true)
+        let localFilePath = libraryURL.path + request.matchedPath
+        let rootFilePath = Bundle.main.resourcePath! + request.matchedPath
+        var fileName: String? = nil
+        // NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
+        if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
+            fileName = localFilePath
+        } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
+            fileName = rootFilePath
+        }
+        if let filePath = fileName {
+            if (request.matchedPath.hasSuffix(".html")) {
+                response.headers["Content-Type"] = "text/html"
+            } else if (request.matchedPath.hasSuffix(".js")) {
+                response.headers["Content-Type"] = "application/javascript"
+            } else if (request.matchedPath.hasSuffix(".wasm")) {
+                response.headers["Content-Type"] = "application/wasm"
+            }
+            // These headers get us a "crossOriginIsolated == true;" on OSX Safari
+            response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
+            response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+            response.headers["Cross-Origin-Resource-Policy"] =  "same-origin"
+            do {
+                // NSLog("Kitura file found: \(filePath)")
+                try response.send(fileName: filePath)
+            }
+            catch {
+                response.statusCode = .forbidden
+                response.send("Loading \(filePath) failed")
+            }
         } else {
-            localServerApp?.http.server.configuration.port = 8334
+            // NSLog("Kitura file not found: \(request.matchedPath)")
+            response.statusCode = .notFound
+            response.send("")
         }
-        localServerApp?.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
-            certificateChain: try NIOSSLCertificate.fromPEMFile(Bundle.main.resourcePath! + "/localCertificate.pem").map { .certificate($0) },
-            privateKey: try NIOSSLPrivateKeySource.privateKey(NIOSSLPrivateKey(file: Bundle.main.resourcePath! + "/localCertificateKey.pem", format: .pem))
-        )
-        localServerApp?.get("**") { request -> Response in
-            let urlPath = request.url.path
-            // Load ~/Library/node_modules first if it exists:
-            // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
-            let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                    in: .userDomainMask,
-                                                    appropriateFor: nil,
-                                                    create: true)
-            let localFilePath = libraryURL.path + urlPath
-            let rootFilePath = Bundle.main.resourcePath! + urlPath
-            var fileName: String? = nil
-            // NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
-            if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
-                fileName = localFilePath
-            } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
-                fileName = rootFilePath
-            }
-            // NSLog("file found: \(fileName)")
-            if (fileName != nil) {
-                var headers = HTTPHeaders()
-                if (urlPath.hasSuffix(".html")) {
-                    headers.add(name: .contentType, value: "text/html")
-                } else if (urlPath.hasSuffix(".js")) {
-                    headers.add(name: .contentType, value: "application/javascript")
-                } else if (urlPath.hasSuffix(".wasm")) {
-                    // NSLog("setting the header to application/wasm")
-                    headers.add(name: .contentType, value: "application/wasm")
-                }
-                // These headers get us a "crossOriginIsolated == true;"
-                headers.add(name: "Cross-Origin-Embedder-Policy", value: "require-corp")
-                headers.add(name: "Cross-Origin-Opener-Policy", value: "same-origin")
-                headers.add(name: "Cross-Origin-Resource-Policy", value: "same-origin")
-                do {
-                    // Binary access to the file, because we could be serving WASM files
-                    let body = try Data(contentsOf: URL(fileURLWithPath: fileName!))
-                    // NSLog("Returned \(urlPath) with \(fileName!)")
-                    return Response(status: .ok, headers: headers, body: Response.Body(data: body))
-                }
-                catch {
-                    NSLog("File: \(String(describing: fileName)) could not access: \(error).")
-                    return Response(status: .forbidden)
-                }
-            }
-            // NSLog("\(urlPath): not found")
-            return Response(status: .notFound)
-        }
-        try localServerApp?.server.start()
+        next()
     }
-    catch {
-        NSLog("Unable to start the vapor server: \(error)")
+    let sslConfig =  SSLConfig(withChainFilePath: Bundle.main.resourcePath! + "/localCertificate.pfx",
+                               withPassword: "password",
+                               usingSelfSignedCerts: true)
+    if (appVersion != "a-Shell-mini") {
+        Kitura.addHTTPServer(onPort: 8443, with: localServerApp, withSSL: sslConfig)
+    } else {
+        Kitura.addHTTPServer(onPort: 8334, with: localServerApp, withSSL: sslConfig)
+    }
+    localServerQueue.async{
+        Kitura.run()
     }
 }
 
@@ -151,7 +140,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // to update Python distribution at each version update
     var versionUpToDate = true
     var libraryFilesUpToDate = true
-    let localServerQueue = DispatchQueue(label: "moveFiles", qos: .userInteractive) // high priority, but not blocking
 
     func createDirectory(localURL: URL) -> Bool {
         do {
@@ -536,9 +524,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Use this method to select a configuration to create the new scene with.
         // Also the function called when a shortcut starts the App.
         NSLog("application configurationForConnecting connectingSceneSession \(connectingSceneSession)")
-        Task {
-            await startLocalWebServer()
-        }
+        startLocalWebServer()
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
 

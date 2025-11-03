@@ -2666,7 +2666,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // NSLog("Could not convert Javascript message: \(message.body)")
             return
         }
-        NSLog("Received JS message: \(cmd)")
+        // NSLog("Received JS message: \(cmd)")
         // Make sure we're acting on the right session here:
         if (cmd.hasPrefix("shell:")) {
             var command = cmd
@@ -3611,9 +3611,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             let commands = contentOfFile.split(separator: "\n")
                             ios_switchSession(self.persistentIdentifier?.toCString())
                             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
-                            thread_stdin  = stdin
-                            thread_stdout = stdout
-                            thread_stderr = stderr
+                            thread_stdin  = nil
+                            thread_stdout = nil
+                            thread_stderr = nil
                             for command in commands {
                                 let trimmedCommand = command.trimmingCharacters(in: .whitespacesAndNewlines)
                                 if (trimmedCommand.count == 0) { continue } // skip white lines
@@ -4096,11 +4096,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
-        // Reload the webAssembly interpreter (this will also check if the Vapor server is still running):
+        // Reload the webAssembly interpreter (this will also check if the local server is still running):
         if (appVersion != "a-Shell-mini") {
-            wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8443/wasm.html")!))
+            wasmWebView?.load(URLRequest(url: URL(string: "https://localhost:8443/wasm.html")!))
         } else {
-            wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8334/wasm.html")!))
+            NSLog("Loding wasm.html from 8334")
+            wasmWebView?.load(URLRequest(url: URL(string: "https://localhost:8334/wasm.html")!))
         }
         // Was this window created with a purpose?
         let userActivity = scene.userActivity
@@ -5719,9 +5720,7 @@ extension SceneDelegate: WKUIDelegate {
                     NSLog("failed to load wasm.html, restarting the server")
                     // if statusCode != 200..299 restart the server.
                     decisionHandler(.cancel)
-                    Task {
-                        await startLocalWebServer()
-                    }
+                    startLocalWebServer()
                     // and reload the web page on all wasmWebView for all open scenes.
                     for scene in UIApplication.shared.connectedScenes {
                         if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
