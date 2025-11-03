@@ -18,7 +18,6 @@ var inputString = ''; // stores keyboard input
 var commandIsRunning = false;
 
 function wakeUpWorker(chunkSize) {
-	const d = new Date();
 	let resultStorage = -1;
 	let resultNotify = -1;
 	let tries = 0;
