@@ -345,6 +345,20 @@
 		<string></string>
 		<string>no</string>
 	</array>
+	<key>openrsync</key>
+	<array>
+		<string>openrsync.framework/openrsync</string>
+		<string>main</string>
+		<string>aDe:ghIJlnOoprtVvxz</string>
+		<string>file</string>
+	</array>
+	<key>rsync</key>
+	<array>
+		<string>openrsync.framework/openrsync</string>
+		<string>main</string>
+		<string>aDe:ghIJlnOoprtVvxz</string>
+		<string>file</string>
+	</array>
 	<key>pbcopy</key>
 	<array>
 		<string>SELF</string>
