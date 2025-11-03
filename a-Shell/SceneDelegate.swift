@@ -69,6 +69,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var thread_stderr_copy: UnsafeMutablePointer<FILE>? = nil
     // var keyboardTimer: Timer!
     var timer = Timer()               // timer for scheduled execution of commands
+    var webAssemblyTimer = Timer()    // timer for pinging the webassembly interpreter
     var scheduledCommand = ""         // the command that is scheduled to run
     var scheduleInterval: Float = 0.0       // the interval for execution
     var lastExecution: Date = .distantPast  // the last time the command was executed
@@ -132,8 +133,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
 
     // Create a document picker for directories.
     private let documentPicker =
-    UIDocumentPickerViewController(documentTypes: [kUTTypeFolder as String],
-                                   in: .open)
+    UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
     
     var screenWidth: CGFloat {
         if windowScene!.interfaceOrientation.isPortrait {
@@ -1445,6 +1445,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             errorCode = error
             errorMessage = message
             currentDispatchGroup?.leave()
+            webAssemblyTimer.invalidate()
         }
     }
     
@@ -1471,6 +1472,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             javascriptGroup.enter()
             currentDispatchGroup = javascriptGroup;
             DispatchQueue.main.async {
+                // Check the webassembly interpreter regularly (required in iOS 18 and above, a good idea nevertheless)
+                // See https://discord.com/channels/935519150305050644/935519150305050647/1431680783122174205
+                self.webAssemblyTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { _ in
+                    self.wasmWebView?.evaluateJavaScript("commandIsRunning;") { (result, error) in
+                        // if let error = error { print(error) }
+                        if let result = result as? Bool {
+                            if (!result) {
+                                self.endWebAssemblyCommand(error: 0, message: "")
+                            }
+                        }
+                    }
+                }
                 self.thread_stdin_copy = command!.thread_stdin_copy
                 self.thread_stdout_copy = command!.thread_stdout_copy
                 self.thread_stderr_copy = command!.thread_stderr_copy
@@ -2028,6 +2041,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let isReadableWithoutSecurity = FileManager().isReadableFile(atPath: newDirectory.path)
         let isSecuredURL = newDirectory.startAccessingSecurityScopedResource()
         let isReadable = FileManager().isReadableFile(atPath: newDirectory.path)
+        
         guard isSecuredURL && isReadable else {
             showAlert("Error", message: "Could not access folder.")
             selectedDirectory = newDirectory.path
@@ -2467,15 +2481,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let commands = command.components(separatedBy: "\n")
             for command in commands {
                 let arguments = command.components(separatedBy: " ")
-                let actualCommand = aliasedCommand(arguments[0])
-                NSLog("Received command to execute: \(actualCommand)")
-                if (actualCommand == "exit") {
-                    self.closeWindow()
-                    break // if "exit" didn't work, still don't execute the rest of the commands.
-                }
-                if (actualCommand == "newWindow") {
-                    self.executeCommand(command: command)
-                    continue
+                if let actualCommand = aliasedCommand(arguments[0]) {
+                    NSLog("Received command to execute: \(actualCommand)")
+                    if (actualCommand == "exit") {
+                        self.closeWindow()
+                        break // if "exit" didn't work, still don't execute the rest of the commands.
+                    }
+                    if (actualCommand == "newWindow") {
+                        self.executeCommand(command: actualCommand)
+                        continue
+                    }
                 }
                 self.currentCommand = command
                 // If we received multiple commands (or if it's a shortcut), we need to inform the window if they are interactive:
@@ -2524,6 +2539,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 ios_system(self.currentCommand)
                 NSLog("Returned from ios_system")
+                // for long running commands, ios_waitpid eats up to 68% CPU.
+                // but for short-running commands, we need it to be reactive.
+                // I tried with a timer, but it didn't work (not reactive enough, fails with dash)
                 ios_waitpid(self.pid)
                 NSLog("Returned from ios_waitpid")
                 ios_releaseThreadId(self.pid)
@@ -2648,7 +2666,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // NSLog("Could not convert Javascript message: \(message.body)")
             return
         }
-        // NSLog("Received JS message: \(cmd)")
+        NSLog("Received JS message: \(cmd)")
         // Make sure we're acting on the right session here:
         if (cmd.hasPrefix("shell:")) {
             var command = cmd
@@ -3517,11 +3535,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 wasmWebView?.isInspectable = true
             }
             wasmWebView?.isOpaque = false
-            if (appVersion != "a-Shell-mini") {
-                wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8443/wasm.html")!))
-            } else {
-                wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8334/wasm.html")!))
-            }
             wasmWebView?.configuration.userContentController = WKUserContentController()
             wasmWebView?.configuration.userContentController.add(self, name: "aShell")
             wasmWebView?.navigationDelegate = self
@@ -4083,6 +4096,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
+        // Reload the webAssembly interpreter (this will also check if the Vapor server is still running):
+        if (appVersion != "a-Shell-mini") {
+            wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8443/wasm.html")!))
+        } else {
+            wasmWebView?.load(URLRequest(url: URL(string: "https://127.0.0.1:8334/wasm.html")!))
+        }
         // Was this window created with a purpose?
         let userActivity = scene.userActivity
         // Do not restore if a command is already running.
