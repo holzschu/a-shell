@@ -112,6 +112,7 @@ class localWebServer: localWebServerExtension {
         }
         catch {
             NSLog("Unable to start the vapor server: \(error)")
+            exit(0)
         }
     }
 
