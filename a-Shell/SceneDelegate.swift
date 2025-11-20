@@ -1099,16 +1099,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     public lazy var editorToolbar: UIToolbar = {
         var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: screenWidth - 20, height: toolbarHeight))
         toolbar.tintColor = .label
-        toolbar.items = leftButtonGroup
-        if #available(iOS 26, *) {
-            // liquid glass makes the buttons larger, we can't have a middle space on small screens
-            if (screenWidth > 400) || (leftButtonGroup.count + rightButtonGroup.count < 8) {
+        if (leftButtonGroup.count == 0) {
+            toolbar.items = rightButtonGroup
+        } else {
+            toolbar.items = leftButtonGroup
+            if #available(iOS 26, *) {
+                NSLog("leftButtonGroup: \(leftButtonGroup)")
+                NSLog("rightButtonGroup: \(rightButtonGroup)")
+                // liquid glass makes the buttons larger, we can't have a middle space on small screens
+                if (screenWidth > 400) || (leftButtonGroup.count + rightButtonGroup.count < 8) {
+                    toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
+                }
+            } else {
                 toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
             }
-        } else {
-            toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
+            if (rightButtonGroup.count > 0) {
+                toolbar.items?.append(contentsOf: rightButtonGroup)
+            }
         }
-        toolbar.items?.append(contentsOf: rightButtonGroup)
         // Long press gesture recognizer (for when the toolbar is pressed):
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
         longPressGesture.minimumPressDuration = 1.0 // 1 second press
