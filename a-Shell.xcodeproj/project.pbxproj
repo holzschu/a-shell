@@ -65,6 +65,8 @@
 		2237DC3228549CCF003E4738 /* jq.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2237DC3028549CB8003E4738 /* jq.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223A1C1B2A5EDCA700B1B9AD /* Tips.swift */; };
 		223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223A1C1B2A5EDCA700B1B9AD /* Tips.swift */; };
+		223E91E62EC1251900A81615 /* openrsyncA.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E91E52EC11C7500A81615 /* openrsyncA.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		223E91E72EC1252800A81615 /* openrsyncA.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 223E91E52EC11C7500A81615 /* openrsyncA.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223FC3C32611F57D00CDC89F /* wasm.html in Resources */ = {isa = PBXBuildFile; fileRef = 223FC3C22611F57C00CDC89F /* wasm.html */; };
 		223FC3CB2611F9C400CDC89F /* wasm.html in Resources */ = {isa = PBXBuildFile; fileRef = 223FC3CA2611F9C300CDC89F /* wasm.html */; };
 		2242B075232293E7002A20FC /* bin in Resources */ = {isa = PBXBuildFile; fileRef = 2242B074232293E5002A20FC /* bin */; };
@@ -1330,6 +1332,7 @@
 				221642752B7C05CB00043766 /* ssh_agent.xcframework in Embed Frameworks */,
 				220F18882C7C81ED007090F8 /* blink.xcframework in Embed Frameworks */,
 				226B0BF92E9FD5F200B14A3F /* openrsync.framework in Embed Frameworks */,
+				223E91E62EC1251900A81615 /* openrsyncA.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1536,7 +1539,6 @@
 				22D145152E62098800E76E2E /* Python-Cryptodome.Util._strxor.framework in Embed Frameworks */,
 				22D145162E62098800E76E2E /* Python-cryptography.hazmat.bindings._openssl.framework in Embed Frameworks */,
 				22D145172E62098800E76E2E /* Python-cryptography.hazmat.bindings._padding.framework in Embed Frameworks */,
-				22D145182E62098800E76E2E /* Python-cv2.cv2.framework in Embed Frameworks */,
 				22D145192E62098800E76E2E /* Python-cvxopt.amd.framework in Embed Frameworks */,
 				22D1451A2E62098800E76E2E /* Python-cvxopt.base.framework in Embed Frameworks */,
 				22D1451B2E62098800E76E2E /* Python-cvxopt.blas.framework in Embed Frameworks */,
@@ -1751,7 +1753,6 @@
 				22D145EE2E62098800E76E2E /* PythonACryptodome.Util._strxor.framework in Embed Frameworks */,
 				22D145EF2E62098800E76E2E /* PythonAcryptography.hazmat.bindings._openssl.framework in Embed Frameworks */,
 				22D145F02E62098800E76E2E /* PythonAcryptography.hazmat.bindings._padding.framework in Embed Frameworks */,
-				22D145F12E62098800E76E2E /* PythonAcv2.cv2.framework in Embed Frameworks */,
 				22D145F22E62098800E76E2E /* PythonAcvxopt.amd.framework in Embed Frameworks */,
 				22D145F32E62098800E76E2E /* PythonAcvxopt.base.framework in Embed Frameworks */,
 				22D145F42E62098800E76E2E /* PythonAcvxopt.blas.framework in Embed Frameworks */,
@@ -1874,8 +1875,11 @@
 				2249E13B2E7546E5003F03EE /* Python-_cffi_backend.framework in Embed Frameworks */,
 				22B0CA662E75DDDD00FDF6FE /* Python-zmq.backend.cffi._cffi.framework in Embed Frameworks */,
 				22B0CA672E75DDDD00FDF6FE /* PythonAzmq.backend.cffi._cffi.framework in Embed Frameworks */,
+				22D145182E62098800E76E2E /* Python-cv2.cv2.framework in Embed Frameworks */,
+				22D145F12E62098800E76E2E /* PythonAcv2.cv2.framework in Embed Frameworks */,
 				224C24FA2C94238900DE430E /* blink.xcframework in Embed Frameworks */,
 				2242DBC12E646FDD000AC08A /* cbc.framework in Embed Frameworks */,
+				223E91E72EC1252800A81615 /* openrsyncA.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1929,6 +1933,7 @@
 		2237DC3028549CB8003E4738 /* jq.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = jq.xcframework; path = xcfs/.build/artifacts/xcfs/jq/jq.xcframework; sourceTree = "<group>"; };
 		223A1C1B2A5EDCA700B1B9AD /* Tips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tips.swift; sourceTree = "<group>"; };
 		223AF28E2D8B2E2300A4A62D /* a-Shell-mini copy2-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "a-Shell-mini copy2-Info.plist"; path = "/Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell-mini copy2-Info.plist"; sourceTree = "<absolute>"; };
+		223E91E52EC11C7500A81615 /* openrsyncA.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = openrsyncA.framework; path = xcfs/.build/artifacts/xcfs/openrsyncA.framework; sourceTree = "<group>"; };
 		223EF3432B97490600A8ED5A /* sshd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = sshd.xcframework; path = xcfs/.build/artifacts/xcfs/sshd/sshd.xcframework; sourceTree = "<group>"; };
 		223FC3C22611F57C00CDC89F /* wasm.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = wasm.html; sourceTree = "<group>"; };
 		223FC3CA2611F9C300CDC89F /* wasm.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = wasm.html; sourceTree = "<group>"; };
@@ -2705,6 +2710,8 @@
 		22E9F5A52558470600673D11 /* bc_ios.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bc_ios.xcframework; path = xcfs/.build/artifacts/xcfs/bc_ios/bc_ios.xcframework; sourceTree = SOURCE_ROOT; };
 		22EA905A266696A700CC9B88 /* wasm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm.js; sourceTree = "<group>"; };
 		22EA905D266698DD00CC9B88 /* script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = script.js; sourceTree = "<group>"; };
+		22EF2AAE2ECFA00600E37233 /* Python-cv2.cv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-cv2.cv2.framework"; path = "Resources/Frameworks/Python-cv2.cv2.framework"; sourceTree = SOURCE_ROOT; };
+		22EF2AAF2ECFA02400E37233 /* PythonAcv2.cv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAcv2.cv2.framework; path = Resources/Frameworks/PythonAcv2.cv2.framework; sourceTree = SOURCE_ROOT; };
 		22F20174264E81E1004FBA5C /* perlA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlA.xcframework; path = xcfs/.build/artifacts/xcfs/perlA/perlA.xcframework; sourceTree = SOURCE_ROOT; };
 		22F20177265260B7004FBA5C /* perlB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlB.xcframework; path = xcfs/.build/artifacts/xcfs/perlB/perlB.xcframework; sourceTree = SOURCE_ROOT; };
 		22F75D40265FA3500056AFD2 /* xxd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xxd.xcframework; path = xcfs/.build/artifacts/xcfs/xxd/xxd.xcframework; sourceTree = SOURCE_ROOT; };
@@ -3047,6 +3054,7 @@
 				221FA4342A1C9CD700463D5B /* libspatialindex.xcframework */,
 				22AD8722246EBFFB00F415DE /* IntentsUI.framework */,
 				226B0BF72E9FD5C300B14A3F /* openrsync.framework */,
+				223E91E52EC11C7500A81615 /* openrsyncA.framework */,
 			);
 			name = Frameworks;
 			sourceTree = SOURCE_ROOT;
@@ -3753,6 +3761,8 @@
 				2249E1392E7546D2003F03EE /* Python-_cffi_backend.framework */,
 				22B0CA642E75DCC100FDF6FE /* Python-zmq.backend.cffi._cffi.framework */,
 				22B0CA652E75DCD300FDF6FE /* PythonAzmq.backend.cffi._cffi.framework */,
+				22EF2AAE2ECFA00600E37233 /* Python-cv2.cv2.framework */,
+				22EF2AAF2ECFA02400E37233 /* PythonAcv2.cv2.framework */,
 			);
 			path = "Frameworks regular";
 			sourceTree = "<group>";
@@ -4826,7 +4836,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 509;
+				CURRENT_PROJECT_VERSION = 512;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4851,7 +4861,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.17.0;
+				MARKETING_VERSION = 1.17.2;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4877,7 +4887,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 509;
+				CURRENT_PROJECT_VERSION = 512;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4902,7 +4912,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.17.0;
+				MARKETING_VERSION = 1.17.2;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4927,7 +4937,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 509;
+				CURRENT_PROJECT_VERSION = 512;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4951,7 +4961,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.17.0;
+				MARKETING_VERSION = 1.17.2;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
@@ -4982,7 +4992,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 509;
+				CURRENT_PROJECT_VERSION = 512;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -5006,7 +5016,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.17.0;
+				MARKETING_VERSION = 1.17.2;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
