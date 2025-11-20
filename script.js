@@ -758,6 +758,8 @@ function setupHterm() {
 					helpRunning = true;
 				} else if (lastLine.includes("Do you really want to exit ([y]/n)?")) {
 					helpRunning = true;
+				} else if (lastLine.includes("Hit Return for more, or q (and Return) to quit:")) {
+					helpRunning = true;
 				}
 			}
 
