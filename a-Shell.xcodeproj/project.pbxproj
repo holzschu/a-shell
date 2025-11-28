@@ -300,6 +300,9 @@
 		22BF623E23157F2400FEA585 /* cacert.pem in Resources */ = {isa = PBXBuildFile; fileRef = 22BF623D23157F1400FEA585 /* cacert.pem */; };
 		22BF6243231589EC00FEA585 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 22BF6242231589DB00FEA585 /* Settings.bundle */; };
 		22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
+		22CA0A1E2ED6368B00F6F8DF /* localWebServerMini.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 22CA0A172ED6368A00F6F8DF /* localWebServerMini.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		22CA0A252ED6376E00F6F8DF /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 22CA0A242ED6376E00F6F8DF /* Kitura */; };
+		22CA0A262ED637E100F6F8DF /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		22D1335D2E61E35B00E76E2E /* Library in Resources */ = {isa = PBXBuildFile; fileRef = 22D1335C2E61E35900E76E2E /* Library */; };
 		22D1424B2E62091700E76E2E /* Python.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D141912E62090000E76E2E /* Python.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D1424C2E62091700E76E2E /* Python-_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D141922E62090000E76E2E /* Python-_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -956,15 +959,9 @@
 		22F87DB32EB8A9A3003251CC /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 22F87DB22EB8A9A3003251CC /* Kitura */; };
 		22F87DB62EB8B3B7003251CC /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
 		22F87DB72EB8B3C6003251CC /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
-		22FB8FAB2E9BA7E900FDF274 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
 		22FB8FC02E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
 		22FB8FC12E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
 		22FB8FC22E9BC2E500FDF274 /* extensionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */; };
-		22FB8FE22E9D154D00FDF274 /* URL+isDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */; };
-		22FB8FE32E9D1EBB00FDF274 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
-		22FB8FE42E9D1EBB00FDF274 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
-		22FB8FE52E9D1EC100FDF274 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
-		22FB8FE62E9D1EC100FDF274 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
 		22FFB44229E87D950054F01F /* require_jscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44129E87D920054F01F /* require_jscore.js */; };
 		22FFB44429E88AE80054F01F /* url-polyfill.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44329E88AE60054F01F /* url-polyfill.js */; };
 		6BD953662BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
@@ -1022,6 +1019,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 22AD8717246EBFFA00F415DE;
 			remoteInfo = "a-Shell-Intents";
+		};
+		22CA0A1C2ED6368B00F6F8DF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 22CA0A162ED6368A00F6F8DF;
+			remoteInfo = localWebServerMini;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1884,6 +1888,27 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		22CA0A0D2ED62D2000F6F8DF /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22CA0A232ED6368B00F6F8DF /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				22CA0A1E2ED6368B00F6F8DF /* localWebServerMini.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -2053,6 +2078,7 @@
 		22BF623D23157F1400FEA585 /* cacert.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = cacert.pem; sourceTree = "<group>"; };
 		22BF6242231589DB00FEA585 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "URL+isDirectory.swift"; path = "Util/URL+isDirectory.swift"; sourceTree = SOURCE_ROOT; };
+		22CA0A172ED6368A00F6F8DF /* localWebServerMini.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = localWebServerMini.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		22CD01C626F07B8E00C635B9 /* texlive_2021_texmf_dist_fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2021_texmf_dist_fonts; path = ODR/texlive_2021_texmf_dist_fonts; sourceTree = "<group>"; };
 		22CD01C726F07B8F00C635B9 /* texlive_2021_texmf_dist_fonts_oft_ttf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2021_texmf_dist_fonts_oft_ttf; path = ODR/texlive_2021_texmf_dist_fonts_oft_ttf; sourceTree = "<group>"; };
 		22CD01C826F07B8F00C635B9 /* texlive_2021_texmf_dist */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2021_texmf_dist; path = ODR/texlive_2021_texmf_dist; sourceTree = "<group>"; };
@@ -2715,9 +2741,7 @@
 		22F20174264E81E1004FBA5C /* perlA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlA.xcframework; path = xcfs/.build/artifacts/xcfs/perlA/perlA.xcframework; sourceTree = SOURCE_ROOT; };
 		22F20177265260B7004FBA5C /* perlB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlB.xcframework; path = xcfs/.build/artifacts/xcfs/perlB/perlB.xcframework; sourceTree = SOURCE_ROOT; };
 		22F75D40265FA3500056AFD2 /* xxd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xxd.xcframework; path = xcfs/.build/artifacts/xcfs/xxd/xxd.xcframework; sourceTree = SOURCE_ROOT; };
-		22FB8F9D2E9B9BC400FDF274 /* localWebServer.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = localWebServer.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		22FB8FBF2E9BC2D500FDF274 /* extensionPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensionPoint.swift; sourceTree = "<group>"; };
-		22FB8FD12E9D104200FDF274 /* localWebServerMini.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = localWebServerMini.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		22FFB44129E87D920054F01F /* require_jscore.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = require_jscore.js; sourceTree = "<group>"; };
 		22FFB44329E88AE60054F01F /* url-polyfill.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "url-polyfill.js"; sourceTree = "<group>"; };
 		6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PutFileIntentHandler.swift; sourceTree = "<group>"; };
@@ -2728,26 +2752,8 @@
 		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		22FB8FA72E9B9BC600FDF274 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 22FB8F9C2E9B9BC400FDF274 /* localWebServer */;
-		};
-		22FB8FD92E9D104300FDF274 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 22FB8FD02E9D104200FDF274 /* localWebServerMini */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		22FB8F9E2E9B9BC400FDF274 /* localWebServer */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (22FB8FA72E9B9BC600FDF274 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = localWebServer; sourceTree = "<group>"; };
-		22FB8FD22E9D104200FDF274 /* localWebServerMini */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (22FB8FD92E9D104300FDF274 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = localWebServerMini; sourceTree = "<group>"; };
+		22CA0A182ED6368A00F6F8DF /* localWebServerMini */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = localWebServerMini; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2809,17 +2815,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		22FB8F9A2E9B9BC400FDF274 /* Frameworks */ = {
+		22CA0A142ED6368A00F6F8DF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		22FB8FCE2E9D104200FDF274 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				22CA0A252ED6376E00F6F8DF /* Kitura in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2899,8 +2899,7 @@
 				22AD8724246EBFFC00F415DE /* a-Shell-IntentsUI */,
 				22178EF9257BBBA4008EB2B4 /* a-Shell-mini-Intents */,
 				22178F03257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI */,
-				22FB8F9E2E9B9BC400FDF274 /* localWebServer */,
-				22FB8FD22E9D104200FDF274 /* localWebServerMini */,
+				22CA0A182ED6368A00F6F8DF /* localWebServerMini */,
 				22984EEB22C93DBC00069497 /* Products */,
 				22B1B80D22CB9A5A00F7C452 /* Frameworks */,
 				2271BAFE2D8B064D00A809E5 /* a-Shell-noPython copy-Info.plist */,
@@ -2918,8 +2917,7 @@
 				22178EF8257BBBA4008EB2B4 /* a-Shell-mini-Intents.appex */,
 				22178F01257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI.appex */,
 				224A91702ADD0999006DB9CC /* a-Shell-noPython.app */,
-				22FB8F9D2E9B9BC400FDF274 /* localWebServer.appex */,
-				22FB8FD12E9D104200FDF274 /* localWebServerMini.appex */,
+				22CA0A172ED6368A00F6F8DF /* localWebServerMini.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3925,6 +3923,7 @@
 				22984EE822C93DBC00069497 /* Resources */,
 				22B1B81522CB9D6500F7C452 /* Embed Frameworks */,
 				22AD8731246EBFFD00F415DE /* Embed App Extensions */,
+				22CA0A0D2ED62D2000F6F8DF /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
 			);
@@ -3949,12 +3948,14 @@
 				229D2488257931E4004A78AC /* Resources */,
 				229D24A1257931E4004A78AC /* Embed Frameworks */,
 				22178EEF257BBB6E008EB2B4 /* Embed App Extensions */,
+				22CA0A232ED6368B00F6F8DF /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				22178F0B257BBBA6008EB2B4 /* PBXTargetDependency */,
 				22178F0E257BBBA6008EB2B4 /* PBXTargetDependency */,
+				22CA0A1D2ED6368B00F6F8DF /* PBXTargetDependency */,
 			);
 			name = "a-Shell-mini";
 			packageProductDependencies = (
@@ -3999,48 +4000,27 @@
 			productReference = 22AD8721246EBFFB00F415DE /* a-Shell-IntentsUI.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		22FB8F9C2E9B9BC400FDF274 /* localWebServer */ = {
+		22CA0A162ED6368A00F6F8DF /* localWebServerMini */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 22FB8FA82E9B9BC600FDF274 /* Build configuration list for PBXNativeTarget "localWebServer" */;
+			buildConfigurationList = 22CA0A202ED6368B00F6F8DF /* Build configuration list for PBXNativeTarget "localWebServerMini" */;
 			buildPhases = (
-				22FB8F992E9B9BC400FDF274 /* Sources */,
-				22FB8F9A2E9B9BC400FDF274 /* Frameworks */,
-				22FB8F9B2E9B9BC400FDF274 /* Resources */,
+				22CA0A132ED6368A00F6F8DF /* Sources */,
+				22CA0A142ED6368A00F6F8DF /* Frameworks */,
+				22CA0A152ED6368A00F6F8DF /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				22FB8F9E2E9B9BC400FDF274 /* localWebServer */,
-			);
-			name = localWebServer;
-			packageProductDependencies = (
-			);
-			productName = localWebServer;
-			productReference = 22FB8F9D2E9B9BC400FDF274 /* localWebServer.appex */;
-			productType = "com.apple.product-type.extensionkit-extension";
-		};
-		22FB8FD02E9D104200FDF274 /* localWebServerMini */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 22FB8FDA2E9D104300FDF274 /* Build configuration list for PBXNativeTarget "localWebServerMini" */;
-			buildPhases = (
-				22FB8FCD2E9D104200FDF274 /* Sources */,
-				22FB8FCE2E9D104200FDF274 /* Frameworks */,
-				22FB8FCF2E9D104200FDF274 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				22FB8FD22E9D104200FDF274 /* localWebServerMini */,
+				22CA0A182ED6368A00F6F8DF /* localWebServerMini */,
 			);
 			name = localWebServerMini;
 			packageProductDependencies = (
+				22CA0A242ED6376E00F6F8DF /* Kitura */,
 			);
 			productName = localWebServerMini;
-			productReference = 22FB8FD12E9D104200FDF274 /* localWebServerMini.appex */;
+			productReference = 22CA0A172ED6368A00F6F8DF /* localWebServerMini.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
 /* End PBXNativeTarget section */
@@ -4049,7 +4029,7 @@
 		22984EE222C93DBC00069497 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 2600;
+				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = AsheKube;
 				TargetAttributes = {
@@ -4069,11 +4049,8 @@
 					22AD8720246EBFFB00F415DE = {
 						CreatedOnToolsVersion = 11.4.1;
 					};
-					22FB8F9C2E9B9BC400FDF274 = {
-						CreatedOnToolsVersion = 26.0.1;
-					};
-					22FB8FD02E9D104200FDF274 = {
-						CreatedOnToolsVersion = 26.0.1;
+					22CA0A162ED6368A00F6F8DF = {
+						CreatedOnToolsVersion = 26.1.1;
 					};
 				};
 			};
@@ -4106,8 +4083,7 @@
 				22178EF7257BBBA4008EB2B4 /* a-Shell-mini-Intents */,
 				22178F00257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI */,
 				224A90352ADD0999006DB9CC /* a-Shell-noPython */,
-				22FB8F9C2E9B9BC400FDF274 /* localWebServer */,
-				22FB8FD02E9D104200FDF274 /* localWebServerMini */,
+				22CA0A162ED6368A00F6F8DF /* localWebServerMini */,
 			);
 		};
 /* End PBXProject section */
@@ -4259,21 +4235,10 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		22FB8F9B2E9B9BC400FDF274 /* Resources */ = {
+		22CA0A152ED6368A00F6F8DF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22FB8FE32E9D1EBB00FDF274 /* localCertificate.pem in Resources */,
-				22FB8FE42E9D1EBB00FDF274 /* localCertificateKey.pem in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		22FB8FCF2E9D104200FDF274 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				22FB8FE52E9D1EC100FDF274 /* localCertificate.pem in Resources */,
-				22FB8FE62E9D1EC100FDF274 /* localCertificateKey.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4400,19 +4365,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		22FB8F992E9B9BC400FDF274 /* Sources */ = {
+		22CA0A132ED6368A00F6F8DF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22FB8FAB2E9BA7E900FDF274 /* URL+isDirectory.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		22FB8FCD2E9D104200FDF274 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				22FB8FE22E9D154D00FDF274 /* URL+isDirectory.swift in Sources */,
+				22CA0A262ED637E100F6F8DF /* URL+isDirectory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4450,6 +4407,11 @@
 			isa = PBXTargetDependency;
 			target = 22AD8717246EBFFA00F415DE /* a-Shell-Intents */;
 			targetProxy = 22AD872E246EBFFD00F415DE /* PBXContainerItemProxy */;
+		};
+		22CA0A1D2ED6368B00F6F8DF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 22CA0A162ED6368A00F6F8DF /* localWebServerMini */;
+			targetProxy = 22CA0A1C2ED6368B00F6F8DF /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -4836,7 +4798,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 512;
+				CURRENT_PROJECT_VERSION = 514;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4861,7 +4823,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.17.2;
+				MARKETING_VERSION = 1.17.3;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4887,7 +4849,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 512;
+				CURRENT_PROJECT_VERSION = 514;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4912,7 +4874,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.17.2;
+				MARKETING_VERSION = 1.17.3;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4937,7 +4899,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 512;
+				CURRENT_PROJECT_VERSION = 515;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4961,7 +4923,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.17.2;
+				MARKETING_VERSION = 1.17.3;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
@@ -4992,7 +4954,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 512;
+				CURRENT_PROJECT_VERSION = 515;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -5016,7 +4978,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 1.17.2;
+				MARKETING_VERSION = 1.17.3;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
@@ -5141,22 +5103,21 @@
 			};
 			name = Release;
 		};
-		22FB8FA52E9B9BC600FDF274 /* Debug */ = {
+		22CA0A212ED6368B00F6F8DF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = localWebServer/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = localWebServerExtension;
+				INFOPLIST_KEY_CFBundleDisplayName = localWebServer;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 AsheKube. All rights reserved.";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -5164,8 +5125,9 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.localWebServerExtension";
+				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.localWebServer";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
@@ -5177,22 +5139,21 @@
 			};
 			name = Debug;
 		};
-		22FB8FA62E9B9BC600FDF274 /* Release */ = {
+		22CA0A222ED6368B00F6F8DF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = localWebServer/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = localWebServerExtension;
+				INFOPLIST_KEY_CFBundleDisplayName = localWebServer;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 AsheKube. All rights reserved.";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -5200,79 +5161,9 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.localWebServerExtension";
+				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.localWebServer";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		22FB8FDB2E9D104300FDF274 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = localWebServerMini/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = localWebServerMini;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 AsheKube. All rights reserved.";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.localWebServerMini";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		22FB8FDC2E9D104300FDF274 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = localWebServerMini/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = localWebServerMini;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 AsheKube. All rights reserved.";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.localWebServerMini";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -5358,20 +5249,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		22FB8FA82E9B9BC600FDF274 /* Build configuration list for PBXNativeTarget "localWebServer" */ = {
+		22CA0A202ED6368B00F6F8DF /* Build configuration list for PBXNativeTarget "localWebServerMini" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				22FB8FA52E9B9BC600FDF274 /* Debug */,
-				22FB8FA62E9B9BC600FDF274 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		22FB8FDA2E9D104300FDF274 /* Build configuration list for PBXNativeTarget "localWebServerMini" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				22FB8FDB2E9D104300FDF274 /* Debug */,
-				22FB8FDC2E9D104300FDF274 /* Release */,
+				22CA0A212ED6368B00F6F8DF /* Debug */,
+				22CA0A222ED6368B00F6F8DF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -5390,6 +5272,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		22CA0A242ED6376E00F6F8DF /* Kitura */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 22F87DAF2EB8A8C9003251CC /* XCRemoteSwiftPackageReference "Kitura" */;
+			productName = Kitura;
+		};
 		22F87DB02EB8A998003251CC /* Kitura */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 22F87DAF2EB8A8C9003251CC /* XCRemoteSwiftPackageReference "Kitura" */;

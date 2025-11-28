@@ -5728,7 +5728,9 @@ extension SceneDelegate: WKUIDelegate {
                     NSLog("failed to load wasm.html, restarting the server")
                     // if statusCode != 200..299 restart the server.
                     decisionHandler(.cancel)
-                    startLocalWebServer()
+                    Task {
+                        await startLocalWebServer()
+                    }
                     // and reload the web page on all wasmWebView for all open scenes.
                     for scene in UIApplication.shared.connectedScenes {
                         if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
