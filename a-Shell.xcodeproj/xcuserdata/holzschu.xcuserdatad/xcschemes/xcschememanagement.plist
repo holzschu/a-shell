@@ -59,11 +59,6 @@
 			<key>orderHint</key>
 			<integer>7</integer>
 		</dict>
-		<key>localWebServerMini.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>8</integer>
-		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
@@ -103,6 +98,11 @@
 			<true/>
 		</dict>
 		<key>22FB8F9C2E9B9BC400FDF274</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>22FB8FD02E9D104200FDF274</key>
 		<dict>
 			<key>primary</key>
 			<true/>
