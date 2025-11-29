@@ -4265,7 +4265,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     if name == "APPBUILDNUMBER" { continue }
                     // Do not restore SSH_AUTH_SOCK, since ssh-agent is not running anymore.
                     if name == "SSH_AUTH_SOCK" {
-                        unlink(value); // close the old socket
+                        // Do not remove the old socket, as ssh-agent could still be running.
+                        // unlink(value); // close the old socket
                         continue
                     }
                     if (name == "TERM") && (value == "dumb") { continue }
