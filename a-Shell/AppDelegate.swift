@@ -16,7 +16,6 @@ import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
 import Kitura // for our local server for WebAssembly
 import NIOSSL // for TLS (https) authentification
-// import ExtensionFoundation // disabled for now
 
 let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
 let localServerQueue = DispatchQueue(label: "moveFiles", qos: .userInteractive) // high priority, but not blocking
@@ -25,45 +24,7 @@ var appDependentPath: String = "" // part of the path that depends on the App lo
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
 var localServerApp = Router()
 
-#if false
-@available(iOS 26, *)
-private var globalMonitor: AppExtensionPoint.Monitor?
-@available(iOS 26, *)
-private(set) var currentIdentity: AppExtensionIdentity?
-@available(iOS 26, *)
-var webServerProcess: AppExtensionProcess?
-@available(iOS 26, *)
-var webServerConnection: NSXPCConnection?
-#endif
-
 func startLocalWebServer() {
-    // Running the server in an extension: the process is started here, the extension is running, but it won't work
-    // for a local web server
-#if false // Disabled for now. Useful reference for later use of iOS extensions
-    if #available(iOS 26, *) {
-        do {
-            let monitor = try await AppExtensionPoint.Monitor(appExtensionPoint: .localWebServerExtension)
-            currentIdentity = monitor.identities.first
-            if let currentIdentity = currentIdentity {
-                NSLog("localWebServerIdentity:")
-                NSLog("\(currentIdentity)")
-                // run local web server in extension
-                let localWebServerConfig = AppExtensionProcess.Configuration(appExtensionIdentity: currentIdentity, onInterruption: { NSLog("localWebServer was terminated") })
-                webServerProcess = try await AppExtensionProcess(configuration: localWebServerConfig)
-                NSLog("localWebServerProcess started: \(String(describing: webServerProcess))")
-                webServerConnection = try webServerProcess?.makeXPCConnection()
-                NSLog("connection: \(String(describing: webServerConnection))")
-                NSLog("localWebServerProcess status: \(String(describing: webServerProcess))")
-            }
-            globalMonitor = monitor
-            return
-        }
-        catch {
-            NSLog("Unable to start the localwebserver extension: \(error.localizedDescription).")
-        }
-    }
-#endif
-    // before iOS 26, or extenstion not starting: webserver running in app, now with async version
     localServerApp.get("/*") { request, response, next in
         // NSLog("Kitura request received: \(request.matchedPath)")
         // Load ~/Library/node_modules first if it exists:
