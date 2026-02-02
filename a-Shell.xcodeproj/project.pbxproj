@@ -969,6 +969,9 @@
 		6BD9536F2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		6BD953702BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		891608902713056B00CED1C9 /* KBWebViewBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 8916088E2713056900CED1C9 /* KBWebViewBase.m */; };
+		892373BE2F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892373BD2F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift */; };
+		892373BF2F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892373BD2F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift */; };
+		892373C02F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892373BD2F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift */; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 /* End PBXBuildFile section */
 
@@ -2715,6 +2718,7 @@
 		8916088D2713056800CED1C9 /* a-Shell-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "a-Shell-Bridging-Header.h"; sourceTree = "<group>"; };
 		8916088E2713056900CED1C9 /* KBWebViewBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KBWebViewBase.m; sourceTree = "<group>"; };
 		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
+		892373BD2F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SceneDelegate+TerminalView.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2882,6 +2886,7 @@
 				22984EED22C93DBC00069497 /* AppDelegate.swift */,
 				22D23117231940B2005B0C12 /* ExtraCommands.swift */,
 				22984EEF22C93DBC00069497 /* SceneDelegate.swift */,
+				892373BD2F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift */,
 				22984EF122C93DBC00069497 /* ContentView.swift */,
 				2208ACC822D24703003985D6 /* WkWebViewExtension.swift */,
 				22BF62282314223D00FEA585 /* WKWebView+KeyCommands.swift */,
@@ -4191,6 +4196,7 @@
 				6BD9536C2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
 				224A90402ADD0999006DB9CC /* Intents.intentdefinition in Sources */,
 				224A90412ADD0999006DB9CC /* UIColor+hexString.swift in Sources */,
+				892373C02F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift in Sources */,
 				224A90422ADD0999006DB9CC /* UIViewController+showAlert.swift in Sources */,
 				224A90432ADD0999006DB9CC /* ListPythonFiles.swift in Sources */,
 				6BD953682BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */,
@@ -4218,6 +4224,7 @@
 				6BD9536A2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
 				2291286722D9DAC40004A5EA /* UIColor+hexString.swift in Sources */,
 				226AD81E23436B7A00E5D672 /* UIViewController+showAlert.swift in Sources */,
+				892373BF2F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift in Sources */,
 				221DA54C26F7688100BEA92A /* listTeXscripts.swift in Sources */,
 				225177C8231663430084B9C1 /* ListPythonFiles.swift in Sources */,
 				6BD953662BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */,
@@ -4245,6 +4252,7 @@
 				6BD9536B2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
 				2220059B2871EF3300DC7A23 /* Intents.intentdefinition in Sources */,
 				229D247B257931E4004A78AC /* UIColor+hexString.swift in Sources */,
+				892373BE2F30E5DB00CD9AD9 /* SceneDelegate+TerminalView.swift in Sources */,
 				229D247C257931E4004A78AC /* UIViewController+showAlert.swift in Sources */,
 				229D247D257931E4004A78AC /* ListPythonFiles.swift in Sources */,
 				6BD953672BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */,
