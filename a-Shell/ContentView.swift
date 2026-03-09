@@ -89,6 +89,7 @@ struct ContentView: View {
     @State private var keyboardHeight: CGFloat = 0
     @State private var keyboardWidth: CGFloat = 0
     // @State private var viewBehavior: ViewBehavior = .ignoreSafeArea
+    @State private var trafficLightHeight: CGFloat = 0
     
     let webview = Webview()
     
@@ -141,7 +142,10 @@ struct ContentView: View {
             // NSLog("Bounds \(webview.webView.coordinateSpace.bounds)")
             // NSLog("Screen \(UIScreen.main.bounds)")
         }
-        .padding(.top, 0) // Important, to set the size of the view
+        .padding(.top, trafficLightHeight) // Important, to set the size of the view
+        .onGeometryChange(for: CGFloat.self, of: \.containerCornerInsets.topLeading.height) { newValue in
+            self.trafficLightHeight = newValue
+        }
         .if(viewBehavior == .original || viewBehavior == .ignoreSafeArea) {
             // If not displaying hterm and not displaying the keyboard, hide the space for the toolbar
             if (webview.webView.url?.path != Bundle.main.resourcePath! + "/hterm.html") && (keyboardHeight <= 40) {
