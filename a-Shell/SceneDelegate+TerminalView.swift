@@ -672,7 +672,7 @@ extension SceneDelegate {
                 if (interactiveCommandRunning || terminalView!.getTerminal().isCurrentBufferAlternate)
                     && (javascriptRunning && (thread_stdin_copy != nil)) {
                     // Q: how many commands are using interactive input, besides nnn?
-                    wasmWebView?.evaluateJavaScript("inputString += '\(string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\r", with: "\\n"))'; commandIsRunning;") { (result, error) in
+                    webView?.evaluateJavaScript("inputString += '\(string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\r", with: "\\n"))'; commandIsRunning;") { (result, error) in
                         // if let error = error { print(error) }
                         if let result = result as? Bool {
                             if (!result) {
@@ -685,7 +685,7 @@ extension SceneDelegate {
                 if (!javascriptRunning && executeWebAssemblyCommandsRunning) {
                     // There seems to be cases where the webassembly command did not terminate properly.
                     // We catch it here:
-                    wasmWebView?.evaluateJavaScript("commandIsRunning;") { (result, error) in
+                    webView?.evaluateJavaScript("commandIsRunning;") { (result, error) in
                         // if let error = error { print(error) }
                         if let result = result as? Bool {
                             if (!result) {
@@ -1267,7 +1267,7 @@ extension SceneDelegate {
                     NSLog("webAssembly: \(stdinString)")
                     if (javascriptRunning && (thread_stdin_copy != nil)) {
                         // non-interactive WebAssembly commands:
-                        wasmWebView?.evaluateJavaScript("inputString += '\(stdinString.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\r", with: "\\n"))'; commandIsRunning;") { (result, error) in
+                        webView?.evaluateJavaScript("inputString += '\(stdinString.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\r", with: "\\n"))'; commandIsRunning;") { (result, error) in
                             // if let error = error { print(error) }
                             if let result = result as? Bool {
                                 if (!result) {

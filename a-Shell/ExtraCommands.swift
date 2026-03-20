@@ -82,10 +82,6 @@ public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
         fputs("JIT webAssembly is not available \"In Extension\". Try \"wasm3\".\n", thread_stderr)
         finishedPreparingWebAssemblyCommand()
         return -1
-    } else if !webAssemblyStarted {
-        fputs("The WebAssembly interpreter is still loading up. Please wait.\n", thread_stderr)
-        finishedPreparingWebAssemblyCommand()
-        return -1
     } else {
         let args = convertCArguments(argc: argc, argv: argv)
         if let delegate = currentDelegate {
@@ -2081,7 +2077,6 @@ public func repeatCommand(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
 
 public func executeCommandAndWait(command: String) {
     NSLog("executeCommandAndWait: \(command)")
-    resultStack.removeAll()
     let pid = ios_fork()
     _ = ios_system(command.decomposedStringWithCanonicalMapping)
     fflush(thread_stdout)

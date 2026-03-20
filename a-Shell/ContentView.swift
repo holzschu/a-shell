@@ -167,12 +167,12 @@ struct ContentView: View {
                                     Button(action: {
                                         if (webview.webView.canGoBack) {
                                             webview.webView.goBack()
-                                        } else {
-                                            // At the end of web page history, go back to the terminal (as before)
-                                            localShowWebView = false
-                                            showWebView = false
-                                            showKeyboardAtStartup = true
-                                            _ = terminalview.view.becomeFirstResponder()
+                                            let url = webview.webView.url
+                                            if url?.scheme == "file" && url?.path == Bundle.main.bundlePath + "/wasm.html" {
+                                                showKeyboardAtStartup = true
+                                                localShowWebView = false
+                                                terminalview.view.becomeFirstResponder()
+                                            }
                                         }
                                     }, label: {
                                         Image(systemName: "arrow.backward")
@@ -180,6 +180,9 @@ struct ContentView: View {
                                 }
                                 ToolbarItem(placement: .navigationBarLeading) {
                                     Button(action: {
+                                        // reload wams.html at this position in history:
+                                        let wasmFilePath = Bundle.main.path(forResource: "wasm", ofType: "html")
+                                        webview.webView.loadFileURL(URL(fileURLWithPath: wasmFilePath!), allowingReadAccessTo: URL(fileURLWithPath: wasmFilePath!))
                                         localShowWebView = false
                                         showWebView = false
                                         showKeyboardAtStartup = true
@@ -203,7 +206,10 @@ struct ContentView: View {
                                 ToolbarItem(placement: .navigationBarTrailing) {
                                     Button(action: {
                                         if (webview.webView.canGoForward) {
-                                            webview.webView.goForward()
+                                            let nextUrl = webview.webView.backForwardList.forwardItem?.url
+                                            if nextUrl?.scheme != "file" || nextUrl?.path != Bundle.main.bundlePath + "/wasm.html" {
+                                                webview.webView.goForward()
+                                            }
                                         }
                                     }, label: {
                                         Image(systemName: "arrow.forward")
@@ -218,7 +224,9 @@ struct ContentView: View {
             // terminalview
             .onReceive(keyboardChangePublisher) {
                 if (showWebView) {
-                    if webview.webView.url == nil {
+                    let url = webview.webView.url
+                    NSLog("showWebView: \(url)")
+                    if url?.scheme == "file" && url?.path == Bundle.main.bundlePath + "/wasm.html" {
                         localShowWebView = false
                     } else {
                         localShowWebView = true

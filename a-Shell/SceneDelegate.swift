@@ -36,26 +36,6 @@ struct javascriptCommand {
     var originalCommand: String = ""
 }
 
-// Since WebAssembly uses a const SharedArrayBuffer, there can be only one WebAssembly interpreter.
-// So everything WebAssembly-related is global variables, not members of SceneDelegate
-// TODO: we *might* be able to workaround this if we generate a different HTML/JS file for
-// each Scene.
-var wasmWebView: WKWebView? // single webView for executing wasm
-// variables for WebAssembly execution
-var stdinString: String = ""
-var commandsStack: [javascriptCommand?] = []
-var resultStack: [Int32?] = []
-var javascriptRunning = false // We can't execute JS while we are already executing JS.
-var executeWebAssemblyCommandsRunning = false // We can't execute JS while we are already executing JS.
-// copies of thread_std*, used when executing webAssembly
-var thread_stdin_copy: UnsafeMutablePointer<FILE>? = nil
-var thread_stdout_copy: UnsafeMutablePointer<FILE>? = nil
-var thread_stderr_copy: UnsafeMutablePointer<FILE>? = nil
-// for when a webAssembly command returns:
-var currentDispatchGroup: DispatchGroup? = nil
-var errorCode:Int32 = 0
-var errorMessage: String = ""
-
 // Tips:
 @available(iOS 17, *)
 let myToolbarTip = toolbarTip()
@@ -66,7 +46,23 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var screen: UIScreen?
     var windowScene: UIWindowScene?
     var terminalView: TerminalView?
-    var webView: WKWebView? // webView for browsing
+    var webView: WKWebView? // webView for browsing and executing webAssembly
+    // variables for WebAssembly execution
+    // TODO: remove all references to stdinString
+    var stdinString: String = ""
+    var commandsStack: [javascriptCommand?] = []
+    var resultStack: [Int32?] = []
+    var javascriptRunning = false // We can't execute JS while we are already executing JS.
+    var executeWebAssemblyCommandsRunning = false // We can't execute JS while we are already executing JS.
+    // copies of thread_std*, used when executing webAssembly
+    var thread_stdin_copy: UnsafeMutablePointer<FILE>? = nil
+    var thread_stdout_copy: UnsafeMutablePointer<FILE>? = nil
+    var thread_stderr_copy: UnsafeMutablePointer<FILE>? = nil
+    // for when a webAssembly command returns:
+    var currentDispatchGroup: DispatchGroup? = nil
+    var errorCode:Int32 = 0
+    var errorMessage: String = ""
+    
     var contentView: ContentView?
     // history of commands used:
     var history: [String] = []
@@ -777,7 +773,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         systemAction(sender)
     }
-
+    
     @objc private func systemAction_1(_ sender: UIBarButtonItem) {
         if (useSystemToolbar) {
             if let buttonGroup = sender.buttonGroup {
@@ -803,7 +799,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         systemAction(sender)
     }
-
+    
     @objc private func systemAction_4(_ sender: UIBarButtonItem) {
         if (useSystemToolbar) {
             if let buttonGroup = sender.buttonGroup {
@@ -903,7 +899,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         systemAction(sender)
     }
     
-
+    
     
     @objc func hideKeyboard() {
         DispatchQueue.main.async {
@@ -1088,11 +1084,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                     // How to use hierarchical UIImages. Contrast not good enough in Dec. 2022, so disabled.
                     /* var configuration: UIImage.SymbolConfiguration
-                    if #available(iOS 15.0, *) {
-                        configuration = UIImage.SymbolConfiguration(hierarchicalColor: .placeholderText)
-                    } else {
-                        configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
-                    } */
+                     if #available(iOS 15.0, *) {
+                     configuration = UIImage.SymbolConfiguration(hierarchicalColor: .placeholderText)
+                     } else {
+                     configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
+                     } */
                     // If there's no string to insert, string to insert == title
                     if (buttonParts.count == 2) {
                         buttonParts.append(buttonParts[0])
@@ -1549,7 +1545,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         terminalView?.feed(text: self.escape + "[1;1H")
         self.windowPrintedContent = "";
     }
-
+    
     func executeWebAssembly(arguments: [String]?) -> Int32 {
         guard (arguments != nil) else { return -1 }
         guard (arguments!.count >= 2) else { return -1 } // There must be at least one command
@@ -1644,7 +1640,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     func endWebAssemblyCommand(error: Int32, message: String) {
-        if (executeWebAssemblyCommandsRunning) {
+        if executeWebAssemblyCommandsRunning && webAssemblyTimer.isValid {
             errorCode = error
             errorMessage = message
             currentDispatchGroup?.leave()
@@ -1678,7 +1674,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // Check the webassembly interpreter regularly (required in iOS 18 and above, a good idea nevertheless)
                 // See https://discord.com/channels/935519150305050644/935519150305050647/1431680783122174205
                 self.webAssemblyTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { _ in
-                    wasmWebView?.evaluateJavaScript("commandIsRunning;") { (result, error) in
+                    self.webView?.evaluateJavaScript("commandIsRunning;") { (result, error) in
                         if let error = error {
                             print(error)
                             wasmEndedWithError = true
@@ -1691,13 +1687,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                 }
-                thread_stdin_copy = command!.thread_stdin_copy
-                thread_stdout_copy = command!.thread_stdout_copy
-                thread_stderr_copy = command!.thread_stderr_copy
-                stdinString = "" // reinitialize stdin
-                NSLog("Executing \(command!.originalCommand) in executeWebAssComm, position= \(commandsStack.count)")
-                wasmWebView?.evaluateJavaScript(command!.jsCommand)
-                    // javascriptGroup.leave() // This is now triggered by a prompt() call
+                self.thread_stdin_copy = command!.thread_stdin_copy
+                self.thread_stdout_copy = command!.thread_stdout_copy
+                self.thread_stderr_copy = command!.thread_stderr_copy
+                self.stdinString = "" // reinitialize stdin
+                NSLog("Executing \(command!.originalCommand) in executeWebAssComm, position= \(self.commandsStack.count)")
+                self.webView?.evaluateJavaScript(command!.jsCommand)
+                // javascriptGroup.leave() // This is now triggered by a prompt() call
             }
             // force synchronization:
             javascriptGroup.wait()
@@ -1711,7 +1707,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             javascriptRunning = false
-
+            
             if (thread_stdin_copy == nil) {
                 // Strangely, the letters typed after ^D do not appear on screen. We force two carriage return to get the prompt visible:
                 terminalView?.feed(text: "\n\n")
@@ -1727,13 +1723,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Restart the webAssembly engine after an error:
         if (wasmEndedWithError) {
             DispatchQueue.main.async {
-                NSLog("reloaded wasmWebView after an error")
+                NSLog("reloaded webView after an error")
                 // Note: reload is not enough, I need to clear the JS state.
-                wasmWebView?.reloadFromOrigin()
+                self.webView?.reloadFromOrigin()
             }
         }
     }
-        
+    
     func printJscUsage() {
         fputs("Usage: jsc file.js [--in-window] [--silent] [arguments]\n       jsc --reset\nExecutes JavaScript file.js.\n--in-window: runs inside the main window (can change terminal appearance or behaviour; use with caution).\n--silent: do not print the result of the JavaScript execution.\nOther arguments are passed to the command through process.argv.\njsc --reset: forces a restart of the JavaScript engine.\n", thread_stdout)
     }
@@ -1750,8 +1746,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let command = arguments![1]
         if (command == "--reset") {
             DispatchQueue.main.async {
-                NSLog("reloading wasmWebView (on purpose)")
-                wasmWebView?.reloadFromOrigin()
+                NSLog("reloading webView (on purpose)")
+                self.webView?.reloadFromOrigin()
             }
             return
         }
@@ -1760,7 +1756,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return
         }
         var silent = false
-        var jscWebView = wasmWebView
+        var jscWebView = webView
         var process_args = "var process = process ?? {}; process.argv = [";
         for argument in arguments! {
             if (argument == "--in-window") {
@@ -1821,9 +1817,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
             }
-            // process.args only available in wasmWebView
+            // process.args only available in webView
             var javascript = fileContent
-            if (jscWebView == wasmWebView) {
+            if (jscWebView == webView) {
                 javascript = process_args + fileContent
             }
             if #available(iOS 15.0, *), false {
@@ -1884,44 +1880,44 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             // Extract information about *where* the error is, etc.
                             NSLog("Error in JSC: \(error)")
                             let userInfo = (error as NSError).userInfo
-                            fputs("jsc: Error ", thread_stderr_copy)
+                            fputs("jsc: Error ", self.thread_stderr_copy)
                             // WKJavaScriptExceptionSourceURL is wasm.html, of course.
-                            fputs("in file " + command + " ", thread_stderr_copy)
+                            fputs("in file " + command + " ", self.thread_stderr_copy)
                             if let line = userInfo["WKJavaScriptExceptionLineNumber"] as? Int32 {
-                                fputs("at line \(line)", thread_stderr_copy)
+                                fputs("at line \(line)", self.thread_stderr_copy)
                             }
                             if let column = userInfo["WKJavaScriptExceptionColumnNumber"] as? Int32 {
-                                fputs(", column \(column): ", thread_stderr_copy)
+                                fputs(", column \(column): ", self.thread_stderr_copy)
                             } else {
-                                fputs(": ", thread_stderr_copy)
+                                fputs(": ", self.thread_stderr_copy)
                             }
                             if let message = userInfo["WKJavaScriptExceptionMessage"] as? String {
-                                fputs(message + "\n", thread_stderr_copy)
+                                fputs(message + "\n", self.thread_stderr_copy)
                             } else if let message = userInfo["NSLocalizedDescription"] as? String {
-                                fputs(message + "\n", thread_stderr_copy)
+                                fputs(message + "\n", self.thread_stderr_copy)
                             }
-                            fflush(thread_stderr_copy)
+                            fflush(self.thread_stderr_copy)
                         }
                         if (!silent) {
                             if let result = result {
                                 if let string = result as? String {
-                                    fputs(string, thread_stdout_copy)
-                                    fputs("\n", thread_stdout_copy)
+                                    fputs(string, self.thread_stdout_copy)
+                                    fputs("\n", self.thread_stdout_copy)
                                 }  else if let number = result as? Int32 {
-                                    fputs("\(number)", thread_stdout_copy)
-                                    fputs("\n", thread_stdout_copy)
+                                    fputs("\(number)", self.thread_stdout_copy)
+                                    fputs("\n", self.thread_stdout_copy)
                                 } else if let number = result as? Float {
-                                    fputs("\(number)", thread_stdout_copy)
-                                    fputs("\n", thread_stdout_copy)
+                                    fputs("\(number)", self.thread_stdout_copy)
+                                    fputs("\n", self.thread_stdout_copy)
                                 } else {
-                                    fputs("\(result)", thread_stdout_copy)
-                                    fputs("\n", thread_stdout_copy)
+                                    fputs("\(result)", self.thread_stdout_copy)
+                                    fputs("\n", self.thread_stdout_copy)
                                 }
-                                fflush(thread_stdout_copy)
-                                fflush(thread_stderr_copy)
+                                fflush(self.thread_stdout_copy)
+                                fflush(self.thread_stderr_copy)
                             }
                         }
-                        javascriptRunning = false
+                        self.javascriptRunning = false
                     }
                 }
             }
@@ -2313,7 +2309,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return -1
         }
     }
-
+    
     func stopRepeating() {
         DispatchQueue.main.async {
             self.timer.invalidate()
@@ -2410,7 +2406,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             self.timer.fire()
         }
     }
-
+    
     
     func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
         let rootVC = self.window?.rootViewController
@@ -2423,15 +2419,26 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     @objc func activateBrowserAction() {
         showWebView = true
-        // http URLs reload automatically, but file URLs must be reloaded explicitly:
-        if (webView?.url?.scheme == "file") {
-            if let url = webView?.url {
+        guard webView != nil else { return }
+        if let url = webView!.url {
+            NSLog("showWebView: \(url)")
+            if url.scheme == "file" && url.path == Bundle.main.bundlePath + "/wasm.html" {
+                if webView!.canGoBack {
+                    webView?.goBack()
+                } else {
+                    return
+                }
+            }
+        }
+        if let url = webView!.url {
+            if url.scheme == "file" && url.path != Bundle.main.bundlePath + "/wasm.html"{
+                // http URLs reload automatically, but file URLs must be reloaded explicitly:
                 webView?.goBack()
                 let directoryURL = url.deletingLastPathComponent()
                 webView?.loadFileURL(url, allowingReadAccessTo: directoryURL)
             }
+            hideKeyboard() // hides the keyboard *and* causes SwiftUI to refresh
         }
-        hideKeyboard() // hides the keyboard *and* causes SwiftUI to refresh
     }
     
     func openURLInWindow(url: URL) {
@@ -2691,7 +2698,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                 }
-                resultStack.removeAll()
+                self.resultStack.removeAll()
                 self.pid = ios_fork()
                 DispatchQueue.main.async {
                     UIApplication.shared.isIdleTimerDisabled = true
@@ -2740,7 +2747,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 stdout_pipe.fileHandleForWriting.write(self.endOfTransmission.data(using: .utf8)!)
                 fflush(thread_stdout)
                 while (self.stdout_active) {
-                   fflush(thread_stdout)
+                    fflush(thread_stdout)
                 }
             }
             do {
@@ -2827,7 +2834,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                 self.editorToolbar.items?.append(UIBarButtonItem(title: "Hi", style: .plain, target: self, action: nil))
                                 self.editorToolbar.items?.removeLast()
                                 // re-activate long-press gesture for buttons (iOS 26 only?):
-                                self.activateLongPressForButtons(repeats: false)
+                                NSLog("activating the long press button timer, repets=false: \(self.activateLongPressForButtons())")
                             }
                         }
                     }
@@ -2844,7 +2851,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // NSLog("Could not convert Javascript message: \(message.body)")
             return
         }
-        // A handful should be kept for when WasmWebView is at the front (and even then?)
+        // A handful should be kept for when webView is at the front (and even then?)
         // NSLog("Received JS message: \(cmd)")
         // TODO: check if these commands are used by the editors.
         if (cmd.hasPrefix("controlOff")) {
@@ -2913,41 +2920,42 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         } else if (cmd.hasPrefix("reload:")) {
             // Reload the web page:
-            wasmWebView?.reloadFromOrigin()
+            webView?.reloadFromOrigin()
         } else if (cmd.hasPrefix("setHomeDir:")) {
+            NSLog("Kitura: setHomeDir received")
             let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                       in: .userDomainMask,
                                                       appropriateFor: nil,
                                                       create: true)
             let homeurl = documentsUrl.deletingLastPathComponent();
-            wasmWebView?.evaluateJavaScript("window.homedir = '\(homeurl)';")
+            webView?.evaluateJavaScript("window.homedir = '\(homeurl)';")
             
         } /* else if (cmd.hasPrefix("JS Error:")) {
-            // When debugging JS, output warning/error messages to a file.
-            let file = "jsError.txt"
-            if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-                let logFile = dir.appendingPathComponent(file)
-                guard let data = cmd.data(using: String.Encoding.utf8) else { return }
-                if FileManager.default.fileExists(atPath: logFile.path) {
-                    if let fileHandle = try? FileHandle(forWritingTo: logFile) {
-                        fileHandle.seekToEndOfFile()
-                        fileHandle.write(data)
-                        fileHandle.closeFile()
-                    }
-                } else {
-                    do {
-                        try cmd.write(to: logFile, atomically: false, encoding: .utf8)
-                    }
-                    catch {
-                        NSLog("Error writing logfile jsError")
-                    }
-                }
-            }
-        } */ else {
-            // Usually debugging information
-            // NSLog("JavaScript message: \(message.body)")
-            // print("JavaScript message: \(message.body)")
-        }
+           // When debugging JS, output warning/error messages to a file.
+           let file = "jsError.txt"
+           if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+           let logFile = dir.appendingPathComponent(file)
+           guard let data = cmd.data(using: String.Encoding.utf8) else { return }
+           if FileManager.default.fileExists(atPath: logFile.path) {
+           if let fileHandle = try? FileHandle(forWritingTo: logFile) {
+           fileHandle.seekToEndOfFile()
+           fileHandle.write(data)
+           fileHandle.closeFile()
+           }
+           } else {
+           do {
+           try cmd.write(to: logFile, atomically: false, encoding: .utf8)
+           }
+           catch {
+           NSLog("Error writing logfile jsError")
+           }
+           }
+           }
+           } */ else {
+               // Usually debugging information
+               // NSLog("JavaScript message: \(message.body)")
+               // print("JavaScript message: \(message.body)")
+           }
     }
     
     func storeBookmark(fileURL: URL) {
@@ -3259,7 +3267,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
     }
-
+    
     func restartPreviousCommand(scene: UIScene) {
         if let userInfo = scene.session.stateRestorationActivity?.userInfo {
             // restart the current command if one was running before
@@ -3441,31 +3449,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if #available(iOS 16.0, *) {
                 webView?.isFindInteractionEnabled = true
             }
-            // The WkWebView used for webAssembly (setup only once, shared between scenes):
-            if (wasmWebView == nil) {
-                let config = WKWebViewConfiguration()
-                config.preferences.javaScriptCanOpenWindowsAutomatically = true
-                config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
-                config.setValue(true as Bool, forKey: "allowUniversalAccessFromFileURLs")
-                wasmWebView = WKWebView(frame: .zero, configuration: config)
-                if #available(iOS 16.4, *) {
-                    wasmWebView?.isInspectable = true
-                }
-                wasmWebView?.isOpaque = false
-                wasmWebView?.configuration.userContentController = WKUserContentController()
-                wasmWebView?.configuration.userContentController.add(self, name: "aShell")
-                wasmWebView?.navigationDelegate = self
-                wasmWebView?.uiDelegate = self;
-                wasmWebView?.isAccessibilityElement = false
-                // Known issue: two windows starting simultaneously: no WebAssembly working.
-                // It's fine if they start one after the other (but only if there's a single wasmWebView)
-                // Issue already present in version 1.17.5.
-                if (appVersion != "a-Shell-mini") {
-                    wasmWebView?.load(URLRequest(url: URL(string: "https://localhost:8443/wasm.html")!))
-                } else {
-                    NSLog("Loding wasm.html from 8334 (sceneWillEnterForeground)")
-                    wasmWebView?.load(URLRequest(url: URL(string: "https://localhost:8334/wasm.html")!))
-                }
+            
+            if (appVersion != "a-Shell-mini") {
+                webView?.load(URLRequest(url: URL(string: "https://localhost:8443/\(session.persistentIdentifier).html")!))
+            } else {
+                NSLog("Loding UUID.html from 8334 (sceneWillEnterForeground)")
+                webView?.load(URLRequest(url: URL(string: "https://localhost:8334/wasm.html")!))
+                // webView?.load(URLRequest(url: URL(string: "https://localhost:8334/\(session.persistentIdentifier).html")!))
             }
             // End WkWebView settings
             // Restore colors and settings from global preference (if set):
@@ -3737,7 +3727,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     queue: nil
                 ) { (notification) in
                     NSLog("keyboardWillChangeFrame: \(notification.name.rawValue): \(session.persistentIdentifier).")
-                    self.activateLongPressForButtons(repeats: false)
+                    NSLog("activating the long press button timer, repets=false: \(self.activateLongPressForButtons())")
                 }
             }
             if UserDefaults.standard.bool(forKey: "keep_content") {
@@ -3953,17 +3943,33 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
-    func activateLongPressForButtons(repeats: Bool) {
+    func activateLongPressForButtons() -> Bool {
         // Give it slight delay so the button views are actually present
         // Note: for some reasons, this doesn't work on iPad with external keyboards the first time the window is activated
         // (the gestures *are* added to the buttons, but the actions are not called when the user taps/long press)
         // It works fine after the first redisplay of the window.
-        if (sceneIsInForeground) {
-            // repeats: true because sometimes 0.5 s is not enough.
-            activateButtonsTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: repeats) { [self]_ in
-                NSLog("Launching the buttons timer. ")
-                if (!useSystemToolbar) {
-                    for button in editorToolbar.items! {
+        var returnValue = false
+        if (!useSystemToolbar) {
+            for button in editorToolbar.items! {
+                if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right")
+                    || title(button) == "up.down" || title(button) == "left.right" || title(button) == "up.down.left.right" {
+                    if let buttonView = button.value(forKey: "view") as? UIView {
+                        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapAction(_:)))
+                        tapGesture.delegate = self
+                        buttonView.addGestureRecognizer(tapGesture)
+                        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(self.longPressAction(_:)))
+                        longPressGesture.minimumPressDuration = 0.2 // 1 second press
+                        longPressGesture.allowableMovement = 30 // 15 points
+                        longPressGesture.delegate = self
+                        buttonView.addGestureRecognizer(longPressGesture)
+                        returnValue = true
+                    }
+                }
+            }
+        } else {
+            if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
+                for leftButtonGroup in leftButtonGroups {
+                    for button in leftButtonGroup.barButtonItems {
                         if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right")
                             || title(button) == "up.down" || title(button) == "left.right" || title(button) == "up.down.left.right" {
                             if let buttonView = button.value(forKey: "view") as? UIView {
@@ -3975,51 +3981,51 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                 longPressGesture.allowableMovement = 30 // 15 points
                                 longPressGesture.delegate = self
                                 buttonView.addGestureRecognizer(longPressGesture)
-                                self.activateButtonsTimer.invalidate()
+                                returnValue = true
                             }
                         }
                     }
-                } else {
-                    if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
-                        for leftButtonGroup in leftButtonGroups {
-                            for button in leftButtonGroup.barButtonItems {
-                                if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right")
-                                    || title(button) == "up.down" || title(button) == "left.right" || title(button) == "up.down.left.right" {
-                                    if let buttonView = button.value(forKey: "view") as? UIView {
-                                        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapAction(_:)))
-                                        tapGesture.delegate = self
-                                        buttonView.addGestureRecognizer(tapGesture)
-                                        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(self.longPressAction(_:)))
-                                        longPressGesture.minimumPressDuration = 0.2 // 1 second press
-                                        longPressGesture.allowableMovement = 30 // 15 points
-                                        longPressGesture.delegate = self
-                                        buttonView.addGestureRecognizer(longPressGesture)
-                                        self.activateButtonsTimer.invalidate()
-                                    }
-                                }
+                }
+            }
+            if let rightButtonGroups = terminalView?.inputAssistantItem.trailingBarButtonGroups {
+                for rightButtonGroup in rightButtonGroups {
+                    for button in rightButtonGroup.barButtonItems {
+                        if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right")
+                            || title(button) == "up.down" || title(button) == "left.right" || title(button) == "up.down.left.right" {
+                            if let buttonView = button.value(forKey: "view") as? UIView {
+                                // NSLog("activating long press for \(title(button)). view= \(buttonView)")
+                                let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapAction(_:)))
+                                tapGesture.delegate = self
+                                buttonView.addGestureRecognizer(tapGesture)
+                                let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(self.longPressAction(_:)))
+                                longPressGesture.minimumPressDuration = 0.2 // 1 second press
+                                longPressGesture.allowableMovement = 30 // 15 points
+                                longPressGesture.delegate = self
+                                buttonView.addGestureRecognizer(longPressGesture)
+                                returnValue = true
                             }
                         }
                     }
-                    if let rightButtonGroups = terminalView?.inputAssistantItem.trailingBarButtonGroups {
-                        for rightButtonGroup in rightButtonGroups {
-                            for button in rightButtonGroup.barButtonItems {
-                                if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right")
-                                    || title(button) == "up.down" || title(button) == "left.right" || title(button) == "up.down.left.right" {
-                                    if let buttonView = button.value(forKey: "view") as? UIView {
-                                        // NSLog("activating long press for \(title(button)). view= \(buttonView)")
-                                        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapAction(_:)))
-                                        tapGesture.delegate = self
-                                        buttonView.addGestureRecognizer(tapGesture)
-                                        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(self.longPressAction(_:)))
-                                        longPressGesture.minimumPressDuration = 0.2 // 1 second press
-                                        longPressGesture.allowableMovement = 30 // 15 points
-                                        longPressGesture.delegate = self
-                                        buttonView.addGestureRecognizer(longPressGesture)
-                                        self.activateButtonsTimer.invalidate()
-                                    }
-                                }
-                            }
-                        }
+                }
+            }
+        }
+        return returnValue // did we activate the longpress action?
+    }
+    
+    func activateLongPressForButtonsWithTimer() {
+        // Give it slight delay so the button views are actually present
+        // Note: for some reasons, this doesn't work on iPad with external keyboards the first time the window is activated
+        // (the gestures *are* added to the buttons, but the actions are not called when the user taps/long press)
+        // It works fine after the first redisplay of the window.
+        if (sceneIsInForeground) {
+            if (!activateLongPressForButtons()) {
+                NSLog("Setting the buttons timer since it didn't work. ")
+                // if it didn't work, make a timer to restart it regularly until it does
+                // repeats: true because sometimes 0.5 s is not enough.
+                activateButtonsTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [self]_ in
+                    NSLog("Launching the buttons timer. ")
+                    if activateLongPressForButtons() {
+                        self.activateButtonsTimer.invalidate()
                     }
                 }
             }
@@ -4077,7 +4083,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         // Delay the long-press-gesture a little so that the buttons have a view:
-        activateLongPressForButtons(repeats: true)
+        NSLog("activating the long press button timer, repets=true")
+        activateLongPressForButtonsWithTimer()
         // zoom gesture interferes with scroll gesture. Disabled for now.
         // let zoomGesture = UIPinchGestureRecognizer(target: self, action: #selector(zoomGestureHandler))
         // terminalView?.addGestureRecognizer(zoomGesture)
@@ -4981,7 +4988,7 @@ extension SceneDelegate: WKUIDelegate {
                             self.executeCommand(command: arguments[2])
                             self.executeCommand(command: commandBeforeEdit)
                         }
-                        wasmWebView?.evaluateJavaScript("inputString += 'q';") { (result, error) in
+                        webView.evaluateJavaScript("inputString += 'q';") { (result, error) in
                             if let error = error { print(error) }
                         }
                         stdinString += "q" // It takes around 0.2 seconds for the command to end
@@ -5343,7 +5350,7 @@ extension SceneDelegate: WKUIDelegate {
                     decisionHandler(.cancel)
                     startLocalWebServer()
                     // and reload the wasmWebView:
-                    wasmWebView?.reloadFromOrigin()
+                    webView.reloadFromOrigin()
                     return
                 }
             }

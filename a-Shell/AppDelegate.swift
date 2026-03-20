@@ -23,57 +23,78 @@ let localServerQueue = DispatchQueue(label: "localWebServer", qos: .userInteract
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
 var localServerApp = Router()
-var webAssemblyStarted = false
 
 func startLocalWebServer() {
     // Last file loaded: /node_modules/@wasmer/wasmfs/lib/index.cjs.js
     localServerApp.get("/*") { request, response, next in
-        NSLog("Kitura request received: \(request.matchedPath)")
+        NSLog("Kitura request received: \(request.matchedPath) ")
         // Load ~/Library/node_modules first if it exists:
         // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
-        let localFilePath = libraryURL.path + request.matchedPath
-        let rootFilePath = Bundle.main.resourcePath! + request.matchedPath
-        var fileName: String? = nil
-        // NSLog("Kitura file requested: \(request.matchedPath). Trying \(localFilePath)  and \(rootFilePath)")
-        if (request.matchedPath == "/wasm.html") {
-            webAssemblyStarted = true
-        }
-        if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
-            fileName = localFilePath
-        } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
-            fileName = rootFilePath
-        }
-        if let filePath = fileName {
-            if (request.matchedPath.hasSuffix(".html")) {
+        let requestedFileURL = URL(fileURLWithPath: request.matchedPath)
+        let baseName = requestedFileURL.deletingPathExtension().lastPathComponent
+        let pathExtension = requestedFileURL.pathExtension
+        // NSLog("Kitura file requested: \(request.matchedPath). Name \(baseName) extension: \(pathExtension)")
+        if let uuid = UUID(uuidString: baseName) {
+            var responseString = ""
+            if (pathExtension == "html") {
                 response.headers["Content-Type"] = "text/html"
-            } else if (request.matchedPath.hasSuffix(".js")) {
+                responseString = wasmHtmlFile.replacingOccurrences(of: "UUID", with: uuid.uuidString)
+            } else if (pathExtension == "js") {
                 response.headers["Content-Type"] = "application/javascript"
-            } else if (request.matchedPath.hasSuffix(".wasm")) {
-                response.headers["Content-Type"] = "application/wasm"
+                responseString = wasmJSFile.replacingOccurrences(of: "UUID", with: uuid.uuidString.replacingOccurrences(of: "-", with: "_"))
             }
             // These headers get us a "crossOriginIsolated == true;" on OSX Safari
             response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
             response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
             response.headers["Cross-Origin-Resource-Policy"] =  "same-origin"
-            do {
-                // NSLog("Kitura file found: \(filePath)")
-                try response.send(fileName: filePath)
-            }
-            catch {
-                // NSLog("Kitura failure: \(filePath)")
-                response.statusCode = .forbidden
-                response.send("Loading \(filePath) failed")
+            NSLog("Kitura: inside UUID branch, responseString= \(responseString.count)")
+            if (responseString.count > 0) {
+                if let responseData = responseString.data(using: .utf8) {
+                    response.send(data: responseData)
+                }
             }
         } else {
-            // NSLog("Kitura file not found: \(request.matchedPath)")
-            response.statusCode = .notFound
-            response.send("")
+            let localFilePath = libraryURL.path + request.matchedPath
+            let rootFilePath = Bundle.main.resourcePath! + request.matchedPath
+            var fileName: String? = nil
+            // NSLog("Kitura file requested: \(request.matchedPath). Trying \(localFilePath)  and \(rootFilePath)")
+            if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
+                fileName = localFilePath
+            } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
+                fileName = rootFilePath
+            }
+            if let filePath = fileName {
+                if (pathExtension == "html") {
+                    response.headers["Content-Type"] = "text/html"
+                } else if (pathExtension == "js") {
+                    response.headers["Content-Type"] = "application/javascript"
+                } else if (pathExtension == "wasm") {
+                    response.headers["Content-Type"] = "application/wasm"
+                }
+                // These headers get us a "crossOriginIsolated == true;" on OSX Safari
+                response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
+                response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+                response.headers["Cross-Origin-Resource-Policy"] =  "same-origin"
+                do {
+                    // NSLog("Kitura file found: \(filePath)")
+                    try response.send(fileName: filePath)
+                }
+                catch {
+                    // NSLog("Kitura failure: \(filePath)")
+                    response.statusCode = .forbidden
+                    response.send("Loading \(filePath) failed")
+                }
+            } else {
+                // NSLog("Kitura file not found: \(request.matchedPath)")
+                response.statusCode = .notFound
+                response.send("")
+                next()
+            }
         }
-        next()
     }
     let sslConfig =  SSLConfig(withChainFilePath: Bundle.main.resourcePath! + "/localCertificate.pfx",
                                withPassword: "password",
@@ -700,3 +721,259 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
 }
+
+
+let wasmHtmlFile = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>a-Shell, webAssembly execution</title>
+        <meta charset='utf-8'/>
+        <meta name="viewport" content="viewport-fit=cover, width=device-width,  height=device-height, initial-scale=1, user-scalable=no">
+      <script src="require.js"></script>
+      <script src="UUID.js"></script>
+      <style>
+         html {
+             height: 100%;
+         }
+         body {
+             position: fixed;
+             height: 100%;
+             width: 100%;
+             overflow: hidden;
+             top: 0px;
+             margin: 0px;
+             padding: 0px;
+         }
+       </style>
+    </head>
+    <body autocapitalize='none' contenteditable='false' spellcheck='false' autocomplete='off' autocorrect='off'>
+        <div id='terminal' autofocus='true' autocapitalize='none' contenteditable='false' spellcheck='false' autocomplete='off' autocorrect='off' ></div>
+        <script>
+            // functions to deal with executeJavaScript:
+            function print(printString) {
+                window.webkit.messageHandlers.aShell.postMessage('print:' + printString);
+            }
+            function println(printString) {
+                window.webkit.messageHandlers.aShell.postMessage('print:' + printString + '\\n');
+            }
+            function print_error(printString) {
+                window.webkit.messageHandlers.aShell.postMessage('print_error:' + printString);
+            }
+
+            const jsc = {
+                // jsc.readFile(filePath: string): string    Open the file at filePath as a UTF-8 file, return the string contents to the JS.
+                readFile: function readFile(path) {
+                    return prompt("jsc\\nreadFile\\n" + path);
+                },
+                // jsc.readFileBase64(filePath: string): string    Open the file at filePath as a binary file, return the content encoded using Base64
+                readFileBase64: function readFileBase64(path) {
+                    return prompt("jsc\\nreadFileBase64\\n" + path);
+                },
+                // jsc.writeFile(filePath: string, content: string): Result    Writes content to a UTF-8 file at filePath.
+                writeFile: function writeFile(path, content) {
+                    var returnValue = prompt("jsc\\nwriteFile\\n" + path + "\\n" + content);
+                    const entries = returnValue.split("\\n");
+                    if (Number(entries[0]) == -1) {
+                        throw new Error(entries[1]);
+                    }
+                    return (Number(returnValue));
+                },
+                // jsc.writeFileBase64(filePath: string, content: string): Result    Writes binary content encoded using Base64 at filePath.
+                writeFileBase64: function writeFileBase64(path, content) {
+                    var returnValue = prompt("jsc\\nwriteFileBase64\\n" + path + "\\n" + content);
+                    const entries = returnValue.split("\\n");
+                    if (Number(entries[0]) == -1) {
+                        throw new Error(entries[1]);
+                    }
+                    return (Number(returnValue));
+                },
+                // jsc.listFiles(folderPath: string): string[]    Returns a list of the file names in the folder at folderPath.
+                listFiles: function listFiles(directory) {
+                    var returnValue = prompt("jsc\\nlistFiles\\n" + directory);
+                    const entries = returnValue.split("\\n");
+                    if (entries[0].count == 0) {
+                        throw new Error(entries[1]);
+                    }
+                    return entries;
+                },
+                // jsc.isFile(filePath: string): boolean    Returns true if there is a file at filePath, false if there is a folder or nothing there.
+                isFile: function isFile(path) {
+                    var returnValue = Number(prompt("jsc\\nisFile\\n" + path));
+                    return (returnValue == 1);
+                },
+                // jsc.isDirectory(folderPath: string): boolean    Returns true if there is a folder at folderPath, false if there is a file or nothing there.
+                isDirectory: function isDirectory(path) {
+                    var returnValue = Number(prompt("jsc\\nisDirectory\\n" + path));
+                    return (returnValue == 1);
+                },
+                // jsc.makeFolder(folderPath: string): Result    Creates a folder at folderPath.
+                makeFolder: function makeFolder(path) {
+                    var returnValue = prompt("jsc\\nmakeFolder\\n" + path);
+                    const entries = returnValue.split("\\n");
+                    if (Number(entries[0]) == -1) {
+                        throw new Error(entries[1]);
+                    }
+                    return (Number(returnValue));
+                },
+                // jsc.deleteFile(filePath: string): Result    Deletes the file at filePath.
+                deleteFile: function deleteFile(path) {
+                    var returnValue = prompt("jsc\\ndelete\\n" + path);
+                    const entries = returnValue.split("\\n");
+                    if (Number(entries[0]) == -1) {
+                        throw new Error(entries[1]);
+                    }
+                    return (Number(returnValue));
+                },
+                // jsc.move(pathA: string, pathB: string): Result    Moves a file from pathA to pathB.
+                move: function move(pathA, pathB) {
+                    var returnValue = prompt("jsc\\nmove\\n" + pathA + "\\n" + pathB);
+                    const entries = returnValue.split("\\n");
+                    if (Number(entries[0]) == -1) {
+                        throw new Error(entries[1]);
+                    }
+                    return (Number(returnValue));
+                },
+                // jsc.copy(pathA: string, pathB: string): Result    Creates a copy of the file at pathA and puts it at pathB.
+                copy: function copy(pathA, pathB) {
+                    var returnValue = prompt("jsc\\ncopy\\n" + pathA + "\\n" + pathB);
+                    const entries = returnValue.split("\\n");
+                    if (Number(entries[0]) == -1) {
+                        throw new Error(entries[1]);
+                    }
+                    return (Number(returnValue));
+                },
+                // jsc.getFileSize(filePath: string): number    Gets the file size of the file at filePath.
+                getFileSize: function getFileSize(path) {
+                    var returnValue = prompt("jsc\\nfileSize\\n" + path);
+                    const entries = returnValue.split("\\n");
+                    if (Number(entries[0]) < 0) {
+                        throw new Error(entries[1]);
+                    }
+                    return (Number(returnValue));
+                },
+                // jsc.system(command: string): executes the command, and returns the return value (usually 0)
+                system: function system(command) {
+                    return prompt("jsc\\nsystem\\n" + command);
+                }
+            };
+
+            // TODO:
+            //
+            // Probably not the right API:
+            // jsc.readFileBytes(filePath: string): number[]    Open the file at filePath, return the contents as an array of bytes (i.e. an array of integers, each in [0, 127]).
+            // jsc.writeFileBytes(filePath: string, content: number[]): Result    Writes content as bytes into the file at filePath.
+
+            console.log = println
+            console.error = print_error
+            window.appdir = (new URL(".", location.href)).href;
+            window.webkit.messageHandlers.aShell.postMessage('setHomeDir:');
+        </script>
+    </body>
+</html>
+"""
+
+
+let wasmJSFile = """
+// make the "require" function available to all
+Tarp.require({expose: true});
+// Have a global variable:
+if (typeof window !== 'undefined') {
+    window.global = window;
+}
+// and Buffer and process variables
+var Buffer = require('buffer').Buffer;
+var process = require('process');
+// (we don't use "require" anymore, but JavaScript files calling JSC might need it)
+// This file handles communication between the system and
+// the WebWorker in charge of executing WebAssembly.
+// Everything related to WebAssembly is in wasm_worker_wasm.js
+const sab_UUID = new SharedArrayBuffer(8196);
+const sharedArray_UUID = new Int32Array(sab_UUID)
+const wasmWorker = new Worker("wasm_worker_wasm.js");
+var inputString = ''; // stores keyboard input
+var commandIsRunning = false;
+
+function wakeUpWorker(chunkSize) {
+    let resultStorage = -1;
+    let resultNotify = -1;
+    let tries = 0;
+    resultStorage = Atomics.store(sharedArray_UUID, 0, chunkSize + 1);
+    resultNotify = Atomics.notify(sharedArray_UUID, 0);
+
+    while ((resultStorage !=  chunkSize +1) && (resultNotify != 0) && (tries < 10)) {
+        resultStorage = Atomics.store(sharedArray_UUID, 0, chunkSize + 1);
+        resultNotify = Atomics.notify(sharedArray_UUID, 0);
+        tries += 1;
+    }
+}
+
+function executeWebAssembly(bufferString, args, cwd, tty, env) {
+    inputString = '';
+    commandIsRunning = true;
+    // create a webWorker to run webAssembly code:
+    wasmWorker.postMessage([bufferString, args, cwd, tty, env, sab_UUID]);
+    let result = "";
+    
+    // Dealing with communications with the system:
+    wasmWorker.onmessage =(e) => {
+        // system calls go through the "prompt()" command
+        // Easiest way to make it synchronous
+        if (e.data[0] == "prompt") {
+            sharedArray_UUID[0] = 0;
+            Atomics.store(sharedArray_UUID, 0, 0);
+            result = prompt(e.data[1]);
+            // Sending the data to the worker by slices of 2047 bytes:
+            // (need to keep one for length of each chunk)
+            // The CPU side has already truncated data at ^D.
+            let chunkSize = result.length;
+            if (chunkSize > 8192) chunkSize = 8192;
+            let chunk = result.substring(0, chunkSize);
+            for (var i = 0, j = 1; i < chunkSize; i+=4, j++) {
+                sharedArray_UUID[j] = chunk.charCodeAt(i) 
+                    | (chunk.charCodeAt(i+1) << 8)
+                    | (chunk.charCodeAt(i+2) << 16)
+                    | (chunk.charCodeAt(i+3) << 24);
+            }
+            result = result.substring(chunkSize);
+            wakeUpWorker(chunkSize);
+        } else if (e.data[0] == "keyboard") { // keyboard input
+            let length = Number(e.data[1]);
+            result = inputString.substring(0, length); // send what was asked
+            let chunkSize = result.length;
+            if (chunkSize > 2047) chunkSize = 2047;
+            let chunk = result.substring(0, chunkSize);
+            for (var i = 0; i < chunkSize; i++) {
+                sharedArray_UUID[i+1] = chunk.charCodeAt(i);
+                // cut after ^D if present, only send up to ^D
+                if (chunk.charCodeAt(i) == 4)
+                    break;
+            }
+            chunkSize = chunk.length;
+            result = result.substring(chunkSize);
+            inputString = inputString.substring(chunkSize); // remove what's already been sent
+            Atomics.store(sharedArray_UUID, 0, chunkSize + 1);
+            Atomics.notify(sharedArray_UUID, 0);
+        } else if (e.data[0] == "sendNextChunk") {
+            sharedArray_UUID[0] = 0;
+            Atomics.store(sharedArray_UUID, 0, 0);
+            let chunkSize = result.length;
+            if (chunkSize > 8192) chunkSize = 8192;
+            let chunk = result.substring(0, chunkSize);
+            for (var i = 0, j=1; i < chunkSize; i+=4, j++) {
+                sharedArray_UUID[j] = chunk.charCodeAt(i) 
+                    | (chunk.charCodeAt(i+1) << 8)
+                    | (chunk.charCodeAt(i+2) << 16)
+                    | (chunk.charCodeAt(i+3) << 24);
+            }
+            result = result.substring(chunkSize);
+            wakeUpWorker(chunkSize);
+        } else if (e.data[0] == "commandTerminated") {
+            // We need the "command is finished" signal to be in sync with the printing, 
+            // so it uses the same signal transmission system:
+            commandIsRunning = false;
+            prompt("libc\\ncommandTerminated\\n" + e.data[1] + "\\n" + e.data[2]);
+        }
+    }
+}
+"""
