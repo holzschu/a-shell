@@ -1,0 +1,39 @@
+name: Build IPA
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Download frameworks
+        run: bash downloadFrameworks.sh
+      - name: Build archive
+        run: |
+          xcodebuild archive \
+            -scheme "a-Shell" \
+            -destination "generic/platform=iOS" \
+            -archivePath ${{ runner.temp }}/a-shell.xcarchive \
+            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Export IPA
+        run: |
+          mkdir -p ${{ runner.temp }}/export
+          /usr/libexec/PlistBuddy -c "Add method string development" ${{ runner.temp }}/export/ExportOptions.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add signingStyle string manual" ${{ runner.temp }}/export/ExportOptions.plist 2>/dev/null || true
+          xcodebuild -exportArchive \
+            -archivePath ${{ runner.temp }}/a-shell.xcarchive \
+            -exportPath ${{ runner.temp }}/export/ \
+            -exportOptionsPlist ${{ runner.temp }}/export/ExportOptions.plist
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: a-shell.ipa
+          path: ${{ runner.temp }}/export/*.ipa
+          if-no-files-found: error
