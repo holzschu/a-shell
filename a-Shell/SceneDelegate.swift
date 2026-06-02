@@ -2046,10 +2046,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // If you support picking multiple items, make sure you handle them all.
         let newDirectory = urls[0]
         // NSLog("changing directory to: \(newDirectory.path.replacingOccurrences(of: " ", with: "\\ "))")
-        let isReadableWithoutSecurity = FileManager().isReadableFile(atPath: newDirectory.path)
         let isSecuredURL = newDirectory.startAccessingSecurityScopedResource()
         let isReadable = FileManager().isReadableFile(atPath: newDirectory.path)
-        
+
         guard isSecuredURL && isReadable else {
             showAlert("Error", message: "Could not access folder.")
             selectedDirectory = newDirectory.path
@@ -2068,10 +2067,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // - the bookmark for the URL
         // - a nickname for the bookmark (last component of the URL)
         // The user can edit the nickname later.
-        // the bookmark is only stored once, the nickname is stored each time:
-        if (!isReadableWithoutSecurity) {
-            storeBookmark(fileURL: newDirectory)
-        }
+        storeBookmark(fileURL: newDirectory)
         storeName(fileURL: newDirectory, name: newDirectory.lastPathComponent)
         // Call cd_main instead of ios_system("cd dir") to avoid closing streams.
         if (newDirectory.isDirectory) {
