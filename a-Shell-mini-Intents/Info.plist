@@ -20,6 +20,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>a-Shell mini would like to access your calendars to read and write events</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionAttributes</key>
