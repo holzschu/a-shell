@@ -1777,12 +1777,15 @@ public func needTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
                                             create: true)
     let texliveTestFile2023 = libraryURL.appendingPathComponent("texlive/2023/texmf-dist/tex/plain/base/plain.tex")
     let texliveTestFile2024 = libraryURL.appendingPathComponent("texlive/2024/texmf-dist/tex/plain/base/plain.tex")
+    let texliveTestFile2025 = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/tex/plain/base/plain.tex")
     if (FileManager().fileExists(atPath: texliveTestFile2023.path)) {
-        fputs("You currently have texlive-2023 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2025 with 'pkg install texlive-2025'.\n", thread_stderr)
+        fputs("You currently have texlive-2023 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2026 with 'pkg install texlive-2026'.\n", thread_stderr)
     } else if (FileManager().fileExists(atPath: texliveTestFile2024.path)) {
-        fputs("You currently have texlive-2024 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2025 with 'pkg install texlive-2025'.\n", thread_stderr)
+        fputs("You currently have texlive-2024 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2026 with 'pkg install texlive-2026'.\n", thread_stderr)
+    } else if (FileManager().fileExists(atPath: texliveTestFile2025.path)) {
+        fputs("You currently have texlive-2025 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2026 with 'pkg install texlive-2026'.\n", thread_stderr)
     } else {
-        fputs("In order to use \(args[0]), you need to install the texlive distribution with 'pkg install texlive-2025'.\n", thread_stderr)
+        fputs("In order to use \(args[0]), you need to install the texlive distribution with 'pkg install texlive-2026'.\n", thread_stderr)
     }
     return 0
 }
@@ -1798,7 +1801,7 @@ public func needLuaTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
     if (FileManager().fileExists(atPath: texliveTestFile.path)) {
         fputs("In order to use \(args[0]), you need to install the OpenType/TrueType fonts with 'pkg install texlive_fonts-2025'.\n", thread_stderr)
     } else {
-        fputs("In order to to use \(args[0]), you need to install the texlive distribution 'pkg install texlive-2025' and the OpenType/TrueType fonts with 'pkg install texlive_fonts-2025'.\n", thread_stderr)
+        fputs("In order to to use \(args[0]), you need to install the texlive distribution 'pkg install texlive-2026' and the OpenType/TrueType fonts with 'pkg install texlive_fonts-2026'.\n", thread_stderr)
     }
     return 0
 }
