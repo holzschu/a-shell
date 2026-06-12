@@ -121,6 +121,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>a-Shell mini would like to access your camera</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>a-Shell mini would like to access your calendars to read and write events</string>
 	<key>NSContactsUsageDescription</key>
 	<string>a-Shell mini would like to access your contacts</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
