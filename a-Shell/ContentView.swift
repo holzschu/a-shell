@@ -53,7 +53,6 @@ struct Webview : UIViewRepresentable {
 
     init() {
         let config = WKWebViewConfiguration()
-        config.preferences.javaScriptEnabled = true
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
         if #available(iOS 15.4, *) {
             config.preferences.isElementFullscreenEnabled = true
@@ -96,6 +95,7 @@ struct Webview : UIViewRepresentable {
 
 public var toolbarShouldBeShown = true
 public var useSystemToolbar = UIDevice.current.model.hasPrefix("iPad")
+public var isiPad = UIDevice.current.model.hasPrefix("iPad")
 public var showToolbar = true
 public var showKeyboardAtStartup = true
 // .fullScreen is too much for floating KB + toolbar, ignoreSafeArea seems to work,
@@ -168,7 +168,7 @@ struct ContentView: View {
                                         if (webview.webView.canGoBack) {
                                             webview.webView.goBack()
                                             let url = webview.webView.url
-                                            if url?.scheme == "file" && url?.path == Bundle.main.bundlePath + "/wasm.html" {
+                                            if url?.host == "localhost" && url?.path == "/wasm.html" {
                                                 showKeyboardAtStartup = true
                                                 localShowWebView = false
                                                 terminalview.view.becomeFirstResponder()
@@ -181,8 +181,12 @@ struct ContentView: View {
                                 ToolbarItem(placement: .navigationBarLeading) {
                                     Button(action: {
                                         // reload wams.html at this position in history:
-                                        let wasmFilePath = Bundle.main.path(forResource: "wasm", ofType: "html")
-                                        webview.webView.loadFileURL(URL(fileURLWithPath: wasmFilePath!), allowingReadAccessTo: URL(fileURLWithPath: wasmFilePath!))
+                                        if (appVersion != "a-Shell-mini") {
+                                            webview.webView.load(URLRequest(url: URL(string: "https://localhost:8443/wasm.html")!))
+                                        } else {
+                                            NSLog("Loding wasm.html from 8334 (sceneWillEnterForeground)")
+                                            webview.webView.load(URLRequest(url: URL(string: "https://localhost:8334/wasm.html")!))
+                                        }
                                         localShowWebView = false
                                         showWebView = false
                                         showKeyboardAtStartup = true
@@ -207,7 +211,7 @@ struct ContentView: View {
                                     Button(action: {
                                         if (webview.webView.canGoForward) {
                                             let nextUrl = webview.webView.backForwardList.forwardItem?.url
-                                            if nextUrl?.scheme != "file" || nextUrl?.path != Bundle.main.bundlePath + "/wasm.html" {
+                                            if nextUrl?.host != "localhost" || nextUrl?.path != "/wasm.html" {
                                                 webview.webView.goForward()
                                             }
                                         }
@@ -226,7 +230,7 @@ struct ContentView: View {
                 if (showWebView) {
                     let url = webview.webView.url
                     NSLog("showWebView: \(url)")
-                    if url?.scheme == "file" && url?.path == Bundle.main.bundlePath + "/wasm.html" {
+                    if url?.host == "localhost" && url?.path == "/wasm.html" {
                         localShowWebView = false
                     } else {
                         localShowWebView = true
@@ -239,7 +243,7 @@ struct ContentView: View {
                 }
                 frameHeight = geometry.size.height
                 frameWidth = geometry.size.width
-                if (!useSystemToolbar) {
+                if (!isiPad) {
                     // iPhones (only)
                     if (frameWidth > UIScreen.main.bounds.width) {
                         frameWidth = UIScreen.main.bounds.width
@@ -270,37 +274,46 @@ struct ContentView: View {
                             NSLog("toolbar height: \(terminalview.view.inputAccessoryView!.bounds.height)")
                             let toolbarHeight = terminalview.view.inputAccessoryView!.bounds.height
                             frameHeight -= toolbarHeight
+                            if #unavailable(iOS 26) {
+                                // related to line 208 in SceneDelegate: we made the toolbar smaller, but
+                                // we need to reduce the frame size a tiny bit as well
+                                // Value of 3 has been determined through expensive testing
+                                frameHeight -= 3
+                            }
                         }
                     }
                 }  else {
                     // iPads:
                     // geometry.size.height is not reliable (and neither is maxY, since maxY = minY + height)
+                    // geometry.size.height can change without us going through this keyboardChange call.
+                    // frameHeight stores the difference between window size and geometry.size.height
                     let globalFrame = geometry.frame(in: .global)
                     if (keyboardHeight < 40) {
                         // iPad 16, slideOver window. minY == 20, keyboardHeight == 35
-                        frameHeight = UIScreen.main.bounds.height - 73 - globalFrame.minY
+                        frameHeight = 0.0 // geometry.size.height - (UIScreenp.main.bounds.height - 73 - globalFrame.minY)
                     } else if (keyboardHeight < 60) {
                         // iPad 16, full window. minY == 20, keyboardHeight == 55
-                        frameHeight = UIScreen.main.bounds.height - 73
+                        frameHeight = 0.0 // geometry.size.height - (UIScreen.main.bounds.height - 73)
                     } else if (keyboardHeight < 90) {
                         // iOS 26 with external keyboard (I see 66, 69, 71, 76...)
                         // minY == 32
-                        frameHeight = geometry.size.height - 16
+                        frameHeight = 16 // ?
                     } else {
-                        frameHeight = geometry.size.height
+                        frameHeight = 0
                     }
-                    // NSLog("keyboardHeight: \(keyboardHeight) geometry height: \(geometry.size.height) min: \(globalFrame.minY)  computed: \(frameHeight) Screen: \(UIScreen.main.bounds.height) ")
+                    NSLog("keyboardHeight: \(keyboardHeight) geometry height: \(geometry.size.height) min: \(globalFrame.minY)  computed: \(geometry.size.height - frameHeight) Screen: \(UIScreen.main.bounds.height) ")
                 }
-                NSLog("results: frameHeight: \(frameHeight)")
+                NSLog("results: frameHeight: \(geometry.size.height - frameHeight) actual: \(frameHeight)")
             }
             // iPhones
-            .if(!useSystemToolbar) {
+            .if(!isiPad) {
                 $0.frame(height: frameHeight).position(x: frameWidth / 2, y: frameHeight / 2 - dynamicIsland)
             }
-            .if((viewBehavior == .ignoreSafeArea || viewBehavior == .original) && useSystemToolbar && showToolbar) {
-                $0.frame(maxHeight: frameHeight)
+            // if nothing is defined, the size is geometry.size.height
+            .if((viewBehavior == .ignoreSafeArea || viewBehavior == .original) && isiPad) {
+                $0.frame(maxHeight: geometry.size.height - frameHeight)
             }
-            .if(((viewBehavior == .ignoreSafeArea || viewBehavior == .fullScreen)) && useSystemToolbar) {
+            .if(((viewBehavior == .ignoreSafeArea || viewBehavior == .fullScreen)) && isiPad) {
                 $0.ignoresSafeArea(.container, edges: .bottom)
             }
         }

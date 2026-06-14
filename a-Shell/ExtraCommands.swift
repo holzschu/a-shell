@@ -164,34 +164,15 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
             }
             let arg = String(cString: argV)
             if (arg == "-l") {
-                guard var commandsArray = commandsAsArray() as! [String]? else { return 0 }
-                // Also scan PATH for executable files:
-                let executablePath = String(cString: ios_getenv("PATH"))
-                for directory in executablePath.components(separatedBy: ":") {
-                    if (directory.count == 0) { continue } // Empty directory (::), don't read it.
-                    do {
-                        // We don't check for exec status, because files inside $APPDIR have no x bit set.
-                        for file in try FileManager().contentsOfDirectory(atPath: directory) {
-                            let fileUrl = URL(fileURLWithPath: directory).appendingPathComponent(file)
-                            if (fileUrl.isDirectory) { continue } // Don't include directories in command list
-                            commandsArray.append(fileUrl.lastPathComponent)
-                        }
-                    } catch {
-                        // The directory is unreadable, move to next one
-                        continue
-                    }
-                }
-                commandsArray.sort() // make sure it's in alphabetical order
-                commandsArray = Array(NSOrderedSet(array: commandsArray)) as! [String]
                 if (ios_isatty(STDOUT_FILENO) == 1) {
-                    for command in commandsArray {
+                    for command in delegate.commandsArray() {
                         delegate.printText(string: command + ", ")
                     }
                     delegate.printText(string: "\n")
                 } else {
                     // stdout is not a tty, so redirecting the output. Probably through grep.
                     // Be nice and present something that can be grepped
-                    for command in commandsArray {
+                    for command in delegate.commandsArray() {
                         delegate.printText(string: command + "\n")
                     }
                 }
@@ -231,7 +212,7 @@ Python3: Python Software Foundation, https://www.python.org/about/
 ssh, scp, sftp: OpenSSH, https://www.openssh.com
 tar: https://libarchive.org
 tree: http://mama.indstate.edu/users/ice/tree/
-TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2025.
+TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2026.
 Vim: Bram Moolenaar and the Vim community, https://www.vim.org
 Vim-session: Peter Odding, http://peterodding.com/code/vim/session
 webAssembly: wasmer.io and the wasi SDK https://github.com/WebAssembly/wasi-sdk
@@ -290,7 +271,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     -b | --background: set background color
     -f | --foreground: set foreground color
     -c | --cursor: set cursor and highlight color
-    -k | --cursorShape: set cursor shape (beam, block or underline)
+    -k | --cursorShape: set cursor shape (beam, block or underline, steady or blinking)
     -l | --ligatures: normal, contextual, none...
     -t | --toolbar: create a configuration file to change the toolbar
     -g | --global: extend settings to all windows currently open
@@ -510,10 +491,11 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
                 terminalCursorShape = factoryCursorShape
             } else {
                 name = name.lowercased()
-                if (name == "beam") || (name == "underline") || (name == "block") {
+                if (name == "bar") || (name == "beam") || (name == "underline") || (name == "block") ||
+                    (name == "blinking-bar") || (name == "blinking-beam") || (name == "blinking-underline") || (name == "blinking-block") {
                     terminalCursorShape = name
                 } else {
-                    fputs("Did not understand cursor shape: \(name) (possible names are beam, block and underline)\n", thread_stderr)
+                    fputs("Did not understand cursor shape: \(name) (possible names are bar, beam, block, underline, blinking-bar, blinking-beam, blinking-block and blinking-underline)\n", thread_stderr)
                 }
             }
             continue
@@ -546,7 +528,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             continue
         case "-t", "--toolbar":
             var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
-            if (UIDevice.current.model.hasPrefix("iPad")) {
+            if (UIDevice.current.model.hasPrefix("iPad") || UIAccessibility.isVoiceOverRunning) {
                 configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
             }
             do {
@@ -1548,10 +1530,14 @@ public func openurl_main(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
     if (FileManager().fileExists(atPath: urlString)) {
         locationUrl = URL(fileURLWithPath: urlString)
     } else {
-        urlString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? urlString
+        // only add percent-encoding to strings that are not already percent-encoded:
+        if urlString.removingPercentEncoding == urlString {
+            urlString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? urlString
+        }
         locationUrl = URL(string: urlString)
     }
-    guard locationUrl != nil else {
+    // locationUrl is always non-nil with modern iOS, so we also check if the scheme is not nil.
+    guard locationUrl != nil && locationUrl?.scheme != nil else {
         fputs("Invalid URL: \(urlString).\n", thread_stderr)
         if (genericCall) {
             fputs(usage, thread_stderr)
@@ -1774,12 +1760,15 @@ public func needTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
                                             create: true)
     let texliveTestFile2023 = libraryURL.appendingPathComponent("texlive/2023/texmf-dist/tex/plain/base/plain.tex")
     let texliveTestFile2024 = libraryURL.appendingPathComponent("texlive/2024/texmf-dist/tex/plain/base/plain.tex")
+    let texliveTestFile2025 = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/tex/plain/base/plain.tex")
     if (FileManager().fileExists(atPath: texliveTestFile2023.path)) {
-        fputs("You currently have texlive-2023 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2025 with 'pkg install texlive-2025'.\n", thread_stderr)
+        fputs("You currently have texlive-2023 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2026 with 'pkg install texlive-2026'.\n", thread_stderr)
     } else if (FileManager().fileExists(atPath: texliveTestFile2024.path)) {
-        fputs("You currently have texlive-2024 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2025 with 'pkg install texlive-2025'.\n", thread_stderr)
+        fputs("You currently have texlive-2024 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2026 with 'pkg install texlive-2026'.\n", thread_stderr)
+    } else if (FileManager().fileExists(atPath: texliveTestFile2025.path)) {
+        fputs("You currently have texlive-2025 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2026 with 'pkg install texlive-2026'.\n", thread_stderr)
     } else {
-        fputs("In order to use \(args[0]), you need to install the texlive distribution with 'pkg install texlive-2025'.\n", thread_stderr)
+        fputs("In order to use \(args[0]), you need to install the texlive distribution with 'pkg install texlive-2026'.\n", thread_stderr)
     }
     return 0
 }
@@ -1791,11 +1780,11 @@ public func needLuaTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
                                             in: .userDomainMask,
                                             appropriateFor: nil,
                                             create: true)
-    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/tex/plain/base/plain.tex")
+    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2026/texmf-dist/tex/plain/base/plain.tex")
     if (FileManager().fileExists(atPath: texliveTestFile.path)) {
-        fputs("In order to use \(args[0]), you need to install the OpenType/TrueType fonts with 'pkg install texlive_fonts-2025'.\n", thread_stderr)
+        fputs("In order to use \(args[0]), you need to install the OpenType/TrueType fonts with 'pkg install texlive_fonts-2026'.\n", thread_stderr)
     } else {
-        fputs("In order to to use \(args[0]), you need to install the texlive distribution 'pkg install texlive-2025' and the OpenType/TrueType fonts with 'pkg install texlive_fonts-2025'.\n", thread_stderr)
+        fputs("In order to to use \(args[0]), you need to install the texlive distribution 'pkg install texlive-2026' and the OpenType/TrueType fonts with 'pkg install texlive_fonts-2026'.\n", thread_stderr)
     }
     return 0
 }
@@ -1821,11 +1810,11 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
         }
     }
     // texlive files:
-    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/tex/plain/base/plain.tex")
+    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2026/texmf-dist/tex/plain/base/plain.tex")
     if FileManager().fileExists(atPath: texliveTestFile.path) {
         addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // LuaTeX and XeTeX: extra fonts files:
-        let luatexTestFile = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf")
+        let luatexTestFile = libraryURL.appendingPathComponent("texlive/2026/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf")
         if FileManager().fileExists(atPath: luatexTestFile.path) {
             addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
         } else {
@@ -1850,7 +1839,7 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
         }
         for script in TeXscripts {
             let command = localPath.appendingPathComponent(script[0])
-            let location = "../texlive/2025/texmf-dist/" + script[1]
+            let location = "../texlive/2026/texmf-dist/" + script[1]
             // fileExists doesn't work, because it follows symbolic links
             do {
                 let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
@@ -1998,6 +1987,7 @@ public func z_command(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoint
 
 
 // TODO: autocomplete for z
+/*
 @_cdecl("rehash")
 public func rehash(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
@@ -2033,7 +2023,7 @@ public func rehash(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     }
     commandsArray.sort() // make sure it's in alphabetical order
     return 0
-}
+} */
 
 @_cdecl("repeatCommand")
 public func repeatCommand(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {

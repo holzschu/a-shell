@@ -37,7 +37,7 @@ extension SceneDelegate {
                 if suggestion.hasPrefix(command) {
                     var shortenedSugg = suggestion
                     shortenedSugg.removeFirst(command.count)
-                    if (!autocompleteSuggestions.contains(shortenedSugg)) {
+                    if !autocompleteSuggestions.contains(shortenedSugg) && (shortenedSugg.count > 0) {
                         autocompleteSuggestions.append(shortenedSugg)
                     }
                 }
@@ -51,7 +51,7 @@ extension SceneDelegate {
                 if suggestion.hasPrefix(command) {
                     var shortenedSugg = suggestion
                     shortenedSugg.removeFirst(command.count)
-                    if (!autocompleteSuggestions.contains(shortenedSugg)) {
+                    if !autocompleteSuggestions.contains(shortenedSugg) && (shortenedSugg.count > 0) {
                         autocompleteSuggestions.append(shortenedSugg)
                     }
                 }
@@ -111,13 +111,103 @@ extension SceneDelegate {
                     }
                 }
                 // Followed by the actual commands:
-                for suggestion in commandsArray { // alphabetical order
+                for suggestion in commandsArray() { // alphabetical order
                     if suggestion.hasPrefix(mainCommand) {
                         var shortenedSugg = suggestion
                         shortenedSugg.removeFirst(mainCommand.count)
                         if (!autocompleteSuggestions.contains(shortenedSugg)) && (!autocompleteSuggestions.contains(shortenedSugg + " ")) {
-                            // add a space so we're ready with the arguments
-                            autocompleteSuggestions.append(shortenedSugg + " ")
+                            // add a space so we're ready with the arguments, unless it's a directory:
+                            if (!shortenedSugg.hasSuffix("/")) {
+                                autocompleteSuggestions.append(shortenedSugg + " ")
+                            } else {
+                                autocompleteSuggestions.append(shortenedSugg)
+                            }
+                        }
+                    }
+                }
+                // also list the matching files and directories in the current dir:
+                var matchingDirectory = URL(fileURLWithPath: mainCommand)
+                var filePrefix = ""
+                if (!mainCommand.hasSuffix("/")) {
+                    filePrefix = URL(fileURLWithPath: mainCommand).lastPathComponent
+                    matchingDirectory = URL(fileURLWithPath: mainCommand).deletingLastPathComponent()
+                }
+                NSLog("directory: \(matchingDirectory) prefix: \(filePrefix)")
+                var isDirectory: ObjCBool = false
+                if FileManager().fileExists(atPath: matchingDirectory.path, isDirectory: &isDirectory) {
+                    if isDirectory.boolValue {
+                        let buf = stat.init()
+                        let pbuf = UnsafeMutablePointer<stat>.allocate(capacity: 1)
+                        pbuf.initialize(to: buf)
+                        do {
+                            var filePaths = try FileManager().contentsOfDirectory(atPath: matchingDirectory.path)
+                            filePaths.sort() // alphabetical order
+                            // Add all non hidden-files first, then all hidden files:
+                            for file in filePaths {
+                                if (!file.hasPrefix(filePrefix)) {
+                                    continue
+                                }
+                                if (file.hasPrefix(".")) {
+                                    continue
+                                }
+                                if !matchingDirectory.path.hasPrefix(Bundle.main.resourcePath!) {
+                                    // We only check for exec status for files outside $APPDIR, because files inside $APPDIR cannot have the x bit set
+                                    // On iOS, isExecutableFile() and access() always returns false so we use stat()
+                                    let returnValue = stat((matchingDirectory.path + "/" + file).utf8CString, pbuf)
+                                    if pbuf.pointee.st_mode & (S_IXOTH|S_IXUSR|S_IXGRP) == 0 {
+                                        continue
+                                    }
+                                }
+                                var newCommand = URL(fileURLWithPath: file).lastPathComponent
+                                if (URL(fileURLWithPath: matchingDirectory.path + "/" + file).isDirectory) {
+                                    newCommand.append("/")
+                                }
+                                // Do not add a command if it is already present:
+                                var shortenedSugg = newCommand
+                                shortenedSugg.removeFirst(filePrefix.count)
+                                if (!autocompleteSuggestions.contains(shortenedSugg)) && (!autocompleteSuggestions.contains(shortenedSugg + " ")) {
+                                    // add a space so we're ready with the arguments, unless it's a directory:
+                                    if (!shortenedSugg.hasSuffix("/")) {
+                                        autocompleteSuggestions.append(shortenedSugg + " ")
+                                    } else {
+                                        autocompleteSuggestions.append(shortenedSugg)
+                                    }
+                                }
+                            }
+                            for file in filePaths {
+                                if (!file.hasPrefix(filePrefix)) {
+                                    continue
+                                }
+                                if (!file.hasPrefix(".")) {
+                                    continue
+                                }
+                                if !matchingDirectory.path.hasPrefix(Bundle.main.resourcePath!) {
+                                    // We only check for exec status for files outside $APPDIR, because files inside $APPDIR cannot have the x bit set
+                                    // On iOS, isExecutableFile() and access() always returns false so we use stat()
+                                    let returnValue = stat((matchingDirectory.path + "/" + file).utf8CString, pbuf)
+                                    if pbuf.pointee.st_mode & (S_IXOTH|S_IXUSR|S_IXGRP) == 0 {
+                                        continue
+                                    }
+                                }
+                                var newCommand = URL(fileURLWithPath: file).lastPathComponent
+                                if (URL(fileURLWithPath: matchingDirectory.path + "/" + file).isDirectory) {
+                                    newCommand.append("/")
+                                }
+                                // Do not add a command if it is already present:
+                                var shortenedSugg = newCommand
+                                shortenedSugg.removeFirst(filePrefix.count)
+                                if (!autocompleteSuggestions.contains(shortenedSugg)) && (!autocompleteSuggestions.contains(shortenedSugg + " ")) {
+                                    // add a space so we're ready with the arguments, unless it's a directory:
+                                    if (!shortenedSugg.hasSuffix("/")) {
+                                        autocompleteSuggestions.append(shortenedSugg + " ")
+                                    } else {
+                                        autocompleteSuggestions.append(shortenedSugg)
+                                    }
+                                }
+                            }
+                        } catch {
+                            // The directory is unreadable, move to next one
+                            NSLog("Can not list content of directory: \(mainCommand)")
                         }
                     }
                 }
@@ -570,7 +660,7 @@ extension SceneDelegate {
             terminalView!.setPromptEnd()
         }
         if var string = String (bytes: data, encoding: .utf8) {
-            print("string: \(string)")
+            // print("string: \(string)")
             if (controlOn) {
                 // a) switch control off
                 controlOn = false
@@ -629,7 +719,6 @@ extension SceneDelegate {
                     fallthrough
                 case escape + "[D": // left arrow
                     string = escape + "[1;3D";  // Alt-left arrow
-                    break;
                 default:
                     // create a control-something character
                     if let controlChar = string.first {
@@ -664,6 +753,7 @@ extension SceneDelegate {
                                 ios_setContext(savedSession)
                             }
                         }
+                        NSLog("after pager input: \(terminalView!.getTerminal().getCursorLocation())")
                     }
                     return
                 }
@@ -717,6 +807,7 @@ extension SceneDelegate {
                     // (store a variable that says the pipe has been closed)
                     // NSLog("Writing (interactive) \(command) to stdin")
                     stdin_file_input?.write(data)
+                    lastKeyboardInput += string
                     return
                 }
             }
@@ -789,13 +880,33 @@ extension SceneDelegate {
                         printPrompt()
                         return
                     }
-                    do {
-                        try stdin_file_input?.close()
+                    if (javascriptRunning) {
+                        // send the current input to WebAssembly, then terminate the command:
+                        // Anything after the cursor is ignored
+                        webView?.evaluateJavaScript("inputString += '\(commandBeforeCursor + string)'; commandIsRunning;") { (result, error) in
+                            // if let error = error { print(error) }
+                            if let result = result as? Bool {
+                                if (!result) {
+                                    self.endWebAssemblyCommand(error: 0, message: "")
+                                }
+                            }
+                        }
+                        commandBeforeCursor = ""
+                        commandAfterCursor = ""
+                        return
+                    } else {
+                        do {
+                            try stdin_file_input?.close()
+                        }
+                        catch {
+                            // NSLog("Could not close stdin input.")
+                        }
+                        stdin_file_input = nil
+                        commandBeforeCursor = ""
+                        commandAfterCursor = ""
+                        printPrompt()
+                        return
                     }
-                    catch {
-                        // NSLog("Could not close stdin input.")
-                    }
-                    stdin_file_input = nil
                 } else {
                     fallthrough // case where control D acts as delete
                 }
@@ -846,7 +957,7 @@ extension SceneDelegate {
                     if (commandBeforeCursor.count > 0) {
                         terminalView?.moveUpIfNeeded()
                         if let lastChar = commandBeforeCursor.last {
-                            NSLog("deleting: \"\(lastChar)\"")
+                            // NSLog("deleting: \"\(lastChar)\"")
                             commandBeforeCursor.removeLast()
                             let characterWidth = NSAttributedString(string: String(lastChar), attributes: [.font: terminalView?.font]).size().width
                             if (characterWidth > 1.4 * basicCharWidth) {
@@ -879,6 +990,8 @@ extension SceneDelegate {
                         commandBeforeCursor += autocompleteSuggestions[autocompletePosition]
                         terminalView?.feed(text: autocompleteSuggestions[autocompletePosition])
                         if (autocompleteSuggestions[autocompletePosition].hasSuffix("/")) {
+                            autocompleteRunning = false
+                            #if DEACTIVATED
                             // single suggestion, is a directory: fill again but don't force
                             fillAutocompleteSuggestions(command: commandBeforeCursor)
                             // NSLog("suggestions: \(autocompleteSuggestions)")
@@ -891,10 +1004,17 @@ extension SceneDelegate {
                             } else {
                                 autocompleteRunning = false
                             }
+                            #endif
                         } else {
                             autocompleteSuggestions = []
                             autocompletePosition = 0
                             autocompleteRunning = false
+                            var currentCommandVoiceOver = commandBeforeCursor
+                            if (commandAfterCursor.count > 0) {
+                                currentCommandVoiceOver += " insertion point "
+                                currentCommandVoiceOver += commandAfterCursor
+                            }
+                            UIAccessibility.post(notification: .announcement, argument: currentCommandVoiceOver)
                         }
                     }
                 } else {
@@ -924,6 +1044,8 @@ extension SceneDelegate {
                         terminalView?.restoreCursorPosition()
                         autocompleteRunning = true
                     } else if (commonPrefix.hasSuffix("/")) {
+                        autocompleteRunning = false
+                        #if DEACTIVATED
                         // Single suggestion, is a directory: fill again but don't force acceptance.
                         fillAutocompleteSuggestions(command: commandBeforeCursor)
                         if (autocompleteSuggestions.count > 0) {
@@ -935,6 +1057,15 @@ extension SceneDelegate {
                         } else {
                             autocompleteRunning = false
                         }
+                        #endif
+                    }
+                    if (!autocompleteRunning) {
+                        var currentCommandVoiceOver = commandBeforeCursor
+                        if (commandAfterCursor.count > 0) {
+                            currentCommandVoiceOver += " insertion point "
+                            currentCommandVoiceOver += commandAfterCursor
+                        }
+                        UIAccessibility.post(notification: .announcement, argument: currentCommandVoiceOver)
                     }
                 }
             case escape + "OA": // up arrow (application mode)
@@ -959,6 +1090,7 @@ extension SceneDelegate {
                             terminalView?.feed(text: history[historyPosition])
                             commandBeforeCursor = history[historyPosition]
                             commandAfterCursor = ""
+                            delayedVoiceOver(message: commandBeforeCursor)
                         }
                     } else {
                         NSLog("Up arrow, position= \(commandHistoryPosition) count= \(commandHistory.count)")
@@ -970,6 +1102,7 @@ extension SceneDelegate {
                             terminalView?.feed(text: commandHistory[commandHistoryPosition])
                             commandBeforeCursor = commandHistory[commandHistoryPosition]
                             commandAfterCursor = ""
+                            delayedVoiceOver(message: commandBeforeCursor)
                         }
                     }
                 }
@@ -996,6 +1129,7 @@ extension SceneDelegate {
                                 terminalView?.feed(text: history[historyPosition])
                                 commandBeforeCursor = history[historyPosition]
                                 commandAfterCursor = ""
+                                delayedVoiceOver(message: commandBeforeCursor)
                             }
                         } else {
                             historyPosition = history.count
@@ -1005,6 +1139,7 @@ extension SceneDelegate {
                             terminalView?.moveToBeginningOfLine()
                             commandBeforeCursor = ""
                             commandAfterCursor = ""
+                            delayedVoiceOver(message: "empty line")
                         }
                     } else {
                         NSLog("Down arrow, position= \(commandHistoryPosition) count= \(commandHistory.count)")
@@ -1017,6 +1152,7 @@ extension SceneDelegate {
                                 terminalView?.feed(text: commandHistory[commandHistoryPosition])
                                 commandBeforeCursor = commandHistory[commandHistoryPosition]
                                 commandAfterCursor = ""
+                                delayedVoiceOver(message: commandBeforeCursor)
                             }
                         } else {
                             commandHistoryPosition = commandHistory.count
@@ -1026,6 +1162,7 @@ extension SceneDelegate {
                             terminalView?.moveToBeginningOfLine()
                             commandBeforeCursor = ""
                             commandAfterCursor = ""
+                            delayedVoiceOver(message: " empty line ")
                         }
                     }
                 }
@@ -1050,7 +1187,12 @@ extension SceneDelegate {
                                 terminalView?.feed(text: escape + "[D")
                             }
                             terminalView?.feed(text: escape + "[D")
+                            delayedVoiceOver(message: String(lastChar))
+                        }  else {
+                            delayedVoiceOver(message: " beginning of line ")
                         }
+                    } else {
+                        delayedVoiceOver(message: " beginning of line")
                     }
                 }
             case escape + "OC": // right arrow (application mode)
@@ -1067,6 +1209,7 @@ extension SceneDelegate {
                     commandBeforeCursor += string
                     terminalView?.feed(text: string) // prints the string
                     updateAutocomplete(text: string)
+                    #if DEACTIVATED
                     if (commandBeforeCursor.hasSuffix("/") && (!autocompleteRunning || (autocompleteSuggestions[autocompletePosition].count == 0))) {
                         // We completed a directory. Let's list the content:
                         fillAutocompleteSuggestions(command: commandBeforeCursor)
@@ -1080,6 +1223,7 @@ extension SceneDelegate {
                             autocompleteRunning = false
                         }
                     }
+                    #endif
                 } else {
                     if (commandAfterCursor.count > 0) {
                         if let firstChar = commandAfterCursor.first {
@@ -1091,8 +1235,14 @@ extension SceneDelegate {
                                 terminalView?.feed(text: escape + "[C")
                             }
                             terminalView?.feed(text: escape + "[C")
+                            if (commandAfterCursor.count > 0) {
+                                delayedVoiceOver(message: String(commandAfterCursor.first!))
+                            } else {
+                                delayedVoiceOver(message: " end of line ")
+                            }
                         }
                     } else {
+                        delayedVoiceOver(message: " end of line ")
                         NSLog("Cannot move right")
                     }
                 }
@@ -1119,6 +1269,11 @@ extension SceneDelegate {
                         }
                     }
                 }
+                if (commandAfterCursor.count > 0) {
+                    delayedVoiceOver(message: String(commandAfterCursor.first!))
+                } else {
+                    delayedVoiceOver(message: " beginning of line ")
+                }
             case escape + "[1;3C":  // Alt-right arrow, move to next word
                 fallthrough
             case escape + "[1;5C":  // Control-right arrow (external keyboard)
@@ -1142,6 +1297,11 @@ extension SceneDelegate {
                         }
                     }
                 }
+                if (commandAfterCursor.count > 0) {
+                    delayedVoiceOver(message: String(commandAfterCursor.first!))
+                } else {
+                    delayedVoiceOver(message: " end of line ")
+                }
             case "\u{0018}": // control X, stop autocomplete
                 fallthrough
             case "\u{001A}": // control Z, stop autocomplete
@@ -1159,6 +1319,7 @@ extension SceneDelegate {
                 terminalView?.moveToBeginningOfLine()
                 terminalView?.getTerminal().updateFullScreen()
                 terminalView?.updateDisplay()
+                UIAccessibility.post(notification: .announcement, argument: "insertion point " + commandAfterCursor)
             case "\u{0005}": // control E, move to end of line
                 if (autocompleteRunning) {
                     stopAutocomplete()
@@ -1168,6 +1329,7 @@ extension SceneDelegate {
                 terminalView?.moveToEndOfLine()
                 terminalView?.getTerminal().updateFullScreen()
                 terminalView?.updateDisplay()
+                UIAccessibility.post(notification: .announcement, argument: commandBeforeCursor + " insertion point")
             case "\u{000B}": // control K: kill until end of line
                 if (autocompleteRunning) {
                     stopAutocomplete()
@@ -1176,7 +1338,7 @@ extension SceneDelegate {
                 commandAfterCursor = ""
                 terminalView?.getTerminal().updateFullScreen()
                 terminalView?.updateDisplay()
-                
+                UIAccessibility.post(notification: .announcement, argument: commandBeforeCursor + " insertion point")
             case "\u{0015}": // control U: kill from cursor to beginning of the line
                 if (autocompleteRunning) {
                     stopAutocomplete()
@@ -1191,6 +1353,7 @@ extension SceneDelegate {
                     terminalView?.feed(text: " ") // force redraw
                 }
                 terminalView?.restoreCursorPosition()
+                UIAccessibility.post(notification: .announcement, argument: "insertion point " + commandAfterCursor)
             case escape + "\u{0008}": // alt delete on external keyboard
                 fallthrough
             case escape + "\u{007F}": // alt delete on keyboard: delete (backward) until the beginning of current word
@@ -1214,12 +1377,33 @@ extension SceneDelegate {
                         terminalView?.feed(text: escape + "[P")
                     }
                 }
+                var currentCommandVoiceOver = commandBeforeCursor
+                if (commandAfterCursor.count > 0) {
+                    currentCommandVoiceOver += " insertion point "
+                    currentCommandVoiceOver += commandAfterCursor
+                }
+                UIAccessibility.post(notification: .announcement, argument: currentCommandVoiceOver)
             case "\u{0017}": // control W: delete (backward) until the next space
                 fallthrough
             case escape + "\u{0017}": // control W: delete (backward) until the next space
                 if (autocompleteRunning) {
                     stopAutocomplete()
                 }
+                // remove all white spaces at the end:
+                while (commandBeforeCursor.count > 0) {
+                    if let lastChar = commandBeforeCursor.last {
+                        if !lastChar.isWhitespace {
+                            break
+                        }
+                        commandBeforeCursor.removeLast()
+                        terminalView?.moveUpIfNeeded()
+                        terminalView?.feed(text: escape + "[D")
+                        terminalView?.feed(text: escape + "[P")
+                    } else {
+                        break
+                    }
+                }
+                // then remove all non-white space characters until a white space:
                 while (commandBeforeCursor.count > 0) {
                     if let lastChar = commandBeforeCursor.last {
                         if lastChar.isWhitespace {
@@ -1234,10 +1418,21 @@ extension SceneDelegate {
                         }
                         terminalView?.feed(text: escape + "[D")
                         terminalView?.feed(text: escape + "[P")
+                    } else {
+                        break
                     }
                 }
+                var currentCommandVoiceOver = commandBeforeCursor
+                if (commandAfterCursor.count > 0) {
+                    currentCommandVoiceOver += " insertion point "
+                    currentCommandVoiceOver += commandAfterCursor
+                }
+                UIAccessibility.post(notification: .announcement, argument: currentCommandVoiceOver)
+                terminalView?.currentCommandVoiceOver = currentCommandVoiceOver
             case "\u{000C}":  // control L: clear screen
                 clearScreen()
+                commandBeforeCursor = ""
+                commandAfterCursor = ""
                 printPrompt()
             case carriageReturn:
                 if (autocompleteRunning) {
@@ -1253,6 +1448,7 @@ extension SceneDelegate {
                     let commandLine = (commandBeforeCursor + commandAfterCursor).trimmingCharacters(in: .whitespaces)
                     commandBeforeCursor = ""
                     commandAfterCursor = ""
+                    terminalView?.saveCursorPosition() // for VoiceOver
                     executeCommand(command: commandLine)
                     windowPrintedContent += lastUsedPrompt + commandLine + "\n\r"
                     terminalView?.feed(text: "\n\r")
@@ -1260,6 +1456,7 @@ extension SceneDelegate {
                     let commandLine = (commandBeforeCursor + commandAfterCursor).trimmingCharacters(in: .whitespaces)
                     commandBeforeCursor = ""
                     commandAfterCursor = ""
+                    terminalView?.saveCursorPosition() // for VoiceOver
                     terminalView?.feed(text: "\n\r")
                     windowPrintedContent += commandLine + "\n\r"
                     // webAssembly commands:
@@ -1310,6 +1507,7 @@ extension SceneDelegate {
                 terminalView?.feed(text: string) // prints the string
                 if autocompleteRunning {
                     updateAutocomplete(text: string)
+                    #if DEACTIVATED
                     if (commandBeforeCursor.hasSuffix("/") && (!autocompleteRunning || (autocompleteSuggestions[autocompletePosition].count == 0))) {
                         // We just completed a directory. Let's list the content:
                         fillAutocompleteSuggestions(command: commandBeforeCursor)
@@ -1323,6 +1521,7 @@ extension SceneDelegate {
                             autocompleteRunning = false
                         }
                     }
+                    #endif
                 } else {
                     if (commandAfterCursor.count > 0) {
                         // redraw the end of the line
@@ -1332,6 +1531,26 @@ extension SceneDelegate {
                         terminalView?.restoreCursorPosition()
                     }
                 }
+            }
+            // Send the current command to VoiceOver, only if running autocomplete:
+            if UIAccessibility.isVoiceOverRunning {
+                var currentCommandVoiceOver = ""
+                // Only speak the command when autocomplete is running:
+                if (autocompleteRunning) && (autocompleteSuggestions[autocompletePosition].count > 0) {
+                    if (commandBeforeCursor.count > 0) {
+                        currentCommandVoiceOver = commandBeforeCursor
+                    }
+                    currentCommandVoiceOver += " autocomplete suggestion " + autocompleteSuggestions[autocompletePosition]
+                    if (commandAfterCursor.count > 0) {
+                        currentCommandVoiceOver += " end suggestion "
+                        currentCommandVoiceOver += commandAfterCursor
+                    }
+                    NSLog("voiceOver: \(currentCommandVoiceOver)")
+                    delayedVoiceOver(message: currentCommandVoiceOver)
+                } else if (commandBeforeCursor.count > 0) || (commandAfterCursor.count > 0) {
+                    currentCommandVoiceOver = commandBeforeCursor + " insertion point " + commandAfterCursor
+                }
+                terminalView?.currentCommandVoiceOver = currentCommandVoiceOver
             }
         } else {
             NSLog("Failure of conversion: \(data)")
@@ -1468,4 +1687,21 @@ extension SceneDelegate {
         }
     }
 
+    // VoiceOver and arrow buttons: speak the new command line with a slight delay.
+    // Also applies to autocomplete suggestions since they can be cause by arrows.
+    // We use the same timer as outputToTerminalView
+    func delayedVoiceOver(message: String) {
+        if (UIAccessibility.isVoiceOverRunning && !terminalView!.getTerminal().isCurrentBufferAlternate) {
+            if (self.readContentTimer.isValid) {
+                // restart the timer each time we add new content
+                self.readContentTimer.invalidate()
+            }
+            self.readContentTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: {_ in
+                self.lastKeyboardInput = ""
+                if (message.count > 0) {
+                    UIAccessibility.post(notification: .announcement, argument: message)
+                }
+            })
+        }
+    }
 }

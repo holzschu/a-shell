@@ -23,11 +23,13 @@ let localServerQueue = DispatchQueue(label: "localWebServer", qos: .userInteract
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
 var localServerApp = Router()
+var zshmarksActivated = false
+var bashmarksActivated = false
 
 func startLocalWebServer() {
     // Last file loaded: /node_modules/@wasmer/wasmfs/lib/index.cjs.js
     localServerApp.get("/*") { request, response, next in
-        NSLog("Kitura request received: \(request.matchedPath) ")
+        NSLog("Kitura request received: \(request.matchedPath)")
         // Load ~/Library/node_modules first if it exists:
         // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
@@ -35,65 +37,42 @@ func startLocalWebServer() {
                                                 appropriateFor: nil,
                                                 create: true)
         let requestedFileURL = URL(fileURLWithPath: request.matchedPath)
-        let baseName = requestedFileURL.deletingPathExtension().lastPathComponent
         let pathExtension = requestedFileURL.pathExtension
-        // NSLog("Kitura file requested: \(request.matchedPath). Name \(baseName) extension: \(pathExtension)")
-        if let uuid = UUID(uuidString: baseName) {
-            var responseString = ""
+        let localFilePath = libraryURL.path + request.matchedPath
+        let rootFilePath = Bundle.main.resourcePath! + request.matchedPath
+        var fileName: String? = nil
+        // NSLog("Kitura file requested: \(request.matchedPath). Trying \(localFilePath)  and \(rootFilePath)")
+        if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
+            fileName = localFilePath
+        } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
+            fileName = rootFilePath
+        }
+        if let filePath = fileName {
             if (pathExtension == "html") {
                 response.headers["Content-Type"] = "text/html"
-                responseString = wasmHtmlFile.replacingOccurrences(of: "UUID", with: uuid.uuidString)
             } else if (pathExtension == "js") {
                 response.headers["Content-Type"] = "application/javascript"
-                responseString = wasmJSFile.replacingOccurrences(of: "UUID", with: uuid.uuidString.replacingOccurrences(of: "-", with: "_"))
+            } else if (pathExtension == "wasm") {
+                response.headers["Content-Type"] = "application/wasm"
             }
             // These headers get us a "crossOriginIsolated == true;" on OSX Safari
             response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
             response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
             response.headers["Cross-Origin-Resource-Policy"] =  "same-origin"
-            NSLog("Kitura: inside UUID branch, responseString= \(responseString.count)")
-            if (responseString.count > 0) {
-                if let responseData = responseString.data(using: .utf8) {
-                    response.send(data: responseData)
-                }
+            do {
+                // NSLog("Kitura file found: \(filePath)")
+                try response.send(fileName: filePath)
+            }
+            catch {
+                // NSLog("Kitura failure: \(filePath)")
+                response.statusCode = .forbidden
+                response.send("Loading \(filePath) failed")
             }
         } else {
-            let localFilePath = libraryURL.path + request.matchedPath
-            let rootFilePath = Bundle.main.resourcePath! + request.matchedPath
-            var fileName: String? = nil
-            // NSLog("Kitura file requested: \(request.matchedPath). Trying \(localFilePath)  and \(rootFilePath)")
-            if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
-                fileName = localFilePath
-            } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
-                fileName = rootFilePath
-            }
-            if let filePath = fileName {
-                if (pathExtension == "html") {
-                    response.headers["Content-Type"] = "text/html"
-                } else if (pathExtension == "js") {
-                    response.headers["Content-Type"] = "application/javascript"
-                } else if (pathExtension == "wasm") {
-                    response.headers["Content-Type"] = "application/wasm"
-                }
-                // These headers get us a "crossOriginIsolated == true;" on OSX Safari
-                response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
-                response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-                response.headers["Cross-Origin-Resource-Policy"] =  "same-origin"
-                do {
-                    // NSLog("Kitura file found: \(filePath)")
-                    try response.send(fileName: filePath)
-                }
-                catch {
-                    // NSLog("Kitura failure: \(filePath)")
-                    response.statusCode = .forbidden
-                    response.send("Loading \(filePath) failed")
-                }
-            } else {
-                // NSLog("Kitura file not found: \(request.matchedPath)")
-                response.statusCode = .notFound
-                response.send("")
-                next()
-            }
+            // NSLog("Kitura file not found: \(request.matchedPath)")
+            response.statusCode = .notFound
+            response.send("")
+            next()
         }
     }
     let sslConfig =  SSLConfig(withChainFilePath: Bundle.main.resourcePath! + "/localCertificate.pfx",
@@ -105,6 +84,7 @@ func startLocalWebServer() {
         Kitura.addHTTPServer(onPort: 8334, with: localServerApp, withSSL: sslConfig)
     }
     localServerQueue.async{
+        NSLog("starting server timestamp")
         Kitura.run()
     }
 }
@@ -205,6 +185,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
         UserDefaults.standard.register(defaults: ["show_toolbar" : true])
+        UserDefaults.standard.register(defaults: ["legacy_toolbar" : false])
         // What color should the keyboard and system toolbar be? (screen: same mode as the screen itself)
         UserDefaults.standard.register(defaults: ["toolbar_color" : "screen"])
         UserDefaults.standard.register(defaults: ["screen_space" : "default"])
@@ -213,7 +194,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         toolbarShouldBeShown = UserDefaults.standard.bool(forKey: "show_toolbar")
         showToolbar = toolbarShouldBeShown
         // system toolbar only applies on iPads:
-        useSystemToolbar = UIDevice.current.model.hasPrefix("iPad")
+        useSystemToolbar = UIDevice.current.model.hasPrefix("iPad") && UserDefaults.standard.bool(forKey: "legacy_toolbar")
         let screenSpacePref = UserDefaults.standard.string(forKey: "screen_space")
         if (screenSpacePref == "safe") {
             viewBehavior = .original
@@ -240,7 +221,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("play", "play_main", true)
         replaceCommand("view", "preview_main", true)
         replaceCommand("z", "z_command", true) // change directory based on frequencys
-        replaceCommand("rehash", "rehash", true) // update list of commands for auto-complete
+        // replaceCommand("rehash", "rehash", true) // update list of commands for auto-complete
         replaceCommand("repeatCommand", "repeatCommand", true)
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
@@ -286,6 +267,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
         setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
         setenv("PAGER", "less", 1) // send control sequences directly to terminal
+        setenv("TERM", "xterm-256color", 1); // now that we use SwiftTerm
         setenv("MAGICK_HOME", Bundle.main.resourcePath! +  "/ImageMagick-7", 1)
         setenv("MAGICK_CONFIGURE_PATH", Bundle.main.resourcePath! +  "/ImageMagick-7/config", 1)
         if (UIDevice.current.model.hasPrefix("iPad")) {
@@ -392,6 +374,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let pysalData = libraryURL.appendingPathComponent("pysal_data")
             setenv("PYSALDATA", pysalData.path, 1)
         } // end !a-Shell mini
+        // All calls to setenv() before calls to executeCommandAndWait otherwise we can be redefining the environment
+        // while copying it
+        // Main Python install: $APPDIR/Library/lib/python3.x
+        setenv("PYTHONHOME", Bundle.main.resourcePath! + "/Library", 1)
+        // Compiled files: ~/Library/__pycache__
+        setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path, 1)
+        setenv("PYTHONUSERBASE", libraryURL.path, 1)
+        setenv("PYTHON_HISTORY", documentsUrl.appendingPathComponent(".python_history").path, 1)
+        setenv("PYZMQ_BACKEND", "cffi", 1)
+        // Frameworks are in $APPDIR/Frameworks:
+        setenv("DYLD_FRAMEWORK_PATH", Bundle.main.resourcePath! + "/Frameworks", 1)
+        setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
         // Switch installed Python packages from 3.9 to 3.13:
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
             cleanupQueue.async{
@@ -436,16 +430,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as! String
         UserDefaults.standard.set(currentBuild, forKey: "buildNumber")
         self.versionUpToDate = true
-        // Main Python install: $APPDIR/Library/lib/python3.x
-        setenv("PYTHONHOME", Bundle.main.resourcePath! + "/Library", 1)
-        // Compiled files: ~/Library/__pycache__
-        setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path, 1)
-        setenv("PYTHONUSERBASE", libraryURL.path, 1)
-        setenv("PYTHON_HISTORY", documentsUrl.appendingPathComponent(".python_history").path, 1)
-        setenv("PYZMQ_BACKEND", "cffi", 1)
-        // Frameworks are in $APPDIR/Frameworks:
-        setenv("DYLD_FRAMEWORK_PATH", Bundle.main.resourcePath! + "/Frameworks", 1)
-        setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
         checkBookmarks() // activate all bookmarks in the app
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
@@ -581,7 +565,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // We only act if things have really changed.
         // bookmarks management, copied from zshmarks: https://github.com/jocelynmallon/zshmarks
         let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
-        if (zshmarks) {
+        if (zshmarks && !zshmarksActivated) {
+            zshmarksActivated = true
             replaceCommand("showmarks", "showmarks", true) //
             replaceCommand("jump", "jump", true) // go to bookmark
             replaceCommand("bookmark", "bookmark", true) // add bookmark for current directory
@@ -589,7 +574,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("renamemark", "renamemark", true) // rename bookmark
         }
         let bashmarks = UserDefaults.standard.bool(forKey: "bashmarks")
-        if (bashmarks) {
+        if (bashmarks && !bashmarksActivated) {
+            bashmarksActivated = true
             replaceCommand("l", "showmarks", true) //
             replaceCommand("p", "showmarks", true) //
             replaceCommand("g", "jump", true) // go to bookmark
@@ -664,6 +650,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         toolbarShouldBeShown = toolbarSettings
+        // use the old-style toolbar on iPads (mostly as a bug fix for iPads that don't display the new toolbar)
+        if UIDevice.current.model.hasPrefix("iPad") {
+            let useOldToolbar = UserDefaults.standard.bool(forKey: "legacy_toolbar")
+            if (useSystemToolbar && useOldToolbar) {
+                useSystemToolbar = false
+                if (toolbarShouldBeShown) {
+                    DispatchQueue.main.async {
+                        for scene in UIApplication.shared.connectedScenes {
+                            if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                                delegate.showEditorToolbar()
+                            }
+                        }
+                    }
+                }
+            } else if (!useSystemToolbar && !useOldToolbar) {
+                useSystemToolbar = true
+                if (toolbarShouldBeShown) {
+                    DispatchQueue.main.async {
+                        for scene in UIApplication.shared.connectedScenes {
+                            if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                                delegate.showEditorToolbar()
+                            }
+                        }
+                    }
+                }
+            }
+        }
         // How much of screen space should we use?
         let screenSpacePref = UserDefaults.standard.string(forKey: "screen_space")
         if (screenSpacePref == "safe") {
@@ -719,261 +732,4 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return nil
         }
     }
-    
 }
-
-
-let wasmHtmlFile = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>a-Shell, webAssembly execution</title>
-        <meta charset='utf-8'/>
-        <meta name="viewport" content="viewport-fit=cover, width=device-width,  height=device-height, initial-scale=1, user-scalable=no">
-      <script src="require.js"></script>
-      <script src="UUID.js"></script>
-      <style>
-         html {
-             height: 100%;
-         }
-         body {
-             position: fixed;
-             height: 100%;
-             width: 100%;
-             overflow: hidden;
-             top: 0px;
-             margin: 0px;
-             padding: 0px;
-         }
-       </style>
-    </head>
-    <body autocapitalize='none' contenteditable='false' spellcheck='false' autocomplete='off' autocorrect='off'>
-        <div id='terminal' autofocus='true' autocapitalize='none' contenteditable='false' spellcheck='false' autocomplete='off' autocorrect='off' ></div>
-        <script>
-            // functions to deal with executeJavaScript:
-            function print(printString) {
-                window.webkit.messageHandlers.aShell.postMessage('print:' + printString);
-            }
-            function println(printString) {
-                window.webkit.messageHandlers.aShell.postMessage('print:' + printString + '\\n');
-            }
-            function print_error(printString) {
-                window.webkit.messageHandlers.aShell.postMessage('print_error:' + printString);
-            }
-
-            const jsc = {
-                // jsc.readFile(filePath: string): string    Open the file at filePath as a UTF-8 file, return the string contents to the JS.
-                readFile: function readFile(path) {
-                    return prompt("jsc\\nreadFile\\n" + path);
-                },
-                // jsc.readFileBase64(filePath: string): string    Open the file at filePath as a binary file, return the content encoded using Base64
-                readFileBase64: function readFileBase64(path) {
-                    return prompt("jsc\\nreadFileBase64\\n" + path);
-                },
-                // jsc.writeFile(filePath: string, content: string): Result    Writes content to a UTF-8 file at filePath.
-                writeFile: function writeFile(path, content) {
-                    var returnValue = prompt("jsc\\nwriteFile\\n" + path + "\\n" + content);
-                    const entries = returnValue.split("\\n");
-                    if (Number(entries[0]) == -1) {
-                        throw new Error(entries[1]);
-                    }
-                    return (Number(returnValue));
-                },
-                // jsc.writeFileBase64(filePath: string, content: string): Result    Writes binary content encoded using Base64 at filePath.
-                writeFileBase64: function writeFileBase64(path, content) {
-                    var returnValue = prompt("jsc\\nwriteFileBase64\\n" + path + "\\n" + content);
-                    const entries = returnValue.split("\\n");
-                    if (Number(entries[0]) == -1) {
-                        throw new Error(entries[1]);
-                    }
-                    return (Number(returnValue));
-                },
-                // jsc.listFiles(folderPath: string): string[]    Returns a list of the file names in the folder at folderPath.
-                listFiles: function listFiles(directory) {
-                    var returnValue = prompt("jsc\\nlistFiles\\n" + directory);
-                    const entries = returnValue.split("\\n");
-                    if (entries[0].count == 0) {
-                        throw new Error(entries[1]);
-                    }
-                    return entries;
-                },
-                // jsc.isFile(filePath: string): boolean    Returns true if there is a file at filePath, false if there is a folder or nothing there.
-                isFile: function isFile(path) {
-                    var returnValue = Number(prompt("jsc\\nisFile\\n" + path));
-                    return (returnValue == 1);
-                },
-                // jsc.isDirectory(folderPath: string): boolean    Returns true if there is a folder at folderPath, false if there is a file or nothing there.
-                isDirectory: function isDirectory(path) {
-                    var returnValue = Number(prompt("jsc\\nisDirectory\\n" + path));
-                    return (returnValue == 1);
-                },
-                // jsc.makeFolder(folderPath: string): Result    Creates a folder at folderPath.
-                makeFolder: function makeFolder(path) {
-                    var returnValue = prompt("jsc\\nmakeFolder\\n" + path);
-                    const entries = returnValue.split("\\n");
-                    if (Number(entries[0]) == -1) {
-                        throw new Error(entries[1]);
-                    }
-                    return (Number(returnValue));
-                },
-                // jsc.deleteFile(filePath: string): Result    Deletes the file at filePath.
-                deleteFile: function deleteFile(path) {
-                    var returnValue = prompt("jsc\\ndelete\\n" + path);
-                    const entries = returnValue.split("\\n");
-                    if (Number(entries[0]) == -1) {
-                        throw new Error(entries[1]);
-                    }
-                    return (Number(returnValue));
-                },
-                // jsc.move(pathA: string, pathB: string): Result    Moves a file from pathA to pathB.
-                move: function move(pathA, pathB) {
-                    var returnValue = prompt("jsc\\nmove\\n" + pathA + "\\n" + pathB);
-                    const entries = returnValue.split("\\n");
-                    if (Number(entries[0]) == -1) {
-                        throw new Error(entries[1]);
-                    }
-                    return (Number(returnValue));
-                },
-                // jsc.copy(pathA: string, pathB: string): Result    Creates a copy of the file at pathA and puts it at pathB.
-                copy: function copy(pathA, pathB) {
-                    var returnValue = prompt("jsc\\ncopy\\n" + pathA + "\\n" + pathB);
-                    const entries = returnValue.split("\\n");
-                    if (Number(entries[0]) == -1) {
-                        throw new Error(entries[1]);
-                    }
-                    return (Number(returnValue));
-                },
-                // jsc.getFileSize(filePath: string): number    Gets the file size of the file at filePath.
-                getFileSize: function getFileSize(path) {
-                    var returnValue = prompt("jsc\\nfileSize\\n" + path);
-                    const entries = returnValue.split("\\n");
-                    if (Number(entries[0]) < 0) {
-                        throw new Error(entries[1]);
-                    }
-                    return (Number(returnValue));
-                },
-                // jsc.system(command: string): executes the command, and returns the return value (usually 0)
-                system: function system(command) {
-                    return prompt("jsc\\nsystem\\n" + command);
-                }
-            };
-
-            // TODO:
-            //
-            // Probably not the right API:
-            // jsc.readFileBytes(filePath: string): number[]    Open the file at filePath, return the contents as an array of bytes (i.e. an array of integers, each in [0, 127]).
-            // jsc.writeFileBytes(filePath: string, content: number[]): Result    Writes content as bytes into the file at filePath.
-
-            console.log = println
-            console.error = print_error
-            window.appdir = (new URL(".", location.href)).href;
-            window.webkit.messageHandlers.aShell.postMessage('setHomeDir:');
-        </script>
-    </body>
-</html>
-"""
-
-
-let wasmJSFile = """
-// make the "require" function available to all
-Tarp.require({expose: true});
-// Have a global variable:
-if (typeof window !== 'undefined') {
-    window.global = window;
-}
-// and Buffer and process variables
-var Buffer = require('buffer').Buffer;
-var process = require('process');
-// (we don't use "require" anymore, but JavaScript files calling JSC might need it)
-// This file handles communication between the system and
-// the WebWorker in charge of executing WebAssembly.
-// Everything related to WebAssembly is in wasm_worker_wasm.js
-const sab_UUID = new SharedArrayBuffer(8196);
-const sharedArray_UUID = new Int32Array(sab_UUID)
-const wasmWorker = new Worker("wasm_worker_wasm.js");
-var inputString = ''; // stores keyboard input
-var commandIsRunning = false;
-
-function wakeUpWorker(chunkSize) {
-    let resultStorage = -1;
-    let resultNotify = -1;
-    let tries = 0;
-    resultStorage = Atomics.store(sharedArray_UUID, 0, chunkSize + 1);
-    resultNotify = Atomics.notify(sharedArray_UUID, 0);
-
-    while ((resultStorage !=  chunkSize +1) && (resultNotify != 0) && (tries < 10)) {
-        resultStorage = Atomics.store(sharedArray_UUID, 0, chunkSize + 1);
-        resultNotify = Atomics.notify(sharedArray_UUID, 0);
-        tries += 1;
-    }
-}
-
-function executeWebAssembly(bufferString, args, cwd, tty, env) {
-    inputString = '';
-    commandIsRunning = true;
-    // create a webWorker to run webAssembly code:
-    wasmWorker.postMessage([bufferString, args, cwd, tty, env, sab_UUID]);
-    let result = "";
-    
-    // Dealing with communications with the system:
-    wasmWorker.onmessage =(e) => {
-        // system calls go through the "prompt()" command
-        // Easiest way to make it synchronous
-        if (e.data[0] == "prompt") {
-            sharedArray_UUID[0] = 0;
-            Atomics.store(sharedArray_UUID, 0, 0);
-            result = prompt(e.data[1]);
-            // Sending the data to the worker by slices of 2047 bytes:
-            // (need to keep one for length of each chunk)
-            // The CPU side has already truncated data at ^D.
-            let chunkSize = result.length;
-            if (chunkSize > 8192) chunkSize = 8192;
-            let chunk = result.substring(0, chunkSize);
-            for (var i = 0, j = 1; i < chunkSize; i+=4, j++) {
-                sharedArray_UUID[j] = chunk.charCodeAt(i) 
-                    | (chunk.charCodeAt(i+1) << 8)
-                    | (chunk.charCodeAt(i+2) << 16)
-                    | (chunk.charCodeAt(i+3) << 24);
-            }
-            result = result.substring(chunkSize);
-            wakeUpWorker(chunkSize);
-        } else if (e.data[0] == "keyboard") { // keyboard input
-            let length = Number(e.data[1]);
-            result = inputString.substring(0, length); // send what was asked
-            let chunkSize = result.length;
-            if (chunkSize > 2047) chunkSize = 2047;
-            let chunk = result.substring(0, chunkSize);
-            for (var i = 0; i < chunkSize; i++) {
-                sharedArray_UUID[i+1] = chunk.charCodeAt(i);
-                // cut after ^D if present, only send up to ^D
-                if (chunk.charCodeAt(i) == 4)
-                    break;
-            }
-            chunkSize = chunk.length;
-            result = result.substring(chunkSize);
-            inputString = inputString.substring(chunkSize); // remove what's already been sent
-            Atomics.store(sharedArray_UUID, 0, chunkSize + 1);
-            Atomics.notify(sharedArray_UUID, 0);
-        } else if (e.data[0] == "sendNextChunk") {
-            sharedArray_UUID[0] = 0;
-            Atomics.store(sharedArray_UUID, 0, 0);
-            let chunkSize = result.length;
-            if (chunkSize > 8192) chunkSize = 8192;
-            let chunk = result.substring(0, chunkSize);
-            for (var i = 0, j=1; i < chunkSize; i+=4, j++) {
-                sharedArray_UUID[j] = chunk.charCodeAt(i) 
-                    | (chunk.charCodeAt(i+1) << 8)
-                    | (chunk.charCodeAt(i+2) << 16)
-                    | (chunk.charCodeAt(i+3) << 24);
-            }
-            result = result.substring(chunkSize);
-            wakeUpWorker(chunkSize);
-        } else if (e.data[0] == "commandTerminated") {
-            // We need the "command is finished" signal to be in sync with the printing, 
-            // so it uses the same signal transmission system:
-            commandIsRunning = false;
-            prompt("libc\\ncommandTerminated\\n" + e.data[1] + "\\n" + e.data[2]);
-        }
-    }
-}
-"""
