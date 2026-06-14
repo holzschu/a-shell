@@ -36,12 +36,28 @@ struct Termview : UIViewRepresentable {
     }
     
     func makeUIView(context: Context) -> UIView {
+        let edgeSwipe = UIScreenEdgePanGestureRecognizer(
+            target: edgeSwipeTarget,
+            action: #selector(EdgeSwipeTarget.handleRightEdgeSwipe(_:)))
+        edgeSwipe.edges = .right
+        view.addGestureRecognizer(edgeSwipe)
+
         return view
     }
     
     func updateUIView(_ uiView: UIView, context: Context)
     {
         
+    }
+}
+
+class EdgeSwipeTarget: NSObject {
+    @objc func handleRightEdgeSwipe(_ gesture: UIScreenEdgePanGestureRecognizer) {
+        if gesture.state == .began {
+            if let delegate = currentDelegate {
+                delegate.activateBrowserAction()
+            }
+        }
     }
 }
 
@@ -106,6 +122,7 @@ public var latestNotification: String = ""
 public var extendBy: CGFloat = 0
 public var showWebView = false
 public var terminalViewHeight = 80
+private let edgeSwipeTarget = EdgeSwipeTarget()
 
 struct ContentView: View {
     @State private var keyboardHeight: CGFloat = 0
