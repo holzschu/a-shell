@@ -2539,11 +2539,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         if let url = webView!.url {
-            /* if (url.scheme == "file") {
+            if (url.scheme == "file") {
                 // Create a directory URL:
                 let directoryURL = url.deletingLastPathComponent()
                 webView?.loadFileURL(url, allowingReadAccessTo: directoryURL)
-            } else */ if url.host == "localhost" && url.path != "/wasm.html"{
+            } else if url.host == "localhost" && url.path != "/wasm.html"{
                 // distant http URLs reload automatically, but local URLs must be reloaded explicitly:
                 webView?.goBack()
                 webView?.load(URLRequest(url: url))
