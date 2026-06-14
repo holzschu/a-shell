@@ -58,6 +58,13 @@
 		<string></string>
 		<string>directory</string>
 	</array>
+	<key>chdir</key>
+	<array>
+		<string>SELF</string>
+		<string>cd_main</string>
+		<string></string>
+		<string>directory</string>
+	</array>
 	<key>chflags</key>
 	<array>
 		<string>files.framework/files</string>
@@ -1001,6 +1008,13 @@
 		<string>blink.framework/blink</string>
 		<string>main</string>
 		<string></string>
+		<string>file</string>
+	</array>
+	<key>curl-impersonate</key>
+	<array>
+		<string>curl-impersonate.framework/curl-impersonate</string>
+		<string>main</string>
+		<string>2346aAbBcCdDeEfgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwxXYyz#</string>
 		<string>file</string>
 	</array>
 </dict>

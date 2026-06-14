@@ -74,6 +74,12 @@ sunmap Q
 " Revert with ":iunmap <C-U>".
 inoremap <C-U> <C-G>u<C-U>
 
+" Map control-arrow keys to up/down one paragraph, left-right one word.
+map   <M-Down>    }
+map   <M-Up>      {
+map   <M-Right>   <C-Right>
+map   <M-Left>    <C-Left>
+
 " In many terminal emulators the mouse works just fine.  By enabling it you
 " can position the cursor, Visually select and scroll with the mouse.
 " Only xterm can grab the mouse events when using the shift key, for other

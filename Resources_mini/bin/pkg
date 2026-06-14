@@ -68,7 +68,6 @@ install() {
 			$APPDIR/bin/chmod +x ~/tmp/$packageName
 			$APPDIR/bin/sh ~/tmp/$packageName
 			$APPDIR/bin/rm ~/tmp/$packageName
-			$APPDIR/bin/rehash
 			echo Done
 		else
 			packageFound=0
@@ -81,7 +80,6 @@ install() {
 					$APPDIR/bin/chmod +x ~/tmp/$packageName
 					$APPDIR/bin/sh ~/tmp/$packageName
 					$APPDIR/bin/rm ~/tmp/$packageName
-					$APPDIR/bin/rehash
 					packageFound=1
 					echo Done
 					break
@@ -111,7 +109,6 @@ remove() {
 			$APPDIR/bin/rm ~/Documents/.pkg/$name
 			# mandocdb complains if it's called with $APPDIR/bin/
 			\mandocdb ~/Library/man/
-			$APPDIR/bin/rehash
 			echo Done
 		else
 			echo Package $name was not installed by pkg. Cannot remove it.
