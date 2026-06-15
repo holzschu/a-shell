@@ -61,12 +61,31 @@ class EdgeSwipeTarget: NSObject {
     }
 }
 
+class WebviewCoordinator: NSObject, UIGestureRecognizerDelegate, WKNavigationDelegate {
+    let webView: WKWebView
+    init(webView: WKWebView) {self.webView = webView}
+    
+    @objc func handleGobackToTerminal(_ gesture: UIScreenEdgePanGestureRecognizer) {
+        guard gesture.state == .recognized else {return}
+        if !webView.canGoBack {
+            NotificationCenter.default.post(name: .init("hideWebView"), object: nil)
+        }
+    }
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return !webView.canGoBack
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
+}
+
 struct Webview : UIViewRepresentable {
     typealias WebViewType = WKWebView
-
+    
     let webView: WKWebView
     var terminalIconName = "pc"
-
+    
     init() {
         let config = WKWebViewConfiguration()
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
@@ -98,16 +117,26 @@ struct Webview : UIViewRepresentable {
     }
     
     func makeUIView(context: Context) -> WebViewType {
+        webView.navigationDelegate = context.coordinator
+        
+        let edgeSwipe = UIScreenEdgePanGestureRecognizer(target: context.coordinator,
+                                                         action: #selector(context.coordinator.handleGobackToTerminal(_:)))
+        edgeSwipe.edges = .left
+        edgeSwipe.delegate = context.coordinator
+        webView.addGestureRecognizer(edgeSwipe)
+        
         return webView
     }
-
+    
+    func makeCoordinator() -> WebviewCoordinator {
+        WebviewCoordinator(webView: webView)
+    }
     func updateUIView(_ uiView: WebViewType, context: Context) {
         NSLog("updateUIView: url= \(uiView.url)")
         if (uiView.url != nil) { return } // Already loaded the page
         uiView.isOpaque = false
     }
 }
-
 
 public var toolbarShouldBeShown = true
 public var useSystemToolbar = UIDevice.current.model.hasPrefix("iPad")
@@ -322,6 +351,13 @@ struct ContentView: View {
                 }
                 NSLog("results: frameHeight: \(geometry.size.height - frameHeight) actual: \(frameHeight)")
             }
+            .onReceive(NotificationCenter.default.publisher(for: .init("hideWebView"))) { _ in
+                localShowWebView = false
+                showWebView = false
+                showKeyboardAtStartup = true
+                _ = terminalview.view.becomeFirstResponder()
+            }
+                                                                
             // iPhones
             .if(!isiPad) {
                 $0.frame(height: frameHeight).position(x: frameWidth / 2, y: frameHeight / 2 - dynamicIsland)
