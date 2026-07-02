@@ -3508,6 +3508,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             terminalView = contentView?.terminalview.view
             terminalView?.terminalDelegate = self
             terminalView?.optionAsMetaKey = false
+            /*  tell SwiftTerm to use Metal rendering:
+             currently breaks the SwiftUI window dimensions on iPadOS, so deactivated
+            do {
+                try terminalView?.setUseMetal(true)
+            }
+            catch {
+                NSLog("Could not activate Metal rendering")
+            }
+            */
             // Is the app opened from a Shortcut?
             var startedFromShortcut = false
             for userActivity in connectionOptions.userActivities {
@@ -4777,10 +4786,10 @@ extension SceneDelegate: WKUIDelegate {
         // NSLog("thread_stdout_copy: \(thread_stdout_copy)")
         let title = arguments[0]
         if (title == "libc") {
-            // Make sure we are on the right iOS session. This resets the current working directory.
             if (arguments[1] != "read") && (arguments[1] != "write") {
-                NSLog("prompt: \(prompt.replacingOccurrences(of: "\n", with: " "))")
+                // NSLog("prompt: \(prompt.replacingOccurrences(of: "\n", with: " "))")
             }
+            // Make sure we are on the right iOS session. This resets the current working directory.
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             if (arguments[1] == "open") {

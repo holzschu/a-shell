@@ -135,6 +135,8 @@
 	<string>a-Shell mini would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>a-Shell mini would like to access to your photo library to view images</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>a-Shell would like to access your reminders to read and write events</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
 		<key>iCloud.AsheKube.app.a-Shell</key>
