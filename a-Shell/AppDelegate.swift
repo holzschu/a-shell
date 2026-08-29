@@ -246,6 +246,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             // "updateCommands" is also called at startup:
             updateCommands(argc: 1, argv: nil);
         }
+        if #unavailable(iOS 18) {
+            replaceCommand("wasmkit", "wasmkitUnavailable", true)
+        }
         // for debugging TeX issues / installing a new distribution
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
@@ -300,7 +303,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
-            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
+            // set up C and C++ compile options: silently add "--target=wasm32-wasi" at the beginning of arguments
+            // and "-lunwind" at the end.
+            // use legacy exception handling for iOS 14 to 17, new exception handling for iOS 18 and above.
+            // - Apple wasm interpreter accepts the new EH on iOS 18 and above,
+            // - wasmkit only accepts the new EH and only runs on iOS 18 and above
+            // - wasm3 does not accept any kind of exception handling.
+            if #available(iOS 18.0, *) {
+                setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions ^-mllvm=-wasm-use-legacy-eh=false +-lunwind", 1)
+            } else {
+                setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions ^-mllvm=-wasm-use-legacy-eh=true  +-lunwind", 1)
+            }
             // TeX variables (for tlmgr to work) = only when installing from scratch
             // default texmf.cnf available:
             // setenv("TEXMFCNF", Bundle.main.resourcePath!, 1)
@@ -585,38 +598,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         let toolbarColor = UserDefaults.standard.string(forKey: "toolbar_color")
         DispatchQueue.main.async {
-            if (toolbarColor == "system") {
-                for scene in UIApplication.shared.connectedScenes {
-                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                        delegate.overrideUserInterfaceStyle(style: .unspecified)
-                    }
-                }
-            } else if (toolbarColor == "dark") {
+            switch (toolbarColor) {
+            case "dark":
                 for scene in UIApplication.shared.connectedScenes {
                     if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
                         delegate.overrideUserInterfaceStyle(style: .dark)
                     }
                 }
-            } else if (toolbarColor == "light") {
+            case "light":
                 for scene in UIApplication.shared.connectedScenes {
                     if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
                         delegate.overrideUserInterfaceStyle(style: .light)
                     }
                 }
-            } else if (toolbarColor == "screen") {
-                if let ColorFgBg = getenv("COLORFGBG") {
-                    if (String(utf8String: ColorFgBg) == "15;0") {
-                        for scene in UIApplication.shared.connectedScenes {
-                            if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+            case "screen":
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                        if let foregroundColor = delegate.terminalForegroundColor, let backgroundColor = delegate.terminalBackgroundColor {
+                            if (foregroundColor.getBrightness() > backgroundColor.getBrightness()) {
                                 delegate.overrideUserInterfaceStyle(style: .dark)
-                            }
-                        }
-                    } else {
-                        for scene in UIApplication.shared.connectedScenes {
-                            if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                            } else {
                                 delegate.overrideUserInterfaceStyle(style: .light)
                             }
                         }
+                    }
+                }
+            case "system":
+                fallthrough
+            default:
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                        delegate.overrideUserInterfaceStyle(style: .unspecified)
                     }
                 }
             }

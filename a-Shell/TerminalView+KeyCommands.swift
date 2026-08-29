@@ -65,10 +65,12 @@ extension TerminalView {
         // command-W is now a system-based command, like command-backquote
         let basicKeyCommands = [
             // "discoverabilityTitle:)' was deprecated in iOS 13.0" but it's quite convenient
+            // These shortcuts work through direct implementation in SwiftTerm
             UIKeyCommand(input: "k", modifierFlags:.command, action: #selector(clearScreen), discoverabilityTitle: "Clear screen"),
             UIKeyCommand(input: "n", modifierFlags:.command, action: #selector(newWindow), discoverabilityTitle: "New window"),
-            UIKeyCommand(input: "+", modifierFlags:.command, action: #selector(increaseTextSize), discoverabilityTitle: "Bigger text"),
-            UIKeyCommand(input: "-", modifierFlags:.command, action: #selector(decreaseTextSize), discoverabilityTitle: "Smaller text"),
+            // These don't, but they still show up in the summary, so we comment them:
+            // UIKeyCommand(input: "+", modifierFlags:.command, action: #selector(increaseTextSize), discoverabilityTitle: "Bigger text"),
+            // UIKeyCommand(input: "-", modifierFlags:.command, action: #selector(decreaseTextSize), discoverabilityTitle: "Smaller text"),
             // back/forward one page keys for internal browser:
         ]
         return basicKeyCommands

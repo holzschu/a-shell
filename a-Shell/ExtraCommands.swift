@@ -1747,7 +1747,7 @@ public func startInteractive() {
 @_cdecl("needLLVM")
 public func needLLVM(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
-    fputs("In order to use \(args[0]), you need to install or update the C SDK with 'pkg install llvm-18'.\n", thread_stderr)
+    fputs("In order to use \(args[0]), you need to install or update the C SDK with 'pkg install llvm-22'.\n", thread_stderr)
     return 0
 }
 
@@ -1799,7 +1799,7 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
                                             appropriateFor: nil,
                                             create: true)
     // LLVM C SDK: check that ~/Library/usr/lib/clang/14.0.0 exists. If yes, activate LLVMcommands. Otherwise, activate fake LLVM commands.
-    let headerUrl = libraryURL.appendingPathComponent("usr/lib/clang/18/include/float.h")
+    let headerUrl = libraryURL.appendingPathComponent("usr/lib/clang/22/include/float.h")
     if FileManager().fileExists(atPath: headerUrl.path) {
         addCommandList(Bundle.main.path(forResource: "llvmDictionary", ofType: "plist"))
     } else {
@@ -2062,6 +2062,12 @@ public func repeatCommand(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
         fputs(usageString, thread_stderr)
         return -1
     }
+    return 0
+}
+
+@_cdecl("wasmkitUnavailable")
+public func wasmkitUnavailable(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    fputs("wasmkit is only available for iOS 18 and above.\n", thread_stdout)
     return 0
 }
 

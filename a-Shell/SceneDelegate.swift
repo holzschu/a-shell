@@ -596,32 +596,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     func sendArrow(direction: String) {
         NSLog("Received sendArrow. direction: \(direction)")
-        DispatchQueue.main.async { [self] in
+        guard let terminalView = terminalView else { return }
+        DispatchQueue.main.async {
             switch (direction) {
             case "up":
-                if terminalView!.getTerminal().applicationCursor {
-                    terminalView!.send(txt: escape + "OA")
-                } else {
-                    terminalView!.send(txt: escape + "[A")
-                }
+                terminalView.sendKeyUp()
             case "down":
-                if terminalView!.getTerminal().applicationCursor {
-                    terminalView!.send(txt: escape + "OB")
-                } else {
-                    terminalView!.send(txt: escape + "[B")
-                }
+                terminalView.sendKeyDown()
             case "left":
-                if terminalView!.getTerminal().applicationCursor {
-                    terminalView!.send(txt: escape + "OD")
-                } else {
-                    terminalView!.send(txt: escape + "[D")
-                }
+                terminalView.sendKeyLeft()
             case "right":
-                if terminalView!.getTerminal().applicationCursor {
-                    terminalView!.send(txt: escape + "OC")
-                } else {
-                    terminalView!.send(txt: escape + "[C")
-                }
+                terminalView.sendKeyRight()
             default:
                 return
             }
@@ -1569,6 +1554,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (self.currentCommand == "") {
             lastUsedPrompt = parsePrompt()
             DispatchQueue.main.async {
+                // reset mouse mode to .offf, so we can scroll:
+                // before the prompt, so it can be overridden by the prompt.
+                self.terminalView!.feed(text: self.escape + "[?1000l")
+                // Now print the prompt:
                 self.terminalView!.ensureCaretIsVisible()
                 self.terminalView!.feed(text: self.lastUsedPrompt)
                 self.terminalView!.setPromptEnd()
@@ -2084,8 +2073,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {  // SwiftTerm changes to the UI must happen on the main thread
             // Force writing all config to term. Used when we changed many parameters.
             self.terminalView?.backgroundColor = backgroundColor
+            self.terminalView?.nativeBackgroundColor = backgroundColor
             self.terminalView?.getTerminal().backgroundColor = (backgroundColor.toSwiftTermColor())
             self.terminalView?.tintColor = foregroundColor
+            self.terminalView?.nativeForegroundColor = foregroundColor
             self.terminalView?.getTerminal().foregroundColor = (foregroundColor.toSwiftTermColor())
             self.terminalView?.caretColor = cursorColor
             self.terminalView?.getTerminal().cursorColor = (cursorColor.toSwiftTermColor())
@@ -2094,26 +2085,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.terminalView?.font = terminalFont
                 self.basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
             }
-            switch (cursorShape.lowercased()) {
-            case "block":
-                self.terminalView?.getTerminal().setCursorStyle(.steadyBlock)
-            case "bar":
-                fallthrough
-            case "beam":
-                self.terminalView?.getTerminal().setCursorStyle(.steadyBar)
-            case "underline":
-                self.terminalView?.getTerminal().setCursorStyle(.steadyUnderline)
-            case "blinking-block":
-                self.terminalView?.getTerminal().setCursorStyle(.blinkBlock)
-            case "blinking-bar":
-                fallthrough
-            case "blinking-beam":
-                self.terminalView?.getTerminal().setCursorStyle(.blinkBar)
-            case "blinking-underline":
-                self.terminalView?.getTerminal().setCursorStyle(.blinkUnderline)
-            default:
-                self.terminalView?.getTerminal().setCursorStyle(.steadyUnderline)
-            }
+            self.terminalView?.setCursorStyle(shape: cursorShape.lowercased())
         }
     }
     
@@ -2133,44 +2105,28 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     self.basicCharWidth = NSAttributedString(string: "m", attributes: [.font: self.terminalView?.font]).size().width
                 }
             }
-            if (backgroundColor != nil) {
+            if let backgroundColor = backgroundColor {
                 self.terminalBackgroundColor = backgroundColor
-                self.terminalView?.backgroundColor = self.terminalBackgroundColor
-                self.terminalView?.getTerminal().backgroundColor = (backgroundColor!.toSwiftTermColor())
+                self.terminalView?.backgroundColor = backgroundColor
+                self.terminalView?.nativeBackgroundColor = backgroundColor
+                // We need to act on the getTerminal() colors as well, otherwise the default color is not very visible.
+                self.terminalView?.getTerminal().backgroundColor = (backgroundColor.toSwiftTermColor())
             }
-            if (foregroundColor != nil) {
+            if let foregroundColor = foregroundColor {
                 self.terminalForegroundColor = foregroundColor
-                self.terminalView?.tintColor = self.terminalForegroundColor
-                self.terminalView?.getTerminal().foregroundColor = (self.terminalForegroundColor?.toSwiftTermColor())!
+                self.terminalView?.tintColor = foregroundColor
+                self.terminalView?.nativeForegroundColor = foregroundColor
+                self.terminalView?.getTerminal().foregroundColor = (foregroundColor.toSwiftTermColor())
             }
-            if (cursorColor != nil) {
+            if let cursorColor = cursorColor {
                 self.terminalCursorColor = cursorColor
-                self.terminalView?.caretColor = self.terminalCursorColor!
-                self.terminalView?.getTerminal().cursorColor = self.terminalCursorColor!.toSwiftTermColor()
-                self.terminalView?.selectedTextBackgroundColor = self.terminalCursorColor!.makeTransparent()
+                self.terminalView?.caretColor = cursorColor
+                self.terminalView?.getTerminal().cursorColor = cursorColor.toSwiftTermColor()
+                self.terminalView?.selectedTextBackgroundColor = cursorColor.makeTransparent()
             }
-            if (cursorShape != nil) {
+            if let cursorShape = cursorShape {
                 self.terminalCursorShape = cursorShape
-                switch (cursorShape!.lowercased()) {
-                case "block":
-                    self.terminalView?.getTerminal().setCursorStyle(.steadyBlock)
-                case "bar":
-                    fallthrough
-                case "beam":
-                    self.terminalView?.getTerminal().setCursorStyle(.steadyBar)
-                case "underline":
-                    self.terminalView?.getTerminal().setCursorStyle(.steadyUnderline)
-                case "blinking-block":
-                    self.terminalView?.getTerminal().setCursorStyle(.blinkBlock)
-                case "blinking-bar":
-                    fallthrough
-                case "blinking-beam":
-                    self.terminalView?.getTerminal().setCursorStyle(.blinkBar)
-                case "blinking-underline":
-                    self.terminalView?.getTerminal().setCursorStyle(.blinkUnderline)
-                default:
-                    self.terminalView?.getTerminal().setCursorStyle(.steadyUnderline)
-                }
+                self.terminalView?.setCursorStyle(shape: cursorShape.lowercased())
             }
             // Update COLORFGBG depending on new color:
             if (foregroundColor != nil ) || (backgroundColor != nil) {
@@ -2628,7 +2584,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     func executeCommand(command: String) {
-        NSLog("executeCommand: \(command) sceneIdentifier: \(persistentIdentifier)")
+        // This line, specifically, causes a crash with the following command:
+        // open shortcuts://run-shortcut?name=%EC%9C%A0%ED%8A%9C%EB%B8%8C%20%EB%B0%9B%EA%B8%B0&input=%22hi%22
+        // See: https://discord.com/channels/935519150305050644/1452153688284987443/1534518700500320329
+        // NSLog("executeCommand: \(command) sceneIdentifier: \(persistentIdentifier)")
         // There are 2 commands that are called directly, before going to ios_system(), because they need to.
         // We still allow them to be aliased.
         // We can't call exit through ios_system because it creates a new session
@@ -3351,8 +3310,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Change in the default value for this variable:
             if let compileOptionsC = getenv("CCC_OVERRIDE_OPTIONS") {
                 if let compileOptions = String(utf8String: compileOptionsC) {
-                    if (compileOptions.isEqual("#^--target") || compileOptions.isEqual("#^--target=wasm32-wasi")) {
-                        setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind", 1)
+                    // previous versions of CCC_OVERRIDE_OPTIONS, replace with the latest:
+                    if (compileOptions.isEqual("#^--target")
+                        || compileOptions.isEqual("#^--target=wasm32-wasi")
+                        || compileOptions.isEqual("#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind")) {
+                        if #available(iOS 18.0, *) {
+                            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions ^-mllvm=-wasm-use-legacy-eh=false +-lunwind", 1)
+                        } else {
+                            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions ^-mllvm=-wasm-use-legacy-eh=true  +-lunwind", 1)
+                        }
                     }
                 }
             }
@@ -3693,7 +3659,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // print("terminalData:\n\(terminalData)\n--------")
                     DispatchQueue.main.async {
                         if let terminalData = scene.session.stateRestorationActivity?.userInfo?["terminal"] as? String {
-                            self.terminalView?.getTerminal().feed(text: terminalData.replacingOccurrences(of: "\n", with: "\n\r"))
+                            self.terminalView?.feed(text: terminalData.replacingOccurrences(of: "\n", with: "\n\r"))
                             // print("terminalData: \(terminalData.replacingOccurrences(of: "\n", with: "\n\r"))")
                             self.terminalView!.setPromptEnd()
                             self.windowPrintedContent = terminalData
@@ -3880,7 +3846,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             NSLog("printing prompt, command: \(currentCommand)")
             if (currentCommand == "") {
                 commandQueue.async {
-                    self.printPrompt()
+                    DispatchQueue.main.async {
+                        // printPrompt needs to be in the same queue as restoreHistoryAndDirectories
+                        // otherwise the prompt is printed with the wrong directory.
+                        self.printPrompt()
+                    }
                 }
             }
         }
@@ -4059,7 +4029,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     func overrideUserInterfaceStyle(style: UIUserInterfaceStyle) {
         DispatchQueue.main.async {
-            // self.window?.overrideUserInterfaceStyle = style
+            self.window?.overrideUserInterfaceStyle = style // required on iPhones with iOS 26.
             self.overrideUserInterfaceStyle = style
         }
     }
@@ -4194,38 +4164,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let cursorShape = terminalCursorShape ?? factoryCursorShape
         let fontLigature = terminalFontLigature ?? factoryFontLigature
         // Force writing all config to term. Used when we changed many parameters.
-        terminalView?.tintColor = foregroundColor
-        terminalView?.caretColor = cursorColor
-        terminalView?.backgroundColor = backgroundColor
-        terminalView?.selectedTextBackgroundColor = cursorColor.makeTransparent()
-        // Setting terminal.foregroundColor causes SwiftTerm to recompute the palette, which
-        // in turn causes some crashes on iOS.
-        if (terminalView?.getTerminal().foregroundColor != foregroundColor.toSwiftTermColor()) {
+        DispatchQueue.main.async { [self] in  // SwiftTerm changes to the UI must happen on the main thread
+            terminalView?.tintColor = foregroundColor
+            terminalView?.caretColor = cursorColor
+            terminalView?.backgroundColor = backgroundColor
+            terminalView?.selectedTextBackgroundColor = cursorColor.makeTransparent()
+            self.terminalView?.nativeForegroundColor = foregroundColor
+            // This is also required otherwise we get light gray writing
             terminalView?.getTerminal().foregroundColor = foregroundColor.toSwiftTermColor()
-        }
-        if (terminalView?.getTerminal().backgroundColor != backgroundColor.toSwiftTermColor()) {
+            self.terminalView?.nativeBackgroundColor = backgroundColor
             terminalView?.getTerminal().backgroundColor = backgroundColor.toSwiftTermColor()
-        }
-        terminalView?.getTerminal().cursorColor = cursorColor.toSwiftTermColor()
-        switch (cursorShape.lowercased()) {
-        case "block":
-            terminalView?.getTerminal().setCursorStyle(.steadyBlock)
-        case "bar":
-            fallthrough
-        case "beam":
-            terminalView?.getTerminal().setCursorStyle(.steadyBar)
-        case "underline":
-            terminalView?.getTerminal().setCursorStyle(.steadyUnderline)
-        case "blinking-block":
-            terminalView?.getTerminal().setCursorStyle(.blinkBlock)
-        case "blinking-bar":
-            fallthrough
-        case "blinking-beam":
-            terminalView?.getTerminal().setCursorStyle(.blinkBar)
-        case "blinking-underline":
-            terminalView?.getTerminal().setCursorStyle(.blinkUnderline)
-        default:
-            terminalView?.getTerminal().setCursorStyle(.steadyUnderline)
+            terminalView?.getTerminal().cursorColor = cursorColor.toSwiftTermColor()
+            self.terminalView?.setCursorStyle(shape: cursorShape.lowercased())
         }
         // TODO: Ligatures are enabled by default on iOS, they're a property of NSAttributeString, not the font.
         NSLog("Enabling font: \(fontName)")
@@ -4472,7 +4422,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     func outputToTerminalView(string: String) {
         guard (terminalView != nil) else { return }
         // Only store what happens in the main buffer, not the alternate buffer
-        if !self.terminalView!.getTerminal().isCurrentBufferAlternate {
+        if !self.terminalView!.isCurrentBufferAlternate {
             var shortString = string
             for controlCharacters in [escape + "[?47h", escape + "[?1047h", escape + "[?1049h"] {
                 // if the string contains the switch to alternate buffer, only store characters up to that.
@@ -4493,7 +4443,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // for "standard" commands (not Vim/less/NNN...) send the output to VoiceOver:
             // using a timer to accumulate content instead of reading each line separately:
             if (UIAccessibility.isVoiceOverRunning) {
-                if !self.terminalView!.getTerminal().isCurrentBufferAlternate {
+                if !self.terminalView!.isCurrentBufferAlternate {
                     if (self.readContentTimer.isValid) {
                         // restart the timer each time we add new content
                         self.readContentTimer.invalidate()
@@ -4736,11 +4686,11 @@ extension SceneDelegate: WKUIDelegate {
         guard let fd = Int32(input) else {
             return nil
         }
-        NSLog("fileDescriptor: input \(input) fd= \(fd)")
+        // NSLog("fileDescriptor: input \(input) fd= \(fd)")
         if (fd == 0) {
             if (thread_stdin_copy != nil) {
                 let f = fileno(thread_stdin_copy)
-                NSLog("fileDescriptor: f= \(f)")
+                // NSLog("fileDescriptor: f= \(f)")
                 if (f >= 0) {
                     return f
                 } else {
@@ -4753,7 +4703,7 @@ extension SceneDelegate: WKUIDelegate {
         if (fd == 1) {
             if (thread_stdout_copy != nil) {
                 let f = fileno(thread_stdout_copy)
-                NSLog("fileDescriptor: f= \(f) thread_stdout_copy= \(thread_stdout_copy)")
+                // NSLog("fileDescriptor: f= \(f) thread_stdout_copy= \(thread_stdout_copy)")
                 if (f >= 0) {
                     return f
                 } else {
@@ -4787,7 +4737,7 @@ extension SceneDelegate: WKUIDelegate {
         let title = arguments[0]
         if (title == "libc") {
             if (arguments[1] != "read") && (arguments[1] != "write") {
-                // NSLog("prompt: \(prompt.replacingOccurrences(of: "\n", with: " "))")
+                NSLog("prompt: \(prompt.replacingOccurrences(of: "\n", with: " "))")
             }
             // Make sure we are on the right iOS session. This resets the current working directory.
             ios_switchSession(self.persistentIdentifier?.toCString())
@@ -4977,13 +4927,18 @@ extension SceneDelegate: WKUIDelegate {
                 let buf = stat.init()
                 let pbuf = UnsafeMutablePointer<stat>.allocate(capacity: 1)
                 pbuf.initialize(to: buf)
-                // NSLog("stat: " + arguments[2])
-                let returnValue = stat(arguments[2].utf8CString, pbuf)
+                // NSLog("stat: " + arguments[2] + " " + arguments[3])
+                var returnValue: Int32 = 0
+                if (arguments[3] == "0") { // SYMLINK_NOFOLLOW
+                    returnValue = lstat(arguments[2].utf8CString, pbuf)
+                } else {
+                    returnValue = stat(arguments[2].utf8CString, pbuf)
+                }
                 if (returnValue == 0) {
-                    // NSLog("Mode: \(arguments[2]) = \(pbuf.pointee.st_mode) stat= \(pbuf.pointee)")
+                    NSLog("Mode: \(arguments[2]) = \(pbuf.pointee.st_mode) stat= \(pbuf.pointee)")
                     completionHandler("\(pbuf.pointee)")
                 } else {
-                    // NSLog("Error: \(arguments[2]) = " + String(cString: strerror(errno)))
+                    NSLog("Error: \(arguments[2]) = " + String(cString: strerror(errno)))
                     completionHandler("\(-errno)")
                     errno = 0
                 }
