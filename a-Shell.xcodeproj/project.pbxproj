@@ -2733,6 +2733,7 @@
 		8916088D2713056800CED1C9 /* a-Shell-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "a-Shell-Bridging-Header.h"; sourceTree = "<group>"; };
 		8916088E2713056900CED1C9 /* KBWebViewBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KBWebViewBase.m; sourceTree = "<group>"; };
 		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
+		898384A83061A39800A1E18D /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2878,6 +2879,7 @@
 				22B1B80D22CB9A5A00F7C452 /* Frameworks */,
 				2271BAFE2D8B064D00A809E5 /* a-Shell-noPython copy-Info.plist */,
 				223AF28E2D8B2E2300A4A62D /* a-Shell-mini copy2-Info.plist */,
+				898384A83061A39800A1E18D /* Build.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -4395,7 +4397,6 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-IntentsUI/a-Shell-mini-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -4406,7 +4407,7 @@
 				);
 				MARKETING_VERSION = 1.17.0;
 				OTHER_CODE_SIGN_FLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.a-Shell-mini-IntentsUI";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.a-Shell-mini-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -4423,7 +4424,6 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-IntentsUI/a-Shell-mini-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -4434,7 +4434,7 @@
 				);
 				MARKETING_VERSION = 1.17.0;
 				OTHER_CODE_SIGN_FLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.a-Shell-mini-IntentsUI";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.a-Shell-mini-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -4450,7 +4450,6 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-Intents/a-Shell-mini-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4459,7 +4458,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.a-Shell-mini-Intents";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.a-Shell-mini-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
@@ -4474,7 +4473,6 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-mini-Intents/a-Shell-mini-Intents.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4483,7 +4481,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini.a-Shell-mini-Intents";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.a-Shell-mini-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
@@ -4504,7 +4502,6 @@
 				CURRENT_PROJECT_VERSION = 533;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4527,7 +4524,7 @@
 					"-L",
 					Frameworks/,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -4555,7 +4552,6 @@
 				CURRENT_PROJECT_VERSION = 533;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4578,7 +4574,7 @@
 					"-L",
 					Frameworks/,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -4595,6 +4591,7 @@
 		};
 		22984EFC22C93DBF00069497 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 898384A83061A39800A1E18D /* Build.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -4660,6 +4657,7 @@
 		};
 		22984EFD22C93DBF00069497 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 898384A83061A39800A1E18D /* Build.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -4729,7 +4727,6 @@
 				CURRENT_PROJECT_VERSION = 567;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_ON_DEMAND_RESOURCES = NO;
 				ENABLE_PREVIEWS = YES;
 				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
@@ -4756,7 +4753,7 @@
 					"-L",
 					Frameworks/,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
 				STRIP_STYLE = debugging;
@@ -4780,7 +4777,6 @@
 				CURRENT_PROJECT_VERSION = 567;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_ON_DEMAND_RESOURCES = NO;
 				ENABLE_PREVIEWS = YES;
 				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
@@ -4807,7 +4803,7 @@
 					"-L",
 					Frameworks/,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
 				STRIP_STYLE = debugging;
@@ -4830,7 +4826,6 @@
 				CURRENT_PROJECT_VERSION = 567;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_ON_DEMAND_RESOURCES = NO;
 				ENABLE_PREVIEWS = YES;
 				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
@@ -4857,7 +4852,7 @@
 					"-L",
 					Frameworks/,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
 				STRIP_STYLE = debugging;
@@ -4885,7 +4880,6 @@
 				CURRENT_PROJECT_VERSION = 567;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_ON_DEMAND_RESOURCES = NO;
 				ENABLE_PREVIEWS = YES;
 				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
@@ -4912,7 +4906,7 @@
 					"-L",
 					Frameworks/,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell-mini";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
 				STRIP_STYLE = debugging;
@@ -4935,7 +4929,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -4947,7 +4940,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-Intents";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell.a-Shell-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -4964,7 +4957,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -4976,7 +4968,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-Intents";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell.a-Shell-Intents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -4992,7 +4984,6 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -5000,7 +4991,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-IntentsUI";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell.a-Shell-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
@@ -5015,7 +5006,6 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
-				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -5023,7 +5013,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "AsheKube.app.a-Shell.a-Shell-IntentsUI";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell.a-Shell-IntentsUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
