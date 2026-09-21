@@ -34,6 +34,10 @@ a-Shellは現在、<a href="https://holzschu.github.io/a-Shell_iOS/">AppStoreで
         * `cd cpython`でディレクトリを`cpython`に変更します
         * `sh ./downloadAndCompile.sh`でPython 3.11および関連するライブラリやフレームワークをビルドします（このステップには2GHzのi5 MBPでは数時間かかります）。
 
+デバイス向けにコンパイルしたい場合は、さらに以下の手順が必要です：
+* `Configuration.sample.xcconfig`をコピーして`Configuration.xcconfig`を作成します
+* `Configuration.xcconfig`にあるチームIDとプレフィックスをあなたのものに置き換えます
+
 a-Shellは現在デバイス上で動作します。a-Shell miniはデバイス上およびシミュレータ上で動作できます。
 
 Python 3.xはiOS 14 SDKでのみ使用できる関数を使用しているため、最小iOSバージョンを14.0に設定しています。これによりバイナリのサイズも削減されるため、`ios_system`や他のフレームワークも同じ設定になっています。iOS 13デバイスで実行する必要がある場合は、ほとんどのフレームワークを再コンパイルする必要があります。
