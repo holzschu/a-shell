@@ -2267,7 +2267,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // The user can edit the nickname later.
         // the bookmark is only stored once, the nickname is stored each time:
         storeBookmark(fileURL: newDirectory)
-        storeName(fileURL: newDirectory, name: newDirectory.lastPathComponent)
+        storeName(fileURL: newDirectory)
         // Call cd_main instead of ios_system("cd dir") to avoid closing streams.
         if (newDirectory.isDirectory) {
             changeDirectory(path: newDirectory.path) // call cd_main and checks secured bookmarked URLs
