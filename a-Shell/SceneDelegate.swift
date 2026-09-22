@@ -18,6 +18,8 @@ import AVKit // for media playback
 import AVFoundation // for media playback
 import TipKit // for helpful tips
 
+private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
+
 var inputFileURLBackup: URL?
 
 let factoryFontSize = Float(13)
@@ -3043,14 +3045,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                         includingResourceValuesForKeys: nil,
                                                         relativeTo: nil)
             let storedBookmarksDictionary =  UserDefaults.standard.dictionary(forKey: "fileBookmarks") ?? [:]
-            // let groupBookmarksDictionary = UserDefaults(suiteName: "group.AsheKube.a-Shell")?.dictionary(forKey: "fileBookmarks")
+            // let groupBookmarksDictionary = UserDefaults(suiteName: appGroupID)?.dictionary(forKey: "fileBookmarks")
             // if (groupBookmarksDictionary != nil) {
             //     storedBookmarksDictionary.merge(groupBookmarksDictionary!, uniquingKeysWith: { (current, _) in current })
             // }
             var mutableBookmarkDictionary : [String:Any] = storedBookmarksDictionary
             mutableBookmarkDictionary.updateValue(fileBookmark, forKey: fileURL.path)
             UserDefaults.standard.set(mutableBookmarkDictionary, forKey: "fileBookmarks")
-            UserDefaults(suiteName: "group.AsheKube.a-Shell")?.set(mutableBookmarkDictionary, forKey: "fileBookmarks")
+            UserDefaults(suiteName: appGroupID)?.set(mutableBookmarkDictionary, forKey: "fileBookmarks")
         }
         catch {
             NSLog("Could not bookmark this file: \(fileURL)")
@@ -3084,7 +3086,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             NSLog("Unable to get the volume name: \(error)")
         }
         var storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
-        // let groupNamesDictionary = UserDefaults(suiteName: "group.AsheKube.a-Shell")?.dictionary(forKey: "bookmarkNames")
+        // let groupNamesDictionary = UserDefaults(suiteName: appGroupID)?.dictionary(forKey: "bookmarkNames")
         // if (groupNamesDictionary != nil) {
         //     storedNamesDictionary.merge(groupNamesDictionary!, uniquingKeysWith: { (current, _) in current })
         // }
@@ -3109,7 +3111,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         var mutableNamesDictionary : [String:Any] = storedNamesDictionary
         mutableNamesDictionary.updateValue(fileURL.path, forKey: newName)
         UserDefaults.standard.set(mutableNamesDictionary, forKey: "bookmarkNames")
-        UserDefaults(suiteName: "group.AsheKube.a-Shell")?.set(mutableNamesDictionary, forKey: "bookmarkNames")
+        UserDefaults(suiteName: appGroupID)?.set(mutableNamesDictionary, forKey: "bookmarkNames")
         if (thread_stderr != nil) {
             fputs("Bookmarked as \(newName).\n", thread_stderr)
         }
@@ -3126,7 +3128,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // set directory to a safer place:
             resetDirectoryAfterCommandTerminates = FileManager().currentDirectoryPath
-            if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
+            if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
                 changeDirectory(path: groupUrl.path)
             }
             if let fileURL: NSURL = userActivity.userInfo!["url"] as? NSURL {
@@ -3746,7 +3748,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // Same reason we can't print the shortcut that is about to be executed.
                     // Set the working directory to somewhere safe:
                     // (but do not reset afterwards, since this is a new window)
-                    if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
+                    if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
                         changeDirectory(path: groupUrl.path)
                     }
                     commandQueue.async {
@@ -3790,7 +3792,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // But do not reset afterwards, since this is a new window
                     // This line causes a crash in iOS 18:
                     // NSLog("Scene, willConnectTo: userActivity.userInfo = \(userActivity.userInfo)")
-                    if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
+                    if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
                         changeDirectory(path: groupUrl.path)
                     }
                     if let fileURL: NSURL = userActivity.userInfo!["url"] as? NSURL {
@@ -3812,7 +3814,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                 self.terminalView?.feed(text: "Executing Shortcut: \(commandSent.replacingOccurrences(of: "\n", with: "\n\r"))")
                             }
                             commandQueue.async {
-                                if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
+                                if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
                                     changeDirectory(path: groupUrl.path)
                                     NSLog("groupUrl: " + groupUrl.path)
                                 }
@@ -3878,7 +3880,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                     command = command.removingPercentEncoding!
                     commandQueue.async {
-                        if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") {
+                        if let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
                             changeDirectory(path: groupUrl.path)
                         }
                         self.executeCommand(command: command)

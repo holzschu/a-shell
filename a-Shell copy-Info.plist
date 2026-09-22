@@ -157,5 +157,7 @@
 	</array>
 	<key>UISupportsDocumentBrowser</key>
 	<true/>
+	<key>AppGroupIdentifier</key>
+	<string>group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell</string>
 </dict>
 </plist>

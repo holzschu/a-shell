@@ -17,6 +17,8 @@ import TipKit // Display some helpful messages for users
 import Kitura // for our local server for WebAssembly
 import NIOSSL // for TLS (https) authentification
 
+private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
+
 let cleanupQueue = DispatchQueue(label: "deleteFiles", qos: .userInteractive) // high priority, but not blocking.
 let localServerQueue = DispatchQueue(label: "localWebServer", qos: .userInteractive) // high priority, but not blocking
 // Need SDK install to be over before starting commands.
@@ -266,8 +268,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("COLORTERM", "truecolor", 1) // tell programs that we can display 16-bit colors (required by Python package rich).
         setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
         setenv("MAGIC", Bundle.main.resourcePath! +  "/usr/share/magic.mgc", 1); // magic file for file command
-        setenv("SHORTCUTS", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
-        setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
+        setenv("SHORTCUTS", FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?.path, 1) // directory used by shortcuts
+        setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?.path, 1) // directory used by shortcuts
         setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
         setenv("PAGER", "less", 1) // send control sequences directly to terminal
         setenv("TERM", "xterm-256color", 1); // now that we use SwiftTerm

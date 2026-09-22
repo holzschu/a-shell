@@ -10,6 +10,8 @@ import Intents
 import ios_system
 // import a_Shell
 
+private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
+
 // As an example, this class is set up to handle Message intents.
 // You will want to replace this or add other intents as appropriate.
 // The intents you wish to handle must be declared in the extension's Info.plist.
@@ -52,7 +54,7 @@ class PutFileIntentHandler: INExtension, PutFileIntentHandling
     
     // PutFileIntent
     func handle(intent: PutFileIntent, completion: @escaping (PutFileIntentResponse) -> Void) {
-        guard let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell") else {
+        guard let groupUrl = FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
             completion(PutFileIntentResponse(code: .failureRequiringAppLaunch, userActivity: nil))
             return
         }
