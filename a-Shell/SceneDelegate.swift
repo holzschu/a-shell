@@ -2247,18 +2247,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // NSLog("changing directory to: \(newDirectory.path.replacingOccurrences(of: " ", with: "\\ "))")
         let isSecuredURL = newDirectory.startAccessingSecurityScopedResource()
         let isReadable = FileManager().isReadableFile(atPath: newDirectory.path)
-        
-        // If it belongs to another file provider, get services:
-        FileManager.default.getFileProviderServicesForItem(at: newDirectory) { (services, error) in
-            // Check to see if an error occurred.
-            if (error != nil) {
-                NSLog("Error in getFileProviderServicesForItem: \(error!)")
-            } else {
-                // NSFileProviderServiceName = working-copy or com.dropbox.fileproviderv2.xpc.service
-                NSLog("services found: \(services)")
-            }
-        }
-        //
         guard isSecuredURL && isReadable else {
             showAlert("Error", message: "Could not access folder.")
             pickerDispatchGroup.leave()
@@ -2279,8 +2267,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // The user can edit the nickname later.
         // the bookmark is only stored once, the nickname is stored each time:
         storeBookmark(fileURL: newDirectory)
-        storeName(fileURL: newDirectory)
-        
+        storeName(fileURL: newDirectory, name: newDirectory.lastPathComponent)
         // Call cd_main instead of ios_system("cd dir") to avoid closing streams.
         if (newDirectory.isDirectory) {
             changeDirectory(path: newDirectory.path) // call cd_main and checks secured bookmarked URLs
