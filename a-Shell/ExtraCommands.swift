@@ -79,7 +79,11 @@ public func isForeground(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
 @_cdecl("wasm")
 public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     if (runningInExtension) {
-        fputs("JIT webAssembly is not available \"In Extension\". Try \"wasm3\".\n", thread_stderr)
+        if #available(iOS 18.0, *) {
+            fputs("Apple webAssembly is not available \"In Extension\". Try \"wasmkit\".\n", thread_stderr)
+        } else {
+            fputs("Apple webAssembly is not available \"In Extension\". Try \"wasm3\".\n", thread_stderr)
+        }
         finishedPreparingWebAssemblyCommand()
         return -1
     } else {

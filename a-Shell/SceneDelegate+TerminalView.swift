@@ -658,34 +658,6 @@ extension SceneDelegate {
         // print("string: \(string)")
         // TODO: move this above, don't do data -> String -> data!
         // NSLog("received string: \"\(string)\"")
-        if (currentCommand != "") {
-            // If there is an interactive webAssembly command running:
-            if (interactiveCommandRunning || terminalView!.isCurrentBufferAlternate)
-                && (javascriptRunning && (thread_stdin_copy != nil)) {
-                // Q: how many commands are using interactive input, besides nnn?
-                webView?.evaluateJavaScript("inputString += '\(string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\r", with: "\\n"))'; commandIsRunning;") { (result, error) in
-                    // if let error = error { print(error) }
-                    if let result = result as? Bool {
-                        if (!result) {
-                            self.endWebAssemblyCommand(error: 0, message: "")
-                        }
-                    }
-                }
-                return
-            }
-            if (!javascriptRunning && executeWebAssemblyCommandsRunning) {
-                // There seems to be cases where the webassembly command did not terminate properly.
-                // We catch it here:
-                webView?.evaluateJavaScript("commandIsRunning;") { (result, error) in
-                    // if let error = error { print(error) }
-                    if let result = result as? Bool {
-                        if (!result) {
-                            self.endWebAssemblyCommand(error: 0, message: "")
-                        }
-                    }
-                }
-            }
-        }
         switch (string) {
         case endOfTransmission: // also control-D: delete character after cursor
             // Stop standard input for the command:
@@ -1495,57 +1467,6 @@ extension SceneDelegate {
         if UIMenuController.shared.isMenuVisible {
             UIMenuController.shared.hideMenu()
         }
-        // if a command is not running, check for button events:
-        // terminal sending button event: it sends escape + "[M " + coordinates and coordinates
-        // are not necessarily convertible into UTF8 characters.
-        if (data.count > 5) && currentCommand == "" {
-            var cursorTrackingRow = 0
-            var cursorTrackingColumn = 0
-            let dataSlice = data[0..<3] // first three characters
-            if let string = String(bytes: dataSlice, encoding: .utf8) {
-                if (string == escape + "[M") {
-                    cursorTrackingRow = Int(data[5]) - 32 //  Int(tracking.last?.asciiValue ?? 32) - 32
-                    cursorTrackingColumn = Int(data[4]) - 32 // Int(tracking[tracking.index(tracking.startIndex, offsetBy: 1)].asciiValue ?? 32) - 32
-                    // data[3] - 32: is the button pressed. Almost always 0, so ' '.
-                    if (autocompleteRunning) {
-                        stopAutocomplete()
-                    }
-                    if let distance = terminalView?.setCursorPosition(x: cursorTrackingColumn - 1, y: cursorTrackingRow - 1) {
-                        let command = commandBeforeCursor + commandAfterCursor
-                        if (distance <= 0) || command.count == 0 {
-                            // beginning of line
-                            commandBeforeCursor = ""
-                            commandAfterCursor = command
-                            terminalView?.moveToBeginningOfLine()
-                        } else {
-                            NSLog("tracking, command: \(command) distance: \(distance)")
-                            var length = 0
-                            commandBeforeCursor = ""
-                            for c in command {
-                                let characterWidth = NSAttributedString(string: String(c), attributes: [.font: terminalView?.font]).size().width
-                                if (characterWidth > 1.4 * basicCharWidth) {
-                                    length += 2
-                                    // "large" characters: takes two columns
-                                } else {
-                                    length += 1
-                                }
-                                NSLog("character: \(c) length: \(length) distance: \(distance)")
-                                commandBeforeCursor += String(c)
-                                if (length >= distance) {
-                                    break
-                                }
-                            }
-                            if (command.count > commandBeforeCursor.count) {
-                                commandAfterCursor = command
-                                commandAfterCursor.removeFirst(commandBeforeCursor.count)
-                            }
-                            NSLog("\(commandBeforeCursor) -- \(commandAfterCursor)")
-                        }
-                    }
-                    return
-                }
-            }
-        }
         // if control is pressed, we have to change the data
         var myData = data
         if (controlOn) {
@@ -1588,7 +1509,8 @@ extension SceneDelegate {
             }
             // b) extract control code:
             // b1) change arrows into control-arrows
-            if ((data[0] == 27) &&  // escape
+            if ((data.count > 2) &&
+                (data[0] == 27) &&  // escape
                 ((data[1] == 91) || (data[1] == 79)) &&  // "[" or "O"
                 ((data[2] >= 65) && (data[2] <= 68))) // A, B, C or D
             {
@@ -1601,7 +1523,7 @@ extension SceneDelegate {
                 myData.insert(51, at: 4) // 3
                 // myData[5] should now be data[2] (A,B, C or D)
                 NSLog("control-arrow: \(myData)")
-            } else {
+            } else if (data.count > 0) {
                 // It's not an arrow, make it a control-character:
                 // control-delete (on screen keyboard) is mapped to alt-delete
                 if (myData[0] == 0x7f) {
@@ -1660,7 +1582,33 @@ extension SceneDelegate {
                 ios_switchSession(self.persistentIdentifier?.toCString())
                 ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
                 ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
-                // Interactive commands: just send the input to them. Allows Vim to map control-D to down half a page.
+                if (javascriptRunning && (thread_stdin_copy != nil)) {
+                    // interactive WebAssembly commands
+                    if let string = String (bytes: myData, encoding: .utf8) {
+                        webView?.evaluateJavaScript("inputString += '\(string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\r", with: "\\n"))'; commandIsRunning;") { (result, error) in
+                            // if let error = error { print(error) }
+                            if let result = result as? Bool {
+                                if (!result) {
+                                    self.endWebAssemblyCommand(error: 0, message: "")
+                                }
+                            }
+                        }
+                        return
+                    }
+                }
+                if (!javascriptRunning && executeWebAssemblyCommandsRunning) {
+                    // There seems to be cases where the webassembly command did not terminate properly.
+                    // We catch it here:
+                    webView?.evaluateJavaScript("commandIsRunning;") { (result, error) in
+                        // if let error = error { print(error) }
+                        if let result = result as? Bool {
+                            if (!result) {
+                                self.endWebAssemblyCommand(error: 0, message: "")
+                            }
+                        }
+                    }
+                }
+                // Interactive commands (not WebAssembly): just send the input to them. Allows Vim to map control-D to down half a page.
                 guard stdin_file_input != nil else { return }
                 // TODO: don't send data if pipe already closed (^D followed by another key)
                 // (store a variable that says the pipe has been closed)
@@ -1677,7 +1625,58 @@ extension SceneDelegate {
                 return
             }
         }
-        if let string = String (bytes: myData, encoding: .utf8) {
+        // if no commands are running, or if they're not interactive, check for button events:
+        // terminal sending button event: it sends escape + "[M " + coordinates and coordinates
+        // are not necessarily convertible into UTF8 characters.
+        if (data.count > 5) {
+            var cursorTrackingRow = 0
+            var cursorTrackingColumn = 0
+            let dataSlice = data[0..<3] // first three characters
+            if let string = String(bytes: dataSlice, encoding: .utf8) {
+                if (string == escape + "[M") {
+                    cursorTrackingRow = Int(data[5]) - 32 //  Int(tracking.last?.asciiValue ?? 32) - 32
+                    cursorTrackingColumn = Int(data[4]) - 32 // Int(tracking[tracking.index(tracking.startIndex, offsetBy: 1)].asciiValue ?? 32) - 32
+                    // data[3] - 32: is the button pressed. Almost always 0, so ' '.
+                    if (autocompleteRunning) {
+                        stopAutocomplete()
+                    }
+                    if let distance = terminalView?.setCursorPosition(x: cursorTrackingColumn - 1, y: cursorTrackingRow - 1) {
+                        let command = commandBeforeCursor + commandAfterCursor
+                        if (distance <= 0) || command.count == 0 {
+                            // beginning of line
+                            commandBeforeCursor = ""
+                            commandAfterCursor = command
+                            terminalView?.moveToBeginningOfLine()
+                        } else {
+                            NSLog("tracking, command: \(command) distance: \(distance)")
+                            var length = 0
+                            commandBeforeCursor = ""
+                            for c in command {
+                                let characterWidth = NSAttributedString(string: String(c), attributes: [.font: terminalView?.font]).size().width
+                                if (characterWidth > 1.4 * basicCharWidth) {
+                                    length += 2
+                                    // "large" characters: takes two columns
+                                } else {
+                                    length += 1
+                                }
+                                NSLog("character: \(c) length: \(length) distance: \(distance)")
+                                commandBeforeCursor += String(c)
+                                if (length >= distance) {
+                                    break
+                                }
+                            }
+                            if (command.count > commandBeforeCursor.count) {
+                                commandAfterCursor = command
+                                commandAfterCursor.removeFirst(commandBeforeCursor.count)
+                            }
+                            NSLog("\(commandBeforeCursor) -- \(commandAfterCursor)")
+                        }
+                    }
+                    return
+                }
+            }
+        }
+        if let string = String(bytes: myData, encoding: .utf8) {
             // most frequent case:
             send(source: source, inputString: string)
         } else {

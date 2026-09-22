@@ -253,7 +253,7 @@ struct ContentView: View {
                         // There is a dynamic island at the top, we need to move the terminal window up a bit.
                         // iPhones with DI: minY = 59 on iPhone 15, 62 on iPhone 17
                         // iPhones without DI: minY = 20 on iPhone 8 and iPhone SE
-                        dynamicIsland = 13
+                        dynamicIsland = 15
                     }
                     NSLog("Scene: \(UIScreen.main.bounds) terminal frame: \(terminalview.view.frame) geometry size: \(geometry.size) keyboardHeight: \(keyboardHeight) minY= \(globalFrame.minY)")
                     // geometry.size.height is wildly all over the place on iPhones.
@@ -307,7 +307,7 @@ struct ContentView: View {
             }
             // iPhones
             .if(!isiPad) {
-                $0.frame(height: frameHeight).position(x: frameWidth / 2, y: frameHeight / 2 - dynamicIsland)
+                $0.frame(height: min(frameHeight, geometry.size.height)).position(x: frameWidth / 2, y: frameHeight / 2 - dynamicIsland )
             }
             // if nothing is defined, the size is geometry.size.height
             .if((viewBehavior == .ignoreSafeArea || viewBehavior == .original) && isiPad) {

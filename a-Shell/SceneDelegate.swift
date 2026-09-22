@@ -22,7 +22,7 @@ var inputFileURLBackup: URL?
 
 let factoryFontSize = Float(13)
 let factoryFontName = "Menlo"
-let factoryCursorShape = "underline"
+let factoryCursorShape = "bar" // to solve issues with SwiftUI hiding the bottom pixels.
 let factoryFontLigature = "contextual" // normal has a bug, so contextual by default
 var directoriesUsed: [String:Int] = [:]
 
@@ -1554,9 +1554,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (self.currentCommand == "") {
             lastUsedPrompt = parsePrompt()
             DispatchQueue.main.async {
-                // reset mouse mode to .offf, so we can scroll:
+                // reset mouse mode to .off, so we can scroll:
                 // before the prompt, so it can be overridden by the prompt.
                 self.terminalView!.feed(text: self.escape + "[?1000l")
+                // also let's get out of bracketed paste mode:
+                self.terminalView!.feed(text: self.escape + "[?2004l")
+                // again, the user can override this in the prompt.
                 // Now print the prompt:
                 self.terminalView!.ensureCaretIsVisible()
                 self.terminalView!.feed(text: self.lastUsedPrompt)
@@ -2600,6 +2603,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Calling "exit(0)" here results in a major crash (I tried).
             commandQueue.async {
                 self.terminalView?.wipeContents()
+                self.history.removeAll()
+                self.historyPosition = 0
+                let documentsUrl = try! FileManager().url(for: .documentDirectory,
+                                                          in: .userDomainMask,
+                                                          appropriateFor: nil,
+                                                          create: true)
+                FileManager().changeCurrentDirectoryPath(documentsUrl.path)
+                self.currentDirectory = FileManager().currentDirectoryPath
+                self.previousDirectory = FileManager().currentDirectoryPath
                 // self.clearScreen()
             }
             // self.terminalView?.feed(text: self.escape + "[2J" + self.escape + "[1;1H")
