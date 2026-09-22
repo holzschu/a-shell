@@ -938,8 +938,8 @@ extension SceneDelegate {
                         historyPosition = history.count
                         terminalView?.moveToBeginningOfLine()
                         terminalView?.clearToEndOfLine()
-                        terminalView?.feed(text: " ") // force redraw
-                        terminalView?.moveToBeginningOfLine()
+                        terminalView?.getTerminal().updateFullScreen() // force redraw
+                        terminalView?.updateDisplay()
                         commandBeforeCursor = ""
                         commandAfterCursor = ""
                         delayedVoiceOver(message: "empty line")
@@ -961,8 +961,8 @@ extension SceneDelegate {
                         commandHistoryPosition = commandHistory.count
                         terminalView?.moveToBeginningOfLine()
                         terminalView?.clearToEndOfLine()
-                        terminalView?.feed(text: " ") // force redraw
-                        terminalView?.moveToBeginningOfLine()
+                        terminalView?.getTerminal().updateFullScreen() // force redraw
+                        terminalView?.updateDisplay()
                         commandBeforeCursor = ""
                         commandAfterCursor = ""
                         delayedVoiceOver(message: " empty line ")
@@ -1126,8 +1126,8 @@ extension SceneDelegate {
                         historyPosition = history.count
                         terminalView?.moveToBeginningOfLine()
                         terminalView?.clearToEndOfLine()
-                        terminalView?.feed(text: " ") // force redraw
-                        terminalView?.moveToBeginningOfLine()
+                        terminalView?.getTerminal().updateFullScreen() // force redraw
+                        terminalView?.updateDisplay()
                         commandBeforeCursor = ""
                         commandAfterCursor = ""
                         delayedVoiceOver(message: "empty line")
@@ -1149,8 +1149,8 @@ extension SceneDelegate {
                         commandHistoryPosition = commandHistory.count
                         terminalView?.moveToBeginningOfLine()
                         terminalView?.clearToEndOfLine()
-                        terminalView?.feed(text: " ") // force redraw
-                        terminalView?.moveToBeginningOfLine()
+                        terminalView?.getTerminal().updateFullScreen() // force redraw
+                        terminalView?.updateDisplay()
                         commandBeforeCursor = ""
                         commandAfterCursor = ""
                         delayedVoiceOver(message: " empty line ")
@@ -1260,10 +1260,10 @@ extension SceneDelegate {
             terminalView?.clearToEndOfLine()
             if (commandAfterCursor.count > 0) {
                 terminalView?.feed(text: commandAfterCursor) // prints the rest of the line
-            } else {
-                terminalView?.feed(text: " ") // force redraw
             }
             terminalView?.restoreCursorPosition()
+            terminalView?.getTerminal().updateFullScreen() // force redraw
+            terminalView?.updateDisplay()
             UIAccessibility.post(notification: .announcement, argument: "insertion point " + commandAfterCursor)
         case escape + "\u{0008}": // alt delete on external keyboard
             fallthrough
