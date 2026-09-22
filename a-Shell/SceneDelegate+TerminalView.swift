@@ -867,6 +867,8 @@ extension SceneDelegate {
                     UIAccessibility.post(notification: .announcement, argument: currentCommandVoiceOver)
                 }
             }
+        case "\u{0010}": // control P
+            fallthrough
         case escape + "OA": // up arrow (application mode)
             fallthrough
         case escape + "[A": // up arrow
@@ -905,6 +907,8 @@ extension SceneDelegate {
                     }
                 }
             }
+        case "\u{000E}": // control N
+            fallthrough
         case escape + "OB": // down arrow (application mode)
             fallthrough
         case escape + "[B": // down arrow
@@ -965,6 +969,8 @@ extension SceneDelegate {
                     }
                 }
             }
+        case "\u{0002}": // control B
+            fallthrough
         case escape + "OD": // left arrow (application mode)
             fallthrough
         case escape + "[D": // left arrow
@@ -994,6 +1000,8 @@ extension SceneDelegate {
                     delayedVoiceOver(message: " beginning of line")
                 }
             }
+        case "\u{0006}": // control F
+            fallthrough
         case escape + "OC": // right arrow (application mode)
             fallthrough
         case escape + "[C": // right arrow
