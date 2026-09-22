@@ -47,7 +47,7 @@ extension SceneDelegate {
         
         let rootVC = self.window?.rootViewController
         DispatchQueue.main.async {
-            rootVC?.present(alert, animated: true) { () -> Void in
+            rootVC?.present(alert, animated: false) { () -> Void in
             }
         }
         

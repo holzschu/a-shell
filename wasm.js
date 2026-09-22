@@ -7,6 +7,7 @@ if (typeof window !== 'undefined') {
 // and a Buffer variable
 var Buffer = require('buffer').Buffer;
 var process = require('process');
+var commandIsRunning = false;
 
 // Functions to deal with WebAssembly:
 // These should load a wasm program: http://andrewsweeney.net/post/llvm-to-wasm/
@@ -58,6 +59,7 @@ function base64DecToArr (sBase64, nBlockSize) {
 // stdinBuffer: standard input
 // cwd: current working directory
 function executeWebAssembly(bufferString, args, cwd, tty, env) {
+	commandIsRunning = true;
 	// Input: base64 encoded binary wasm file
 	if (typeof window !== 'undefined') {
 		if (!('WebAssembly' in window)) {
@@ -98,14 +100,20 @@ function executeWebAssembly(bufferString, args, cwd, tty, env) {
 		// console.log("Wasm error: " + error.message + " Error code: " + error.code);
         if (error.code === undefined) {
 			errorCode = 1; 
-			errorMessage = '\nwasm: ' + error + '\n';
+			errorMessage = 'wasm: ' + error;
 		} else if (error.code != null) { 
 			// Numerical error code. Send the return code back to Swift.
 			errorCode = error.code;
+			if (errorCode > 0) 
+				errorMessage = error.message;
 		} else {
 			errorCode = 1; 
 		}
 	}
+	// We need the "command is finished" signal to be in sync with the printing, 
+	// so it uses the same signal transmission system:
+	prompt("libc\ncommandTerminated\n" + errorCode + "\n" + errorMessage);
+	commandIsRunning = false;
 	return [errorCode, errorMessage];
 }
 

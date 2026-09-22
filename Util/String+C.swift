@@ -41,7 +41,41 @@ extension String {
                                     withAttributes: attributes)
         }
     }
-    	
+    
+    // takes as input a String that contains litteral UTF8 characters (like "\u{0009}")
+    // and converts these to the actual UTF8 character (\u{0009}, or tabulation in that case)
+    var convertUnicode: String {
+        // converting "\u{00xx}" (litteral) into the actual character \u{00xx}:
+        // a) match \u{00xx} using regex
+        // Regex: we need four slashes to match with "\u", two for the curly brackets:
+        do {
+            var newTitle = ""
+            var offset = 0
+            let regex = try NSRegularExpression(pattern: "\\\\u\\{([0-9a-fA-F]+)\\}", options: [])
+            let matches = regex.matches(in: self, range: NSRange(self.startIndex..<self.endIndex, in: self))
+            for match in matches {
+                let range = match.range
+                newTitle += self[self.index(self.startIndex, offsetBy:offset)..<self.index(self.startIndex, offsetBy: range.lowerBound)]
+                var subString = self[self.index(self.startIndex, offsetBy:range.lowerBound)..<self.index(self.startIndex, offsetBy: range.upperBound)]
+                subString.removeFirst(3)
+                subString.removeLast()
+                if let unicodeScalar = UInt8(subString, radix: 16) {
+                    newTitle += String(Character(UnicodeScalar(unicodeScalar)))
+                } else {
+                    // conversion failure, store the unmodified string:
+                    newTitle += self[self.index(self.startIndex, offsetBy:range.lowerBound)..<self.index(self.startIndex, offsetBy: range.upperBound)]
+                }
+                offset = range.upperBound
+                // NSLog("Edited prompt: \(newPrompt) offset: \(offset)")
+            }
+            newTitle += self[self.index(self.startIndex, offsetBy:offset)..<self.index(self.endIndex, offsetBy: 0)]
+            return newTitle
+        }
+        catch {
+            NSLog("Error converting \(self): \(error)")
+        }
+        return self
+    }
 }
 
 func convertCArguments(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> [String]? {
@@ -61,4 +95,19 @@ func convertCArguments(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
 	}
 	
 	return args
+}
+
+// TODO: kept to remember that I tried it and it doesn't work. Must be removed.
+// It does convert <br> but not \u{0009}
+extension String {
+    var attributedHtmlString: NSAttributedString? {
+        try? NSAttributedString(
+            data: Data(utf8),
+            options: [
+                .documentType: NSAttributedString.DocumentType.html,
+                .characterEncoding: String.Encoding.utf8.rawValue
+            ],
+            documentAttributes: nil
+        )
+    }
 }

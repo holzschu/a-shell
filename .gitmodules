@@ -2,3 +2,6 @@
 	path = cpython
 	url = git@github.com:holzschu/cpython.git
 	branch = 3.11
+[submodule "SwiftTerm"]
+	path = SwiftTerm
+	url = git@github.com:holzschu/SwiftTerm.git

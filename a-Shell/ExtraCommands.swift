@@ -79,8 +79,12 @@ public func isForeground(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
 @_cdecl("wasm")
 public func wasm(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     if (runningInExtension) {
-        fputs("JIT webAssembly is not available \"In Extension\". Try \"wasm3\".\n", thread_stderr)
-        finishedPreparingWebAssemblyCommand();
+        if #available(iOS 18.0, *) {
+            fputs("Apple webAssembly is not available \"In Extension\". Try \"wasmkit\".\n", thread_stderr)
+        } else {
+            fputs("Apple webAssembly is not available \"In Extension\". Try \"wasm3\".\n", thread_stderr)
+        }
+        finishedPreparingWebAssemblyCommand()
         return -1
     } else {
         let args = convertCArguments(argc: argc, argv: argv)
@@ -127,11 +131,11 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 - newWindow: open a new window
 - exit: close the current window
 
-- All your files, including configuration files (.bashrc, .profile, .ssh...) are in ~/Documents/
+- All your files, including configuration files (.bashrc, .profile, .ssh/...) are in ~/Documents/
 - Files created by Shortcuts are in ~shortcuts/
 - a-Shell executes the ~/Documents/.profile and ~/Documents/.bashrc files for each new window
 
-- Single-finger swipes move the cursor or scroll, two-finger swipes send keyboard input (up, down, escape, tab). "man gestures" for more.
+- single-finger swipe scrolls the terminal and selects text, two-fingers swipe sends arrows.
 
 - Edit files with vim and pico.
 - Transfer files with curl, tar, scp and sftp.
@@ -164,34 +168,15 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
             }
             let arg = String(cString: argV)
             if (arg == "-l") {
-                guard var commandsArray = commandsAsArray() as! [String]? else { return 0 }
-                // Also scan PATH for executable files:
-                let executablePath = String(cString: ios_getenv("PATH"))
-                for directory in executablePath.components(separatedBy: ":") {
-                    if (directory.count == 0) { continue } // Empty directory (::), don't read it.
-                    do {
-                        // We don't check for exec status, because files inside $APPDIR have no x bit set.
-                        for file in try FileManager().contentsOfDirectory(atPath: directory) {
-                            let fileUrl = URL(fileURLWithPath: directory).appendingPathComponent(file)
-                            if (fileUrl.isDirectory) { continue } // Don't include directories in command list
-                            commandsArray.append(fileUrl.lastPathComponent)
-                        }
-                    } catch {
-                        // The directory is unreadable, move to next one
-                        continue
-                    }
-                }
-                commandsArray.sort() // make sure it's in alphabetical order
-                commandsArray = Array(NSOrderedSet(array: commandsArray)) as! [String]
                 if (ios_isatty(STDOUT_FILENO) == 1) {
-                    for command in commandsArray {
+                    for command in delegate.commandsArray() {
                         delegate.printText(string: command + ", ")
                     }
                     delegate.printText(string: "\n")
                 } else {
                     // stdout is not a tty, so redirecting the output. Probably through grep.
                     // Be nice and present something that can be grepped
-                    for command in commandsArray {
+                    for command in delegate.commandsArray() {
                         delegate.printText(string: command + "\n")
                     }
                 }
@@ -231,7 +216,7 @@ Python3: Python Software Foundation, https://www.python.org/about/
 ssh, scp, sftp: OpenSSH, https://www.openssh.com
 tar: https://libarchive.org
 tree: http://mama.indstate.edu/users/ice/tree/
-TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2025.
+TeX: Donald Knuth and TUG, https://tug.org. TeX distribution is texlive 2026.
 Vim: Bram Moolenaar and the Vim community, https://www.vim.org
 Vim-session: Peter Odding, http://peterodding.com/code/vim/session
 webAssembly: wasmer.io and the wasi SDK https://github.com/WebAssembly/wasi-sdk
@@ -290,7 +275,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     -b | --background: set background color
     -f | --foreground: set foreground color
     -c | --cursor: set cursor and highlight color
-    -k | --cursorShape: set cursor shape (beam, block or underline)
+    -k | --cursorShape: set cursor shape (beam, block or underline, steady or blinking)
     -l | --ligatures: normal, contextual, none...
     -t | --toolbar: create a configuration file to change the toolbar
     -g | --global: extend settings to all windows currently open
@@ -509,11 +494,12 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             } else if name == "factory" {
                 terminalCursorShape = factoryCursorShape
             } else {
-                name = name.uppercased()
-                if (name == "BEAM") || (name == "UNDERLINE") || (name == "BLOCK") {
+                name = name.lowercased()
+                if (name == "bar") || (name == "beam") || (name == "underline") || (name == "block") ||
+                    (name == "blinking-bar") || (name == "blinking-beam") || (name == "blinking-underline") || (name == "blinking-block") {
                     terminalCursorShape = name
                 } else {
-                    fputs("Did not understand cursor shape: \(name) (possible names are beam, block and underline)\n", thread_stderr)
+                    fputs("Did not understand cursor shape: \(name) (possible names are bar, beam, block, underline, blinking-bar, blinking-beam, blinking-block and blinking-underline)\n", thread_stderr)
                 }
             }
             continue
@@ -545,7 +531,10 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             }
             continue
         case "-t", "--toolbar":
-            let configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
+            var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
+            if (UIDevice.current.model.hasPrefix("iPad") || UIAccessibility.isVoiceOverRunning) {
+                configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
+            }
             do {
                 let documentsUrl = try FileManager().url(for: .documentDirectory,
                                                          in: .userDomainMask,
@@ -1503,6 +1492,16 @@ public func openurl_main(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
         return -1
     }
     
+    // if the internal browser was already started, internalbrowser makes it visible (same as the showBrowser button)
+    if (args[0] == "internalbrowser") && internalBrowserStarted && (argc == 1) {
+        if let delegate = currentDelegate {
+            DispatchQueue.main.async {
+                delegate.activateBrowserAction()
+            }
+            return 0
+        }
+    }
+    
     let genericCall = (args[0] == "openurl")
     
     if ((argc < 2) || (args[1] == "-h") || (args[1] == "--help")) {
@@ -1535,10 +1534,14 @@ public func openurl_main(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
     if (FileManager().fileExists(atPath: urlString)) {
         locationUrl = URL(fileURLWithPath: urlString)
     } else {
-        urlString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? urlString
+        // only add percent-encoding to strings that are not already percent-encoded:
+        if urlString.removingPercentEncoding == urlString {
+            urlString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? urlString
+        }
         locationUrl = URL(string: urlString)
     }
-    guard locationUrl != nil else {
+    // locationUrl is always non-nil with modern iOS, so we also check if the scheme is not nil.
+    guard locationUrl != nil && locationUrl?.scheme != nil else {
         fputs("Invalid URL: \(urlString).\n", thread_stderr)
         if (genericCall) {
             fputs(usage, thread_stderr)
@@ -1710,11 +1713,7 @@ public func stopInteractive() {
     }
     DispatchQueue.main.async {
         if let delegate = currentDelegate {
-            delegate.resignFirstResponder()
-            delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = false;") { (result, error) in
-                // if let error = error { print(error) }
-                // if let result = result { print(result) }
-            }
+            delegate.interactiveCommandRunning = false
         }
     }
 }
@@ -1724,25 +1723,17 @@ public func storeInteractive() -> Int32 {
     if (runningInExtension) {
         return 0
     }
-    var returnValue:Int32 = -1;
-    var waitingForAnswer = true
+    var returnValue: Int32 = 0
     DispatchQueue.main.async {
         if let delegate = currentDelegate {
-            delegate.resignFirstResponder()
-            delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning;") { (result, error) in
-                // if let error = error { print(error); }
-                if let result = result as? Int32 { returnValue = result; }
-                waitingForAnswer = false
+            if delegate.interactiveCommandRunning {
+                returnValue = 1
+            } else {
+                returnValue = 0
             }
         }
     }
-    // We need to place something in this loop, otherwise it gets removed by the optimizer.
-    while (waitingForAnswer) {
-        if (thread_stdout != nil) { fflush(thread_stdout) }
-        if (thread_stderr != nil) { fflush(thread_stderr) }
-    }
-    // NSLog("Returning from storeInteractive, result= \(returnValue)")
-    return returnValue;
+    return returnValue
 }
 
 @_cdecl("startInteractive")
@@ -1752,11 +1743,7 @@ public func startInteractive() {
     }
     DispatchQueue.main.async {
         if let delegate = currentDelegate {
-            delegate.resignFirstResponder()
-            delegate.webView?.evaluateJavaScript("window.interactiveCommandRunning = true;") { (result, error) in
-                // if let error = error { print(error) }
-                // if let result = result { print(result) }
-            }
+            delegate.interactiveCommandRunning = true
         }
     }
 }
@@ -1764,7 +1751,7 @@ public func startInteractive() {
 @_cdecl("needLLVM")
 public func needLLVM(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
-    fputs("In order to use \(args[0]), you need to install or update the C SDK with 'pkg install llvm-18'.\n", thread_stderr)
+    fputs("In order to use \(args[0]), you need to install or update the C SDK with 'pkg install llvm-22'.\n", thread_stderr)
     return 0
 }
 
@@ -1777,12 +1764,15 @@ public func needTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
                                             create: true)
     let texliveTestFile2023 = libraryURL.appendingPathComponent("texlive/2023/texmf-dist/tex/plain/base/plain.tex")
     let texliveTestFile2024 = libraryURL.appendingPathComponent("texlive/2024/texmf-dist/tex/plain/base/plain.tex")
+    let texliveTestFile2025 = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/tex/plain/base/plain.tex")
     if (FileManager().fileExists(atPath: texliveTestFile2023.path)) {
-        fputs("You currently have texlive-2023 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2025 with 'pkg install texlive-2025'.\n", thread_stderr)
+        fputs("You currently have texlive-2023 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2026 with 'pkg install texlive-2026'.\n", thread_stderr)
     } else if (FileManager().fileExists(atPath: texliveTestFile2024.path)) {
-        fputs("You currently have texlive-2024 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2025 with 'pkg install texlive-2025'.\n", thread_stderr)
+        fputs("You currently have texlive-2024 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2026 with 'pkg install texlive-2026'.\n", thread_stderr)
+    } else if (FileManager().fileExists(atPath: texliveTestFile2025.path)) {
+        fputs("You currently have texlive-2025 installed. In order to to use \(args[0]), you need to update the distribution to texlive-2026 with 'pkg install texlive-2026'.\n", thread_stderr)
     } else {
-        fputs("In order to use \(args[0]), you need to install the texlive distribution with 'pkg install texlive-2025'.\n", thread_stderr)
+        fputs("In order to use \(args[0]), you need to install the texlive distribution with 'pkg install texlive-2026'.\n", thread_stderr)
     }
     return 0
 }
@@ -1794,11 +1784,11 @@ public func needLuaTeX(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
                                             in: .userDomainMask,
                                             appropriateFor: nil,
                                             create: true)
-    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/tex/plain/base/plain.tex")
+    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2026/texmf-dist/tex/plain/base/plain.tex")
     if (FileManager().fileExists(atPath: texliveTestFile.path)) {
-        fputs("In order to use \(args[0]), you need to install the OpenType/TrueType fonts with 'pkg install texlive_fonts-2025'.\n", thread_stderr)
+        fputs("In order to use \(args[0]), you need to install the OpenType/TrueType fonts with 'pkg install texlive_fonts-2026'.\n", thread_stderr)
     } else {
-        fputs("In order to to use \(args[0]), you need to install the texlive distribution 'pkg install texlive-2025' and the OpenType/TrueType fonts with 'pkg install texlive_fonts-2025'.\n", thread_stderr)
+        fputs("In order to to use \(args[0]), you need to install the texlive distribution 'pkg install texlive-2026' and the OpenType/TrueType fonts with 'pkg install texlive_fonts-2026'.\n", thread_stderr)
     }
     return 0
 }
@@ -1813,7 +1803,7 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
                                             appropriateFor: nil,
                                             create: true)
     // LLVM C SDK: check that ~/Library/usr/lib/clang/14.0.0 exists. If yes, activate LLVMcommands. Otherwise, activate fake LLVM commands.
-    let headerUrl = libraryURL.appendingPathComponent("usr/lib/clang/18/include/float.h")
+    let headerUrl = libraryURL.appendingPathComponent("usr/lib/clang/22/include/float.h")
     if FileManager().fileExists(atPath: headerUrl.path) {
         addCommandList(Bundle.main.path(forResource: "llvmDictionary", ofType: "plist"))
     } else {
@@ -1824,11 +1814,11 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
         }
     }
     // texlive files:
-    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/tex/plain/base/plain.tex")
+    let texliveTestFile = libraryURL.appendingPathComponent("texlive/2026/texmf-dist/tex/plain/base/plain.tex")
     if FileManager().fileExists(atPath: texliveTestFile.path) {
         addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // LuaTeX and XeTeX: extra fonts files:
-        let luatexTestFile = libraryURL.appendingPathComponent("texlive/2025/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf")
+        let luatexTestFile = libraryURL.appendingPathComponent("texlive/2026/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf")
         if FileManager().fileExists(atPath: luatexTestFile.path) {
             addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
         } else {
@@ -1853,7 +1843,7 @@ public func updateCommands(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
         }
         for script in TeXscripts {
             let command = localPath.appendingPathComponent(script[0])
-            let location = "../texlive/2025/texmf-dist/" + script[1]
+            let location = "../texlive/2026/texmf-dist/" + script[1]
             // fileExists doesn't work, because it follows symbolic links
             do {
                 let fileAttribute = try FileManager().attributesOfItem(atPath: command.path)
@@ -2001,6 +1991,7 @@ public func z_command(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoint
 
 
 // TODO: autocomplete for z
+/*
 @_cdecl("rehash")
 public func rehash(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
@@ -2035,24 +2026,8 @@ public func rehash(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         }
     }
     commandsArray.sort() // make sure it's in alphabetical order
-    var javascriptCommand = "commandList = ["
-    for command in commandsArray {
-        javascriptCommand += "\"" + command + "\", "
-    }
-    javascriptCommand += "];"
-    DispatchQueue.main.async {
-        if let delegate = currentDelegate {
-            delegate.resignFirstResponder()
-            delegate.webView?.evaluateJavaScript(javascriptCommand) { (result, error) in
-                if let error = error {
-                    NSLog("Error in creating command list, line = \(javascriptCommand) error = \(error)")
-                }
-                // if let result = result as? Int32 {  }
-            }
-        }
-    }
     return 0
-}
+} */
 
 @_cdecl("repeatCommand")
 public func repeatCommand(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
@@ -2094,11 +2069,16 @@ public func repeatCommand(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
     return 0
 }
 
+@_cdecl("wasmkitUnavailable")
+public func wasmkitUnavailable(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    fputs("wasmkit is only available for iOS 18 and above.\n", thread_stdout)
+    return 0
+}
+
 public func executeCommandAndWait(command: String) {
     NSLog("executeCommandAndWait: \(command)")
-    resultStack.removeAll()
     let pid = ios_fork()
-    _ = ios_system(command)
+    _ = ios_system(command.decomposedStringWithCanonicalMapping)
     fflush(thread_stdout)
     ios_waitpid(pid)
     ios_releaseThreadId(pid)

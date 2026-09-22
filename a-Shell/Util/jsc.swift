@@ -291,7 +291,7 @@ public func jsc_core(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointe
         
         let system: @convention(block) (String) -> Int32 = { command in
             let pid = ios_fork()
-            var result = ios_system(command)
+            var result = ios_system(command.decomposedStringWithCanonicalMapping)
             ios_waitpid(pid)
             ios_releaseThreadId(pid)
             if (result == 0) {

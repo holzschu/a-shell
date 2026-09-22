@@ -110,6 +110,8 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>NFCReaderUsageDescription</key>
+	<string>a-Shell mini requests permission to access your NFC scanner</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -127,6 +129,12 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>a-Shell mini requests permission to access your Bluetooth devices.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>a-Shell mini uses Bluetooth to connect to nearby devices from scripts and commands.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>a-Shell would like to access your calendars to read and write events</string>
 	<key>NSCameraUsageDescription</key>
 	<string>a-Shell would like to access your camera</string>
 	<key>NSContactsUsageDescription</key>
@@ -135,6 +143,8 @@
 	<string>a-Shell would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>a-Shell would like to access to your photo library to view images</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>a-Shell would like to access your reminders to read and write events</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
 		<key>iCloud.AsheKube.app.a-Shell</key>
@@ -180,6 +190,8 @@
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
+	<key>UIDesignRequiresCompatibility</key>
+	<false/>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

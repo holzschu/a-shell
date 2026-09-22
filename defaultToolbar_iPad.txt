@@ -42,15 +42,15 @@ network						systemAction		showBrowser
 
 # Arrows:
 # This is the default on iPhones:
-arrow.left.and.right		systemAction		left.right
-arrow.up.and.down			systemAction		up.down
+# arrow.left.and.right		systemAction		left.right
+# arrow.up.and.down			systemAction		up.down
 # You can also use the four-arrows-button if you need more space for other buttons:
 # arrow.up.and.down.and.arrow.left.and.right		systemAction	up.down.left.right
 # This is the default on iPads (and you can use it if your iPhone has a large screen):
-# arrow.up						systemAction		up
-# arrow.down					systemAction		down
-# arrow.left					systemAction		left
-# arrow.right					systemAction		right
+arrow.up					systemAction		up
+arrow.down					systemAction		down
+arrow.left					systemAction		left
+arrow.right					systemAction		right
 
 # Example buttons:
 #

@@ -17,37 +17,42 @@ import TipKit // Display some helpful messages for users
 import Kitura // for our local server for WebAssembly
 import NIOSSL // for TLS (https) authentification
 
-let installQueue = DispatchQueue(label: "installFiles", qos: .userInteractive) // high priority, but not blocking.
-let localServerQueue = DispatchQueue(label: "moveFiles", qos: .userInteractive) // high priority, but not blocking
+let cleanupQueue = DispatchQueue(label: "deleteFiles", qos: .userInteractive) // high priority, but not blocking.
+let localServerQueue = DispatchQueue(label: "localWebServer", qos: .userInteractive) // high priority, but not blocking
 // Need SDK install to be over before starting commands.
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
 var localServerApp = Router()
+var zshmarksActivated = false
+var bashmarksActivated = false
 
 func startLocalWebServer() {
+    // Last file loaded: /node_modules/@wasmer/wasmfs/lib/index.cjs.js
     localServerApp.get("/*") { request, response, next in
-        // NSLog("Kitura request received: \(request.matchedPath)")
+        NSLog("Kitura request received: \(request.matchedPath)")
         // Load ~/Library/node_modules first if it exists:
         // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
+        let requestedFileURL = URL(fileURLWithPath: request.matchedPath)
+        let pathExtension = requestedFileURL.pathExtension
         let localFilePath = libraryURL.path + request.matchedPath
         let rootFilePath = Bundle.main.resourcePath! + request.matchedPath
         var fileName: String? = nil
-        // NSLog("file requested: \(urlPath). Trying \(localFilePath)  and \(rootFilePath)")
+        // NSLog("Kitura file requested: \(request.matchedPath). Trying \(localFilePath)  and \(rootFilePath)")
         if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
             fileName = localFilePath
         } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
             fileName = rootFilePath
         }
         if let filePath = fileName {
-            if (request.matchedPath.hasSuffix(".html")) {
+            if (pathExtension == "html") {
                 response.headers["Content-Type"] = "text/html"
-            } else if (request.matchedPath.hasSuffix(".js")) {
+            } else if (pathExtension == "js") {
                 response.headers["Content-Type"] = "application/javascript"
-            } else if (request.matchedPath.hasSuffix(".wasm")) {
+            } else if (pathExtension == "wasm") {
                 response.headers["Content-Type"] = "application/wasm"
             }
             // These headers get us a "crossOriginIsolated == true;" on OSX Safari
@@ -59,6 +64,7 @@ func startLocalWebServer() {
                 try response.send(fileName: filePath)
             }
             catch {
+                // NSLog("Kitura failure: \(filePath)")
                 response.statusCode = .forbidden
                 response.send("Loading \(filePath) failed")
             }
@@ -66,8 +72,8 @@ func startLocalWebServer() {
             // NSLog("Kitura file not found: \(request.matchedPath)")
             response.statusCode = .notFound
             response.send("")
+            next()
         }
-        next()
     }
     let sslConfig =  SSLConfig(withChainFilePath: Bundle.main.resourcePath! + "/localCertificate.pfx",
                                withPassword: "password",
@@ -78,6 +84,7 @@ func startLocalWebServer() {
         Kitura.addHTTPServer(onPort: 8334, with: localServerApp, withSSL: sslConfig)
     }
     localServerQueue.async{
+        NSLog("starting server timestamp")
         Kitura.run()
     }
 }
@@ -178,20 +185,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
         UserDefaults.standard.register(defaults: ["escape_preference" : false])
         UserDefaults.standard.register(defaults: ["show_toolbar" : true])
-        // Use the system toolbar is the default for iPad M1 and above, but not for the other models:
-        UserDefaults.standard.register(defaults: ["system_toolbar" : isM1iPad(modelName: UIDevice.current.modelName)])
+        UserDefaults.standard.register(defaults: ["legacy_toolbar" : false])
         // What color should the keyboard and system toolbar be? (screen: same mode as the screen itself)
         UserDefaults.standard.register(defaults: ["toolbar_color" : "screen"])
         UserDefaults.standard.register(defaults: ["screen_space" : "default"])
         UserDefaults.standard.register(defaults: ["restart_vim" : false])
         UserDefaults.standard.register(defaults: ["keep_content" : true])
         toolbarShouldBeShown = UserDefaults.standard.bool(forKey: "show_toolbar")
+        showToolbar = toolbarShouldBeShown
         // system toolbar only applies on iPads:
-        if (UIDevice.current.model.hasPrefix("iPad")) {
-            useSystemToolbar = UserDefaults.standard.bool(forKey: "system_toolbar")
-        } else {
-            useSystemToolbar = false
-        }
+        useSystemToolbar = UIDevice.current.model.hasPrefix("iPad") && UserDefaults.standard.bool(forKey: "legacy_toolbar")
         let screenSpacePref = UserDefaults.standard.string(forKey: "screen_space")
         if (screenSpacePref == "safe") {
             viewBehavior = .original
@@ -218,7 +221,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("play", "play_main", true)
         replaceCommand("view", "preview_main", true)
         replaceCommand("z", "z_command", true) // change directory based on frequencys
-        replaceCommand("rehash", "rehash", true) // update list of commands for auto-complete
+        // replaceCommand("rehash", "rehash", true) // update list of commands for auto-complete
         replaceCommand("repeatCommand", "repeatCommand", true)
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
@@ -243,6 +246,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             // "updateCommands" is also called at startup:
             updateCommands(argc: 1, argv: nil);
         }
+        if #unavailable(iOS 18) {
+            replaceCommand("wasmkit", "wasmkitUnavailable", true)
+        }
         // for debugging TeX issues / installing a new distribution
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
@@ -264,6 +270,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier:"group.AsheKube.a-Shell")?.path, 1) // directory used by shortcuts
         setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
         setenv("PAGER", "less", 1) // send control sequences directly to terminal
+        setenv("TERM", "xterm-256color", 1); // now that we use SwiftTerm
         setenv("MAGICK_HOME", Bundle.main.resourcePath! +  "/ImageMagick-7", 1)
         setenv("MAGICK_CONFIGURE_PATH", Bundle.main.resourcePath! +  "/ImageMagick-7/config", 1)
         if (UIDevice.current.model.hasPrefix("iPad")) {
@@ -296,7 +303,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (appVersion != "a-Shell-mini") {
             // clang options:
             setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
-            setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions +-lunwind", 1) // silently add "--target=wasm32-wasi" at the beginning of arguments and "-lunwind" at the end.
+            // set up C and C++ compile options: silently add "--target=wasm32-wasi" at the beginning of arguments
+            // and "-lunwind" at the end.
+            // use legacy exception handling for iOS 14 to 17, new exception handling for iOS 18 and above.
+            // - Apple wasm interpreter accepts the new EH on iOS 18 and above,
+            // - wasmkit only accepts the new EH and only runs on iOS 18 and above
+            // - wasm3 does not accept any kind of exception handling.
+            if #available(iOS 18.0, *) {
+                setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions ^-mllvm=-wasm-use-legacy-eh=false +-lunwind", 1)
+            } else {
+                setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions ^-mllvm=-wasm-use-legacy-eh=true  +-lunwind", 1)
+            }
             // TeX variables (for tlmgr to work) = only when installing from scratch
             // default texmf.cnf available:
             // setenv("TEXMFCNF", Bundle.main.resourcePath!, 1)
@@ -370,9 +387,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let pysalData = libraryURL.appendingPathComponent("pysal_data")
             setenv("PYSALDATA", pysalData.path, 1)
         } // end !a-Shell mini
+        // All calls to setenv() before calls to executeCommandAndWait otherwise we can be redefining the environment
+        // while copying it
+        // Main Python install: $APPDIR/Library/lib/python3.x
+        setenv("PYTHONHOME", Bundle.main.resourcePath! + "/Library", 1)
+        // Compiled files: ~/Library/__pycache__
+        setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path, 1)
+        setenv("PYTHONUSERBASE", libraryURL.path, 1)
+        setenv("PYTHON_HISTORY", documentsUrl.appendingPathComponent(".python_history").path, 1)
+        setenv("PYZMQ_BACKEND", "cffi", 1)
+        // Frameworks are in $APPDIR/Frameworks:
+        setenv("DYLD_FRAMEWORK_PATH", Bundle.main.resourcePath! + "/Frameworks", 1)
+        setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
         // Switch installed Python packages from 3.9 to 3.13:
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
-            installQueue.async{
+            cleanupQueue.async{
                 ios_switchSession("filesCleanup")
                 // Move all site-packages to $HOME/Library/lib/python3.11/site-packages/
                 executeCommandAndWait(command: "mkdir -p " + libraryURL.path + "/lib/python3.13/site-packages/")
@@ -383,7 +412,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         // Switch installed Python packages from 3.11 to 3.13:
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.11/site-packages/")) {
-            installQueue.async{
+            cleanupQueue.async{
                 ios_switchSession("filesCleanup")
                 // Move all site-packages to $HOME/Library/lib/python3.11/site-packages/
                 executeCommandAndWait(command: "mkdir -p " + libraryURL.path + "/lib/python3.13/site-packages/")
@@ -393,7 +422,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         if (!versionUpToDate) {
-            installQueue.async{
+            cleanupQueue.async{
                 // The version number changed, so the App has been re-installed. Clean all pre-compiled Python files:
                 NSLog("Cleaning __pycache__ and .cpan/build")
                 ios_switchSession("filesCleanup")
@@ -414,16 +443,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as! String
         UserDefaults.standard.set(currentBuild, forKey: "buildNumber")
         self.versionUpToDate = true
-        // Main Python install: $APPDIR/Library/lib/python3.x
-        setenv("PYTHONHOME", Bundle.main.resourcePath! + "/Library", 1)
-        // Compiled files: ~/Library/__pycache__
-        setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path, 1)
-        setenv("PYTHONUSERBASE", libraryURL.path, 1)
-        setenv("PYTHON_HISTORY", documentsUrl.appendingPathComponent(".python_history").path, 1)
-        setenv("PYZMQ_BACKEND", "cffi", 1)
-        // Frameworks are in $APPDIR/Frameworks:
-        setenv("DYLD_FRAMEWORK_PATH", Bundle.main.resourcePath! + "/Frameworks", 1)
-        setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
         checkBookmarks() // activate all bookmarks in the app
         // iCloud abilities:
         // We check whether the user has iCloud ability here, and that the container exists
@@ -559,7 +578,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // We only act if things have really changed.
         // bookmarks management, copied from zshmarks: https://github.com/jocelynmallon/zshmarks
         let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
-        if (zshmarks) {
+        if (zshmarks && !zshmarksActivated) {
+            zshmarksActivated = true
             replaceCommand("showmarks", "showmarks", true) //
             replaceCommand("jump", "jump", true) // go to bookmark
             replaceCommand("bookmark", "bookmark", true) // add bookmark for current directory
@@ -567,7 +587,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("renamemark", "renamemark", true) // rename bookmark
         }
         let bashmarks = UserDefaults.standard.bool(forKey: "bashmarks")
-        if (bashmarks) {
+        if (bashmarks && !bashmarksActivated) {
+            bashmarksActivated = true
             replaceCommand("l", "showmarks", true) //
             replaceCommand("p", "showmarks", true) //
             replaceCommand("g", "jump", true) // go to bookmark
@@ -576,37 +597,38 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             replaceCommand("r", "renamemark", true) // rename bookmark
         }
         let toolbarColor = UserDefaults.standard.string(forKey: "toolbar_color")
-        if (toolbarColor == "system") {
-            for scene in UIApplication.shared.connectedScenes {
-                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                    delegate.overrideUserInterfaceStyle(style: .unspecified)
+        DispatchQueue.main.async {
+            switch (toolbarColor) {
+            case "dark":
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                        delegate.overrideUserInterfaceStyle(style: .dark)
+                    }
                 }
-            }
-        } else if (toolbarColor == "dark") {
-            for scene in UIApplication.shared.connectedScenes {
-                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                    delegate.overrideUserInterfaceStyle(style: .dark)
+            case "light":
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                        delegate.overrideUserInterfaceStyle(style: .light)
+                    }
                 }
-            }
-        } else if (toolbarColor == "light") {
-            for scene in UIApplication.shared.connectedScenes {
-                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                    delegate.overrideUserInterfaceStyle(style: .light)
-                }
-            }
-        } else if (toolbarColor == "screen") {
-            if let ColorFgBg = getenv("COLORFGBG") {
-                if (String(utf8String: ColorFgBg) == "15;0") {
-                    for scene in UIApplication.shared.connectedScenes {
-                        if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                            delegate.overrideUserInterfaceStyle(style: .dark)
+            case "screen":
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                        if let foregroundColor = delegate.terminalForegroundColor, let backgroundColor = delegate.terminalBackgroundColor {
+                            if (foregroundColor.getBrightness() > backgroundColor.getBrightness()) {
+                                delegate.overrideUserInterfaceStyle(style: .dark)
+                            } else {
+                                delegate.overrideUserInterfaceStyle(style: .light)
+                            }
                         }
                     }
-                } else {
-                    for scene in UIApplication.shared.connectedScenes {
-                        if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                            delegate.overrideUserInterfaceStyle(style: .light)
-                        }
+                }
+            case "system":
+                fallthrough
+            default:
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                        delegate.overrideUserInterfaceStyle(style: .unspecified)
                     }
                 }
             }
@@ -618,9 +640,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             // Send the value to all the SceneDelegate connected to this application
             toolbarShouldBeShown = false
             // Remove the toolbar on all connected scenes (usually none since the app is in the background):
-            for scene in UIApplication.shared.connectedScenes {
-                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                    delegate.hideToolbar()
+            DispatchQueue.main.async {
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                        delegate.hideToolbar()
+                    }
                 }
             }
         } else if (!toolbarShouldBeShown && toolbarSettings) {
@@ -629,41 +653,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             // Send the value to all the SceneDelegate connected to this application
             toolbarShouldBeShown = true
             // Remove the toolbar on all connected scenes (usually none since the app is in the background):
-            for scene in UIApplication.shared.connectedScenes {
-                if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                    delegate.showEditorToolbar()
+            DispatchQueue.main.async {
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                        delegate.showEditorToolbar()
+                    }
                 }
             }
         }
         toolbarShouldBeShown = toolbarSettings
-        // Ability to switch to the iPadOS-style system toolbar. Only available on iPads
-        if (UIDevice.current.model.hasPrefix("iPad")) {
-            let systemToolbarSettings = UserDefaults.standard.bool(forKey: "system_toolbar")
-            if (useSystemToolbar && !systemToolbarSettings) {
-                NSLog("Received call to switch to system toolbar through preferences")
-                // User has just requested we hide the system toolbar
-                // Send the value to all the SceneDelegate connected to this application
+        // use the old-style toolbar on iPads (mostly as a bug fix for iPads that don't display the new toolbar)
+        if UIDevice.current.model.hasPrefix("iPad") {
+            let useOldToolbar = UserDefaults.standard.bool(forKey: "legacy_toolbar")
+            if (useSystemToolbar && useOldToolbar) {
                 useSystemToolbar = false
-                for scene in UIApplication.shared.connectedScenes {
-                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                        if (toolbarShouldBeShown) {
-                            delegate.showEditorToolbar()
-                        } else {
-                            delegate.hideToolbar()
+                if (toolbarShouldBeShown) {
+                    DispatchQueue.main.async {
+                        for scene in UIApplication.shared.connectedScenes {
+                            if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                                delegate.showEditorToolbar()
+                            }
                         }
                     }
                 }
-            } else if (!useSystemToolbar && systemToolbarSettings) {
-                NSLog("Received call to switch to regular toolbar through preferences")
-                // User has just requested we show the toolbar
-                // Send the value to all the SceneDelegate connected to this application
+            } else if (!useSystemToolbar && !useOldToolbar) {
                 useSystemToolbar = true
-                for scene in UIApplication.shared.connectedScenes {
-                    if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
-                        if (toolbarShouldBeShown) {
-                            delegate.showEditorToolbar()
-                        } else {
-                            delegate.hideToolbar()
+                if (toolbarShouldBeShown) {
+                    DispatchQueue.main.async {
+                        for scene in UIApplication.shared.connectedScenes {
+                            if let delegate: SceneDelegate = scene.delegate as? SceneDelegate {
+                                delegate.showEditorToolbar()
+                            }
                         }
                     }
                 }
@@ -724,5 +744,4 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return nil
         }
     }
-    
 }

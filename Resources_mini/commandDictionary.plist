@@ -49,7 +49,14 @@
 		<string>SELF</string>
 		<string>cd_main</string>
 		<string></string>
-		<string>no</string>
+		<string>directory</string>
+	</array>
+	<key>chdir</key>
+	<array>
+		<string>SELF</string>
+		<string>cd_main</string>
+		<string></string>
+		<string>directory</string>
 	</array>
 	<key>chflags</key>
 	<array>
@@ -926,11 +933,25 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>wasmkit</key>
+	<array>
+		<string>WasmKitCommand.framework/WasmKitCommand</string>
+		<string>wasmkit</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>blink</key>
 	<array>
 		<string>blink.framework/blink</string>
 		<string>main</string>
 		<string></string>
+		<string>file</string>
+	</array>
+	<key>curl-impersonate</key>
+	<array>
+		<string>curl-impersonate.framework/curl-impersonate</string>
+		<string>main</string>
+		<string>2346aAbBcCdDeEfgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwxXYyz#</string>
 		<string>file</string>
 	</array>
 </dict>

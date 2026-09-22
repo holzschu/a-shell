@@ -72,9 +72,9 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
-			<string>Use the iPadOS toolbar</string>
+			<string>Old-style toolbar on iPads</string>
 			<key>Key</key>
-			<string>system_toolbar</string>
+			<string>legacy_toolbar</string>
 			<key>DefaultValue</key>
 			<false/>
 		</dict>
