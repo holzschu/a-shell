@@ -296,6 +296,9 @@
 		22B0CA662E75DDDD00FDF6FE /* Python-zmq.backend.cffi._cffi.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B0CA642E75DCC100FDF6FE /* Python-zmq.backend.cffi._cffi.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B0CA672E75DDDD00FDF6FE /* PythonAzmq.backend.cffi._cffi.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B0CA652E75DCD300FDF6FE /* PythonAzmq.backend.cffi._cffi.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B114772817CEA400A5BF16 /* terminfo in Resources */ = {isa = PBXBuildFile; fileRef = 22B114762817CEA200A5BF16 /* terminfo */; };
+		22B11A362FF78B97000A40FE /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B11A352FF78A43000A40FE /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22B11A372FF78BA7000A40FE /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B11A352FF78A43000A40FE /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22B11A382FF78BAF000A40FE /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B11A352FF78A43000A40FE /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B3D35B2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */ = {isa = PBXBuildFile; fileRef = 22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */; };
 		22B3D35C2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */ = {isa = PBXBuildFile; fileRef = 22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */; };
 		22B3D35D2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */ = {isa = PBXBuildFile; fileRef = 22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */; };
@@ -1078,6 +1081,7 @@
 				224A90CA2ADD0999006DB9CC /* dashE.xcframework in Embed Frameworks */,
 				224A90CB2ADD0999006DB9CC /* jq.xcframework in Embed Frameworks */,
 				224A91682ADD0999006DB9CC /* pico.framework in Embed Frameworks */,
+				22B11A382FF78BAF000A40FE /* WasmKitCommand.framework in Embed Frameworks */,
 				224A91692ADD0999006DB9CC /* multimarkdown.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -1332,6 +1336,7 @@
 				220F18882C7C81ED007090F8 /* blink.xcframework in Embed Frameworks */,
 				226B0BF92E9FD5F200B14A3F /* openrsync.framework in Embed Frameworks */,
 				223E91E62EC1251900A81615 /* openrsyncA.framework in Embed Frameworks */,
+				22B11A372FF78BA7000A40FE /* WasmKitCommand.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1882,6 +1887,7 @@
 				224C24FA2C94238900DE430E /* blink.xcframework in Embed Frameworks */,
 				2242DBC12E646FDD000AC08A /* cbc.framework in Embed Frameworks */,
 				223E91E72EC1252800A81615 /* openrsyncA.framework in Embed Frameworks */,
+				22B11A362FF78B97000A40FE /* WasmKitCommand.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2047,6 +2053,7 @@
 		22B0CA642E75DCC100FDF6FE /* Python-zmq.backend.cffi._cffi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-zmq.backend.cffi._cffi.framework"; path = "Resources/Frameworks/Python-zmq.backend.cffi._cffi.framework"; sourceTree = SOURCE_ROOT; };
 		22B0CA652E75DCD300FDF6FE /* PythonAzmq.backend.cffi._cffi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAzmq.backend.cffi._cffi.framework; path = Resources/Frameworks/PythonAzmq.backend.cffi._cffi.framework; sourceTree = SOURCE_ROOT; };
 		22B114762817CEA200A5BF16 /* terminfo */ = {isa = PBXFileReference; lastKnownFileType = folder; path = terminfo; sourceTree = "<group>"; };
+		22B11A352FF78A43000A40FE /* WasmKitCommand.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WasmKitCommand.framework; path = "/Users/holzschu/Library/Developer/Xcode/DerivedData/WasmKitCommand-ekirbcggqhwihkemvunodcrbcfyg/Build/Products/Release-iphoneos/WasmKitCommand.framework"; sourceTree = "<absolute>"; };
 		22B1B81622CB9E4800F7C452 /* extraCommandsDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = extraCommandsDictionary.plist; path = Resources/extraCommandsDictionary.plist; sourceTree = "<group>"; };
 		22B1B83322CBC53700F7C452 /* a-Shell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell.entitlements"; sourceTree = "<group>"; };
 		22B257B9267691E2006C2B31 /* gestures.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = gestures.js; sourceTree = "<group>"; };
@@ -3028,6 +3035,7 @@
 				226B0BF72E9FD5C300B14A3F /* openrsync.framework */,
 				223E91E52EC11C7500A81615 /* openrsyncA.framework */,
 				2269076D2F97BBB40071F551 /* curl-impersonate.framework */,
+				22B11A352FF78A43000A40FE /* WasmKitCommand.framework */,
 			);
 			name = Frameworks;
 			sourceTree = SOURCE_ROOT;
@@ -3916,7 +3924,6 @@
 			packageProductDependencies = (
 				227EE36D2F0913C000636757 /* SwiftTerm */,
 				2225C10F2F685BD50013F533 /* Kitura */,
-				222187322FF3CEE000B93938 /* WasmKit */,
 			);
 			productName = "a-Shell";
 			productReference = 22984EEA22C93DBC00069497 /* a-Shell.app */;
@@ -4726,7 +4733,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 567;
+				CURRENT_PROJECT_VERSION = 585;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4751,7 +4758,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = 2.2.2;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4777,7 +4784,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 567;
+				CURRENT_PROJECT_VERSION = 585;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4802,7 +4809,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = 2.2.2;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4827,7 +4834,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 567;
+				CURRENT_PROJECT_VERSION = 585;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4851,7 +4858,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = 2.2.2;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
@@ -4882,7 +4889,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 567;
+				CURRENT_PROJECT_VERSION = 585;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -4906,7 +4913,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = 2.2.2;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
@@ -5130,10 +5137,6 @@
 		2213EE122EE4A148001F0114 /* SwiftTerm */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SwiftTerm;
-		};
-		222187322FF3CEE000B93938 /* WasmKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = WasmKit;
 		};
 		2225C10D2F685BCB0013F533 /* Kitura */ = {
 			isa = XCSwiftPackageProductDependency;
