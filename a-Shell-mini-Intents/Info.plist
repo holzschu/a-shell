@@ -42,5 +42,7 @@
 		<key>NSExtensionPrincipalClass</key>
 		<string>$(PRODUCT_MODULE_NAME).IntentHandler</string>
 	</dict>
+	<key>AppGroupIdentifier</key>
+	<string>group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell</string>
 </dict>
 </plist>

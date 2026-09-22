@@ -141,7 +141,7 @@
 	<string>a-Shell would like to access your reminders to read and write events</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
-		<key>iCloud.AsheKube.app.a-Shell</key>
+		<key>iCloud.$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell</key>
 		<dict>
 			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
 			<true/>
@@ -210,5 +210,7 @@
 	</array>
 	<key>UISupportsDocumentBrowser</key>
 	<true/>
+	<key>AppGroupIdentifier</key>
+	<string>group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell</string>
 </dict>
 </plist>

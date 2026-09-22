@@ -34,6 +34,10 @@ If you want to compile the project yourself, you will need the following steps:
         * change directory to `cpython`: `cd cpython`
         * build Python 3.11 and all the associated libraries / frameworks: `sh ./downloadAndCompile.sh` (this step takes several hours on a 2GHz i5 MBP, YMMV).
 
+If you want to compile for the devices, you will need the following additional steps:
+* copy `Configuration.sample.xcconfig` to create `Configuration.xcconfig`
+* replace the team ID and prefixes with your own ones in `Configuration.xcconfig`
+
 a-Shell now runs on the devices. a-Shell mini can run on the devices and the simulator.
 
 Because Python 3.x uses functions that are only available on the iOS 14 SDK, I've set the minimum iOS version to 14.0. It also reduces the size of the binaries, so `ios_system` and the other frameworks have the same settings. If you need to run it on an iOS 13 device, you'll have to recompile most frameworks.

@@ -1,0 +1,6 @@
+// You can find your team ID at https://developer.apple.com/account#MembershipDetailsCard.
+DEVELOPMENT_TEAM = VG8Z23C8YL
+// The bundle IDs will be something like `$(PRODUCT_BUNDLE_PREFIX).a-Shell`.
+PRODUCT_BUNDLE_PREFIX = AsheKube.app
+// The app group ID will be something like `group.$(APP_GROUP_PREFIX).a-Shell`.
+APP_GROUP_PREFIX = AsheKube
