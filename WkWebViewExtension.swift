@@ -65,6 +65,8 @@ extension WKWebView {
         return nil
     }
 
+#if TO_REMOVE
+
     var keyboardDisplayRequiresUserAction: Bool? {
         get {
             return self.keyboardDisplayRequiresUserAction
@@ -147,5 +149,6 @@ extension WKWebView {
             }
         }
     }
+    #endif
 
 }

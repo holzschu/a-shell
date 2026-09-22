@@ -8,6 +8,8 @@
 
 import Foundation
 import UIKit
+import SwiftTerm
+
 extension UIColor {
     convenience init(hexString: String, alpha: CGFloat = 1.0) {
         let hexString: String = hexString.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
@@ -36,6 +38,15 @@ extension UIColor {
         return String(format:"#%06x", rgb)
     }
     
+    func toSwiftTermColor() -> SwiftTerm.Color {
+        var r:CGFloat = 0
+        var g:CGFloat = 0
+        var b:CGFloat = 0
+        var a:CGFloat = 0
+        getRed(&r, green: &g, blue: &b, alpha: &a)
+        return SwiftTerm.Color(red: UInt16(r * 65535), green: UInt16(g * 65535), blue: UInt16(b * 65535))
+    }
+    
     // Swift
     func inverseColor() -> UIColor {
         var alpha: CGFloat = 1.0
@@ -58,12 +69,44 @@ extension UIColor {
         return self
     }
     
-    func nonTransparent() -> UIColor {
+    func getBrightness() -> CGFloat {
         var alpha: CGFloat = 1.0
+        var hue: CGFloat = 0.0, saturation: CGFloat = 0.0, brightness: CGFloat = 0.0
+        if self.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) {
+            return brightness
+        }
+        return 0
+    }
+    
+    func makeTransparent() -> UIColor {
+        var alpha: CGFloat = 1.0
+        var newAlpha: CGFloat = 0.5
+        
+        var red: CGFloat = 0.0, green: CGFloat = 0.0, blue: CGFloat = 0.0
+        if self.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+            return UIColor(red: red, green: green, blue: blue, alpha: newAlpha)
+        }
+        
+        var hue: CGFloat = 0.0, saturation: CGFloat = 0.0, brightness: CGFloat = 0.0
+        if self.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) {
+            return UIColor(hue: hue, saturation: saturation, brightness: brightness, alpha: newAlpha)
+        }
         
         var white: CGFloat = 0.0
         if self.getWhite(&white, alpha: &alpha) {
-            return UIColor(white: white, alpha: 1.0)
+            return UIColor(white: white, alpha: newAlpha)
+        }
+        
+        return self
+
+    }
+    
+    func nonTransparent() -> UIColor {
+        var alpha: CGFloat = 1.0
+        
+        var red: CGFloat = 0.0, green: CGFloat = 0.0, blue: CGFloat = 0.0
+        if self.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+            return UIColor(red: red, green: green, blue: blue, alpha: 1.0)
         }
         
         var hue: CGFloat = 0.0, saturation: CGFloat = 0.0, brightness: CGFloat = 0.0
@@ -71,9 +114,9 @@ extension UIColor {
             return UIColor(hue: hue, saturation: saturation, brightness: brightness, alpha: 1.0)
         }
         
-        var red: CGFloat = 0.0, green: CGFloat = 0.0, blue: CGFloat = 0.0
-        if self.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
-            return UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+        var white: CGFloat = 0.0
+        if self.getWhite(&white, alpha: &alpha) {
+            return UIColor(white: white, alpha: 1.0)
         }
         
         return self

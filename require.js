@@ -47,6 +47,28 @@
       t: undefined, // type
       u: href, // url
     };
+	  // Once jsc is loaded, we use it, for file:// urls:
+	  if ((typeof jsc !== 'undefined') && (href.startsWith('file:'))) {
+		  var path = new URL(href).pathname;
+		  var source;
+		  if (typeof cached.p == 'boolean') {
+		  	  return cached;
+		  }
+		  if (jsc.isFile(path)) {
+			  cached.s = source = jsc.readFile(path);
+			  cached.t = "file/text";
+			  var regex = /\.json$/;
+			  if (regex.test(href)) {
+				  cached.t = "application/json";
+			  }
+			  cached.p = true;
+			  cached.r = true;
+			  return cached;
+		  } else {
+			  cached.e = new Error("No such file: " + path);
+			  return null;
+		  }
+	  }
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
@@ -164,7 +186,38 @@
 					  return evaluate(cached, parent).exports;
 				  }
 
+		  // Enhancement: search for modules in ~/Library/node_modules before $APPDIR/node_modules.
 		  var cachedModule = null; 
+		  if (typeof window !== 'undefined') {
+			  if (typeof window.homedir !== 'undefined') {
+				  var localroot = new URL("Library/", window.homedir);
+				  var localpwd = (new URL(id[0] == "." ? (parent ? parent.uri : localroot) : config.paths[0], localroot)).href;
+				  cachedModule = load(id, localpwd, ""); // no suffix at all
+				  // "browser" modules must take priority over package.json 
+				  // This might be a larger issue: package.json contains (often) index.js
+				  // Could be: "replace index.js with browser.js" (if it exists)
+				  // Or: edit package.json in the few relevant cases.
+				  if (cachedModule == null) {
+					  cachedModule = load(id, localpwd, "/browser.js");
+				  }
+				  if (cachedModule == null) {
+					  cachedModule = load(id, localpwd, "-browserify/index.js");
+				  }
+				  // package.json contains the name of the module
+				  if (cachedModule == null) {
+					  cachedModule = load(id, localpwd, "/package.json");
+				  }
+				  if (cachedModule == null) {
+					  cachedModule = load(id, localpwd, ".js");
+				  }
+				  if (cachedModule == null) {
+					  cachedModule = load(id, localpwd, "/index.js");
+				  }
+				  if (cachedModule == null) {
+					  cachedModule = load(id, localpwd, "/" + id + ".js");
+				  }
+			  }
+		  }
 		  if (cachedModule == null) {
 			  var pwd = (new URL(id[0] == "." ? (parent ? parent.uri : config.root) : config.paths[0], config.root)).href;
 			  cachedModule = load(id, pwd, ""); // no suffix at all
@@ -214,7 +267,11 @@
   config = config || new Object();
   config.paths = config.paths || ["./node_modules/"];
   config.resolve = config.resolve || resolve;
-  config.root = config.root || location.href;
+  if (typeof window !== 'undefined') {
+	  config.root = config.root || window.appdir || location.href;
+  } else {
+	  config.root = config.root || location.href;
+  }
   require = factory(null);
   if (config.expose)
     self.require = require;
