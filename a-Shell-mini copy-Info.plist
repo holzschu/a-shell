@@ -127,6 +127,10 @@
 	<string>a-Shell mini would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>a-Shell mini would like to access to your photo library to upload images</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>a-Shell mini uses Bluetooth to connect to nearby devices from scripts and commands.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>a-Shell mini uses Bluetooth to connect to nearby devices from scripts and commands.</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
 		<key>iCloud.AsheKube.app.a-Shell</key>
