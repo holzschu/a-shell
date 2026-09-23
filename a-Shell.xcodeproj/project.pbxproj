@@ -69,6 +69,8 @@
 		2232245F289695B2001BAE04 /* pico.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2232245E289695A9001BAE04 /* pico.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2234FB15266F767200702AD1 /* lg2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2234FB14266F765A00702AD1 /* lg2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22365231249A39AC00221868 /* man in Resources */ = {isa = PBXBuildFile; fileRef = 22365230249A39AA00221868 /* man */; };
+		2236B29E30640BD2002B6F9E /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2236B29D30640BC4002B6F9E /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2236B29F30640BDC002B6F9E /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2236B29D30640BC4002B6F9E /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22372B722448E85D0033FE07 /* usr in Resources */ = {isa = PBXBuildFile; fileRef = 22372B712448E85C0033FE07 /* usr */; };
 		2237DC3128549CC6003E4738 /* jq.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2237DC3028549CB8003E4738 /* jq.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2237DC3228549CCF003E4738 /* jq.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2237DC3028549CB8003E4738 /* jq.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -296,9 +298,6 @@
 		22B0CA662E75DDDD00FDF6FE /* Python-zmq.backend.cffi._cffi.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B0CA642E75DCC100FDF6FE /* Python-zmq.backend.cffi._cffi.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B0CA672E75DDDD00FDF6FE /* PythonAzmq.backend.cffi._cffi.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B0CA652E75DCD300FDF6FE /* PythonAzmq.backend.cffi._cffi.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B114772817CEA400A5BF16 /* terminfo in Resources */ = {isa = PBXBuildFile; fileRef = 22B114762817CEA200A5BF16 /* terminfo */; };
-		22B11A362FF78B97000A40FE /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B11A352FF78A43000A40FE /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22B11A372FF78BA7000A40FE /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B11A352FF78A43000A40FE /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22B11A382FF78BAF000A40FE /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B11A352FF78A43000A40FE /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B3D35B2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */ = {isa = PBXBuildFile; fileRef = 22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */; };
 		22B3D35C2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */ = {isa = PBXBuildFile; fileRef = 22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */; };
 		22B3D35D2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */ = {isa = PBXBuildFile; fileRef = 22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */; };
@@ -1081,7 +1080,6 @@
 				224A90CA2ADD0999006DB9CC /* dashE.xcframework in Embed Frameworks */,
 				224A90CB2ADD0999006DB9CC /* jq.xcframework in Embed Frameworks */,
 				224A91682ADD0999006DB9CC /* pico.framework in Embed Frameworks */,
-				22B11A382FF78BAF000A40FE /* WasmKitCommand.framework in Embed Frameworks */,
 				224A91692ADD0999006DB9CC /* multimarkdown.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -1336,7 +1334,7 @@
 				220F18882C7C81ED007090F8 /* blink.xcframework in Embed Frameworks */,
 				226B0BF92E9FD5F200B14A3F /* openrsync.framework in Embed Frameworks */,
 				223E91E62EC1251900A81615 /* openrsyncA.framework in Embed Frameworks */,
-				22B11A372FF78BA7000A40FE /* WasmKitCommand.framework in Embed Frameworks */,
+				2236B29F30640BDC002B6F9E /* WasmKitCommand.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1887,7 +1885,7 @@
 				224C24FA2C94238900DE430E /* blink.xcframework in Embed Frameworks */,
 				2242DBC12E646FDD000AC08A /* cbc.framework in Embed Frameworks */,
 				223E91E72EC1252800A81615 /* openrsyncA.framework in Embed Frameworks */,
-				22B11A362FF78B97000A40FE /* WasmKitCommand.framework in Embed Frameworks */,
+				2236B29E30640BD2002B6F9E /* WasmKitCommand.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1938,6 +1936,7 @@
 		2232245E289695A9001BAE04 /* pico.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = pico.framework; path = xcfs/.build/artifacts/xcfs/pico.framework; sourceTree = "<group>"; };
 		2234FB14266F765A00702AD1 /* lg2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lg2.xcframework; path = xcfs/.build/artifacts/xcfs/lg2/lg2.xcframework; sourceTree = "<group>"; };
 		22365230249A39AA00221868 /* man */ = {isa = PBXFileReference; lastKnownFileType = folder; path = man; sourceTree = "<group>"; };
+		2236B29D30640BC4002B6F9E /* WasmKitCommand.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WasmKitCommand.framework; path = xcfs/.build/artifacts/xcfs/WasmKitCommand.framework; sourceTree = "<group>"; };
 		22372B712448E85C0033FE07 /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources/usr; sourceTree = "<group>"; };
 		2237DC3028549CB8003E4738 /* jq.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = jq.xcframework; path = xcfs/.build/artifacts/xcfs/jq/jq.xcframework; sourceTree = "<group>"; };
 		223A1C1B2A5EDCA700B1B9AD /* Tips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tips.swift; sourceTree = "<group>"; };
@@ -2053,7 +2052,6 @@
 		22B0CA642E75DCC100FDF6FE /* Python-zmq.backend.cffi._cffi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-zmq.backend.cffi._cffi.framework"; path = "Resources/Frameworks/Python-zmq.backend.cffi._cffi.framework"; sourceTree = SOURCE_ROOT; };
 		22B0CA652E75DCD300FDF6FE /* PythonAzmq.backend.cffi._cffi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAzmq.backend.cffi._cffi.framework; path = Resources/Frameworks/PythonAzmq.backend.cffi._cffi.framework; sourceTree = SOURCE_ROOT; };
 		22B114762817CEA200A5BF16 /* terminfo */ = {isa = PBXFileReference; lastKnownFileType = folder; path = terminfo; sourceTree = "<group>"; };
-		22B11A352FF78A43000A40FE /* WasmKitCommand.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WasmKitCommand.framework; path = "/Users/holzschu/Library/Developer/Xcode/DerivedData/WasmKitCommand-ekirbcggqhwihkemvunodcrbcfyg/Build/Products/Release-iphoneos/WasmKitCommand.framework"; sourceTree = "<absolute>"; };
 		22B1B81622CB9E4800F7C452 /* extraCommandsDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = extraCommandsDictionary.plist; path = Resources/extraCommandsDictionary.plist; sourceTree = "<group>"; };
 		22B1B83322CBC53700F7C452 /* a-Shell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell.entitlements"; sourceTree = "<group>"; };
 		22B257B9267691E2006C2B31 /* gestures.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = gestures.js; sourceTree = "<group>"; };
@@ -3037,7 +3035,7 @@
 				226B0BF72E9FD5C300B14A3F /* openrsync.framework */,
 				223E91E52EC11C7500A81615 /* openrsyncA.framework */,
 				2269076D2F97BBB40071F551 /* curl-impersonate.framework */,
-				22B11A352FF78A43000A40FE /* WasmKitCommand.framework */,
+				2236B29D30640BC4002B6F9E /* WasmKitCommand.framework */,
 			);
 			name = Frameworks;
 			sourceTree = SOURCE_ROOT;
@@ -3997,7 +3995,7 @@
 		22984EE222C93DBC00069497 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 2600;
+				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = AsheKube;
 				TargetAttributes = {
@@ -4500,7 +4498,6 @@
 		224A916E2ADD0999006DB9CC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
@@ -4550,7 +4547,6 @@
 		224A916F2ADD0999006DB9CC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
@@ -4726,7 +4722,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
@@ -4776,7 +4771,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
@@ -4825,7 +4819,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
@@ -4879,7 +4872,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
@@ -4931,7 +4923,6 @@
 		22AD8732246EBFFD00F415DE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -4959,7 +4950,6 @@
 		22AD8733246EBFFD00F415DE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-Intents/a-Shell-Intents.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -4987,7 +4977,6 @@
 		22AD8734246EBFFD00F415DE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
@@ -5009,7 +4998,6 @@
 		22AD8735246EBFFD00F415DE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-IntentsUI/a-Shell-IntentsUI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
