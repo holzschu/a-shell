@@ -636,12 +636,14 @@ extension SceneDelegate {
         if (newRows != height) {
             height = newRows
             setenv("LINES", "\(height)".toCString(), 1)
+            ios_setenv("LINES", "\(height)".toCString(), 1)
         }
         if (newCols != width) {
             width = newCols
             setenv("COLUMNS", "\(width)".toCString(), 1)
+            ios_setenv("COLUMNS", "\(width)".toCString(), 1)
         }
-        NSLog("Resized window: \(newCols) x \(newRows)")
+        NSLog("Resized window: \(newCols) x \(newRows) == \(getenv("COLUMNS")) x \(getenv("LINES"))")
     }
     
     // None of these are called.
@@ -1684,6 +1686,14 @@ extension SceneDelegate {
                 }
             }
         }
+        if (data.count >= 5) {
+            // kitty KB: (escape + [? + keyboardEnhancementFlags.rawValue + u)
+            // escape + [ + ? + ??? + u
+            if (data[0] == 0x1b) && (data[1] == 0x5b) && (data[2] == 0x3f) && (data[data.count-1] == 0x75) {
+                return
+            }
+        }
+        
         if let string = String(bytes: myData, encoding: .utf8) {
             // most frequent case:
             send(source: source, inputString: string)

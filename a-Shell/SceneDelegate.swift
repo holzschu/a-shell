@@ -36,6 +36,8 @@ struct javascriptCommand {
     var jsCommand: String = ""
     var webAssemblyGroup: DispatchGroup? = nil
     var originalCommand: String = ""
+    var stdout_fileName: String = ""
+    var stderr_fileName: String = ""
 }
 
 // Tips:
@@ -1680,7 +1682,28 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         webAssemblyCommand.thread_stderr_copy = thread_stderr
         webAssemblyCommand.webAssemblyGroup = DispatchGroup()
         webAssemblyCommand.originalCommand = argumentString
-        NSLog("Created webAssemblyCommand: \(argumentString) at position: \(commandNumber) stdout:\(fileno(thread_stdout))")
+        webAssemblyCommand.stdout_fileName = ""
+        webAssemblyCommand.stderr_fileName = ""
+
+        var stdoutFilePathCString = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+        _ = fcntl(fileno(thread_stdout), F_GETPATH, &stdoutFilePathCString)
+        let stdoutFilePath = String(cString: stdoutFilePathCString)
+        var stderrFilePathCString = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+        _ = fcntl(fileno(thread_stderr), F_GETPATH, &stderrFilePathCString)
+        let stderrFilePath = String(cString: stderrFilePathCString)
+        let stdoutDirectOutput = (fileno(thread_stdout) == fileno(stdout_file))
+        let stderrDirectOutput = (fileno(thread_stderr) == fileno(stdout_file))
+        
+        NSLog("Created webAssemblyCommand: \(argumentString) at position: \(commandNumber) stdout:\(fileno(thread_stdout)) stdout command: \(fileno(stdout_file))")
+        if (stdoutFilePath.count == 0) && !stdoutDirectOutput {
+            webAssemblyCommand.stdout_fileName = NSTemporaryDirectory() + "wasm_command_\(commandNumber).out"
+            NSLog("We redirect the standard output to a file: \(webAssemblyCommand.stdout_fileName)")
+        }
+        if (stderrFilePath.count == 0) && !stderrDirectOutput && (fileno(thread_stderr) != fileno(thread_stdout)) {
+            webAssemblyCommand.stderr_fileName = NSTemporaryDirectory() + "wasm_command_\(commandNumber).err"
+            NSLog("We redirect the standard error to a different file: \(webAssemblyCommand.stderr_fileName)")
+        }
+
         if (commandsStack[commandNumber] == nil) {
             commandsStack[commandNumber] = webAssemblyCommand
             resultStack[commandNumber] = nil
@@ -1716,7 +1739,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     func executeWebAssemblyCommands() {
         // since we're multi-threaded, we could be executing this while executeWebAssembly() is still running. So we wait.
-        NSLog("executeWebAssemblyCommands: ur: \(webView?.url)")
+        NSLog("executeWebAssemblyCommands: url: \(webView?.url)")
         var wasmEndedWithError = false;
         NSLog("Starting executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack) executeWebAssemblyCommandsRunning= \(executeWebAssemblyCommandsRunning)")
         if (commandsStack.isEmpty) {
@@ -1755,10 +1778,21 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
                 self.thread_stdin_copy = command!.thread_stdin_copy
-                self.thread_stdout_copy = command!.thread_stdout_copy
-                self.thread_stderr_copy = command!.thread_stderr_copy
+                if (command!.stdout_fileName == "") {
+                    self.thread_stdout_copy = command!.thread_stdout_copy
+                } else {
+                    self.thread_stdout_copy = fopen(command!.stdout_fileName, "w")
+                    if (fileno(command!.thread_stdout_copy) == fileno(command!.thread_stderr_copy)) {
+                        self.thread_stderr_copy = self.thread_stdout_copy
+                    }
+                }
+                if (command!.stderr_fileName == "") {
+                    self.thread_stderr_copy = command!.thread_stderr_copy
+                } else {
+                    self.thread_stderr_copy = fopen(command!.stderr_fileName, "w")
+                }
                 self.stdinString = "" // reinitialize stdin
-                NSLog("Executing \(command!.originalCommand) in executeWebAssComm, position= \(self.commandsStack.count)")
+                NSLog("Executing \(command!.originalCommand) in executeWebAssComm, position= \(self.commandsStack.count) stdin: \(fileno(self.thread_stdin_copy)) stdout: \(fileno(self.thread_stdout_copy)) stderr: \(fileno(self.thread_stderr_copy)) ")
                 self.webView?.evaluateJavaScript(command!.jsCommand)
                 // javascriptGroup.leave() // This is now triggered by a prompt() call
             }
@@ -1778,6 +1812,36 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (thread_stdin_copy == nil) {
                 // Strangely, the letters typed after ^D do not appear on screen. We force two carriage return to get the prompt visible:
                 terminalView?.feed(text: "\n\n")
+            }
+            if (command!.stdout_fileName != "") {
+                fflush(thread_stdout_copy)
+                fclose(thread_stdout_copy)
+                do {
+                    if let outData = try? Data(contentsOf: URL(fileURLWithPath: command!.stdout_fileName)) {
+                        let stdout_file = FileHandle(fileDescriptor: fileno(command!.thread_stdout_copy))
+                        try stdout_file.write(contentsOf: outData)
+                        try stdout_file.close() // necessary?
+                        try FileManager().removeItem(atPath: command!.stdout_fileName)
+                     }
+                }
+                catch {
+                    NSLog("Something went wrong in writing the stdout data from \(command!.stdout_fileName) to \(fileno(command!.thread_stdout_copy)): \(error).")
+                }
+            }
+            if (command!.stderr_fileName != "") {
+                fflush(thread_stderr_copy)
+                fclose(thread_stderr_copy)
+                do {
+                    if let errData = try? Data(contentsOf: URL(fileURLWithPath: command!.stderr_fileName)) {
+                        let stderr_file = FileHandle(fileDescriptor: fileno(command!.thread_stderr_copy))
+                        try stderr_file.write(contentsOf: errData)
+                        try stderr_file.close() // necessary? 
+                        try FileManager().removeItem(atPath: command!.stderr_fileName)
+                    }
+                }
+                catch {
+                    NSLog("Something went wrong in writing the stderr data from \(command!.stderr_fileName) to \(fileno(command!.thread_stderr_copy)): \(error).")
+                }
             }
             // Do not close thread_stdin because if it's a pipe, processes could still be writing into it
             // fclose(thread_stdin)
@@ -4747,10 +4811,21 @@ extension SceneDelegate: WKUIDelegate {
                 // NSLog("opening file: \(arguments[2])")
                 let rights = Int32(arguments[3]) ?? 577;
                 var returnValue:Int32 = 0
+                var fileName = arguments[2]
+                // sometimes, wasm removes the leading "/":
+                if (!FileManager().fileExists(atPath: fileName)) {
+                    if (arguments[2].hasPrefix("var/mobile/Containers") ||
+                        arguments[2].hasPrefix("var/mobile/Library") ||
+                        arguments[2].hasPrefix("private/var/mobile/Containers") ||
+                        arguments[2].hasPrefix("private/var/mobile/Library") ||
+                        arguments[2].hasPrefix("dev")) {
+                        fileName = "/" + arguments[2]
+                    }
+                }
                 if (rights & O_CREAT != 0) {
-                    returnValue = open(arguments[2], rights, 0o644)
+                    returnValue = open(fileName, rights, 0o644)
                 } else {
-                    returnValue = open(arguments[2], rights)
+                    returnValue = open(fileName, rights)
                 }
                 if (returnValue == -1) {
                     completionHandler("\(-errno)")
@@ -4799,7 +4874,8 @@ extension SceneDelegate: WKUIDelegate {
                                         data.append(contentsOf: [value])
                                     }
                                 }
-                                // NSLog("writing \(String(decoding: data, as: UTF8.self)) to fd \(fd)")
+                                // NSLog("writing to fd \(fd): \(String(decoding: data, as: UTF8.self)) ")
+                                // NSLog("writing to fd \(fd): \(data.count) bytes.")
                                 // let returnValue = write(fd, data, numValues)
                                 let file = FileHandle(fileDescriptor: fd)
                                 do {
@@ -4930,10 +5006,20 @@ extension SceneDelegate: WKUIDelegate {
                 pbuf.initialize(to: buf)
                 // NSLog("stat: " + arguments[2] + " " + arguments[3])
                 var returnValue: Int32 = 0
+                var fileName = arguments[2]
+                // sometimes, wasm removes the leading "/":
+                if (!FileManager().fileExists(atPath: fileName)) {
+                    if (arguments[2].hasPrefix("var/mobile/Containers") ||
+                        arguments[2].hasPrefix("var/mobile/Library") ||
+                        arguments[2].hasPrefix("private/var/mobile/Containers") ||
+                        arguments[2].hasPrefix("private/var/mobile/Library")) {
+                        fileName = "/" + arguments[2]
+                    }
+                }
                 if (arguments[3] == "0") { // SYMLINK_NOFOLLOW
-                    returnValue = lstat(arguments[2].utf8CString, pbuf)
+                    returnValue = lstat(fileName.utf8CString, pbuf)
                 } else {
-                    returnValue = stat(arguments[2].utf8CString, pbuf)
+                    returnValue = stat(fileName.utf8CString, pbuf)
                 }
                 if (returnValue == 0) {
                     NSLog("Mode: \(arguments[2]) = \(pbuf.pointee.st_mode) stat= \(pbuf.pointee)")
@@ -4967,8 +5053,18 @@ extension SceneDelegate: WKUIDelegate {
                 }
                 return
             } else if (arguments[1] == "mkdir") {
+                var fileName = arguments[2]
+                // sometimes, wasm removes the leading "/":
+                if (!FileManager().fileExists(atPath: fileName)) {
+                    if (arguments[2].hasPrefix("var/mobile/Containers") ||
+                        arguments[2].hasPrefix("var/mobile/Library") ||
+                        arguments[2].hasPrefix("private/var/mobile/Containers") ||
+                        arguments[2].hasPrefix("private/var/mobile/Library")) {
+                        fileName = "/" + arguments[2]
+                    }
+                }
                 do {
-                    try FileManager().createDirectory(atPath: arguments[2], withIntermediateDirectories: true)
+                    try FileManager().createDirectory(atPath: fileName, withIntermediateDirectories: true)
                     completionHandler("0")
                 }
                 catch {
