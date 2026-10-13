@@ -1,0 +1,174 @@
+--- a/src/node_errors.cc
++++ b/src/node_errors.cc
+@@ -13,6 +13,15 @@
+ #include "util-inl.h"
+ 
+ namespace node {
++// Native exception diagnostics belong to the calling command, not the app.
++static thread_local FILE* a_shell_error_stream = nullptr;
++NODE_EXTERN void AShellSetErrorStream(FILE* stream) {
++  a_shell_error_stream = stream;
++}
++static FILE* AShellErrorStream() {
++  return a_shell_error_stream ? a_shell_error_stream : stderr;
++}
++
+ 
+ using errors::TryCatchScope;
+ using v8::Boolean;
+@@ -283,8 +292,8 @@
+ }
+ 
+ static void PrintToStderrAndFlush(const std::string& str) {
+-  FPrintF(stderr, "%s\n", str);
+-  fflush(stderr);
++  FPrintF(AShellErrorStream(), "%s\n", str);
++  fflush(AShellErrorStream());
+ }
+ 
+ void PrintStackTrace(Isolate* isolate,
+@@ -385,7 +394,7 @@
+     env->set_printed_error(true);
+ 
+     ResetStdio();
+-    FPrintF(stderr, "\n%s", source);
++    FPrintF(AShellErrorStream(), "\n%s", source);
+     return;
+   }
+ 
+@@ -405,7 +414,7 @@
+ void DefaultAbortHandler(const char* /*location*/, const char* /*message*/) {
+   DumpNativeBacktrace(stderr);
+   DumpJavaScriptBacktrace(stderr);
+-  fflush(stderr);
++  fflush(AShellErrorStream());
+   ABORT_NO_BACKTRACE();
+ }
+ // Constant-initialized, so this is valid from load time, safe even for a
+@@ -423,7 +432,7 @@
+ void Assert(const AssertionInfo& info) {
+   std::string name = GetHumanReadableProcessName();
+ 
+-  fprintf(stderr,
++  fprintf(AShellErrorStream(),
+           "\n"
+           "  #  %s: %s at %s\n"
+           "  #  Assertion failed: %s\n\n",
+@@ -432,7 +441,7 @@
+           info.file_line ? info.file_line : "(unknown source location)",
+           info.message);
+ 
+-  fflush(stderr);
++  fflush(AShellErrorStream());
+   ABORT_WITH_DETAILS(info.file_line, info.message);
+ }
+ 
+@@ -519,10 +528,10 @@
+   // range errors have a trace member set to undefined
+   if (trace.length() > 0 && !stack_trace->IsUndefined()) {
+     if (arrow.IsEmpty() || !arrow->IsString() || decorated) {
+-      FPrintF(stderr, "%s\n", trace);
++      FPrintF(AShellErrorStream(), "%s\n", trace);
+     } else {
+       node::Utf8Value arrow_string(env->isolate(), arrow);
+-      FPrintF(stderr, "%s\n%s\n", arrow_string, trace);
++      FPrintF(AShellErrorStream(), "%s\n%s\n", arrow_string, trace);
+     }
+   } else {
+     // this really only happens for RangeErrors, since they're the only
+@@ -543,7 +552,7 @@
+       node::Utf8Value message(env->isolate(), error);
+ 
+       FPrintF(
+-          stderr,
++          AShellErrorStream(),
+           "%s\n",
+           *message ? message.ToStringView() : "<toString() threw exception>");
+     } else {
+@@ -553,10 +562,10 @@
+       report_message = message_string.ToString();
+ 
+       if (arrow.IsEmpty() || !arrow->IsString() || decorated) {
+-        FPrintF(stderr, "%s: %s\n", name_string, message_string);
++        FPrintF(AShellErrorStream(), "%s: %s\n", name_string, message_string);
+       } else {
+         node::Utf8Value arrow_string(env->isolate(), arrow);
+-        FPrintF(stderr,
++        FPrintF(AShellErrorStream(),
+             "%s\n%s: %s\n", arrow_string, name_string, message_string);
+       }
+     }
+@@ -566,7 +575,7 @@
+       if (!env->argv().empty()) argv0 = env->argv()[0];
+       if (argv0.empty()) argv0 = "node";
+       auto filesystem_path = std::filesystem::path(argv0).replace_extension();
+-      FPrintF(stderr,
++      FPrintF(AShellErrorStream(),
+               "(Use `%s --trace-uncaught ...` to show where the exception "
+               "was thrown)\n",
+               filesystem_path.filename().string());
+@@ -580,23 +589,23 @@
+   if (env->options()->trace_uncaught) {
+     Local<StackTrace> trace = message->GetStackTrace();
+     if (!trace.IsEmpty()) {
+-      FPrintF(stderr, "Thrown at:\n");
++      FPrintF(AShellErrorStream(), "Thrown at:\n");
+       PrintStackTrace(env->isolate(), trace);
+     }
+   }
+ 
+   if (env->options()->extra_info_on_fatal_exception) {
+-    FPrintF(stderr, "\nNode.js %s\n", NODE_VERSION);
+-  }
+-
+-  fflush(stderr);
++    FPrintF(AShellErrorStream(), "\nNode.js %s\n", NODE_VERSION);
++  }
++
++  fflush(AShellErrorStream());
+ }
+ 
+ [[noreturn]] void OnFatalError(const char* location, const char* message) {
+   if (location) {
+-    FPrintF(stderr, "FATAL ERROR: %s %s\n", location, message);
++    FPrintF(AShellErrorStream(), "FATAL ERROR: %s %s\n", location, message);
+   } else {
+-    FPrintF(stderr, "FATAL ERROR: %s\n", message);
++    FPrintF(AShellErrorStream(), "FATAL ERROR: %s\n", message);
+   }
+ 
+   Isolate* isolate = Isolate::TryGetCurrent();
+@@ -610,7 +619,7 @@
+     TriggerNodeReport(isolate, message, "FatalError", "", Local<Object>());
+   }
+ 
+-  fflush(stderr);
++  fflush(AShellErrorStream());
+   ABORT_WITH_DETAILS(location, message);
+ }
+ 
+@@ -622,12 +631,12 @@
+       details.is_heap_oom ? "Allocation failed - JavaScript heap out of memory"
+                           : "Allocation failed - process out of memory";
+   if (location) {
+-    FPrintF(stderr, "FATAL ERROR: %s %s\n", location, message);
++    FPrintF(AShellErrorStream(), "FATAL ERROR: %s %s\n", location, message);
+   } else {
+-    FPrintF(stderr, "FATAL ERROR: %s\n", message);
++    FPrintF(AShellErrorStream(), "FATAL ERROR: %s\n", message);
+   }
+   if (details.detail != nullptr) {
+-    FPrintF(stderr, "Reason: %s\n", details.detail);
++    FPrintF(AShellErrorStream(), "Reason: %s\n", details.detail);
+   }
+ 
+   Isolate* isolate = Isolate::TryGetCurrent();
+@@ -646,7 +655,7 @@
+     TriggerNodeReport(isolate, message, "OOMError", "", Local<Object>());
+   }
+ 
+-  fflush(stderr);
++  fflush(AShellErrorStream());
+   ABORT_WITH_DETAILS(location, message);
+ }
+ 

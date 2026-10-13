@@ -1,0 +1,14 @@
+--- a/src/api/environment.cc
++++ b/src/api/environment.cc
+@@ -445,6 +445,11 @@
+ 
+   Context::Scope context_scope(context);
+   env->InitializeMainContext(context, env_snapshot_info);
++  // Embedded commands do not own the host process environment. Reuse the
++  // stock Worker map so process.env writes remain local to this Environment.
++  if (!env->owns_process_state()) {
++    env->set_env_vars(env->env_vars()->Clone(isolate));
++  }
+ 
+   if (use_snapshot && for_worker) {
+     // The deserialized context went through is_main_thread /
