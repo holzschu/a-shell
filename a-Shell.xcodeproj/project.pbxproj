@@ -976,6 +976,22 @@
 		6BD9536F2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		6BD953702BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		66727EE1DC59BDA02721BFDF /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		6DA4290CEFD8AE8731971F7C /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
+		6E0E9C24B43A7139D193FA09 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
+		7F117665FA3CA0A131164904 /* a-Shell-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8D581F458AB1D50B2B8214BC /* a-Shell-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9313D8BBB62B8827FA0F4BBE /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
+		9FA1E9A5C72AF598227B3351 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B2C2C9D94DB1A976E1C18301 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229D25C025793699004A78AC /* commandDictionary.plist */; };
+		CDB88291CE91BD1BB768CB32 /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
+		CFC692FD99A84C71382E2A01 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229F51142473BBC90053AC03 /* commandDictionary.plist */; };
+		FE87DA972C544F9F425195EE /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		D91691CFCADBED6F76AE4E4E /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		BE8AFE2BBEDBF93A4910062F /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		B85B646A76EB1C3038FBC891 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		241174C3FD9A4286E38FE7C0 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		87BFA35D4A842B3F7BD8E197 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1020,6 +1036,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = 22AD8717246EBFFA00F415DE;
 			remoteInfo = "a-Shell-Intents";
+		};
+		75A702C38BAC6B039A56C397 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1D1C6DB1924CE909F07BB047;
+			remoteInfo = "a-Shell-LongCommands";
+		};
+		967E5C627ADCDCB09451FAC6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 05CD0AC3A045D4B4D1258F0B;
+			remoteInfo = "a-Shell-mini-LongCommands";
+		};
+		F33F299FD852DC4CD1764F55 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1D1C6DB1924CE909F07BB047;
+			remoteInfo = "a-Shell-LongCommands";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1890,6 +1927,39 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		06944D7F6743B6FC21625999 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				8D581F458AB1D50B2B8214BC /* a-Shell-LongCommands.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49A255B4BCFBF00F034858F4 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				9FA1E9A5C72AF598227B3351 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B427E6638A792BDC5802FE8 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				7F117665FA3CA0A131164904 /* a-Shell-LongCommands.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -2739,6 +2809,13 @@
 		8916088E2713056900CED1C9 /* KBWebViewBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KBWebViewBase.m; sourceTree = "<group>"; };
 		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
 		898384A83061A39800A1E18D /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
+		0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExecuteLongCommandIntent.swift; sourceTree = "<group>"; };
+		4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LongCommandsExtension.swift; sourceTree = "<group>"; };
+		A83EA8C808E52262F507587D /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "a-Shell-mini-LongCommands.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "a-Shell-LongCommands.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EF41C539C9EC98353B77E1BB /* LongCommands.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = LongCommands.entitlements; sourceTree = "<group>"; };
+		196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCommand.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2801,6 +2878,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				22AD8723246EBFFC00F415DE /* IntentsUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4EF95B478646F901898E00B3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE87DA972C544F9F425195EE /* ios_system.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5226E3090F3A128FBB93D81B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66727EE1DC59BDA02721BFDF /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2885,6 +2978,7 @@
 				2271BAFE2D8B064D00A809E5 /* a-Shell-noPython copy-Info.plist */,
 				223AF28E2D8B2E2300A4A62D /* a-Shell-mini copy2-Info.plist */,
 				898384A83061A39800A1E18D /* Build.xcconfig */,
+				9C5656AC927E171D1D99F3D1 /* a-Shell-LongCommands */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2898,6 +2992,8 @@
 				22178EF8257BBBA4008EB2B4 /* a-Shell-mini-Intents.appex */,
 				22178F01257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI.appex */,
 				224A91702ADD0999006DB9CC /* a-Shell-noPython.app */,
+				E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */,
+				CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3842,6 +3938,19 @@
 			name = Perl;
 			sourceTree = "<group>";
 		};
+		9C5656AC927E171D1D99F3D1 /* a-Shell-LongCommands */ = {
+			isa = PBXGroup;
+			children = (
+				0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */,
+				196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */,
+				4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */,
+				A83EA8C808E52262F507587D /* Info.plist */,
+				EF41C539C9EC98353B77E1BB /* LongCommands.entitlements */,
+			);
+			name = "a-Shell-LongCommands";
+			path = "a-Shell-LongCommands";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -3888,12 +3997,14 @@
 				224A904E2ADD0999006DB9CC /* Resources */,
 				224A90682ADD0999006DB9CC /* Embed Frameworks */,
 				224A916A2ADD0999006DB9CC /* Embed App Extensions */,
+				9B427E6638A792BDC5802FE8 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				224A90362ADD0999006DB9CC /* PBXTargetDependency */,
 				224A90382ADD0999006DB9CC /* PBXTargetDependency */,
+				265206496F54531C61AB6A9F /* PBXTargetDependency */,
 			);
 			name = "a-Shell-noPython";
 			packageProductDependencies = (
@@ -3913,12 +4024,14 @@
 				22984EE822C93DBC00069497 /* Resources */,
 				22B1B81522CB9D6500F7C452 /* Embed Frameworks */,
 				22AD8731246EBFFD00F415DE /* Embed App Extensions */,
+				06944D7F6743B6FC21625999 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				22AD872C246EBFFD00F415DE /* PBXTargetDependency */,
 				22AD872F246EBFFD00F415DE /* PBXTargetDependency */,
+				73952D30D61DB3A43B5B2988 /* PBXTargetDependency */,
 			);
 			name = "a-Shell";
 			packageProductDependencies = (
@@ -3938,12 +4051,14 @@
 				229D2488257931E4004A78AC /* Resources */,
 				229D24A1257931E4004A78AC /* Embed Frameworks */,
 				22178EEF257BBB6E008EB2B4 /* Embed App Extensions */,
+				49A255B4BCFBF00F034858F4 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				22178F0B257BBBA6008EB2B4 /* PBXTargetDependency */,
 				22178F0E257BBBA6008EB2B4 /* PBXTargetDependency */,
+				B04225AB066C9DA994272DBF /* PBXTargetDependency */,
 			);
 			name = "a-Shell-mini";
 			packageProductDependencies = (
@@ -3988,6 +4103,40 @@
 			productName = "a-Shell-IntentsUI";
 			productReference = 22AD8721246EBFFB00F415DE /* a-Shell-IntentsUI.appex */;
 			productType = "com.apple.product-type.app-extension";
+		};
+		05CD0AC3A045D4B4D1258F0B /* a-Shell-mini-LongCommands */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 392B2F6985B8AAC1FBC19481 /* Build configuration list for PBXNativeTarget "a-Shell-mini-LongCommands" */;
+			buildPhases = (
+				F904F3ABF06380EBAB8707BF /* Sources */,
+				5226E3090F3A128FBB93D81B /* Frameworks */,
+				EFC8EB71B291A25F3E5FC8F3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "a-Shell-mini-LongCommands";
+			productName = "a-Shell-mini-LongCommands";
+			productReference = CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
+		1D1C6DB1924CE909F07BB047 /* a-Shell-LongCommands */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BC929EF6C5CD652C2CBB48BC /* Build configuration list for PBXNativeTarget "a-Shell-LongCommands" */;
+			buildPhases = (
+				1E42370D6E364CC1134DF9B3 /* Sources */,
+				4EF95B478646F901898E00B3 /* Frameworks */,
+				6EFE2B28D3AAE60946CE98D9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "a-Shell-LongCommands";
+			productName = "a-Shell-LongCommands";
+			productReference = E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -4047,6 +4196,8 @@
 				22178EF7257BBBA4008EB2B4 /* a-Shell-mini-Intents */,
 				22178F00257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI */,
 				224A90352ADD0999006DB9CC /* a-Shell-noPython */,
+				1D1C6DB1924CE909F07BB047 /* a-Shell-LongCommands */,
+				05CD0AC3A045D4B4D1258F0B /* a-Shell-mini-LongCommands */,
 			);
 		};
 /* End PBXProject section */
@@ -4193,6 +4344,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6EFE2B28D3AAE60946CE98D9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CFC692FD99A84C71382E2A01 /* commandDictionary.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFC8EB71B291A25F3E5FC8F3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B2C2C9D94DB1A976E1C18301 /* commandDictionary.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -4219,6 +4386,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
+				D91691CFCADBED6F76AE4E4E /* ProgressCommand.swift in Sources */,
 				224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */,
 				224A903E2ADD0999006DB9CC /* Tips.swift in Sources */,
 				224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */,
@@ -4246,6 +4414,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
+				BE8AFE2BBEDBF93A4910062F /* ProgressCommand.swift in Sources */,
 				22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */,
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
 				223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */,
@@ -4273,6 +4442,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
+				B85B646A76EB1C3038FBC891 /* ProgressCommand.swift in Sources */,
 				229D2478257931E4004A78AC /* AppDelegate.swift in Sources */,
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				224754D72EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,
@@ -4313,6 +4483,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1E42370D6E364CC1134DF9B3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6DA4290CEFD8AE8731971F7C /* ExecuteLongCommandIntent.swift in Sources */,
+				241174C3FD9A4286E38FE7C0 /* ProgressCommand.swift in Sources */,
+				CDB88291CE91BD1BB768CB32 /* LongCommandsExtension.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F904F3ABF06380EBAB8707BF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E0E9C24B43A7139D193FA09 /* ExecuteLongCommandIntent.swift in Sources */,
+				87BFA35D4A842B3F7BD8E197 /* ProgressCommand.swift in Sources */,
+				9313D8BBB62B8827FA0F4BBE /* LongCommandsExtension.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -4347,6 +4537,24 @@
 			isa = PBXTargetDependency;
 			target = 22AD8717246EBFFA00F415DE /* a-Shell-Intents */;
 			targetProxy = 22AD872E246EBFFD00F415DE /* PBXContainerItemProxy */;
+		};
+		265206496F54531C61AB6A9F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "a-Shell-LongCommands";
+			target = 1D1C6DB1924CE909F07BB047 /* a-Shell-LongCommands */;
+			targetProxy = F33F299FD852DC4CD1764F55 /* PBXContainerItemProxy */;
+		};
+		73952D30D61DB3A43B5B2988 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "a-Shell-LongCommands";
+			target = 1D1C6DB1924CE909F07BB047 /* a-Shell-LongCommands */;
+			targetProxy = 75A702C38BAC6B039A56C397 /* PBXContainerItemProxy */;
+		};
+		B04225AB066C9DA994272DBF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "a-Shell-mini-LongCommands";
+			target = 05CD0AC3A045D4B4D1258F0B /* a-Shell-mini-LongCommands */;
+			targetProxy = 967E5C627ADCDCB09451FAC6 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -5016,6 +5224,126 @@
 			};
 			name = Release;
 		};
+		0E460F1DD19719A63885775C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 585;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
+				INFOPLIST_FILE = "a-Shell-LongCommands/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
+				MARKETING_VERSION = 2.2.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell.LongCommands";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		3B469D9C278E63467CFA416D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 585;
+				INFOPLIST_FILE = "a-Shell-LongCommands/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
+				MARKETING_VERSION = 2.2.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.LongCommands";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		44FC22BCB171431F925662C3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 585;
+				INFOPLIST_FILE = "a-Shell-LongCommands/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
+				MARKETING_VERSION = 2.2.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.LongCommands";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E620AFB86AC61E49577768ED /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 585;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
+				INFOPLIST_FILE = "a-Shell-LongCommands/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
+				MARKETING_VERSION = 2.2.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell.LongCommands";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -5087,6 +5415,24 @@
 			buildConfigurations = (
 				22AD8732246EBFFD00F415DE /* Debug */,
 				22AD8733246EBFFD00F415DE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		392B2F6985B8AAC1FBC19481 /* Build configuration list for PBXNativeTarget "a-Shell-mini-LongCommands" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				44FC22BCB171431F925662C3 /* Release */,
+				3B469D9C278E63467CFA416D /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BC929EF6C5CD652C2CBB48BC /* Build configuration list for PBXNativeTarget "a-Shell-LongCommands" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E460F1DD19719A63885775C /* Release */,
+				E620AFB86AC61E49577768ED /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
