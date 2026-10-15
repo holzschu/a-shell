@@ -909,9 +909,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    var isToolbarVisible: Bool {
+        guard let terminalView = terminalView else { return false }
+        if useSystemToolbar {
+            return !terminalView.inputAssistantItem.leadingBarButtonGroups.isEmpty ||
+                !terminalView.inputAssistantItem.trailingBarButtonGroups.isEmpty
+        }
+        return terminalView.inputAccessoryView === editorToolbar
+    }
+
     @objc func hideToolbar() {
         DispatchQueue.main.async {
-            showToolbar = false
             self.terminalView!.inputAccessoryView = self.emptyToolbar
             self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
             if (useSystemToolbar) {
@@ -2805,8 +2813,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
                 self.currentCommand = command
-                if (showToolbar) {
-                    DispatchQueue.main.async {
+                DispatchQueue.main.async {
+                    if (self.isToolbarVisible) {
                         if #available(iOS 16.0, *) {
                             // Show buttons depending on commands:
                             // Hide all buttons with tag == noneTag, show all buttons that match.
@@ -2927,8 +2935,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.resetDirectoryAfterCommandTerminates = ""
             }
             // re-hide buttons after leaving command:
-            if (showToolbar) {
-                DispatchQueue.main.async {
+            DispatchQueue.main.async {
+                if (self.isToolbarVisible) {
                     if #available(iOS 16.0, *) {
                         if (useSystemToolbar) {
                             // Show buttons after command is done:
@@ -3558,7 +3566,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // printPrompt here doesn't work yet.
             if (!toolbarShouldBeShown) {
-                showToolbar = false
                 self.terminalView!.inputAccessoryView = self.emptyToolbar
                 self.webView?.addInputAccessoryView(toolbar: self.emptyToolbar)
             } else {
@@ -3890,7 +3897,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // iPads: re-activate long-press on arrow buttons when the toolbar appears:
             sceneIsInForeground = true
-            if (useSystemToolbar && showToolbar) {
+            if (useSystemToolbar && isToolbarVisible) {
                 NotificationCenter.default.addObserver(
                     forName: UIResponder.keyboardWillChangeFrameNotification,
                     object: nil,
@@ -4296,7 +4303,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Otherwise, go for it:
         NSLog("sceneWillEnterForeground: \(self.persistentIdentifier). userActivity: \(userActivity)")
         if (!toolbarShouldBeShown) {
-            showToolbar = false
             self.terminalView!.inputAccessoryView = self.emptyToolbar
             self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
         } else {
