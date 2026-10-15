@@ -194,7 +194,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UserDefaults.standard.register(defaults: ["restart_vim" : false])
         UserDefaults.standard.register(defaults: ["keep_content" : true])
         toolbarShouldBeShown = UserDefaults.standard.bool(forKey: "show_toolbar")
-        showToolbar = toolbarShouldBeShown
         // system toolbar only applies on iPads:
         useSystemToolbar = UIDevice.current.model.hasPrefix("iPad") && UserDefaults.standard.bool(forKey: "legacy_toolbar")
         let screenSpacePref = UserDefaults.standard.string(forKey: "screen_space")

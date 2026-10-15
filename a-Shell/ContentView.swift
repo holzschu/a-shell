@@ -42,12 +42,70 @@ struct Termview : UIViewRepresentable {
         edgeSwipe.edges = .right
         view.addGestureRecognizer(edgeSwipe)
 
-        return view
+        return TerminalContainerView(terminal: view)
     }
     
     func updateUIView(_ uiView: UIView, context: Context)
     {
         
+    }
+}
+
+
+final class TerminalContainerView: UIView {
+    private var legacyBottomConstraint: NSLayoutConstraint?
+    private var keyboardFrame = CGRect.zero
+    private var keyboardObservers: [NSObjectProtocol] = []
+
+    init(terminal: TerminalView) {
+        super.init(frame: .zero)
+        terminal.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(terminal)
+        NSLayoutConstraint.activate([
+            terminal.topAnchor.constraint(equalTo: topAnchor),
+            terminal.leadingAnchor.constraint(equalTo: leadingAnchor),
+            terminal.trailingAnchor.constraint(equalTo: trailingAnchor)
+        ])
+        if #available(iOS 15.0, *) {
+            keyboardLayoutGuide.followsUndockedKeyboard = UIDevice.current.userInterfaceIdiom == .pad
+            terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor).isActive = true
+        } else {
+            let bottom = terminal.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
+            bottom.isActive = true
+            legacyBottomConstraint = bottom
+            for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
+                keyboardObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                    guard let self = self else { return }
+                    self.keyboardFrame = note.name == UIResponder.keyboardWillHideNotification ? .zero :
+                        (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero)
+                    self.updateLegacyKeyboardInset()
+                })
+            }
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    deinit {
+        keyboardObservers.forEach { NotificationCenter.default.removeObserver($0) }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        updateLegacyKeyboardInset()
+    }
+
+    private func updateLegacyKeyboardInset() {
+        guard let bottom = legacyBottomConstraint, let window = window else { return }
+        let windowFrame = window.convert(keyboardFrame, from: nil as UIWindow?)
+        let intersection = bounds.intersection(convert(windowFrame, from: window))
+        let inset = intersection.isNull || intersection.isEmpty ? 0 : max(0, bounds.maxY - intersection.minY - safeAreaInsets.bottom)
+        if bottom.constant != -inset {
+            bottom.constant = -inset
+            setNeedsLayout()
+        }
     }
 }
 
@@ -141,7 +199,6 @@ struct Webview : UIViewRepresentable {
 public var toolbarShouldBeShown = true
 public var useSystemToolbar = UIDevice.current.model.hasPrefix("iPad")
 public var isiPad = UIDevice.current.model.hasPrefix("iPad")
-public var showToolbar = true
 public var showKeyboardAtStartup = true
 // .fullScreen is too much for floating KB + toolbar, ignoreSafeArea seems to work,
 // automatic detection causes blank screen when switching back-forth
@@ -282,6 +339,7 @@ struct ContentView: View {
                         localShowWebView = true
                     }
                 }
+                guard showWebView && localShowWebView else { return }
                 keyboardHeight = $0
                 if !showKeyboardAtStartup || ((latestNotification == "UIKeyboardWillHideNotification") && !useSystemToolbar) {
                     NSLog("setting keyboardHeight to 0 from \(keyboardHeight)")
@@ -316,7 +374,7 @@ struct ContentView: View {
                             // Apparently we need the -20 even when there's no toolbar on iPhone SE
                             // It doesn't make sense
                             frameHeight -= 20
-                        } else if showToolbar  {
+                        } else if (terminalview.view.inputAccessoryView?.bounds.height ?? 0) > 0  {
                             NSLog("toolbar height: \(terminalview.view.inputAccessoryView!.bounds.height)")
                             let toolbarHeight = terminalview.view.inputAccessoryView!.bounds.height
                             frameHeight -= toolbarHeight
@@ -359,16 +417,19 @@ struct ContentView: View {
             }
                                                                 
             // iPhones
-            .if(!isiPad) {
+            .if(!isiPad && showWebView && localShowWebView) {
                 $0.frame(height: min(frameHeight, geometry.size.height)).position(x: frameWidth / 2, y: frameHeight / 2 - dynamicIsland )
             }
             // if nothing is defined, the size is geometry.size.height
-            .if((viewBehavior == .ignoreSafeArea || viewBehavior == .original) && isiPad) {
+            .if((viewBehavior == .ignoreSafeArea || viewBehavior == .original) && isiPad && showWebView && localShowWebView) {
                 $0.frame(maxHeight: geometry.size.height - frameHeight)
             }
-            .if(((viewBehavior == .ignoreSafeArea || viewBehavior == .fullScreen)) && isiPad) {
+            .if(((viewBehavior == .ignoreSafeArea || viewBehavior == .fullScreen)) && isiPad && showWebView && localShowWebView) {
                 $0.ignoresSafeArea(.container, edges: .bottom)
             }
+        }
+        .if(!(showWebView && localShowWebView)) {
+            $0.ignoresSafeArea(.keyboard, edges: .bottom)
         }
     }
 }
