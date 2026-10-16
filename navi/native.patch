@@ -395,7 +395,7 @@ index 13f5bbf..a803ed2 100644
 -    cmd.args(words);
 -    let dash_c = if words_str.contains("cmd.exe") { "/c" } else { "-c" };
 -    cmd.arg(dash_c);
-+    let mut cmd = Command::new("sh");
++    let mut cmd = Command::new("dash");
 +    cmd.arg("-c");
      cmd
  }
