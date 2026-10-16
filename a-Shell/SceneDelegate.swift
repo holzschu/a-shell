@@ -5111,7 +5111,11 @@ extension SceneDelegate: WKUIDelegate {
                         catch {
                         }
                     }
-                    try FileManager().moveItem(atPath:arguments[2], toPath: arguments[3])
+                    if (FileManager().fileExists(atPath: arguments[2])) {
+                        try FileManager().moveItem(atPath:arguments[2], toPath: arguments[3])
+                    } else {
+                        try FileManager().moveItem(atPath: "/" + arguments[2], toPath: arguments[3])
+                    }
                     completionHandler("0")
                 }
                 catch {

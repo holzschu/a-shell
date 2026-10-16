@@ -194,7 +194,7 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 public func credits(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     if let delegate = currentDelegate {
         let creditText = """
-a-Shell owes to many open-source contributors. The current code contains contributions from: Yury Korolev, Ian McDowell, Louis d'Hauwe, Anders Borum, Adrian Labbé, Kenta Kubo, Ian Willis, Henry Heino and suggestions for improvements from many others.
+a-Shell owes to many open-source contributors. The current code contains contributions from: Yury Korolev, Ian McDowell, Louis d'Hauwe, Anders Borum, Adrian Labbé, Kenta Kubo, Ian Willis, Henry Heino, Demian Romanenko and suggestions for improvements from many others.
 
 Most terminal commands are from the BSD distribution, mainly through the Apple OpenSource program.
 
