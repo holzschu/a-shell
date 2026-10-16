@@ -9,6 +9,13 @@
 		<string></string>
 		<string>no</string>
 	</array>
+	<key>navi</key>
+	<array>
+		<string>navi.framework/navi</string>
+		<string>navi_ios_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
 	<key>alias</key>
 	<array>
 		<string>SELF</string>

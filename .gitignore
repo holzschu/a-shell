@@ -80,3 +80,4 @@ fastlane/test_output
 
 Configuration.xcconfig
 /fzf/fzf.xcframework/
+/navi/navi.xcframework/
