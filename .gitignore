@@ -79,3 +79,4 @@ fastlane/test_output
 # a-Shell
 
 Configuration.xcconfig
+/ruff/Ruff.xcframework/
