@@ -79,3 +79,5 @@ fastlane/test_output
 # a-Shell
 
 Configuration.xcconfig
+
+helix/helix.xcframework/

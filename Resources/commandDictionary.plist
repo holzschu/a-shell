@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>hx</key>
+	<array>
+		<string>helix.framework/helix</string>
+		<string>hx_ios_main</string>
+		<string>hVgc:v</string>
+		<string>file</string>
+	</array>
 	<key>alias</key>
 	<array>
 		<string>SELF</string>

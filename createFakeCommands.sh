@@ -24,6 +24,7 @@ touch Resources/bin/gunzip
 touch Resources/bin/gzip
 touch Resources/bin/head
 touch Resources/bin/host
+touch Resources/bin/hx
 touch Resources/bin/ifconfig
 touch Resources/bin/jsc
 touch Resources/bin/link
