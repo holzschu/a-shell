@@ -1,0 +1,14 @@
+--- os_workdir_ios_arm64.go
++++ os_workdir_ios_arm64.go
+@@ -14,6 +14,11 @@
+ // initWorkingDir sets the current working directory to the app root on iOS.
+ // By default ios/arm64 processes start in "/".
+ func initWorkingDir() {
++	// A library inherits its host's working directory, including on first load.
++	if isarchive || islibrary {
++		return
++	}
++
+ 	bundle := cfBundleGetMainBundle()
+ 	if bundle == 0 {
+ 		writeErrStr("runtime/cgo: no main bundle\n")
