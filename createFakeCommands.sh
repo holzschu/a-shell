@@ -19,6 +19,8 @@ touch Resources/bin/egrep
 touch Resources/bin/env
 touch Resources/bin/fgrep
 touch Resources/bin/find
+touch Resources/bin/gix
+touch Resources/bin/ein
 touch Resources/bin/grep
 touch Resources/bin/gunzip
 touch Resources/bin/gzip
