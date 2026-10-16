@@ -1,3 +1,17 @@
+diff --git i/src/algo/algo.go w/src/algo/algo.go
+index 9103ac0..7670669 100644
+--- i/src/algo/algo.go
++++ w/src/algo/algo.go
+@@ -174,6 +174,9 @@ const (
+ )
+ 
+ func Init(scheme string) bool {
++	// Restore the default character classes before applying this run's scheme.
++	delimiterChars = "/,:;|"
++	initialCharClass = charWhite
+ 	switch scheme {
+ 	case "default":
+ 		bonusBoundaryWhite = bonusBoundary + 2
 diff --git i/src/core.go w/src/core.go
 index 2883488..6c6b4e1 100644
 --- i/src/core.go
@@ -101,7 +115,7 @@ index 9637037..db696c0 100644
  			var matches []Result
  			for {
 diff --git i/src/options.go w/src/options.go
-index 94e3a7f..3efb021 100644
+index 94e3a7f..263e0c4 100644
 --- i/src/options.go
 +++ w/src/options.go
 @@ -3,6 +3,7 @@ package fzf
@@ -112,16 +126,25 @@ index 94e3a7f..3efb021 100644
  	"maps"
  	"math"
  	"os"
-@@ -723,7 +724,7 @@ func defaultPreviewOpts(command string) previewOpts {
+@@ -722,12 +723,14 @@ func defaultPreviewOpts(command string) previewOpts {
+ }
  
  func defaultOptions() *Options {
++	// Embedded invocations share this package, but not flag defaults.
++	defaultBorderShape = tui.DefaultBorderShape
  	var theme, baseTheme *tui.ColorTheme
 -	if os.Getenv("NO_COLOR") != "" {
+-		theme = tui.NoColorTheme
 +	if iosbridge.Getenv("NO_COLOR") != "" {
- 		theme = tui.NoColorTheme
++		theme = dupeTheme(tui.NoColorTheme)
  		baseTheme = tui.NoColorTheme
  	} else {
-@@ -788,7 +789,7 @@ func defaultOptions() *Options {
+-		theme = tui.EmptyTheme
++		theme = dupeTheme(tui.EmptyTheme)
+ 	}
+ 
+ 	return &Options{
+@@ -788,7 +791,7 @@ func defaultOptions() *Options {
  		Preview:      defaultPreviewOpts(""),
  		PrintQuery:   false,
  		ReadZero:     false,
@@ -130,7 +153,7 @@ index 94e3a7f..3efb021 100644
  		PrintSep:     "\n",
  		Sync:         false,
  		History:      nil,
-@@ -802,7 +803,7 @@ func defaultOptions() *Options {
+@@ -802,7 +805,7 @@ func defaultOptions() *Options {
  		Margin:       defaultMargin(),
  		Padding:      defaultMargin(),
  		Unicode:      true,
@@ -139,7 +162,28 @@ index 94e3a7f..3efb021 100644
  		Tabstop:      8,
  		BorderLabel:  labelOpts{},
  		PreviewLabel: labelOpts{},
-@@ -3049,10 +3050,10 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
+@@ -2788,7 +2791,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
+ 		case "--color":
+ 			_, spec := optionalNextString()
+ 			if len(spec) == 0 {
+-				opts.Theme = tui.EmptyTheme
++				opts.Theme = dupeTheme(tui.EmptyTheme)
+ 			} else {
+ 				var baseTheme *tui.ColorTheme
+ 				if baseTheme, opts.Theme, err = parseTheme(opts.Theme, spec); err != nil {
+@@ -2902,9 +2905,9 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
+ 			opts.Mouse = false
+ 		case "+c", "--no-color":
+ 			opts.BaseTheme = tui.NoColorTheme
+-			opts.Theme = tui.NoColorTheme
++			opts.Theme = dupeTheme(tui.NoColorTheme)
+ 		case "+2", "--no-256":
+-			opts.Theme = tui.Default16
++			opts.Theme = dupeTheme(tui.Default16)
+ 		case "--black":
+ 			opts.Black = true
+ 		case "--no-black":
+@@ -3049,10 +3052,10 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
  		case "--no-read0":
  			opts.ReadZero = false
  		case "--print0":
@@ -152,7 +196,7 @@ index 94e3a7f..3efb021 100644
  			opts.PrintSep = "\n"
  		case "--print-query":
  			opts.PrintQuery = true
-@@ -3685,11 +3686,11 @@ func noSeparatorLine(style infoStyle, separator bool) bool {
+@@ -3685,11 +3688,11 @@ func noSeparatorLine(style infoStyle, separator bool) bool {
  }
  
  func (opts *Options) useTmux() bool {
@@ -166,7 +210,16 @@ index 94e3a7f..3efb021 100644
  }
  
  func (opts *Options) noSeparatorLine() bool {
-@@ -3908,7 +3909,7 @@ func ParseOptions(useDefaults bool, args []string) (*Options, error) {
+@@ -3708,6 +3711,8 @@ func (opts *Options) noSeparatorLine() bool {
+ func postProcessOptions(opts *Options) error {
+ 	if opts.Ambidouble {
+ 		uniseg.EastAsianAmbiguousWidth = 2
++	} else {
++		uniseg.EastAsianAmbiguousWidth = 1
+ 	}
+ 
+ 	if opts.BorderShape == tui.BorderUndefined {
+@@ -3908,7 +3913,7 @@ func ParseOptions(useDefaults bool, args []string) (*Options, error) {
  
  	if useDefaults {
  		// 1. Options from $FZF_DEFAULT_OPTS_FILE
@@ -175,7 +228,7 @@ index 94e3a7f..3efb021 100644
  			bytes, err := os.ReadFile(path)
  			if err != nil {
  				return nil, errors.New("$FZF_DEFAULT_OPTS_FILE: " + err.Error())
-@@ -3926,7 +3927,7 @@ func ParseOptions(useDefaults bool, args []string) (*Options, error) {
+@@ -3926,7 +3931,7 @@ func ParseOptions(useDefaults bool, args []string) (*Options, error) {
  		}
  
  		// 2. Options from $FZF_DEFAULT_OPTS string
@@ -184,7 +237,7 @@ index 94e3a7f..3efb021 100644
  		if parseErr != nil {
  			return nil, errors.New("$FZF_DEFAULT_OPTS: " + parseErr.Error())
  		}
-@@ -3954,7 +3955,7 @@ func ParseOptions(useDefaults bool, args []string) (*Options, error) {
+@@ -3954,7 +3959,7 @@ func ParseOptions(useDefaults bool, args []string) (*Options, error) {
  			//   1. explicitly set --scheme=default,
  			//   2. or replace $FZF_DEFAULT_COMMAND with an equivalent 'start:reload'
  			//      binding, which is the new preferred way.
@@ -423,7 +476,7 @@ index a2080d3..3c88b90 100644
  			apiKey:        []byte(apiKey),
  			actionChannel: actionChannel,
 diff --git i/src/terminal.go w/src/terminal.go
-index 21a2967..39b38b2 100644
+index 21a2967..acab875 100644
 --- i/src/terminal.go
 +++ w/src/terminal.go
 @@ -5,6 +5,7 @@ import (
@@ -441,7 +494,7 @@ index 21a2967..39b38b2 100644
 -var ttyin *os.File
  
 -var inTmux = len(os.Getenv("TMUX")) > 0
-+var inTmux = len(iosbridge.Getenv("TMUX")) > 0
++var inTmux bool
  
  const clearCode string = "\x1b[2J"
  
@@ -454,7 +507,15 @@ index 21a2967..39b38b2 100644
  	}
  	add(tui.CtrlSlash, actToggleWrapWord)
  	addEvent(tui.AltKey('/'), actToggleWrapWord)
-@@ -998,14 +998,13 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
+@@ -978,6 +978,7 @@ func evaluateHeight(opts *Options, termHeight int) int {
+ 
+ // NewTerminal returns new Terminal object
+ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor) (*Terminal, error) {
++	inTmux = iosbridge.Getenv("TMUX") != ""
+ 	input := trimQuery(opts.Query)
+ 	var delay time.Duration
+ 	if opts.Sync {
+@@ -998,14 +999,13 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
  	var renderer tui.Renderer
  	fullscreen := !opts.Height.auto && (opts.Height.size == 0 || opts.Height.percent && opts.Height.size == 100)
  	var err error
@@ -475,7 +536,7 @@ index 21a2967..39b38b2 100644
  	if fullscreen {
  		if tui.HasFullscreenRenderer() {
  			renderer = tui.NewFullscreenRenderer(opts.Theme, opts.Black, opts.Mouse, opts.Tabstop)
-@@ -1412,7 +1411,7 @@ func (t *Terminal) environForPreview() []string {
+@@ -1412,7 +1412,7 @@ func (t *Terminal) environForPreview() []string {
  }
  
  func (t *Terminal) environImpl(forPreview bool) []string {
@@ -484,7 +545,7 @@ index 21a2967..39b38b2 100644
  	if t.listenAddr != nil && len(t.listenAddr.sock) > 0 {
  		env = append(env, "FZF_SOCK="+t.listenAddr.sock)
  	}
-@@ -2226,7 +2225,9 @@ func (t *Terminal) UpdateList(result MatchResult) {
+@@ -2226,7 +2226,9 @@ func (t *Terminal) UpdateList(result MatchResult) {
  	// and an inline send on a full channel would deadlock with the main loop
  	// blocking on eventBox.Set while trying to drain the channel.
  	if wakeUp {
@@ -494,7 +555,7 @@ index 21a2967..39b38b2 100644
  			t.serverInputChan <- []*action{{t: actIgnore}}
  		}()
  	}
-@@ -5778,7 +5779,9 @@ Loop:
+@@ -5778,7 +5780,9 @@ Loop:
  				continue Loop
  			}
  			todo := item
@@ -504,7 +565,7 @@ index 21a2967..39b38b2 100644
  				// Acquire global semaphore
  				t.bgSemaphore <- struct{}{}
  
-@@ -5811,21 +5814,21 @@ func (t *Terminal) executeCommand(template string, forcePlus bool, background bo
+@@ -5811,21 +5815,21 @@ func (t *Terminal) executeCommand(template string, forcePlus bool, background bo
  		// Open a separate handle for tty input
  		if in, _ := tui.TtyIn(t.ttyDefault); in != nil {
  			cmd.Stdin = in
@@ -531,7 +592,7 @@ index 21a2967..39b38b2 100644
  			if out, _ := tui.TtyOut(t.ttyDefault); out != nil {
  				cmd.Stderr = out
  				defer out.Close()
-@@ -5850,7 +5853,9 @@ func (t *Terminal) executeCommand(template string, forcePlus bool, background bo
+@@ -5850,7 +5854,9 @@ func (t *Terminal) executeCommand(template string, forcePlus bool, background bo
  		}
  		paused := atomic.Int32{}
  		ctx, cancel := context.WithCancel(context.Background())
@@ -541,7 +602,7 @@ index 21a2967..39b38b2 100644
  			select {
  			case <-ctx.Done():
  				return
-@@ -6124,7 +6129,9 @@ func (t *Terminal) blockWait(pending []*action) {
+@@ -6124,7 +6130,9 @@ func (t *Terminal) blockWait(pending []*action) {
  	t.wait.pending = slices.Clone(pending)
  	// Show the waiting feedback only if the search takes long enough,
  	// so that quick searches don't cause flickering
@@ -551,7 +612,7 @@ index 21a2967..39b38b2 100644
  		timer := time.NewTimer(progressMinDuration)
  		<-timer.C
  		t.mutex.Lock()
-@@ -6284,7 +6291,9 @@ func (t *Terminal) startTimers(ctx context.Context) {
+@@ -6284,7 +6292,9 @@ func (t *Terminal) startTimers(ctx context.Context) {
  		case tui.Every:
  			d := time.Duration(evt.Char) * time.Millisecond
  			evt := evt
@@ -561,7 +622,7 @@ index 21a2967..39b38b2 100644
  				ticker := time.NewTicker(d)
  				defer ticker.Stop()
  				for {
-@@ -6336,7 +6345,9 @@ func (t *Terminal) Loop() error {
+@@ -6336,7 +6346,9 @@ func (t *Terminal) Loop() error {
  	{ // Late initialization
  		intChan := make(chan os.Signal, 1)
  		signal.Notify(intChan, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
@@ -571,7 +632,7 @@ index 21a2967..39b38b2 100644
  			for {
  				select {
  				case <-ctx.Done():
-@@ -6354,7 +6365,9 @@ func (t *Terminal) Loop() error {
+@@ -6354,7 +6366,9 @@ func (t *Terminal) Loop() error {
  		if !t.tui.ShouldEmitResizeEvent() {
  			resizeChan := make(chan os.Signal, 1)
  			notifyOnResize(ctx, resizeChan) // Non-portable
@@ -581,7 +642,7 @@ index 21a2967..39b38b2 100644
  				for {
  					select {
  					case <-ctx.Done():
-@@ -6383,7 +6396,9 @@ func (t *Terminal) Loop() error {
+@@ -6383,7 +6397,9 @@ func (t *Terminal) Loop() error {
  		t.reqBox.Set(reqHeader, nil)
  		t.reqBox.Set(reqFooter, nil)
  		if t.initDelay > 0 {
@@ -591,7 +652,7 @@ index 21a2967..39b38b2 100644
  				timer := time.NewTimer(t.initDelay)
  				<-timer.C
  				t.reqBox.Set(reqActivate, nil)
-@@ -6391,7 +6406,9 @@ func (t *Terminal) Loop() error {
+@@ -6391,7 +6407,9 @@ func (t *Terminal) Loop() error {
  		}
  
  		// Keep the spinner spinning
@@ -601,7 +662,7 @@ index 21a2967..39b38b2 100644
  			for t.running.Get() {
  				t.mutex.Lock()
  				reading := t.reading
-@@ -6405,7 +6422,9 @@ func (t *Terminal) Loop() error {
+@@ -6405,7 +6423,9 @@ func (t *Terminal) Loop() error {
  	}
  
  	if t.hasPreviewer() {
@@ -611,7 +672,7 @@ index 21a2967..39b38b2 100644
  			var version int64
  			stop := false
  			t.previewBox.WaitFor(reqPreviewReady)
-@@ -6457,7 +6476,9 @@ func (t *Terminal) Loop() error {
+@@ -6457,7 +6477,9 @@ func (t *Terminal) Loop() error {
  						reapChan := make(chan bool)
  						lineChan := make(chan eachLine)
  						// Goroutine 1 reads process output
@@ -621,7 +682,7 @@ index 21a2967..39b38b2 100644
  							for {
  								line, err := reader.ReadString('\n')
  								lineChan <- eachLine{line, err}
-@@ -6470,7 +6491,9 @@ func (t *Terminal) Loop() error {
+@@ -6470,7 +6492,9 @@ func (t *Terminal) Loop() error {
  
  						// Goroutine 2 periodically requests rendering
  						rendered := util.NewAtomicBool(false)
@@ -631,7 +692,7 @@ index 21a2967..39b38b2 100644
  							lines := []string{}
  							spinner := makeSpinner(t.unicode)
  							spinnerIndex := -1 // Delay initial rendering by an extra tick
-@@ -6518,7 +6541,9 @@ func (t *Terminal) Loop() error {
+@@ -6518,7 +6542,9 @@ func (t *Terminal) Loop() error {
  						}(version)
  
  						// Goroutine 3 is responsible for cancelling running preview command
@@ -641,7 +702,7 @@ index 21a2967..39b38b2 100644
  							timer := time.NewTimer(previewDelayed)
  						Loop:
  							for {
-@@ -6580,7 +6605,9 @@ func (t *Terminal) Loop() error {
+@@ -6580,7 +6606,9 @@ func (t *Terminal) Loop() error {
  		}
  	}
  
@@ -652,7 +713,7 @@ index 21a2967..39b38b2 100644
  		var focusedIndex = minItem.Index()
  		var version int64 = -1
  		running := true
-@@ -6592,6 +6619,7 @@ func (t *Terminal) Loop() error {
+@@ -6592,6 +6620,7 @@ func (t *Terminal) Loop() error {
  			if t.listener != nil {
  				t.listener.Close()
  			}
@@ -660,7 +721,7 @@ index 21a2967..39b38b2 100644
  			t.tui.Close()
  			code = getCode()
  			if code <= ExitNoMatch && t.history != nil {
-@@ -6805,7 +6833,9 @@ func (t *Terminal) Loop() error {
+@@ -6805,7 +6834,9 @@ func (t *Terminal) Loop() error {
  
  	looping := true
  	barrier := make(chan bool)
@@ -670,7 +731,7 @@ index 21a2967..39b38b2 100644
  		for {
  			select {
  			case <-ctx.Done():
-@@ -6815,7 +6845,7 @@ func (t *Terminal) Loop() error {
+@@ -6815,7 +6846,7 @@ func (t *Terminal) Loop() error {
  			select {
  			case <-ctx.Done():
  				return
@@ -679,7 +740,7 @@ index 21a2967..39b38b2 100644
  			}
  		}
  	}()
-@@ -7120,6 +7150,7 @@ func (t *Terminal) Loop() error {
+@@ -7120,6 +7151,7 @@ func (t *Terminal) Loop() error {
  				if valid {
  					// We do not remove temp files in this case
  					command, _ := t.replacePlaceholder(a.a, false, string(t.input), list)
