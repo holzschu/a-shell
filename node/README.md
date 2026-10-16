@@ -29,7 +29,7 @@ Command stdin/stdout/stderr use owned duplicate descriptors without replacing ap
 
 ## Verification
 
-Verified on 2026-10-15 in full a-Shell 2.2.2 (585), arm64 iOS 27 Simulator: 48 CLI checks and ten child-process cases passed with status 0 and empty runner stderr. Five sequential invocations shared one app process. Node 26.11.1, npm 11.20.0, Node-to-Node pipes, Workers, CommonJS/ESM and HTTPS passed. Real terminal UI Ctrl-C stopped a synchronous loop with status 130; the next Node invocation returned 42 with empty stderr. App RSS after the suite was 400,703,488 bytes (382.1 MiB), measured for the whole app.
+Verified on 2026-10-15 in full a-Shell 2.2.2 (585), arm64 iOS 27 Simulator: the CLI acceptance scripts in this directory and ten child-process cases passed with status 0 and empty runner stderr. Five sequential invocations shared one app process. Node 26.11.1, npm 11.20.0, Node-to-Node pipes, Workers, CommonJS/ESM and HTTPS passed. Real terminal UI Ctrl-C stopped a synchronous loop with status 130; the next Node invocation returned 42 with empty stderr. App RSS after the suite was 400,703,488 bytes (382.1 MiB), measured for the whole app.
 
 The matching Release Simulator bundle grew from 522,078,682 to 589,274,878 apparent bytes: +67,196,196 bytes (64.1 MiB), including npm, fetch dependencies, licenses and the SDK changes. The Node framework was 66,422,159 bytes, with a 41,786,352-byte native library. The local full-target build omits unavailable optional frameworks equally in both measurements. These are uncompressed file sizes, not an App Store download estimate. Both arm64 native slices build for iOS 16.
 
