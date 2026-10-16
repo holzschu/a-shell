@@ -79,3 +79,6 @@ fastlane/test_output
 # a-Shell
 
 Configuration.xcconfig
+
+# Locally built native ripgrep framework
+/rg/rg.xcframework/
