@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>sd</key>
+	<array>
+		<string>sd.framework/sd</string>
+		<string>sd_ios_main</string>
+		<string>pFsn:f:A</string>
+		<string>file</string>
+	</array>
 	<key>alias</key>
 	<array>
 		<string>SELF</string>

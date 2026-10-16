@@ -1,0 +1,129 @@
+--- a/sd-cli/Cargo.toml
++++ b/sd-cli/Cargo.toml
+@@ -2,10 +2,13 @@
+ name = "sd-cli"
+ version.workspace = true
+ edition.workspace = true
++autobins = false
+ 
+-[[bin]]
+-name = "sd"
++[lib]
++name = "sd_ios"
++crate-type = ["cdylib"]
+ path = "src/main.rs"
++
+ 
+ [dependencies]
+ sd = { path = "../sd" }
+--- a/sd/src/lib.rs
++++ b/sd/src/lib.rs
+@@ -1,3 +1,4 @@
++pub mod host_io;
+ mod error;
+ mod input;
+ pub mod replacer;
+--- a/sd/src/input.rs
++++ b/sd/src/input.rs
+@@ -1,9 +1,10 @@
+ use std::{
+     fs::File,
+-    io::{BufRead, BufReader, Read, stdin},
++    io::{BufRead, BufReader, Read},
+     path::PathBuf,
+ };
+ 
++use crate::host_io::stdin;
+ use crate::error::{Error, Result};
+ 
+ #[derive(Debug, PartialEq)]
+@@ -45,7 +46,7 @@
+             Ok(Box::new(BufReader::new(file)))
+         }
+         Source::Stdin => {
+-            let stdin = stdin().lock();
++            let stdin = stdin();
+             Ok(Box::new(BufReader::new(stdin)))
+         }
+     }
+--- a/sd-cli/src/main.rs
++++ b/sd-cli/src/main.rs
+@@ -1,20 +1,61 @@
+ mod cli;
+ 
+ use clap::Parser;
+-use std::{io::stdout, process};
++use sd::host_io::{stderr, stdout};
++use std::{
++    ffi::{CStr, OsString, c_char},
++    io::Write,
++    os::unix::ffi::OsStringExt,
++};
+ 
+ use sd::{Replacer, Result, Source, process_sources};
+ 
+-fn main() {
+-    if let Err(e) = try_main() {
+-        eprintln!("error: {e}");
+-        process::exit(1);
++// ios_system owns argv and streams until this synchronous command returns.
++#[unsafe(no_mangle)]
++pub unsafe extern "C" fn sd_ios_main(argc: i32, argv: *const *const c_char) -> i32 {
++    let status = std::panic::catch_unwind(|| {
++        let args: Vec<OsString> = (0..argc)
++            .map(|i| unsafe {
++                OsString::from_vec(CStr::from_ptr(*argv.add(i as usize)).to_bytes().to_vec())
++            })
++            .collect();
++        let options = match cli::Options::try_parse_from(args) {
++            Ok(options) => options,
++            Err(error) => {
++                let mut output = if error.use_stderr() {
++                    stderr()
++                } else {
++                    stdout()
++                };
++                let status = error.exit_code();
++                if write!(output, "{error}").is_err() {
++                    return 1;
++                }
++                return status;
++            }
++        };
++        match try_main(options) {
++            Ok(()) => 0,
++            Err(error) => {
++                let _ = writeln!(stderr(), "error: {error}");
++                1
++            }
++        }
++    })
++    .unwrap_or_else(|_| {
++        let _ = writeln!(stderr(), "error: sd panicked");
++        1
++    });
++    let out = stdout().flush();
++    let err = stderr().flush();
++    if out.is_err() || err.is_err() {
++        1
++    } else {
++        status
+     }
+ }
+ 
+-fn try_main() -> Result<()> {
+-    let options = cli::Options::parse();
+-
++fn try_main(options: cli::Options) -> Result<()> {
+     let replacer = Replacer::new(
+         options.find,
+         options.replace_with,
+@@ -30,7 +71,7 @@
+     };
+     let sources = sources?;
+ 
+-    let mut handle = stdout().lock();
++    let mut handle = stdout();
+     process_sources(
+         &replacer,
+         &sources,

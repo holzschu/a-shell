@@ -52,6 +52,7 @@ touch Resources/bin/rm
 touch Resources/bin/rmdir
 touch Resources/bin/say
 touch Resources/bin/scp
+touch Resources/bin/sd
 touch Resources/bin/sed
 touch Resources/bin/setenv
 touch Resources/bin/sftp
