@@ -188,25 +188,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
-    private func fontSize() -> CGFloat {
-        // font size for the labels on buttons.
-        // iPads with external keyboard: not used
-        // iPads with onscreen keyboard: used
-        if (UIDevice.current.model.hasPrefix("iPad")) {
-            return 19
-        } else {
-            // iPhone: button size depends on number of buttons. LiquidGlass puts a lot of extra space around buttons.
-            // 8 buttons, screen= 375: 15 fits on screen (barely), 20 doesn't work
-            // 6 buttons, screen= 375: 20 is good, 22.5 works. 25 feels too large.
-            // Problem: fontSize is called before I have the number of buttons. Damn it.
-            let numButtons = leftButtonGroup.count + rightButtonGroup.count
-            NSLog("button size: \(screenWidth/CGFloat(3 * numButtons)) (width= \(screenWidth)) buttons= \(leftButtonGroup.count + rightButtonGroup.count)")
-            let computedSize = min(max(screenWidth/CGFloat(3 * numButtons), 11.0), 23)
-            return computedSize
-        }
-        // This can now be made a configurable option
-    }
-    
     var toolbarHeight: CGFloat {
         let deviceModel = UIDevice.current.model
         if (deviceModel.hasPrefix("iPad")) {
@@ -1030,13 +1011,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 var activeTag = 0
                 noneTag = -1
                 // iPhones, iOS 26+ only: recompute button font size based on number of buttons
+                // This a "liquiglass-only" issue, all other devices work well with default size of 19.
                 if #available(iOS 26, *) {
                     if !UIDevice.current.model.hasPrefix("iPad") {
+                        // parse the config file to get the number of buttons
                         let numButtons = computeNumberOfButtons(toolbar: contentOfFile)
                         let multiplier = 3.17 // Ensures roughly 15 to 21 for fontsize for 6 to 8 buttons
-                        // smaller than 15 won't change the button size
+                        // smaller than 15 won't change the button size (but it will change the label size!)
+                        // larger than 22 feels much larger than the keyboard keys
                         buttonFontSize =  min(max(screenWidth/(multiplier * CGFloat(numButtons)), 15.0), 22)
                         NSLog("button size: \(buttonFontSize): \(screenWidth)/\(multiplier) * \(numButtons)")
+                        // With liquiglass, 8 buttons is the maximum for an iPhone screen
                     }
                 }
                 let buttonsDefinition = contentOfFile.split(separator: "\n")
