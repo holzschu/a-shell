@@ -17,6 +17,7 @@ touch Resources/bin/echo
 touch Resources/bin/ed
 touch Resources/bin/egrep
 touch Resources/bin/env
+touch Resources/bin/fd
 touch Resources/bin/fgrep
 touch Resources/bin/find
 touch Resources/bin/grep
