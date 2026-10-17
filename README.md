@@ -99,3 +99,7 @@ The host retains each `AppExtensionProcess` and XPC connection until release or 
 Workers share the host's command libraries. Build with ios_system changes #179–#184 and dash_iOS#1–#2, including the matched libedit dependency described there. The build derives each worker's catalogue and executable markers from `Resources_mini/commandDictionary.plist`; it generates the ExtensionFoundation binding from `PRODUCT_BUNDLE_PREFIX`. Keep worker versions in `ShellWorkers/Worker.xcconfig` aligned with the containing app. The mini bundle suffixes are `.ShellWorkerA` through `.ShellWorkerJ`; each requires its own App ID and profile for a device build.
 
 `tests/worker-pool.m` is a real app-command consumer for Simulator qualification. Device memory limits, background execution without other host background modes, and App Store acceptance require separate validation. Retaining the process handle provides no promise of unlimited background execution.
+
+## Embedded Herdr
+
+The mini target registers `herdr` as a native embedded command. Build its pinned static archive with `./Herdr/build.sh aarch64-apple-ios-sim` before a Simulator build, or select `aarch64-apple-ios` for a device build. See [Herdr/README.md](Herdr/README.md) for toolchain requirements, supported operations and qualification limits.

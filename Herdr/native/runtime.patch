@@ -1,0 +1,1779 @@
+--- a/src/terminal_notify.rs
++++ b/src/terminal_notify.rs
+@@ -49,7 +49,7 @@
+         sequence
+     };
+ 
+-    let mut stdout = io::stdout();
++    let mut stdout = crate::host_io::stdout();
+     stdout.write_all(&sequence)?;
+     stdout.flush()?;
+     Ok(true)
+--- a/src/update.rs
++++ b/src/update.rs
+@@ -1127,7 +1127,7 @@
+     plans: &[RunningServerUpdatePlan],
+     release: &ReleaseInfo,
+ ) -> Result<bool, String> {
+-    if !io::stdin().is_terminal() {
++    if !crate::host_io::stdin().is_terminal() {
+         return Err(
+             "one or more Herdr sessions must stop for this update. Stop running Herdr sessions when ready, then run `herdr update` again from an interactive terminal."
+                 .to_string(),
+@@ -1151,12 +1151,12 @@
+ 
+     loop {
+         eprint!("stop after installing? [y/N] ");
+-        io::stderr()
++        crate::host_io::stderr()
+             .flush()
+             .map_err(|e| format!("failed to flush prompt: {e}"))?;
+ 
+         let mut input = String::new();
+-        let read = io::stdin()
++        let read = crate::host_io::stdin()
+             .read_line(&mut input)
+             .map_err(|e| format!("failed to read prompt response: {e}"))?;
+         if read == 0 {
+@@ -1253,7 +1253,7 @@
+         return Ok(true);
+     }
+ 
+-    if !io::stdin().is_terminal() {
++    if !crate::host_io::stdin().is_terminal() {
+         return Ok(false);
+     }
+ 
+@@ -1280,12 +1280,12 @@
+             noun,
+             release.label()
+         );
+-        io::stderr()
++        crate::host_io::stderr()
+             .flush()
+             .map_err(|e| format!("failed to flush prompt: {e}"))?;
+ 
+         let mut input = String::new();
+-        let read = io::stdin()
++        let read = crate::host_io::stdin()
+             .read_line(&mut input)
+             .map_err(|e| format!("failed to read prompt response: {e}"))?;
+         if read == 0 {
+@@ -1410,7 +1410,7 @@
+     );
+     eprintln!("stopping the old server will exit its pane processes.");
+ 
+-    if !io::stdin().is_terminal() {
++    if !crate::host_io::stdin().is_terminal() {
+         eprintln!(
+             "not stopping the old server from a non-interactive update; run `{}` when you are ready.",
+             plan.stop_command()
+@@ -1420,12 +1420,12 @@
+ 
+     loop {
+         eprint!("stop the old server now? [y/N] ");
+-        io::stderr()
++        crate::host_io::stderr()
+             .flush()
+             .map_err(|e| format!("failed to flush prompt: {e}"))?;
+ 
+         let mut input = String::new();
+-        let read = io::stdin()
++        let read = crate::host_io::stdin()
+             .read_line(&mut input)
+             .map_err(|e| format!("failed to read prompt response: {e}"))?;
+         if read == 0 {
+@@ -3103,7 +3103,7 @@
+     #[test]
+     fn plain_update_defers_stop_prompt_until_after_install() {
+         assert!(
+-            !io::stdin().is_terminal(),
++            !crate::host_io::stdin().is_terminal(),
+             "this test relies on noninteractive test stdin"
+         );
+         let release = fake_release("9.8.7", Some(77));
+@@ -3306,7 +3306,7 @@
+     fn noninteractive_plain_update_does_not_complete_with_running_server() {
+         let _guard = env_lock().lock().unwrap();
+         assert!(
+-            !io::stdin().is_terminal(),
++            !crate::host_io::stdin().is_terminal(),
+             "this test relies on noninteractive test stdin"
+         );
+         std::env::set_var(crate::session::SESSION_ENV_VAR, "work");
+@@ -3362,7 +3362,7 @@
+     #[test]
+     fn noninteractive_plain_update_completes_with_compatible_server() {
+         assert!(
+-            !io::stdin().is_terminal(),
++            !crate::host_io::stdin().is_terminal(),
+             "this test relies on noninteractive test stdin"
+         );
+         let release = fake_release("9.8.7", Some(77));
+--- a/src/selection.rs
++++ b/src/selection.rs
+@@ -364,8 +364,8 @@
+     }
+ 
+     let sequence = osc52_sequence(bytes);
+-    let _ = std::io::stdout().write_all(sequence.as_bytes());
+-    let _ = std::io::stdout().flush();
++    let _ = crate::host_io::stdout().write_all(sequence.as_bytes());
++    let _ = crate::host_io::stdout().flush();
+ }
+ 
+ #[cfg(test)]
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -14,6 +14,9 @@
+ }
+ #[cfg(target_os = "ios")]
+ mod ios_entry;
++mod host_io;
++#[cfg(target_os = "ios")]
++mod ios_ipc;
+ 
+ use std::io;
+ 
+@@ -486,7 +489,7 @@
+         eprintln!("see configuration if you want to enable it.");
+         eprintln!();
+         eprintln!("\x1b[2m\"{}\"\x1b[0m", random_nested_message());
+-        std::process::exit(1);
++        crate::host_io::exit(1);
+     }
+ }
+ 
+@@ -505,16 +508,16 @@
+ 
+ fn finish_cli(outcome: io::Result<cli::CommandOutcome>) -> io::Result<()> {
+     match outcome {
+-        Ok(cli::CommandOutcome::Handled(code)) => std::process::exit(code),
++        Ok(cli::CommandOutcome::Handled(code)) => crate::host_io::exit(code),
+         Ok(cli::CommandOutcome::NotCli) => Ok(()),
+-        Err(err) if cli::protocol_mismatch_was_reported(&err) => std::process::exit(1),
++        Err(err) if cli::protocol_mismatch_was_reported(&err) => crate::host_io::exit(1),
+         Err(err) if cli::server_not_running_was_reported(&err) => {
+             if let Some(response) = cli::server_not_running_reported_response(&err) {
+                 if let Ok(json) = serde_json::to_string(response) {
+                     eprintln!("{json}");
+                 }
+             }
+-            std::process::exit(1);
++            crate::host_io::exit(1);
+         }
+         Err(err) => Err(err),
+     }
+@@ -526,7 +529,7 @@
+         Err(err) => {
+             eprintln!("error: {err}");
+             eprintln!("run 'herdr --help' for usage");
+-            std::process::exit(2);
++            crate::host_io::exit(2);
+         }
+     };
+     run_main(raw_args)
+@@ -542,7 +545,7 @@
+         Err(err) => {
+             eprintln!("error: {err}");
+             eprintln!("run 'herdr --help' for usage");
+-            std::process::exit(2);
++            crate::host_io::exit(2);
+         }
+     };
+     #[cfg(target_os = "ios")]
+@@ -552,7 +555,7 @@
+         Err(err) => {
+             eprintln!("error: {err}");
+             eprintln!("run 'herdr --help' for usage");
+-            std::process::exit(2);
++            crate::host_io::exit(2);
+         }
+     };
+ 
+@@ -567,7 +570,7 @@
+     {
+         eprintln!("error: --remote can only be used with the default launch command");
+         eprintln!("run 'herdr --help' for usage");
+-        std::process::exit(2);
++        crate::host_io::exit(2);
+     }
+ 
+     finish_cli(cli::maybe_run(&args))?;
+@@ -597,12 +600,12 @@
+             Ok(options) => options,
+             Err(err) if err.starts_with("usage:") => {
+                 eprintln!("{err}");
+-                std::process::exit(0);
++                crate::host_io::exit(0);
+             }
+             Err(err) => {
+                 eprintln!("{err}");
+                 eprintln!("usage: herdr update [--handoff]");
+-                std::process::exit(2);
++                crate::host_io::exit(2);
+             }
+         };
+         match update::self_update(options) {
+@@ -613,7 +616,7 @@
+                 } else {
+                     eprintln!("update failed: {e}");
+                 }
+-                std::process::exit(1);
++                crate::host_io::exit(1);
+             }
+         }
+     }
+@@ -773,7 +776,7 @@
+         if arg.starts_with('-') && !known_flags.contains(&arg_name) {
+             eprintln!("unknown option: {arg}");
+             eprintln!("run 'herdr --help' for usage");
+-            std::process::exit(2);
++            crate::host_io::exit(2);
+         }
+         if !arg.starts_with('-')
+             && ![
+@@ -795,7 +798,7 @@
+         {
+             eprintln!("unknown command: {arg}");
+             eprintln!("run 'herdr --help' for usage");
+-            std::process::exit(2);
++            crate::host_io::exit(2);
+         }
+     }
+ 
+@@ -804,7 +807,7 @@
+         if let Err(err) = remote::run_remote(remote_launch) {
+             eprintln!("error: {err}");
+             remote::print_remote_error_hint(&err, &remote_target);
+-            std::process::exit(1);
++            crate::host_io::exit(1);
+         }
+         return Ok(());
+     }
+@@ -816,7 +819,7 @@
+         client::endpoint::EndpointCatalog::load().is_ok_and(|catalog| catalog.has_enabled_ssh());
+     if let Err(err) = server::autodetect::auto_detect_launch(saved_federation) {
+         eprintln!("herdr: {err}");
+-        std::process::exit(1);
++        crate::host_io::exit(1);
+     }
+     Ok(())
+ }
+--- a/src/platform/unix_common.rs
++++ b/src/platform/unix_common.rs
+@@ -162,11 +162,11 @@
+     use interprocess::TryClone as _;
+ 
+     let activity = idle_timeout.map(Activity::start).transpose()?;
+-    let mut stdout = TrackedIo::new(std::io::stdout().lock(), activity.clone());
++    let mut stdout = TrackedIo::new(crate::host_io::stdout().lock(), activity.clone());
+     let mut socket_to_stdout = TrackedIo::new(stream.try_clone()?, activity.clone());
+     let mut stdin_to_socket = stream;
+     let _upload = std::thread::spawn(move || {
+-        let mut stdin = TrackedIo::new(std::io::stdin(), activity.clone());
++        let mut stdin = TrackedIo::new(crate::host_io::stdin(), activity.clone());
+         let _ = copy_flush(
+             &mut stdin,
+             &mut TrackedIo::new(&mut stdin_to_socket, activity),
+@@ -239,6 +239,9 @@
+ }
+ 
+ pub(super) fn read_terminal_grid_size() -> std::io::Result<(u16, u16)> {
++    #[cfg(target_os = "ios")]
++    return crate::ios_entry::grid_size();
++    #[cfg(not(target_os = "ios"))]
+     crossterm::terminal::window_size().map(|size| (size.columns, size.rows))
+ }
+ 
+--- a/src/platform/fallback.rs
++++ b/src/platform/fallback.rs
+@@ -22,11 +22,11 @@
+ ) -> std::io::Result<()> {
+     use interprocess::TryClone as _;
+ 
+-    let mut stdout = std::io::stdout().lock();
++    let mut stdout = crate::host_io::stdout().lock();
+     let mut socket_to_stdout = stream.try_clone()?;
+     let mut stdin_to_socket = stream;
+     let _upload = std::thread::spawn(move || {
+-        let mut stdin = std::io::stdin();
++        let mut stdin = crate::host_io::stdin();
+         let _ = std::io::copy(&mut stdin, &mut stdin_to_socket);
+     });
+     std::io::copy(&mut socket_to_stdout, &mut stdout).map(|_| ())
+@@ -124,7 +124,7 @@
+ }
+
+ pub(crate) fn should_query_host_terminal_palette() -> bool {
+-    false
++    cfg!(target_os = "ios")
+ }
+
+ pub(crate) fn hostname() -> Option<String> {
+--- a/src/platform/windows.rs
++++ b/src/platform/windows.rs
+@@ -74,13 +74,13 @@
+     use interprocess::TryClone as _;
+     use std::sync::atomic::{AtomicBool, Ordering};
+ 
+-    let mut stdout = std::io::stdout().lock();
++    let mut stdout = crate::host_io::stdout().lock();
+     let mut socket_to_stdout = stream.try_clone()?;
+     let mut stdin_to_socket = stream;
+     let upload_done = Arc::new(AtomicBool::new(false));
+     let upload_done_worker = Arc::clone(&upload_done);
+     let _upload = std::thread::spawn(move || {
+-        let mut stdin = std::io::stdin();
++        let mut stdin = crate::host_io::stdin();
+         let _ = copy_flush(&mut stdin, &mut stdin_to_socket);
+         upload_done_worker.store(true, Ordering::Release);
+     });
+--- a/src/platform/remote_bridge.rs
++++ b/src/platform/remote_bridge.rs
+@@ -42,7 +42,7 @@
+                     if expired {
+                         // Only the dedicated bridge process owns this watchdog. Returning from a
+                         // blocked copy cannot guarantee shutdown, and joining it could hang forever.
+-                        std::process::exit(1);
++                        crate::host_io::exit(1);
+                     }
+                 }
+             })?;
+--- a/src/cli/spec.rs
++++ b/src/cli/spec.rs
+@@ -67,7 +67,7 @@
+ }
+ 
+ pub(super) fn print_requested_help(args: &[String]) -> std::io::Result<bool> {
+-    let mut stdout = std::io::stdout().lock();
++    let mut stdout = crate::host_io::stdout().lock();
+     write_requested_help(args, &mut stdout, crate::platform::begin_cli_output)
+ }
+ 
+--- a/src/cli/completion.rs
++++ b/src/cli/completion.rs
+@@ -36,10 +36,10 @@
+             std::io::Error::new(std::io::ErrorKind::InvalidData, err.utf8_error())
+         })?;
+         crate::platform::begin_cli_output();
+-        std::io::stdout().write_all(space_separated_zsh_long_options(&script).as_bytes())?;
++        crate::host_io::stdout().write_all(space_separated_zsh_long_options(&script).as_bytes())?;
+     } else {
+         crate::platform::begin_cli_output();
+-        generate(shell, &mut command, "herdr", &mut std::io::stdout());
++        generate(shell, &mut command, "herdr", &mut crate::host_io::stdout());
+     }
+     Ok(0)
+ }
+--- a/src/cli/plugin.rs
++++ b/src/cli/plugin.rs
+@@ -206,7 +206,7 @@
+         }
+     };
+ 
+-    if !yes && !io::stdin().is_terminal() {
++    if !yes && !crate::host_io::stdin().is_terminal() {
+         eprintln!("remote plugin install requires --yes when stdin is not interactive");
+         return Ok(2);
+     }
+@@ -1579,9 +1579,9 @@
+ 
+ fn confirm(prompt: &str) -> std::io::Result<bool> {
+     eprint!("{prompt} [y/N] ");
+-    io::stderr().flush()?;
++    crate::host_io::stderr().flush()?;
+     let mut line = String::new();
+-    io::stdin().read_line(&mut line)?;
++    crate::host_io::stdin().read_line(&mut line)?;
+     Ok(matches!(line.trim(), "y" | "Y" | "yes" | "YES" | "Yes"))
+ }
+ 
+--- a/src/cli/machine.rs
++++ b/src/cli/machine.rs
+@@ -190,7 +190,7 @@
+             return Ok(2);
+         }
+     };
+-    if !std::io::stdin().is_terminal() {
++    if !crate::host_io::stdin().is_terminal() {
+         eprintln!("reconnect requires an interactive terminal; use herdr machine status for noninteractive checks");
+         return Ok(2);
+     }
+@@ -310,7 +310,7 @@
+     };
+     let mut setup = None;
+     let session =
+-        if session.is_none() && std::io::stdin().is_terminal() && std::io::stderr().is_terminal() {
++        if session.is_none() && crate::host_io::stdin().is_terminal() && crate::host_io::stderr().is_terminal() {
+             let discovered = (|| {
+                 let connection = crate::remote::SavedSshSetup::connect(&target)?;
+                 let sessions = connection.running_sessions()?;
+@@ -398,7 +398,7 @@
+     }
+ 
+     let _raw_mode = RawModeGuard::enable()?;
+-    let mut output = std::io::stderr();
++    let mut output = crate::host_io::stderr();
+     let mut selected = 0;
+     render_remote_session_picker(&mut output, target, sessions, selected, false)?;
+     loop {
+--- a/src/client/shell_runtime.rs
++++ b/src/client/shell_runtime.rs
+@@ -97,7 +97,7 @@
+     if desired == state.keyboard_report_all_active {
+         return Ok(());
+     }
+-    crate::terminal_modes::set_host_kitty_keyboard_report_all(&mut io::stdout(), desired)
++    crate::terminal_modes::set_host_kitty_keyboard_report_all(&mut crate::host_io::stdout(), desired)
+         .map_err(ClientError::ConnectionFailed)?;
+     state.keyboard_report_all_active = desired;
+     Ok(())
+@@ -127,7 +127,7 @@
+ 
+     state.pane_keyboard_report_all = false;
+     let _ = sync_client_shell_keyboard_report_all(state);
+-    let _ = crate::terminal_effects::write_window_title(&mut std::io::stdout(), None);
++    let _ = crate::terminal_effects::write_window_title(&mut crate::host_io::stdout(), None);
+ }
+ 
+ pub(super) fn apply_client_shell_input_source_changes(
+--- a/src/client/handshake.rs
++++ b/src/client/handshake.rs
+@@ -92,7 +92,7 @@
+             || is_ssh_session()
+             || std::env::var_os("TMUX").is_some()
+             || std::env::var_os("STY").is_some(),
+-        io::stdin().is_terminal() && io::stdout().is_terminal(),
++        crate::host_io::stdin().is_terminal() && crate::host_io::stdout().is_terminal(),
+     )
+ }
+ 
+--- a/src/client/terminal_sessions.rs
++++ b/src/client/terminal_sessions.rs
+@@ -42,7 +42,7 @@
+ 
+     let mut write_stream = stream.try_clone()?;
+     let _input_thread = std::thread::spawn(move || {
+-        let stdin = io::stdin();
++        let stdin = crate::host_io::stdin();
+         for line in stdin.lock().lines() {
+             let Ok(line) = line else {
+                 break;
+@@ -85,7 +85,7 @@
+         Ok(stream) => stream,
+         Err(err) => {
+             eprintln!("herdr: {}", ClientError::ConnectionFailed(err));
+-            std::process::exit(1);
++            crate::host_io::exit(1);
+         }
+     };
+ 
+@@ -108,11 +108,11 @@
+                 "herdr: terminal session observe negotiated unsupported encoding {:?}",
+                 handshake.encoding
+             );
+-            std::process::exit(1);
++            crate::host_io::exit(1);
+         }
+         Err(err) => {
+             eprintln!("herdr: {err}");
+-            std::process::exit(1);
++            crate::host_io::exit(1);
+         }
+     }
+ 
+@@ -121,7 +121,7 @@
+ }
+ 
+ fn write_terminal_session_output(mut stream: LocalStream) -> io::Result<()> {
+-    let mut stdout = io::stdout().lock();
++    let mut stdout = crate::host_io::stdout().lock();
+     loop {
+         match protocol::read_message(&mut stream, MAX_GRAPHICS_FRAME_SIZE) {
+             Ok(ServerMessage::Terminal(frame)) => {
+--- a/src/client/terminal_setup.rs
++++ b/src/client/terminal_setup.rs
+@@ -45,7 +45,10 @@
+     enable_client_protocols: bool,
+     mouse_capture: bool,
+ ) -> io::Result<TerminalGuard> {
++    #[cfg(not(target_os = "ios"))]
+     ratatui::init();
++    #[cfg(target_os = "ios")]
++    crate::ios_entry::terminal_start()?;
+     let mut terminal_guard = TerminalGuard {
+         host_escape_disambiguation_active: false,
+         buffered_host_input: Vec::new(),
+@@ -57,7 +60,7 @@
+         #[cfg(windows)]
+         restore_windows_input_mode: Arc::new(WindowsInputModeRestore::default()),
+     };
+-    crate::terminal_modes::clear_host_mouse_reporting(&mut io::stdout())?;
++    crate::terminal_modes::clear_host_mouse_reporting(&mut crate::host_io::stdout())?;
+     let host_color_scheme_reports =
+         should_enable_host_color_scheme_reports(enable_client_protocols);
+     #[cfg(windows)]
+@@ -78,18 +81,18 @@
+         push_keyboard_enhancement_flags()?;
+         let (active, buffered_input) = query_host_escape_disambiguation();
+         set_mouse_capture(mouse_capture, false)?;
+-        execute!(io::stdout(), EnableBracketedPaste, EnableFocusChange)?;
++        execute!(crate::host_io::stdout(), EnableBracketedPaste, EnableFocusChange)?;
+         if host_color_scheme_reports {
+             terminal_guard.reset_host_color_scheme_reports = true;
+-            write_host_color_scheme_report_mode(&mut io::stdout(), true)?;
++            write_host_color_scheme_report_mode(&mut crate::host_io::stdout(), true)?;
+         }
+         (active, buffered_input)
+     } else {
+         if should_enable_host_color_scheme_reports(true) {
+-            write_host_color_scheme_report_mode(&mut io::stdout(), false)?;
++            write_host_color_scheme_report_mode(&mut crate::host_io::stdout(), false)?;
+         }
+         set_mouse_capture(mouse_capture, false)?;
+-        execute!(io::stdout(), EnableBracketedPaste)?;
++        execute!(crate::host_io::stdout(), EnableBracketedPaste)?;
+         (false, Vec::new())
+     };
+ 
+@@ -107,7 +110,7 @@
+         && windows_virtual_terminal_input.active
+         && windows_win32_input_mode_enabled()
+     {
+-        enable_windows_win32_input_mode(&mut io::stdout())?;
++        enable_windows_win32_input_mode(&mut crate::host_io::stdout())?;
+     }
+ 
+     let modify_other_keys_mode = enable_client_protocols
+@@ -115,11 +118,11 @@
+         .flatten();
+     if let Some(mode) = modify_other_keys_mode {
+         terminal_guard.reset_modify_other_keys = true;
+-        io::stdout().write_all(mode.set_sequence())?;
+-        io::stdout().flush()?;
+-    }
+-
+-    execute!(io::stdout(), DisableLineWrap)?;
++        crate::host_io::stdout().write_all(mode.set_sequence())?;
++        crate::host_io::stdout().flush()?;
++    }
++
++    execute!(crate::host_io::stdout(), DisableLineWrap)?;
+ 
+     terminal_guard.host_escape_disambiguation_active = host_escape_disambiguation_active;
+     terminal_guard.buffered_host_input = buffered_host_input;
+@@ -160,16 +163,16 @@
+     const QUERY: &[u8] = b"\x1b[?u\x1b[c";
+ 
+     let mut buffered_input = Vec::new();
+-    if let Err(err) = io::stdout()
++    if let Err(err) = crate::host_io::stdout()
+         .write_all(QUERY)
+-        .and_then(|()| io::stdout().flush())
++        .and_then(|()| crate::host_io::stdout().flush())
+     {
+         tracing::debug!(%err, "host keyboard enhancement query unavailable");
+         return (false, buffered_input);
+     }
+ 
+     // Bypass StdinLock's shared buffer so poll and read observe the same bytes.
+-    let stdin = io::stdin();
++    let stdin = crate::host_io::stdin();
+     let stdin_fd = stdin.as_raw_fd();
+     let deadline = Instant::now() + HOST_KEYBOARD_QUERY_TIMEOUT;
+     let mut responses = HostKeyboardProbeResponses::default();
+@@ -349,7 +352,11 @@
+         )?;
+     }
+     // Restore a visible cursor and reset DECSCUSR back to the terminal default.
++    #[cfg(not(target_os = "ios"))]
+     writer.write_all(b"\x1b[?25h\x1b[0 q")?;
++    // a-Shell owns its cursor style; resetting DECSCUSR would enable blinking.
++    #[cfg(target_os = "ios")]
++    writer.write_all(b"\x1b[?25h")?;
+     writer.flush()
+ }
+ 
+@@ -563,34 +570,34 @@
+     #[cfg(windows)]
+     if windows_uses_vt_mouse_reporting() {
+         if !enabled {
+-            crate::terminal_modes::clear_host_mouse_reporting(&mut io::stdout())?;
++            crate::terminal_modes::clear_host_mouse_reporting(&mut crate::host_io::stdout())?;
+         }
+         return crate::terminal_modes::set_windows_mouse_reporting(
+-            &mut io::stdout(),
++            &mut crate::host_io::stdout(),
+             enabled,
+             sgr_pixels,
+         );
+     }
+     #[cfg(windows)]
+-    return set_windows_native_mouse_capture(&mut io::stdout(), enabled, sgr_pixels, |enabled| {
++    return set_windows_native_mouse_capture(&mut crate::host_io::stdout(), enabled, sgr_pixels, |enabled| {
+         if enabled {
+-            execute!(io::stdout(), EnableMouseCapture)
++            execute!(crate::host_io::stdout(), EnableMouseCapture)
+         } else {
+             disable_windows_native_mouse_capture()
+         }
+     });
+     #[cfg(not(windows))]
+-    crate::terminal_modes::clear_host_mouse_reporting(&mut io::stdout())?;
++    crate::terminal_modes::clear_host_mouse_reporting(&mut crate::host_io::stdout())?;
+     #[cfg(not(windows))]
+     if enabled {
+-        execute!(io::stdout(), EnableMouseCapture)?;
++        execute!(crate::host_io::stdout(), EnableMouseCapture)?;
+         if sgr_pixels {
+-            io::stdout().write_all(b"\x1b[?1016h")?;
+-            io::stdout().flush()?;
++            crate::host_io::stdout().write_all(b"\x1b[?1016h")?;
++            crate::host_io::stdout().flush()?;
+         }
+         Ok(())
+     } else {
+-        match execute!(io::stdout(), DisableMouseCapture) {
++        match execute!(crate::host_io::stdout(), DisableMouseCapture) {
+             Ok(()) => Ok(()),
+             Err(err) => Err(err),
+         }
+@@ -599,7 +606,7 @@
+ 
+ #[cfg(windows)]
+ fn disable_windows_native_mouse_capture() -> io::Result<()> {
+-    match execute!(io::stdout(), DisableMouseCapture) {
++    match execute!(crate::host_io::stdout(), DisableMouseCapture) {
+         Ok(()) => Ok(()),
+         Err(err) if err.to_string() == "Initial console modes not set" => Ok(()),
+         Err(err) => Err(err),
+@@ -633,12 +640,12 @@
+     reset_host_color_scheme_reports: bool,
+     #[cfg(windows)] restore_windows_input_mode: Option<u32>,
+ ) -> io::Result<()> {
+-    let _ = clear_received_kitty_graphics(&mut io::stdout());
++    let _ = clear_received_kitty_graphics(&mut crate::host_io::stdout());
+ 
+     // Reset modifyOtherKeys if we enabled it.
+     if reset_modify_other_keys {
+-        let _ = io::stdout().write_all(b"\x1b[>4;0m");
+-        let _ = io::stdout().flush();
++        let _ = crate::host_io::stdout().write_all(b"\x1b[>4;0m");
++        let _ = crate::host_io::stdout().flush();
+     }
+ 
+     if reset_keyboard_enhancements {
+@@ -646,7 +653,7 @@
+     }
+ 
+     let _ = execute!(
+-        io::stdout(),
++        crate::host_io::stdout(),
+         EnableLineWrap,
+         DisableFocusChange,
+         DisableBracketedPaste
+@@ -661,13 +668,17 @@
+         let _ = disable_windows_native_mouse_capture();
+     }
+ 
++    #[cfg(not(target_os = "ios"))]
+     let restore_result = ratatui::try_restore();
++    #[cfg(target_os = "ios")]
++    // The host command guard restores the screen after render/input threads join.
++    let restore_result: io::Result<()> = Ok(());
+     let postlude_result =
+-        write_terminal_restore_postlude(&mut io::stdout(), reset_host_color_scheme_reports);
++        write_terminal_restore_postlude(&mut crate::host_io::stdout(), reset_host_color_scheme_reports);
+ 
+     #[cfg(windows)]
+     if windows_vti_input_backend_enabled() && windows_win32_input_mode_enabled() {
+-        let _ = disable_windows_win32_input_mode(&mut io::stdout());
++        let _ = disable_windows_win32_input_mode(&mut crate::host_io::stdout());
+     }
+ 
+     restore_result.and(postlude_result)
+@@ -676,7 +687,7 @@
+ #[cfg(not(windows))]
+ fn push_keyboard_enhancement_flags() -> io::Result<()> {
+     execute!(
+-        io::stdout(),
++        crate::host_io::stdout(),
+         PushKeyboardEnhancementFlags(crate::input::ime_compatible_keyboard_enhancement_flags())
+     )
+ }
+@@ -688,7 +699,7 @@
+ 
+ #[cfg(not(windows))]
+ fn pop_keyboard_enhancement_flags() -> io::Result<()> {
+-    execute!(io::stdout(), PopKeyboardEnhancementFlags)
++    execute!(crate::host_io::stdout(), PopKeyboardEnhancementFlags)
+ }
+ 
+ #[cfg(windows)]
+@@ -732,7 +743,7 @@
+         )
+         .active;
+         if active && windows_win32_input_mode_enabled() {
+-            enable_windows_win32_input_mode(&mut io::stdout())?;
++            enable_windows_win32_input_mode(&mut crate::host_io::stdout())?;
+         }
+         Ok(())
+     }
+--- a/src/client/mod.rs
++++ b/src/client/mod.rs
+@@ -167,7 +167,7 @@
+     // client initializes the terminal, so defer the host mouse reset to
+     // `setup_terminal_with_capabilities` instead of emitting raw escapes early.
+     #[cfg(not(windows))]
+-    crate::terminal_modes::clear_host_mouse_reporting(&mut io::stdout())?;
++    crate::terminal_modes::clear_host_mouse_reporting(&mut crate::host_io::stdout())?;
+     let client_rendered_shell = attach_request.is_none();
+     let socket_path = client_socket_path();
+     let keybinding_source = client_shell_keybinding_source();
+@@ -311,6 +311,8 @@
+     loop_config.initial_host_input = terminal_guard.take_buffered_host_input();
+ 
+     // Install a panic hook so the foreground client always restores its terminal.
++    #[cfg(not(target_os = "ios"))]
++    {
+     let panic_restore = terminal_guard.panic_restore();
+     let original_hook = std::panic::take_hook();
+     std::panic::set_hook(Box::new(move |info| {
+@@ -318,6 +320,8 @@
+         original_hook(info);
+     }));
+ 
++    }
++
+     // Create the tokio runtime.
+     let rt = tokio::runtime::Builder::new_current_thread()
+         .enable_all()
+@@ -328,6 +332,8 @@
+ 
+     // ctrlc's "termination" feature also catches SIGTERM/SIGHUP so direct
+     // termination signals still run the quit path and TerminalGuard::Drop.
++    #[cfg(not(target_os = "ios"))]
++    {
+     let quit_flag = should_quit.clone();
+     if let Err(err) = ctrlc::set_handler(move || {
+         quit_flag.store(true, Ordering::Release);
+@@ -335,6 +341,10 @@
+         warn!(%err, "failed to install termination handler; terminal restore relies on TerminalGuard::Drop and the panic hook");
+     }
+ 
++    }
++    #[cfg(target_os = "ios")]
++    crate::ios_entry::remember_client_quit(should_quit.clone());
++    let client_quit = should_quit.clone();
+     let result = rt.block_on(async {
+         run_client_loop(
+             initial,
+@@ -352,11 +362,12 @@
+         .await
+     });
+ 
++    client_quit.store(true, Ordering::Release);
+     // Restore the terminal before printing any final status message.
+     let terminal_restore_failed = terminal_guard.restore().is_err();
+ 
+     if let Err(err) = result {
+-        let _ = writeln!(io::stderr(), "herdr: {err}");
++        let _ = writeln!(crate::host_io::stderr(), "herdr: {err}");
+         rt.shutdown_timeout(Duration::from_millis(100));
+         crate::logging::shutdown("client");
+ 
+@@ -372,7 +383,7 @@
+             return Ok(());
+         }
+ 
+-        std::process::exit(1);
++        crate::host_io::exit(1);
+     }
+ 
+     rt.shutdown_timeout(Duration::from_millis(100));
+@@ -536,7 +547,11 @@
+         .lock()
+         .map(|matcher| matcher.active_handle())
+         .unwrap_or_default();
+-    std::thread::spawn(move || {
++    #[cfg(target_os = "ios")]
++    use crate::ios_entry::spawn_client_thread;
++    #[cfg(not(target_os = "ios"))]
++    use std::thread::spawn as spawn_client_thread;
++    spawn_client_thread(move || {
+         input::stdin_reader_loop(
+             stdin_tx,
+             &stdin_quit,
+@@ -572,7 +587,7 @@
+     let resize_cell_size = reported_cell_size.clone();
+     let pixel_geometry_enabled = state.pixel_geometry_enabled;
+     let pixel_geometry_fallback = config.pixel_geometry_fallback;
+-    std::thread::spawn(move || {
++    spawn_client_thread(move || {
+         resize_poll_loop(
+             resize_tx,
+             cols,
+@@ -1535,21 +1550,21 @@
+                         {
+                             record_received_kitty_graphics(&frame.bytes);
+                         }
+-                        let mut stdout = io::stdout();
++                        let mut stdout = crate::host_io::stdout();
+                         let _ = stdout.write_all(&frame.bytes);
+                         let _ = stdout.flush();
+                     }
+                     ServerMessage::Graphics { bytes } => {
+                         if state.kitty_graphics_enabled {
+                             record_received_kitty_graphics(&bytes);
+-                            let mut stdout = io::stdout();
++                            let mut stdout = crate::host_io::stdout();
+                             let _ = stdout.write_all(&bytes);
+                             let _ = stdout.flush();
+                         }
+                     }
+                     ServerMessage::TerminalBell { count } => {
+                         if let Err(err) =
+-                            crate::terminal_effects::write_terminal_bells(&mut io::stdout(), count)
++                            crate::terminal_effects::write_terminal_bells(&mut crate::host_io::stdout(), count)
+                         {
+                             warn!(err = %err, "failed to emit terminal bell");
+                         }
+@@ -1643,7 +1658,7 @@
+                                     &control,
+                                     &path,
+                                 );
+-                                let mut stdout = io::stdout();
++                                let mut stdout = crate::host_io::stdout();
+                                 let written = state
+                                     .flush_native_cleanup(&mut stdout)
+                                     .and_then(|()| stdout.write_all(&command))
+@@ -1921,11 +1936,11 @@
+                                 state.present_frame(frame);
+                             }
+                         }
+-                        let _ = io::stdout().flush();
++                        let _ = crate::host_io::stdout().flush();
+                     }
+                     ServerMessage::WindowTitle { title } => {
+                         let _ = crate::terminal_effects::write_window_title(
+-                            &mut io::stdout(),
++                            &mut crate::host_io::stdout(),
+                             title.as_deref(),
+                         );
+                     }
+@@ -1978,7 +1993,7 @@
+                     } => {
+                         if state.attach_escape.is_some() {
+                             crate::terminal_modes::set_direct_host_keyboard_protocol(
+-                                &mut io::stdout(),
++                                &mut crate::host_io::stdout(),
+                                 &mut state.direct_keyboard_protocol,
+                                 flags,
+                                 modify_other_keys_level,
+@@ -2278,7 +2293,7 @@
+     // Clean exit (Ctrl+C). Send Detach before closing.
+     let detach = ClientMessage::Detach;
+     let _ = write_to_server(&mut write_stream, &detach);
+-    let _ = io::stdout().flush();
++    let _ = crate::host_io::stdout().flush();
+ 
+     Ok(())
+ }
+--- a/src/client/state.rs
++++ b/src/client/state.rs
+@@ -84,7 +84,7 @@
+     fn drop(&mut self) {
+         if self.attach_escape.is_some() {
+             let _ = crate::terminal_modes::set_direct_host_keyboard_protocol(
+-                &mut io::stdout(),
++                &mut crate::host_io::stdout(),
+                 &mut self.direct_keyboard_protocol,
+                 0,
+                 0,
+@@ -310,7 +310,7 @@
+         if self.presentation_frozen || graphics.is_empty() || !self.kitty_graphics_enabled {
+             return;
+         }
+-        let mut stdout = io::stdout();
++        let mut stdout = crate::host_io::stdout();
+         let _ = write_encoded_frame_with_graphics(&mut stdout, &[], graphics);
+         let _ = stdout.flush();
+     }
+@@ -349,7 +349,7 @@
+         crate::render_prof::duration_since("client_surface_patch.encode", encode_started);
+         let write_started = crate::render_prof::timer();
+         if !encoded.bytes.is_empty() {
+-            let mut stdout = io::stdout();
++            let mut stdout = crate::host_io::stdout();
+             stdout.write_all(&encoded.bytes)?;
+             stdout.flush()?;
+         }
+@@ -561,7 +561,7 @@
+         } else {
+             self.blit_encoder.encode(&frame_data, self.repaint_pending)
+         };
+-        let mut stdout = io::stdout();
++        let mut stdout = crate::host_io::stdout();
+         if let Err(error) = self.write_composed_output(&mut stdout, &encoded.bytes, graphics) {
+             tracing::warn!(%error, "failed to present client frame");
+             self.repaint_pending = true;
+--- a/src/client/input.rs
++++ b/src/client/input.rs
+@@ -90,7 +90,7 @@
+     direct_response: Arc<std::sync::Mutex<super::direct_graphics::ResponseMatcher>>,
+     direct_response_active: Arc<AtomicBool>,
+ ) {
+-    let stdin = io::stdin();
++    let stdin = crate::host_io::stdin();
+     let mut reader = stdin.lock();
+     let mut scratch = [0u8; 4096];
+     let mut framer = crate::raw_input::RawInputByteFramer::for_host_input();
+--- a/src/client/terminal_geometry.rs
++++ b/src/client/terminal_geometry.rs
+@@ -179,7 +179,7 @@
+ 
+ #[cfg(not(windows))]
+ pub(super) fn query_host_terminal_appearance() {
+-    let _ = write_host_terminal_appearance_query(io::stdout());
++    let _ = write_host_terminal_appearance_query(crate::host_io::stdout());
+ }
+ 
+ #[cfg(any(not(windows), test))]
+@@ -189,7 +189,7 @@
+ }
+ 
+ pub(super) fn query_host_terminal_theme() {
+-    let _ = write_host_terminal_theme_query(io::stdout());
++    let _ = write_host_terminal_theme_query(crate::host_io::stdout());
+ }
+ 
+ pub(super) fn write_host_terminal_theme_query(mut writer: impl io::Write) -> io::Result<()> {
+@@ -203,7 +203,7 @@
+ const HOST_CELL_SIZE_QUERY: &[u8] = b"\x1b[16t";
+ 
+ pub(super) fn query_host_cell_size() {
+-    let _ = write_host_cell_size_query(io::stdout());
++    let _ = write_host_cell_size_query(crate::host_io::stdout());
+ }
+ 
+ pub(super) fn should_query_host_cell_size() -> bool {
+--- a/src/client/image_files.rs
++++ b/src/client/image_files.rs
+@@ -68,8 +68,8 @@
+ #[cfg(unix)]
+ fn environment_allows() -> bool {
+     allowed(
+-        std::io::stdin().is_terminal(),
+-        std::io::stdout().is_terminal(),
++        crate::host_io::stdin().is_terminal(),
++        crate::host_io::stdout().is_terminal(),
+         |key| std::env::var_os(key),
+     )
+ }
+--- a/src/remote/attach.rs
++++ b/src/remote/attach.rs
+@@ -1014,7 +1014,7 @@
+     let stderr_relay = thread::spawn(move || -> io::Result<Vec<u8>> {
+         let mut captured = Vec::new();
+         let mut buffer = [0_u8; 8 * 1024];
+-        let mut destination = io::stderr();
++        let mut destination = crate::host_io::stderr();
+ 
+         loop {
+             let read = child_stderr.read(&mut buffer)?;
+@@ -1974,7 +1974,7 @@
+     let status = match remote_server_status(ssh, remote_herdr, require_surface_interest) {
+         Ok(status) => status,
+         Err(err) => {
+-            if !io::stdin().is_terminal() {
++            if !crate::host_io::stdin().is_terminal() {
+                 return Err(io::Error::other(format!(
+                     "could not inspect the running remote herdr server on {target} before installing: {err}; run from an interactive terminal to approve updating the remote binary"
+                 )));
+@@ -1983,10 +1983,10 @@
+                 "could not inspect the running remote herdr server on {target} before installing: {err}"
+             );
+             eprint!("continue installing the remote herdr binary? [y/N] ");
+-            io::stderr().flush()?;
++            crate::host_io::stderr().flush()?;
+ 
+             let mut answer = String::new();
+-            io::stdin().read_line(&mut answer)?;
++            crate::host_io::stdin().read_line(&mut answer)?;
+             let answer = answer.trim().to_ascii_lowercase();
+             if answer != "y" && answer != "yes" {
+                 return Err(io::Error::new(
+@@ -2019,7 +2019,7 @@
+     );
+ 
+     if plan == RemoteInstallRunningServerPlan::KeepRunning {
+-        if io::stdin().is_terminal() {
++        if crate::host_io::stdin().is_terminal() {
+             eprintln!("remote herdr server on {target} is already compatible:");
+             eprintln!("  server: v{}", version_label(version.as_deref()));
+             eprintln!(
+@@ -2030,7 +2030,7 @@
+         return Ok(false);
+     }
+ 
+-    if !io::stdin().is_terminal() {
++    if !crate::host_io::stdin().is_terminal() {
+         match plan {
+             RemoteInstallRunningServerPlan::LiveHandoff => return Ok(false),
+             RemoteInstallRunningServerPlan::StopRequired(_) => {
+@@ -2064,10 +2064,10 @@
+         "Install {} and stop the remote server now? [y/N] ",
+         current_version()
+     );
+-    io::stderr().flush()?;
++    crate::host_io::stderr().flush()?;
+ 
+     let mut answer = String::new();
+-    io::stdin().read_line(&mut answer)?;
++    crate::host_io::stdin().read_line(&mut answer)?;
+     let answer = answer.trim().to_ascii_lowercase();
+     if answer != "y" && answer != "yes" {
+         return Err(io::Error::new(
+@@ -2254,7 +2254,7 @@
+             | RemoteServerRestartReason::SurfaceInterest
+             | RemoteServerRestartReason::HealthCheck
+     );
+-    if !io::stdin().is_terminal() {
++    if !crate::host_io::stdin().is_terminal() {
+         if required_upgrade {
+             return Err(io::Error::other(format!(
+                 "remote herdr server on {target} needs one final update before this client can attach; run from an interactive terminal to approve updating it"
+@@ -2302,9 +2302,9 @@
+         "restart the remote server now? [y/N] "
+     };
+     eprint!("{prompt}");
+-    io::stderr().flush()?;
+-
+-    if read_remote_confirmation(&mut io::stdin().lock(), false)? {
++    crate::host_io::stderr().flush()?;
++
++    if read_remote_confirmation(&mut crate::host_io::stdin().lock(), false)? {
+         return Ok(true);
+     }
+     if required_upgrade {
+@@ -2581,7 +2581,7 @@
+     remote_herdr: &RemoteHerdr,
+     source_description: &str,
+ ) -> io::Result<()> {
+-    if !io::stdin().is_terminal() {
++    if !crate::host_io::stdin().is_terminal() {
+         return Err(io::Error::other(format!(
+             "matching remote herdr {} is not installed at {}; run from an interactive terminal to approve installation",
+             current_version(),
+@@ -2599,9 +2599,9 @@
+         source_description,
+         remote_herdr.executable.display()
+     );
+-    io::stderr().flush()?;
+-
+-    if !read_remote_confirmation(&mut io::stdin().lock(), true)? {
++    crate::host_io::stderr().flush()?;
++
++    if !read_remote_confirmation(&mut crate::host_io::stdin().lock(), true)? {
+         return Err(io::Error::new(
+             io::ErrorKind::Interrupted,
+             "remote herdr installation cancelled",
+--- a/src/server/headless/bootstrap.rs
++++ b/src/server/headless/bootstrap.rs
+@@ -2,7 +2,10 @@
+ 
+ /// Run the headless server. This is the entry point called from main.rs.
+ pub fn run_server() -> io::Result<()> {
++    #[cfg(not(target_os = "ios"))]
+     let args: Vec<String> = std::env::args().collect();
++    #[cfg(target_os = "ios")]
++    let args = vec!["herdr".to_owned(), "server".to_owned()];
+     let handoff_import = args.get(2).map(String::as_str) == Some("--handoff-import");
+     let process_context = crate::platform::prepare_server_process(handoff_import);
+     init_logging();
+@@ -29,7 +32,10 @@
+     let loaded_config = config::Config::load();
+     let (api_tx, api_rx) = tokio::sync::mpsc::unbounded_channel();
+     let event_hub = api::EventHub::default();
++    #[cfg(not(target_os = "ios"))]
+     let should_quit = Arc::new(AtomicBool::new(false));
++    #[cfg(target_os = "ios")]
++    let should_quit = crate::ios_entry::server_stop_flag();
+ 
+     // Start the JSON API socket server.
+     let _api_server = match api::start_server_with_stop_control(
+@@ -41,7 +47,7 @@
+         Err(err) if err.kind() == io::ErrorKind::AddrInUse => {
+             eprintln!("error: herdr server is already running");
+             eprintln!("api socket: {}", api::socket_path().display());
+-            std::process::exit(1);
++            crate::host_io::exit(1);
+         }
+         Err(err) => return Err(err),
+     };
+@@ -74,7 +80,7 @@
+             Err(err) if err.kind() == io::ErrorKind::AddrInUse => {
+                 eprintln!("error: herdr server is already running");
+                 eprintln!("client socket: {}", client_socket_path().display());
+-                std::process::exit(1);
++                crate::host_io::exit(1);
+             }
+             Err(err) => return Err(err),
+         };
+@@ -120,6 +126,8 @@
+ }
+ 
+ fn take_startup_cwd() -> Option<PathBuf> {
++    #[cfg(target_os = "ios")]
++    return crate::ios_entry::take_startup_cwd();
+     let cwd = std::env::var_os(crate::server::autodetect::STARTUP_CWD_ENV_VAR)?;
+     std::env::remove_var(crate::server::autodetect::STARTUP_CWD_ENV_VAR);
+     (!cwd.is_empty()).then(|| PathBuf::from(cwd))
+--- a/src/platform/windows/config_backup/tests.rs
++++ b/src/platform/windows/config_backup/tests.rs
+@@ -312,7 +312,7 @@
+         };
+         let _ = write_observed(&path, b"new", |phase| {
+             if phase == crash_phase {
+-                std::process::exit(23);
++                crate::host_io::exit(23);
+             }
+             Ok(())
+         });
+--- a/src/platform/mod.rs
++++ b/src/platform/mod.rs
+@@ -160,8 +160,8 @@
+ 
+ pub(crate) const fn capabilities() -> PlatformCapabilities {
+     PlatformCapabilities {
+-        live_handoff: cfg!(unix),
+-        direct_terminal_attach: cfg!(unix),
++        live_handoff: cfg!(all(unix, not(target_os = "ios"))),
++        direct_terminal_attach: cfg!(all(unix, not(target_os = "ios"))),
+         preserve_legacy_doubled_escape_input: cfg!(target_os = "macos"),
+     }
+ }
+@@ -228,6 +228,8 @@
+ /// Records SIGWINCH events that size polling can miss.
+ #[cfg(unix)]
+ pub(crate) fn watch_terminal_resize_signal() {
++    #[cfg(target_os = "ios")]
++    return;
+     let mut action: libc::sigaction = unsafe { std::mem::zeroed() };
+     action.sa_sigaction =
+         record_terminal_resize_signal as extern "C" fn(libc::c_int) as libc::sighandler_t;
+--- a/src/server/headless.rs
++++ b/src/server/headless.rs
+@@ -3328,6 +3328,7 @@
+ /// Installs a Ctrl+C handler that sets the should_quit flag and wakes up
+ /// the event loop by sending a QuitSignal on the server event channel.
+ fn ctrlc_handler(should_quit: Arc<AtomicBool>, server_event_tx: mpsc::Sender<ServerEvent>) {
++    #[cfg(not(target_os = "ios"))]
+     let _ = ctrlc::set_handler(move || {
+         should_quit.store(true, Ordering::Release);
+         // Wake up the event loop so the quit flag is checked promptly.
+--- a/src/server/autodetect.rs
++++ b/src/server/autodetect.rs
+@@ -47,13 +47,15 @@
+ 
+ /// Checks whether a herdr server is listening at a specific socket path.
+ fn is_server_listening_at(socket_path: &Path) -> bool {
++    #[cfg(target_os = "ios")]
++    { return client_protocol_accepts_hello(socket_path).unwrap_or(false); }
+     #[cfg(windows)]
+     {
+         let _ = socket_path;
+         read_server_status().ok().flatten().is_some()
+     }
+ 
+-    #[cfg(not(windows))]
++    #[cfg(all(not(windows), not(target_os = "ios")))]
+     {
+         if !socket_path.exists() {
+             return false;
+@@ -92,8 +94,9 @@
+     crate::api::read_runtime_status_at(&crate::api::socket_path(), STATUS_REQUEST_TIMEOUT)
+ }
+ 
+-#[cfg(windows)]
++#[cfg(any(windows, target_os = "ios"))]
+ fn client_protocol_accepts_hello(socket_path: &Path) -> io::Result<bool> {
++    #[cfg(windows)]
+     if !socket_path.exists() {
+         return Ok(false);
+     }
+@@ -114,6 +117,11 @@
+         Err(err) => return Err(err),
+     };
+ 
++    #[cfg(target_os = "ios")]
++    { return crate::client::probe_endpoint_negotiation(&mut stream).map(|_| true); }
++
++    #[cfg(windows)]
++    {
+     let hello = crate::protocol::ClientMessage::TerminalHello {
+         version: crate::protocol::PROTOCOL_VERSION,
+         cols: 80,
+@@ -139,6 +147,7 @@
+             Ok(false)
+         }
+         Err(err) => Err(io::Error::other(err.to_string())),
++    }
+     }
+ }
+ 
+@@ -192,6 +201,8 @@
+ ///
+ /// Returns the PID of the spawned server process.
+ pub fn spawn_server_daemon() -> io::Result<u32> {
++    #[cfg(target_os = "ios")]
++    return crate::ios_entry::start_server();
+     let exe = std::env::current_exe().map_err(|err| {
+         io::Error::new(
+             err.kind(),
+@@ -253,13 +264,13 @@
+     let deadline = std::time::Instant::now() + timeout;
+ 
+     while std::time::Instant::now() < deadline {
+-        #[cfg(windows)]
++        #[cfg(any(windows, target_os = "ios"))]
+         if client_protocol_accepts_hello(socket_path)? {
+             info!(path = %socket_path.display(), "server client protocol ready");
+             return Ok(());
+         }
+ 
+-        #[cfg(not(windows))]
++        #[cfg(all(not(windows), not(target_os = "ios")))]
+         if is_server_listening_at(socket_path) {
+             info!(path = %socket_path.display(), "server socket ready");
+             return Ok(());
+--- a/src/pty/backend.rs
++++ b/src/pty/backend.rs
+@@ -1,8 +1,14 @@
+-#[cfg(unix)]
++#[cfg(all(unix, not(target_os = "ios")))]
+ mod unix;
+ 
+-#[cfg(unix)]
++#[cfg(all(unix, not(target_os = "ios")))]
+ pub(crate) use unix::*;
++
++#[cfg(target_os = "ios")]
++#[path = "ios.rs"]
++mod ios;
++#[cfg(target_os = "ios")]
++pub(crate) use ios::*;
+ 
+ #[cfg(windows)]
+ use portable_pty::{native_pty_system, Child, CommandBuilder, MasterPty, PtySize};
+--- a/src/pty/fd.rs
++++ b/src/pty/fd.rs
+@@ -224,6 +224,9 @@
+     cell_width_px: u32,
+     cell_height_px: u32,
+ ) -> std::io::Result<()> {
++    #[cfg(target_os = "ios")]
++    {
++      return crate::pty::backend::resize(fd,rows,cols); }
+     let size = libc::winsize {
+         ws_row: rows,
+         ws_col: cols,
+--- a/src/ipc.rs
++++ b/src/ipc.rs
+@@ -7,7 +7,10 @@
+ #[cfg(unix)]
+ use interprocess::local_socket::traits::Stream as _;
+ 
++#[cfg(not(target_os = "ios"))]
+ pub(crate) type LocalListener = interprocess::local_socket::Listener;
++#[cfg(target_os = "ios")]
++pub(crate) use crate::ios_ipc::LocalListener;
+ pub(crate) type LocalStream = interprocess::local_socket::Stream;
+ 
+ pub(crate) enum LocalStreamRead {
+@@ -24,16 +27,20 @@
+ 
+ #[derive(Clone, Debug, Eq, PartialEq)]
+ pub(crate) struct SocketFileIdentity {
+-    #[cfg(unix)]
++    #[cfg(target_os = "ios")]
++    generation:u64,
++    #[cfg(all(unix, not(target_os = "ios")))]
+     dev: u64,
+-    #[cfg(unix)]
++    #[cfg(all(unix, not(target_os = "ios")))]
+     ino: u64,
+     #[cfg(windows)]
+     marker: Vec<u8>,
+ }
+ 
+ pub(crate) fn connect_local_stream(path: &Path) -> io::Result<LocalStream> {
+-    #[cfg(unix)]
++    #[cfg(target_os = "ios")]
++    return crate::ios_ipc::connect(path);
++    #[cfg(all(unix, not(target_os = "ios")))]
+     {
+         use interprocess::local_socket::{prelude::*, GenericFilePath};
+ 
+@@ -52,7 +59,9 @@
+ }
+ 
+ pub(crate) fn bind_local_listener(path: &Path) -> io::Result<LocalListener> {
+-    #[cfg(unix)]
++    #[cfg(target_os = "ios")]
++    return crate::ios_ipc::bind(path);
++    #[cfg(all(unix, not(target_os = "ios")))]
+     {
+         use interprocess::local_socket::{prelude::*, GenericFilePath, ListenerOptions};
+ 
+@@ -82,6 +91,8 @@
+     path: &Path,
+     busy_message: impl FnOnce(&Path) -> String,
+ ) -> io::Result<()> {
++    #[cfg(target_os = "ios")]
++    return crate::ios_ipc::prepare(path);
+     if let Some(parent) = path.parent() {
+         fs::create_dir_all(parent)?;
+     }
+@@ -278,6 +289,8 @@
+ }
+ 
+ pub(crate) fn socket_file_identity(path: &Path) -> io::Result<SocketFileIdentity> {
++    #[cfg(target_os = "ios")]
++    return crate::ios_ipc::identity(path).map(|generation|SocketFileIdentity{generation});
+     #[cfg(windows)]
+     {
+         Ok(SocketFileIdentity {
+@@ -285,7 +298,7 @@
+         })
+     }
+ 
+-    #[cfg(unix)]
++    #[cfg(all(unix, not(target_os = "ios")))]
+     {
+         let metadata = fs::metadata(path)?;
+         Ok(SocketFileIdentity {
+@@ -299,6 +312,8 @@
+     path: &Path,
+     identity: &SocketFileIdentity,
+ ) -> io::Result<()> {
++    #[cfg(target_os = "ios")]
++    { crate::ios_ipc::remove(path,identity.generation); return Ok(()); }
+     let current = match socket_file_identity(path) {
+         Ok(current) => current,
+         Err(err) if err.kind() == io::ErrorKind::NotFound => return Ok(()),
+@@ -327,6 +342,8 @@
+ 
+ #[cfg(unix)]
+ pub(crate) fn restrict_socket_permissions(path: &Path, mode: u32) -> io::Result<()> {
++    #[cfg(target_os = "ios")]
++    return crate::ios_ipc::private(path,mode);
+     let mut permissions = fs::metadata(path)?.permissions();
+     permissions.set_mode(mode);
+     fs::set_permissions(path, permissions)
+--- a/vendor/portable-pty/src/cmdbuilder.rs
++++ b/vendor/portable-pty/src/cmdbuilder.rs
+@@ -409,6 +409,13 @@
++    /// Preserve the full environment and OS strings across an embedded process boundary.
++    #[cfg(target_os = "ios")]
++    pub fn iter_full_env(&self) -> impl Iterator<Item = (&OsStr, &OsStr)> {
++        self.envs.values()
++            .map(|entry| (entry.preferred_key.as_os_str(), entry.value.as_os_str()))
++    }
++
+     /// Iterate over the configured environment. Only includes environment
+     /// variables set by the caller via `env`, not variables set in the base
+     /// environment.
+     pub fn iter_extra_env_as_str(&self) -> impl Iterator<Item = (&str, &str)> {
+         self.envs.values().filter_map(
+             |EnvEntry {
+--- a/src/pane.rs
++++ b/src/pane.rs
+@@ -1680,6 +1680,9 @@
+ }
+ 
+ fn pane_shell(configured_shell: &str) -> String {
++    #[cfg(target_os = "ios")]
++    { return if configured_shell.trim().is_empty() { "dash".to_owned() } else { configured_shell.trim().to_owned() }; }
++    #[cfg(not(target_os = "ios"))]
+     pane_shell_from(configured_shell, std::env::var("SHELL").ok())
+ }
+ 
+--- a/src/api/status.rs
++++ b/src/api/status.rs
+@@ -15,6 +15,7 @@
+     socket_path: &Path,
+     timeout: Duration,
+ ) -> io::Result<Option<RuntimeStatus>> {
++    #[cfg(not(target_os = "ios"))]
+     if !socket_path.exists() {
+         return Ok(None);
+     }
+--- a/src/pty/actor/unix.rs
++++ b/src/pty/actor/unix.rs
+@@ -402,6 +402,29 @@
+             response_order: Arc::clone(&response_order),
+         };
+
++        // Socket panes have no kernel ONLCR. Normalize only terminal output,
++        // preserving existing CRLF even when CR and LF arrive in different reads.
++        #[cfg(target_os = "ios")]
++        let on_read: ReadCallback = if unsafe { libc::isatty(config.master_fd.as_raw_fd()) } == 0 {
++            let mut callback = config.on_read;
++            let mut previous_cr = false;
++            Box::new(move |bytes| {
++                let mut output = Vec::with_capacity(bytes.len() * 2);
++                for &byte in bytes {
++                    if byte == b'\n' && !previous_cr {
++                        output.push(b'\r');
++                    }
++                    output.push(byte);
++                    previous_cr = byte == b'\r';
++                }
++                callback(&output)
++            })
++        } else {
++            config.on_read
++        };
++        #[cfg(not(target_os = "ios"))]
++        let on_read = config.on_read;
++
+         let mut runner = PtyIoActorRunner {
+             pane_id: config.pane_id,
+             file: std::fs::File::from(config.master_fd),
+@@ -419,7 +442,7 @@
+             wake_read_fd: wake_pipe.read_fd,
+             controls,
+             response_order,
+-            on_read: config.on_read,
++            on_read,
+             on_reader_exit: config.on_reader_exit,
+             poll_observer,
+         };
+@@ -639,6 +662,17 @@
+             PtyIoDataCommand::WriteUserInput(bytes) => {
+                 if self.state == ActorState::Running {
++                    #[cfg(target_os = "ios")]
++                    if bytes.as_ref() == [3] {
++                        match crate::pty::backend::interrupt(self.file.as_raw_fd()) {
++                            Ok(true) => return false,
++                            Ok(false) => {}, // A raw editor/TUI consumes ETX itself.
++                            Err(error) => {
++                                warn!(pane = self.pane_id, %error, "pane interrupt failed");
++                                return false;
++                            }
++                        }
++                    }
+                     self.enqueue_write(bytes);
+                 }
+             }
+             PtyIoDataCommand::SubmitUserInput {
+@@ -710,7 +744,11 @@
+                 let _ = reply.send(Ok(()));
+                 return true;
+             }
+-            PtyIoControlCommand::Shutdown => return true,
++            PtyIoControlCommand::Shutdown => {
++                #[cfg(target_os = "ios")]
++                crate::pty::backend::cancel(self.file.as_raw_fd());
++                return true;
++            }
+         }
+         false
+     }
+--- a/src/persist/io.rs
++++ b/src/persist/io.rs
+@@ -105,7 +105,20 @@
+         }
+     };
+     match parse_snapshot(&content) {
+-        Ok(snapshot) => Some(snapshot),
++        Ok(snapshot) => {
++            #[cfg(target_os = "ios")]
++            let snapshot = {
++                let mut snapshot = snapshot;
++                if crate::ios_entry::relocate_snapshot(&mut snapshot) {
++                    if let Err(err) = save_to_path(&path, &snapshot) {
++                        warn!(path = %path.display(), err = %err,
++                            "failed to save relocated app-container cwd");
++                    }
++                }
++                snapshot
++            };
++            Some(snapshot)
++        },
+         Err(err) => {
+             if let Some(version) = snapshot_file_version(&content) {
+                 if version > SNAPSHOT_VERSION {
+
+--- a/src/app/mod.rs
++++ b/src/app/mod.rs
+@@ -250,7 +250,14 @@
+         .theme
+         .name
+         .clone()
+-        .unwrap_or_else(|| "catppuccin".to_string());
++        .unwrap_or_else(|| {
++            if cfg!(target_os = "ios") {
++                "terminal"
++            } else {
++                "catppuccin"
++            }
++            .to_string()
++        });
+     let (default_dark, default_light) = sibling_theme_names(&manual_name);
+     state::ThemeRuntimeConfig {
+         manual_name,
+--- a/src/client/shell/overlays.rs
++++ b/src/client/shell/overlays.rs
+@@ -534,15 +534,6 @@
+ }
+
+ fn render_onboarding_overlay(b: &mut Buffer, p: &Palette) -> Option<OverlayRender> {
+-    let outer = popup(b.area, 64, 16)?;
+-    let inner = panel(b, outer, p.accent, p.panel_bg)?;
+-    if inner.height < 11 {
+-        return Some(OverlayRender {
+-            area: outer,
+-            ..OverlayRender::default()
+-        });
+-    }
+-    let stack = crate::ui::modal_stack_areas(inner, 2, 0, 1, 1);
+     let base = Style::default()
+         .bg(p.panel_bg)
+         .remove_modifier(Modifier::DIM);
+@@ -551,63 +542,37 @@
+     let text = base.fg(p.overlay1);
+     let accent = base.fg(p.accent).add_modifier(Modifier::BOLD);
+
+-    put_text(
+-        b,
+-        stack.header.x,
+-        stack.header.y,
+-        stack.header.width,
+-        crate::ui::ONBOARDING_TITLE,
+-        title,
+-    );
+-    put_text(
+-        b,
+-        stack.header.x,
+-        stack.header.y.saturating_add(1),
+-        stack.header.width,
+-        crate::ui::ONBOARDING_SUBTITLE,
+-        muted,
+-    );
+-
+-    let content = stack.content;
+-    for (offset, line) in crate::ui::ONBOARDING_DESCRIPTION.iter().enumerate() {
+-        put_text(
+-            b,
+-            content.x,
+-            content.y.saturating_add(offset as u16),
+-            content.width,
+-            line,
+-            text,
+-        );
+-    }
+-
+-    let key_y = content.y.saturating_add(4);
+-    let mut key_x = content.x;
+-    for (value, style) in [
+-        ("  ", base),
+-        (crate::ui::ONBOARDING_PREFIX_LABEL, accent),
+-        (crate::ui::ONBOARDING_PREFIX_SUFFIX, text),
+-        (crate::ui::ONBOARDING_HELP_LABEL, accent),
+-        (crate::ui::ONBOARDING_HELP_SUFFIX, text),
+-    ] {
+-        let width = display_width(value);
+-        put_text(
+-            b,
+-            key_x,
+-            key_y,
+-            content.right().saturating_sub(key_x),
+-            value,
+-            style,
+-        );
+-        key_x = key_x.saturating_add(width);
+-    }
+-    put_text(
+-        b,
+-        content.x,
+-        content.y.saturating_add(5),
+-        content.width,
+-        crate::ui::ONBOARDING_NEXT,
+-        text,
+-    );
++    use ratatui::text::{Line, Span};
++    use ratatui::widgets::{Paragraph, Widget, Wrap};
++    let mut lines = crate::ui::ONBOARDING_DESCRIPTION
++        .iter()
++        .map(|line| Line::styled(*line, text))
++        .collect::<Vec<_>>();
++    lines.push(Line::raw(""));
++    lines.push(Line::from(vec![
++        Span::styled("  ", base),
++        Span::styled(crate::ui::ONBOARDING_PREFIX_LABEL, accent),
++        Span::styled(crate::ui::ONBOARDING_PREFIX_SUFFIX, text),
++        Span::styled(crate::ui::ONBOARDING_HELP_LABEL, accent),
++        Span::styled(crate::ui::ONBOARDING_HELP_SUFFIX, text),
++    ]));
++    lines.push(Line::styled(crate::ui::ONBOARDING_NEXT, text));
++    let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
++
++    let width = b.area.width.saturating_sub(6).min(62);
++    let subtitle = Paragraph::new(crate::ui::ONBOARDING_SUBTITLE)
++        .style(muted)
++        .wrap(Wrap { trim: false });
++    let header_height = 1 + u16::try_from(subtitle.line_count(width)).unwrap_or(u16::MAX);
++    let height = u16::try_from(paragraph.line_count(width)).unwrap_or(u16::MAX)
++        .saturating_add(header_height)
++        .saturating_add(5);
++    let outer = popup(b.area, 64, height.max(16))?;
++    let inner = panel(b, outer, p.accent, p.panel_bg)?;
++    let stack = crate::ui::modal_stack_areas(inner, header_height, 0, 1, 1);
++    put_text(b, stack.header.x, stack.header.y, stack.header.width, crate::ui::ONBOARDING_TITLE, title);
++    subtitle.render(Rect::new(stack.header.x, stack.header.y + 1, stack.header.width, header_height.saturating_sub(1)), b);
++    paragraph.render(stack.content, b);
+
+     let primary = crate::ui::onboarding_welcome_continue_rect(stack.actions.unwrap_or_default());
+     button(
+--- a/src/events.rs
++++ b/src/events.rs
+@@ -76,6 +76,8 @@
+ /// An event from a background task to the main loop.
+ #[derive(Debug)]
+ pub enum AppEvent {
++    #[cfg(target_os = "ios")]
++    PaneExitStatus { pane_id: PaneId, status: u32 },
+     /// A pane's child process exited.
+     PaneDied {
+         pane_id: PaneId,
+--- a/src/app/actions.rs
++++ b/src/app/actions.rs
+@@ -1373,6 +1373,8 @@
+
+     pub fn handle_app_event(&mut self, event: AppEvent) -> Vec<PaneStateUpdate> {
+         match event {
++            #[cfg(target_os = "ios")]
++            AppEvent::PaneExitStatus { .. } => Vec::new(),
+             AppEvent::PaneDied { pane_id, .. } => {
+                 self.handle_pane_died(pane_id);
+                 Vec::new()
+--- a/src/pane.rs
++++ b/src/pane.rs
+@@ -2605,6 +2605,11 @@
+             tokio::task::spawn_blocking(move || {
+                 let exit_reason = match child.wait() {
+                     Ok(status) => {
++                        #[cfg(target_os = "ios")]
++                        let _ = rt.block_on(events.send(AppEvent::PaneExitStatus {
++                            pane_id,
++                            status: status.exit_code(),
++                        }));
+                         let exit_reason = crate::platform::classify_child_exit(&status);
+                         let status_text = format!("{status:?}");
+                         crate::logging::pane_exited(pane_id.raw(), &status_text);
+--- a/src/client/shell/actions.rs
++++ b/src/client/shell/actions.rs
+@@ -430,6 +430,14 @@
+     }
+
+     pub(crate) fn receive_endpoint_error(&mut self, message: String) -> bool {
++        #[cfg(target_os = "ios")]
++        return self.push_endpoint_notice(
++            ClientEndpointNoticeKind::Rejected,
++            "pane_error",
++            message.clone(),
++            message,
++        );
++        #[cfg(not(target_os = "ios"))]
+         self.push_endpoint_notice(
+             ClientEndpointNoticeKind::Rejected,
+             "paste_rejected",
+@@ -550,12 +558,18 @@
+                         "Server unavailable",
+                         error.message.clone(),
+                     ),
+-                    _ => (
+-                        ClientEndpointNoticeKind::Rejected,
+-                        format!("{}:{code}", pending.method_name),
+-                        "Action rejected",
+-                        error.message.clone(),
+-                    ),
++                    _ => {
++                        #[cfg(target_os = "ios")]
++                        let title = error.message.as_str();
++                        #[cfg(not(target_os = "ios"))]
++                        let title = "Action rejected";
++                        (
++                            ClientEndpointNoticeKind::Rejected,
++                            format!("{}:{code}", pending.method_name),
++                            title,
++                            error.message.clone(),
++                        )
++                    }
+                 };
+                 self.push_endpoint_notice(kind, notice_code, title, body);
+             }
+--- a/src/server/headless/notifications.rs
++++ b/src/server/headless/notifications.rs
+@@ -646,6 +646,17 @@
+                 }
+                 true
+             }
++            #[cfg(target_os = "ios")]
++            AppEvent::PaneExitStatus { pane_id, status } => {
++                // Explicit pane close removes the pane before its exit event arrives.
++                if self.app.find_pane(*pane_id).is_none() {
++                    return false;
++                }
++                self.send_to_client_shells(ServerMessage::ClientShellError {
++                    message: format!("Pane {} exited: {status}", pane_id.raw()),
++                });
++                true
++            }
+             AppEvent::PaneDied { pane_id, .. }
+             | AppEvent::WorktreeRuntimeRestoreFailed { pane_id, .. } => {
+                 let focus_before = self.shell_focus_targets();
+--- a/src/app/actions.rs
++++ b/src/app/actions.rs
+@@ -2055,6 +2055,12 @@
+             self.workspaces.remove(ws_idx);
+             self.remove_unattached_terminal_ids(workspace_terminal_ids);
+             if self.workspaces.is_empty() {
++                #[cfg(target_os = "ios")]
++                {
++                    // Embedded Herdr returns to its containing a-Shell command
++                    // when the final shell ends instead of replacing the workspace.
++                    self.should_quit = true;
++                }
+                 self.active = None;
+                 self.selected = 0;
+                 if self.mode == Mode::Terminal {
+--- a/src/app/mod.rs
++++ b/src/app/mod.rs
+@@ -696,6 +696,11 @@
+     }
+
+     pub(crate) fn ensure_default_workspace(&mut self) -> bool {
++        // Do not launch a replacement while the embedded command is shutting down.
++        #[cfg(target_os = "ios")]
++        if self.state.should_quit {
++            return false;
++        }
+         if !self.state.workspaces.is_empty() {
+             return false;
+         }
+--- a/src/client/shell/endpoint_notices.rs
++++ b/src/client/shell/endpoint_notices.rs
+@@ -15 +15 @@
+-        Some(&notice.body),
++        Some(notice.body.as_str()).filter(|body| !cfg!(target_os = "ios") || *body != notice.title),
+@@ -67 +67,5 @@
+-        &notice.body,
++        if cfg!(target_os = "ios") && notice.body == notice.title {
++            ""
++        } else {
++            &notice.body
++        },
