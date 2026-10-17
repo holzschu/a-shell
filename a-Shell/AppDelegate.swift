@@ -205,6 +205,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             viewBehavior = .ignoreSafeArea
         }
         initializeEnvironment()
+        replaceCommand("progress", "ashell_progress", false)
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
         replaceCommand("history", "history", true)
