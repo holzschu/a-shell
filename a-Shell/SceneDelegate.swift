@@ -2568,7 +2568,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 webView?.goBack()
                 webView?.load(URLRequest(url: url))
             }
-            hideKeyboard() // hides the keyboard *and* causes SwiftUI to refresh
+            NotificationCenter.default.post(name: .init("showWebView"), object: webView)
+            hideKeyboard()
         }
     }
     
@@ -2583,7 +2584,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         NSLog("setting showWebView to true")
         showWebView = true
-        hideKeyboard() // hides the keyboard *and* causes SwiftUI to refresh
+        NotificationCenter.default.post(name: .init("showWebView"), object: webView)
+        hideKeyboard()
         internalBrowserStarted = true
         // make "showBrowser" button now visible in the toolbar
         if #available(iOS 16.0, *) {
