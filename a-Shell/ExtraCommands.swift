@@ -1726,14 +1726,15 @@ public func storeInteractive() -> Int32 {
         return 0
     }
     var returnValue: Int32 = 0
-    DispatchQueue.main.async {
+    let readMode = {
         if let delegate = currentDelegate {
-            if delegate.interactiveCommandRunning {
-                returnValue = 1
-            } else {
-                returnValue = 0
-            }
+            returnValue = delegate.interactiveCommandRunning ? 1 : 0
         }
+    }
+    if Thread.isMainThread {
+        readMode()
+    } else {
+        DispatchQueue.main.sync(execute: readMode)
     }
     return returnValue
 }
