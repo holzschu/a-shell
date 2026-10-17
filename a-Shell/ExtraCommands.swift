@@ -2072,6 +2072,12 @@ public func repeatCommand(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
     return 0
 }
 
+@_cdecl("codexUnavailable")
+public func codexUnavailable(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    fputs("codex requires iOS 26.2 or later.\n", thread_stderr)
+    return 1
+}
+
 @_cdecl("wasmkitUnavailable")
 public func wasmkitUnavailable(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     fputs("wasmkit is only available for iOS 18 and above.\n", thread_stdout)

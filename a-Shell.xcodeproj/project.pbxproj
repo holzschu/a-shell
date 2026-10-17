@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A22600000000000000000001 /* codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2203367A28C4B8070027664C /* pico.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2232245E289695A9001BAE04 /* pico.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22068CC62F51C11A004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
 		22068CC72F51CE47004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
@@ -1420,6 +1421,7 @@
 				225F45B0282A4B2D0010E698 /* texlua53A.xcframework in Embed Frameworks */,
 				2243B1B12840ADBF00588B51 /* vimproc.xcframework in Embed Frameworks */,
 				2243B1BA284278F500588B51 /* dash.xcframework in Embed Frameworks */,
+				A22600000000000000000001 /* codex.xcframework in Embed Frameworks */,
 				2243B1BB284278F500588B51 /* dashA.xcframework in Embed Frameworks */,
 				2243B1BC284278F500588B51 /* dashB.xcframework in Embed Frameworks */,
 				2243B1BD284278F500588B51 /* dashC.xcframework in Embed Frameworks */,
@@ -1893,6 +1895,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A22600000000000000000002 /* codex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = codex/codex.xcframework; sourceTree = SOURCE_ROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
@@ -2992,6 +2995,7 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A22600000000000000000002 /* codex.xcframework */,
 				22D13FDE2E61E3FC00E76E2E /* Frameworks regular */,
 				22D132A12E61E01100E76E2E /* Frameworks mini */,
 				22E2F7E62CD67C5C0079534C /* iwasm.framework */,
