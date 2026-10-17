@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>node</key>
+	<array>
+		<string>node.framework/node</string>
+		<string>node_ios_main</string>
+		<string>e:p:r:</string>
+		<string>file</string>
+	</array>
 	<key>alias</key>
 	<array>
 		<string>SELF</string>
@@ -407,6 +414,20 @@
 		<string>printenv_main</string>
 		<string></string>
 		<string>no</string>
+	</array>
+	<key>npm</key>
+	<array>
+		<string>node.framework/node</string>
+		<string>npm_ios_main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>npx</key>
+	<array>
+		<string>node.framework/node</string>
+		<string>npx_ios_main</string>
+		<string></string>
+		<string>file</string>
 	</array>
 	<key>pwd</key>
 	<array>
