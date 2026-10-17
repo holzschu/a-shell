@@ -4187,6 +4187,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     func activateLongPressForButtons() -> Bool {
+        let arrowActions = ["up", "down", "left", "right", "up.down", "left.right", "up.down.left.right"]
+        guard (leftButtonGroup + rightButtonGroup).contains(where: { arrowActions.contains(title($0) ?? "") }) else {
+            return true
+        }
         // Give it slight delay so the button views are actually present
         // Note: for some reasons, this doesn't work on iPad with external keyboards the first time the window is activated
         // (the gestures *are* added to the buttons, but the actions are not called when the user taps/long press)
