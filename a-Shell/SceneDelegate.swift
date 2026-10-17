@@ -647,7 +647,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                 case "copy":
-                    terminalView?.copy()
+                    terminalView?.copy(sender)
                 case "cut":
                     terminalView?.cut(sender)
                 case "control":
@@ -662,7 +662,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
                     }
                 case "selectAll":
-                    terminalView?.selectAll()
+                    terminalView?.selectAll(sender)
                 case "showBrowser":
                     activateBrowserAction()
                 default:
