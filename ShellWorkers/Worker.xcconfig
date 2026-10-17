@@ -1,0 +1,22 @@
+// Dedicated Generic Non-UI worker targets share the stock host's command libraries.
+SDKROOT = iphoneos
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator
+IPHONEOS_DEPLOYMENT_TARGET = 26.0
+SWIFT_VERSION = 6.0
+SWIFT_STRICT_CONCURRENCY = complete
+SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated
+SWIFT_APPROACHABLE_CONCURRENCY = YES
+CLANG_ENABLE_OBJC_ARC = YES
+APPLICATION_EXTENSION_API_ONLY = YES
+GENERATE_INFOPLIST_FILE = YES
+EX_ENABLE_EXTENSION_POINT_GENERATION = YES
+ASHELL_WORKER_HOST_IDENTIFIER = $(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini
+SWIFT_OBJC_BRIDGING_HEADER = ShellWorkers/PaneWire.h
+HEADER_SEARCH_PATHS = $(inherited) $(SRCROOT)/ShellWorkers
+FRAMEWORK_SEARCH_PATHS = $(inherited) $(BUILT_PRODUCTS_DIR)
+OTHER_LDFLAGS = $(inherited) -framework ios_system -framework Foundation -framework UIKit
+LD_RUNPATH_SEARCH_PATHS = @executable_path/../../Frameworks @executable_path/Frameworks
+SKIP_INSTALL = YES
+CURRENT_PROJECT_VERSION = 589
+MARKETING_VERSION = 2.2.3
+CODE_SIGN_STYLE = Automatic
