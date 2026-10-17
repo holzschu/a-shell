@@ -1,0 +1,1011 @@
+diff --git i/src/core.go w/src/core.go
+index 2883488..6c6b4e1 100644
+--- i/src/core.go
++++ w/src/core.go
+@@ -3,6 +3,7 @@ package fzf
+ 
+ import (
+ 	"fmt"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"maps"
+ 	"math"
+ 	"os"
+@@ -207,7 +208,11 @@ func Run(opts *Options) (int, error) {
+ 
+ 		ingestionStart = time.Now()
+ 		readyChan := make(chan bool)
+-		go reader.ReadSource(opts.Input, opts.WalkerRoot, opts.WalkerOpts, opts.WalkerSkip, initialReload, initialEnv, readyChan)
++		iosbridge.Add()
++		go func() {
++			defer iosbridge.Done()
++			reader.ReadSource(opts.Input, opts.WalkerRoot, opts.WalkerOpts, opts.WalkerSkip, initialReload, initialEnv, readyChan)
++		}()
+ 		<-readyChan
+ 	}
+ 
+@@ -358,7 +363,8 @@ func Run(opts *Options) (int, error) {
+ 	}
+ 
+ 	// Go interactive
+-	go matcher.Loop()
++	iosbridge.Add()
++	go func() { defer iosbridge.Done(); matcher.Loop() }()
+ 	defer matcher.Stop()
+ 
+ 	// Handling adaptive height
+@@ -369,10 +375,18 @@ func Run(opts *Options) (int, error) {
+ 		maxFit, padHeight = terminal.MaxFitAndPad()
+ 	}
+ 	deferred := opts.Select1 || opts.Exit0 || opts.Sync
+-	go terminal.Loop()
++	terminalStarted := false
++	startTerminal := func(value fitpad) {
++		if !terminalStarted {
++			terminalStarted = true
++			iosbridge.Add()
++			go func() { defer iosbridge.Done(); terminal.Loop() }()
++		}
++		terminal.startChan <- value
++	}
+ 	if !deferred && !heightUnknown {
+ 		// Start right away
+-		terminal.startChan <- fitpad{-1, -1}
++		startTerminal(fitpad{-1, -1})
+ 	}
+ 
+ 	// Event coordination
+@@ -390,11 +404,11 @@ func Run(opts *Options) (int, error) {
+ 			if items >= maxFit || final {
+ 				deferred = false
+ 				heightUnknown = false
+-				terminal.startChan <- fitpad{min(items, maxFit), padHeight}
++				startTerminal(fitpad{min(items, maxFit), padHeight})
+ 			}
+ 		} else if deferred {
+ 			deferred = false
+-			terminal.startChan <- fitpad{-1, -1}
++			startTerminal(fitpad{-1, -1})
+ 		}
+ 	}
+ 
+@@ -412,7 +426,8 @@ func Run(opts *Options) (int, error) {
+ 		itemIndex = 0
+ 		inputRevision.bumpMajor()
+ 		readyChan := make(chan bool)
+-		go reader.restart(command, environ, readyChan)
++		iosbridge.Add()
++		go func() { defer iosbridge.Done(); reader.restart(command, environ, readyChan) }()
+ 		<-readyChan
+ 	}
+ 
+diff --git i/src/matcher.go w/src/matcher.go
+index 9637037..db696c0 100644
+--- i/src/matcher.go
++++ w/src/matcher.go
+@@ -2,6 +2,7 @@ package fzf
+ 
+ import (
+ 	"fmt"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"runtime"
+ 	"sync"
+ 	"sync/atomic"
+@@ -183,7 +184,9 @@ func (m *Matcher) scan(request MatchRequest) MatchResult {
+ 		if m.slab[idx] == nil {
+ 			m.slab[idx] = util.MakeSlab(slab16Size, slab32Size)
+ 		}
++		iosbridge.Add()
+ 		go func(idx int, slab *util.Slab) {
++			defer iosbridge.Done()
+ 			defer waitGroup.Done()
+ 			var matches []Result
+ 			for {
+diff --git i/src/options.go w/src/options.go
+index 94e3a7f..3efb021 100644
+--- i/src/options.go
++++ w/src/options.go
+@@ -3,6 +3,7 @@ package fzf
+ import (
+ 	"errors"
+ 	"fmt"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"maps"
+ 	"math"
+ 	"os"
+@@ -723,7 +724,7 @@ func defaultPreviewOpts(command string) previewOpts {
+ 
+ func defaultOptions() *Options {
+ 	var theme, baseTheme *tui.ColorTheme
+-	if os.Getenv("NO_COLOR") != "" {
++	if iosbridge.Getenv("NO_COLOR") != "" {
+ 		theme = tui.NoColorTheme
+ 		baseTheme = tui.NoColorTheme
+ 	} else {
+@@ -788,7 +789,7 @@ func defaultOptions() *Options {
+ 		Preview:      defaultPreviewOpts(""),
+ 		PrintQuery:   false,
+ 		ReadZero:     false,
+-		Printer:      func(str string) { fmt.Println(str) },
++		Printer:      func(str string) { fmt.Fprintln(iosbridge.Stdout, str) },
+ 		PrintSep:     "\n",
+ 		Sync:         false,
+ 		History:      nil,
+@@ -802,7 +803,7 @@ func defaultOptions() *Options {
+ 		Margin:       defaultMargin(),
+ 		Padding:      defaultMargin(),
+ 		Unicode:      true,
+-		Ambidouble:   os.Getenv("RUNEWIDTH_EASTASIAN") == "1",
++		Ambidouble:   iosbridge.Getenv("RUNEWIDTH_EASTASIAN") == "1",
+ 		Tabstop:      8,
+ 		BorderLabel:  labelOpts{},
+ 		PreviewLabel: labelOpts{},
+@@ -3049,10 +3050,10 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
+ 		case "--no-read0":
+ 			opts.ReadZero = false
+ 		case "--print0":
+-			opts.Printer = func(str string) { fmt.Print(str, "\x00") }
++			opts.Printer = func(str string) { fmt.Fprint(iosbridge.Stdout, str, "\x00") }
+ 			opts.PrintSep = "\x00"
+ 		case "--no-print0":
+-			opts.Printer = func(str string) { fmt.Println(str) }
++			opts.Printer = func(str string) { fmt.Fprintln(iosbridge.Stdout, str) }
+ 			opts.PrintSep = "\n"
+ 		case "--print-query":
+ 			opts.PrintQuery = true
+@@ -3685,11 +3686,11 @@ func noSeparatorLine(style infoStyle, separator bool) bool {
+ }
+ 
+ func (opts *Options) useTmux() bool {
+-	return opts.Tmux != nil && len(os.Getenv("TMUX")) > 0 && opts.Tmux.index >= opts.Height.index
++	return opts.Tmux != nil && len(iosbridge.Getenv("TMUX")) > 0 && opts.Tmux.index >= opts.Height.index
+ }
+ 
+ func (opts *Options) useZellij() bool {
+-	return opts.Tmux != nil && len(os.Getenv("ZELLIJ")) > 0 && opts.Tmux.index >= opts.Height.index
++	return opts.Tmux != nil && len(iosbridge.Getenv("ZELLIJ")) > 0 && opts.Tmux.index >= opts.Height.index
+ }
+ 
+ func (opts *Options) noSeparatorLine() bool {
+@@ -3908,7 +3909,7 @@ func ParseOptions(useDefaults bool, args []string) (*Options, error) {
+ 
+ 	if useDefaults {
+ 		// 1. Options from $FZF_DEFAULT_OPTS_FILE
+-		if path := os.Getenv("FZF_DEFAULT_OPTS_FILE"); path != "" {
++		if path := iosbridge.Getenv("FZF_DEFAULT_OPTS_FILE"); path != "" {
+ 			bytes, err := os.ReadFile(path)
+ 			if err != nil {
+ 				return nil, errors.New("$FZF_DEFAULT_OPTS_FILE: " + err.Error())
+@@ -3926,7 +3927,7 @@ func ParseOptions(useDefaults bool, args []string) (*Options, error) {
+ 		}
+ 
+ 		// 2. Options from $FZF_DEFAULT_OPTS string
+-		words, parseErr := parseShellWords(os.Getenv("FZF_DEFAULT_OPTS"))
++		words, parseErr := parseShellWords(iosbridge.Getenv("FZF_DEFAULT_OPTS"))
+ 		if parseErr != nil {
+ 			return nil, errors.New("$FZF_DEFAULT_OPTS: " + parseErr.Error())
+ 		}
+@@ -3954,7 +3955,7 @@ func ParseOptions(useDefaults bool, args []string) (*Options, error) {
+ 			//   1. explicitly set --scheme=default,
+ 			//   2. or replace $FZF_DEFAULT_COMMAND with an equivalent 'start:reload'
+ 			//      binding, which is the new preferred way.
+-			if !opts.hasReloadOrTransformOnStart() && util.IsTty(os.Stdin) {
++			if !opts.hasReloadOrTransformOnStart() && util.IsTty(iosbridge.Stdin) {
+ 				opts.Scheme = "path"
+ 			}
+ 			_, opts.Criteria, _ = parseScheme(opts.Scheme)
+diff --git i/src/options_pprof.go w/src/options_pprof.go
+index 9688535..2580f73 100644
+--- i/src/options_pprof.go
++++ w/src/options_pprof.go
+@@ -5,6 +5,7 @@ package fzf
+ 
+ import (
+ 	"fmt"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"os"
+ 	"runtime"
+ 	"runtime/pprof"
+@@ -26,17 +27,17 @@ func (o *Options) initProfiling() error {
+ 		util.AtExit(func() {
+ 			pprof.StopCPUProfile()
+ 			if err := f.Close(); err != nil {
+-				fmt.Fprintln(os.Stderr, "Error: closing cpu profile:", err)
++				fmt.Fprintln(iosbridge.Stderr, "Error: closing cpu profile:", err)
+ 			}
+ 		})
+ 	}
+ 
+ 	stopProfile := func(name string, f *os.File) {
+ 		if err := pprof.Lookup(name).WriteTo(f, 0); err != nil {
+-			fmt.Fprintf(os.Stderr, "Error: could not write %s profile: %v\n", name, err)
++			fmt.Fprintf(iosbridge.Stderr, "Error: could not write %s profile: %v\n", name, err)
+ 		}
+ 		if err := f.Close(); err != nil {
+-			fmt.Fprintf(os.Stderr, "Error: closing %s profile: %v\n", name, err)
++			fmt.Fprintf(iosbridge.Stderr, "Error: closing %s profile: %v\n", name, err)
+ 		}
+ 	}
+ 
+diff --git i/src/proxy.go w/src/proxy.go
+index e81205f..8d09e9a 100644
+--- i/src/proxy.go
++++ w/src/proxy.go
+@@ -4,6 +4,7 @@ import (
+ 	"bufio"
+ 	"errors"
+ 	"fmt"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"io"
+ 	"os"
+ 	"os/exec"
+@@ -30,7 +31,7 @@ func escapeSingleQuote(str string) string {
+ 
+ // Read and remove, so preview and execute commands do not inherit it
+ func takeEnv(name string) string {
+-	value := os.Getenv(name)
++	value := iosbridge.Getenv(name)
+ 	os.Unsetenv(name)
+ 	return value
+ }
+@@ -53,7 +54,8 @@ func (u *labelUpdater) update(label string) {
+ 		return
+ 	}
+ 	u.running = true
+-	go u.run()
++	iosbridge.Add()
++	go func() { defer iosbridge.Done(); u.run() }()
+ }
+ 
+ // Ends once caught up, so nothing needs cancelling when Run returns
+@@ -133,10 +135,12 @@ func runProxy(commandPrefix string, cmdBuilder func(temp string, needBash bool)
+ 	defer os.Remove(output)
+ 
+ 	// Take the output
++	iosbridge.Add()
+ 	go func() {
++		defer iosbridge.Done()
+ 		withOutputPipe(output, func(outputFile io.ReadCloser) {
+ 			if opts.Output == nil {
+-				io.Copy(os.Stdout, outputFile)
++				io.Copy(iosbridge.Stdout, outputFile)
+ 			} else {
+ 				reader := bufio.NewReader(outputFile)
+ 				sep := opts.PrintSep[0]
+@@ -153,7 +157,7 @@ func runProxy(commandPrefix string, cmdBuilder func(temp string, needBash bool)
+ 
+ 	var command, input string
+ 	commandPrefix += ` --no-force-tty-in --proxy-script "$0"`
+-	if opts.Input == nil && (opts.ForceTtyIn || util.IsTty(os.Stdin)) {
++	if opts.Input == nil && (opts.ForceTtyIn || util.IsTty(iosbridge.Stdin)) {
+ 		command = fmt.Sprintf(`%s > %q`, commandPrefix, output)
+ 	} else {
+ 		input, err = fifo("proxy-input")
+@@ -162,10 +166,12 @@ func runProxy(commandPrefix string, cmdBuilder func(temp string, needBash bool)
+ 		}
+ 		defer os.Remove(input)
+ 
++		iosbridge.Add()
+ 		go func() {
++			defer iosbridge.Done()
+ 			withInputPipe(input, func(inputFile io.WriteCloser) {
+ 				if opts.Input == nil {
+-					io.Copy(inputFile, os.Stdin)
++					io.Copy(inputFile, iosbridge.Stdin)
+ 				} else {
+ 					for item := range opts.Input {
+ 						fmt.Fprint(inputFile, item+opts.PrintSep)
+@@ -189,7 +195,7 @@ func runProxy(commandPrefix string, cmdBuilder func(temp string, needBash bool)
+ 		// Nullify FZF_DEFAULT_* variables as tmux popup may inject them even when undefined.
+ 		exports = []string{"FZF_DEFAULT_COMMAND=", "FZF_DEFAULT_OPTS=", "FZF_DEFAULT_OPTS_FILE="}
+ 		validIdentifier := regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+-		for _, pairStr := range os.Environ() {
++		for _, pairStr := range iosbridge.Environ() {
+ 			pair := strings.SplitN(pairStr, "=", 2)
+ 			if strings.HasPrefix(pair[0], internalEnvPrefix) {
+ 				continue
+@@ -222,10 +228,12 @@ func runProxy(commandPrefix string, cmdBuilder func(temp string, needBash bool)
+ 	if err != nil {
+ 		return ExitError, err
+ 	}
+-	cmd.Stderr = os.Stderr
++	cmd.Stderr = iosbridge.Stderr
+ 	intChan := make(chan os.Signal, 1)
+ 	defer close(intChan)
++	iosbridge.Add()
+ 	go func() {
++		defer iosbridge.Done()
+ 		if sig, valid := <-intChan; valid {
+ 			cmd.Process.Signal(sig)
+ 		}
+diff --git i/src/reader.go w/src/reader.go
+index f05d311..6288168 100644
+--- i/src/reader.go
++++ w/src/reader.go
+@@ -3,6 +3,7 @@ package fzf
+ import (
+ 	"bytes"
+ 	"context"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"io"
+ 	"io/fs"
+ 	"os"
+@@ -43,13 +44,15 @@ func NewReader(pusher func([]byte) bool, eventBox *util.EventBox, executor *util
+ 		make(chan bool, 1),
+ 		sync.Mutex{},
+ 		false,
+-		func() { os.Stdin.Close() },
++		func() { iosbridge.Stdin.Close() },
+ 		nil,
+ 		wait}
+ }
+ 
+ func (r *Reader) startEventPoller() {
++	iosbridge.Add()
+ 	go func() {
++		defer iosbridge.Done()
+ 		ptr := &r.event
+ 		pollInterval := readerPollIntervalMin
+ 		for {
+@@ -135,8 +138,8 @@ func (r *Reader) ReadSource(inputChan chan string, roots []string, opts walkerOp
+ 		success = r.readChannel(inputChan)
+ 	} else if len(initCmd) > 0 {
+ 		success = r.readFromCommand(initCmd, initEnv, signalReady)
+-	} else if util.IsTty(os.Stdin) {
+-		cmd := os.Getenv("FZF_DEFAULT_COMMAND")
++	} else if util.IsTty(iosbridge.Stdin) {
++		cmd := iosbridge.Getenv("FZF_DEFAULT_COMMAND")
+ 		if len(cmd) == 0 {
+ 			signalReady()
+ 			success = r.readFiles(roots, opts, ignores)
+@@ -152,13 +155,13 @@ func (r *Reader) ReadSource(inputChan chan string, roots []string, opts walkerOp
+ 
+ func (r *Reader) feed(src io.Reader) {
+ 	/*
+-		readerSlabSize, ae := strconv.Atoi(os.Getenv("SLAB_KB"))
++		readerSlabSize, ae := strconv.Atoi(iosbridge.Getenv("SLAB_KB"))
+ 		if ae != nil {
+ 			readerSlabSize = 128 * 1024
+ 		} else {
+ 			readerSlabSize *= 1024
+ 		}
+-		readerBufferSize, be := strconv.Atoi(os.Getenv("BUF_KB"))
++		readerBufferSize, be := strconv.Atoi(iosbridge.Getenv("BUF_KB"))
+ 		if be != nil {
+ 			readerBufferSize = 64 * 1024
+ 		} else {
+@@ -239,7 +242,7 @@ func (r *Reader) feed(src io.Reader) {
+ }
+ 
+ func (r *Reader) readFromStdin() bool {
+-	r.feed(os.Stdin)
++	r.feed(iosbridge.Stdin)
+ 	return true
+ }
+ 
+@@ -296,7 +299,7 @@ func (r *Reader) readFiles(roots []string, opts walkerOpts, ignores []string) bo
+ 	ignoresFull := []string{}
+ 	ignoresSuffix := []string{}
+ 	sep := string(os.PathSeparator)
+-	if _, ok := os.LookupEnv("MSYSTEM"); ok {
++	if _, ok := iosbridge.LookupEnv("MSYSTEM"); ok {
+ 		sep = "/"
+ 	}
+ 	for _, ignore := range ignores {
+diff --git i/src/server.go w/src/server.go
+index a2080d3..3c88b90 100644
+--- i/src/server.go
++++ w/src/server.go
+@@ -6,6 +6,7 @@ import (
+ 	"crypto/subtle"
+ 	"errors"
+ 	"fmt"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"net"
+ 	"os"
+ 	"regexp"
+@@ -81,7 +82,7 @@ func parseListenAddress(address string) (listenAddress, error) {
+ func startHttpServer(address listenAddress, actionChannel chan []*action, getHandler func(getParams) string) (net.Listener, int, error) {
+ 	host := address.host
+ 	port := address.port
+-	apiKey := os.Getenv("FZF_API_KEY")
++	apiKey := iosbridge.Getenv("FZF_API_KEY")
+ 	if !address.IsLocal() && len(apiKey) == 0 {
+ 		return nil, port, errors.New("FZF_API_KEY is required to allow remote access")
+ 	}
+@@ -122,7 +123,9 @@ func startHttpServer(address listenAddress, actionChannel chan []*action, getHan
+ 		}
+ 	}
+ 
++	iosbridge.Add()
+ 	go func() {
++		defer iosbridge.Done()
+ 		server := httpServer{
+ 			apiKey:        []byte(apiKey),
+ 			actionChannel: actionChannel,
+diff --git i/src/terminal.go w/src/terminal.go
+index 21a2967..39b38b2 100644
+--- i/src/terminal.go
++++ w/src/terminal.go
+@@ -5,6 +5,7 @@ import (
+ 	"context"
+ 	"encoding/json"
+ 	"fmt"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"io"
+ 	"maps"
+ 	"math"
+@@ -59,9 +60,8 @@ var passThroughBeginRegex *regexp.Regexp
+ var passThroughEndTmuxRegex *regexp.Regexp
+ var sixelBeginRegex *regexp.Regexp
+ var cursorBackRegex *regexp.Regexp
+-var ttyin *os.File
+ 
+-var inTmux = len(os.Getenv("TMUX")) > 0
++var inTmux = len(iosbridge.Getenv("TMUX")) > 0
+ 
+ const clearCode string = "\x1b[2J"
+ 
+@@ -892,7 +892,7 @@ func defaultKeymap() map[tui.Event][]*action {
+ 	add(tui.CtrlW, actUnixWordRubout)
+ 	add(tui.CtrlY, actYank)
+ 	if !util.IsWindows() {
+-		add(tui.CtrlZ, actSigStop)
++		add(tui.CtrlZ, actIgnore)
+ 	}
+ 	add(tui.CtrlSlash, actToggleWrapWord)
+ 	addEvent(tui.AltKey('/'), actToggleWrapWord)
+@@ -998,14 +998,13 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
+ 	var renderer tui.Renderer
+ 	fullscreen := !opts.Height.auto && (opts.Height.size == 0 || opts.Height.percent && opts.Height.size == 100)
+ 	var err error
+-	// Reuse ttyin if available to avoid having multiple file descriptors open
+-	// when you run fzf multiple times in your Go program. Closing it is known to
+-	// cause problems with 'become' action and invalid terminal state after exit.
+-	if ttyin == nil {
+-		if ttyin, err = tui.TtyIn(opts.TtyDefault); err != nil {
+-			return nil, err
+-		}
++	// A new command owns a new keyboard descriptor, even in the same process.
++	ttyin, err := tui.TtyIn(opts.TtyDefault)
++	if err != nil {
++		return nil, err
+ 	}
++	util.AtExit(func() { ttyin.Close() })
++
+ 	if fullscreen {
+ 		if tui.HasFullscreenRenderer() {
+ 			renderer = tui.NewFullscreenRenderer(opts.Theme, opts.Black, opts.Mouse, opts.Tabstop)
+@@ -1412,7 +1411,7 @@ func (t *Terminal) environForPreview() []string {
+ }
+ 
+ func (t *Terminal) environImpl(forPreview bool) []string {
+-	env := os.Environ()
++	env := iosbridge.Environ()
+ 	if t.listenAddr != nil && len(t.listenAddr.sock) > 0 {
+ 		env = append(env, "FZF_SOCK="+t.listenAddr.sock)
+ 	}
+@@ -2226,7 +2225,9 @@ func (t *Terminal) UpdateList(result MatchResult) {
+ 	// and an inline send on a full channel would deadlock with the main loop
+ 	// blocking on eventBox.Set while trying to drain the channel.
+ 	if wakeUp {
++		iosbridge.Add()
+ 		go func() {
++			defer iosbridge.Done()
+ 			t.serverInputChan <- []*action{{t: actIgnore}}
+ 		}()
+ 	}
+@@ -5778,7 +5779,9 @@ Loop:
+ 				continue Loop
+ 			}
+ 			todo := item
++			iosbridge.Add()
+ 			go func() {
++				defer iosbridge.Done()
+ 				// Acquire global semaphore
+ 				t.bgSemaphore <- struct{}{}
+ 
+@@ -5811,21 +5814,21 @@ func (t *Terminal) executeCommand(template string, forcePlus bool, background bo
+ 		// Open a separate handle for tty input
+ 		if in, _ := tui.TtyIn(t.ttyDefault); in != nil {
+ 			cmd.Stdin = in
+-			if in != os.Stdin {
++			if in != iosbridge.Stdin {
+ 				defer in.Close()
+ 			}
+ 		}
+ 
+-		cmd.Stdout = os.Stdout
+-		if !util.IsTty(os.Stdout) {
++		cmd.Stdout = iosbridge.Stdout
++		if !util.IsTty(iosbridge.Stdout) {
+ 			if out, _ := tui.TtyOut(t.ttyDefault); out != nil {
+ 				cmd.Stdout = out
+ 				defer out.Close()
+ 			}
+ 		}
+ 
+-		cmd.Stderr = os.Stderr
+-		if !util.IsTty(os.Stderr) {
++		cmd.Stderr = iosbridge.Stderr
++		if !util.IsTty(iosbridge.Stderr) {
+ 			if out, _ := tui.TtyOut(t.ttyDefault); out != nil {
+ 				cmd.Stderr = out
+ 				defer out.Close()
+@@ -5850,7 +5853,9 @@ func (t *Terminal) executeCommand(template string, forcePlus bool, background bo
+ 		}
+ 		paused := atomic.Int32{}
+ 		ctx, cancel := context.WithCancel(context.Background())
++		iosbridge.Add()
+ 		go func() {
++			defer iosbridge.Done()
+ 			select {
+ 			case <-ctx.Done():
+ 				return
+@@ -6124,7 +6129,9 @@ func (t *Terminal) blockWait(pending []*action) {
+ 	t.wait.pending = slices.Clone(pending)
+ 	// Show the waiting feedback only if the search takes long enough,
+ 	// so that quick searches don't cause flickering
++	iosbridge.Add()
+ 	go func() {
++		defer iosbridge.Done()
+ 		timer := time.NewTimer(progressMinDuration)
+ 		<-timer.C
+ 		t.mutex.Lock()
+@@ -6284,7 +6291,9 @@ func (t *Terminal) startTimers(ctx context.Context) {
+ 		case tui.Every:
+ 			d := time.Duration(evt.Char) * time.Millisecond
+ 			evt := evt
++			iosbridge.Add()
+ 			go func() {
++				defer iosbridge.Done()
+ 				ticker := time.NewTicker(d)
+ 				defer ticker.Stop()
+ 				for {
+@@ -6336,7 +6345,9 @@ func (t *Terminal) Loop() error {
+ 	{ // Late initialization
+ 		intChan := make(chan os.Signal, 1)
+ 		signal.Notify(intChan, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
++		iosbridge.Add()
+ 		go func() {
++			defer iosbridge.Done()
+ 			for {
+ 				select {
+ 				case <-ctx.Done():
+@@ -6354,7 +6365,9 @@ func (t *Terminal) Loop() error {
+ 		if !t.tui.ShouldEmitResizeEvent() {
+ 			resizeChan := make(chan os.Signal, 1)
+ 			notifyOnResize(ctx, resizeChan) // Non-portable
++			iosbridge.Add()
+ 			go func() {
++				defer iosbridge.Done()
+ 				for {
+ 					select {
+ 					case <-ctx.Done():
+@@ -6383,7 +6396,9 @@ func (t *Terminal) Loop() error {
+ 		t.reqBox.Set(reqHeader, nil)
+ 		t.reqBox.Set(reqFooter, nil)
+ 		if t.initDelay > 0 {
++			iosbridge.Add()
+ 			go func() {
++				defer iosbridge.Done()
+ 				timer := time.NewTimer(t.initDelay)
+ 				<-timer.C
+ 				t.reqBox.Set(reqActivate, nil)
+@@ -6391,7 +6406,9 @@ func (t *Terminal) Loop() error {
+ 		}
+ 
+ 		// Keep the spinner spinning
++		iosbridge.Add()
+ 		go func() {
++			defer iosbridge.Done()
+ 			for t.running.Get() {
+ 				t.mutex.Lock()
+ 				reading := t.reading
+@@ -6405,7 +6422,9 @@ func (t *Terminal) Loop() error {
+ 	}
+ 
+ 	if t.hasPreviewer() {
++		iosbridge.Add()
+ 		go func() {
++			defer iosbridge.Done()
+ 			var version int64
+ 			stop := false
+ 			t.previewBox.WaitFor(reqPreviewReady)
+@@ -6457,7 +6476,9 @@ func (t *Terminal) Loop() error {
+ 						reapChan := make(chan bool)
+ 						lineChan := make(chan eachLine)
+ 						// Goroutine 1 reads process output
++						iosbridge.Add()
+ 						go func() {
++							defer iosbridge.Done()
+ 							for {
+ 								line, err := reader.ReadString('\n')
+ 								lineChan <- eachLine{line, err}
+@@ -6470,7 +6491,9 @@ func (t *Terminal) Loop() error {
+ 
+ 						// Goroutine 2 periodically requests rendering
+ 						rendered := util.NewAtomicBool(false)
++						iosbridge.Add()
+ 						go func(version int64) {
++							defer iosbridge.Done()
+ 							lines := []string{}
+ 							spinner := makeSpinner(t.unicode)
+ 							spinnerIndex := -1 // Delay initial rendering by an extra tick
+@@ -6518,7 +6541,9 @@ func (t *Terminal) Loop() error {
+ 						}(version)
+ 
+ 						// Goroutine 3 is responsible for cancelling running preview command
++						iosbridge.Add()
+ 						go func(version int64) {
++							defer iosbridge.Done()
+ 							timer := time.NewTimer(previewDelayed)
+ 						Loop:
+ 							for {
+@@ -6580,7 +6605,9 @@ func (t *Terminal) Loop() error {
+ 		}
+ 	}
+ 
+-	go func() { // Render loop
++	iosbridge.Add()
++	go func() {
++		defer iosbridge.Done() // Render loop
+ 		var focusedIndex = minItem.Index()
+ 		var version int64 = -1
+ 		running := true
+@@ -6592,6 +6619,7 @@ func (t *Terminal) Loop() error {
+ 			if t.listener != nil {
+ 				t.listener.Close()
+ 			}
++			t.tui.CancelGetChar()
+ 			t.tui.Close()
+ 			code = getCode()
+ 			if code <= ExitNoMatch && t.history != nil {
+@@ -6805,7 +6833,9 @@ func (t *Terminal) Loop() error {
+ 
+ 	looping := true
+ 	barrier := make(chan bool)
++	iosbridge.Add()
+ 	go func() {
++		defer iosbridge.Done()
+ 		for {
+ 			select {
+ 			case <-ctx.Done():
+@@ -6815,7 +6845,7 @@ func (t *Terminal) Loop() error {
+ 			select {
+ 			case <-ctx.Done():
+ 				return
+-			case t.keyChan <- t.tui.GetChar(t.listenAddr != nil):
++			case t.keyChan <- t.tui.GetChar(true):
+ 			}
+ 		}
+ 	}()
+@@ -7120,6 +7150,7 @@ func (t *Terminal) Loop() error {
+ 				if valid {
+ 					// We do not remove temp files in this case
+ 					command, _ := t.replacePlaceholder(a.a, false, string(t.input), list)
++					t.tui.CancelGetChar()
+ 					t.tui.Close()
+ 					if t.history != nil {
+ 						t.history.append(string(t.input))
+diff --git i/src/terminal_unix.go w/src/terminal_unix.go
+index 0fedb44..d1560d6 100644
+--- i/src/terminal_unix.go
++++ w/src/terminal_unix.go
+@@ -4,18 +4,37 @@ package fzf
+ 
+ import (
+ 	"context"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"os"
+-	"os/signal"
+ 	"syscall"
++	"time"
+ 
+ 	"golang.org/x/sys/unix"
+ )
+ 
+ func notifyOnResize(ctx context.Context, resizeChan chan<- os.Signal) {
+-	signal.Notify(resizeChan, syscall.SIGWINCH)
++	iosbridge.Add()
+ 	go func() {
+-		<-ctx.Done()
+-		signal.Stop(resizeChan)
++		defer iosbridge.Done()
++		timer := time.NewTicker(100 * time.Millisecond)
++		defer timer.Stop()
++		width, height, _ := iosbridge.Size()
++		for {
++			select {
++			case <-ctx.Done():
++				return
++			case <-timer.C:
++				w, h, err := iosbridge.Size()
++				if err == nil && (w != width || h != height) {
++					width, height = w, h
++					select {
++					case resizeChan <- syscall.SIGWINCH:
++					case <-ctx.Done():
++						return
++					}
++				}
++			}
++		}
+ 	}()
+ }
+ 
+diff --git i/src/tmux.go w/src/tmux.go
+index c9c44ef..1d1da7e 100644
+--- i/src/tmux.go
++++ w/src/tmux.go
+@@ -2,6 +2,7 @@ package fzf
+ 
+ import (
+ 	"fmt"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"os"
+ 	"os/exec"
+ 	"path/filepath"
+@@ -28,7 +29,7 @@ func tmuxFloatingPaneInfo() (int, int, bool, bool) {
+ 	// The right approach for such bindings is 'run-shell -b', which does
+ 	// not suspend key processing, as discussed in:
+ 	//   https://github.com/tmux/tmux/issues/5384
+-	target := os.Getenv("TMUX_PANE")
++	target := iosbridge.Getenv("TMUX_PANE")
+ 	if target == "" {
+ 		return 0, 0, false, false
+ 	}
+@@ -171,7 +172,7 @@ func runTmuxFloatingPane(argStr string, dir string, windowWidth int, windowHeigh
+ 		}
+ 		paneCmd := fmt.Sprintf("%s%s %s; echo $? > %s; tmux wait-for -S %s",
+ 			setup, escapeSingleQuote(sh), escapeSingleQuote(temp), code, signal)
+-		target := os.Getenv("TMUX_PANE")
++		target := iosbridge.Getenv("TMUX_PANE")
+ 		newPane := "tmux new-pane -A"
+ 		if !overZoom {
+ 			// Unzoom the window first; creating a floating pane over a
+diff --git i/src/tui/light.go w/src/tui/light.go
+index b8c6ac7..ddc42f6 100644
+--- i/src/tui/light.go
++++ w/src/tui/light.go
+@@ -4,6 +4,7 @@ import (
+ 	"bytes"
+ 	"errors"
+ 	"fmt"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"os"
+ 	"regexp"
+ 	"strconv"
+@@ -187,6 +188,7 @@ type LightRenderer struct {
+ 	maxHeightFunc func(int) int
+ 	showCursor    bool
+ 	mutex         sync.Mutex
++	stopping      bool
+ 
+ 	// Whether bracketed paste was already on before we enabled it. Nil when
+ 	// the terminal did not answer the query.
+@@ -221,7 +223,7 @@ type LightWindow struct {
+ func NewLightRenderer(ttyDefault string, ttyin *os.File, theme *ColorTheme, forceBlack bool, mouse bool, tabstop int, clearOnExit bool, fullscreen bool, maxHeightFunc func(int) int) (Renderer, error) {
+ 	out, err := openTtyOut(ttyDefault)
+ 	if err != nil {
+-		out = os.Stderr
++		out = iosbridge.Stderr
+ 	}
+ 	r := LightRenderer{
+ 		theme:         theme,
+@@ -255,7 +257,7 @@ func atoi(s string, defaultValue int) int {
+ }
+ 
+ func (r *LightRenderer) Init() error {
+-	r.escDelay = atoi(os.Getenv("ESCDELAY"), defaultEscDelay)
++	r.escDelay = atoi(iosbridge.Getenv("ESCDELAY"), defaultEscDelay)
+ 
+ 	if err := r.initPlatform(); err != nil {
+ 		return err
+@@ -333,7 +335,7 @@ func (r *LightRenderer) origin() {
+ }
+ 
+ func getEnv(name string, defaultValue int) int {
+-	env := os.Getenv(name)
++	env := iosbridge.Getenv(name)
+ 	if len(env) == 0 {
+ 		return defaultValue
+ 	}
+@@ -637,6 +639,9 @@ func (r *LightRenderer) CancelGetChar() {
+ func (r *LightRenderer) setCancel(f func()) {
+ 	r.mutex.Lock()
+ 	r.cancel = f
++	if r.stopping && f != nil {
++		f()
++	}
+ 	r.mutex.Unlock()
+ }
+ 
+@@ -1355,6 +1360,10 @@ func (r *LightRenderer) Refresh() {
+ }
+ 
+ func (r *LightRenderer) Close() {
++	r.mutex.Lock()
++	r.stopping = true
++	r.mutex.Unlock()
++	r.CancelGetChar()
+ 	if r.clearOnExit {
+ 		if r.fullscreen {
+ 			r.rmcup()
+diff --git i/src/tui/light_unix.go w/src/tui/light_unix.go
+index 3b8b1de..f704f68 100644
+--- i/src/tui/light_unix.go
++++ w/src/tui/light_unix.go
+@@ -4,38 +4,29 @@ package tui
+ 
+ import (
+ 	"errors"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"os"
+-	"os/exec"
+ 	"strings"
++
+ 	"syscall"
+ 	"time"
+ 
+ 	"github.com/junegunn/fzf/src/util"
+ 	"golang.org/x/sys/unix"
+-	"golang.org/x/term"
+ )
+ 
+ func IsLightRendererSupported() bool {
+ 	return true
+ }
+ 
+-func (r *LightRenderer) DefaultTheme() *ColorTheme {
+-	if strings.Contains(os.Getenv("TERM"), "256") {
+-		return Dark256
+-	}
+-	colors, err := exec.Command("tput", "colors").Output()
+-	if err == nil && atoi(strings.TrimSpace(string(colors)), 16) > 16 {
+-		return Dark256
+-	}
+-	return Default16
+-}
++func (r *LightRenderer) DefaultTheme() *ColorTheme { return Dark256 }
+ 
+ func (r *LightRenderer) fd() int {
+ 	return int(r.ttyin.Fd())
+ }
+ 
+ func (r *LightRenderer) initPlatform() (err error) {
+-	r.origState, err = term.MakeRaw(r.fd())
++	err = iosbridge.Raw(true)
+ 	return err
+ }
+ 
+@@ -66,24 +57,25 @@ func openTty(ttyDefault string, mode int) (*os.File, error) {
+ 	return in, nil
+ }
+ 
+-func openTtyIn(ttyDefault string) (*os.File, error) {
+-	return openTty(ttyDefault, syscall.O_RDONLY)
+-}
+-
+-func openTtyOut(ttyDefault string) (*os.File, error) {
+-	return openTty(ttyDefault, syscall.O_WRONLY)
++func openTtyIn(_ string) (*os.File, error) { return iosbridge.Input() }
++func openTtyOut(_ string) (*os.File, error) {
++	fd, err := syscall.Dup(int(iosbridge.Stderr.Fd()))
++	if err != nil {
++		return nil, err
++	}
++	return os.NewFile(uintptr(fd), "a-Shell terminal output"), nil
+ }
+ 
+ func (r *LightRenderer) setupTerminal() {
+-	term.MakeRaw(r.fd())
++	iosbridge.Raw(true)
+ }
+ 
+ func (r *LightRenderer) restoreTerminal() {
+-	term.Restore(r.fd(), r.origState)
++	iosbridge.Raw(false)
+ }
+ 
+ func (r *LightRenderer) updateTerminalSize() {
+-	width, height, err := term.GetSize(r.fd())
++	width, height, err := iosbridge.Size()
+ 
+ 	if err == nil {
+ 		r.width = width
+@@ -215,8 +207,8 @@ func (r *LightRenderer) getch(cancellable bool, nonblock bool) (int, getCharResu
+ 	getter := func() (int, getCharResult) {
+ 		b := make([]byte, 1)
+ 		util.SetNonblock(r.ttyin, nonblock)
+-		_, err := util.Read(fd, b)
+-		if err != nil {
++		n, err := util.Read(fd, b)
++		if err != nil || n == 0 {
+ 			return 0, getCharError
+ 		}
+ 		return int(b[0]), getCharSuccess
+@@ -270,9 +262,9 @@ func (r *LightRenderer) getch(cancellable bool, nonblock bool) (int, getCharResu
+ }
+ 
+ func (r *LightRenderer) Size() TermSize {
+-	ws, err := unix.IoctlGetWinsize(int(r.ttyin.Fd()), unix.TIOCGWINSZ)
++	width, height, err := iosbridge.Size()
+ 	if err != nil {
+ 		return TermSize{}
+ 	}
+-	return TermSize{int(ws.Row), int(ws.Col), int(ws.Xpixel), int(ws.Ypixel)}
++	return TermSize{height, width, 0, 0}
+ }
+diff --git i/src/tui/tcell.go w/src/tui/tcell.go
+index 1dbb6dc..e04367f 100644
+--- i/src/tui/tcell.go
++++ w/src/tui/tcell.go
+@@ -3,6 +3,7 @@
+ package tui
+ 
+ import (
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"os"
+ 	"regexp"
+ 	"strings"
+@@ -192,7 +193,7 @@ func (r *FullscreenRenderer) initScreen() error {
+ }
+ 
+ func (r *FullscreenRenderer) Init() error {
+-	if os.Getenv("TERM") == "cygwin" {
++	if iosbridge.Getenv("TERM") == "cygwin" {
+ 		os.Setenv("TERM", "")
+ 	}
+ 
+diff --git i/src/util/util.go w/src/util/util.go
+index 3e2acd4..c6b58d6 100644
+--- i/src/util/util.go
++++ w/src/util/util.go
+@@ -2,6 +2,7 @@ package util
+ 
+ import (
+ 	"cmp"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"math"
+ 	"os"
+ 	"strconv"
+@@ -75,6 +76,9 @@ func AsUint16(val int) uint16 {
+ 
+ // IsTty returns true if the file is a terminal
+ func IsTty(file *os.File) bool {
++	if file == iosbridge.Stdin {
++		return iosbridge.InputTTY
++	}
+ 	fd := file.Fd()
+ 	return isatty.IsTerminal(fd) || isatty.IsCygwinTerminal(fd)
+ }
+diff --git i/src/util/util_unix.go w/src/util/util_unix.go
+index 736fa01..57607ba 100644
+--- i/src/util/util_unix.go
++++ w/src/util/util_unix.go
+@@ -4,6 +4,7 @@ package util
+ 
+ import (
+ 	"fmt"
++	"github.com/junegunn/fzf/src/iosbridge"
+ 	"os"
+ 	"os/exec"
+ 	"strings"
+@@ -20,7 +21,7 @@ type Executor struct {
+ }
+ 
+ func NewExecutor(withShell string) *Executor {
+-	shell := os.Getenv("SHELL")
++	shell := iosbridge.Getenv("SHELL")
+ 	args, err := shellwords.Parse(withShell)
+ 	if err == nil && len(args) > 0 {
+ 		shell = args[0]
+@@ -61,7 +62,7 @@ func (x *Executor) QuoteEntry(entry string) string {
+ func (x *Executor) Become(stdin *os.File, environ []string, command string) {
+ 	shellPath, err := exec.LookPath(x.shell)
+ 	if err != nil {
+-		fmt.Fprintf(os.Stderr, "fzf (become): %s\n", err.Error())
++		fmt.Fprintf(iosbridge.Stderr, "fzf (become): %s\n", err.Error())
+ 		os.Exit(127)
+ 	}
+ 	args := append([]string{shellPath}, append(x.args, command)...)

@@ -79,3 +79,5 @@ fastlane/test_output
 # a-Shell
 
 Configuration.xcconfig
+/fzf/fzf.xcframework/
+/navi/navi.xcframework/
