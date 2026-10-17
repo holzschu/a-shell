@@ -1727,9 +1727,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         webAssemblyCommand.webAssemblyGroup?.enter()
         webAssemblyCommand.webAssemblyGroup?.wait()
         
-        if (stdout_file != nil && fileno(webAssemblyCommand.thread_stdout_copy) != fileno(stdout_file)) {
-            fclose(webAssemblyCommand.thread_stdout_copy)
-        }
+        // The command borrows its caller's streams; ios_system owns their cleanup.
         
         // if resultStack[commandNumber] does not exist, something went wrong.
         // Don't crash, but raise the issue.
@@ -1826,9 +1824,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 fclose(thread_stdout_copy)
                 do {
                     if let outData = try? Data(contentsOf: URL(fileURLWithPath: command!.stdout_fileName)) {
-                        let stdout_file = FileHandle(fileDescriptor: fileno(command!.thread_stdout_copy))
+                        let stdout_file = FileHandle(fileDescriptor: fileno(command!.thread_stdout_copy), closeOnDealloc: false)
                         try stdout_file.write(contentsOf: outData)
-                        try stdout_file.close() // necessary?
                         try FileManager().removeItem(atPath: command!.stdout_fileName)
                      }
                 }
@@ -1841,9 +1838,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 fclose(thread_stderr_copy)
                 do {
                     if let errData = try? Data(contentsOf: URL(fileURLWithPath: command!.stderr_fileName)) {
-                        let stderr_file = FileHandle(fileDescriptor: fileno(command!.thread_stderr_copy))
+                        let stderr_file = FileHandle(fileDescriptor: fileno(command!.thread_stderr_copy), closeOnDealloc: false)
                         try stderr_file.write(contentsOf: errData)
-                        try stderr_file.close() // necessary? 
                         try FileManager().removeItem(atPath: command!.stderr_fileName)
                     }
                 }

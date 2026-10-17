@@ -1,0 +1,227 @@
+--- a/tui/src/daemon_recovery.rs
++++ b/tui/src/daemon_recovery.rs
+@@ -23,7 +23,10 @@
+ use ratatui::widgets::Paragraph;
+ use ratatui::widgets::Wrap;
+ use std::io;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use tokio::sync::mpsc::unbounded_channel;
+ use tokio_stream::StreamExt;
+ 
+--- a/tui/src/terminal_title.rs
++++ b/tui/src/terminal_title.rs
+@@ -17,7 +17,10 @@
+ 
+ use std::fmt;
+ use std::io;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::io::stdout;
+ 
+ use crossterm::Command;
+--- a/tui/src/lib.rs
++++ b/tui/src/lib.rs
+@@ -81,7 +81,10 @@
+ pub use session_archive_commands::run_session_archive_command;
+ pub use session_queue_commands::run_session_queue_command;
+ use std::fs::OpenOptions;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::path::Path;
+ use std::path::PathBuf;
+ use std::sync::Arc;
+--- a/tui/src/session_archive_commands.rs
++++ b/tui/src/session_archive_commands.rs
+@@ -3,7 +3,10 @@
+ //! The CLI commands are thin app-server clients: resolve a user-provided UUID or exact session
+ //! name, then call the corresponding app-server RPC.
+ 
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::io::Write;
+ use std::path::Path;
+ use std::path::PathBuf;
+--- a/tui/src/tui/terminal_stderr.rs
++++ b/tui/src/tui/terminal_stderr.rs
+@@ -10,7 +10,10 @@
+ #[cfg(target_os = "macos")]
+ use std::fs::OpenOptions;
+ #[cfg(target_os = "macos")]
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ #[cfg(target_os = "macos")]
+ use std::mem::MaybeUninit;
+ #[cfg(target_os = "macos")]
+--- a/tui/src/tui/input_boundary.rs
++++ b/tui/src/tui/input_boundary.rs
+@@ -2,7 +2,10 @@
+ 
+ use std::io;
+ #[cfg(unix)]
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::io::Result;
+ #[cfg(unix)]
+ use std::io::stdin;
+--- a/tui/src/markdown_render/web_links.rs
++++ b/tui/src/markdown_render/web_links.rs
+@@ -6,7 +6,10 @@
+ use codex_terminal_detection::TerminalInfo;
+ use codex_terminal_detection::TerminalName;
+ use codex_terminal_detection::terminal_info;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::sync::LazyLock;
+ 
+ use ratatui::style::Style;
+--- a/cli/src/mcp_login.rs
++++ b/cli/src/mcp_login.rs
+@@ -7,7 +7,10 @@
+ use std::collections::HashMap;
+ use std::io;
+ use std::io::BufRead;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::io::Write;
+ use std::sync::Arc;
+ 
+--- a/cli/src/migrate_rollouts.rs
++++ b/cli/src/migrate_rollouts.rs
+@@ -1,5 +1,8 @@
+ use std::io;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::io::Write;
+ use std::path::Path;
+ use std::time::Duration;
+--- a/cli/src/daemon_install.rs
++++ b/cli/src/daemon_install.rs
+@@ -1,6 +1,9 @@
+ //! Confirmation for copying the invoking CLI package into a daemon installation.
+ 
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ 
+ use anyhow::Result;
+ use codex_app_server_daemon::InstallRequest;
+--- a/cli/src/doctor.rs
++++ b/cli/src/doctor.rs
+@@ -17,7 +17,10 @@
+ use std::env;
+ use std::ffi::OsStr;
+ use std::future::Future;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::io::Read;
+ use std::net::IpAddr;
+ use std::path::Path;
+--- a/cli/src/login.rs
++++ b/cli/src/login.rs
+@@ -26,7 +26,10 @@
+ use codex_protocol::config_types::ForcedLoginMethod;
+ use codex_utils_cli::CliConfigOverrides;
+ use std::fs::OpenOptions;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::io::Read;
+ use std::path::Path;
+ use std::path::PathBuf;
+--- a/cli/src/state_db_recovery.rs
++++ b/cli/src/state_db_recovery.rs
+@@ -5,7 +5,10 @@
+ 
+ use codex_state::RuntimeDbBackup;
+ use codex_tui::LocalStateDbStartupError;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::path::Path;
+ 
+ pub(crate) fn startup_error(err: &std::io::Error) -> Option<&LocalStateDbStartupError> {
+--- a/cli/src/main.rs
++++ b/cli/src/main.rs
+@@ -36,7 +36,10 @@
+ use codex_utils_cli::ProfileV2Name;
+ use codex_utils_cli::SharedCliOptions;
+ use std::collections::HashSet;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::io::Write;
+ use std::path::PathBuf;
+ use std::sync::Arc;
+--- a/cli/src/doctor/progress.rs
++++ b/cli/src/doctor/progress.rs
+@@ -1,5 +1,8 @@
+ use std::io;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::io::Write;
+ use std::sync::Mutex;
+ use std::time::Duration;
+--- a/tui/src/tui.rs
++++ b/tui/src/tui.rs
+@@ -1,7 +1,10 @@
+ use std::fmt;
+ use std::future::Future;
+ use std::io;
++#[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
++#[cfg(target_os = "ios")]
++use crossterm::tty::IsTerminal;
+ use std::io::Result;
+ use std::io::Stdout;
+ use std::io::Write;
+@@ -420,7 +423,7 @@
+ 
+ /// Flush the underlying stdin buffer to clear any input that may be buffered at the terminal level.
+ /// For example, clears any user input that occurred while the crossterm EventStream was dropped.
+-#[cfg(unix)]
++#[cfg(all(unix, not(target_os = "ios")))]
+ fn flush_terminal_input_buffer() {
+     // Safety: flushing the stdin queue is safe and does not move ownership.
+     let result = unsafe { libc::tcflush(libc::STDIN_FILENO, libc::TCIFLUSH) };
+@@ -451,6 +454,14 @@
+     if result == 0 {
+         let err = unsafe { GetLastError() };
+         tracing::warn!("failed to flush stdin buffer: error {err}");
++    }
++}
++
++#[cfg(target_os = "ios")]
++fn flush_terminal_input_buffer() {
++    // a-Shell pipes have no kernel termios queue; drain the actual input/parser.
++    if let Err(error) = discard_pending_terminal_input() {
++        tracing::warn!("failed to discard host terminal input: {error}");
+     }
+ }
+ 

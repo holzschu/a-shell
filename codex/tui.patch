@@ -1,0 +1,254 @@
+--- a/tui/Cargo.toml
++++ b/tui/Cargo.toml
+@@ -167,7 +167,7 @@
+ 
+ # Clipboard support via `arboard` is not available on Android/Termux.
+ # Only include it for non-Android targets so the crate builds on Android.
+-[target.'cfg(not(target_os = "android"))'.dependencies]
++[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+ arboard = { workspace = true }
+ 
+ 
+--- a/tui/src/clipboard_copy.rs
++++ b/tui/src/clipboard_copy.rs
+@@ -95,7 +95,7 @@
+     begin_delivery: impl Fn() -> Result<(), String>,
+     osc52: impl Fn(&str) -> Result<(), String>,
+ ) -> Result<CopyOutcome, String> {
+-    #[cfg(not(target_os = "android"))]
++    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+     let native_copy = {
+         let clipboard = arboard::Clipboard::new();
+         move |text: &str, html: Option<&str>| arboard_copy(clipboard, text, html)
+@@ -103,6 +103,26 @@
+     #[cfg(target_os = "android")]
+     let native_copy = |_text: &str, _html: Option<&str>| {
+         Err("native clipboard unavailable on Android".to_string())
++    };
++    #[cfg(target_os = "ios")]
++    let native_copy = |text: &str, html: Option<&str>| {
++        unsafe extern "C" {
++            fn codex_ios_clipboard_set(
++                text: *const u8,
++                length: usize,
++                html: *const u8,
++                html_length: usize,
++            ) -> i32;
++        }
++        let html = html.unwrap_or("");
++        let status = unsafe {
++            codex_ios_clipboard_set(text.as_ptr(), text.len(), html.as_ptr(), html.len())
++        };
++        if status == 0 {
++            Ok(None)
++        } else {
++            Err("iOS clipboard write failed".to_owned())
++        }
+     };
+     // Decide before propagating setup success or failure: either result could otherwise
+     // start a native write or fallback long after the user abandoned this request.
+@@ -243,7 +263,7 @@
+ }
+ 
+ /// Write to the native clipboard. The TUI owns any process-wide stderr redirection.
+-#[cfg(not(target_os = "android"))]
++#[cfg(not(any(target_os = "android", target_os = "ios")))]
+ fn arboard_copy(
+     clipboard: Result<arboard::Clipboard, arboard::Error>,
+     text: &str,
+--- a/tui/src/clipboard_paste.rs
++++ b/tui/src/clipboard_paste.rs
+@@ -51,7 +51,7 @@
+ }
+ 
+ /// Capture image from system clipboard, encode to PNG, and return bytes + info.
+-#[cfg(not(target_os = "android"))]
++#[cfg(not(any(target_os = "android", target_os = "ios")))]
+ pub fn paste_image_as_png() -> Result<(Vec<u8>, PastedImageInfo), PasteImageError> {
+     let _span = tracing::debug_span!("paste_image_as_png").entered();
+     tracing::debug!("attempting clipboard image read");
+@@ -570,3 +570,30 @@
+         );
+     }
+ }
++
++/// UIKit supplies PNG bytes; image decoding and temporary-file handling stay upstream.
++#[cfg(target_os = "ios")]
++pub fn paste_image_as_png() -> Result<(Vec<u8>, PastedImageInfo), PasteImageError> {
++    unsafe extern "C" {
++        fn codex_ios_clipboard_png(length: *mut usize) -> *mut u8;
++    }
++    let mut length = 0;
++    let pointer = unsafe { codex_ios_clipboard_png(&mut length) };
++    if pointer.is_null() {
++        return Err(PasteImageError::NoImage(
++            "iOS clipboard contains no image".into(),
++        ));
++    }
++    let png = unsafe { std::slice::from_raw_parts(pointer, length).to_vec() };
++    unsafe { libc::free(pointer.cast()) };
++    let image = image::load_from_memory(&png)
++        .map_err(|error| PasteImageError::EncodeFailed(error.to_string()))?;
++    Ok((
++        png,
++        PastedImageInfo {
++            width: image.width(),
++            height: image.height(),
++            encoded_format: EncodedImageFormat::Png,
++        },
++    ))
++}
+--- a/tui/src/lib.rs
++++ b/tui/src/lib.rs
+@@ -1148,7 +1148,16 @@
+ ) -> color_eyre::Result<AppExitInfo> {
+     let uses_remote_workspace = app_server_target.uses_remote_workspace();
+     let workload_identity_selected = is_workload_identity_selected();
++    #[cfg(not(target_os = "ios"))]
+     color_eyre::install()?;
++    #[cfg(target_os = "ios")]
++    {
++        static REPORT_HOOK: std::sync::OnceLock<Result<(), String>> = std::sync::OnceLock::new();
++        REPORT_HOOK
++            .get_or_init(|| color_eyre::install().map_err(|error| error.to_string()))
++            .as_ref()
++            .map_err(|error| color_eyre::eyre::eyre!("{error}"))?;
++    }
+ 
+     tooltips::announcement::prewarm(initial_config.http_client_factory());
+ 
+@@ -2200,7 +2209,7 @@
+             if let Some(worktree) = worktree {
+                 worktree.report_startup_failure();
+             }
+-            std::process::exit(1);
++            embedded_exit(1);
+         }
+     }
+ }
+@@ -2275,7 +2284,7 @@
+             } else {
+                 eprintln!("Error loading config.toml: {err}");
+             }
+-            std::process::exit(1);
++            embedded_exit(1);
+         }
+     }
+ }
+@@ -3998,3 +4007,13 @@
+         Ok(())
+     }
+ }
++
++#[cfg(target_os = "ios")]
++fn embedded_exit(status: i32) -> ! {
++    std::panic::resume_unwind(Box::new(status))
++}
++
++#[cfg(not(target_os = "ios"))]
++fn embedded_exit(status: i32) -> ! {
++    std::process::exit(status)
++}
+--- a/tui/src/startup_orchestration.rs
++++ b/tui/src/startup_orchestration.rs
+@@ -69,7 +69,7 @@
+         #[allow(clippy::print_stderr)]
+         Err(e) => {
+             eprintln!("Error parsing -c overrides: {e}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     };
+     if explicit_remote_endpoint.is_some()
+@@ -89,7 +89,7 @@
+         Ok(codex_home) => codex_home.to_path_buf(),
+         Err(err) => {
+             eprintln!("Error finding codex home: {err}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     };
+ 
+@@ -746,7 +746,7 @@
+                     .shutdown_with_timeout(INTERACTIVE_OTEL_SHUTDOWN_TIMEOUT)
+                     .await;
+             }
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     }
+ 
+@@ -767,7 +767,7 @@
+                     .shutdown_with_timeout(INTERACTIVE_OTEL_SHUTDOWN_TIMEOUT)
+                     .await;
+             }
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     }
+ 
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -637,7 +637,7 @@
+ [patch.crates-io]
+ # Uncomment to debug local changes.
+ # ratatui = { path = "../../ratatui" }
+-crossterm = { git = "https://github.com/openai-oss-forks/crossterm", rev = "efa177859fd9623d57b9fe7ae9bf491ae1ac6ec4" }
++crossterm = { path = "../ios-crossterm" }
+ tokio-tungstenite = { git = "https://github.com/openai-oss-forks/tokio-tungstenite", rev = "0e5b2d73aa18dd9f0a50ee9ff199d5aef7594186" }
+ tungstenite = { git = "https://github.com/openai-oss-forks/tungstenite-rs", rev = "4fffad30fe373adbdcffab9545e9e9bf4f2fc19f" }
+ 
+--- a/tui/src/clipboard_paste/text.rs
++++ b/tui/src/clipboard_paste/text.rs
+@@ -21,12 +21,41 @@
+             .map_err(|_| "could not start clipboard reader")?
+             .block_on(read_command(command, deadline));
+     }
+-    #[cfg(not(target_os = "android"))]
++    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+     {
+         native_result(
+             arboard::Clipboard::new().and_then(|mut clipboard| clipboard.get_text()),
+             deadline,
+         )
++    }
++    #[cfg(target_os = "ios")]
++    {
++        unsafe extern "C" {
++            fn codex_ios_clipboard_text(bytes: *mut *mut u8, length: *mut usize, limit: usize) -> i32;
++        }
++        if Instant::now() >= deadline {
++            return Err("clipboard read timed out".into());
++        }
++        let mut bytes = std::ptr::null_mut();
++        let mut length = 0;
++        let status = unsafe {
++            codex_ios_clipboard_text(&mut bytes, &mut length, MAX_USER_INPUT_TEXT_CHARS * 4)
++        };
++        if status != 0 {
++            return Err(if status == 2 {
++                "clipboard text exceeds the message size limit"
++            } else {
++                "clipboard text is unavailable"
++            }.into());
++        }
++        let text = if length == 0 {
++            String::new()
++        } else {
++            let text = String::from_utf8(unsafe { std::slice::from_raw_parts(bytes, length) }.to_vec());
++            unsafe { libc::free(bytes.cast()) };
++            text.map_err(|_| "clipboard text is not UTF-8")?
++        };
++        validate(text, deadline)
+     }
+     #[cfg(target_os = "android")]
+     {
+@@ -34,7 +63,7 @@
+     }
+ }
+ 
+-#[cfg(not(target_os = "android"))]
++#[cfg(not(any(target_os = "android", target_os = "ios")))]
+ pub(crate) fn native_result(
+     result: Result<String, arboard::Error>,
+     deadline: Instant,

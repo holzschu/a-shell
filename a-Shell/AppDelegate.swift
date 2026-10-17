@@ -250,6 +250,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if #unavailable(iOS 18) {
             replaceCommand("wasmkit", "wasmkitUnavailable", true)
         }
+        if appVersion != "a-Shell-mini", #unavailable(iOS 26.2) {
+            replaceCommand("codex", "codexUnavailable", true)
+        }
         // for debugging TeX issues / installing a new distribution
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))

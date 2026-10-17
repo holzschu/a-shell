@@ -1,0 +1,20 @@
+--- a/otel/src/metrics/mod.rs
++++ b/otel/src/metrics/mod.rs
+@@ -33,9 +33,14 @@
+         .get()
+         .and_then(|current| current.active.clone())
+         .unwrap_or_else(|| Arc::new(RwLock::new(Arc::clone(&metrics.inner))));
+-    *active
+-        .write()
+-        .unwrap_or_else(std::sync::PoisonError::into_inner) = Arc::clone(&metrics.inner);
++    let previous = {
++        let mut current = active
++            .write()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        std::mem::replace(&mut *current, Arc::clone(&metrics.inner))
++    };
++    // Provider teardown can emit metrics that acquire the active slot's read lock.
++    drop(previous);
+     metrics.active = Some(active);
+     let _ = GLOBAL_METRICS.set(metrics.clone());
+     buffered::GLOBAL.enable(&metrics);

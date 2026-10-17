@@ -1,0 +1,80 @@
+--- a/core/src/tools/router.rs
++++ b/core/src/tools/router.rs
+@@ -256,4 +256,18 @@
+                 ..
+             } => {
++                if namespace.as_deref() == Some("tool_search") && name == "tool_search_tool" {
++                    let arguments: SearchToolCallParams =
++                        serde_json::from_str(&arguments).map_err(|err| {
++                            FunctionCallError::RespondToModel(format!(
++                                "failed to parse tool_search arguments: {err}"
++                            ))
++                        })?;
++                    return Ok(Some(ToolCall {
++                        tool_name: ToolName::plain("tool_search"),
++                        call_id,
++                        payload: ToolPayload::ToolSearch { arguments },
++                        encrypted_function_args,
++                    }));
++                }
+                 let tool_name = ToolName::new(namespace, name).with_default_namespace();
+                 Ok(Some(ToolCall {
+--- a/core/src/tools/router_tests.rs
++++ b/core/src/tools/router_tests.rs
+@@ -43,4 +43,28 @@
+ use super::tool_log_payload;
+
++#[test]
++fn build_tool_call_routes_reserved_search_function_to_native_search() -> anyhow::Result<()> {
++    let call = ToolRouter::build_tool_call(ResponseItem::FunctionCall {
++        id: None,
++        name: "tool_search_tool".to_string(),
++        namespace: Some("tool_search".to_string()),
++        arguments: r#"{"query":"calendar lookup","limit":2}"#.to_string(),
++        encrypted_function_args: None,
++        call_id: "call-search-alias".to_string(),
++        internal_chat_message_metadata_passthrough: None,
++    })?
++    .expect("reserved search function should produce a tool call");
++    assert_eq!(call.tool_name, ToolName::plain("tool_search"));
++    assert_eq!(call.call_id, "call-search-alias");
++    match call.payload {
++        ToolPayload::ToolSearch { arguments } => {
++            assert_eq!(arguments.query, "calendar lookup");
++            assert_eq!(arguments.limit, Some(2));
++        }
++        other => panic!("expected native search payload, got {other:?}"),
++    }
++    Ok(())
++}
++
+ struct ExtensionEchoContributor;
+
+--- a/core/src/stream_events_utils.rs
++++ b/core/src/stream_events_utils.rs
+@@ -344,4 +344,25 @@
+             );
+
++            // Persist the same native search identity that the router dispatches, so its
++            // ToolSearchOutput remains paired in history. Keep encrypted args on `call`.
++            let item = match (&item, &call.payload) {
++                (
++                    ResponseItem::FunctionCall {
++                        id,
++                        internal_chat_message_metadata_passthrough,
++                        ..
++                    },
++                    crate::tools::context::ToolPayload::ToolSearch { arguments },
++                ) => ResponseItem::ToolSearchCall {
++                    id: id.clone(),
++                    call_id: Some(call.call_id.clone()),
++                    status: None,
++                    execution: "client".to_string(),
++                    arguments: serde_json::to_value(arguments)?,
++                    internal_chat_message_metadata_passthrough:
++                        internal_chat_message_metadata_passthrough.clone(),
++                },
++                _ => item,
++            };
+             record_completed_response_item(ctx.sess.as_ref(), ctx.step_context.as_ref(), &item)
+                 .await;

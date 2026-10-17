@@ -1,0 +1,124 @@
+--- a/hooks/src/legacy_notify.rs
++++ b/hooks/src/legacy_notify.rs
+@@ -1,4 +1,5 @@
+ use std::ffi::OsString;
++#[cfg(not(target_os = "ios"))]
+ use std::process::Stdio;
+ use std::sync::Arc;
+ 
+@@ -8,6 +9,7 @@
+ use crate::HookEvent;
+ use crate::HookPayload;
+ use crate::HookResult;
++#[cfg(any(not(target_os = "ios"), test))]
+ use crate::registry::command_from_argv;
+ 
+ /// Legacy notify payload appended as the final argv argument for backward compatibility.
+@@ -50,22 +52,81 @@
+             let argv = Arc::clone(&argv);
+             let environment = Arc::clone(&environment);
+             Box::pin(async move {
++                #[cfg(not(target_os = "ios"))]
+                 let mut command = match command_from_argv(&argv, environment.iter().cloned()) {
+                     Some(command) => command,
+                     None => return HookResult::Success,
+                 };
++                #[cfg(target_os = "ios")]
++                let mut command = {
++                    let Some((program, args)) = argv.split_first() else {
++                        return HookResult::Success;
++                    };
++                    if program.is_empty() {
++                        return HookResult::Success;
++                    }
++                    let mut command = codex_utils_pty::Command::new(program);
++                    command.args(args).envs(
++                        environment
++                            .iter()
++                            .map(|(key, value)| (key.as_os_str(), value.as_os_str()))
++                            .filter(|(key, _)| {
++                                !key.to_str().is_some_and(
++                                    codex_protocol::shell_environment::is_non_inheritable_env_var,
++                                )
++                            }),
++                    );
++                    command
++                };
+                 if let Ok(notify_payload) = legacy_notify_json(payload) {
+                     command.arg(notify_payload);
+                 }
+ 
++                #[cfg(not(target_os = "ios"))]
+                 command
+                     .stdin(Stdio::null())
+                     .stdout(Stdio::null())
+                     .stderr(Stdio::null());
+ 
+-                match command.spawn() {
+-                    Ok(_) => HookResult::Success,
+-                    Err(err) => HookResult::FailedContinue(err.into()),
++                #[cfg(not(target_os = "ios"))]
++                {
++                    match command.spawn() {
++                        Ok(_) => HookResult::Success,
++                        Err(err) => HookResult::FailedContinue(err.into()),
++                    }
++                }
++                #[cfg(target_os = "ios")]
++                {
++                    // The app cannot give a notifier an independent process lifetime.
++                    // Release native cwd/env ownership before the session returns to shell.
++                    command
++                        .stdin(codex_utils_pty::ChildStdin::Null)
++                        .current_dir(&payload.cwd);
++                    let mut child = match command.spawn() {
++                        Ok(child) => child,
++                        Err(error) => return HookResult::FailedContinue(error.into()),
++                    };
++                    let stdout = child.stdout.take();
++                    let stderr = child.stderr.take();
++                    let drain_output = async {
++                        if let Some(mut stream) = stdout {
++                            tokio::io::copy(&mut stream, &mut tokio::io::sink()).await?;
++                        }
++                        Ok::<_, std::io::Error>(())
++                    };
++                    let drain_errors = async {
++                        if let Some(mut stream) = stderr {
++                            tokio::io::copy(&mut stream, &mut tokio::io::sink()).await?;
++                        }
++                        Ok::<_, std::io::Error>(())
++                    };
++                    match tokio::try_join!(drain_output, drain_errors, child.wait()) {
++                        Ok(((), (), status)) if status.success() => HookResult::Success,
++                        Ok(((), (), status)) => HookResult::FailedContinue(
++                            anyhow::anyhow!("Native notifier exited with status {status}").into(),
++                        ),
++                        Err(error) => HookResult::FailedContinue(error.into()),
++                    }
+                 }
+             })
+         }),
+--- a/hooks/src/registry.rs
++++ b/hooks/src/registry.rs
+@@ -32,10 +32,12 @@
+ use codex_plugin::ExecutorPluginHookSource;
+ use codex_plugin::PluginHookSource;
+ use codex_protocol::ThreadId;
++#[cfg(any(not(target_os = "ios"), test))]
+ use codex_protocol::shell_environment::scrub_non_inheritable_env_vars;
+ use std::ffi::OsString;
+ use std::sync::Arc;
+ use std::time::Duration;
++#[cfg(any(not(target_os = "ios"), test))]
+ use tokio::process::Command;
+ 
+ #[derive(Default, Clone)]
+@@ -319,6 +321,7 @@
+ }
+ 
+ // TODO: Remove this legacy-notify-only command builder when `notify` support is removed.
++#[cfg(any(not(target_os = "ios"), test))]
+ pub(crate) fn command_from_argv(
+     argv: &[String],
+     environment: impl IntoIterator<Item = (OsString, OsString)>,
