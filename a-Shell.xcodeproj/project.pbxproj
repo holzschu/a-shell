@@ -11,6 +11,7 @@
 		FD0000000000000000000001 /* fd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000000000000000000002 /* fd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F2F000000000000000000001 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F2F000000000000000000002 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA7100000000000000000001 /* navi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AA7100000000000000000002 /* navi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A2B1818A0000000000000001 /* Herdr LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = A2B1818A0000000000000002 /* Herdr LICENSE */; };
 		2203367A28C4B8070027664C /* pico.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2232245E289695A9001BAE04 /* pico.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22068CC62F51C11A004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
 		22068CC72F51CE47004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
@@ -2181,6 +2182,7 @@
 
 /* Begin PBXFileReference section */
 		619225000000000000000002 /* gitoxide.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = gitoxide/gitoxide.xcframework; sourceTree = SOURCE_ROOT; };
+		A2B1818A0000000000000002 /* Herdr LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = "Herdr LICENSE"; path = Herdr/LICENSE; sourceTree = SOURCE_ROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
@@ -3340,6 +3342,7 @@
 		22984EE122C93DBC00069497 = {
 			isa = PBXGroup;
 			children = (
+				A2B1818A0000000000000002 /* Herdr LICENSE */,
 				220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */,
 				223FC3CA2611F9C300CDC89F /* wasm.html */,
 				2220059F2871EF3300DC7A23 /* Intents.intentdefinition */,
@@ -4822,6 +4825,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2B1818A0000000000000001 /* Herdr LICENSE in Resources */,
 				227B248C2BE12FF1003A8031 /* wasm_withWorker.js in Resources */,
 				22A536352C4521CA0031A9FF /* wasm_worker_wasm.js in Resources */,
 				22068CCC2F5C9AAF004307F7 /* wasm.js in Resources */,
@@ -5915,6 +5919,8 @@
 					"$(PROJECT_DIR)/Frameworks",
 					"$(PROJECT_DIR)",
 				);
+				"HERDR_RUST_TARGET[sdk=iphoneos*]" = "aarch64-apple-ios";
+				"HERDR_RUST_TARGET[sdk=iphonesimulator*]" = "aarch64-apple-ios-sim";
 				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -5923,6 +5929,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
+					"$(SRCROOT)/Herdr/build/target/$(HERDR_RUST_TARGET)/release",
 					"$(inherited)",
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
@@ -5930,6 +5937,16 @@
 				MARKETING_VERSION = 2.2.3;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lherdr_ios",
+					"-Wl,-u,_herdr_ios_main",
+					"-framework",
+					"Security",
+					"-framework",
+					"SystemConfiguration",
+					"-lc++",
+					"-lz",
+					"-liconv",
 					"-L",
 					Frameworks/,
 				);
@@ -5944,6 +5961,7 @@
 				SWIFT_INSTALL_OBJC_HEADER = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "a-Shell/a-Shell-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) HERDR_EMBEDDED";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -5968,6 +5986,8 @@
 					"$(PROJECT_DIR)/Frameworks",
 					"$(PROJECT_DIR)",
 				);
+				"HERDR_RUST_TARGET[sdk=iphoneos*]" = "aarch64-apple-ios";
+				"HERDR_RUST_TARGET[sdk=iphonesimulator*]" = "aarch64-apple-ios-sim";
 				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -5976,6 +5996,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
+					"$(SRCROOT)/Herdr/build/target/$(HERDR_RUST_TARGET)/release",
 					"$(inherited)",
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
@@ -5983,6 +6004,16 @@
 				MARKETING_VERSION = 2.2.3;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lherdr_ios",
+					"-Wl,-u,_herdr_ios_main",
+					"-framework",
+					"Security",
+					"-framework",
+					"SystemConfiguration",
+					"-lc++",
+					"-lz",
+					"-liconv",
 					"-L",
 					Frameworks/,
 				);
@@ -5996,6 +6027,7 @@
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_INSTALL_OBJC_HEADER = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "a-Shell/a-Shell-Bridging-Header.h";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) HERDR_EMBEDDED";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

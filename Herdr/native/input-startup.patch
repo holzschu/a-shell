@@ -1,0 +1,183 @@
+diff --git a/src/client/shell/state.rs b/src/client/shell/state.rs
+--- a/src/client/shell/state.rs
++++ b/src/client/shell/state.rs
+@@ -920,6 +920,10 @@
+     pub(super) popup_pending_deadline: Option<std::time::Instant>,
+     pub(super) next_request_id: u64,
+     pub(super) pending_requests: HashMap<String, PendingEndpointRequest>,
++    #[cfg(target_os = "ios")]
++    pub(super) pending_creation_input: Option<(String, Option<String>)>,
++    #[cfg(target_os = "ios")]
++    pub(super) creation_input: Vec<crate::raw_input::RawInputEvent>,
+     pub(super) pending_integration_installs: usize,
+     pub(super) pending_notifications: Vec<ClientPendingNotification>,
+     pub(super) visible_notification: Option<ClientVisibleNotification>,
+@@ -1085,6 +1089,10 @@
+             popup_pending_deadline: None,
+             next_request_id: 1,
+             pending_requests: HashMap::new(),
++            #[cfg(target_os = "ios")]
++            pending_creation_input: None,
++            #[cfg(target_os = "ios")]
++            creation_input: Vec::new(),
+             pending_integration_installs: 0,
+             pending_notifications: Vec::new(),
+             visible_notification: None,
+@@ -1233,6 +1241,11 @@
+         self.last_composed_at = None;
+         self.selection_repaint_deadline = None;
+         self.pending_requests.clear();
++        #[cfg(target_os = "ios")]
++        {
++            self.pending_creation_input = None;
++            self.creation_input.clear();
++        }
+         self.pane_scroll_in_flight.clear();
+         self.pane_scroll_queued.clear();
+         self.pane_scroll_targets.clear();
+@@ -1560,6 +1573,16 @@
+                 Some(_) => {}
+             }
+         }
++        #[cfg(target_os = "ios")]
++        if self
++            .pending_creation_input
++            .as_ref()
++            .is_some_and(|(_, expected)| {
++                expected.is_some() && snapshot.focused_pane_id == *expected
++            })
++        {
++            self.pending_creation_input = None;
++        }
+         self.snapshot = Some(snapshot);
+         self.reconcile_pending_workspace_highlight();
+         let pending_surface = self.pending_pane_surface.take();
+diff --git a/src/client/shell/actions.rs b/src/client/shell/actions.rs
+--- a/src/client/shell/actions.rs
++++ b/src/client/shell/actions.rs
+@@ -409,6 +409,18 @@
+         let request_id = self.next_request_id;
+         self.next_request_id = self.next_request_id.saturating_add(1);
+         let request_id = format!("client-shell:{request_id}");
++        #[cfg(target_os = "ios")]
++        if changes_focus
++            && matches!(
++                &method,
++                crate::api::schema::Method::PaneSplit(_)
++                    | crate::api::schema::Method::TabCreate(_)
++                    | crate::api::schema::Method::WorkspaceCreate(_)
++            )
++        {
++            // The API lane creates the worker; input must not target the old snapshot.
++            self.pending_creation_input = Some((request_id.clone(), None));
++        }
+         self.pending_requests.insert(
+             request_id.clone(),
+             PendingEndpointRequest {
+@@ -514,6 +526,40 @@
+                 .is_none_or(|snapshot| snapshot.boot_id != boot_id)
+         {
+             return (false, Vec::new());
++        }
++        #[cfg(target_os = "ios")]
++        if self
++            .pending_creation_input
++            .as_ref()
++            .is_some_and(|(id, _)| id == request_id)
++        {
++            use crate::api::schema::ResponseResult;
++            let created = match &result {
++                Ok(ResponseResult::PaneInfo { pane }) => Some(pane.pane_id.clone()),
++                Ok(ResponseResult::TabCreated { root_pane, .. })
++                | Ok(ResponseResult::WorkspaceCreated { root_pane, .. }) => {
++                    Some(root_pane.pane_id.clone())
++                }
++                _ => None,
++            };
++            if let Some(pane) = created {
++                if self
++                    .snapshot
++                    .as_ref()
++                    .and_then(|snapshot| snapshot.focused_pane_id.as_ref())
++                    == Some(&pane)
++                {
++                    self.pending_creation_input = None;
++                } else {
++                    self.pending_creation_input = Some((request_id.to_owned(), Some(pane)));
++                }
++            } else {
++                self.pending_creation_input = None;
++                self.creation_input.clear();
++                self.receive_endpoint_error(
++                    "Pane creation failed; buffered input was discarded".into(),
++                );
++            }
+         }
+         if let PendingEndpointKind::PaneLinkResolve { target } = pending.kind {
+             return self.complete_link_hover(target, result);
+diff --git a/src/client/shell/input.rs b/src/client/shell/input.rs
+--- a/src/client/shell/input.rs
++++ b/src/client/shell/input.rs
+@@ -157,12 +157,41 @@
+     }
+ 
+     pub(crate) fn handle_raw_events(&mut self, events: Vec<RawInputEvent>) -> ClientShellInput {
++        #[cfg(target_os = "ios")]
++        let awaiting_focus = self
++            .snapshot
++            .as_ref()
++            .is_none_or(|snapshot| snapshot.focused_pane_id.is_none());
++        #[cfg(target_os = "ios")]
++        let events = if !awaiting_focus
++            && self.pending_creation_input.is_none()
++            && !self.creation_input.is_empty()
++        {
++            let mut buffered = std::mem::take(&mut self.creation_input);
++            buffered.extend(events);
++            buffered
++        } else {
++            events
++        };
+         let mut outcome = ClientShellInput::default();
+         if !events.is_empty() && self.endpoint_error.take().is_some() {
+             self.endpoint_error_deadline = None;
+             outcome.repaint = true;
+         }
+         for event in events {
++            #[cfg(target_os = "ios")]
++            if self.pending_creation_input.is_some() {
++                // Buffer only an outstanding creation; unfocused overlays and controls still handle input.
++                // Preserve order even when a split binding and text share one input batch.
++                if self.creation_input.len() < 4096 {
++                    self.creation_input.push(event);
++                } else {
++                    outcome.repaint |= self.receive_endpoint_error(
++                        "Pane startup input buffer is full; input was rejected".into(),
++                    );
++                }
++                continue;
++            }
+             if self.handle_machine_badge_event(&event, &mut outcome) {
+                 continue;
+             }
+diff --git a/src/client/mod.rs b/src/client/mod.rs
+--- a/src/client/mod.rs
++++ b/src/client/mod.rs
+@@ -2249,6 +2249,17 @@
+                     let (effects, outcome, frame) = {
+                         let shell = state.shell.as_mut().expect("checked shell mode");
+                         let mut outcome = shell.tick_selection_autoscroll(now);
++                        #[cfg(target_os = "ios")]
++                        {
++                            let buffered = shell.handle_raw_events(Vec::new());
++                            outcome.repaint |= buffered.repaint;
++                            outcome.resize |= buffered.resize;
++                            outcome.detach |= buffered.detach;
++                            outcome.query_host_appearance |= buffered.query_host_appearance;
++                            outcome.query_host_theme |= buffered.query_host_theme;
++                            outcome.requests.extend(buffered.requests);
++                            outcome.actions.extend(buffered.actions);
++                        }
+                         for expired in expired_endpoints {
+                             if !shell.endpoint_is_active(&expired.endpoint_id) {
+                                 continue;
