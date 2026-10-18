@@ -1,0 +1,781 @@
+diff --git i/Cargo.toml w/Cargo.toml
+index 841ec56..79e6bbc 100644
+--- i/Cargo.toml
++++ w/Cargo.toml
+@@ -47,6 +47,7 @@ unicode-width = "0.2.0"
+ dunce = "1"
+ 
+ [lib]
++crate-type = ["staticlib", "rlib"]
+ name = "navi"
+ path = "src/lib.rs"
+ 
+diff --git i/src/clients/cheatsh.rs w/src/clients/cheatsh.rs
+index 8a71370..b416662 100644
+--- i/src/clients/cheatsh.rs
++++ w/src/clients/cheatsh.rs
+@@ -1,5 +1,5 @@
+ use crate::prelude::*;
+-use std::process::Command;
++use crate::embedded::Command;
+ 
+ fn map_line(line: &str) -> String {
+     line.trim().trim_end_matches(':').to_string()
+diff --git i/src/clients/tldr.rs w/src/clients/tldr.rs
+index 97c2b9b..f8ec42b 100644
+--- i/src/clients/tldr.rs
++++ w/src/clients/tldr.rs
+@@ -1,6 +1,6 @@
+-use crate::config::CONFIG;
++use crate::config::config;
+ use crate::prelude::*;
+-use std::process::{Command, Stdio};
++use crate::embedded::{Command, Stdio};
+ 
+ lazy_static! {
+     pub static ref VAR_TLDR_REGEX: Regex = Regex::new(r"\{\{(.*?)\}\}").expect("Invalid regex");
+@@ -53,7 +53,7 @@ fn markdown_lines(query: &str, markdown: &str) -> Vec<String> {
+ }
+ 
+ pub fn call(query: &str) -> Result<Vec<String>> {
+-    let tealdeer = CONFIG.tealdeer();
++    let tealdeer = config().tealdeer();
+     let output_flag = if tealdeer { "--raw" } else { "--markdown" };
+     let args = [query, output_flag];
+ 
+diff --git i/src/commands/core/actor.rs w/src/commands/core/actor.rs
+index 5e089e6..363203f 100644
+--- i/src/commands/core/actor.rs
++++ w/src/commands/core/actor.rs
+@@ -10,7 +10,7 @@ use crate::prelude::*;
+ use crate::structures::cheat::{Suggestion, VariableMap};
+ use crate::structures::item::Item;
+ use shell::EOF;
+-use std::process::Stdio;
++use crate::embedded::Stdio;
+ 
+ fn prompt_finder(
+     variable_name: &str,
+@@ -63,7 +63,7 @@ fn prompt_finder(
+ 
+     let exe = fs::exe_string();
+ 
+-    let preview = if CONFIG.shell().contains("powershell") {
++    let preview = if config().shell().contains("powershell") {
+         format!(
+             r#"{exe} preview-var {{+}} "{{q}}" "{name}"; {extra}"#,
+             exe = exe,
+@@ -73,7 +73,7 @@ fn prompt_finder(
+                 .map(|e| format!(" echo; {e}"))
+                 .unwrap_or_default(),
+         )
+-    } else if CONFIG.shell().contains("cmd.exe") {
++    } else if config().shell().contains("cmd.exe") {
+         format!(
+             r#"(@echo.{{+}}{eof}{{q}}{eof}{name}{eof}{extra}) | {exe} preview-var-stdin"#,
+             exe = exe,
+@@ -81,7 +81,7 @@ fn prompt_finder(
+             extra = extra_preview.clone().unwrap_or_default(),
+             eof = EOF,
+         )
+-    } else if CONFIG.shell().contains("fish") {
++    } else if config().shell().contains("fish") {
+         format!(
+             r#"{exe} preview-var "{{+}}" "{{q}}" "{name}"; {extra}"#,
+             exe = exe,
+@@ -135,7 +135,7 @@ fn prompt_finder(
+         opts.suggestion_type = SuggestionType::Disabled;
+     };
+ 
+-    let (output, _) = CONFIG
++    let (output, _) = config()
+         .finder()
+         .call(opts, |stdin| {
+             stdin
+@@ -158,7 +158,7 @@ fn unique_result_count(results: &[&str]) -> usize {
+ fn replace_variables_from_snippet(snippet: &str, tags: &str, variables: VariableMap) -> Result<String> {
+     let mut interpolated_snippet = String::from(snippet);
+ 
+-    if CONFIG.prevent_interpolation() {
++    if config().prevent_interpolation() {
+         return Ok(interpolated_snippet);
+     }
+ 
+@@ -202,7 +202,7 @@ pub fn with_absolute_path(snippet: String) -> String {
+ 
+ pub fn act(
+     extractions: Result<(&str, Item)>,
+-    files: Vec<String>,
++    _files: Vec<String>,
+     variables: Option<VariableMap>,
+ ) -> Result<()> {
+     let (
+@@ -211,15 +211,13 @@ pub fn act(
+             tags,
+             comment,
+             snippet,
+-            file_index,
++            file_index: _,
+             ..
+         },
+     ) = extractions.unwrap();
+ 
+     if key == "ctrl-o" {
+-        edit::edit_file(Path::new(&files[file_index.expect("No files found")]))
+-            .expect("Could not open file in external editor");
+-        return Ok(());
++        return Err(anyhow!("External editor launch is unavailable; edit the cheat file in a-Shell"));
+     }
+ 
+     env_var::set(env_var::PREVIEW_INITIAL_SNIPPET, &snippet);
+@@ -238,7 +236,7 @@ pub fn act(
+         s
+     };
+ 
+-    match CONFIG.action() {
++    match config().action() {
+         Action::Print => {
+             println!("{interpolated_snippet}");
+         }
+@@ -250,10 +248,13 @@ pub fn act(
+                 let mut cmd = shell::out();
+                 cmd.arg(&interpolated_snippet[..]);
+                 debug!(cmd = ?cmd);
+-                cmd.spawn()
++                let status = cmd.spawn()
+                     .map_err(|e| ShellSpawnError::new(&interpolated_snippet[..], e))?
+                     .wait()
+-                    .context("bash was not running")?;
++                    .context("shell command failed")?;
++                if !status.success() {
++                    return Err(anyhow!(crate::embedded::CommandExit(status.code().unwrap_or(1))));
++                }
+             }
+         },
+     };
+diff --git i/src/commands/core/mod.rs w/src/commands/core/mod.rs
+index 00e3a35..e8dd36f 100644
+--- i/src/commands/core/mod.rs
++++ w/src/commands/core/mod.rs
+@@ -11,7 +11,7 @@ use crate::structures::fetcher::{Fetcher, StaticFetcher};
+ use crate::welcome;
+ 
+ pub fn init(fetcher: Box<dyn Fetcher>) -> Result<()> {
+-    let config = &CONFIG;
++    let config = &config();
+     let opts = FinderOpts::snippet_default();
+     debug!("opts = {opts:#?}");
+     // let fetcher = config.fetcher();
+@@ -46,7 +46,7 @@ pub fn init(fetcher: Box<dyn Fetcher>) -> Result<()> {
+ }
+ 
+ pub fn get_fetcher() -> Result<Box<dyn Fetcher>> {
+-    let source = CONFIG.source();
++    let source = config().source();
+     debug!(source = ?source);
+     match source {
+         Source::Cheats(query) => {
+diff --git i/src/commands/func/widget.rs w/src/commands/func/widget.rs
+index e888518..649829a 100644
+--- i/src/commands/func/widget.rs
++++ w/src/commands/func/widget.rs
+@@ -1,9 +1,9 @@
+ use crate::prelude::*;
+-use std::io::{self, Read};
++use std::io::Read;
+ 
+ pub fn last_command() -> Result<()> {
+     let mut text = String::new();
+-    io::stdin().read_to_string(&mut text)?;
++    crate::embedded::input()?.read_to_string(&mut text)?;
+ 
+     let replacements = vec![("||", "ග"), ("|", "ඛ"), ("&&", "ඝ")];
+ 
+diff --git i/src/commands/mod.rs w/src/commands/mod.rs
+index 4537177..b03e969 100644
+--- i/src/commands/mod.rs
++++ w/src/commands/mod.rs
+@@ -12,8 +12,8 @@ use crate::prelude::*;
+ pub fn handle() -> Result<()> {
+     use crate::config::Command::*;
+ 
+-    debug!("CONFIG = {:#?}", &*CONFIG);
+-    match CONFIG.cmd() {
++    debug!("CONFIG = {:#?}", &*config());
++    match config().cmd() {
+         None => commands::core::main(),
+ 
+         Some(c) => match c {
+diff --git i/src/commands/preview/mod.rs w/src/commands/preview/mod.rs
+index e571b78..821f194 100644
+--- i/src/commands/preview/mod.rs
++++ w/src/commands/preview/mod.rs
+@@ -2,7 +2,6 @@ use crate::deser;
+ use crate::prelude::*;
+ use clap::Args;
+ use crossterm::style::{style, Stylize};
+-use std::process;
+ 
+ pub mod var;
+ pub mod var_stdin;
+@@ -29,11 +28,11 @@ impl Runnable for Input {
+ 
+         println!(
+             "{comment} {tags} \n{snippet}",
+-            comment = style(comment).with(CONFIG.comment_color()),
+-            tags = style(format!("[{tags}]")).with(CONFIG.tag_color()),
+-            snippet = style(deser::fix_newlines(snippet)).with(CONFIG.snippet_color()),
++            comment = style(comment).with(config().comment_color()),
++            tags = style(format!("[{tags}]")).with(config().tag_color()),
++            snippet = style(deser::fix_newlines(snippet)).with(config().snippet_color()),
+         );
+ 
+-        process::exit(0)
++        Ok(())
+     }
+ }
+diff --git i/src/commands/preview/var.rs w/src/commands/preview/var.rs
+index 0b76f67..63961e0 100644
+--- i/src/commands/preview/var.rs
++++ w/src/commands/preview/var.rs
+@@ -6,7 +6,6 @@ use clap::Args;
+ use crossterm::style::style;
+ use crossterm::style::Stylize;
+ use std::iter;
+-use std::process;
+ 
+ #[derive(Debug, Clone, Args)]
+ pub struct Input {
+@@ -31,8 +30,8 @@ impl Runnable for Input {
+         let delimiter = env_var::get(env_var::PREVIEW_DELIMITER).ok();
+         let map = env_var::get(env_var::PREVIEW_MAP).ok();
+ 
+-        let active_color = CONFIG.tag_color();
+-        let inactive_color = CONFIG.comment_color();
++        let active_color = config().tag_color();
++        let inactive_color = config().comment_color();
+ 
+         let mut colored_snippet = String::from(&snippet);
+         let mut visited_vars: HashSet<&str> = HashSet::new();
+@@ -41,8 +40,8 @@ impl Runnable for Input {
+ 
+         println!(
+             "{comment} {tags}",
+-            comment = style(comment).with(CONFIG.comment_color()),
+-            tags = style(format!("[{tags}]")).with(CONFIG.tag_color()),
++            comment = style(comment).with(config().comment_color()),
++            tags = style(format!("[{tags}]")).with(config().tag_color()),
+         );
+ 
+         let bracketed_current_variable = format!("<{variable}>");
+@@ -104,6 +103,6 @@ impl Runnable for Input {
+         println!("{snippet}", snippet = deser::fix_newlines(&colored_snippet));
+         println!("{variables}");
+ 
+-        process::exit(0)
++        Ok(())
+     }
+ }
+diff --git i/src/commands/preview/var_stdin.rs w/src/commands/preview/var_stdin.rs
+index 78cc8ef..c4daab4 100755
+--- i/src/commands/preview/var_stdin.rs
++++ w/src/commands/preview/var_stdin.rs
+@@ -3,7 +3,7 @@ use clap::Args;
+ use super::var;
+ use crate::common::shell::{self, ShellSpawnError, EOF};
+ use crate::prelude::*;
+-use std::io::{self, Read};
++use std::io::Read;
+ 
+ #[derive(Debug, Clone, Args)]
+ pub struct Input {}
+@@ -11,7 +11,7 @@ pub struct Input {}
+ impl Runnable for Input {
+     fn run(&self) -> Result<()> {
+         let mut text = String::new();
+-        io::stdin().read_to_string(&mut text)?;
++        crate::embedded::input()?.read_to_string(&mut text)?;
+ 
+         let mut parts = text.split(EOF);
+         let selection = parts.next().expect("Unable to get selection").to_owned();
+diff --git i/src/commands/repo/add.rs w/src/commands/repo/add.rs
+index 0c00a75..017996f 100644
+--- i/src/commands/repo/add.rs
++++ w/src/commands/repo/add.rs
+@@ -26,7 +26,7 @@ fn ask_if_should_import_all(finder: &FinderChoice) -> Result<bool> {
+ }
+ 
+ pub fn main(uri: String) -> Result<()> {
+-    let finder = CONFIG.finder();
++    let finder = config().finder();
+ 
+     let should_import_all = ask_if_should_import_all(&finder).unwrap_or(false);
+     let (actual_uri, user, repo) = git::meta(uri.as_str());
+diff --git i/src/commands/repo/browse.rs w/src/commands/repo/browse.rs
+index 48d2828..a737a00 100644
+--- i/src/commands/repo/browse.rs
++++ w/src/commands/repo/browse.rs
+@@ -6,7 +6,7 @@ use crate::prelude::*;
+ use std::fs;
+ 
+ pub fn main() -> Result<String> {
+-    let finder = CONFIG.finder();
++    let finder = config().finder();
+ 
+     let repo_pathbuf = {
+         let mut p = filesystem::tmp_pathbuf()?;
+diff --git i/src/commands/temp.rs w/src/commands/temp.rs
+index dab4192..94224f9 100644
+--- i/src/commands/temp.rs
++++ w/src/commands/temp.rs
+@@ -6,7 +6,7 @@ use crate::{deser, prelude::*};
+ use std::io::{self, Write};
+ 
+ pub fn main() -> Result<()> {
+-    let _config = &CONFIG;
++    let _config = &config();
+     let _opts = FinderOpts::snippet_default();
+ 
+     let fetcher = get_fetcher()?;
+@@ -49,7 +49,7 @@ pub fn main() -> Result<()> {
+ }
+ 
+ pub fn _main0() -> Result<()> {
+-    let _config = &CONFIG;
++    let _config = &config();
+ 
+     let fetcher = get_fetcher()?;
+ 
+diff --git i/src/common/fs.rs w/src/common/fs.rs
+index cf8a737..2e15fed 100644
+--- i/src/common/fs.rs
++++ w/src/common/fs.rs
+@@ -77,7 +77,7 @@ fn follow_symlink(pathbuf: PathBuf) -> Result<PathBuf> {
+ }
+ 
+ fn exe_pathbuf() -> Result<PathBuf> {
+-    let pathbuf = std::env::current_exe().context("Unable to acquire executable's path")?;
++    let pathbuf = Ok::<_, std::io::Error>(PathBuf::from("navi")).context("Unable to acquire executable's path")?;
+ 
+     #[cfg(target_family = "windows")]
+     let pathbuf = dunce::canonicalize(pathbuf)?;
+diff --git i/src/common/git.rs w/src/common/git.rs
+index 2823fe6..1c4684e 100644
+--- i/src/common/git.rs
++++ w/src/common/git.rs
+@@ -1,6 +1,6 @@
+ use crate::common::shell::ShellSpawnError;
+ use crate::prelude::*;
+-use std::process::Command;
++use crate::embedded::Command;
+ 
+ pub fn shallow_clone(uri: &str, target: &str) -> Result<()> {
+     Command::new("git")
+diff --git i/src/common/shell.rs w/src/common/shell.rs
+index 13f5bbf..a803ed2 100644
+--- i/src/common/shell.rs
++++ w/src/common/shell.rs
+@@ -1,6 +1,6 @@
+ use crate::prelude::*;
+ use clap::ValueEnum;
+-use std::process::Command;
++use crate::embedded::Command;
+ use thiserror::Error;
+ 
+ pub const EOF: &str = "NAVIEOF";
+@@ -36,13 +36,7 @@ impl ShellSpawnError {
+ }
+ 
+ pub fn out() -> Command {
+-    let words_str = CONFIG.shell();
+-    let mut words_vec = shellwords::split(&words_str).expect("empty shell command");
+-    let mut words = words_vec.iter_mut();
+-    let first_cmd = words.next().expect("absent shell binary");
+-    let mut cmd = Command::new(first_cmd);
+-    cmd.args(words);
+-    let dash_c = if words_str.contains("cmd.exe") { "/c" } else { "-c" };
+-    cmd.arg(dash_c);
++    let mut cmd = Command::new("dash");
++    cmd.arg("-c");
+     cmd
+ }
+diff --git i/src/common/terminal.rs w/src/common/terminal.rs
+index e20432b..b232ed9 100644
+--- i/src/common/terminal.rs
++++ w/src/common/terminal.rs
+@@ -1,65 +1 @@
+-use crate::prelude::*;
+-use crossterm::style;
+-use crossterm::terminal;
+-
+-use std::process::Command;
+-
+-const FALLBACK_WIDTH: u16 = 80;
+-
+-fn width_with_shell_out() -> Result<u16> {
+-    let output = if cfg!(target_os = "macos") {
+-        Command::new("stty")
+-            .arg("-f")
+-            .arg("/dev/stderr")
+-            .arg("size")
+-            .stderr(Stdio::inherit())
+-            .output()?
+-    } else {
+-        Command::new("stty")
+-            .arg("size")
+-            .arg("-F")
+-            .arg("/dev/stderr")
+-            .stderr(Stdio::inherit())
+-            .output()?
+-    };
+-
+-    if let Some(0) = output.status.code() {
+-        let stdout = String::from_utf8(output.stdout).expect("Invalid utf8 output from stty");
+-        let mut data = stdout.split_whitespace();
+-        data.next();
+-        return data
+-            .next()
+-            .expect("Not enough data")
+-            .parse::<u16>()
+-            .map_err(|_| anyhow!("Invalid width"));
+-    }
+-
+-    Err(anyhow!("Invalid status code"))
+-}
+-
+-pub fn width() -> u16 {
+-    if let Ok((w, _)) = terminal::size() {
+-        w
+-    } else {
+-        width_with_shell_out().unwrap_or(FALLBACK_WIDTH)
+-    }
+-}
+-
+-pub fn parse_ansi(ansi: &str) -> Option<style::Color> {
+-    style::Color::parse_ansi(&format!("5;{ansi}"))
+-}
+-
+-#[derive(Debug, Clone)]
+-pub struct Color(pub style::Color);
+-
+-impl FromStr for Color {
+-    type Err = &'static str;
+-
+-    fn from_str(ansi: &str) -> Result<Self, Self::Err> {
+-        if let Some(c) = parse_ansi(ansi) {
+-            Ok(Color(c))
+-        } else {
+-            Err("Invalid color")
+-        }
+-    }
+-}
++pub fn width() -> u16 { crate::embedded::width() }
+diff --git i/src/config/mod.rs w/src/config/mod.rs
+index a5d1e4a..fc6e350 100644
+--- i/src/config/mod.rs
++++ w/src/config/mod.rs
+@@ -9,9 +9,19 @@ use crossterm::style::Color;
+ use env::EnvConfig;
+ use yaml::YamlConfig;
+ 
+-lazy_static! {
+-    pub static ref CONFIG: Config = Config::new();
++use std::cell::RefCell;
++use std::rc::Rc;
++use clap::Parser;
++thread_local! { static CURRENT: RefCell<Option<Rc<Config>>> = const { RefCell::new(None) }; }
++pub fn config() -> Rc<Config> {
++    CURRENT.with(|value| value.borrow().as_ref().expect("navi invocation is not initialized").clone())
+ }
++pub fn initialize(words: Vec<String>) -> Result<(), clap::Error> {
++    let clap = cli::ClapConfig::try_parse_from(words)?;
++    CURRENT.with(|value| *value.borrow_mut() = Some(Rc::new(Config::new(clap))));
++    Ok(())
++}
++pub fn clear() { CURRENT.with(|value| *value.borrow_mut() = None); }
+ #[derive(Debug)]
+ pub struct Config {
+     yaml: YamlConfig,
+@@ -20,7 +30,7 @@ pub struct Config {
+ }
+ 
+ impl Config {
+-    pub fn new() -> Self {
++    fn new(clap: cli::ClapConfig) -> Self {
+         let env = EnvConfig::new();
+         let yaml = YamlConfig::get(&env).unwrap_or_else(|e| {
+             eprintln!("Error parsing config file: {e}");
+@@ -28,7 +38,6 @@ impl Config {
+             eprintln!();
+             YamlConfig::default()
+         });
+-        let clap = ClapConfig::new();
+         Self { yaml, clap, env }
+     }
+ 
+diff --git i/src/deser/terminal.rs w/src/deser/terminal.rs
+index 3408ff1..7312dc3 100644
+--- i/src/deser/terminal.rs
++++ w/src/deser/terminal.rs
+@@ -7,16 +7,16 @@ use std::cmp::max;
+ pub fn get_widths() -> (usize, usize, usize) {
+     let width = terminal::width();
+     let tag_width_percentage = max(
+-        CONFIG.tag_min_width(),
+-        width * CONFIG.tag_width_percentage() / 100,
++        config().tag_min_width(),
++        width * config().tag_width_percentage() / 100,
+     );
+     let comment_width_percentage = max(
+-        CONFIG.comment_min_width(),
+-        width * CONFIG.comment_width_percentage() / 100,
++        config().comment_min_width(),
++        width * config().comment_width_percentage() / 100,
+     );
+     let snippet_width_percentage = max(
+-        CONFIG.snippet_min_width(),
+-        width * CONFIG.snippet_width_percentage() / 100,
++        config().snippet_min_width(),
++        width * config().snippet_width_percentage() / 100,
+     );
+     (
+         usize::from(tag_width_percentage),
+@@ -27,17 +27,13 @@ pub fn get_widths() -> (usize, usize, usize) {
+ 
+ pub const DELIMITER: &str = r"  ⠀";
+ 
+-lazy_static! {
+-    pub static ref COLUMN_WIDTHS: (usize, usize, usize) = get_widths();
+-}
+-
+ pub fn write(item: &Item) -> String {
+-    let (tag_width_percentage, comment_width_percentage, snippet_width_percentage) = *COLUMN_WIDTHS;
++    let (tag_width_percentage, comment_width_percentage, snippet_width_percentage) = get_widths();
+     format!(
+             "{tags_short}{delimiter}{comment_short}{delimiter}{snippet_short}{delimiter}{tags}{delimiter}{comment}{delimiter}{snippet}{delimiter}{file_index}{delimiter}\n",
+-            tags_short = style(limit_str(&item.tags, tag_width_percentage)).with(CONFIG.tag_color()),
+-            comment_short = style(limit_str(&item.comment, comment_width_percentage)).with(CONFIG.comment_color()),
+-            snippet_short = style(limit_str(&fix_newlines(&item.snippet), snippet_width_percentage)).with(CONFIG.snippet_color()),
++            tags_short = style(limit_str(&item.tags, tag_width_percentage)).with(config().tag_color()),
++            comment_short = style(limit_str(&item.comment, comment_width_percentage)).with(config().comment_color()),
++            snippet_short = style(limit_str(&fix_newlines(&item.snippet), snippet_width_percentage)).with(config().snippet_color()),
+             tags = item.tags,
+             comment = item.comment,
+             delimiter = DELIMITER,
+diff --git i/src/env_var.rs w/src/env_var.rs
+index 8097edd..8dd933c 100644
+--- i/src/env_var.rs
++++ w/src/env_var.rs
+@@ -1,8 +1,8 @@
+ use crate::prelude::*;
+-pub use env::remove_var as remove;
+-pub use env::set_var as set;
+-pub use env::var as get;
+-use std::env;
++pub use crate::embedded::remove;
++pub use crate::embedded::set;
++pub use crate::embedded::get;
++
+ 
+ pub const PREVIEW_INITIAL_SNIPPET: &str = "NAVI_PREVIEW_INITIAL_SNIPPET";
+ pub const PREVIEW_TAGS: &str = "NAVI_PREVIEW_TAGS";
+@@ -20,7 +20,7 @@ pub const CONFIG: &str = "NAVI_CONFIG";
+ pub const CONFIG_YAML: &str = "NAVI_CONFIG_YAML";
+ 
+ pub fn parse<T: FromStr>(varname: &str) -> Option<T> {
+-    if let Ok(x) = env::var(varname) {
++    if let Ok(x) = get(varname) {
+         x.parse::<T>().ok()
+     } else {
+         None
+@@ -28,7 +28,7 @@ pub fn parse<T: FromStr>(varname: &str) -> Option<T> {
+ }
+ 
+ pub fn must_get(name: &str) -> String {
+-    if let Ok(v) = env::var(name) {
++    if let Ok(v) = get(name) {
+         v
+     } else {
+         panic!("{name} not set")
+diff --git i/src/filesystem.rs w/src/filesystem.rs
+index 304629c..ce42e4a 100644
+--- i/src/filesystem.rs
++++ w/src/filesystem.rs
+@@ -207,7 +207,7 @@ mod tests {
+ 
+     use crate::finder::structures::{Opts as FinderOpts, SuggestionType};
+     use crate::writer;
+-    use std::process::{Command, Stdio};
++    use crate::embedded::{Command, Stdio};
+ 
+     #[test]
+     fn test_read_file() {
+diff --git i/src/finder/mod.rs w/src/finder/mod.rs
+index a1edee6..3171865 100644
+--- i/src/finder/mod.rs
++++ w/src/finder/mod.rs
+@@ -1,8 +1,8 @@
+ use crate::deser;
+ use crate::prelude::*;
+ use std::io::Write;
+-use std::process::{self, Output};
+-use std::process::{Command, Stdio};
++use std::process::Output;
++use crate::embedded::{Command, Stdio};
+ pub mod structures;
+ use clap::ValueEnum;
+ pub use post::process;
+@@ -35,14 +35,14 @@ impl FromStr for FinderChoice {
+ 
+ fn parse(out: Output, opts: Opts) -> Result<String> {
+     let text = match out.status.code() {
+-        Some(0) | Some(1) | Some(2) => {
++        Some(0) | Some(1) => {
+             String::from_utf8(out.stdout).context("Invalid utf8 received from finder")?
+         }
+-        Some(130) => process::exit(130),
++        Some(130) => return Err(anyhow!(crate::embedded::CommandExit(130))),
+         _ => {
+             let err = String::from_utf8(out.stderr)
+                 .unwrap_or_else(|_| "<stderr contains invalid UTF-8>".to_owned());
+-            panic!("External command failed:\n {err}")
++            return Err(anyhow!("External command failed:\n {err}"))
+         }
+     };
+ 
+@@ -71,7 +71,7 @@ impl FinderChoice {
+     {
+         let finder_str = match self {
+             Self::Fzf => "fzf",
+-            Self::Skim => "sk",
++            Self::Skim => return Err(anyhow!("This embedded build supports the registered fzf finder")),
+         };
+ 
+         if let Self::Fzf = self {
+@@ -86,7 +86,7 @@ impl FinderChoice {
+                     eprintln!(
+                         "Consider updating Fzf to a version >= {MIN_FZF_VERSION_MAJOR}.{MIN_FZF_VERSION_MINOR}.{MIN_FZF_VERSION_PATCH} or use a compatible layout.",
+                     );
+-                    process::exit(1);
++                    return Err(anyhow!("Finder version is too old"));
+                 }
+             }
+         }
+@@ -187,8 +187,11 @@ impl FinderChoice {
+                 });
+         }
+ 
++        // Preview commands recursively invoke navi and require process ownership.
++        // This embedded selection path explicitly runs without a preview process.
++        command.args(["--preview", "", "--preview-window", "hidden", "--height", "100%"]);
+         command
+-            .env("SHELL", CONFIG.finder_shell())
++            .env("SHELL", config().finder_shell())
+             .stdin(Stdio::piped())
+             .stdout(Stdio::piped());
+         debug!(cmd = ?command);
+@@ -209,7 +212,7 @@ impl FinderChoice {
+                     cmd = &finder_str,
+                     repo = repo
+                 );
+-                process::exit(33)
++                return Err(anyhow!("Unable to invoke the registered finder"))
+             }
+         };
+ 
+diff --git i/src/finder/post.rs w/src/finder/post.rs
+index 9daa962..761d9bb 100644
+--- i/src/finder/post.rs
++++ w/src/finder/post.rs
+@@ -2,11 +2,11 @@ use crate::common::shell;
+ use crate::finder::structures::SuggestionType;
+ use crate::prelude::*;
+ use shell::EOF;
+-use std::process::Stdio;
++use crate::embedded::Stdio;
+ 
+ fn apply_map(text: String, map_fn: Option<String>) -> Result<String> {
+     if let Some(m) = map_fn {
+-        let cmd = if CONFIG.shell().contains("fish") {
++        let cmd = if config().shell().contains("fish") {
+             format!(r#"printf "%s" "{text}" | {m}"#)
+         } else {
+             format!(
+diff --git i/src/finder/structures.rs w/src/finder/structures.rs
+index a055194..f5e3851 100644
+--- i/src/finder/structures.rs
++++ w/src/finder/structures.rs
+@@ -44,16 +44,16 @@ impl Opts {
+     pub fn snippet_default() -> Self {
+         Self {
+             suggestion_type: SuggestionType::SnippetSelection,
+-            overrides: CONFIG.fzf_overrides(),
++            overrides: config().fzf_overrides(),
+             preview: Some(format!("{} preview {{}}", filesystem::exe_string())),
+-            prevent_select1: !CONFIG.best_match(),
+-            query: if CONFIG.best_match() {
++            prevent_select1: !config().best_match(),
++            query: if config().best_match() {
+                 None
+             } else {
+-                CONFIG.get_query()
++                config().get_query()
+             },
+-            filter: if CONFIG.best_match() {
+-                CONFIG.get_query()
++            filter: if config().best_match() {
++                config().get_query()
+             } else {
+                 None
+             },
+@@ -63,7 +63,7 @@ impl Opts {
+ 
+     pub fn var_default() -> Self {
+         Self {
+-            overrides: CONFIG.fzf_overrides_var(),
++            overrides: config().fzf_overrides_var(),
+             suggestion_type: SuggestionType::SingleRecommendation,
+             prevent_select1: false,
+             ..Default::default()
+diff --git i/src/lib.rs w/src/lib.rs
+index bc2bdf6..af1b9ef 100644
+--- i/src/lib.rs
++++ w/src/lib.rs
+@@ -1,3 +1,9 @@
++// Route upstream formatting through the invoking command's streams.
++macro_rules! print { ($($arg:tt)*) => { crate::embedded::write(false, format_args!($($arg)*)) } }
++macro_rules! println { () => { print!("\n") }; ($($arg:tt)*) => { print!("{}\n", format_args!($($arg)*)) } }
++macro_rules! eprint { ($($arg:tt)*) => { crate::embedded::write(true, format_args!($($arg)*)) } }
++macro_rules! eprintln { () => { eprint!("\n") }; ($($arg:tt)*) => { eprint!("{}\n", format_args!($($arg)*)) } }
++mod embedded;
+ #[macro_use]
+ extern crate lazy_static;
+ 
+diff --git i/src/parser.rs w/src/parser.rs
+index bcdda8f..e3d581e 100644
+--- i/src/parser.rs
++++ w/src/parser.rs
+@@ -167,7 +167,7 @@ impl<'a> Parser<'a> {
+             deser::raycast::write
+         };
+ 
+-        let filter = match CONFIG.tag_rules() {
++        let filter = match config().tag_rules() {
+             Some(tr) => gen_lists(&tr),
+             None => Default::default(),
+         };
+diff --git i/src/prelude.rs w/src/prelude.rs
+index 709624d..f3d1040 100644
+--- i/src/prelude.rs
++++ w/src/prelude.rs
+@@ -1,8 +1,8 @@
+-pub use crate::config::CONFIG; // TODO
++pub use crate::config::config; // TODO
+ pub use dns_common::prelude::*;
+ pub use regex::Regex;
+ pub use std::io::{BufRead, BufReader};
+-pub use std::process::Stdio;
++pub use crate::embedded::Stdio;
+ pub use std::str::FromStr;
+ 
+ pub trait Runnable {

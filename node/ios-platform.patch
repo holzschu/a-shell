@@ -1,0 +1,355 @@
+--- a/configure.py
++++ b/configure.py
+@@ -1315,6 +1315,8 @@
+     dest='use_ccache_win',
+     default=None,
+     help='Use ccache for compiling on Windows. ')
++
++parser.add_argument('--ios-simulator', action='store_true', default=False)
+
+ (options, args) = parser.parse_known_args()
+
+@@ -1901,6 +1903,9 @@
+     SearchFiles('test/cctest', 'h')
+
+ def configure_node(o):
++  if options.dest_os == 'ios':
++    o['variables']['OS'] = 'ios'
++    o['variables']['iossim'] = b(options.ios_simulator)
+   if options.dest_os == 'android':
+     o['variables']['OS'] = 'android'
+   o['variables']['node_enable_experimentals'] = b(options.enable_all_experimentals)
+--- a/common.gypi
++++ b/common.gypi
+@@ -111,7 +111,7 @@
+         'obj_dir%': '<(PRODUCT_DIR)/obj.target',
+         'v8_base': '<(PRODUCT_DIR)/obj.target/tools/v8_gypfiles/libv8_snapshot.a',
+       }],
+-      ['OS=="mac"', {
++      ['OS in "mac ios"', {
+         'obj_dir%': '<(PRODUCT_DIR)/obj.target',
+         'v8_base': '<(PRODUCT_DIR)/libv8_snapshot.a',
+       }],
+@@ -802,6 +802,79 @@
+           }],
+         ],
+       }],
++      ['OS=="ios"', {
++        'defines': ['_DARWIN_USE_64_BIT_INODE=1'],
++        'xcode_settings': {
++          'ALWAYS_SEARCH_USER_PATHS': 'NO',
++          'GCC_CW_ASM_SYNTAX': 'NO',                # No -fasm-blocks
++          'GCC_DYNAMIC_NO_PIC': 'NO',               # No -mdynamic-no-pic
++                                                    # (Equivalent to -fPIC)
++          'GCC_ENABLE_CPP_EXCEPTIONS': 'NO',        # -fno-exceptions
++          'GCC_ENABLE_CPP_RTTI': 'NO',              # -fno-rtti
++          'GCC_ENABLE_PASCAL_STRINGS': 'NO',        # No -mpascal-strings
++          'PREBINDING': 'NO',                       # No -Wl,-prebind
++          'USE_HEADERMAP': 'NO',
++          'OTHER_CFLAGS': [
++            '-fno-strict-aliasing',
++          ],
++          'WARNING_CFLAGS': [
++            '-Wall',
++            '-Wendif-labels',
++            '-W',
++            '-Wno-unused-parameter',
++            '-Wno-enum-constexpr-conversion',
++          ],
++        },
++        'target_conditions': [
++          ['_toolset=="target"', {
++            'xcode_settings': {'IPHONEOS_DEPLOYMENT_TARGET': '16.0'},
++          }],
++          # Build-time generators execute on macOS, not in the Simulator.
++          ['_toolset=="host" and host_os=="mac"', {
++            'xcode_settings': {
++              'SDKROOT': 'macosx',
++              'MACOSX_DEPLOYMENT_TARGET': '13.5',
++            },
++          }],
++          ['_type!="static_library"', {
++            'xcode_settings': {
++              'OTHER_LDFLAGS': [
++                '-Wl,-no_pie',
++                '-Wl,-search_paths_first',
++              ],
++            },
++          }],
++        ],
++        'conditions': [
++          ['target_arch=="ia32"', {
++            'xcode_settings': {'ARCHS': ['i386']},
++          }],
++          ['target_arch=="x64"', {
++            'xcode_settings': {'ARCHS': ['x86_64']},
++          }],
++          [ 'target_arch=="arm64"', {
++            'xcode_settings': {'ARCHS': ['arm64']},
++          }],
++          [ 'target_arch=="arm"', {
++            'xcode_settings': {'ARCHS': ['armv7']},
++          }],
++          [ 'target_arch=="armv7s"', {
++            'xcode_settings': {'ARCHS': ['armv7s']},
++          }],
++          ['clang==1', {
++            'xcode_settings': {
++              'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
++              'CLANG_CXX_LANGUAGE_STANDARD': 'gnu++20',  # -std=gnu++20
++              'CLANG_CXX_LIBRARY': 'libc++',
++            },
++          }],
++          ['target_arch=="x64" or target_arch=="ia32" or (target_arch=="arm64" and iossim=="true")', {
++            'xcode_settings': { 'SDKROOT': 'iphonesimulator' },
++          }, {
++            'xcode_settings': { 'SDKROOT': 'iphoneos' },
++          }],
++        ],
++      }],
+       ['OS=="freebsd"', {
+         'ldflags': [
+           '-Wl,--export-dynamic',
+--- a/node.gyp
++++ b/node.gyp
+@@ -1643,7 +1643,7 @@
+         'src/builtin_info.cc',
+       ],
+       'conditions': [
+-        [ 'OS=="mac"', {
++        [ 'OS in "mac ios"', {
+           'libraries': [ '-framework CoreFoundation -framework Security' ],
+         }],
+         [ 'node_shared_simdutf=="false" and node_use_bundled_v8!="false"', {
+@@ -1652,7 +1652,7 @@
+         [ 'node_shared_libuv=="false"', {
+           'dependencies': [ 'deps/uv/uv.gyp:libuv#host' ],
+         }],
+-        [ 'OS in "linux mac openharmony"', {
++        [ 'OS in "linux mac ios openharmony"', {
+           'defines': ['NODE_JS2C_USE_STRING_LITERALS'],
+         }],
+         [ 'debug_node=="true"', {
+--- a/tools/gyp/pylib/gyp/generator/make.py
++++ b/tools/gyp/pylib/gyp/generator/make.py
+@@ -66,8 +66,8 @@
+ def CalculateVariables(default_variables, params):
+     """Calculate additional variables for use in the build (called by gyp)."""
+     flavor = gyp.common.GetFlavor(params)
+-    if flavor == "mac":
+-        default_variables.setdefault("OS", "mac")
++    if flavor in ("mac", "ios"):
++        default_variables.setdefault("OS", flavor)
+         default_variables.setdefault("SHARED_LIB_SUFFIX", ".dylib")
+         default_variables.setdefault(
+             "SHARED_LIB_DIR", generator_default_variables["PRODUCT_DIR"]
+@@ -860,7 +860,7 @@
+         self.toolset = spec["toolset"]
+
+         self.is_mac_bundle = gyp.xcode_emulation.IsMacBundle(self.flavor, spec)
+-        if self.flavor == "mac":
++        if self.flavor in ("mac", "ios"):
+             self.xcode_settings = gyp.xcode_emulation.XcodeSettings(spec)
+         else:
+             self.xcode_settings = None
+@@ -1055,7 +1055,7 @@
+
+             # Write the actual command.
+             action_commands = action["action"]
+-            if self.flavor == "mac":
++            if self.flavor in ("mac", "ios"):
+                 action_commands = [
+                     gyp.xcode_emulation.ExpandEnvVars(command, env)
+                     for command in action_commands
+@@ -1239,7 +1239,7 @@
+                 # action, cd_action, and mkdirs get written to a toplevel variable
+                 # called cmd_foo. Toplevel variables can't handle things that change
+                 # per makefile like $(TARGET), so hardcode the target.
+-                if self.flavor == "mac":
++                if self.flavor in ("mac", "ios"):
+                     action = [
+                         gyp.xcode_emulation.ExpandEnvVars(command, env)
+                         for command in action
+@@ -1412,7 +1412,7 @@
+                 quoter=EscapeCppDefine,
+             )
+
+-            if self.flavor == "mac":
++            if self.flavor in ("mac", "ios"):
+                 cflags = self.xcode_settings.GetCflags(
+                     configname, arch=config.get("xcode_configuration_platform")
+                 )
+@@ -1431,7 +1431,7 @@
+             self.WriteList(cflags_c, "CFLAGS_C_%s" % configname)
+             self.WriteLn("# Flags passed to only C++ files.")
+             self.WriteList(cflags_cc, "CFLAGS_CC_%s" % configname)
+-            if self.flavor == "mac":
++            if self.flavor in ("mac", "ios"):
+                 self.WriteLn("# Flags passed to only ObjC files.")
+                 self.WriteList(cflags_objc, "CFLAGS_OBJC_%s" % configname)
+                 self.WriteLn("# Flags passed to only ObjC++ files.")
+@@ -1499,7 +1499,7 @@
+                 "%s " % precompiled_header.GetInclude("cc") + "$(CFLAGS_$(BUILDTYPE)) "
+                 "$(CFLAGS_CC_$(BUILDTYPE))"
+             )
+-            if self.flavor == "mac":
++            if self.flavor in ("mac", "ios"):
+                 self.WriteLn(
+                     "$(OBJS): GYP_OBJCFLAGS := "
+                     "$(DEFS_$(BUILDTYPE)) "
+@@ -1568,7 +1568,7 @@
+         """
+         assert not self.is_mac_bundle
+
+-        if self.flavor == "mac" and self.type in (
++        if self.flavor in ("mac", "ios") and self.type in (
+             "static_library",
+             "executable",
+             "shared_library",
+@@ -1615,7 +1615,7 @@
+     def _InstallImmediately(self):
+         return (
+             self.toolset == "target"
+-            and self.flavor == "mac"
++            and self.flavor in ("mac", "ios")
+             and self.type
+             in ("static_library", "executable", "shared_library", "loadable_module")
+         )
+@@ -1713,7 +1713,7 @@
+         if self.type != "none":
+             for configname in sorted(configs.keys()):
+                 config = configs[configname]
+-                if self.flavor == "mac":
++                if self.flavor in ("mac", "ios"):
+                     ldflags = self.xcode_settings.GetLdflags(
+                         configname,
+                         generator_default_variables["PRODUCT_DIR"],
+@@ -1748,7 +1748,7 @@
+                     library_dirs = [Sourceify(self.Absolutify(i)) for i in library_dirs]
+                 ldflags += [("-L%s" % library_dir) for library_dir in library_dirs]
+                 self.WriteList(ldflags, "LDFLAGS_%s" % configname)
+-                if self.flavor == "mac":
++                if self.flavor in ("mac", "ios"):
+                     self.WriteList(
+                         self.xcode_settings.GetLibtoolflags(configname),
+                         "LIBTOOLFLAGS_%s" % configname,
+@@ -1757,7 +1757,7 @@
+             if libraries:
+                 # Remove duplicate entries
+                 libraries = gyp.common.uniquer(libraries)
+-                if self.flavor == "mac":
++                if self.flavor in ("mac", "ios"):
+                     libraries = self.xcode_settings.AdjustLibraries(libraries)
+             self.WriteList(libraries, "LIBS")
+             self.WriteLn(
+@@ -1766,7 +1766,7 @@
+             )
+             self.WriteLn("%s: LIBS := $(LIBS)" % QuoteSpaces(self.output_binary))
+
+-            if self.flavor == "mac":
++            if self.flavor in ("mac", "ios"):
+                 self.WriteLn(
+                     "%s: GYP_LIBTOOLFLAGS := $(LIBTOOLFLAGS_$(BUILDTYPE))"
+                     % QuoteSpaces(self.output_binary)
+@@ -1775,7 +1775,7 @@
+         # Postbuild actions. Like actions, but implicitly depend on the target's
+         # output.
+         postbuilds = []
+-        if self.flavor == "mac":
++        if self.flavor in ("mac", "ios"):
+             if target_postbuilds:
+                 postbuilds.append("$(TARGET_POSTBUILDS_$(BUILDTYPE))")
+             postbuilds.extend(gyp.xcode_emulation.GetSpecPostbuildCommands(spec))
+@@ -1885,7 +1885,7 @@
+                     "Spaces in alink input filenames not supported (%s)" % link_dep
+                 )
+             if (
+-                self.flavor not in ("mac", "openbsd", "netbsd", "win")
++                self.flavor not in ("mac", "ios", "openbsd", "netbsd", "win")
+                 and not self.is_standalone_static_library
+             ):
+                 if self.flavor in ("linux", "android", "openharmony"):
+@@ -2003,7 +2003,7 @@
+             if self.flavor != "zos":
+                 installable_deps.append(self.output)
+             if (
+-                self.flavor == "mac"
++                self.flavor in ("mac", "ios")
+                 and "product_dir" not in spec
+                 and self.toolset == "target"
+             ):
+@@ -2507,7 +2507,7 @@
+         "LINK.host": LINK_host,
+         "PLI.host": PLI_host,
+     }
+-    if flavor == "mac":
++    if flavor in ("mac", "ios"):
+         flock_command = "%s gyp-mac-tool flock" % sys.executable
+         header_params.update(
+             {
+@@ -2685,7 +2685,7 @@
+         spec = target_dicts[qualified_target]
+         configs = spec["configurations"]
+
+-        if flavor == "mac":
++        if flavor in ("mac", "ios"):
+             gyp.xcode_emulation.MergeGlobalXcodeSettingsToSpec(data[build_file], spec)
+
+         writer = MakefileWriter(generator_flags, flavor)
+--- a/deps/cares/config/darwin/ares_config.h
++++ b/deps/cares/config/darwin/ares_config.h
+@@ -329,7 +329,10 @@
+ #define HAVE_SYS_PARAM_H 1
+
+ /* Define to 1 if you have the <sys/random.h> header file. */
++#include <TargetConditionals.h>
++#if !TARGET_OS_IPHONE
+ #define HAVE_SYS_RANDOM_H 1
++#endif
+
+ /* Define to 1 if you have the <sys/select.h> header file. */
+ #define HAVE_SYS_SELECT_H 1
+--- a/src/crypto/crypto_context.cc
++++ b/src/crypto/crypto_context.cc
+@@ -20,6 +20,7 @@
+ #include <openssl/rand.h>
+ #include <openssl/x509.h>
+ #ifdef __APPLE__
++#include <TargetConditionals.h>
+ #include <Security/Security.h>
+ #endif
+
+@@ -325,7 +326,7 @@
+ // Licensed under a BSD-style license
+ // See https://chromium.googlesource.com/chromium/src/+/HEAD/LICENSE for
+ // details.
+-#ifdef __APPLE__
++#if defined(__APPLE__) && TARGET_OS_OSX
+ TrustStatus IsTrustDictionaryTrustedForPolicy(CFDictionaryRef trust_dict,
+                                               bool is_self_issued) {
+   // Trust settings may be scoped to a single application
+@@ -627,7 +628,7 @@
+   }
+   CFRelease(curr_anchors);
+ }
+-#endif  // __APPLE__
++#endif  // defined(__APPLE__) && TARGET_OS_OSX
+
+ #ifdef _WIN32
+
+@@ -896,13 +897,13 @@
+
+ static std::vector<ncrypto::X509Pointer> InitializeSystemStoreCertificates() {
+   std::vector<ncrypto::X509Pointer> system_store_certs;
+-#ifdef __APPLE__
++#if defined(__APPLE__) && TARGET_OS_OSX
+   ReadMacOSKeychainCertificates(&system_store_certs);
+ #endif
+ #ifdef _WIN32
+   ReadWindowsCertificates(&system_store_certs);
+ #endif
+-#if !defined(__APPLE__) && !defined(_WIN32)
++#if (!defined(__APPLE__) || !TARGET_OS_OSX) && !defined(_WIN32)
+   GetOpenSSLSystemCertificates(&system_store_certs);
+ #endif
+   return system_store_certs;
