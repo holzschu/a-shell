@@ -82,3 +82,8 @@ Configuration.xcconfig
 
 # Locally built native Codex framework
 /codex/codex.xcframework/
+/ruff/Ruff.xcframework/
+gitoxide/gitoxide.xcframework/
+xcfs/node.xcframework/
+/fzf/fzf.xcframework/
+/navi/navi.xcframework/

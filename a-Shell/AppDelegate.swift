@@ -87,7 +87,7 @@ func startLocalWebServer() {
     }
     localServerQueue.async{
         NSLog("starting server timestamp")
-        Kitura.run()
+        Kitura.run(exitOnFailure: false)
     }
 }
 

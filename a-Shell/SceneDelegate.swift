@@ -140,6 +140,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var avControllerPiPEnabled = false
     // for repetitive buttons
     var continuousButtonAction = false
+    var buttonFontSize: CGFloat = 19.0 // default value for iPads
     // If we introduce submenus, the abilities of editorToolbar and inputAssistantItem change.
     var leftButtonGroup: [UIBarButtonItem] = []
     var leftButtonGroups: [UIBarButtonItemGroup] = []
@@ -185,20 +186,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else {
             return UIScreen.main.bounds.size.width
         }
-    }
-    
-    var fontSize: CGFloat {
-        // font size for the labels on buttons.
-        // iPads with external keyboard: not used
-        // iPads with onscreen keyboard: used
-        // iPhones: used
-        // toolbar height is always 45
-        if (UIDevice.current.model.hasPrefix("iPad")) {
-            return 19
-        } else {
-            return 21
-        }
-        // This can now be made a configurable option
     }
     
     var toolbarHeight: CGFloat {
@@ -660,7 +647,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                 case "copy":
-                    terminalView?.copy()
+                    terminalView?.copy(sender)
                 case "cut":
                     terminalView?.cut(sender)
                 case "control":
@@ -670,12 +657,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         sender.isSelected = controlOn
                     } else {
                         // buttonName.fill? if it exists?
-                        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
+                        let configuration = UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular, scale: .large)
                         sender.image = controlOn ? UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration) :
                         UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
                     }
                 case "selectAll":
-                    terminalView?.selectAll()
+                    terminalView?.selectAll(sender)
                 case "showBrowser":
                     activateBrowserAction()
                 default:
@@ -744,7 +731,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         sender.isSelected = controlOn
                     } else {
                         // buttonName.fill? if it exists?
-                        let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
+                        let configuration = UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular, scale: .large)
                         sender.image = controlOn ? UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration) :
                         UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
                     }
@@ -930,6 +917,62 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
     }
+    
+    private func computeNumberOfButtons(toolbar: String) -> UInt {
+        var numButtons: UInt = 0
+        let buttonsDefinition = toolbar.split(separator: "\n")
+        // We have to count all buttons, even if they're hidden, because we cannot change the toolbar font size
+        // once it has been created.
+        for buttonLine in buttonsDefinition {
+            let trimmedButtonLine = buttonLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            if (trimmedButtonLine.hasPrefix("#")) { continue } // skip comments
+            if (trimmedButtonLine.count == 0) { continue } // skip blank lines
+            if (trimmedButtonLine == "separator") { continue } // we're in a situation where the separator will be ignored
+            let regularLine = trimmedButtonLine.contains("insertString") || trimmedButtonLine.contains("systemAction") || trimmedButtonLine.contains("insertCommand")
+            if ((trimmedButtonLine == "[")
+                || (trimmedButtonLine.hasPrefix("[=\"")) && !regularLine
+                || ((trimmedButtonLine.hasPrefix("[='")) && !regularLine)) { continue }
+            if trimmedButtonLine.hasPrefix("]") { continue }
+            let buttonPartsLine = trimmedButtonLine.components(separatedBy: .whitespaces)
+            var buttonParts: [String] = []
+            var buttonCount = 0
+            for str in buttonPartsLine {
+                // command is a single string, the others can have spaces
+                if (str.count > 0) {
+                    if ((str == "insertString") || (str == "systemAction") || (str == "insertCommand")) {
+                        if (buttonParts.count == 0) {
+                            buttonParts.append("questionmark.app.dashed")
+                        }
+                        buttonParts.append(str)
+                        buttonCount = 2
+                    } else if (buttonCount == 0) {
+                        if (buttonParts.count > 0) {
+                            buttonParts[0].append(" ")
+                            buttonParts[0].append(str)
+                        } else {
+                            buttonParts.append(str)
+                        }
+                    } else {
+                        if (buttonParts.count <= 2) {
+                            buttonParts.append(str)
+                        } else {
+                            buttonParts[2].append(" ")
+                            buttonParts[2].append(str)
+                        }
+                    }
+                }
+            }
+            if (buttonParts.count < 2) {
+                continue
+            }
+            if (String(buttonParts[2]) == "showBrowser") {
+                continue
+            }
+            numButtons += 1
+        }
+        return numButtons
+    }
+    
     @objc func generateToolbarButtons() {
         // check issue with screen size and pico.
         // Scan the configuration file to generate the button groups:
@@ -967,9 +1010,23 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 var pastSeparator = false
                 var activeTag = 0
                 noneTag = -1
+                // iPhones, iOS 26+ only: recompute button font size based on number of buttons
+                // This a "liquiglass-only" issue, all other devices work well with default size of 19.
+                if #available(iOS 26, *) {
+                    if !UIDevice.current.model.hasPrefix("iPad") {
+                        // parse the config file to get the number of buttons
+                        let numButtons = computeNumberOfButtons(toolbar: contentOfFile)
+                        let multiplier = 3.17 // Ensures roughly 15 to 21 for fontsize for 6 to 8 buttons
+                        // smaller than 15 won't change the button size (but it will change the label size!)
+                        // larger than 22 feels much larger than the keyboard keys
+                        buttonFontSize =  min(max(screenWidth/(multiplier * CGFloat(numButtons)), 15.0), 22)
+                        NSLog("button size: \(buttonFontSize): \(screenWidth)/\(multiplier) * \(numButtons)")
+                        // With liquiglass, 8 buttons is the maximum for an iPhone screen
+                    }
+                }
                 let buttonsDefinition = contentOfFile.split(separator: "\n")
                 var activeButtonGroup: [UIBarButtonItem] = []
-                let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
+                let configuration = UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular)
                 for buttonLine in buttonsDefinition {
                     let trimmedButtonLine = buttonLine.trimmingCharacters(in: .whitespacesAndNewlines)
                     if (trimmedButtonLine.hasPrefix("#")) { continue } // skip comments
@@ -1100,7 +1157,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                      if #available(iOS 15.0, *) {
                      configuration = UIImage.SymbolConfiguration(hierarchicalColor: .placeholderText)
                      } else {
-                     configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
+                     configuration = UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular)
                      } */
                     // If there's no string to insert, string to insert == title
                     if (buttonParts.count == 2) {
@@ -2564,7 +2621,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 webView?.goBack()
                 webView?.load(URLRequest(url: url))
             }
-            hideKeyboard() // hides the keyboard *and* causes SwiftUI to refresh
+            NotificationCenter.default.post(name: .init("showWebView"), object: webView)
+            hideKeyboard()
         }
     }
     
@@ -2579,7 +2637,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         NSLog("setting showWebView to true")
         showWebView = true
-        hideKeyboard() // hides the keyboard *and* causes SwiftUI to refresh
+        NotificationCenter.default.post(name: .init("showWebView"), object: webView)
+        hideKeyboard()
         internalBrowserStarted = true
         // make "showBrowser" button now visible in the toolbar
         if #available(iOS 16.0, *) {
@@ -3039,7 +3098,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
             } else {
-                let configuration = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular, scale: .large)
+                let configuration = UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular, scale: .large)
                 for button in editorToolbar.items! {
                     if title(button) == "control" {
                         button.image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
@@ -4124,6 +4183,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     func activateLongPressForButtons() -> Bool {
+        let arrowActions = ["up", "down", "left", "right", "up.down", "left.right", "up.down.left.right"]
+        guard (leftButtonGroup + rightButtonGroup).contains(where: { arrowActions.contains(title($0) ?? "") }) else {
+            return true
+        }
         // Give it slight delay so the button views are actually present
         // Note: for some reasons, this doesn't work on iPad with external keyboards the first time the window is activated
         // (the gestures *are* added to the buttons, but the actions are not called when the user taps/long press)
@@ -5643,7 +5706,7 @@ extension SceneDelegate: WKUIDelegate {
         NSLog("finished loading, title= \(webView.title ?? "unknown"), host= \(webView.url?.host) path=\(webView.url?.path ?? "unknown"), navigation= \(navigation)")
         if (webView.url?.host == "localhost") && (webView.url?.path == "/wasm.html") {
             // host=="localhost" && path == "/wasm.html" --> make the terminal active
-            // NSLog("Back to the terminal. showWebView: \(showWebView)")
+            NSLog("Back to the terminal. showWebView: \(showWebView)")
         }
         if (webView.title != nil) && (webView.title != "") {
             title = webView.title

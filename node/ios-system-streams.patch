@@ -1,0 +1,269 @@
+--- a/ios_system.m
++++ b/ios_system.m
+@@ -22,6 +22,7 @@
+ // the reverse (if type == "r").
+ 
+ #include <pthread.h>
++#include <stdatomic.h>
+ #include <sys/stat.h>
+ #include <libgen.h> // for basename()
+ #include <dlfcn.h>  // for dlopen()/dlsym()/dlclose()
+@@ -377,6 +378,7 @@
+     int  numInterpreter;
+     bool storeRootThread;
+     sessionParameters* session;
++    void *ashell_owned; // native ownership token, initialized by run_function
+ } functionParameters;
+ 
+ extern pthread_mutex_t pid_mtx;
+@@ -384,10 +386,97 @@
+ extern void ios_releaseBackgroundThread(pthread_t thread);
+ extern void startedPreparingWebAssemblyCommand(void);
+ 
++// Native callers register their exact streams until command cleanup completes.
++typedef struct ashell_owned_streams {
++    FILE *streams[3];
++    unsigned active;
++    pthread_cond_t idle;
++    struct ashell_owned_streams *next;
++} ashell_owned_streams;
++static pthread_mutex_t ashell_stream_mutex = PTHREAD_MUTEX_INITIALIZER;
++static ashell_owned_streams *ashell_native_streams;
++
++int ashell_register_owned_streams(FILE *in, FILE *out, FILE *err, void **registration) {
++    if (!in || !out || !err || !registration || *registration) return EINVAL;
++    ashell_owned_streams *entry = malloc(sizeof(*entry));
++    if (!entry) return ENOMEM;
++    int error = pthread_cond_init(&entry->idle, NULL);
++    if (error) { free(entry); return error; }
++    entry->active = 0;
++    entry->streams[0] = in;
++    entry->streams[1] = out;
++    entry->streams[2] = err;
++    pthread_mutex_lock(&ashell_stream_mutex);
++    entry->next = ashell_native_streams;
++    ashell_native_streams = entry;
++    pthread_mutex_unlock(&ashell_stream_mutex);
++    *registration = entry;
++    return 0;
++}
++
++// The owner must wait for actual command completion before unregistering or closing FILEs.
++void ashell_unregister_owned_streams(void **registration) {
++    if (!registration || !*registration) return;
++    pthread_mutex_lock(&ashell_stream_mutex);
++    ashell_owned_streams **entry = &ashell_native_streams;
++    while (*entry && *entry != *registration) entry = &(*entry)->next;
++    if (*entry) {
++        ashell_owned_streams *removed = *entry;
++        *entry = removed->next;
++        pthread_cond_destroy(&removed->idle);
++        free(removed);
++    }
++    pthread_mutex_unlock(&ashell_stream_mutex);
++    *registration = NULL;
++}
++
++// PID release happens before cleanup's final session/context accesses. Track native
++// command entry through the end of run_function, not just the stock fake PID slot.
++static ashell_owned_streams *ashell_enter_owned_command(FILE *in, FILE *out, FILE *err) {
++    ashell_owned_streams *found = NULL;
++    pthread_mutex_lock(&ashell_stream_mutex);
++    for (ashell_owned_streams *entry = ashell_native_streams; entry && !found; entry = entry->next)
++        for (int i = 0; i < 3; i++)
++            if (entry->streams[i] == in || entry->streams[i] == out || entry->streams[i] == err)
++                found = entry;
++    if (found) found->active++;
++    pthread_mutex_unlock(&ashell_stream_mutex);
++    return found;
++}
++
++static void ashell_leave_owned_command(ashell_owned_streams *entry) {
++    if (!entry) return;
++    pthread_mutex_lock(&ashell_stream_mutex);
++    if (--entry->active == 0) pthread_cond_broadcast(&entry->idle);
++    pthread_mutex_unlock(&ashell_stream_mutex);
++}
++
++// Call after ios_waitpid; allocated-but-not-started commands must have entered first.
++void ashell_wait_owned_streams(void *registration) {
++    ashell_owned_streams *entry = registration;
++    if (!entry) return;
++    pthread_mutex_lock(&ashell_stream_mutex);
++    while (entry->active) pthread_cond_wait(&entry->idle, &ashell_stream_mutex);
++    pthread_mutex_unlock(&ashell_stream_mutex);
++}
++
++// Only exact owned streams are protected; nested command pipes retain stock cleanup.
++static bool ashell_host_owns_stream(FILE *stream) {
++    if (!stream) return false;
++    bool found = false;
++    pthread_mutex_lock(&ashell_stream_mutex);
++    for (ashell_owned_streams *entry = ashell_native_streams; entry && !found; entry = entry->next)
++        for (int i = 0; i < 3; i++)
++            if (stream == entry->streams[i]) found = true;
++    pthread_mutex_unlock(&ashell_stream_mutex);
++    return found;
++}
++
+ static void cleanup_function(void* parameters) {
+     // This function is called when pthread_exit() or ios_kill() is called
+     pthread_t current_thread = pthread_self();
+     functionParameters *p = (functionParameters *) parameters;
++    ashell_owned_streams *owned = p->ashell_owned;
+     bool backgroundCommand = p->backgroundCommand;
+     char* commandName = p->argv[0];
+     char* currentSessionCommandName = NULL;
+@@ -446,7 +535,7 @@
+     fcntl(fileno(thread_stdin), F_SETNOSIGPIPE);
+     fcntl(fileno(thread_stdout), F_SETNOSIGPIPE);
+     fcntl(fileno(thread_stderr), F_SETNOSIGPIPE);
+-    fflush(thread_stdin);
++    if (!ashell_host_owns_stream(thread_stdin)) fflush(thread_stdin);
+     fflush(thread_stdout);
+     fflush(thread_stderr);
+     // release parameters:
+@@ -509,7 +598,7 @@
+     cleanup_counter++;
+     while (pthread_mutex_trylock(&pid_mtx) != 0) { } // Someone else has the lock, so we wait.
+     pthread_mutex_unlock(&pid_mtx);
+-    if (mustCloseStderr) {
++    if (mustCloseStderr && !ashell_host_owns_stream(p->stderr)) {
+         NSLog(@"Closing stderr (mustCloseStderr): %d \n", fileno(p->stderr));
+         int res = fclose(p->stderr);
+     }
+@@ -521,7 +610,7 @@
+             mustCloseStdout &= fileno(p->stdout) != fileno(currentSession->stdout);
+         }
+     }
+-    if (mustCloseStdout) {
++    if (mustCloseStdout && !ashell_host_owns_stream(p->stdout)) {
+         int fd = fileno(p->stdout);
+         NSLog(@"Closing stdout (mustCloseStdout): %d \n", fileno(p->stdout));
+         int res = fclose(p->stdout);
+@@ -545,7 +634,7 @@
+             mustCloseStdin &= false;
+         }
+     }
+-    if (mustCloseStdin) {
++    if (mustCloseStdin && !ashell_host_owns_stream(p->stdin)) {
+         NSLog(@"Closing stdin (mustCloseStdin): %d \n", fileno(p->stdin));
+         int res = fclose(p->stdin);
+     }
+@@ -585,6 +674,7 @@
+     }
+     cleanup_counter--;
+     NSLog(@"returning from cleanup_function, session: %s\n", (char*)currentSession->context);
++    ashell_leave_owned_command(owned);
+ }
+ 
+ // Avoir calling crash_handler several times:
+@@ -607,6 +697,7 @@
+ 
+ static void* run_function(void* parameters) {
+     functionParameters *p = (functionParameters *) parameters;
++    p->ashell_owned = ashell_enter_owned_command(p->stdin, p->stdout, p->stderr);
+     NSLog(@"Storing thread_id: %x pid: %d isPipeOut: %x isPipeErr: %x stdin %d stdout %d stderr %d command= %s\n", pthread_self(), ios_currentPid(), p->isPipeOut, p->isPipeErr,
+           (p->stdin == nil) ? -1 : fileno(p->stdin),
+           (p->stdout == nil) ? -1 : fileno(p->stdout),
+@@ -3960,10 +4051,10 @@
+             // If command output was redirected to a pipe, we still need to close it.
+             // (to warn the other command that it can stop waiting)
+             // We still need this step because there can be multiple pipes.
+-            if (params->stdout != currentSession->stdout) {
++            if ((params->stdout != currentSession->stdout) && !ashell_host_owns_stream(params->stdout)) {
+                 fclose(params->stdout);
+             }
+-            if ((params->stderr != currentSession->stderr) && (params->stderr != params->stdout)) {
++            if ((params->stderr != currentSession->stderr) && (params->stderr != params->stdout) && !ashell_host_owns_stream(params->stderr)) {
+                 fclose(params->stderr);
+             }
+             if ((handle != NULL) && (handle != RTLD_SELF)
+@@ -3983,7 +4074,7 @@
+     }
+     NSLog(@"returning from ios_system, global_errno= %d\n", currentSession->global_errno);
+     free(originalCommand); // releases cmd, which was a strdup of inputCommand
+-    fflush(thread_stdin);
++    if (!ashell_host_owns_stream(thread_stdin)) fflush(thread_stdin);
+     fflush(thread_stdout);
+     fflush(thread_stderr);
+     return currentSession->global_errno;
+--- a/libc_replacement.c
++++ b/libc_replacement.c
+@@ -13,6 +13,7 @@
+ #include <string.h>
+ #include <sys/wait.h>
+ #include <sys/param.h>
++#include <stdatomic.h>
+ #include <dlfcn.h>  // for dlopen()/dlsym()/dlclose()
+ 
+ #include "ios_error.h"
+@@ -181,7 +182,15 @@
+ // Fake process IDs to go with fake forking:
+ // You will still need to edit your code to make sure you go through both branches.
+ #define IOS_MAX_THREADS 128
+-static pthread_t thread_ids[IOS_MAX_THREADS];
++static _Atomic(pthread_t) thread_ids[IOS_MAX_THREADS];
++static pthread_mutex_t thread_completion_mutex = PTHREAD_MUTEX_INITIALIZER;
++static pthread_cond_t thread_completed = PTHREAD_COND_INITIALIZER;
++
++static void notify_thread_completion(void) {
++    pthread_mutex_lock(&thread_completion_mutex);
++    pthread_cond_broadcast(&thread_completed);
++    pthread_mutex_unlock(&thread_completion_mutex);
++}
+ static int numVariablesSet[IOS_MAX_THREADS];
+ static char** environment[IOS_MAX_THREADS];
+ static char** copyEnvironment[IOS_MAX_THREADS];
+@@ -274,6 +283,7 @@
+     // fprintf(stderr, "Unlocking pid %d, storing thread %x current value: %x\n", current_pid, thread,  thread_ids[current_pid]);
+     if (thread_ids[current_pid] == -1) {
+         thread_ids[current_pid] = thread;
++        if (!thread) notify_thread_completion();
+     }
+     pthread_mutex_unlock(&pid_mtx);
+ }
+@@ -538,6 +548,7 @@
+             // fprintf(stderr, "Reset current directory to %s because process %d terminates\n", previousDirectory[p], p);
+             current_pid = previousPid[p];
+             thread_ids[p] = NULL;
++            notify_thread_completion();
+             chdir_nolock(previousDirectory[p]);
+             return;
+         }
+@@ -552,6 +563,7 @@
+             // fprintf(stderr, "Found Id %d\n", p);
+             current_pid = previousPid[p];
+             thread_ids[p] = NULL;
++            notify_thread_completion();
+             return;
+         }
+     }
+@@ -567,6 +579,7 @@
+         chdir_nolock(previousDirectory[pid]);
+         current_pid = previousPid[pid];
+         thread_ids[pid] = 0;
++        notify_thread_completion();
+         // fprintf(stderr, "Unlocking for pid %d in ios_releaseThreadId\n", pid);
+     } else {
+         // fprintf(stderr, "ios_releaseThreadId: pid %d was already terminated.\n", pid);
+@@ -599,11 +612,14 @@
+         return;
+     }
+     // New system: thread Id is store with pid:
+-    threadToWaitFor = ios_getThreadId(pid);
+-    while (threadToWaitFor != 0) {
+-        // -1: not started, >0 started, not finished, 0: finished
+-        threadToWaitFor = ios_getThreadId(pid);
+-    }
++    if (pid < 0 || pid >= IOS_MAX_THREADS) return;
++    // ios_system detaches command threads, so pthread_join cannot wait for them.
++    // Include the allocated-but-not-started (-1) state and recheck under the
++    // notification mutex to avoid losing an exit between the check and wait.
++    pthread_mutex_lock(&thread_completion_mutex);
++    while (atomic_load(&thread_ids[pid]) != 0)
++        pthread_cond_wait(&thread_completed, &thread_completion_mutex);
++    pthread_mutex_unlock(&thread_completion_mutex);
+     // fprintf(stderr, "Returning from ios_waitpid for %d \n", pid);
+     return;
+ }
