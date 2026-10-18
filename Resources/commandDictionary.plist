@@ -8,6 +8,7 @@
 		<string>fd_ios_main</string>
 		<string></string>
 		<string>file</string>
+	</array>
 	<key>fzf</key>
 	<array>
 		<string>fzf.framework/fzf</string>

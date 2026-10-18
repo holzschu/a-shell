@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FD0000000000000000000001 /* fd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000000000000000000002 /* fd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		F2F000000000000000000001 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F2F000000000000000000002 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2203367A28C4B8070027664C /* pico.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2232245E289695A9001BAE04 /* pico.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22068CC62F51C11A004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
 		22068CC72F51CE47004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
@@ -220,6 +218,7 @@
 		227722EB239D1FA00020037E /* task in Resources */ = {isa = PBXBuildFile; fileRef = 227722EA239D1F9F0020037E /* task */; };
 		22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F6625700F7E0068004E /* luatex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227A13642F308E9C006FD5C1 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 227A13632F308E9C006FD5C1 /* SwiftTerm */; };
+		227A540830850D0E007EA879 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227A540730850D06007EA879 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227B24842BE01ED5003A8031 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
 		227B24852BE01ED5003A8031 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
 		227B24862BE033DE003A8031 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
@@ -242,7 +241,6 @@
 		22984EF222C93DBC00069497 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EF122C93DBC00069497 /* ContentView.swift */; };
 		22984EF722C93DBF00069497 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF622C93DBF00069497 /* Preview Assets.xcassets */; };
 		22984EFA22C93DBF00069497 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF822C93DBF00069497 /* LaunchScreen.storyboard */; };
-		229CD5DD3084F9C9006C6D85 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 229CD5DC3084F9C3006C6D85 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
 		229D2478257931E4004A78AC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		229D2479257931E4004A78AC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
@@ -1370,8 +1368,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				FD0000000000000000000001 /* fd.xcframework in Embed Frameworks */,
-				F2F000000000000000000001 /* fzf.xcframework in Embed Frameworks */,
+				227A540830850D0E007EA879 /* fzf.xcframework in Embed Frameworks */,
 				228E13FC25C95F4E0065D825 /* ios_system.xcframework in Embed Frameworks */,
 				22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */,
 				2249368226E0F0750053F014 /* kpsewhich.xcframework in Embed Frameworks */,
@@ -1898,8 +1895,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		FD0000000000000000000002 /* fd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = fd/fd.xcframework; sourceTree = SOURCE_ROOT; };
-		F2F000000000000000000002 /* fzf.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = fzf/fzf.xcframework; sourceTree = SOURCE_ROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
@@ -2011,6 +2006,7 @@
 		227A434329FD202200548D77 /* texlive_2023_texmf_dist_fonts_type1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist_fonts_type1; path = ODR/texlive_2023_texmf_dist_fonts_type1; sourceTree = "<group>"; };
 		227A434429FD202300548D77 /* texlive_2023_texmf_dist */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist; path = ODR/texlive_2023_texmf_dist; sourceTree = "<group>"; };
 		227A434529FD202300548D77 /* texlive_2023_texmf_dist_fonts_otf_ttf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist_fonts_otf_ttf; path = ODR/texlive_2023_texmf_dist_fonts_otf_ttf; sourceTree = "<group>"; };
+		227A540730850D06007EA879 /* fzf.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = fzf.xcframework; path = fzf/fzf.xcframework; sourceTree = "<group>"; };
 		227B24822BE01ED2003A8031 /* localCertificate.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = localCertificate.pem; sourceTree = "<group>"; };
 		227B24832BE01ED3003A8031 /* localCertificateKey.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = localCertificateKey.pem; sourceTree = "<group>"; };
 		227B248A2BE12FEE003A8031 /* wasm_withWorker.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_withWorker.js; sourceTree = "<group>"; };
@@ -2031,7 +2027,6 @@
 		22984EF922C93DBF00069497 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		22984EFB22C93DBF00069497 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		22984F0122C9F78800069497 /* hterm_all.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = hterm_all.js; sourceTree = "<group>"; };
-		229CD5DC3084F9C3006C6D85 /* fzf.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = fzf.xcframework; path = fzf/fzf.xcframework; sourceTree = "<group>"; };
 		229D25A6257931E4004A78AC /* a-Shell-mini.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "a-Shell-mini.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		229D25BF25793697004A78AC /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources_mini/usr; sourceTree = "<group>"; };
 		229D25C025793699004A78AC /* commandDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = commandDictionary.plist; path = Resources_mini/commandDictionary.plist; sourceTree = "<group>"; };
@@ -3000,8 +2995,7 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				FD0000000000000000000002 /* fd.xcframework */,
-				F2F000000000000000000002 /* fzf.xcframework */,
+				227A540730850D06007EA879 /* fzf.xcframework */,
 				22D13FDE2E61E3FC00E76E2E /* Frameworks regular */,
 				22D132A12E61E01100E76E2E /* Frameworks mini */,
 				22E2F7E62CD67C5C0079534C /* iwasm.framework */,
