@@ -147,3 +147,6 @@ touch Resources/bin/luatex
 touch Resources/bin/texlua
 touch Resources/bin/texluac
 
+touch Resources/bin/node
+touch Resources/bin/npm
+touch Resources/bin/npx
