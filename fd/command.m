@@ -3,11 +3,26 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include "ios_system.h"
 
 extern int fd_embedded_run(int argc, const char *const *argv, int output, int errors);
 static pthread_mutex_t command_lock = PTHREAD_MUTEX_INITIALIZER;
+
+int fd_stream_is_terminal(int fd) {
+    return ios_isatty(fd);
+}
+
+const char *fd_command_getenv(const char *name) {
+    char **environment = environmentVariables(ios_currentPid());
+    size_t length = strlen(name);
+    for (size_t i = 0; environment && environment[i]; i++) {
+        const char *entry = environment[i];
+        if (!strncmp(entry, name, length) && entry[length] == '=') return entry + length + 1;
+    }
+    return NULL;
+}
 
 struct command_cleanup {
     int status;
