@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A22400000000000000000001 /* Ruff.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22400000000000000000002 /* Ruff.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		619225000000000000000001 /* gitoxide.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 619225000000000000000002 /* gitoxide.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		FD0000000000000000000001 /* fd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000000000000000000002 /* fd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		F2F000000000000000000001 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F2F000000000000000000002 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		AA7100000000000000000001 /* navi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AA7100000000000000000002 /* navi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2203367A28C4B8070027664C /* pico.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2232245E289695A9001BAE04 /* pico.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22068CC62F51C11A004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
 		22068CC72F51CE47004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
@@ -17,6 +22,7 @@
 		22068CCC2F5C9AAF004307F7 /* wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 22EA905A266696A700CC9B88 /* wasm.js */; };
 		2208ACBF22CCE57E003985D6 /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
 		2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACC422D2026E003985D6 /* UIDevice+Name.swift */; };
+		2208CD763085292C00AB790C /* navi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2208CD753085292500AB790C /* navi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		220C524D26D637540062F673 /* unrar.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220C524C26D637500062F673 /* unrar.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		220C524E26D6375A0062F673 /* unrar.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220C524C26D637500062F673 /* unrar.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		220F18882C7C81ED007090F8 /* blink.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220F18872C7C81D7007090F8 /* blink.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -218,6 +224,8 @@
 		227722EB239D1FA00020037E /* task in Resources */ = {isa = PBXBuildFile; fileRef = 227722EA239D1F9F0020037E /* task */; };
 		22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F6625700F7E0068004E /* luatex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227A13642F308E9C006FD5C1 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 227A13632F308E9C006FD5C1 /* SwiftTerm */; };
+		227A540830850D0E007EA879 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227A540730850D06007EA879 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		227A540A308519F1007EA879 /* fd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227A5409308519E1007EA879 /* fd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227B24842BE01ED5003A8031 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
 		227B24852BE01ED5003A8031 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
 		227B24862BE033DE003A8031 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
@@ -966,6 +974,7 @@
 		22F87DB72EB8B3C6003251CC /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
 		22FFB44229E87D950054F01F /* require_jscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44129E87D920054F01F /* require_jscore.js */; };
 		22FFB44429E88AE80054F01F /* url-polyfill.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44329E88AE60054F01F /* url-polyfill.js */; };
+		619225000000000000000001 /* gitoxide/gitoxide.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 619225000000000000000002 /* gitoxide/gitoxide.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6BD953662BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
 		6BD953672BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
 		6BD953682BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
@@ -992,6 +1001,7 @@
 		B85B646A76EB1C3038FBC891 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		241174C3FD9A4286E38FE7C0 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		87BFA35D4A842B3F7BD8E197 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1404,7 +1414,13 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				227A540A308519F1007EA879 /* fd.xcframework in Embed Frameworks */,
+				227A540830850D0E007EA879 /* fzf.xcframework in Embed Frameworks */,
+				2208CD763085292C00AB790C /* navi.xcframework in Embed Frameworks */,
+				619225000000000000000001 /* gitoxide/gitoxide.xcframework in Embed Frameworks */,
+				A22400000000000000000001 /* Ruff.xcframework in Embed Frameworks */,
 				228E13FC25C95F4E0065D825 /* ios_system.xcframework in Embed Frameworks */,
+				AA7100000000000000000001 /* (null) in Embed Frameworks */,
 				22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */,
 				2249368226E0F0750053F014 /* kpsewhich.xcframework in Embed Frameworks */,
 				22B0C0192F9E05810001BEBF /* curl-impersonate.framework in Embed Frameworks */,
@@ -1963,10 +1979,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A22400000000000000000002 /* Ruff.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = ruff/Ruff.xcframework; sourceTree = SOURCE_ROOT; };
+		619225000000000000000002 /* gitoxide.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = gitoxide/gitoxide.xcframework; sourceTree = SOURCE_ROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC822D24703003985D6 /* WkWebViewExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WkWebViewExtension.swift; sourceTree = SOURCE_ROOT; };
+		2208CD753085292500AB790C /* navi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = navi.xcframework; path = navi/navi.xcframework; sourceTree = "<group>"; };
 		220C524C26D637500062F673 /* unrar.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = unrar.xcframework; path = xcfs/.build/artifacts/xcfs/unrar/unrar.xcframework; sourceTree = "<group>"; };
 		220F18872C7C81D7007090F8 /* blink.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = blink.xcframework; path = xcfs/.build/artifacts/xcfs/blink.xcframework; sourceTree = "<group>"; };
 		220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -2074,6 +2093,8 @@
 		227A434329FD202200548D77 /* texlive_2023_texmf_dist_fonts_type1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist_fonts_type1; path = ODR/texlive_2023_texmf_dist_fonts_type1; sourceTree = "<group>"; };
 		227A434429FD202300548D77 /* texlive_2023_texmf_dist */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist; path = ODR/texlive_2023_texmf_dist; sourceTree = "<group>"; };
 		227A434529FD202300548D77 /* texlive_2023_texmf_dist_fonts_otf_ttf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist_fonts_otf_ttf; path = ODR/texlive_2023_texmf_dist_fonts_otf_ttf; sourceTree = "<group>"; };
+		227A540730850D06007EA879 /* fzf.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = fzf.xcframework; path = fzf/fzf.xcframework; sourceTree = "<group>"; };
+		227A5409308519E1007EA879 /* fd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = fd.xcframework; path = fd/fd.xcframework; sourceTree = "<group>"; };
 		227B24822BE01ED2003A8031 /* localCertificate.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = localCertificate.pem; sourceTree = "<group>"; };
 		227B24832BE01ED3003A8031 /* localCertificateKey.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = localCertificateKey.pem; sourceTree = "<group>"; };
 		227B248A2BE12FEE003A8031 /* wasm_withWorker.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_withWorker.js; sourceTree = "<group>"; };
@@ -2802,6 +2823,7 @@
 		22F75D40265FA3500056AFD2 /* xxd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xxd.xcframework; path = xcfs/.build/artifacts/xcfs/xxd/xxd.xcframework; sourceTree = SOURCE_ROOT; };
 		22FFB44129E87D920054F01F /* require_jscore.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = require_jscore.js; sourceTree = "<group>"; };
 		22FFB44329E88AE60054F01F /* url-polyfill.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "url-polyfill.js"; sourceTree = "<group>"; };
+		619225000000000000000002 /* gitoxide/gitoxide.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = gitoxide/gitoxide.xcframework; sourceTree = SOURCE_ROOT; };
 		6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PutFileIntentHandler.swift; sourceTree = "<group>"; };
 		6BD953692BFFCC4000C2508F /* GetFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetFileIntentHandler.swift; sourceTree = "<group>"; };
 		6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecuteCommandIntentHandler.swift; sourceTree = "<group>"; };
@@ -3088,6 +3110,11 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				227A5409308519E1007EA879 /* fd.xcframework */,
+				227A540730850D06007EA879 /* fzf.xcframework */,
+				2208CD753085292500AB790C /* navi.xcframework */,
+				619225000000000000000002 /* gitoxide/gitoxide.xcframework */,
+				A22400000000000000000002 /* Ruff.xcframework */,
 				22D13FDE2E61E3FC00E76E2E /* Frameworks regular */,
 				22D132A12E61E01100E76E2E /* Frameworks mini */,
 				22E2F7E62CD67C5C0079534C /* iwasm.framework */,
@@ -4934,7 +4961,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 585;
+				CURRENT_PROJECT_VERSION = 593;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4958,7 +4985,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4983,7 +5010,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 585;
+				CURRENT_PROJECT_VERSION = 593;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -5007,7 +5034,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -5031,7 +5058,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 585;
+				CURRENT_PROJECT_VERSION = 592;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -5054,7 +5081,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
@@ -5084,7 +5111,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 585;
+				CURRENT_PROJECT_VERSION = 592;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -5107,7 +5134,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",

@@ -1,0 +1,123 @@
+--- a/src/node.h
++++ b/src/node.h
+@@ -227,6 +227,7 @@
+ namespace node {
+
+ class IsolateData;
++class PerIsolateOptions;
+ class Environment;
+ class MultiIsolatePlatform;
+ class InitializationResultImpl;
+@@ -904,6 +905,14 @@
+       const EmbedderSnapshotData* snapshot_data,
+       EnvironmentArgs&&... env_args);
+
++  // Parse command-local options without changing process options or V8 flags.
++  static std::unique_ptr<CommonEnvironmentSetup> CreateForCommand(
++      MultiIsolatePlatform* platform,
++      std::vector<std::string>* errors,
++      std::vector<std::string> args,
++      EnvironmentFlags::Flags flags,
++      int* exit_code);
++
+   // Create an embedding setup which will be used for creating a snapshot
+   // using CreateSnapshot().
+   //
+@@ -966,6 +975,14 @@
+       uint32_t flags,
+       std::function<Environment*(const CommonEnvironmentSetup*)>,
+       const SnapshotConfig* config = nullptr);
++  CommonEnvironmentSetup(
++      MultiIsolatePlatform*,
++      std::vector<std::string>*,
++      const EmbedderSnapshotData*,
++      uint32_t flags,
++      std::function<Environment*(const CommonEnvironmentSetup*)>,
++      const SnapshotConfig*,
++      std::shared_ptr<PerIsolateOptions>);
+ };
+
+ // Implementation for CommonEnvironmentSetup::Create
+--- a/src/api/embed_helpers.cc
++++ b/src/api/embed_helpers.cc
+@@ -107,6 +107,17 @@
+     uint32_t flags,
+     std::function<Environment*(const CommonEnvironmentSetup*)> make_env,
+     const SnapshotConfig* snapshot_config)
++    : CommonEnvironmentSetup(platform, errors, snapshot_data, flags,
++                             std::move(make_env), snapshot_config, nullptr) {}
++
++CommonEnvironmentSetup::CommonEnvironmentSetup(
++    MultiIsolatePlatform* platform,
++    std::vector<std::string>* errors,
++    const EmbedderSnapshotData* snapshot_data,
++    uint32_t flags,
++    std::function<Environment*(const CommonEnvironmentSetup*)> make_env,
++    const SnapshotConfig* snapshot_config,
++    std::shared_ptr<PerIsolateOptions> command_options)
+     : impl_(new Impl()) {
+   CHECK_NOT_NULL(platform);
+   CHECK_NOT_NULL(errors);
+@@ -154,8 +165,10 @@
+       }
+     });
+
+-    impl_->isolate_data.reset(CreateIsolateData(
+-        isolate, loop, platform, impl_->allocator.get(), snapshot_data));
++    impl_->isolate_data.reset(IsolateData::CreateIsolateData(
++        isolate, loop, platform, impl_->allocator.get(),
++        SnapshotData::FromEmbedderWrapper(snapshot_data),
++        std::move(command_options)));
+     impl_->isolate_data->set_snapshot_config(snapshot_config);
+
+     if (snapshot_data) {
+@@ -184,6 +196,38 @@
+     std::function<Environment*(const CommonEnvironmentSetup*)> make_env)
+     : CommonEnvironmentSetup(platform, errors, nullptr, false, make_env) {}
+
++std::unique_ptr<CommonEnvironmentSetup> CommonEnvironmentSetup::CreateForCommand(
++    MultiIsolatePlatform* platform,
++    std::vector<std::string>* errors,
++    std::vector<std::string> args,
++    EnvironmentFlags::Flags flags,
++    int* exit_code) {
++  auto options = std::make_shared<PerIsolateOptions>();
++  std::vector<std::string> exec_args, v8_args;
++  // The parser is stock; neither per_process::cli_options nor V8 flags change.
++  // Serialize the parser only, not bootstrap or either command's event loop.
++  {
++    Mutex::ScopedLock lock(per_process::cli_options_mutex);
++    options_parser::Parse(&args, &exec_args, &v8_args, options.get(),
++                          kDisallowedInEnvvar, errors);
++  }
++  *exit_code = 9;
++  if (!errors->empty()) return nullptr;
++  if (v8_args.size() > 1) {
++    errors->emplace_back("V8 options are unavailable in embedded commands.");
++    return nullptr;
++  }
++  *exit_code = 1;
++  auto ret = std::unique_ptr<CommonEnvironmentSetup>(new CommonEnvironmentSetup(
++      platform, errors, nullptr, 0,
++      [&](const CommonEnvironmentSetup* setup) -> Environment* {
++        return CreateEnvironment(setup->isolate_data(), setup->context(),
++                                 args, exec_args, flags);
++      }, nullptr, std::move(options)));
++  if (!errors->empty()) ret.reset();
++  return ret;
++}
++
+ std::unique_ptr<CommonEnvironmentSetup>
+ CommonEnvironmentSetup::CreateForSnapshotting(
+     MultiIsolatePlatform* platform,
+--- a/src/env.cc
++++ b/src/env.cc
+@@ -603,6 +603,8 @@
+     const SnapshotData* snapshot_data,
+     std::shared_ptr<PerIsolateOptions> options) {
+   if (options == nullptr) {
++    // GetOptions temporarily selects another Environment under this mutex.
++    Mutex::ScopedLock lock(per_process::cli_options_mutex);
+     options = per_process::cli_options->per_isolate->Clone();
+   }
+   return new IsolateData(

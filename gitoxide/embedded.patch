@@ -1,0 +1,229 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -27,6 +27,9 @@
+ doc = false
+ test = false
+ doctest = false
++
++[lib]
++crate-type = ["rlib", "staticlib"]
+ 
+ [features]
+ default = ["max"]
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -23,6 +23,10 @@
+ #![allow(missing_docs)]
+ #![deny(unsafe_code)]
+ 
++#[cfg(target_os = "ios")]
++#[allow(unsafe_code)]
++pub mod embedded;
++
+ pub mod plumbing;
+ pub mod porcelain;
+ /// everything in common between the `gix` and `ein` binaries.
+--- a/src/plumbing/main.rs
++++ b/src/plumbing/main.rs
+@@ -1,11 +1,16 @@
+ use std::{
+-    io::{BufReader, IsTerminal, stdin},
++    io::{BufReader, IsTerminal},
+     path::PathBuf,
+     sync::{
+         Arc,
+         atomic::{AtomicBool, Ordering},
+     },
+ };
++
++#[cfg(not(target_os = "ios"))]
++use std::io::{stdin, Stdin as Input};
++#[cfg(target_os = "ios")]
++use {crate::embedded::stdin, std::fs::File as Input};
+ 
+ use clap::{CommandFactory, Parser};
+ use gitoxide_core as core;
+@@ -28,7 +33,10 @@
+ };
+ 
+ pub fn main() -> Result<()> {
++    #[cfg(not(target_os = "ios"))]
+     let args: Args = Args::parse_from(gix::env::args_os());
++    #[cfg(target_os = "ios")]
++    let args: Args = crate::embedded::parse()?;
+     let thread_limit = args.threads;
+     let verbose = args.verbose;
+     let format = args.format;
+@@ -126,6 +134,7 @@
+     let auto_verbose = !args.no_verbose;
+ 
+     let should_interrupt = Arc::new(AtomicBool::new(false));
++    #[cfg(not(target_os = "ios"))]
+     #[expect(unsafe_code)]
+     unsafe {
+         // SAFETY: The closure doesn't use mutexes or memory allocation, so it should be safe to call from a signal handler.
+@@ -575,9 +584,12 @@
+             )
+         }
+         Subcommands::ConfigTree => {
+-            prepare_and_run("config-tree", false, None, move |_progress, _out, _err| show_progress())
++            prepare_and_run("config-tree", false, None, move |_progress, out, _err| show_progress(out))
+         }
+         Subcommands::Credential(cmd) => prepare_and_run("credential", false, None, move |_progress, _out, _err| {
++            #[cfg(target_os = "ios")]
++            { let _ = cmd; bail!("Credential protocol commands and helpers are unsupported in embedded iOS gitoxide"); }
++            #[cfg(not(target_os = "ios"))]
+             core::repository::credential(
+                 repository(Mode::StrictWithGitInstallConfig).ok(),
+                 match cmd {
+@@ -981,7 +993,7 @@
+                             let input = if let Some(path) = pack_path {
+                                 PathOrRead::Path(path)
+                             } else {
+-                                if std::io::stdin().is_terminal() {
++                                if stdin().is_terminal() {
+                                     bail!(
+                                         "Refusing to read from standard input as no path is given, but it's a terminal."
+                                     )
+@@ -1400,8 +1412,8 @@
+     Ok(())
+ }
+ 
+-fn stdin_or_bail() -> Result<std::io::BufReader<std::io::Stdin>> {
+-    if std::io::stdin().is_terminal() {
++fn stdin_or_bail() -> Result<std::io::BufReader<Input>> {
++    if stdin().is_terminal() {
+         bail!("Refusing to read from standard input while a terminal is connected")
+     }
+     Ok(BufReader::new(stdin()))
+--- a/src/plumbing/progress.rs
++++ b/src/plumbing/progress.rs
+@@ -1,7 +1,7 @@
+ use gix::{Result, error::ResultExt};
+ use std::{
+     fmt::{Display, Formatter},
+-    io::StdoutLock,
++    io::Write,
+ };
+ 
+ #[derive(Clone)]
+@@ -478,7 +478,7 @@
+ ];
+ 
+ /// A programmatic way to record and display progress.
+-pub fn show_progress() -> Result<()> {
++pub fn show_progress(mut stdout: &mut dyn Write) -> Result<()> {
+     let sorted = {
+         let mut v: Vec<_> = GIT_CONFIG.into();
+         v.extend(gix::config::Tree.sections().iter().flat_map(|section| {
+@@ -543,7 +543,6 @@
+         .map(|(width, _height)| width.0)
+         .map(std::convert::Into::into);
+ 
+-    let mut stdout = std::io::stdout().lock();
+     for Record { config, usage } in &sorted {
+         use std::io::Write;
+         write!(stdout, "{icon} {config: <50}: ", icon = usage.icon()).or_error()?;
+@@ -555,7 +554,7 @@
+         }
+     }
+ 
+-    println!(
++    writeln!(stdout,
+         "\nTotal records: {nr_sorted} ({perfect_icon} = {perfect}, {deviation_icon} = {deviation}, {planned_icon} = {planned}, {ondemand_icon} = {notplanned}, {not_applicable_icon} = {not_applicable})",
+         nr_sorted = sorted.len(),
+         perfect_icon = InUse("").icon(),
+@@ -563,11 +562,11 @@
+         planned_icon = Planned("").icon(),
+         ondemand_icon = NotPlanned("").icon(),
+         not_applicable_icon = NotApplicable("").icon(),
+-    );
++    ).or_error()?;
+     Ok(())
+ }
+ 
+-fn write_with_linewrap(stdout: &mut StdoutLock<'_>, text: &str, width: usize) -> std::io::Result<()> {
++fn write_with_linewrap(stdout: &mut dyn Write, text: &str, width: usize) -> std::io::Result<()> {
+     use std::io::Write;
+     let icon_and_config_width = 55;
+     let width_after_config = width.saturating_sub(icon_and_config_width);
+--- a/src/porcelain/main.rs
++++ b/src/porcelain/main.rs
+@@ -16,8 +16,12 @@
+ };
+ 
+ pub fn main() -> Result<()> {
++    #[cfg(not(target_os = "ios"))]
+     let args: Args = Args::parse_from(gix::env::args_os());
++    #[cfg(target_os = "ios")]
++    let args: Args = crate::embedded::parse()?;
+     let should_interrupt = Arc::new(AtomicBool::new(false));
++    #[cfg(not(target_os = "ios"))]
+     #[expect(unsafe_code)]
+     unsafe {
+         // SAFETY: The closure doesn't use mutexes or memory allocation, so it should be safe to call from a signal handler.
+@@ -168,7 +172,13 @@
+             if let Some(out_dir) = out_dir {
+                 clap_complete::generate_to(shell, &mut app, bin_name, &out_dir).or_error()?;
+             } else {
++                #[cfg(not(target_os = "ios"))]
+                 clap_complete::generate(shell, &mut app, bin_name, &mut std::io::stdout());
++                #[cfg(target_os = "ios")]
++                crate::embedded::run(|out, _err| {
++                    clap_complete::generate(shell, &mut app, bin_name, out);
++                    Ok(())
++                })?;
+             }
+             Ok(())
+         }
+--- a/src/shared.rs
++++ b/src/shared.rs
+@@ -49,6 +49,16 @@
+ 
+     use crate::shared::ProgressRange;
+ 
++    #[cfg(target_os = "ios")]
++    pub fn prepare_and_run<T>(
++        _name: &str, _verbose: bool, _range: impl Into<Option<ProgressRange>>,
++        run: impl FnOnce(progress::DoOrDiscard<prodash::tree::Item>, &mut dyn std::io::Write, &mut dyn std::io::Write) -> Result<T>,
++    ) -> Result<T> {
++        // ios_system owns streams per command; process stdio and signal renderers are shared.
++        crate::embedded::run(|out, err| run(progress::DoOrDiscard::from(None), out, err))
++    }
++
++    #[cfg(not(target_os = "ios"))]
+     pub fn prepare_and_run<T>(
+         name: &str,
+         verbose: bool,
+--- a/gix-command/src/prepare.rs
++++ b/gix-command/src/prepare.rs
+@@ -186,6 +186,9 @@
+     type Error = gix_error::Error;
+ 
+     fn try_from(mut prep: Prepare) -> Result<Self> {
++        if cfg!(target_os = "ios") {
++            return Err(gix_error::message("External programs (SSH, hooks, filters, signing and credential helpers) are unsupported in embedded iOS gitoxide").into());
++        }
+         let mut inline_env = Vec::new();
+         let mut cmd = if prep.use_shell {
+             let split_args = prep
+--- a/gix-path/src/env/git/mod.rs
++++ b/gix-path/src/env/git/mod.rs
+@@ -133,6 +133,7 @@
+ const NULL_DEVICE: &str = "/dev/null";
+ 
+ fn config_paths_from_executable() -> ConfigPaths {
++    if cfg!(target_os = "ios") { return ConfigPaths::default(); }
+     let executable = PathBuf::from(EXE_NAME);
+     match config_paths_from_executable_at(executable) {
+         Ok(paths) => paths,
+--- a/gix-path/src/env/mod.rs
++++ b/gix-path/src/env/mod.rs
+@@ -170,6 +170,7 @@
+ }
+ 
+ static GIT_CORE_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
++    if cfg!(target_os = "ios") { return None; }
+     let mut cmd = std::process::Command::new(exe_invocation());
+ 
+     #[cfg(windows)]
