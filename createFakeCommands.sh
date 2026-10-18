@@ -20,6 +20,8 @@ touch Resources/bin/env
 touch Resources/bin/fd
 touch Resources/bin/fgrep
 touch Resources/bin/find
+touch Resources/bin/gix
+touch Resources/bin/ein
 touch Resources/bin/fzf
 touch Resources/bin/navi
 touch Resources/bin/grep
