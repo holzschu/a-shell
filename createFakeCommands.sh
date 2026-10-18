@@ -55,6 +55,7 @@ touch Resources/bin/readlink
 touch Resources/bin/rlogin
 touch Resources/bin/rm
 touch Resources/bin/rmdir
+touch Resources/bin/ruff
 touch Resources/bin/say
 touch Resources/bin/scp
 touch Resources/bin/sed
