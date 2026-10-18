@@ -10,7 +10,10 @@ export CARGO_TARGET_DIR=$cache/target IPHONEOS_DEPLOYMENT_TARGET=14.0
 
 prepare() {
   mkdir -p "$cache"
-  rustup run 1.96.1 rustc --version
+  cargo +1.96.1 --version >/dev/null || {
+    echo 'Rust 1.96.1 is missing; run: rustup toolchain install 1.96.1 --profile minimal' >&2
+    return 1
+  }
   if [[ ! -f $cache/source.tar.gz ]]; then
     curl -fLsS --connect-timeout 15 --max-time 300 \
       https://codeload.github.com/GitoxideLabs/gitoxide/tar.gz/refs/tags/v0.60.0 -o "$cache/source.tar.gz.part"
@@ -50,10 +53,7 @@ framework() {
   esac
   [[ -f $frameworks/ios_system.framework/ios_system ]]
   prepare
-  rustup target list --toolchain 1.96.1 --installed | grep -Fx "$target" >/dev/null || {
-    echo "Install the Rust 1.96.1 target before building: $target" >&2
-    return 1
-  }
+  rustup target add --toolchain 1.96.1 "$target"
   cargo +1.96.1 build --release --manifest-path "$source/Cargo.toml" --locked --target "$target" --lib --no-default-features \
     --features sha1,pretty-cli,prodash-render-line,gitoxide-core-blocking-client,http-client-reqwest
   sdk=$(xcrun --sdk "$sdk_name" --show-sdk-path)

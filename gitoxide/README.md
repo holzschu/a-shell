@@ -4,7 +4,7 @@ This port adds `gix` and `ein` from gitoxide v0.60.0, revision `0115e902fd0334b8
 
 ## Build
 
-Install Rust 1.96.1 and its `aarch64-apple-ios` and `aarch64-apple-ios-sim` targets through rustup, and provide matching ios_system frameworks for each platform. Run from the repository root:
+Install Rust 1.96.1 with rustup (`rustup toolchain install 1.96.1 --profile minimal`); the build adds the `aarch64-apple-ios` or `aarch64-apple-ios-sim` target to that toolchain itself. Provide matching ios_system frameworks for each platform. Run from the repository root:
 
 ```sh
 bash gitoxide/build.sh xcframework DEVICE_FRAMEWORKS SIMULATOR_FRAMEWORKS
