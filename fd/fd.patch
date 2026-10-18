@@ -1,0 +1,140 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -28,0 +29,5 @@
++[lib]
++name = "fd_ios_embedded"
++path = "src/main.rs"
++crate-type = ["staticlib"]
++
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -62,9 +62,30 @@
+-fn main() {
+-    let result = run();
+-    match result {
+-        Ok(exit_code) => {
+-            exit_code.exit();
+-        }
+-        Err(err) => {
+-            crate::error::print_error(format!("{err:#}"));
+-            ExitCode::GeneralError.exit();
++// The host owns argv, descriptors and command lifetime; never exit its process.
++#[unsafe(no_mangle)]
++pub unsafe extern "C" fn fd_embedded_run(argc: i32, argv: *const *const std::ffi::c_char, output: i32, errors: i32) -> i32 {
++    use std::os::fd::BorrowedFd;
++    let Ok(stdout) = (unsafe { BorrowedFd::borrow_raw(output) }).try_clone_to_owned() else { return 1; };
++    let Ok(stderr) = (unsafe { BorrowedFd::borrow_raw(errors) }).try_clone_to_owned() else { return 1; };
++    let stdout = std::fs::File::from(stdout);
++    let stderr = std::fs::File::from(stderr);
++    use std::os::unix::ffi::OsStrExt;
++    let args = (0..argc).map(|i| {
++        let bytes = unsafe { std::ffi::CStr::from_ptr(*argv.add(i as usize)) }.to_bytes();
++        std::ffi::OsStr::from_bytes(bytes).to_os_string()
++    }).collect::<Vec<_>>();
++    match std::panic::catch_unwind(|| {
++        let opts = match Opts::try_parse_from(args) {
++            Ok(opts) => opts,
++            Err(error) => {
++                let status = error.exit_code();
++                use std::io::Write;
++                let mut stream = if error.use_stderr() { &stderr } else { &stdout };
++                let _ = write!(stream, "{error}");
++                return status;
++            }
++        };
++        match run(opts, &stdout, &stderr) {
++            Ok(status) => status.into(),
++            Err(error) => {
++                crate::error::print_error(&stderr, format!("{error:#}"));
++                1
++            }
+@@ -71,0 +93,3 @@
++    }) {
++        Ok(status) => status,
++        Err(_) => 1,
+@@ -75,2 +99,4 @@
+-fn run() -> Result<ExitCode> {
+-    let opts = Opts::parse();
++fn run(opts: Opts, stdout: &std::fs::File, stderr: &std::fs::File) -> Result<ExitCode> {
++    if opts.exec.command.is_some() || opts.list_details {
++        bail!("Command execution (-x/-X/--list-details) is unsupported in embedded iOS fd: iOS cannot spawn POSIX child processes; no ios_system execution adapter is installed.");
++    }
+@@ -84 +110 @@
+-    let search_paths = opts.search_paths()?;
++    let search_paths = opts.search_paths(stderr)?;
+@@ -102 +128 @@
+-    let config = construct_config(opts, &pattern_regexps)?;
++    let config = construct_config(opts, &pattern_regexps, stdout, stderr)?;
+@@ -248 +274 @@
+-fn construct_config(mut opts: Opts, pattern_regexps: &[String]) -> Result<Config> {
++fn construct_config(mut opts: Opts, pattern_regexps: &[String], stdout: &std::fs::File, stderr: &std::fs::File) -> Result<Config> {
+@@ -277 +303 @@
+-    let interactive_terminal = std::io::stdout().is_terminal();
++    let interactive_terminal = stdout.is_terminal();
+@@ -310,0 +337,2 @@
++        stdout: stdout.try_clone()?,
++        stderr: stderr.try_clone()?,
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -14,0 +15,3 @@
++    /// Owned copies of this command's pane streams, shared with walk workers.
++    pub stdout: std::fs::File,
++    pub stderr: std::fs::File,
+--- a/src/error.rs
++++ b/src/error.rs
+@@ -1 +1,2 @@
+-use std::io::IsTerminal;
++use std::io::Write;
++use std::os::fd::{AsFd, AsRawFd};
+@@ -5 +6 @@
+-pub fn print_error(msg: impl Into<String>) {
++pub fn print_error(mut stderr: impl Write + AsFd, msg: impl Into<String>) {
+@@ -7,2 +8,2 @@
+-    let safe = maybe_sanitize(&msg, std::io::stderr().is_terminal());
+-    eprintln!("[fd error]: {safe}");
++    let safe = maybe_sanitize(&msg, unsafe { libc::isatty(stderr.as_fd().as_raw_fd()) == 1 });
++    let _ = writeln!(stderr, "[fd error]: {safe}");
+--- a/src/walk.rs
++++ b/src/walk.rs
+@@ -229 +229 @@
+-                                print_error(err.to_string());
++                                print_error(&self.config.stderr, err.to_string());
+@@ -256 +256 @@
+-            print_error(format!("Could not write to output: {e}"));
++            print_error(&self.config.stderr, format!("Could not write to output: {e}"));
+@@ -380 +380 @@
+-                        print_error(format!("Malformed pattern in global ignore file. {err}."));
++                        print_error(&config.stderr, format!("Malformed pattern in global ignore file. {err}."));
+@@ -392 +392 @@
+-                    print_error(format!("Malformed pattern in custom ignore file. {err}."));
++                    print_error(&config.stderr, format!("Malformed pattern in custom ignore file. {err}."));
+@@ -435 +435 @@
+-            let stdout = io::stdout().lock();
++            let stdout = &config.stdout;
+@@ -620,0 +621,2 @@
++        // SIGINT handlers are process-global; the app owns command cancellation.
++        #[cfg(not(target_os = "ios"))]
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -696 +696 @@
+-    pub fn search_paths(&self) -> anyhow::Result<Vec<PathBuf>> {
++    pub fn search_paths(&self, stderr: &std::fs::File) -> anyhow::Result<Vec<PathBuf>> {
+@@ -713 +713 @@
+-                    print_error(format!(
++                    print_error(stderr, format!(
+--- a/src/exec/command.rs
++++ b/src/exec/command.rs
+@@ -104 +104 @@
+-            print_error(format!(
++            print_error(std::io::stderr(), format!(
+@@ -111 +111 @@
+-            print_error(format!("Problem while executing command: {err}"));
++            print_error(std::io::stderr(), format!("Problem while executing command: {err}"));
+--- a/src/exec/job.rs
++++ b/src/exec/job.rs
+@@ -27 +27 @@
+-                    print_error(err.to_string());
++                    print_error(std::io::stderr(), err.to_string());
+@@ -57 +57 @@
+-                    print_error(err.to_string());
++                    print_error(std::io::stderr(), err.to_string());
