@@ -81,6 +81,7 @@ fastlane/test_output
 Configuration.xcconfig
 
 helix/helix.xcframework/
+/ruff/Ruff.xcframework/
 gitoxide/gitoxide.xcframework/
 xcfs/node.xcframework/
 /fzf/fzf.xcframework/
