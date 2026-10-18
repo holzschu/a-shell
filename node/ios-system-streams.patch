@@ -190,7 +190,15 @@
      return currentSession->global_errno;
 --- a/libc_replacement.c
 +++ b/libc_replacement.c
-@@ -181,7 +181,15 @@
+@@ -13,6 +13,7 @@
+ #include <string.h>
+ #include <sys/wait.h>
+ #include <sys/param.h>
++#include <stdatomic.h>
+ #include <dlfcn.h>  // for dlopen()/dlsym()/dlclose()
+ 
+ #include "ios_error.h"
+@@ -181,7 +182,15 @@
  // Fake process IDs to go with fake forking:
  // You will still need to edit your code to make sure you go through both branches.
  #define IOS_MAX_THREADS 128
@@ -207,7 +215,7 @@
  static int numVariablesSet[IOS_MAX_THREADS];
  static char** environment[IOS_MAX_THREADS];
  static char** copyEnvironment[IOS_MAX_THREADS];
-@@ -274,6 +282,7 @@
+@@ -274,6 +283,7 @@
      // fprintf(stderr, "Unlocking pid %d, storing thread %x current value: %x\n", current_pid, thread,  thread_ids[current_pid]);
      if (thread_ids[current_pid] == -1) {
          thread_ids[current_pid] = thread;
@@ -215,7 +223,7 @@
      }
      pthread_mutex_unlock(&pid_mtx);
  }
-@@ -538,6 +547,7 @@
+@@ -538,6 +548,7 @@
              // fprintf(stderr, "Reset current directory to %s because process %d terminates\n", previousDirectory[p], p);
              current_pid = previousPid[p];
              thread_ids[p] = NULL;
@@ -223,7 +231,7 @@
              chdir_nolock(previousDirectory[p]);
              return;
          }
-@@ -552,6 +562,7 @@
+@@ -552,6 +563,7 @@
              // fprintf(stderr, "Found Id %d\n", p);
              current_pid = previousPid[p];
              thread_ids[p] = NULL;
@@ -231,7 +239,7 @@
              return;
          }
      }
-@@ -567,6 +578,7 @@
+@@ -567,6 +579,7 @@
          chdir_nolock(previousDirectory[pid]);
          current_pid = previousPid[pid];
          thread_ids[pid] = 0;
@@ -239,7 +247,7 @@
          // fprintf(stderr, "Unlocking for pid %d in ios_releaseThreadId\n", pid);
      } else {
          // fprintf(stderr, "ios_releaseThreadId: pid %d was already terminated.\n", pid);
-@@ -599,11 +611,14 @@
+@@ -599,11 +612,14 @@
          return;
      }
      // New system: thread Id is store with pid:
