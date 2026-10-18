@@ -4,7 +4,7 @@ Embeds ripgrep 15.2.0, revision `e89fff89ac9af12e8d4ce9d5fd07beb408ca730f`, with
 
 ## Build
 
-Install Rust 1.96.1 and its `aarch64-apple-ios` and `aarch64-apple-ios-sim` targets through rustup. Provide matching device and arm64 Simulator ios_system frameworks, including Headers/ios_system.h, then run from the repository root:
+Install Rust 1.96.1 with rustup (`rustup toolchain install 1.96.1 --profile minimal`); the build adds the `aarch64-apple-ios` or `aarch64-apple-ios-sim` target to that toolchain itself. Provide matching device and arm64 Simulator ios_system frameworks, including Headers/ios_system.h, then run from the repository root:
 
 ```sh
 bash rg/build.sh xcframework DEVICE_FRAMEWORKS SIMULATOR_FRAMEWORKS

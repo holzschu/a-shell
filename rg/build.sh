@@ -50,6 +50,11 @@ framework() {
   [[ -f $frameworks/ios_system.framework/ios_system ]]
   xcrun vtool -show-build "$frameworks/ios_system.framework/ios_system" | grep -E "platform +$mach_platform$" >/dev/null
   prepare
+  cargo +1.96.1 --version >/dev/null || {
+    echo 'Rust 1.96.1 is missing; run: rustup toolchain install 1.96.1 --profile minimal' >&2
+    return 1
+  }
+  rustup target add --toolchain 1.96.1 "$target"
   (cd "$source" && CARGO_TARGET_DIR="$cache/target" \
     CARGO_PROFILE_RELEASE_DEBUG=0 IPHONEOS_DEPLOYMENT_TARGET=14.0 \
     cargo +1.96.1 build --locked --release --target "$target" --lib)
