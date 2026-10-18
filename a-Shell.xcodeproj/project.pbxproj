@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A22400000000000000000001 /* Ruff.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22400000000000000000002 /* Ruff.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		619225000000000000000001 /* gitoxide.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 619225000000000000000002 /* gitoxide.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FD0000000000000000000001 /* fd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000000000000000000002 /* fd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F2F000000000000000000001 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F2F000000000000000000002 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1373,6 +1374,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				A22400000000000000000001 /* Ruff.xcframework in Embed Frameworks */,
 				619225000000000000000001 /* gitoxide.xcframework in Embed Frameworks */,
 				228E13FC25C95F4E0065D825 /* ios_system.xcframework in Embed Frameworks */,
 				AA7100000000000000000001 /* navi.xcframework in Embed Frameworks */,
@@ -1902,6 +1904,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A22400000000000000000002 /* Ruff.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = ruff/Ruff.xcframework; sourceTree = SOURCE_ROOT; };
 		619225000000000000000002 /* gitoxide.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = gitoxide/gitoxide.xcframework; sourceTree = SOURCE_ROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
@@ -3005,6 +3008,7 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A22400000000000000000002 /* Ruff.xcframework */,
 				619225000000000000000002 /* gitoxide.xcframework */,
 				FD0000000000000000000002 /* fd.xcframework */,
 				F2F000000000000000000002 /* fzf.xcframework */,
