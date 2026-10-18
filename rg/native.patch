@@ -141,7 +141,7 @@
 +}
 --- /dev/null
 +++ b/crates/core/embedded.rs
-@@ -0,0 +1,177 @@
+@@ -0,0 +1,186 @@
 +//! Invocation-owned streams and state for the embedded command.
 +use std::{
 +    cell::RefCell,
@@ -156,6 +156,7 @@
 +
 +unsafe extern "C" {
 +    fn rg_dup_stream(fd: i32) -> i32;
++    fn ios_getenv(name: *const std::ffi::c_char) -> *const std::ffi::c_char;
 +}
 +
 +pub(crate) struct Context {
@@ -248,15 +249,23 @@
 +            t.is_file() || t.is_fifo() || t.is_socket()
 +        })
 +}
++// Must run on the command thread: ios_getenv reads that thread's session.
 +fn colors(choice: termcolor::ColorChoice) -> bool {
 +    match choice {
 +        termcolor::ColorChoice::Never => false,
 +        termcolor::ColorChoice::Always
 +        | termcolor::ColorChoice::AlwaysAnsi => true,
 +        termcolor::ColorChoice::Auto => {
++            // The command's own environment sees inline NO_COLOR=1 rg ...;
++            // the process environment does not.
++            let variable = |name: &std::ffi::CStr| unsafe {
++                let value = ios_getenv(name.as_ptr());
++                (!value.is_null()).then(|| std::ffi::CStr::from_ptr(value))
++            };
 +            stdout_is_terminal()
-+                && std::env::var_os("NO_COLOR").is_none()
-+                && std::env::var_os("TERM").is_some_and(|s| s != "dumb")
++                && variable(c"NO_COLOR").is_none()
++                && variable(c"TERM")
++                    .is_some_and(|value| value.to_bytes() != b"dumb")
 +        }
 +    }
 +}

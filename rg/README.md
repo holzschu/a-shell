@@ -16,6 +16,8 @@ The output is `rg/rg.xcframework`, ignored by Git. Build inputs and intermediate
 
 PCRE2 is disabled. External preprocessors and compressed-file helpers require subprocess facilities unavailable on iOS; do not rely on them. Working-directory and environment ownership remain host responsibilities. The patch isolates command streams, arguments, diagnostics and error state, including parallel search workers. It does not provide general process isolation or cancellation.
 
+Automatic color follows a-Shell's terminal: rg asks `ios_isatty` whether stdout is the terminal and reads only `NO_COLOR` and `TERM` with `ios_getenv`, so values set for a single command (`NO_COLOR=1 rg ...`) are honored. Redirected output stays free of escape sequences, and `--color=always` still forces them. Other variables rg reads (`RIPGREP_CONFIG_PATH`, `GIT_CONFIG_*`, `XDG_CONFIG_HOME`, `PWD`) still come from the process environment.
+
 An installed `Documents/bin/rg.wasm3` may take precedence over the bundled command; remove or rename that package to exercise this native entry. The WASM package remains independently available through `pkg install rg`.
 
 ## Validation
