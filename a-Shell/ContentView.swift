@@ -216,7 +216,7 @@ struct ContentView: View {
     @State private var frameHeight: CGFloat = 0
     @State private var frameWidth: CGFloat = 0
     @State private var dynamicIsland: CGFloat = 0
-    @State private var localShowWebView: Bool = true
+    @State private var localShowWebView: Bool = false
 
     let terminalview = Termview()
     let webview = Webview()
@@ -409,6 +409,12 @@ struct ContentView: View {
                 }
                 NSLog("results: frameHeight: \(geometry.size.height - frameHeight) actual: \(frameHeight)")
             }
+            .onReceive(NotificationCenter.default.publisher(for: .init("showWebView"), object: webview.webView)) { _ in
+                keyboardHeight = 0
+                frameHeight = isiPad ? 0 : geometry.size.height
+                frameWidth = geometry.size.width
+                localShowWebView = true
+            }
             .onReceive(NotificationCenter.default.publisher(for: .init("hideWebView"))) { _ in
                 localShowWebView = false
                 showWebView = false
@@ -428,7 +434,8 @@ struct ContentView: View {
                 $0.ignoresSafeArea(.container, edges: .bottom)
             }
         }
-        .if(!(showWebView && localShowWebView)) {
+        // Read local state first so SwiftUI observes visibility while the global flag is false.
+        .if(!(localShowWebView && showWebView)) {
             $0.ignoresSafeArea(.keyboard, edges: .bottom)
         }
     }
