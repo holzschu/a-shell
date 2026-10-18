@@ -9,7 +9,7 @@ bash fd/build.sh xcframework DEVICE_FRAMEWORKS SIMULATOR_FRAMEWORKS
 sh createFakeCommands.sh
 ```
 
-Each argument is a directory containing `ios_system.framework` with its public headers. Install the `aarch64-apple-ios` and `aarch64-apple-ios-sim` targets for Rust 1.96.1. Build outputs default to an external temporary cache; `FD_BUILD_CACHE` selects another directory. The generated `fd/fd.xcframework` is ignored by Git. Xcode embeds it only in full a-Shell; the command dictionary maps `fd` to `fd_ios_main`, and `createFakeCommands.sh` creates the lookup placeholder. Mini and extensions have no new framework entry.
+Each argument is a directory containing `ios_system.framework` with its public headers. Install Rust 1.96.1 with rustup (`rustup toolchain install 1.96.1 --profile minimal`); the build adds the `aarch64-apple-ios` or `aarch64-apple-ios-sim` target to that toolchain itself. Build outputs default to an external temporary cache; `FD_BUILD_CACHE` selects another directory. The generated `fd/fd.xcframework` is ignored by Git. Xcode embeds it only in full a-Shell; the command dictionary maps `fd` to `fd_ios_main`, and `createFakeCommands.sh` creates the lookup placeholder. Mini and extensions have no new framework entry.
 
 The original filename matching, ignore handling and parallel directory traversal stay upstream. The adapter supplies owned duplicates of ios_system's command stdout and stderr to the Rust workers. It does not redirect process descriptors 0, 1 or 2, install a process-wide signal handler, or terminate the app when Clap handles help, version or invalid arguments. A mutex rejects simultaneous fd invocations; a pthread cleanup handler restores the working directory before returning.
 
