@@ -72,16 +72,16 @@
 +fn construct_config(mut opts: Opts, pattern_regexps: &[String], stdout: &std::fs::File, stderr: &std::fs::File) -> Result<Config> {
 @@ -277 +303,10 @@
 -    let interactive_terminal = std::io::stdout().is_terminal();
-+    // Session-aware identity must be read on the invoking command thread.
++    // ios_isatty reads the thread-local session, so call it on the command thread.
 +    unsafe extern "C" {
-+        fn fd_stream_is_terminal(fd: i32) -> i32;
-+        fn fd_command_getenv(name: *const std::ffi::c_char) -> *const std::ffi::c_char;
++        fn ios_isatty(fd: i32) -> i32;
++        fn ios_getenv(name: *const std::ffi::c_char) -> *const std::ffi::c_char;
 +    }
 +    let color_env = |name: &std::ffi::CStr| {
-+        let value = unsafe { fd_command_getenv(name.as_ptr()) };
++        let value = unsafe { ios_getenv(name.as_ptr()) };
 +        (!value.is_null()).then(|| unsafe { std::ffi::CStr::from_ptr(value) }.to_string_lossy().into_owned())
 +    };
-+    let interactive_terminal = unsafe { fd_stream_is_terminal(1) != 0 };
++    let interactive_terminal = unsafe { ios_isatty(1) != 0 };
 @@ -283 +321 @@
 -            let no_color = env::var_os("NO_COLOR").is_some_and(|x| !x.is_empty());
 +            let no_color = color_env(c"NO_COLOR").is_some_and(|x| !x.is_empty());
