@@ -24,21 +24,32 @@ a-Shell is now <a href="https://holzschu.github.io/a-Shell_iOS/">available on th
 
 ## How to compile it?
 
-If you want to compile the project yourself, you will need the following steps: 
-* download the entire project and its sub-modules: `git submodule update --init --recursive`
-* download all the xcFrameworks: `downloadFrameworks.sh`
-    * this will download the standard Apple frameworks (in `xcfs/.build/artefacts/xcfs`, with checksum control).
-    * There are too many Python frameworks (more than 2000) for automatic download. You can either remove them from the "Embed" step in the project, or compile them: 
-        * You'll need the Xcode command line tools, if you don't already have them: `sudo xcode-select --install` 
-        * You also need the OpenSSL libraries (libssl and libcrypto), XQuartz (freetype), and Node.js (npm) for macOS (we provide the versions for iOS and simulator).
-        * change directory to `cpython`: `cd cpython`
-        * build Python 3.11 and all the associated libraries / frameworks: `sh ./downloadAndCompile.sh` (this step takes several hours on a 2GHz i5 MBP, YMMV).
+Use macOS with Xcode and its iOS SDKs installed. Start with `a-Shell-noPython` to avoid the Python build; both `a-Shell` and `a-Shell-mini` embed Python.
 
-If you want to compile for the devices, you will need the following additional steps:
-* copy `Configuration.sample.xcconfig` to create `Configuration.xcconfig`
-* replace the team ID and prefixes with your own ones in `Configuration.xcconfig`
+```sh
+git clone https://github.com/holzschu/a-shell.git
+cd a-shell
+git submodule update --init SwiftTerm
+./downloadFrameworks.sh
+```
 
-a-Shell now runs on the devices. a-Shell mini can run on the devices and the simulator.
+In an existing checkout, run `git submodule sync` before updating initialized submodules. Avoid `--recursive`: the pinned CPython tree contains nested SSH URLs and an unavailable rasterio commit.
+
+`downloadFrameworks.sh` installs the binary targets from `xcfs/Package.swift` under `xcfs/.build/artifacts/xcfs`, with Swift Package Manager checksum verification. Its `pythonInstall.tar.gz` contains Python 3.9 files, while the current project requires Python 3.13.
+
+Additional prerequisites:
+
+- For Python targets, initialize the pinned sources with `git submodule update --init cpython`, then follow `cpython/downloadAndCompile.sh` and `updatePythonFiles.sh`. Building Python and its libraries takes several hours and requires resolving the nested submodule gaps above.
+- For full `a-Shell`, build the local frameworks using [node/README.md](node/README.md), [fd/README.md](fd/README.md), [fzf/README.md](fzf/README.md), [navi/README.md](navi/README.md), [gitoxide/README.md](gitoxide/README.md) and [ruff/README.md](ruff/README.md).
+- Downloads do not supply every project input. `a-Shell-noPython` still needs `pico` and `multimarkdown`; Python targets also reference missing inputs such as `openrsync`/`openrsyncA`, `curl-impersonate`, `WasmKitCommand` and `blink`, and full `a-Shell` references additional TeX, `cbc` and `perlC` frameworks. This list is not exhaustive; see [#1005](https://github.com/holzschu/a-shell/issues/1005).
+
+Open `a-Shell.xcodeproj` and select the desired scheme. To check noPython's package dependencies without building the app:
+
+```sh
+xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -destination 'generic/platform=iOS Simulator' -resolvePackageDependencies
+```
+
+For device builds, copy `Configuration.sample.xcconfig` to `Configuration.xcconfig` and replace the team ID and prefixes with your own.
 
 Because Python 3.x uses functions that are only available on the iOS 14 SDK, I've set the minimum iOS version to 14.0. It also reduces the size of the binaries, so `ios_system` and the other frameworks have the same settings. If you need to run it on an iOS 13 device, you'll have to recompile most frameworks.
 

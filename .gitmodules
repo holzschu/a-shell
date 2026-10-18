@@ -1,7 +1,7 @@
 [submodule "cpython"]
 	path = cpython
-	url = git@github.com:holzschu/cpython.git
-	branch = 3.11
+	url = https://github.com/holzschu/cpython.git
+	branch = 3.13
 [submodule "SwiftTerm"]
 	path = SwiftTerm
-	url = git@github.com:holzschu/SwiftTerm.git
+	url = https://github.com/holzschu/SwiftTerm.git
