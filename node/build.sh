@@ -9,26 +9,59 @@ cache=${NODE_IOS_CACHE:-$HOME/.cache/a-shell-node/$rev}
 source=$cache/source
 stage=${1:-node}
 ios_system=${IOS_SYSTEM_XCFRAMEWORK:-$app/xcfs/.build/artifacts/xcfs/ios_system/ios_system.xcframework}
+jobs=${NODE_IOS_JOBS:-4}
 libraries="ada brotli cares crdtp icui18n icuucx icudata icustubdata histogram llhttp nbytes ncrypto ncrypto_engine nghttp2 sfparse merve node node_base openssl simdjson simdutf sqlite uv uvwasi ffi highway v8_base_without_compiler v8_compiler v8_initializers v8_libbase v8_libplatform v8_snapshot v8_zlib v8_init abseil zlib zlib_data_chunk_simd zlib_adler32_simd zstd"
+die() {
+  echo "$*" >&2
+  exit 1
+}
+# Run a long step with its output in a log; on failure show where it stopped.
+logged() {
+  local log=$1
+  shift
+  if ! "$@" >"$log" 2>&1; then
+    echo "Failed: $* (log: $log)" >&2
+    tail -n 30 "$log" >&2
+    return 1
+  fi
+}
+# Patch a fresh tree. -N turns an already-applied hunk into an error instead of a skip.
+apply_patches() {
+  local tree=$1 name
+  shift
+  for name; do
+    if ! patch -s -N -F 0 -p1 -d "$tree" <"$here/$name.patch"; then
+      echo "Patch $name.patch does not apply to $tree" >&2
+      return 1
+    fi
+  done
+}
 check() {
-  [[ $(uname -m) == arm64 ]]
-  command -v xcodebuild >/dev/null
+  [[ $(uname -m) == arm64 ]] || die "Apple Silicon is required."
+  command -v xcodebuild >/dev/null || die "xcodebuild not found; install Xcode."
   case $stage in
-    node | device) ;;
-    sdk) [[ -n ${IOS_SYSTEM_SOURCE:-} && -f $IOS_SYSTEM_SOURCE/ios_system.xcodeproj/project.pbxproj ]] ;;
+    node | device)
+      # Node's configure.py only runs on these Pythons and looks for them in this order.
+      local py
+      for py in python3.14 python3.13 python3.12 python3.11 python3.10 python3; do
+        if command -v "$py" >/dev/null && "$py" -c 'import sys; sys.exit(not (3, 10) <= sys.version_info[:2] <= (3, 14))'; then break; fi
+        py=
+      done
+      [[ -n $py ]] || die "Node 26 needs Python 3.10-3.14 on PATH (for example: brew install python@3.14)."
+      ;;
+    sdk) [[ -n ${IOS_SYSTEM_SOURCE:-} && -f $IOS_SYSTEM_SOURCE/ios_system.xcodeproj/project.pbxproj ]] || die "Set IOS_SYSTEM_SOURCE to an ios_system source tree." ;;
     package)
       command -v npm >/dev/null
       local platform name
       for platform in simulator device; do
         for name in $libraries; do
           [[ -f $cache/$platform-libs/lib$name.a ]] || {
-            echo "Missing $platform archive lib$name.a; complete its native build first." >&2
+            echo "Missing $platform archive lib$name.a; complete its native build first (build.sh $([[ $platform == simulator ]] && echo node || echo device); see $cache/make.log)." >&2
             exit 1
           }
         done
       done
-      [[ -f $ios_system/ios-arm64/ios_system.framework/Headers/ios_system.h ]]
-      [[ -f $ios_system/ios-arm64-simulator/ios_system.framework/Headers/ios_system.h ]]
+      [[ -f $ios_system/ios-arm64/ios_system.framework/Headers/ios_system.h && -f $ios_system/ios-arm64-simulator/ios_system.framework/Headers/ios_system.h ]] || die "IOS_SYSTEM_XCFRAMEWORK $ios_system has no ios_system slices; run build.sh sdk."
       local slice
       for slice in ios-arm64 ios-arm64-simulator; do
         if ! xcrun nm -gU "$ios_system/$slice/ios_system.framework/ios_system" | grep ' T _ashell_register_owned_streams$' >/dev/null; then
@@ -53,25 +86,31 @@ apply() (
       local sdk_source=$cache/ios-system-source platform slice
       local sdk_frameworks=()
       local sdk_changed=0
-      if [[ ! -f $sdk_source/ios_system.m ]]; then
+      local sdk_excludes=(--exclude .git --exclude build --exclude tests --exclude docs --exclude .deps)
+      # The patched copy is rebuilt from pristine input whenever the input or a patch changed.
+      local sdk_stamp
+      sdk_stamp=$(
+        {
+          cat "$here/ios-system-streams.patch" "$here/command-path.patch"
+          tar "${sdk_excludes[@]}" -cf - -C "$IOS_SYSTEM_SOURCE" .
+        } | shasum -a 256
+      )
+      if [[ ! -f $sdk_source/.patched || $(<"$sdk_source/.patched") != "$sdk_stamp" ]]; then
+        rm -rf "$sdk_source"
         mkdir -p "$sdk_source"
-        rsync -a --exclude .git --exclude build --exclude tests --exclude docs --exclude .deps "$IOS_SYSTEM_SOURCE/" "$sdk_source/"
+        rsync -a "${sdk_excludes[@]}" "$IOS_SYSTEM_SOURCE/" "$sdk_source/"
+        apply_patches "$sdk_source" ios-system-streams command-path || die "Use ios_system revision fb7a9057874290bff2765f82b4ba3ba1d76dadb3 or merge these patches into your tree."
+        echo "$sdk_stamp" >"$sdk_source/.patched"
+      else
+        echo "ios_system source already carries these patches."
       fi
-      local sdk_patch
-      for sdk_patch in ios-system-streams command-path; do
-        if patch -s -N -F 0 --dry-run -p1 -d "$sdk_source" <"$here/$sdk_patch.patch"; then
-          patch -s -N -F 0 -p1 -d "$sdk_source" <"$here/$sdk_patch.patch"
-        else
-          patch -s -F 0 --dry-run -R -p1 -d "$sdk_source" <"$here/$sdk_patch.patch"
-        fi
-      done
       for platform in iphonesimulator iphoneos; do
         slice=ios-arm64
         [[ $platform != iphonesimulator ]] || slice=ios-arm64-simulator
-        xcodebuild -project "$sdk_source/ios_system.xcodeproj" -target ios_system -sdk "$platform" \
+        logged "$cache/sdk-$platform.log" xcodebuild -project "$sdk_source/ios_system.xcodeproj" -target ios_system -sdk "$platform" \
           -configuration Release -jobs 2 ARCHS=arm64 IPHONEOS_DEPLOYMENT_TARGET=16.0 \
           CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CONFIGURATION_BUILD_DIR="$cache/sdk-$platform" \
-          build >"$cache/sdk-$platform.log" 2>&1
+          build
         sdk_frameworks+=(-framework "$cache/sdk-$platform/ios_system.framework")
         if ! cmp -s "$cache/sdk-$platform/ios_system.framework/ios_system" "$ios_system/$slice/ios_system.framework/ios_system"; then
           sdk_changed=1
@@ -79,7 +118,7 @@ apply() (
       done
       if [[ $sdk_changed == 1 || ! -f $ios_system/Info.plist ]]; then
         if [[ -d $cache/ios-system.xcframework ]]; then rm -rf "$cache/ios-system.xcframework"; fi
-        xcodebuild -create-xcframework "${sdk_frameworks[@]}" -output "$cache/ios-system.xcframework" >"$cache/sdk-package.log" 2>&1
+        logged "$cache/sdk-package.log" xcodebuild -create-xcframework "${sdk_frameworks[@]}" -output "$cache/ios-system.xcframework"
         mkdir -p "$ios_system"
         rsync -a --delete "$cache/ios-system.xcframework/" "$ios_system/"
       fi
@@ -88,19 +127,27 @@ apply() (
       if [[ ! -f $cache/pinned.tar.gz ]]; then
         curl --http1.1 --remove-on-error -fL --retry 2 --max-time 600 "https://nodejs.org/dist/$rev/node-$rev.tar.gz" -o "$cache/pinned.tar.gz"
       fi
-      [[ $(shasum -a 256 "$cache/pinned.tar.gz" | awk '{print $1}') == "$sha" ]]
-      if [[ ! -f $source/configure ]]; then
+      [[ $(shasum -a 256 "$cache/pinned.tar.gz" | awk '{print $1}') == "$sha" ]] || die "$cache/pinned.tar.gz does not match the pinned checksum; delete it and rerun."
+      # The node and device stages share this tree. Extract and patch it once per patch set;
+      # any other state (older patches, interrupted run) is discarded with its build output.
+      local node_patches="ios-platform host-tools command-options command-errors command-environment child-process"
+      local node_stamp command_patch
+      node_stamp=$(
+        {
+          echo "$sha"
+          for command_patch in $node_patches; do cat "$here/$command_patch.patch"; done
+        } | shasum -a 256
+      )
+      if [[ ! -f $source/.patched || $(<"$source/.patched") != "$node_stamp" ]]; then
+        [[ ! -e $source ]] || echo "Node source tree is not at the current patch set; extracting a fresh copy (full rebuild)."
+        rm -rf "$source"
         mkdir -p "$source"
         tar -xzf "$cache/pinned.tar.gz" -C "$source" --strip-components=1
+        apply_patches "$source" $node_patches
+        echo "$node_stamp" >"$source/.patched"
+      else
+        echo "Node source already carries the current patches."
       fi
-      local command_patch
-      for command_patch in ios-platform host-tools command-options command-errors command-environment child-process; do
-        if patch -s -N -F 0 --dry-run -p1 -d "$source" <"$here/$command_patch.patch"; then
-          patch -s -N -F 0 -p1 -d "$source" <"$here/$command_patch.patch"
-        else
-          patch -s -F 0 --dry-run -R -p1 -d "$source" <"$here/$command_patch.patch"
-        fi
-      done
       (
         cd "$source"
         export GYP_DEFINES="target_arch=arm64 host_os=mac target_os=ios v8_enable_turbofan=0 v8_enable_sparkplug=0 v8_enable_maglev=0 v8_enable_drumbrake=0"
@@ -113,7 +160,7 @@ apply() (
           configure_args+=(--ios-simulator)
         fi
         if [[ ! -f config.gypi ]] || ! python3 -c 'import json,sys; v=json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]; sys.exit(not (v["iossim"] == sys.argv[1] and v["icu_small"] == "true" and v["v8_enable_lite_mode"] == 1 and v["v8_enable_webassembly"] == 0 and v["v8_enable_pointer_compression"] == 0 and v["v8_enable_maglev"] == 0 and v["node_v8_options"] == "--jitless"))' "$iossim" || [[ tools/v8_gypfiles/v8.gyp -nt out/Makefile || tools/v8_gypfiles/features.gypi -nt out/Makefile || tools/gyp/pylib/gyp/generator/make.py -nt out/Makefile || common.gypi -nt out/Makefile ]]; then
-          ./configure "${configure_args[@]}" >"$cache/configure.log" 2>&1
+          logged "$cache/configure.log" ./configure "${configure_args[@]}"
         fi
         local targets=(libnode) name
         for name in $libraries; do
@@ -128,9 +175,9 @@ apply() (
         # GYP emits DWARF even in Release; stock trailing flags keep caches compact.
         CFLAGS="${CFLAGS:-} -g0" CXXFLAGS="${CXXFLAGS:-} -g0" \
           CFLAGS_host="${CFLAGS_host:-} -g0" CXXFLAGS_host="${CXXFLAGS_host:-} -g0" \
-          /usr/bin/time -p make -C out BUILDTYPE=Release -j4 "${targets[@]}" >"$cache/make.log" 2>&1
+          logged "$cache/make.log" /usr/bin/time -p make -C out BUILDTYPE=Release -j"$jobs" "${targets[@]}"
       )
-      xcrun nm -gU "$source/out/Release/libnode_base.a" 2>/dev/null | grep 'InitializeOncePerProcess' >/dev/null
+      xcrun nm -gU "$source/out/Release/libnode_base.a" 2>/dev/null | grep 'InitializeOncePerProcess' >/dev/null || die "make finished without a usable libnode_base.a; see $cache/make.log."
       local platform=simulator name
       [[ $stage != device ]] || platform=device
       mkdir -p "$cache/$platform-libs"
@@ -158,7 +205,7 @@ PYABI
       mkdir -p "$cache/fetch"
       printf '{"name":"node-ios-fetch","dependencies":{"node-fetch":"3.3.2"}}\n' >"$cache/fetch/package.json"
       cp "$here/fetch-lock.json" "$cache/fetch/package-lock.json"
-      npm ci --prefix "$cache/fetch" --cache "$cache/npm-cache" --ignore-scripts --no-audit --no-fund >"$cache/fetch-install.log" 2>&1
+      logged "$cache/fetch-install.log" npm ci --prefix "$cache/fetch" --cache "$cache/npm-cache" --ignore-scripts --no-audit --no-fund
       local platform sdk target slice framework name input relink
       local framework_args=()
       local package_changed=0
@@ -238,7 +285,7 @@ EOF
         if [[ -d $app/xcfs/node.xcframework ]]; then
           rm -rf "$app/xcfs/node.xcframework"
         fi
-        xcodebuild -create-xcframework "${framework_args[@]}" -output "$app/xcfs/node.xcframework" >"$cache/framework.log" 2>&1
+        logged "$cache/framework.log" xcodebuild -create-xcframework "${framework_args[@]}" -output "$app/xcfs/node.xcframework"
       fi
       ;;
   esac
