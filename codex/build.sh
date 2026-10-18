@@ -6,7 +6,9 @@ cache=${CODEX_BUILD_CACHE:-${TMPDIR:-/tmp}/a-shell-codex}
 source=$cache/upstream
 export CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-$cache/target}
 export CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-2}
-export IPHONEOS_DEPLOYMENT_TARGET=26.2 CARGO_PROFILE_RELEASE_LTO=off
+export IPHONEOS_DEPLOYMENT_TARGET=26.2
+export CARGO_PROFILE_RELEASE_LTO=fat CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1
+export CARGO_PROFILE_RELEASE_OPT_LEVEL=z CARGO_PROFILE_RELEASE_DEBUG=0 CARGO_PROFILE_RELEASE_STRIP=symbols
 cargo=${CODEX_CARGO:-cargo}
 rustup=${CODEX_RUSTUP:-rustup}
 
@@ -105,6 +107,7 @@ framework() {
     -dynamiclib "$here/command.m" "$here/home.m" "$CARGO_TARGET_DIR/$target/release/libcodex_ios_embedded.a" \
     -F "$frameworks" -framework ios_system -framework UIKit -framework Foundation -framework CoreFoundation -framework Security -framework SystemConfiguration \
     -lobjc -lc++ -lz -liconv -Wl,-dead_strip -Wl,-S -Wl,-install_name,@rpath/codex.framework/codex -Wl,-exported_symbol,_codex_ios_main -o "$output/codex"
+  xcrun strip -x "$output/codex"
   cp "$source/LICENSE" "$output/LICENSE"
   cat >"$output/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
