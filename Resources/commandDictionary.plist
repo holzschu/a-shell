@@ -9,6 +9,19 @@
 		<string>e:p:r:</string>
 		<string>file</string>
 	</array>
+	<key>fd</key>
+	<array>
+		<string>fd.framework/fd</string>
+		<string>fd_ios_main</string>
+		<string></string>
+		<string>file</string>
+	<key>fzf</key>
+	<array>
+		<string>fzf.framework/fzf</string>
+		<string>fzf_ios_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
 	<key>alias</key>
 	<array>
 		<string>SELF</string>

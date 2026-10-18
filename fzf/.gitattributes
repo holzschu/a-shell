@@ -1,0 +1,2 @@
+# Unified-diff context has significant whitespace prefixes.
+*.patch -whitespace
