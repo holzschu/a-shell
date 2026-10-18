@@ -48,6 +48,11 @@ archive() {
   local sdk_name rust_target clang_target mach_platform
   apple_target "${1:?device or simulator required}"
   prepare
+  cargo +1.96.1 --version >/dev/null || {
+    echo 'Rust 1.96.1 is missing; run: rustup toolchain install 1.96.1 --profile minimal' >&2
+    return 1
+  }
+  rustup target add --toolchain 1.96.1 "$rust_target"
   IPHONEOS_DEPLOYMENT_TARGET=14.0 cargo +1.96.1 build --manifest-path "$source/Cargo.toml" \
     --locked --release --lib --no-default-features --target "$rust_target"
 }
