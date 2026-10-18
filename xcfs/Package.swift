@@ -9,7 +9,6 @@ _ = Package(
     ],
     
     targets: [
-        .binaryTarget(name: "node", path: "node.xcframework"),
         // libssh2
         .binaryTarget(
             name: "libssh2",
