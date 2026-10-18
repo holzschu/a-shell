@@ -82,6 +82,7 @@ Configuration.xcconfig
 
 # Locally built native ripgrep framework
 /rg/rg.xcframework/
+/ruff/Ruff.xcframework/
 gitoxide/gitoxide.xcframework/
 xcfs/node.xcframework/
 /fzf/fzf.xcframework/

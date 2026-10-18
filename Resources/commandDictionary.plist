@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ruff</key>
+	<array>
+		<string>Ruff.framework/Ruff</string>
+		<string>ruff_ios_main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>gix</key>
 	<array>
 		<string>gitoxide.framework/gitoxide</string>
