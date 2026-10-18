@@ -1,0 +1,54 @@
+--- /dev/null
++++ b/npmrc
+@@ -0,0 +1,2 @@
++# iOS permits cache writes below Library, not at the container root.
++cache=${HOME}/Library/Caches/npm
+--- a/node_modules/@npmcli/run-script/lib/run-script-pkg.js
++++ b/node_modules/@npmcli/run-script/lib/run-script-pkg.js
+@@ -42,6 +42,11 @@
+ 
+   if (!cmd) {
+     return { code: 0, signal: null }
++  }
++
++  // Embedded iOS Node cannot load native addons or run a native compiler.
++  if (gypfile !== false && (await isNodeGypPackage(path) || /\b(?:node-gyp|node-pre-gyp|prebuild-install|cmake-js)\b/.test(cmd))) {
++    throw Object.assign(new Error('Native addons and compiler install scripts are unavailable in a-Shell Node.'), { code: 'ENOSYS' })
+   }
+ 
+   let inputEnd = () => {}
+--- a/node_modules/bin-links/lib/link-bins.js
++++ b/node_modules/bin-links/lib/link-bins.js
+@@ -1,7 +1,7 @@
+-const isWindows = require('./is-windows.js')
+ const binTarget = require('./bin-target.js')
+ const { dirname, resolve, relative } = require('path')
+-const linkBin = isWindows ? require('./shim-bin.js') : require('./link-bin.js')
++// Use npm's existing shell shims: ios_system maps a raw node shebang to jsc.
++const linkBin = require('./shim-bin.js')
+ const normalize = require('npm-normalize-package-bin')
+ 
+ const linkBins = ({ path, pkg, top, force }) => {
+--- a/node_modules/bin-links/lib/get-paths.js
++++ b/node_modules/bin-links/lib/get-paths.js
+@@ -4,7 +4,6 @@
+ const binTarget = require('./bin-target.js')
+ const manTarget = require('./man-target.js')
+ const { resolve, basename, extname } = require('path')
+-const isWindows = require('./is-windows.js')
+ module.exports = ({ path, pkg, global, top }) => {
+   if (top && !global) {
+     return []
+@@ -16,9 +15,8 @@
+     for (const bin of Object.keys(pkg.bin)) {
+       const b = resolve(binTarg, bin)
+       binSet.push(b)
+-      if (isWindows) {
+-        binSet.push(b + '.cmd')
+-        binSet.push(b + '.ps1')
+-      }
++      // npm's existing cmd-shim writes these companions in this distribution.
++      binSet.push(b + '.cmd')
++      binSet.push(b + '.ps1')
+     }
+   }
