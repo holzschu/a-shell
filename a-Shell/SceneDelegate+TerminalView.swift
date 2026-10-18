@@ -1549,6 +1549,16 @@ extension SceneDelegate {
         }
         // if a command is running, send the data directly (except for webAssembly commands, who need a string)
         if (currentCommand != "") {
+            // Node owns command streams, not a terminal signal-generating process.
+            // A surrounding interactive Dash otherwise forwards these as bytes.
+            if myData.count == 1, let key = myData.first, key == 3 || key == 4 {
+                ios_switchSession(self.persistentIdentifier?.toCString())
+                ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                if let program = ios_progname(), String(cString: program) == "node" {
+                    send(source: source, inputString: key == 3 ? interrupt : endOfTransmission)
+                    return
+                }
+            }
             // If there is an interactive command running, we send the data to its stdin thread
             // active pager (interactive command): gets all the input sent through TTY:
             if (ios_activePager() != 0) {
