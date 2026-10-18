@@ -1002,6 +1002,11 @@
 		241174C3FD9A4286E38FE7C0 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		87BFA35D4A842B3F7BD8E197 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		535000000000000000000002 /* CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* CommandEnvironment.swift */; };
+		535000000000000000000003 /* CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* CommandEnvironment.swift */; };
+		535000000000000000000004 /* CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* CommandEnvironment.swift */; };
+		535000000000000000000005 /* CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* CommandEnvironment.swift */; };
+		535000000000000000000006 /* CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* CommandEnvironment.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2838,6 +2843,7 @@
 		E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "a-Shell-LongCommands.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF41C539C9EC98353B77E1BB /* LongCommands.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = LongCommands.entitlements; sourceTree = "<group>"; };
 		196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCommand.swift; sourceTree = "<group>"; };
+		535000000000000000000001 /* CommandEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util/CommandEnvironment.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2925,6 +2931,7 @@
 		2208ACBB22CCE529003985D6 /* Util */ = {
 			isa = PBXGroup;
 			children = (
+				535000000000000000000001 /* CommandEnvironment.swift */,
 				226FBED72C1257B000400751 /* jsc.swift */,
 				22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */,
 				2291286622D9DAC40004A5EA /* UIColor+hexString.swift */,
@@ -4414,6 +4421,7 @@
 			files = (
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
 				D91691CFCADBED6F76AE4E4E /* ProgressCommand.swift in Sources */,
+				535000000000000000000002 /* CommandEnvironment.swift in Sources */,
 				224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */,
 				224A903E2ADD0999006DB9CC /* Tips.swift in Sources */,
 				224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */,
@@ -4442,6 +4450,7 @@
 			files = (
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
 				BE8AFE2BBEDBF93A4910062F /* ProgressCommand.swift in Sources */,
+				535000000000000000000003 /* CommandEnvironment.swift in Sources */,
 				22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */,
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
 				223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */,
@@ -4470,6 +4479,7 @@
 			files = (
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
 				B85B646A76EB1C3038FBC891 /* ProgressCommand.swift in Sources */,
+				535000000000000000000004 /* CommandEnvironment.swift in Sources */,
 				229D2478257931E4004A78AC /* AppDelegate.swift in Sources */,
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				224754D72EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,
@@ -4516,6 +4526,7 @@
 			files = (
 				6DA4290CEFD8AE8731971F7C /* ExecuteLongCommandIntent.swift in Sources */,
 				241174C3FD9A4286E38FE7C0 /* ProgressCommand.swift in Sources */,
+				535000000000000000000005 /* CommandEnvironment.swift in Sources */,
 				CDB88291CE91BD1BB768CB32 /* LongCommandsExtension.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4526,6 +4537,7 @@
 			files = (
 				6E0E9C24B43A7139D193FA09 /* ExecuteLongCommandIntent.swift in Sources */,
 				87BFA35D4A842B3F7BD8E197 /* ProgressCommand.swift in Sources */,
+				535000000000000000000006 /* CommandEnvironment.swift in Sources */,
 				9313D8BBB62B8827FA0F4BBE /* LongCommandsExtension.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

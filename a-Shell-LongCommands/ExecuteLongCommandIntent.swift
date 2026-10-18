@@ -56,23 +56,29 @@ enum CommandExecutionError: LocalizedError {
 
 @available(iOS 27.0, *)
 private final class LongCommandExecutor {
-    private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
-    private static let initialized: Void = {
+    private static let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
+    private static let initialized: Result<Void, Error> = Result {
         initializeEnvironment()
         replaceCommand("progress", "ashell_progress", false)
         // Match AppDelegate: release file coordination before waiting for the command.
         joinMainThread = false
         let host = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
+        guard let hostBundle = Bundle(url: host),
+              let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
+            throw CommandExecutionError.unavailableDirectory
+        }
+        // The extension cannot use the app's private Library. Shared user packages live here.
+        let libraryURL = groupURL.appendingPathComponent("Library")
         setenv("APPDIR", host.path, 1)
-        setenv("PYTHONHOME", host.appendingPathComponent("Library").path, 1)
-        setenv("DYLD_FRAMEWORK_PATH", host.appendingPathComponent("Frameworks").path, 1)
+        initializeCommandEnvironment(hostBundle: hostBundle, documentsUrl: groupURL, libraryURL: libraryURL, groupURL: groupURL)
+        // ios_system expands ~name using standard defaults; include the app's mirrored bookmarks.
+        UserDefaults.standard.addSuite(named: appGroupID)
+        ios_setBookmarkDictionaryName("bookmarkNames")
         let path = [host.appendingPathComponent("bin").path,
                     host.appendingPathComponent("Library/bin").path,
                     String(cString: getenv("PATH"))].joined(separator: ":")
         setenv("PATH", path, 1)
-        // Match AppDelegate and the two Python frameworks shipped with the app.
-        numPythonInterpreters = 2
-    }()
+    }
     private static let executionLock = NSLock()
     private static var executionActive = false
 
@@ -119,15 +125,30 @@ private final class LongCommandExecutor {
         defer { Self.releaseExecution() }
         return try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .utility).async {
-                _ = Self.initialized
+                do {
+                    try Self.initialized.get()
+                } catch {
+                    continuation.resume(throwing: error)
+                    return
+                }
                 guard !self.isCancelled else {
                     continuation.resume(throwing: CommandExecutionError.cancelled)
                     return
                 }
-                guard let directory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: self.appGroupID) else {
+                guard let directory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroupID) else {
                     continuation.resume(throwing: CommandExecutionError.unavailableDirectory)
                     return
                 }
+                // Hold security-scoped access for this invocation, including every command thread.
+                let bookmarkData = UserDefaults.standard.dictionary(forKey: "fileBookmarks") ?? [:]
+                let accessedURLs: [URL] = bookmarkData.values.compactMap { value in
+                    guard let data = value as? Data else { return nil }
+                    var stale = false
+                    guard let url = try? URL(resolvingBookmarkData: data, bookmarkDataIsStale: &stale),
+                          url.startAccessingSecurityScopedResource() else { return nil }
+                    return url
+                }
+                defer { accessedURLs.forEach { $0.stopAccessingSecurityScopedResource() } }
                 progress.localizedAdditionalDescription = nil
                 progress.totalUnitCount = Int64(commands.count)
                 progress.completedUnitCount = 0
