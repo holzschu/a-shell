@@ -81,3 +81,6 @@ fastlane/test_output
 Configuration.xcconfig
 
 gitoxide/gitoxide.xcframework/
+xcfs/node.xcframework/
+/fzf/fzf.xcframework/
+/navi/navi.xcframework/

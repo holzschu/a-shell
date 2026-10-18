@@ -1,0 +1,48 @@
+--- a/tools/v8_gypfiles/v8.gyp
++++ b/tools/v8_gypfiles/v8.gyp
+@@ -906,6 +906,12 @@
+       'direct_dependent_settings': {
+         'sources': ['<!@pymod_do_main(GN-scraper "<(V8_ROOT)/BUILD.gn"  "v8_compiler_sources = ")'],
+         'conditions': [
++          # Match V8's Maglev-disabled graph-builder dependencies for Turboshaft.
++          ['v8_enable_maglev==0', {
++            'sources': [
++              '<!@pymod_do_main(GN-scraper "<(V8_ROOT)/BUILD.gn"  "v8_compiler_sources =.*?!v8_enable_maglev.*?v8_compiler_sources \\+= ")',
++            ],
++          }],
+           ['v8_target_arch=="ia32"', {
+             'sources': [
+               '<!@pymod_do_main(GN-scraper "<(V8_ROOT)/BUILD.gn"  "v8_compiler_sources =.*?v8_current_cpu == \\"x86\\".*?v8_compiler_sources \\+= ")',
+@@ -979,9 +985,15 @@
+         'v8_pch',
+       ],
+       'conditions': [
+-        ['v8_enable_turbofan==1', {
+-          'dependencies': ['v8_compiler_sources'],
++        # Builtin generation needs the compiler only in macOS host tools.
++        ['v8_enable_turbofan==1 or _toolset=="host"', {
++          'dependencies': [
++            'v8_compiler_sources',
++            'abseil.gyp:abseil',
++          ],
+         }, {
++          # The stock compiler-disabled implementation includes Abseil headers.
++          'dependencies': ['abseil.gyp:abseil'],
+           'sources': ['<(V8_ROOT)/src/compiler/turbofan-disabled.cc'],
+         }],
+       ],
+--- a/deps/v8/tools/gen-postmortem-metadata.py
++++ b/deps/v8/tools/gen-postmortem-metadata.py
+@@ -947,7 +947,11 @@
+   for const in consts:
+     name = ws.sub('', const['name'])
+     value = ws.sub('', str(const['value']))  # Can be a number.
+-    lines.append('V8_EXPORT int v8dbg_%s = %s;' % (name, value))
++    line = 'V8_EXPORT int v8dbg_%s = %s;' % (name, value)
++    # Map exposes this overlay only in WebAssembly builds.
++    if value == 'Map::kImmediateSupertypeOffset':
++      line = '#if V8_ENABLE_WEBASSEMBLY\n%s\n#endif' % line
++    lines.append(line)
+
+   # Generate without duplicates and with preserved order.
+   out.write('\n'.join(dict.fromkeys(lines)))

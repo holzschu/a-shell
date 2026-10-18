@@ -17,10 +17,13 @@ touch Resources/bin/echo
 touch Resources/bin/ed
 touch Resources/bin/egrep
 touch Resources/bin/env
+touch Resources/bin/fd
 touch Resources/bin/fgrep
 touch Resources/bin/find
 touch Resources/bin/gix
 touch Resources/bin/ein
+touch Resources/bin/fzf
+touch Resources/bin/navi
 touch Resources/bin/grep
 touch Resources/bin/gunzip
 touch Resources/bin/gzip
@@ -147,3 +150,6 @@ touch Resources/bin/luatex
 touch Resources/bin/texlua
 touch Resources/bin/texluac
 
+touch Resources/bin/node
+touch Resources/bin/npm
+touch Resources/bin/npx
