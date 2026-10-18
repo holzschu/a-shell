@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>fzf</string>
+<key>CFBundleIdentifier</key><string>com.asheKube.a-Shell.fzf</string>
+<key>CFBundleName</key><string>fzf</string>
+<key>CFBundlePackageType</key><string>FMWK</string>
+<key>CFBundleShortVersionString</key><string>0.74.5</string>
+<key>CFBundleVersion</key><string>1</string>
+<key>MinimumOSVersion</key><string>14.0</string>
+</dict></plist>
