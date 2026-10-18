@@ -85,7 +85,6 @@
 		2243B1B12840ADBF00588B51 /* vimproc.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2243B1B02840ADAB00588B51 /* vimproc.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2243B1B22840ADC500588B51 /* vimproc.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2243B1B02840ADAB00588B51 /* vimproc.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2243B1BA284278F500588B51 /* dash.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2243B1B9284278E700588B51 /* dash.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		79AC43000000000000000000 /* node.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 79AC43000000000000000003 /* node.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2243B1BB284278F500588B51 /* dashA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2243B1B4284278DC00588B51 /* dashA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2243B1BC284278F500588B51 /* dashB.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2243B1B8284278DD00588B51 /* dashB.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2243B1BD284278F500588B51 /* dashC.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2243B1B5284278DC00588B51 /* dashC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -220,6 +219,7 @@
 		22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F6625700F7E0068004E /* luatex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227A13642F308E9C006FD5C1 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 227A13632F308E9C006FD5C1 /* SwiftTerm */; };
 		227A540830850D0E007EA879 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227A540730850D06007EA879 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		227A540A308519F1007EA879 /* fd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227A5409308519E1007EA879 /* fd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227B24842BE01ED5003A8031 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
 		227B24852BE01ED5003A8031 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
 		227B24862BE033DE003A8031 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
@@ -1369,6 +1369,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				227A540A308519F1007EA879 /* fd.xcframework in Embed Frameworks */,
 				227A540830850D0E007EA879 /* fzf.xcframework in Embed Frameworks */,
 				228E13FC25C95F4E0065D825 /* ios_system.xcframework in Embed Frameworks */,
 				22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */,
@@ -1423,7 +1424,6 @@
 				225F45B0282A4B2D0010E698 /* texlua53A.xcframework in Embed Frameworks */,
 				2243B1B12840ADBF00588B51 /* vimproc.xcframework in Embed Frameworks */,
 				2243B1BA284278F500588B51 /* dash.xcframework in Embed Frameworks */,
-				79AC43000000000000000000 /* node.xcframework in Embed Frameworks */,
 				2243B1BB284278F500588B51 /* dashA.xcframework in Embed Frameworks */,
 				2243B1BC284278F500588B51 /* dashB.xcframework in Embed Frameworks */,
 				2243B1BD284278F500588B51 /* dashC.xcframework in Embed Frameworks */,
@@ -1959,7 +1959,6 @@
 		2243B1B7284278DD00588B51 /* dashE.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashE.xcframework; path = xcfs/.build/artifacts/xcfs/dashE/dashE.xcframework; sourceTree = "<group>"; };
 		2243B1B8284278DD00588B51 /* dashB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dashB.xcframework; path = xcfs/.build/artifacts/xcfs/dashB/dashB.xcframework; sourceTree = "<group>"; };
 		2243B1B9284278E700588B51 /* dash.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dash.xcframework; path = xcfs/.build/artifacts/xcfs/dash/dash.xcframework; sourceTree = "<group>"; };
-		79AC43000000000000000003 /* node.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = node.xcframework; path = xcfs/node.xcframework; sourceTree = "<group>"; };
 		224754D42EFBDF2C007C35FE /* SceneDelegate+TerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SceneDelegate+TerminalView.swift"; sourceTree = "<group>"; };
 		22484B052434F11E00D6BDDA /* node_modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node_modules; path = Resources/node_modules; sourceTree = "<group>"; };
 		2249367F26E0F03F0053F014 /* makeindex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = makeindex.xcframework; path = xcfs/.build/artifacts/xcfs/makeindex/makeindex.xcframework; sourceTree = "<group>"; };
@@ -2010,6 +2009,7 @@
 		227A434429FD202300548D77 /* texlive_2023_texmf_dist */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist; path = ODR/texlive_2023_texmf_dist; sourceTree = "<group>"; };
 		227A434529FD202300548D77 /* texlive_2023_texmf_dist_fonts_otf_ttf */ = {isa = PBXFileReference; lastKnownFileType = folder; name = texlive_2023_texmf_dist_fonts_otf_ttf; path = ODR/texlive_2023_texmf_dist_fonts_otf_ttf; sourceTree = "<group>"; };
 		227A540730850D06007EA879 /* fzf.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = fzf.xcframework; path = fzf/fzf.xcframework; sourceTree = "<group>"; };
+		227A5409308519E1007EA879 /* fd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = fd.xcframework; path = fd/fd.xcframework; sourceTree = "<group>"; };
 		227B24822BE01ED2003A8031 /* localCertificate.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = localCertificate.pem; sourceTree = "<group>"; };
 		227B24832BE01ED3003A8031 /* localCertificateKey.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = localCertificateKey.pem; sourceTree = "<group>"; };
 		227B248A2BE12FEE003A8031 /* wasm_withWorker.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_withWorker.js; sourceTree = "<group>"; };
@@ -2849,7 +2849,6 @@
 			isa = PBXGroup;
 			children = (
 				2243B1B9284278E700588B51 /* dash.xcframework */,
-				79AC43000000000000000003 /* node.xcframework */,
 				2243B1B4284278DC00588B51 /* dashA.xcframework */,
 				2243B1B8284278DD00588B51 /* dashB.xcframework */,
 				2243B1B5284278DC00588B51 /* dashC.xcframework */,
@@ -2999,6 +2998,7 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				227A5409308519E1007EA879 /* fd.xcframework */,
 				227A540730850D06007EA879 /* fzf.xcframework */,
 				22D13FDE2E61E3FC00E76E2E /* Frameworks regular */,
 				22D132A12E61E01100E76E2E /* Frameworks mini */,
@@ -4734,7 +4734,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 592;
+				CURRENT_PROJECT_VERSION = 593;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4783,7 +4783,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 592;
+				CURRENT_PROJECT_VERSION = 593;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
