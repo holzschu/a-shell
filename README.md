@@ -89,6 +89,24 @@ Shortcuts can be executed either "In Extension" or "In App". "In Extension" mean
 
 Both kind of shortcuts run by default in the same specific directory, `$SHORTCUTS` or `~shortcuts`. Of course, since you can run the commands `cd` and `jump` in a shortcut, you can pretty much go anywhere.
 
+## Terminal scripting
+
+`term` reads and controls the native terminal from scripts. `term windows --json` lists window IDs; use `--window ID` to select a window when several are available. Run input scripts from a separate execution context or target another window so the script does not type into its own input.
+
+```sh
+term screen
+term screen --colors
+term type --window ID --key enter -- "echo hello"
+term wait --window ID --text '(?m)^hello$' --timeout 10
+term scrollback --lines 100
+term resize 80x24
+term shot terminal.png
+```
+
+`screen --colors` returns JSON with text rows and a cell matrix. Each cell includes text, foreground and background colors, and style flags. Indexed colors are decimal strings, RGB colors use `#RRGGBB`, and default colors use `Reset`. `--json` also works for ordinary reads. `wait` matches a regular expression against visible rows and returns exit status 124 on timeout.
+
+`type` accepts literal text and repeated `--key` options. Text is sent before keys. Supported keys include Enter, Backspace, arrows, Home, End, PageUp, PageDown, Tab, Esc and Ctrl chords. Named keys that the terminal's public input API cannot encode in its current keyboard mode return an error. `keys` sends explicit byte escapes, and `paste` respects bracketed paste mode. `shot` requires a foreground native terminal. This command does not control the web terminal.
+
 ## Programming / add more commands:
 
 a-Shell has several programming languages installed: Python, Lua, JS, C, C++ and TeX. 

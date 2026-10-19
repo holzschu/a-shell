@@ -4574,6 +4574,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         DispatchQueue.main.async {
             self.terminalView?.feed(text: string.replacingOccurrences(of:"\n", with: "\n\r")) // prints the string
+            if let terminal = self.terminalView?.getTerminal() {
+                NotificationCenter.default.post(name: Notification.Name("AShellTerminalOutput"), object: terminal)
+            }
             // for "standard" commands (not Vim/less/NNN...) send the output to VoiceOver:
             // using a timer to accumulate content instead of reading each line separately:
             if (UIAccessibility.isVoiceOverRunning) {

@@ -65,6 +65,7 @@ touch Resources_mini/bin/tail
 touch Resources_mini/bin/tar
 touch Resources_mini/bin/tee
 touch Resources_mini/bin/telnet
+touch Resources_mini/bin/term
 touch Resources_mini/bin/touch
 touch Resources_mini/bin/tr
 touch Resources_mini/bin/uname
