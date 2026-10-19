@@ -43,15 +43,21 @@ Additional prerequisites:
 - For full `a-Shell`, build the local frameworks using [node/README.md](node/README.md), [fd/README.md](fd/README.md), [fzf/README.md](fzf/README.md), [navi/README.md](navi/README.md), [gitoxide/README.md](gitoxide/README.md) and [ruff/README.md](ruff/README.md).
 - The Python targets also reference inputs absent from the downloads, including `openrsync`/`openrsyncA`, `curl-impersonate`, `WasmKitCommand` and `blink`; full `a-Shell` references additional TeX, `cbc` and `perlC` frameworks. This list is not exhaustive; see [#1005](https://github.com/holzschu/a-shell/issues/1005).
 
-Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. For an x86_64 Simulator build with the downloaded frameworks:
+Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. To build an unsigned app for iOS devices:
+
+```sh
+xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -configuration Debug -destination 'generic/platform=iOS' IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
+```
+
+Xcode 27.1 rejects the project's 14.0 deployment target with "the range of supported deployment target versions is 15.0 to 27.1.x", so this command sets 15.0. To sign and install on a device, copy `Configuration.sample.xcconfig` to `Configuration.xcconfig`, replace the team ID and prefixes with your own, and omit `CODE_SIGNING_ALLOWED=NO`.
+
+For an x86_64 Simulator build:
 
 ```sh
 xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -configuration Debug -destination 'generic/platform=iOS Simulator' ARCHS=x86_64 IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
 ```
 
-Xcode 27's SDK requires a deployment target of at least 15.0. The downloaded Simulator slices have mixed architectures: ImageMagick and its freetype/harfbuzz/libpng dependencies are x86_64-only, while `bc_ios` is arm64-only. A successful build does not make every command runnable on the same Simulator.
-
-For device builds, copy `Configuration.sample.xcconfig` to `Configuration.xcconfig` and replace the team ID and prefixes with your own.
+The Simulator build needs the same deployment-target override on Xcode 27.1. The downloaded Simulator slices have mixed architectures: ImageMagick and its freetype/harfbuzz/libpng dependencies are x86_64-only, while `bc_ios` is arm64-only. A successful build does not make every command runnable on the same Simulator.
 
 Because Python 3.x uses functions that are only available on the iOS 14 SDK, I've set the minimum iOS version to 14.0. It also reduces the size of the binaries, so `ios_system` and the other frameworks have the same settings. If you need to run it on an iOS 13 device, you'll have to recompile most frameworks.
 
