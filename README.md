@@ -46,7 +46,7 @@ Additional prerequisites:
 Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. For a Simulator build with the downloaded x86_64 slices on Xcode 27:
 
 ```sh
-xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' ARCHS=x86_64 IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
+xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -configuration Debug -destination 'generic/platform=iOS Simulator' ARCHS=x86_64 IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
 ```
 
 For device builds, copy `Configuration.sample.xcconfig` to `Configuration.xcconfig` and replace the team ID and prefixes with your own.
