@@ -24,7 +24,7 @@ a-Shell is now <a href="https://holzschu.github.io/a-Shell_iOS/">available on th
 
 ## How to compile it?
 
-Use macOS with Xcode and its iOS SDKs installed. Start with `a-Shell-noPython` to avoid the Python build; both `a-Shell` and `a-Shell-mini` embed Python.
+Use macOS with Xcode and its iOS SDKs installed. Start with `a-Shell-noPython`, which uses the publicly downloadable frameworks. Both `a-Shell` and `a-Shell-mini` embed Python and need the frameworks from the maintainer's Python build.
 
 ```sh
 git clone https://github.com/holzschu/a-shell.git
@@ -35,18 +35,18 @@ git submodule update --init SwiftTerm
 
 In an existing checkout, run `git submodule sync` before updating initialized submodules. Avoid `--recursive`: the pinned CPython tree contains nested SSH URLs and an unavailable rasterio commit.
 
-`downloadFrameworks.sh` installs the binary targets from `xcfs/Package.swift` under `xcfs/.build/artifacts/xcfs`, with Swift Package Manager checksum verification. Its `pythonInstall.tar.gz` contains Python 3.9 files, while the current project requires Python 3.13.
+`downloadFrameworks.sh` installs the binary targets from `xcfs/Package.swift` under `xcfs/.build/artifacts/xcfs`, with Swift Package Manager checksum verification. Its `pythonInstall.tar.gz` contains Python 3.9 files, while the Python targets require Python 3.13.
 
 Additional prerequisites:
 
-- For Python targets, initialize the pinned sources with `git submodule update --init cpython`, then follow `cpython/downloadAndCompile.sh` and `updatePythonFiles.sh`. Building Python and its libraries takes several hours and requires resolving the nested submodule gaps above.
+- Python and its associated libraries cannot be built from this clone alone: they require an iOS Fortran compiler built from a patched gcc. The Python targets therefore need the frameworks produced by the maintainer's build; see [the build discussion](https://github.com/holzschu/a-shell/pull/1100#issuecomment-6265206051).
 - For full `a-Shell`, build the local frameworks using [node/README.md](node/README.md), [fd/README.md](fd/README.md), [fzf/README.md](fzf/README.md), [navi/README.md](navi/README.md), [gitoxide/README.md](gitoxide/README.md) and [ruff/README.md](ruff/README.md).
-- Downloads do not supply every project input. `a-Shell-noPython` still needs `pico` and `multimarkdown`; Python targets also reference missing inputs such as `openrsync`/`openrsyncA`, `curl-impersonate`, `WasmKitCommand` and `blink`, and full `a-Shell` references additional TeX, `cbc` and `perlC` frameworks. This list is not exhaustive; see [#1005](https://github.com/holzschu/a-shell/issues/1005).
+- The Python targets also reference inputs absent from the downloads, including `openrsync`/`openrsyncA`, `curl-impersonate`, `WasmKitCommand` and `blink`; full `a-Shell` references additional TeX, `cbc` and `perlC` frameworks. This list is not exhaustive; see [#1005](https://github.com/holzschu/a-shell/issues/1005).
 
-Open `a-Shell.xcodeproj` and select the desired scheme. To check noPython's package dependencies without building the app:
+Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. For a Simulator build with the downloaded x86_64 slices on Xcode 27:
 
 ```sh
-xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -destination 'generic/platform=iOS Simulator' -resolvePackageDependencies
+xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' ARCHS=x86_64 IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
 ```
 
 For device builds, copy `Configuration.sample.xcconfig` to `Configuration.xcconfig` and replace the team ID and prefixes with your own.
