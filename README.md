@@ -79,6 +79,14 @@ A user-configurable option in Settings lets you use the commands `s`, `g`, `l`, 
 
 If you are lost, `cd` will always bring you back to `~/Documents/`. `cd -` will change to the previous directory. 
 
+## Background mode
+
+Background mode is off by default; run `background on` in the foreground to keep the location session active for long scripts that use `location` off screen. `background on --precise` selects the default requested accuracy of 100 m, and `background on --coarse` selects 3 km; the choice persists in the existing settings. The location pill is hidden only with Always authorization and precise accuracy, while coarse accuracy or When In Use keeps it visible: coarse updates with a hidden pill suspended a-Shell after about 5 seconds in testing. Precise updates can use more battery.
+
+Run `background off` to stop the background session, `background status` to see the mode, authorization, requested accuracy and indicator policy, or `background` to open the in-app settings; the same choices are available in iOS Settings. Requested accuracy is not guaranteed accuracy and does not change the iOS Precise Location privacy setting. iOS can still terminate the app.
+
+Run `location --timeout 30` to print one fix as JSON, for example `location > fix.json`. The command requests When In Use authorization on first use and returns Termux-compatible field names: `latitude`, `longitude`, `altitude`, `accuracy`, `vertical_accuracy`, `bearing`, `speed`, `elapsedMs` (age of the fix in milliseconds), and `provider` (`corelocation`, since iOS chooses the underlying provider). Distances and accuracies are in meters, bearing in degrees, and speed in meters per second; negative accuracy, bearing or speed values mean unavailable. A valid fix up to 10 seconds old is reused. The default timeout is 30 seconds; timeout exits with 124, denied access with 1, and invalid arguments with 2. Coordinates are returned to the invoking script and are not retained by the location session.
+
 ## Shortcuts
 
 a-Shell is compatible with Apple Shortcuts, giving users full control of the Shell. You can write complex Shortcuts to download, process and release files using a-Shell commands. There are three shortcuts: 

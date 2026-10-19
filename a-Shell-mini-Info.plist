@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>The location command returns your position to your script. Optional background mode keeps its location session active for long scripts while the app is off screen. The app does not retain or send location samples.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>The location command returns your position to your script. Optional background mode keeps its location session active for long scripts while the app is off screen. The app does not retain or send location samples.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -180,6 +184,7 @@
 	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>location</string>
 		<string>audio</string>
 		<string>fetch</string>
 		<string>remote-notification</string>

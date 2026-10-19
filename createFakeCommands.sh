@@ -1,4 +1,5 @@
 touch Resources/bin/awk
+touch Resources/bin/background
 touch Resources/bin/bc
 touch Resources/bin/cat
 touch Resources/bin/cd
@@ -34,6 +35,7 @@ touch Resources/bin/ifconfig
 touch Resources/bin/jsc
 touch Resources/bin/link
 touch Resources/bin/ln
+touch Resources/bin/location
 touch Resources/bin/ls
 touch Resources/bin/lua
 touch Resources/bin/luac
