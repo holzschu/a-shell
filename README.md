@@ -24,7 +24,7 @@ a-Shell is now <a href="https://holzschu.github.io/a-Shell_iOS/">available on th
 
 ## How to compile it?
 
-Use macOS with Xcode and its iOS SDKs installed. Start with `a-Shell-noPython`, which uses the publicly downloadable frameworks. Both `a-Shell` and `a-Shell-mini` embed Python and need the frameworks from the maintainer's Python build.
+Use macOS with Xcode and its iOS SDKs installed. Start with `a-Shell-noPython`, which uses the publicly downloadable frameworks. Both `a-Shell` and `a-Shell-mini` embed Python and need prebuilt Python frameworks, which are not currently published.
 
 ```sh
 git clone https://github.com/holzschu/a-shell.git
@@ -39,7 +39,7 @@ In an existing checkout, run `git submodule sync` before updating initialized su
 
 Additional prerequisites:
 
-- Python and its associated libraries cannot be built from this clone alone: they require an iOS Fortran compiler built from a patched gcc. The Python targets therefore need the frameworks produced by the maintainer's build, which are not currently published; see [the build discussion](https://github.com/holzschu/a-shell/pull/1100#issuecomment-6265206051).
+- Python and its associated libraries cannot be built from this clone alone: they require an iOS Fortran compiler built from a patched gcc. The Python targets therefore need prebuilt frameworks, which are not currently published; see [the build discussion](https://github.com/holzschu/a-shell/pull/1100#issuecomment-6265206051).
 - For full `a-Shell`, build the local frameworks using [node/README.md](node/README.md), [fd/README.md](fd/README.md), [fzf/README.md](fzf/README.md), [navi/README.md](navi/README.md), [gitoxide/README.md](gitoxide/README.md) and [ruff/README.md](ruff/README.md).
 - The Python targets also reference inputs absent from the downloads, including `openrsync`/`openrsyncA`, `curl-impersonate`, `WasmKitCommand` and `blink`; full `a-Shell` references additional TeX, `cbc` and `perlC` frameworks. This list is not exhaustive; see [#1005](https://github.com/holzschu/a-shell/issues/1005).
 
@@ -49,7 +49,7 @@ Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. For an x86_64 Simulator 
 xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -configuration Debug -destination 'generic/platform=iOS Simulator' ARCHS=x86_64 IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
 ```
 
-Several downloaded frameworks, including ImageMagick and its freetype/harfbuzz/libpng dependencies, provide only x86_64 Simulator slices. Running this build requires an x86_64-capable Simulator runtime.
+Xcode 27's SDK requires a deployment target of at least 15.0. The downloaded Simulator slices have mixed architectures: ImageMagick and its freetype/harfbuzz/libpng dependencies are x86_64-only, while `bc_ios` is arm64-only. A successful build does not make every command runnable on the same Simulator.
 
 For device builds, copy `Configuration.sample.xcconfig` to `Configuration.xcconfig` and replace the team ID and prefixes with your own.
 
