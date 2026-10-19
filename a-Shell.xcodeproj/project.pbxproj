@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		224A907B2ADD0999006DB9CC /* freetype.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000001 /* freetype.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		224A907C2ADD0999006DB9CC /* harfbuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000002 /* harfbuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		224A907D2ADD0999006DB9CC /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000003 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A22400000000000000000001 /* Ruff.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22400000000000000000002 /* Ruff.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		619225000000000000000001 /* gitoxide.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 619225000000000000000002 /* gitoxide.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FD0000000000000000000001 /* fd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000000000000000000002 /* fd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1061,6 +1064,9 @@
 				224A90762ADD0999006DB9CC /* xxd.xcframework in Embed Frameworks */,
 				224A90772ADD0999006DB9CC /* libssh2.xcframework in Embed Frameworks */,
 				224A90782ADD0999006DB9CC /* openssl.xcframework in Embed Frameworks */,
+				224A907B2ADD0999006DB9CC /* freetype.xcframework in Embed Frameworks */,
+				224A907C2ADD0999006DB9CC /* harfbuzz.xcframework in Embed Frameworks */,
+				224A907D2ADD0999006DB9CC /* libpng.xcframework in Embed Frameworks */,
 				224A907E2ADD0999006DB9CC /* magick.xcframework in Embed Frameworks */,
 				224A90802ADD0999006DB9CC /* vim.xcframework in Embed Frameworks */,
 				224A90952ADD0999006DB9CC /* lua_ios.xcframework in Embed Frameworks */,
@@ -1894,6 +1900,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A53600000000000000000001 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = "xcfs/.build/artifacts/xcfs/freetype/freetype.xcframework"; sourceTree = SOURCE_ROOT; };
+		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = "xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework"; sourceTree = SOURCE_ROOT; };
+		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = "xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework"; sourceTree = SOURCE_ROOT; };
 		A22400000000000000000002 /* Ruff.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = ruff/Ruff.xcframework; sourceTree = SOURCE_ROOT; };
 		619225000000000000000002 /* gitoxide.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = gitoxide/gitoxide.xcframework; sourceTree = SOURCE_ROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
@@ -3030,6 +3039,9 @@
 				22E9F5A0255846F300673D11 /* vim.xcframework */,
 				2243B1B02840ADAB00588B51 /* vimproc.xcframework */,
 				22F75D40265FA3500056AFD2 /* xxd.xcframework */,
+				A53600000000000000000001 /* freetype.xcframework */,
+				A53600000000000000000002 /* harfbuzz.xcframework */,
+				A53600000000000000000003 /* libpng.xcframework */,
 				2294A9BE254C19D0008C1490 /* freetype.xcframework */,
 				22AF02D229F669C20085290B /* openblas.xcframework */,
 				22AF02D329F669DE0085290B /* libgfortran.xcframework */,

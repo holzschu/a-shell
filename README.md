@@ -39,15 +39,17 @@ In an existing checkout, run `git submodule sync` before updating initialized su
 
 Additional prerequisites:
 
-- Python and its associated libraries cannot be built from this clone alone: they require an iOS Fortran compiler built from a patched gcc. The Python targets therefore need the frameworks produced by the maintainer's build; see [the build discussion](https://github.com/holzschu/a-shell/pull/1100#issuecomment-6265206051).
+- Python and its associated libraries cannot be built from this clone alone: they require an iOS Fortran compiler built from a patched gcc. The Python targets therefore need the frameworks produced by the maintainer's build, which are not currently published; see [the build discussion](https://github.com/holzschu/a-shell/pull/1100#issuecomment-6265206051).
 - For full `a-Shell`, build the local frameworks using [node/README.md](node/README.md), [fd/README.md](fd/README.md), [fzf/README.md](fzf/README.md), [navi/README.md](navi/README.md), [gitoxide/README.md](gitoxide/README.md) and [ruff/README.md](ruff/README.md).
 - The Python targets also reference inputs absent from the downloads, including `openrsync`/`openrsyncA`, `curl-impersonate`, `WasmKitCommand` and `blink`; full `a-Shell` references additional TeX, `cbc` and `perlC` frameworks. This list is not exhaustive; see [#1005](https://github.com/holzschu/a-shell/issues/1005).
 
-Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. For a Simulator build with the downloaded x86_64 slices on Xcode 27:
+Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. For an x86_64 Simulator build with the downloaded frameworks:
 
 ```sh
 xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -configuration Debug -destination 'generic/platform=iOS Simulator' ARCHS=x86_64 IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
 ```
+
+Several downloaded frameworks, including ImageMagick and its freetype/harfbuzz/libpng dependencies, provide only x86_64 Simulator slices. Running this build requires an x86_64-capable Simulator runtime.
 
 For device builds, copy `Configuration.sample.xcconfig` to `Configuration.xcconfig` and replace the team ID and prefixes with your own.
 
