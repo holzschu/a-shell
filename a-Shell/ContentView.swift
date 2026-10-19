@@ -211,6 +211,7 @@ public var terminalViewHeight = 80
 private let edgeSwipeTarget = EdgeSwipeTarget()
 
 struct ContentView: View {
+    @ObservedObject private var relay = Relay.shared
     @State private var keyboardHeight: CGFloat = 0
     @State private var lastKeyboardHeight: CGFloat = 0
     @State private var frameHeight: CGFloat = 0
@@ -438,6 +439,27 @@ struct ContentView: View {
         .if(!(localShowWebView && showWebView)) {
             $0.ignoresSafeArea(.keyboard, edges: .bottom)
         }
+        .overlay(Group {
+            if let connections = relay.indicatorConnections {
+                HStack(spacing: 3) {
+                    Circle()
+                        .fill(connections > 0 || relay.indicatorRecent ? Color.green : Color.yellow)
+                        .frame(width: 8, height: 8)
+                        .overlay(Circle().stroke(Color.primary.opacity(0.6), lineWidth: 0.5))
+                    if connections > 0 {
+                        Text("\(connections)")
+                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .foregroundColor(.primary)
+                    }
+                }
+                .padding(.top, 2)
+                .padding(.trailing, 8)
+                .offset(y: -12)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(connections > 0 ? "Relay connections: \(connections)" : (relay.indicatorRecent ? "Relay recently connected" : "Relay listening"))
+                .allowsHitTesting(false)
+            }
+        }, alignment: .topTrailing)
     }
 }
 

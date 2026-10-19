@@ -108,3 +108,65 @@ TeX files are not installed by default. Type any TeX command and the system will
 ## VoiceOver
 
 If you enable VoiceOver in Settings, a-Shell will work with VoiceOver: reading commands as you type them, reading the result, letting you read the screen with your finger...
+
+## Run commands remotely with relay
+
+`relay` is an optional HTTPS server built into the app. It is off by default. It executes commands in a separate, noninteractive a-Shell session with stdin connected to `/dev/null`. It does not expose the terminal screen or keyboard. iOS can suspend the app when it leaves the foreground; enabling relay does not grant background execution time.
+
+Run `relay status` once to create `~/Documents/.relay.json` with a random token. Edit that file to configure the listener, then run `relay on`. This starts the listener and saves `enabled: true` so it starts at the next app launch. `relay off` stops the listener and saves `enabled: false`. `relay` or `relay help` prints usage.
+
+`relay status` prints the state, autostart setting, absolute config path and effective settings, certificate path and SHA-256 fingerprint, client CA path, loaded state, fingerprint and subject, and a Mac curl command, one item per line. It describes the running listener when active and the saved configuration when stopped; autostart always reflects the saved `enabled` setting. Copy the public server certificate to the Mac as `.relay-cert.pem`. For an all-interface bind, the curl command uses the phone's Wi-Fi address when available; otherwise replace `PHONE_IP` with a reachable address. A loopback bind requires the config edit shown below before connecting from a Mac.
+
+With mutual TLS on, status keeps the token hidden and uses `$RELAY_TOKEN` in the curl command. Run `relay tokens` explicitly to retrieve it and set that variable on the Mac. With mutual TLS off, status prints the full token and includes it in the curl command, together with a warning that anyone reaching the port with that token can execute commands. Treat that status output as a credential. `relay on`, `relay off` and startup never print credentials.
+
+Every field below except `indicator` is required in `.relay.json`. Changes take effect on `relay on` or the next app launch. Invalid configuration prevents startup.
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `enabled` | `false` | Start at app launch. `relay on` and `relay off` update this field. |
+| `bind` | `"127.0.0.1"` | Numeric IPv4 or IPv6 address. Loopback accepts connections only from this device. Set `"0.0.0.0"` for all IPv4 interfaces, `"::"` for IPv6, or a specific interface address to connect from a Mac. |
+| `port` | `8765` | TCP port, from 0 to 65535. Zero asks the OS to choose a port; `relay status` reports it. |
+| `mutualTLS` | `true` | Require a client certificate signed by the CA enrolled in `.relay-client-ca.der`. Missing or invalid enrollment prevents startup. Set `false` explicitly to accept clients without certificates. HTTPS and the token remain required. |
+| `indicator` | `true` | Show a small yellow dot while listening and a green dot with the active connection count when clients connect. Set `false` to hide it. Older config files that omit this field use `true`. |
+| `token` | Random 256-bit value | Value of the `X-Token` request header. Must contain 32 to 256 printable ASCII characters without spaces. Use `relay tokens` to retrieve it; `relay status` also prints it when mutual TLS is off. |
+
+The indicator floats above the terminal without changing its height or moving its rows. The dot stays green for ten seconds after the last connection closes; the count appears only while connections are active. It disappears when relay stops or `indicator` is false. Its contrasting border works with light and dark appearances.
+
+`/run` passes the submitted line directly to `ios_system`, just as the a-Shell terminal does, without an extra shell layer. Native commands, pipes and redirections follow a-Shell's command syntax. For compound commands, explicitly invoke an available shell, for example `sh -c 'echo first && echo second'`, or run a script file with its interpreter. The chosen interpreter determines which shell syntax and commands are available.
+
+TLS is always enabled. On first successful setup relay creates a separate server identity for this app installation in `.relay-identity.p12` and exports its public certificate to `.relay-cert.pem`, both in Documents. Copy only the public certificate to your Mac through a trusted channel such as USB file sharing. Keep the private identity and `.relay.json` private. To replace the server identity, run `relay off`, delete `.relay-identity.p12`, run `relay on`, then export and trust the new public certificate.
+
+For mutual TLS, create a client CA and certificate on your Mac with OpenSSL 3 or later. Keep both private keys on the Mac; enroll only the CA's public DER certificate on the phone:
+
+```sh
+umask 077
+openssl req -x509 -newkey rsa:2048 -nodes -keyout client-ca.key -out client-ca.pem -days 365 -subj '/CN=relay client CA' -addext 'basicConstraints=critical,CA:TRUE' -addext 'keyUsage=critical,keyCertSign,cRLSign'
+openssl req -newkey rsa:2048 -nodes -keyout client.key -out client.csr -subj '/CN=relay Mac client'
+printf 'basicConstraints=critical,CA:FALSE\nextendedKeyUsage=clientAuth\nkeyUsage=critical,digitalSignature\n' > client.ext
+openssl x509 -req -in client.csr -CA client-ca.pem -CAkey client-ca.key -CAcreateserial -out client.pem -days 365 -extfile client.ext
+openssl x509 -in client-ca.pem -outform DER -out .relay-client-ca.der
+```
+
+Copy `.relay-client-ca.der` to a-Shell's Documents through USB file sharing. In `.relay.json`, change `"bind": "127.0.0.1"` to `"bind": "0.0.0.0"` (or `"bind": "::"` for IPv6), keep `"port": 8765` for this example, and run `relay on`. Copy `.relay-cert.pem` from Documents to the Mac. Obtain the token with `relay tokens` and put it into the Mac's `RELAY_TOKEN` environment variable without committing it to a file or including it in a URL. Replace `PHONE_IP` below with the phone's address and adjust the port if configured:
+
+```sh
+curl --cacert .relay-cert.pem --cert client.pem --key client.key \
+    --resolve "relay.local:8765:PHONE_IP" \
+    -H "X-Token: $RELAY_TOKEN" \
+    --data-binary 'echo hello' \
+    https://relay.local:8765/run
+```
+
+The certificate names `relay.local` and `localhost`; `--resolve` connects to the actual address while checking the certificate name. Do not use `curl -k`. With `mutualTLS: false`, omit `--cert` and `--key`. This reduces authentication to possession of the token; anyone who obtains it can execute commands with the app's access. With either setting, relay is intended for trusted networks. In-app commands share the app's sandbox and can read its credential files; file permissions do not isolate commands from one another.
+
+For example, after changing `"mutualTLS": true` to `"mutualTLS": false` and running `relay on`, use:
+
+```sh
+curl --cacert .relay-cert.pem --resolve "relay.local:8765:PHONE_IP" \
+    -H "X-Token: $RELAY_TOKEN" --data-binary 'pwd' \
+    https://relay.local:8765/run
+```
+
+`POST /run` takes a UTF-8 command line as its body and requires `Content-Length` and `X-Token`. Optional `X-Cwd` selects a directory, relative to Documents unless absolute; percent-encode non-ASCII characters and spaces. Tilde paths are accepted. Success returns HTTP 200 with JSON fields `stdout`, `stderr` and integer `status`, for example `{"stdout":"hello\n","stderr":"","status":0}`. A command's nonzero exit status is still HTTP 200. Output is decoded as UTF-8, replacing invalid sequences. If either stdout or stderr exceeds 8 MiB, relay closes both output pipes, requests thread cancellation, discards both streams and immediately returns HTTP 413 with the message "relay: command output exceeded 8 MiB; redirect output to a file." The app also logs that message. Programs normally exit when their next write fails with EPIPE. A program that ignores write errors and cancellation can keep running; while it does, queued and new `/run` requests receive HTTP 503 rather than waiting behind it. Restart the app to recover from such a program. The limit is checked while the command runs; output is never truncated and returned as a successful result. Commands execute serially, with at most eight outstanding requests. Headers are limited to 16 KiB and the command body to 1 MiB. Incomplete requests are closed after 15 seconds. A wrong or missing token returns HTTP 401; missing or untrusted client certificates fail the TLS handshake when mutual TLS is enabled. Other routes return HTTP 404 after authentication.
+
+There is no execution timeout or client cancellation. A command such as `sleep 100000` that never exceeds the output limit keeps the command queue occupied until it finishes or the app process is restarted. A client disconnect or `relay off` closes the connection and discards queued requests; a command already running continues, subject to the output limit, and keeps its side effects. Avoid interactive or unbounded commands. Stopping and restarting relay does not run two commands concurrently. Relay executes with the app's file and network permissions; it is not a restricted shell.

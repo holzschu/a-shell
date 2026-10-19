@@ -117,6 +117,7 @@
 		2249E13A2E7546E5003F03EE /* PythonA_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1382E7546C6003F03EE /* PythonA_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2249E13B2E7546E5003F03EE /* Python-_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1392E7546D2003F03EE /* Python-_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		A59100000000000000000001 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
 		224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		224A903E2ADD0999006DB9CC /* Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223A1C1B2A5EDCA700B1B9AD /* Tips.swift */; };
 		224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
@@ -251,6 +252,7 @@
 		22984EF722C93DBF00069497 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF622C93DBF00069497 /* Preview Assets.xcassets */; };
 		22984EFA22C93DBF00069497 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF822C93DBF00069497 /* LaunchScreen.storyboard */; };
 		229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		A59100000000000000000002 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
 		229D2478257931E4004A78AC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		229D2479257931E4004A78AC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
 		229D247B257931E4004A78AC /* UIColor+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291286622D9DAC40004A5EA /* UIColor+hexString.swift */; };
@@ -942,6 +944,7 @@
 		22D146662E62098800E76E2E /* PythonAxxlimited.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146672E62098800E76E2E /* PythonAxxlimited_35.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		A59100000000000000000003 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
 		22DC1F942570139D0068004E /* awk.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F8E257012F50068004E /* awk.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F952570139D0068004E /* curl_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F91257012F50068004E /* curl_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F962570139D0068004E /* files.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F89257012F50068004E /* files.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -2726,6 +2729,7 @@
 		22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited.framework; path = Resources/Frameworks/PythonAxxlimited.framework; sourceTree = SOURCE_ROOT; };
 		22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited_35.framework; path = Resources/Frameworks/PythonAxxlimited_35.framework; sourceTree = SOURCE_ROOT; };
 		22D23117231940B2005B0C12 /* ExtraCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraCommands.swift; sourceTree = "<group>"; };
+		A59100000000000000000004 /* Relay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relay.swift; sourceTree = "<group>"; };
 		22DC1F6425700F7E0068004E /* bibtex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bibtex.xcframework; path = xcfs/.build/artifacts/xcfs/bibtex/bibtex.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F6525700F7E0068004E /* kpathsea.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpathsea.xcframework; path = xcfs/.build/artifacts/xcfs/kpathsea/kpathsea.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F6625700F7E0068004E /* luatex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luatex.xcframework; path = xcfs/.build/artifacts/xcfs/luatex/luatex.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2947,6 +2951,7 @@
 				22B1B83322CBC53700F7C452 /* a-Shell.entitlements */,
 				22984EED22C93DBC00069497 /* AppDelegate.swift */,
 				22D23117231940B2005B0C12 /* ExtraCommands.swift */,
+				A59100000000000000000004 /* Relay.swift */,
 				22984EEF22C93DBC00069497 /* SceneDelegate.swift */,
 				224754D42EFBDF2C007C35FE /* SceneDelegate+TerminalView.swift */,
 				22984EF122C93DBC00069497 /* ContentView.swift */,
@@ -4270,6 +4275,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
+				A59100000000000000000001 /* Relay.swift in Sources */,
 				224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */,
 				224A903E2ADD0999006DB9CC /* Tips.swift in Sources */,
 				224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */,
@@ -4297,6 +4303,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
+				A59100000000000000000003 /* Relay.swift in Sources */,
 				22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */,
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
 				223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */,
@@ -4324,6 +4331,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
+				A59100000000000000000002 /* Relay.swift in Sources */,
 				229D2478257931E4004A78AC /* AppDelegate.swift in Sources */,
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				224754D72EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,

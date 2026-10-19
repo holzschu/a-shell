@@ -47,6 +47,7 @@ touch Resources_mini/bin/python3
 touch Resources_mini/bin/python
 touch Resources_mini/bin/pythonA
 touch Resources_mini/bin/readlink
+touch Resources_mini/bin/relay
 touch Resources_mini/bin/rlogin
 touch Resources_mini/bin/rm
 touch Resources_mini/bin/rmdir

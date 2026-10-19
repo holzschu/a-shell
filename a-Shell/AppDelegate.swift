@@ -211,6 +211,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         initializeEnvironment()
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
+        replaceCommand("relay", "relay_main", true)
         replaceCommand("history", "history", true)
         replaceCommand("help", "help", true)
         replaceCommand("clear", "clear", true)
@@ -488,6 +489,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         catch {
             // print("Setting category to AVAudioSessionCategoryPlayback failed.")
         }
+        Relay.shared.restore()
         return true
     }
 
