@@ -13,6 +13,8 @@ Each argument is a directory containing `ios_system.framework` with its public h
 
 The original filename matching, ignore handling and parallel directory traversal stay upstream. The adapter supplies owned duplicates of ios_system's command stdout and stderr to the Rust workers. It does not redirect process descriptors 0, 1 or 2, install a process-wide signal handler, or terminate the app when Clap handles help, version or invalid arguments. A mutex rejects simultaneous fd invocations; a pthread cleanup handler restores the working directory before returning.
 
+Automatic color follows a-Shell's terminal, not the duplicated descriptor. fd asks `ios_isatty` on the invoking command thread whether stdout is the terminal, and reads `NO_COLOR` and `LS_COLORS` with `ios_getenv`, so values set for a single command (`NO_COLOR=1 fd ...`) are honored. Redirected output stays free of escape sequences, and `--color=always` still forces them. The same terminal check also makes fd escape control characters in file names on screen.
+
 `-x`, `-X` and `--list-details` return status 1 with an explicit unsupported-process error. This port has no child-command execution adapter. Cancellation, background/foreground transitions and physical-device runtime remain unverified.
 
 ## Acceptance
