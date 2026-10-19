@@ -520,6 +520,13 @@
 		<string>q</string>
 		<string>file</string>
 	</array>
+	<key>rg</key>
+	<array>
+		<string>rg.framework/rg</string>
+		<string>rg_ios_main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>rlogin</key>
 	<array>
 		<string>network_ios.framework/network_ios</string>
