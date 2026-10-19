@@ -49,7 +49,7 @@ Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. To build an unsigned app
 xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -configuration Debug -destination 'generic/platform=iOS' IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
 ```
 
-Xcode 27.1 rejects the project's 14.0 deployment target with "the range of supported deployment target versions is 15.0 to 27.1.x", so this command sets 15.0. To sign and install on a device, copy `Configuration.sample.xcconfig` to `Configuration.xcconfig`, replace the team ID and prefixes with your own, and omit `CODE_SIGNING_ALLOWED=NO`.
+Xcode 27.1 rejects the project's 14.0 deployment target with "the range of supported deployment target versions is 15.0 to 27.1.x", so this command sets 15.0. To build a signed app, copy `Configuration.sample.xcconfig` to `Configuration.xcconfig`, replace the team ID and prefixes with your own, and omit `CODE_SIGNING_ALLOWED=NO`.
 
 For an x86_64 Simulator build:
 
