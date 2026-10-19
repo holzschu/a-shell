@@ -150,6 +150,8 @@ apply() (
       fi
       (
         cd "$source"
+        # configure probes the bundled OpenSSL with $CC and the include variables; drop user overrides so the build matches a clean shell.
+        unset CC CXX CC_host CXX_host CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH
         export GYP_DEFINES="target_arch=arm64 host_os=mac target_os=ios v8_enable_turbofan=0 v8_enable_sparkplug=0 v8_enable_maglev=0 v8_enable_drumbrake=0"
         # GYP's lite flag does not itself disable compiler source sets in this branch.
         local iossim=true
@@ -159,9 +161,11 @@ apply() (
         else
           configure_args+=(--ios-simulator)
         fi
-        if [[ ! -f config.gypi ]] || ! python3 -c 'import json,sys; v=json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]; sys.exit(not (v["iossim"] == sys.argv[1] and v["icu_small"] == "true" and v["v8_enable_lite_mode"] == 1 and v["v8_enable_webassembly"] == 0 and v["v8_enable_pointer_compression"] == 0 and v["v8_enable_maglev"] == 0 and v["node_v8_options"] == "--jitless"))' "$iossim" || [[ tools/v8_gypfiles/v8.gyp -nt out/Makefile || tools/v8_gypfiles/features.gypi -nt out/Makefile || tools/gyp/pylib/gyp/generator/make.py -nt out/Makefile || common.gypi -nt out/Makefile ]]; then
+        if [[ ! -f config.gypi ]] || ! python3 -c 'import json,sys; v=json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]; sys.exit(not (v["iossim"] == sys.argv[1] and v["icu_small"] == "true" and v["v8_enable_lite_mode"] == 1 and v["v8_enable_webassembly"] == 0 and v["v8_enable_pointer_compression"] == 0 and v["v8_enable_maglev"] == 0 and v["node_v8_options"] == "--jitless" and v["openssl_version"] >= 0x3000000f))' "$iossim" || [[ tools/v8_gypfiles/v8.gyp -nt out/Makefile || tools/v8_gypfiles/features.gypi -nt out/Makefile || tools/gyp/pylib/gyp/generator/make.py -nt out/Makefile || common.gypi -nt out/Makefile ]]; then
           logged "$cache/configure.log" ./configure "${configure_args[@]}"
         fi
+        # A failed probe leaves openssl_version 0 (only a warning); engine.cc then builds without engine compat and make dies in ncrypto.
+        python3 -c 'import json,sys; sys.exit(json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]["openssl_version"] < 0x3000000f)' || die "configure did not detect the bundled OpenSSL 3 headers; see the OpenSSL warnings in $cache/configure.log."
         local targets=(libnode) name
         for name in $libraries; do
           case $name in
