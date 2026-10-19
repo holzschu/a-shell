@@ -54,6 +54,7 @@ touch Resources/bin/python3
 touch Resources/bin/python
 touch Resources/bin/pythonA
 touch Resources/bin/readlink
+touch Resources/bin/rg
 touch Resources/bin/rlogin
 touch Resources/bin/rm
 touch Resources/bin/rmdir
