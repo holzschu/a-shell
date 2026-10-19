@@ -1066,6 +1066,9 @@ extension SceneDelegate {
                         autocompletePosition = 0
                     }
                 }
+                if (autocompletePosition >= autocompleteSuggestions.count) {
+                    autocompletePosition = autocompleteSuggestions.count - 1
+                }
                 terminalView?.saveCursorPosition()
                 printAutocompleteString(suggestion: autocompleteSuggestions[autocompletePosition])
                 terminalView?.feed(text: commandAfterCursor) // prints the rest of the line
