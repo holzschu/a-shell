@@ -1,0 +1,638 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -27,10 +27,10 @@
+ edition = "2024"
+ rust-version = "1.85"
+ 
+-[[bin]]
+-bench = false
++[lib]
+ path = "crates/core/main.rs"
+-name = "rg"
++name = "rg_embedded"
++crate-type = ["staticlib"]
+ 
+ [[test]]
+ name = "integration"
+--- a/crates/core/main.rs
++++ b/crates/core/main.rs
+@@ -2,7 +2,9 @@
+ The main entry point into ripgrep.
+ */
+ 
+-use std::{io::Write, process::ExitCode};
++use std::io::Write;
++// An embedded command returns status instead of terminating the app.
++type ExitCode = i32;
+ 
+ use ignore::WalkState;
+ 
+@@ -11,6 +13,7 @@
+ #[macro_use]
+ mod messages;
+ 
++mod embedded;
+ mod flags;
+ mod haystack;
+ mod logger;
+@@ -172,7 +175,10 @@
+         args.searcher()?,
+         args.printer(mode, bufwtr.buffer()),
+     )?;
++    let context = embedded::context();
+     args.walk_builder()?.build_parallel().run(|| {
++        let context = context.clone();
++        let mut guard = None;
+         let bufwtr = &bufwtr;
+         let stats = &stats;
+         let matched = &matched;
+@@ -181,6 +187,8 @@
+         let mut searcher = searcher.clone();
+ 
+         Box::new(move |result| {
++            // Visitors are constructed by the parent, then moved to worker threads.
++            guard.get_or_insert_with(|| embedded::enter(context.clone()));
+             let haystack = match haystack_builder.build_from_result(result) {
+                 Some(haystack) => haystack,
+                 None => return WalkState::Continue,
+@@ -292,12 +300,17 @@
+         }
+         Ok(())
+     });
++    let context = embedded::context();
+     args.walk_builder()?.build_parallel().run(|| {
++        let context = context.clone();
++        let mut guard = None;
+         let haystack_builder = &haystack_builder;
+         let matched = &matched;
+         let tx = tx.clone();
+ 
+         Box::new(move |result| {
++            // Visitors are constructed by the parent, then moved to worker threads.
++            guard.get_or_insert_with(|| embedded::enter(context.clone()));
+             let haystack = match haystack_builder.build_from_result(result) {
+                 Some(haystack) => haystack,
+                 None => return WalkState::Continue,
+@@ -364,7 +377,7 @@
+             flags::generate_complete_powershell()
+         }
+     };
+-    writeln!(std::io::stdout(), "{}", output.trim_end())?;
++    writeln!(crate::embedded::stdout(), "{}", output.trim_end())?;
+     Ok(ExitCode::from(0))
+ }
+ 
+@@ -399,7 +412,7 @@
+             output
+         }
+     };
+-    writeln!(std::io::stdout(), "{}", output.trim_end())?;
++    writeln!(crate::embedded::stdout(), "{}", output.trim_end())?;
+     Ok(exit)
+ }
+ 
+@@ -481,3 +494,47 @@
+         )
+     }
+ }
++
++// Supply command argv instead of application argv.
++fn embedded_args() -> Vec<std::ffi::OsString> {
++    embedded::context().args.clone()
++}
++#[unsafe(no_mangle)]
++pub unsafe extern "C" fn rg_embedded_run(
++    argc: i32,
++    argv: *const *const std::ffi::c_char,
++    input: i32,
++    output: i32,
++    error: i32,
++    input_is_terminal: i32,
++    output_is_terminal: i32,
++) -> i32 {
++    use std::os::unix::ffi::OsStringExt;
++    if argc < 1 || argv.is_null() {
++        return 2;
++    }
++    let args = (1..argc as usize)
++        .map(|i| {
++            let bytes =
++                unsafe { std::ffi::CStr::from_ptr(*argv.add(i)) }.to_bytes();
++            std::ffi::OsString::from_vec(bytes.to_vec())
++        })
++        .collect();
++    let context = match embedded::new(
++        args,
++        input,
++        output,
++        error,
++        input_is_terminal != 0,
++        output_is_terminal != 0,
++    ) {
++        Ok(context) => context,
++        Err(_) => return 2,
++    };
++    let _guard = embedded::enter(context);
++    let result = std::panic::catch_unwind(main);
++    match result {
++        Ok(status) => status,
++        Err(payload) => payload.downcast_ref::<i32>().copied().unwrap_or(2),
++    }
++}
+--- /dev/null
++++ b/crates/core/embedded.rs
+@@ -0,0 +1,186 @@
++//! Invocation-owned streams and state for the embedded command.
++use std::{
++    cell::RefCell,
++    fs::File,
++    io::{self, Write},
++    os::{fd::FromRawFd, unix::fs::FileTypeExt},
++    sync::{
++        Arc, Mutex,
++        atomic::{AtomicBool, AtomicUsize, Ordering},
++    },
++};
++
++unsafe extern "C" {
++    fn rg_dup_stream(fd: i32) -> i32;
++    fn ios_getenv(name: *const std::ffi::c_char) -> *const std::ffi::c_char;
++}
++
++pub(crate) struct Context {
++    pub(crate) args: Vec<std::ffi::OsString>,
++    streams: [File; 3],
++    stdin_is_terminal: bool,
++    stdout_is_terminal: bool,
++    pub(crate) output_lock: Mutex<()>,
++    pub(crate) messages: AtomicBool,
++    pub(crate) ignore_messages: AtomicBool,
++    pub(crate) errored: AtomicBool,
++    pub(crate) log_level: AtomicUsize,
++}
++thread_local! {
++    static CURRENT: RefCell<Option<Arc<Context>>> = const { RefCell::new(None) };
++}
++pub(crate) struct Guard(Option<Arc<Context>>);
++impl Drop for Guard {
++    fn drop(&mut self) {
++        CURRENT.with(|slot| *slot.borrow_mut() = self.0.take());
++    }
++}
++pub(crate) fn enter(context: Arc<Context>) -> Guard {
++    Guard(CURRENT.with(|slot| slot.borrow_mut().replace(context)))
++}
++pub(crate) fn context() -> Arc<Context> {
++    CURRENT.with(|slot| slot.borrow().as_ref().unwrap().clone())
++}
++pub(crate) fn logging(level: log::Level) -> bool {
++    CURRENT.with(|slot| {
++        slot.borrow().as_ref().is_some_and(|c| {
++            level as usize <= c.log_level.load(Ordering::Relaxed)
++        })
++    })
++}
++pub(crate) fn new(
++    args: Vec<std::ffi::OsString>,
++    input: i32,
++    output: i32,
++    error: i32,
++    stdin_is_terminal: bool,
++    stdout_is_terminal: bool,
++) -> io::Result<Arc<Context>> {
++    fn duplicate(fd: i32) -> io::Result<File> {
++        let copy = unsafe { rg_dup_stream(fd) };
++        if copy < 0 {
++            return Err(io::Error::last_os_error());
++        }
++        // The adapter returns an owned dup; File closes only that copy.
++        Ok(unsafe { File::from_raw_fd(copy) })
++    }
++    let streams = [duplicate(input)?, duplicate(output)?, duplicate(error)?];
++    // A redirected regular file is never a terminal, even if the host session says so.
++    let stdin_is_terminal = stdin_is_terminal && !streams[0].metadata()?.is_file();
++    let stdout_is_terminal = stdout_is_terminal && !streams[1].metadata()?.is_file();
++    Ok(Arc::new(Context {
++        args,
++        streams,
++        stdin_is_terminal,
++        stdout_is_terminal,
++        output_lock: Mutex::new(()),
++        messages: AtomicBool::new(true),
++        ignore_messages: AtomicBool::new(true),
++        errored: AtomicBool::new(false),
++        log_level: AtomicUsize::new(log::LevelFilter::Warn as usize),
++    }))
++}
++fn stream(index: usize) -> File {
++    context().streams[index]
++        .try_clone()
++        .unwrap_or_else(|_| std::panic::resume_unwind(Box::new(2i32)))
++}
++pub(crate) fn stdin() -> File {
++    stream(0)
++}
++pub(crate) fn stdout() -> File {
++    stream(1)
++}
++pub(crate) fn stderr() -> File {
++    stream(2)
++}
++pub(crate) fn stdout_is_terminal() -> bool {
++    context().stdout_is_terminal
++}
++pub(crate) fn readable_stdin() -> bool {
++    let input = stdin();
++    !context().stdin_is_terminal
++        && input.metadata().is_ok_and(|m| {
++            let t = m.file_type();
++            t.is_file() || t.is_fifo() || t.is_socket()
++        })
++}
++// Must run on the command thread: ios_getenv reads that thread's session.
++fn colors(choice: termcolor::ColorChoice) -> bool {
++    match choice {
++        termcolor::ColorChoice::Never => false,
++        termcolor::ColorChoice::Always
++        | termcolor::ColorChoice::AlwaysAnsi => true,
++        termcolor::ColorChoice::Auto => {
++            // The command's own environment sees inline NO_COLOR=1 rg ...;
++            // the process environment does not.
++            let variable = |name: &std::ffi::CStr| unsafe {
++                let value = ios_getenv(name.as_ptr());
++                (!value.is_null()).then(|| std::ffi::CStr::from_ptr(value))
++            };
++            stdout_is_terminal()
++                && variable(c"NO_COLOR").is_none()
++                && variable(c"TERM")
++                    .is_some_and(|value| value.to_bytes() != b"dumb")
++        }
++    }
++}
++pub(crate) fn writer(
++    choice: termcolor::ColorChoice,
++    line: bool,
++) -> Box<dyn termcolor::WriteColor + Send> {
++    let out: Box<dyn Write + Send> = if line {
++        Box::new(io::LineWriter::new(stdout()))
++    } else {
++        Box::new(io::BufWriter::new(stdout()))
++    };
++    if colors(choice) {
++        Box::new(termcolor::Ansi::new(out))
++    } else {
++        Box::new(termcolor::NoColor::new(out))
++    }
++}
++
++/// Keep upstream parallel search buffers and serialize only this invocation's writes.
++pub(crate) struct BufferWriter {
++    context: Arc<Context>,
++    output: Mutex<(File, bool)>,
++    separator: Option<Vec<u8>>,
++    color: bool,
++}
++impl BufferWriter {
++    pub(crate) fn new(
++        choice: termcolor::ColorChoice,
++        separator: Option<Vec<u8>>,
++    ) -> Self {
++        Self {
++            context: context(),
++            output: Mutex::new((stdout(), false)),
++            separator,
++            color: colors(choice),
++        }
++    }
++    pub(crate) fn buffer(&self) -> termcolor::Buffer {
++        if self.color {
++            termcolor::Buffer::ansi()
++        } else {
++            termcolor::Buffer::no_color()
++        }
++    }
++    pub(crate) fn print(&self, buffer: &termcolor::Buffer) -> io::Result<()> {
++        if buffer.is_empty() {
++            return Ok(());
++        }
++        let _lock = self.context.output_lock.lock().unwrap();
++        let mut state = self.output.lock().unwrap();
++        if state.1 {
++            if let Some(ref sep) = self.separator {
++                state.0.write_all(sep)?;
++                state.0.write_all(b"\n")?;
++            }
++        }
++        state.0.write_all(buffer.as_slice())?;
++        state.1 = true;
++        Ok(())
++    }
++}
+--- a/crates/core/flags/parse.rs
++++ b/crates/core/flags/parse.rs
+@@ -69,7 +69,9 @@
+ 
+     let parser = Parser::new();
+     let mut low = LowArgs::default();
+-    if let Err(err) = parser.parse(std::env::args_os().skip(1), &mut low) {
++    if let Err(err) =
++        parser.parse(crate::embedded_args().into_iter(), &mut low)
++    {
+         return ParseResult::Err(err);
+     }
+     // Even though we haven't parsed the config file yet (assuming it exists),
+@@ -100,7 +102,7 @@
+     // The final arguments are just the arguments from the CLI appending to
+     // the end of the config arguments.
+     let mut final_args = config_args;
+-    final_args.extend(std::env::args_os().skip(1));
++    final_args.extend(crate::embedded_args().into_iter());
+ 
+     // Now do the CLI parsing dance again.
+     let mut low = LowArgs::default();
+@@ -118,12 +120,21 @@
+     crate::messages::set_ignore_messages(!low.no_ignore_messages);
+     match low.logging {
+         Some(LoggingMode::Trace) => {
+-            log::set_max_level(log::LevelFilter::Trace)
++            crate::embedded::context().log_level.store(
++                log::LevelFilter::Trace as usize,
++                std::sync::atomic::Ordering::Relaxed,
++            )
+         }
+         Some(LoggingMode::Debug) => {
+-            log::set_max_level(log::LevelFilter::Debug)
++            crate::embedded::context().log_level.store(
++                log::LevelFilter::Debug as usize,
++                std::sync::atomic::Ordering::Relaxed,
++            )
+         }
+-        None => log::set_max_level(log::LevelFilter::Warn),
++        None => crate::embedded::context().log_level.store(
++            log::LevelFilter::Warn as usize,
++            std::sync::atomic::Ordering::Relaxed,
++        ),
+     }
+ }
+ 
+--- a/crates/core/flags/hiargs.rs
++++ b/crates/core/flags/hiargs.rs
+@@ -328,11 +328,11 @@
+     /// then independently write to the buffers. Once a unit of work is
+     /// complete, a buffer can be given to the buffer writer to write to
+     /// stdout.
+-    pub(crate) fn buffer_writer(&self) -> termcolor::BufferWriter {
+-        let mut wtr =
+-            termcolor::BufferWriter::stdout(self.color.to_termcolor());
+-        wtr.separator(self.file_separator.clone());
+-        wtr
++    pub(crate) fn buffer_writer(&self) -> crate::embedded::BufferWriter {
++        crate::embedded::BufferWriter::new(
++            self.color.to_termcolor(),
++            self.file_separator.clone(),
++        )
+     }
+ 
+     /// Returns true when ripgrep had to guess to search the current working
+@@ -828,19 +828,13 @@
+     /// The writer returned is also configured to do either line or block
+     /// buffering, based on either explicit configuration from the user via CLI
+     /// flags, or automatically based on whether stdout is connected to a tty.
+-    pub(crate) fn stdout(&self) -> grep::cli::StandardStream {
+-        let color = self.color.to_termcolor();
+-        match self.buffer {
+-            BufferMode::Auto => {
+-                if self.is_terminal_stdout {
+-                    grep::cli::stdout_buffered_line(color)
+-                } else {
+-                    grep::cli::stdout_buffered_block(color)
+-                }
+-            }
+-            BufferMode::Line => grep::cli::stdout_buffered_line(color),
+-            BufferMode::Block => grep::cli::stdout_buffered_block(color),
+-        }
++    pub(crate) fn stdout(&self) -> Box<dyn termcolor::WriteColor + Send> {
++        let line = match self.buffer {
++            BufferMode::Auto => self.is_terminal_stdout,
++            BufferMode::Line => true,
++            BufferMode::Block => false,
++        };
++        crate::embedded::writer(self.color.to_termcolor(), line)
+     }
+ 
+     /// Returns the total number of threads ripgrep should use to execute a
+@@ -889,7 +883,6 @@
+             .max_filesize(self.max_filesize)
+             .threads(self.threads)
+             .same_file_system(self.one_file_system)
+-            .skip_stdout(matches!(self.mode, Mode::Search(_)))
+             .overrides(self.globs.clone())
+             .types(self.types.clone())
+             .hidden(!self.hidden)
+@@ -901,6 +894,9 @@
+             .require_git(!self.no_require_git)
+             .ignore_case_insensitive(self.ignore_file_case_insensitive)
+             .current_dir(&self.cwd);
++        if matches!(self.mode, Mode::Search(_)) {
++            builder.skip_file(crate::embedded::stdout())?;
++        }
+         if !self.no_ignore_dot {
+             builder.add_custom_ignore_filename(".rgignore");
+         }
+@@ -948,12 +944,10 @@
+     /// Note that the state values may change throughout the lifetime of
+     /// argument parsing.
+     fn new() -> anyhow::Result<State> {
+-        use std::io::IsTerminal;
+-
+         let cwd = current_dir()?;
+         log::debug!("read CWD from environment: {}", cwd.display());
+         Ok(State {
+-            is_terminal_stdout: std::io::stdout().is_terminal(),
++            is_terminal_stdout: crate::embedded::stdout_is_terminal(),
+             stdin_consumed: false,
+             cwd,
+         })
+@@ -1032,7 +1026,9 @@
+                             "error reading -f/--file from stdin: stdin \
+                              has already been consumed"
+                         );
+-                        for pat in grep::cli::patterns_from_stdin()? {
++                        for pat in grep::cli::patterns_from_reader(
++                            std::io::BufReader::new(crate::embedded::stdin()),
++                        )? {
+                             add(pat);
+                         }
+                         state.stdin_consumed = true;
+@@ -1110,7 +1106,7 @@
+         // mode, but there really is no good way to mitigate it. It's just a
+         // consequence of letting the user type 'rg foo' and "guessing" that
+         // they meant to search the CWD.
+-        let is_readable_stdin = grep::cli::is_readable_stdin();
++        let is_readable_stdin = crate::embedded::readable_stdin();
+         let use_cwd = !is_readable_stdin
+             || state.stdin_consumed
+             || !matches!(low.mode, Mode::Search(_));
+--- a/crates/core/logger.rs
++++ b/crates/core/logger.rs
+@@ -23,18 +23,25 @@
+     /// global logger. If there was a problem setting the logger, then an
+     /// error is returned.
+     pub(crate) fn init() -> Result<(), log::SetLoggerError> {
+-        log::set_logger(LOGGER)
++        static INIT: std::sync::Once = std::sync::Once::new();
++        INIT.call_once(|| {
++            log::set_logger(LOGGER).expect("initialize ripgrep logger");
++            log::set_max_level(log::LevelFilter::Trace);
++        });
++        Ok(())
+     }
+ }
+ 
+ impl Log for Logger {
+-    fn enabled(&self, _: &log::Metadata<'_>) -> bool {
+-        // We set the log level via log::set_max_level, so we don't need to
+-        // implement filtering here.
+-        true
++    fn enabled(&self, metadata: &log::Metadata<'_>) -> bool {
++        // The library logger is shared; each invocation owns its filtering.
++        crate::embedded::logging(metadata.level())
+     }
+ 
+     fn log(&self, record: &log::Record<'_>) {
++        if !self.enabled(record.metadata()) {
++            return;
++        }
+         match (record.file(), record.line()) {
+             (Some(file), Some(line)) => {
+                 eprintln_locked!(
+--- a/crates/core/messages.rs
++++ b/crates/core/messages.rs
+@@ -15,14 +15,7 @@
+ consulted to determine what the exit status ought to be.
+ */
+ 
+-use std::sync::atomic::{AtomicBool, Ordering};
+-
+-/// When false, "messages" will not be printed.
+-static MESSAGES: AtomicBool = AtomicBool::new(false);
+-/// When false, "messages" related to ignore rules will not be printed.
+-static IGNORE_MESSAGES: AtomicBool = AtomicBool::new(false);
+-/// Flipped to true when an error message is printed.
+-static ERRORED: AtomicBool = AtomicBool::new(false);
++use std::sync::atomic::Ordering;
+ 
+ /// Like eprintln, but locks stdout to prevent interleaving lines.
+ ///
+@@ -39,8 +32,9 @@
+             // lock stdout before printing to stderr. This avoids interleaving
+             // lines within ripgrep because `search_parallel` uses `termcolor`,
+             // which accesses the same stdout lock when writing lines.
+-            let stdout = std::io::stdout().lock();
+-            let mut stderr = std::io::stderr().lock();
++            let context = crate::embedded::context();
++            let stdout = context.output_lock.lock().unwrap();
++            let mut stderr = crate::embedded::stderr();
+             // We specifically ignore any errors here. One plausible error we
+             // can get in some cases is a broken pipe error. And when that
+             // occurs, we should exit gracefully. Otherwise, just abort with
+@@ -49,16 +43,16 @@
+             // See: https://github.com/BurntSushi/ripgrep/issues/1966
+             if let Err(err) = write!(stderr, "rg: ") {
+                 if err.kind() == std::io::ErrorKind::BrokenPipe {
+-                    std::process::exit(0);
++                    std::panic::resume_unwind(Box::new(0i32));
+                 } else {
+-                    std::process::exit(2);
++                    std::panic::resume_unwind(Box::new(2i32));
+                 }
+             }
+             if let Err(err) = writeln!(stderr, $($tt)*) {
+                 if err.kind() == std::io::ErrorKind::BrokenPipe {
+-                    std::process::exit(0);
++                    std::panic::resume_unwind(Box::new(0i32));
+                 } else {
+-                    std::process::exit(2);
++                    std::panic::resume_unwind(Box::new(2i32));
+                 }
+             }
+             drop(stdout);
+@@ -99,19 +93,19 @@
+ 
+ /// Returns true if and only if messages should be shown.
+ pub(crate) fn messages() -> bool {
+-    MESSAGES.load(Ordering::Relaxed)
++    crate::embedded::context().messages.load(Ordering::Relaxed)
+ }
+ 
+ /// Set whether messages should be shown or not.
+ ///
+ /// By default, they are not shown.
+ pub(crate) fn set_messages(yes: bool) {
+-    MESSAGES.store(yes, Ordering::Relaxed)
++    crate::embedded::context().messages.store(yes, Ordering::Relaxed)
+ }
+ 
+ /// Returns true if and only if "ignore" related messages should be shown.
+ pub(crate) fn ignore_messages() -> bool {
+-    IGNORE_MESSAGES.load(Ordering::Relaxed)
++    crate::embedded::context().ignore_messages.load(Ordering::Relaxed)
+ }
+ 
+ /// Set whether "ignore" related messages should be shown or not.
+@@ -122,12 +116,12 @@
+ /// `messages` is disabled, then "ignore" messages are never shown, regardless
+ /// of this setting.
+ pub(crate) fn set_ignore_messages(yes: bool) {
+-    IGNORE_MESSAGES.store(yes, Ordering::Relaxed)
++    crate::embedded::context().ignore_messages.store(yes, Ordering::Relaxed)
+ }
+ 
+ /// Returns true if and only if ripgrep came across a non-fatal error.
+ pub(crate) fn errored() -> bool {
+-    ERRORED.load(Ordering::Relaxed)
++    crate::embedded::context().errored.load(Ordering::Relaxed)
+ }
+ 
+ /// Indicate that ripgrep has come across a non-fatal error.
+@@ -135,5 +129,5 @@
+ /// Callers should not use this directly. Instead, it is called automatically
+ /// via the `err_message` macro.
+ pub(crate) fn set_errored() {
+-    ERRORED.store(true, Ordering::Relaxed);
++    crate::embedded::context().errored.store(true, Ordering::Relaxed);
+ }
+--- a/crates/core/search.rs
++++ b/crates/core/search.rs
+@@ -256,7 +256,7 @@
+ 
+         self.searcher.set_binary_detection(bin);
+         if haystack.is_stdin() {
+-            self.search_reader(path, &mut io::stdin().lock())
++            self.search_reader(path, &mut crate::embedded::stdin())
+         } else if self.should_preprocess(path) {
+             self.search_preprocessor(path)
+         } else if self.should_decompress(path) {
+--- a/crates/ignore/src/walk.rs
++++ b/crates/ignore/src/walk.rs
+@@ -984,6 +984,20 @@
+         self
+     }
+ 
++    /// Skip a command's redirected output without consulting process stdout.
++    pub fn skip_file(
++        &mut self,
++        file: std::fs::File,
++    ) -> std::io::Result<&mut WalkBuilder> {
++        let handle = Handle::from_file(file)?;
++        self.skip = if handle.as_file().metadata()?.is_file() {
++            Some(Arc::new(handle))
++        } else {
++            None
++        };
++        Ok(self)
++    }
++
+     /// Yields only entries which satisfy the given predicate and skips
+     /// descending into directories that do not satisfy the given predicate.
+     ///

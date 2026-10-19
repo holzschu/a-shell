@@ -80,6 +80,8 @@ fastlane/test_output
 
 Configuration.xcconfig
 
+# Locally built native ripgrep framework
+/rg/rg.xcframework/
 helix/helix.xcframework/
 /ruff/Ruff.xcframework/
 gitoxide/gitoxide.xcframework/
