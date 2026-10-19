@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A22600000000000000000001 /* codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		AE1100000000000000000001 /* helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A22400000000000000000001 /* Ruff.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22400000000000000000002 /* Ruff.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		619225000000000000000001 /* gitoxide.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 619225000000000000000002 /* gitoxide.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FD0000000000000000000001 /* fd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000000000000000000002 /* fd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1378,6 +1379,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				AE1100000000000000000001 /* helix.xcframework in Embed Frameworks */,
 				227A540A308519F1007EA879 /* fd.xcframework in Embed Frameworks */,
 				227A540830850D0E007EA879 /* fzf.xcframework in Embed Frameworks */,
 				2208CD763085292C00AB790C /* navi.xcframework in Embed Frameworks */,
@@ -1912,6 +1914,7 @@
 
 /* Begin PBXFileReference section */
 		A22600000000000000000002 /* codex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = codex/codex.xcframework; sourceTree = SOURCE_ROOT; };
+		AE1100000000000000000002 /* helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
 		A22400000000000000000002 /* Ruff.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = ruff/Ruff.xcframework; sourceTree = SOURCE_ROOT; };
 		619225000000000000000002 /* gitoxide.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = gitoxide/gitoxide.xcframework; sourceTree = SOURCE_ROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
@@ -3018,6 +3021,7 @@
 			isa = PBXGroup;
 			children = (
 				A22600000000000000000002 /* codex.xcframework */,
+				AE1100000000000000000002 /* helix.xcframework */,
 				227A5409308519E1007EA879 /* fd.xcframework */,
 				227A540730850D06007EA879 /* fzf.xcframework */,
 				2208CD753085292500AB790C /* navi.xcframework */,
