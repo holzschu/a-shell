@@ -40,7 +40,7 @@ In an existing checkout, run `git submodule sync` before updating initialized su
 Additional prerequisites:
 
 - Python and its associated libraries cannot be built from this clone alone: they require an iOS Fortran compiler built from a patched gcc. The Python targets therefore need prebuilt frameworks, which are not currently published; see [the build discussion](https://github.com/holzschu/a-shell/pull/1100#issuecomment-6265206051).
-- For full `a-Shell`, build the local frameworks using [node/README.md](node/README.md), [fd/README.md](fd/README.md), [fzf/README.md](fzf/README.md), [navi/README.md](navi/README.md), [gitoxide/README.md](gitoxide/README.md) and [ruff/README.md](ruff/README.md).
+- For full `a-Shell`, build the local frameworks using [node/README.md](node/README.md), [fd/README.md](fd/README.md), [fzf/README.md](fzf/README.md), [navi/README.md](navi/README.md), [gitoxide/README.md](gitoxide/README.md), [ruff/README.md](ruff/README.md), [rg/README.md](rg/README.md) and [helix/README.md](helix/README.md).
 - The Python targets also reference inputs absent from the downloads, including `openrsync`/`openrsyncA`, `curl-impersonate`, `WasmKitCommand` and `blink`; full `a-Shell` references additional TeX, `cbc` and `perlC` frameworks. This list is not exhaustive; see [#1005](https://github.com/holzschu/a-shell/issues/1005).
 
 Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. To build an unsigned app for iOS devices:
