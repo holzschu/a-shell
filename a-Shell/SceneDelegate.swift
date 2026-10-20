@@ -1389,6 +1389,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     public lazy var editorToolbar: UIToolbar = {
         var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: screenWidth - 20, height: toolbarHeight))
         toolbar.tintColor = .label
+        toolbar.backgroundColor = terminalBackgroundColor
         if (leftButtonGroup.count == 0) {
             toolbar.items = rightButtonGroup
         } else {
@@ -2213,6 +2214,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {  // SwiftTerm changes to the UI must happen on the main thread
             // Force writing all config to term. Used when we changed many parameters.
             self.terminalView?.backgroundColor = backgroundColor
+            self.terminalView?.inputAccessoryView?.backgroundColor = self.terminalBackgroundColor
+            self.window?.rootViewController?.view.backgroundColor = self.terminalBackgroundColor ?? .systemBackground
             self.terminalView?.nativeBackgroundColor = backgroundColor
             self.terminalView?.getTerminal().backgroundColor = (backgroundColor.toSwiftTermColor())
             self.terminalView?.tintColor = foregroundColor
@@ -2248,6 +2251,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let backgroundColor = backgroundColor {
                 self.terminalBackgroundColor = backgroundColor
                 self.terminalView?.backgroundColor = backgroundColor
+                self.terminalView?.inputAccessoryView?.backgroundColor = backgroundColor
+                self.window?.rootViewController?.view.backgroundColor = backgroundColor
                 self.terminalView?.nativeBackgroundColor = backgroundColor
                 // We need to act on the getTerminal() colors as well, otherwise the default color is not very visible.
                 self.terminalView?.getTerminal().backgroundColor = (backgroundColor.toSwiftTermColor())
@@ -4311,6 +4316,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             terminalView?.tintColor = foregroundColor
             terminalView?.caretColor = cursorColor
             terminalView?.backgroundColor = backgroundColor
+            terminalView?.inputAccessoryView?.backgroundColor = terminalBackgroundColor
+            window?.rootViewController?.view.backgroundColor = terminalBackgroundColor ?? .systemBackground
             terminalView?.selectedTextBackgroundColor = cursorColor.makeTransparent()
             self.terminalView?.nativeForegroundColor = foregroundColor
             // This is also required otherwise we get light gray writing
