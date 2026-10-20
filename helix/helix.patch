@@ -162,6 +162,23 @@ index 362d3ba..1e7e3ff 100644
 +    anyhow::ensure!((13..=15).contains(&grammar.abi_version()), "Incompatible static grammar ABI");
 +    Ok(Some(grammar))
 +}
+diff --git i/helix-stdx/src/env.rs w/helix-stdx/src/env.rs
+index 6f9a091..9a6bc8a 100644
+--- i/helix-stdx/src/env.rs
++++ w/helix-stdx/src/env.rs
+@@ -47,6 +47,12 @@ pub fn set_current_working_dir(path: impl AsRef<Path>) -> std::io::Result<Option
+     Ok(cwd.replace(path))
+ }
+ 
++/// Forget the cached working directory so the next call reads it again.
++#[cfg(target_os = "ios")]
++pub fn reset_current_working_dir() {
++    *CWD.write().unwrap() = None;
++}
++
+ /// Checks if the given environment variable is set.
+ pub fn env_var_is_set(env_var_name: &str) -> bool {
+     std::env::var_os(env_var_name).is_some()
 diff --git i/helix-stdx/src/ios_io.rs w/helix-stdx/src/ios_io.rs
 new file mode 100644
 index 0000000..7cfdaa9
@@ -543,7 +560,7 @@ index 31ab85c..34e440e 100644
  
      // NOTE: Set the working directory early so the correct configuration is loaded. Be aware that
      // Application::new() depends on this logic so it must be updated if this changes.
-@@ -123,34 +134,67 @@ async fn main_impl() -> Result<i32> {
+@@ -123,34 +134,69 @@ async fn main_impl() -> Result<i32> {
          helix_stdx::env::set_current_working_dir(path)?;
      }
  
@@ -613,6 +630,8 @@ index 31ab85c..34e440e 100644
 +    let args: Vec<String> = (0..argc).map(|i| std::ffi::CStr::from_ptr(*argv.add(i as usize)).to_string_lossy().into_owned()).collect();
 +    match std::thread::Builder::new().name("helix-ios".into()).stack_size(16 * 1024 * 1024).spawn(move || {
 +        crate::args::IOS_ARGS.with(|slot| *slot.borrow_mut() = args);
++        // The embedded process outlives each command; the cwd belongs to this command.
++        helix_stdx::env::reset_current_working_dir();
 +        match main_impl() { Ok(code) => code, Err(err) => { port_eprintln!("Helix: {err:#}"); 1 } }
 +    }) {
 +        Ok(thread) => thread.join().unwrap_or(1),

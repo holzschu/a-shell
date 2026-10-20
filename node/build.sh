@@ -150,6 +150,8 @@ apply() (
       fi
       (
         cd "$source"
+        # configure probes the bundled OpenSSL with $CC and the include variables; drop user overrides so the build matches a clean shell.
+        unset CC CXX CC_host CXX_host CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH
         export GYP_DEFINES="target_arch=arm64 host_os=mac target_os=ios v8_enable_turbofan=0 v8_enable_sparkplug=0 v8_enable_maglev=0 v8_enable_drumbrake=0"
         # GYP's lite flag does not itself disable compiler source sets in this branch.
         local iossim=true
@@ -159,9 +161,11 @@ apply() (
         else
           configure_args+=(--ios-simulator)
         fi
-        if [[ ! -f config.gypi ]] || ! python3 -c 'import json,sys; v=json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]; sys.exit(not (v["iossim"] == sys.argv[1] and v["icu_small"] == "true" and v["v8_enable_lite_mode"] == 1 and v["v8_enable_webassembly"] == 0 and v["v8_enable_pointer_compression"] == 0 and v["v8_enable_maglev"] == 0 and v["node_v8_options"] == "--jitless"))' "$iossim" || [[ tools/v8_gypfiles/v8.gyp -nt out/Makefile || tools/v8_gypfiles/features.gypi -nt out/Makefile || tools/gyp/pylib/gyp/generator/make.py -nt out/Makefile || common.gypi -nt out/Makefile ]]; then
+        if [[ ! -f config.gypi ]] || ! python3 -c 'import json,sys; v=json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]; sys.exit(not (v["iossim"] == sys.argv[1] and v["icu_small"] == "true" and v["v8_enable_lite_mode"] == 1 and v["v8_enable_webassembly"] == 0 and v["v8_enable_pointer_compression"] == 0 and v["v8_enable_maglev"] == 0 and v["node_v8_options"] == "--jitless" and v["openssl_version"] >= 0x3000000f))' "$iossim" || [[ tools/v8_gypfiles/v8.gyp -nt out/Makefile || tools/v8_gypfiles/features.gypi -nt out/Makefile || tools/gyp/pylib/gyp/generator/make.py -nt out/Makefile || common.gypi -nt out/Makefile ]]; then
           logged "$cache/configure.log" ./configure "${configure_args[@]}"
         fi
+        # A failed probe leaves openssl_version 0 (only a warning); engine.cc then builds without engine compat and make dies in ncrypto.
+        python3 -c 'import json,sys; sys.exit(json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]["openssl_version"] < 0x3000000f)' || die "configure did not detect the bundled OpenSSL 3 headers; see the OpenSSL warnings in $cache/configure.log."
         local targets=(libnode) name
         for name in $libraries; do
           case $name in
@@ -267,25 +271,29 @@ PYABI
 </dict></plist>
 EOF
         fi
-        cp "$here/fetch-preload.mjs" "$framework/fetch-preload.mjs"
-        cp "$here/fetch-lock.json" "$framework/fetch-lock.json"
         cp "$source/LICENSE" "$framework/LICENSE"
-        mkdir -p "$framework/fetch"
-        rsync -a --delete "$cache/fetch/node_modules" "$framework/fetch/"
-        # Node's pinned tree ships its matching npm, including its dependency tree.
-        mkdir -p "$framework/npm"
-        rsync -a --delete "$source/deps/npm/" "$framework/npm/"
-        patch -s -F 0 -p1 -d "$framework/npm" <"$here/npm-native.patch"
         framework_args+=(-framework "$framework")
-        if [[ $relink == 1 ]] || ! cmp -s "$framework/Info.plist" "$app/xcfs/node.xcframework/$slice/node.framework/Info.plist" || ! cmp -s "$framework/npm/npmrc" "$app/xcfs/node.xcframework/$slice/node.framework/npm/npmrc" || ! cmp -s "$framework/node" "$app/xcfs/node.xcframework/$slice/node.framework/node" || ! cmp -s "$here/fetch-preload.mjs" "$app/xcfs/node.xcframework/$slice/node.framework/fetch-preload.mjs" || ! cmp -s "$here/fetch-lock.json" "$app/xcfs/node.xcframework/$slice/node.framework/fetch-lock.json" || ! cmp -s "$framework/npm/node_modules/@npmcli/run-script/lib/run-script-pkg.js" "$app/xcfs/node.xcframework/$slice/node.framework/npm/node_modules/@npmcli/run-script/lib/run-script-pkg.js" || ! cmp -s "$framework/npm/node_modules/bin-links/lib/link-bins.js" "$app/xcfs/node.xcframework/$slice/node.framework/npm/node_modules/bin-links/lib/link-bins.js" || ! cmp -s "$framework/npm/node_modules/bin-links/lib/get-paths.js" "$app/xcfs/node.xcframework/$slice/node.framework/npm/node_modules/bin-links/lib/get-paths.js"; then
+        if [[ $relink == 1 ]] || ! cmp -s "$framework/Info.plist" "$app/xcfs/node.xcframework/$slice/node.framework/Info.plist" || ! cmp -s "$framework/node" "$app/xcfs/node.xcframework/$slice/node.framework/node" || [[ -e $app/xcfs/node.xcframework/$slice/node.framework/npm || -e $app/xcfs/node.xcframework/$slice/node.framework/fetch ]]; then
           package_changed=1
         fi
       done
+      # The App Store treats every .js and .py file inside a framework as unsigned code, so the
+      # JavaScript lives in the app bundle's resources: the project copies these two folders to
+      # $APPDIR/npm and $APPDIR/node-fetch. Node's pinned tree ships its matching npm, including its dependency tree.
+      mkdir -p "$app/Resources/npm" "$app/Resources/node-fetch/fetch"
+      rsync -a --delete "$source/deps/npm/" "$app/Resources/npm/"
+      patch -s -F 0 -p1 -d "$app/Resources/npm" <"$here/npm-native.patch"
+      cp "$here/fetch-preload.mjs" "$here/fetch-lock.json" "$app/Resources/node-fetch/"
+      rsync -a --delete "$cache/fetch/node_modules" "$app/Resources/node-fetch/fetch/"
       if [[ $package_changed == 1 || ! -d $app/xcfs/node.xcframework ]]; then
         if [[ -d $app/xcfs/node.xcframework ]]; then
           rm -rf "$app/xcfs/node.xcframework"
         fi
         logged "$cache/framework.log" xcodebuild -create-xcframework "${framework_args[@]}" -output "$app/xcfs/node.xcframework"
+      fi
+      # The App Store rejects the upload when a framework holds script files it cannot sign.
+      if scripts=$(find "$app/xcfs/node.xcframework" \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.py' \) -print -quit) && [[ -n $scripts ]]; then
+        die "$scripts is a script inside node.xcframework; app-store frameworks must hold none."
       fi
       ;;
   esac

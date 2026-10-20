@@ -88,5 +88,7 @@ helix/helix.xcframework/
 /ruff/Ruff.xcframework/
 gitoxide/gitoxide.xcframework/
 xcfs/node.xcframework/
+Resources/npm/
+Resources/node-fetch/
 /fzf/fzf.xcframework/
 /navi/navi.xcframework/

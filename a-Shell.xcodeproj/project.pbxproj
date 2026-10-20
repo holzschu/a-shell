@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		A22600000000000000000001 /* codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		224A907B2ADD0999006DB9CC /* freetype.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000001 /* freetype.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		224A907C2ADD0999006DB9CC /* harfbuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000002 /* harfbuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		224A907D2ADD0999006DB9CC /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000003 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A22000000000000000000001 /* rg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22000000000000000000002 /* rg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AE1100000000000000000001 /* helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A22400000000000000000001 /* Ruff.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22400000000000000000002 /* Ruff.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -168,9 +171,6 @@
 		224A90762ADD0999006DB9CC /* xxd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D40265FA3500056AFD2 /* xxd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90772ADD0999006DB9CC /* libssh2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F822570120E0068004E /* libssh2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90782ADD0999006DB9CC /* openssl.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F83257012190068004E /* openssl.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		224A907B2ADD0999006DB9CC /* freetype.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9BE254C19D0008C1490 /* freetype.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		224A907C2ADD0999006DB9CC /* harfbuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9F7254C2C21008C1490 /* harfbuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		224A907D2ADD0999006DB9CC /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9F4254C2AA7008C1490 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907E2ADD0999006DB9CC /* magick.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2231A5072588D8D100B5EDFD /* magick.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90802ADD0999006DB9CC /* vim.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5A0255846F300673D11 /* vim.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90952ADD0999006DB9CC /* lua_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F583255846A500673D11 /* lua_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -188,8 +188,6 @@
 		224A90C92ADD0999006DB9CC /* dashD.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2243B1B6284278DC00588B51 /* dashD.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90CA2ADD0999006DB9CC /* dashE.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2243B1B7284278DD00588B51 /* dashE.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90CB2ADD0999006DB9CC /* jq.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2237DC3028549CB8003E4738 /* jq.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		224A91682ADD0999006DB9CC /* pico.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2232245E289695A9001BAE04 /* pico.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		224A91692ADD0999006DB9CC /* multimarkdown.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227318AC28F02E170027A736 /* multimarkdown.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A916B2ADD0999006DB9CC /* a-Shell-mini-Intents.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22178EF8257BBBA4008EB2B4 /* a-Shell-mini-Intents.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		224A916C2ADD0999006DB9CC /* a-Shell-mini-IntentsUI.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22178F01257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		224C24FA2C94238900DE430E /* blink.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 220F18872C7C81D7007090F8 /* blink.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -235,6 +233,9 @@
 		227B24872BE033E1003A8031 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
 		227B248C2BE12FF1003A8031 /* wasm_withWorker.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248A2BE12FEE003A8031 /* wasm_withWorker.js */; };
 		227EE36E2F0913C000636757 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 227EE36D2F0913C000636757 /* SwiftTerm */; };
+		227F058330867D0500FCC674 /* node.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227F058230867C0300FCC674 /* node.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		227F0FB930868CE400FCC674 /* npm in Resources */ = {isa = PBXBuildFile; fileRef = 227F0FB830868CE300FCC674 /* npm */; };
+		22F0FE7B3A1C4B0D00A1B2C3 /* node-fetch in Resources */ = {isa = PBXBuildFile; fileRef = 22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */; };
 		228503772F47806F00E4DA17 /* listTeXscripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221DA54B26F7688100BEA92A /* listTeXscripts.swift */; };
 		228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		228E13F725C95F430065D825 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -975,6 +976,7 @@
 		22F8457F266FDB7C00A0BF11 /* lg2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2234FB14266F765A00702AD1 /* lg2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F87DB62EB8B3B7003251CC /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
 		22F87DB72EB8B3C6003251CC /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
+		22F9641B30852E8100868C46 /* Ruff.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F9641A30852E7600868C46 /* Ruff.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22FFB44229E87D950054F01F /* require_jscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44129E87D920054F01F /* require_jscore.js */; };
 		22FFB44429E88AE80054F01F /* url-polyfill.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44329E88AE60054F01F /* url-polyfill.js */; };
 		619225000000000000000001 /* gitoxide/gitoxide.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 619225000000000000000002 /* gitoxide/gitoxide.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -988,7 +990,9 @@
 		6BD9536F2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		6BD953702BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22000000000000000000002 /* rg/rg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		AE1100000000000000000001 /* helix/helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix/helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1092,8 +1096,6 @@
 				224A90C92ADD0999006DB9CC /* dashD.xcframework in Embed Frameworks */,
 				224A90CA2ADD0999006DB9CC /* dashE.xcframework in Embed Frameworks */,
 				224A90CB2ADD0999006DB9CC /* jq.xcframework in Embed Frameworks */,
-				224A91682ADD0999006DB9CC /* pico.framework in Embed Frameworks */,
-				224A91692ADD0999006DB9CC /* multimarkdown.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1380,12 +1382,13 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				AE1100000000000000000001 /* helix.xcframework in Embed Frameworks */,
+				AE1100000000000000000001 /* helix/helix.xcframework in Embed Frameworks */,
 				227A540A308519F1007EA879 /* fd.xcframework in Embed Frameworks */,
 				227A540830850D0E007EA879 /* fzf.xcframework in Embed Frameworks */,
 				2208CD763085292C00AB790C /* navi.xcframework in Embed Frameworks */,
 				619225000000000000000001 /* gitoxide/gitoxide.xcframework in Embed Frameworks */,
-				A22400000000000000000001 /* Ruff.xcframework in Embed Frameworks */,
+				22F9641B30852E8100868C46 /* Ruff.xcframework in Embed Frameworks */,
+				227F058330867D0500FCC674 /* node.xcframework in Embed Frameworks */,
 				228E13FC25C95F4E0065D825 /* ios_system.xcframework in Embed Frameworks */,
 				AA7100000000000000000001 /* (null) in Embed Frameworks */,
 				22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */,
@@ -1441,7 +1444,7 @@
 				2243B1B12840ADBF00588B51 /* vimproc.xcframework in Embed Frameworks */,
 				2243B1BA284278F500588B51 /* dash.xcframework in Embed Frameworks */,
 				A22600000000000000000001 /* codex.xcframework in Embed Frameworks */,
-				A22000000000000000000001 /* rg.xcframework in Embed Frameworks */,
+				A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */,
 				2243B1BB284278F500588B51 /* dashA.xcframework in Embed Frameworks */,
 				2243B1BC284278F500588B51 /* dashB.xcframework in Embed Frameworks */,
 				2243B1BD284278F500588B51 /* dashC.xcframework in Embed Frameworks */,
@@ -1916,6 +1919,9 @@
 
 /* Begin PBXFileReference section */
 		A22600000000000000000002 /* codex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = codex/codex.xcframework; sourceTree = SOURCE_ROOT; };
+		A53600000000000000000001 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = "xcfs/.build/artifacts/xcfs/freetype/freetype.xcframework"; sourceTree = SOURCE_ROOT; };
+		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = "xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework"; sourceTree = SOURCE_ROOT; };
+		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = "xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework"; sourceTree = SOURCE_ROOT; };
 		A22000000000000000000002 /* rg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = rg/rg.xcframework; sourceTree = SOURCE_ROOT; };
 		AE1100000000000000000002 /* helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
 		A22400000000000000000002 /* Ruff.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = ruff/Ruff.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2038,6 +2044,9 @@
 		227B24832BE01ED3003A8031 /* localCertificateKey.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = localCertificateKey.pem; sourceTree = "<group>"; };
 		227B248A2BE12FEE003A8031 /* wasm_withWorker.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_withWorker.js; sourceTree = "<group>"; };
 		227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_worker_wasm.js; sourceTree = "<group>"; };
+		227F058230867C0300FCC674 /* node.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = node.xcframework; path = xcfs/node.xcframework; sourceTree = "<group>"; };
+		227F0FB830868CE300FCC674 /* npm */ = {isa = PBXFileReference; lastKnownFileType = folder; name = npm; path = Resources/npm; sourceTree = "<group>"; };
+		22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node-fetch; path = Resources/node-fetch; sourceTree = "<group>"; };
 		228E13F225C95F2D0065D825 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = xcfs/.build/artifacts/xcfs/ios_system/ios_system.xcframework; sourceTree = "<group>"; };
 		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIColor+hexString.swift"; path = "Util/UIColor+hexString.swift"; sourceTree = SOURCE_ROOT; };
 		22942C3F263F15B1004BEA41 /* perl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perl.xcframework; path = xcfs/.build/artifacts/xcfs/perl/perl.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2760,6 +2769,7 @@
 		22F20174264E81E1004FBA5C /* perlA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlA.xcframework; path = xcfs/.build/artifacts/xcfs/perlA/perlA.xcframework; sourceTree = SOURCE_ROOT; };
 		22F20177265260B7004FBA5C /* perlB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlB.xcframework; path = xcfs/.build/artifacts/xcfs/perlB/perlB.xcframework; sourceTree = SOURCE_ROOT; };
 		22F75D40265FA3500056AFD2 /* xxd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xxd.xcframework; path = xcfs/.build/artifacts/xcfs/xxd/xxd.xcframework; sourceTree = SOURCE_ROOT; };
+		22F9641A30852E7600868C46 /* Ruff.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Ruff.xcframework; path = ruff/Ruff.xcframework; sourceTree = "<group>"; };
 		22FFB44129E87D920054F01F /* require_jscore.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = require_jscore.js; sourceTree = "<group>"; };
 		22FFB44329E88AE60054F01F /* url-polyfill.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "url-polyfill.js"; sourceTree = "<group>"; };
 		619225000000000000000002 /* gitoxide/gitoxide.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = gitoxide/gitoxide.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2770,6 +2780,8 @@
 		8916088E2713056900CED1C9 /* KBWebViewBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KBWebViewBase.m; sourceTree = "<group>"; };
 		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
 		898384A83061A39800A1E18D /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
+		A22000000000000000000002 /* rg/rg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = rg/rg.xcframework; sourceTree = SOURCE_ROOT; };
+		AE1100000000000000000002 /* helix/helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3024,13 +3036,14 @@
 			isa = PBXGroup;
 			children = (
 				A22600000000000000000002 /* codex.xcframework */,
-				A22000000000000000000002 /* rg.xcframework */,
-				AE1100000000000000000002 /* helix.xcframework */,
+				227F058230867C0300FCC674 /* node.xcframework */,
+				A22000000000000000000002 /* rg/rg.xcframework */,
+				AE1100000000000000000002 /* helix/helix.xcframework */,
 				227A5409308519E1007EA879 /* fd.xcframework */,
 				227A540730850D06007EA879 /* fzf.xcframework */,
 				2208CD753085292500AB790C /* navi.xcframework */,
 				619225000000000000000002 /* gitoxide/gitoxide.xcframework */,
-				A22400000000000000000002 /* Ruff.xcframework */,
+				22F9641A30852E7600868C46 /* Ruff.xcframework */,
 				22D13FDE2E61E3FC00E76E2E /* Frameworks regular */,
 				22D132A12E61E01100E76E2E /* Frameworks mini */,
 				22E2F7E62CD67C5C0079534C /* iwasm.framework */,
@@ -3058,6 +3071,9 @@
 				22E9F5A0255846F300673D11 /* vim.xcframework */,
 				2243B1B02840ADAB00588B51 /* vimproc.xcframework */,
 				22F75D40265FA3500056AFD2 /* xxd.xcframework */,
+				A53600000000000000000001 /* freetype.xcframework */,
+				A53600000000000000000002 /* harfbuzz.xcframework */,
+				A53600000000000000000003 /* libpng.xcframework */,
 				2294A9BE254C19D0008C1490 /* freetype.xcframework */,
 				22AF02D229F669C20085290B /* openblas.xcframework */,
 				22AF02D329F669DE0085290B /* libgfortran.xcframework */,
@@ -3082,6 +3098,8 @@
 		22B1B81A22CB9E5500F7C452 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				227F0FB830868CE300FCC674 /* npm */,
+				22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */,
 				22D1335C2E61E35900E76E2E /* Library */,
 				227B248A2BE12FEE003A8031 /* wasm_withWorker.js */,
 				227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */,
@@ -4144,6 +4162,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				227F0FB930868CE400FCC674 /* npm in Resources */,
+				22F0FE7B3A1C4B0D00A1B2C3 /* node-fetch in Resources */,
 				22D1335D2E61E35B00E76E2E /* Library in Resources */,
 				227B24842BE01ED5003A8031 /* localCertificate.pem in Resources */,
 				227B24852BE01ED5003A8031 /* localCertificateKey.pem in Resources */,
@@ -4765,7 +4785,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 593;
+				CURRENT_PROJECT_VERSION = 595;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4814,7 +4834,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 593;
+				CURRENT_PROJECT_VERSION = 595;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;

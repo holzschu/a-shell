@@ -243,7 +243,7 @@ _ = Package(
             url: "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/pdftexA.xcframework.zip",
             checksum: "16130dd0486e8fb352be4bc461f382733436576a5ad5c0ecccec847f3db8c506"
         ),
-        // freetype and harfbuzz:
+        // freetype, harfbuzz and libpng:
         .binaryTarget(
             name: "freetype",
             url: "https://github.com/holzschu/Python-aux/releases/download/1.0/freetype.xcframework.zip",
@@ -253,6 +253,11 @@ _ = Package(
             name: "harfbuzz",
             url: "https://github.com/holzschu/Python-aux/releases/download/1.0/harfbuzz.xcframework.zip",
             checksum: "9a983795826d1662ba354f563b19a7b980e4c744138b3afb68491991e2c8a66a"
+        ),
+        .binaryTarget(
+            name: "libpng",
+            url: "https://github.com/holzschu/Python-aux/releases/download/1.0/libpng.xcframework.zip",
+            checksum: "30ff80e9a2c20d7f266e7f788e94e44b2e105ac9c8107b44eb91f6869d6d8aa4"
         ),
         // Perl and make (single-architecture xcframeworks... for now)
         .binaryTarget(
