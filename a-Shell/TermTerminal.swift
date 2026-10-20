@@ -62,7 +62,7 @@ final class TermTerminal {
         case "scrollback":
             let last = terminal.buffer.yDisp + terminal.rows
             let first = max(0, last - (request.lines ?? last))
-            let rows = (first..<last).map { terminal.getScrollInvariantLine(row: terminal.buffer.totalLinesTrimmed + $0)?.translateToString(trimRight: true).replacingOccurrences(of: "\u{0}", with: " ") ?? "" }
+            let rows = (first..<last).map { terminal.getScrollInvariantLine(row: terminal.buffer.totalLinesTrimmed + $0)?.translateToString(trimRight: true, characterProvider: { terminal.getCharacter(for: $0) }).replacingOccurrences(of: "\u{0}", with: " ") ?? "" }
             reply(TermResponse(["rows": rows, "window": scene.persistentIdentifier ?? ""]))
         case "size": reply(TermResponse(["columns": terminal.cols, "height": terminal.rows]))
         case "cursor":
@@ -91,7 +91,7 @@ final class TermTerminal {
 
     private func snapshot(_ scene: SceneDelegate, _ view: TerminalView, colors: Bool = false) -> TermResponse {
         let terminal = view.getTerminal()
-        let rows = (0..<terminal.rows).map { terminal.getLine(row: $0)?.translateToString(trimRight: true).replacingOccurrences(of: "\u{0}", with: " ") ?? "" }
+        let rows = (0..<terminal.rows).map { terminal.getLine(row: $0)?.translateToString(trimRight: true, characterProvider: { terminal.getCharacter(for: $0) }).replacingOccurrences(of: "\u{0}", with: " ") ?? "" }
         let cursor = terminal.getCursorLocation()
         let cells: [[Any]] = (0..<terminal.rows).map { row in
             (0..<terminal.cols).map { column -> Any in
