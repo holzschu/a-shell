@@ -29,6 +29,7 @@ touch Resources/bin/gunzip
 touch Resources/bin/gzip
 touch Resources/bin/head
 touch Resources/bin/host
+touch Resources/bin/hx
 touch Resources/bin/ifconfig
 touch Resources/bin/jsc
 touch Resources/bin/link
@@ -52,6 +53,7 @@ touch Resources/bin/python3
 touch Resources/bin/python
 touch Resources/bin/pythonA
 touch Resources/bin/readlink
+touch Resources/bin/rg
 touch Resources/bin/rlogin
 touch Resources/bin/rm
 touch Resources/bin/rmdir

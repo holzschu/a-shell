@@ -586,7 +586,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     func sendArrow(direction: String) {
-        NSLog("Received sendArrow. direction: \(direction)")
+        // NSLog("Received sendArrow. direction: \(direction)")
         guard let terminalView = terminalView else { return }
         DispatchQueue.main.async {
             switch (direction) {
@@ -605,7 +605,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     @objc private func systemAction(_ sender: UIBarButtonItem) {
-        NSLog("Received systemAction. Position x = \(tapPosition.x) y = \(tapPosition.y)")
+        // NSLog("Received systemAction. Position x = \(tapPosition.x) y = \(tapPosition.y)")
         if let title = title(sender) {
             if (terminalView != nil) && terminalView!.isFirstResponder {
                 switch (title) {
@@ -632,7 +632,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         sendArrow(direction: "left")
                     }
                 case "up.down.left.right":
-                    NSLog("up.down.left.right: \(tapPosition.x) -- \(tapPosition.y)")
+                    // NSLog("up.down.left.right: \(tapPosition.x) -- \(tapPosition.y)")
                     if abs(tapPosition.x) > abs(tapPosition.y) {
                         if (tapPosition.x > 0) {
                             sendArrow(direction: "right")
@@ -697,7 +697,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         commandString = "var event = new KeyboardEvent('keydown', {which:37, keyCode:37, key:'Left', code:'Left', bubbles:true});document.activeElement.dispatchEvent(event);"
                     }
                 case "up.down.left.right":
-                    NSLog("up.down.left.right: \(tapPosition.x) -- \(tapPosition.y)")
+                    // NSLog("up.down.left.right: \(tapPosition.x) -- \(tapPosition.y)")
                     if abs(tapPosition.x) > abs(tapPosition.y) {
                         if (tapPosition.x > 0) {
                             commandString = "var event = new KeyboardEvent('keydown', {which:39, keyCode:39, key:'Right', code:'Right', bubbles:true});document.activeElement.dispatchEvent(event);"
@@ -1020,7 +1020,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         // smaller than 15 won't change the button size (but it will change the label size!)
                         // larger than 22 feels much larger than the keyboard keys
                         buttonFontSize =  min(max(screenWidth/(multiplier * CGFloat(numButtons)), 15.0), 22)
+                        #if DEBUG
                         NSLog("button size: \(buttonFontSize): \(screenWidth)/\(multiplier) * \(numButtons)")
+                        #endif
                         // With liquiglass, 8 buttons is the maximum for an iPhone screen
                     }
                 }
@@ -1316,7 +1318,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             continuousButtonTimer.invalidate()
             return
         }
+        #if DEBUG
         NSLog("long press action, sender.state: \(sender.state): \(tapPosition.x) -- \(tapPosition.y) bounds: \(sender.view!.frame.width) -- \(sender.view!.frame.height)")
+        #endif
         if (sender.state == .began) || (sender.state == .changed) {
             tapPosition = sender.location(in: sender.view)
             if (sender.view != nil) {
@@ -1392,7 +1396,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             var useLiquidGlass = false
             if #available(iOS 26, *) {
                 if let preference = Bundle.main.infoDictionary?["UIDesignRequiresCompatibility"] as? Bool {
+                    #if DEBUG
                     NSLog("stored UIDesignRequiresCompatibility: \(preference)")
+                    #endif
                     useLiquidGlass = !preference
                 }
             }
@@ -1784,9 +1790,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         webAssemblyCommand.webAssemblyGroup?.enter()
         webAssemblyCommand.webAssemblyGroup?.wait()
         
-        if (stdout_file != nil && fileno(webAssemblyCommand.thread_stdout_copy) != fileno(stdout_file)) {
-            fclose(webAssemblyCommand.thread_stdout_copy)
-        }
+        // The command borrows its caller's streams; leave their cleanup to the caller.
         
         // if resultStack[commandNumber] does not exist, something went wrong.
         // Don't crash, but raise the issue.
@@ -1802,6 +1806,25 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    func copyOutputFile(_ path: String, toDescriptor descriptor: Int32, group: DispatchGroup) {
+        group.enter()
+        DispatchQueue.global().async {
+            defer {
+                try? FileManager().removeItem(atPath: path)
+                group.leave()
+            }
+            do {
+                if let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+                    let output = FileHandle(fileDescriptor: descriptor, closeOnDealloc: false)
+                    try output.write(contentsOf: data)
+                }
+            }
+            catch {
+                NSLog("Something went wrong in writing the data from \(path) to \(descriptor): \(error).")
+            }
+        }
+    }
+
     func executeWebAssemblyCommands() {
         // since we're multi-threaded, we could be executing this while executeWebAssembly() is still running. So we wait.
         NSLog("executeWebAssemblyCommands: url: \(webView?.url)")
@@ -1878,40 +1901,26 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // Strangely, the letters typed after ^D do not appear on screen. We force two carriage return to get the prompt visible:
                 terminalView?.feed(text: "\n\n")
             }
+            // The next command in the queue may be the reader of this output: copy it from a
+            // background thread, and release the caller (which closes its streams) once it is written.
+            let copies = DispatchGroup()
             if (command!.stdout_fileName != "") {
                 fflush(thread_stdout_copy)
                 fclose(thread_stdout_copy)
-                do {
-                    if let outData = try? Data(contentsOf: URL(fileURLWithPath: command!.stdout_fileName)) {
-                        let stdout_file = FileHandle(fileDescriptor: fileno(command!.thread_stdout_copy))
-                        try stdout_file.write(contentsOf: outData)
-                        try stdout_file.close() // necessary?
-                        try FileManager().removeItem(atPath: command!.stdout_fileName)
-                     }
-                }
-                catch {
-                    NSLog("Something went wrong in writing the stdout data from \(command!.stdout_fileName) to \(fileno(command!.thread_stdout_copy)): \(error).")
-                }
+                copyOutputFile(command!.stdout_fileName, toDescriptor: fileno(command!.thread_stdout_copy), group: copies)
             }
             if (command!.stderr_fileName != "") {
                 fflush(thread_stderr_copy)
                 fclose(thread_stderr_copy)
-                do {
-                    if let errData = try? Data(contentsOf: URL(fileURLWithPath: command!.stderr_fileName)) {
-                        let stderr_file = FileHandle(fileDescriptor: fileno(command!.thread_stderr_copy))
-                        try stderr_file.write(contentsOf: errData)
-                        try stderr_file.close() // necessary? 
-                        try FileManager().removeItem(atPath: command!.stderr_fileName)
-                    }
-                }
-                catch {
-                    NSLog("Something went wrong in writing the stderr data from \(command!.stderr_fileName) to \(fileno(command!.thread_stderr_copy)): \(error).")
-                }
+                copyOutputFile(command!.stderr_fileName, toDescriptor: fileno(command!.thread_stderr_copy), group: copies)
             }
             // Do not close thread_stdin because if it's a pipe, processes could still be writing into it
             // fclose(thread_stdin)
             // Wait until the command is done, signal is sent by prompt()
-            command!.webAssemblyGroup?.leave()
+            let commandGroup = command!.webAssemblyGroup
+            copies.notify(queue: DispatchQueue.global()) {
+                commandGroup?.leave()
+            }
         }
         NSLog("Ended executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack)")
         
@@ -3815,7 +3824,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Was this window created with a purpose?
             // Case 1: url to open is inside urlContexts
+            #if DEBUG
             NSLog("connectionOptions.urlContexts: \(connectionOptions.urlContexts.first)")
+            #endif
             if let urlContext = connectionOptions.urlContexts.first {
                 // let sendingAppID = urlContext.options.sourceApplication
                 let fileURL = urlContext.url

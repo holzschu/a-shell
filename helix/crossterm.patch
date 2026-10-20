@@ -1,0 +1,168 @@
+--- a/src/event.rs
++++ b/src/event.rs
+@@ -1325,3 +1325,7 @@
+         assert_eq!(format!("{}", Modifier(RightSuper)), "Right Super");
+     }
+ }
++
++/// Release input state between embedded command invocations. No EventStream may be live.
++#[cfg(target_os = "ios")]
++pub fn reset_ios_input() { *INTERNAL_EVENT_READER.lock() = None; }
+--- a/src/terminal/sys/file_descriptor.rs
++++ b/src/terminal/sys/file_descriptor.rs
+@@ -121,6 +121,7 @@
+ 
+ #[cfg(feature = "libc")]
+ /// Creates a file descriptor pointing to the standard input or `/dev/tty`.
++#[cfg(not(target_os = "ios"))]
+ pub fn tty_fd() -> io::Result<FileDesc<'static>> {
+     let (fd, close_on_drop) = if unsafe { libc::isatty(libc::STDIN_FILENO) == 1 } {
+         (libc::STDIN_FILENO, false)
+@@ -140,6 +141,7 @@
+ 
+ #[cfg(not(feature = "libc"))]
+ /// Creates a file descriptor pointing to the standard input or `/dev/tty`.
++#[cfg(not(target_os = "ios"))]
+ pub fn tty_fd() -> io::Result<FileDesc<'static>> {
+     use std::fs::File;
+ 
+@@ -152,3 +154,14 @@
+     };
+     Ok(fd)
+ }
++
++#[cfg(target_os = "ios")]
++pub fn tty_fd() -> io::Result<FileDesc<'static>> {
++    extern "C" { fn hx_io_fd(index: i32) -> i32; }
++    let fd = unsafe { hx_io_fd(0) };
++    if fd < 0 { return Err(io::Error::new(io::ErrorKind::NotConnected, "Helix input is closed")); }
++    #[cfg(feature = "libc")]
++    return Ok(FileDesc::new(fd, false));
++    #[cfg(not(feature = "libc"))]
++    return Ok(FileDesc::Borrowed(unsafe { BorrowedFd::borrow_raw(fd) }));
++}
+--- a/src/terminal/sys/unix.rs
++++ b/src/terminal/sys/unix.rs
+@@ -1,3 +1,4 @@
++#![cfg_attr(target_os = "ios", allow(unused_imports))]
+ //! UNIX related logic for terminal manipulation.
+ 
+ use crate::terminal::{
+@@ -56,6 +57,7 @@
+ 
+ #[allow(clippy::useless_conversion)]
+ #[cfg(feature = "libc")]
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn window_size() -> io::Result<WindowSize> {
+     // http://rosettacode.org/wiki/Terminal_control/Dimensions#Library:_BSD_libc
+     let mut size = winsize {
+@@ -81,6 +83,7 @@
+ }
+ 
+ #[cfg(not(feature = "libc"))]
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn window_size() -> io::Result<WindowSize> {
+     let file = File::open("/dev/tty").map(|file| (FileDesc::Owned(file.into())));
+     let fd = if let Ok(file) = &file {
+@@ -224,7 +227,10 @@
+         file.flush()
+     });
+     if result.is_err() {
+-        let mut stdout = io::stdout();
++        let mut stdout = {
++            #[cfg(target_os = "ios")] { use std::os::fd::FromRawFd; extern "C" { fn hx_io_fd(index: i32) -> i32; fn dup(fd: i32) -> i32; } unsafe { File::from_raw_fd(dup(hx_io_fd(1))) } }
++            #[cfg(not(target_os = "ios"))] { io::stdout() }
++        };
+         stdout.write_all(QUERY)?;
+         stdout.flush()?;
+     }
+@@ -313,3 +319,11 @@
+         Ok(())
+     }
+ }
++
++#[cfg(target_os = "ios")]
++pub(crate) fn window_size() -> io::Result<WindowSize> {
++    extern "C" { fn hx_io_fd(index: i32) -> i32; fn dup(fd: i32) -> i32; }
++    let fd = unsafe { hx_io_fd(0) };
++    let size = rustix::termios::tcgetwinsize(unsafe { rustix::fd::BorrowedFd::borrow_raw(fd) })?;
++    Ok(size.into())
++}
+--- a/src/cursor/sys/unix.rs
++++ b/src/cursor/sys/unix.rs
+@@ -1,3 +1,4 @@
++#![cfg_attr(target_os = "ios", allow(unused_imports))]
+ use std::{
+     io::{self, Error, ErrorKind, Write},
+     time::Duration,
+@@ -31,7 +32,10 @@
+ 
+ fn read_position_raw() -> io::Result<(u16, u16)> {
+     // Use `ESC [ 6 n` to and retrieve the cursor position.
+-    let mut stdout = io::stdout();
++    let mut stdout = {
++        #[cfg(target_os = "ios")] { use std::os::fd::FromRawFd; extern "C" { fn hx_io_fd(index: i32) -> i32; fn dup(fd: i32) -> i32; } unsafe { std::fs::File::from_raw_fd(dup(hx_io_fd(1))) } }
++        #[cfg(not(target_os = "ios"))] { io::stdout() }
++    };
+     stdout.write_all(b"\x1B[6n")?;
+     stdout.flush()?;
+ 
+--- a/src/event/source/unix/mio.rs
++++ b/src/event/source/unix/mio.rs
+@@ -1,17 +1,21 @@
++#[cfg(not(target_os = "ios"))]
++use crate::event::Event;
+ use std::{collections::VecDeque, io, time::Duration};
+ 
+ use mio::{unix::SourceFd, Events, Interest, Poll, Token};
++#[cfg(not(target_os = "ios"))]
+ use signal_hook_mio::v1_0::Signals;
+ 
+ #[cfg(feature = "event-stream")]
+ use crate::event::sys::Waker;
+ use crate::event::{
+-    source::EventSource, sys::unix::parse::parse_event, timeout::PollTimeout, Event, InternalEvent,
++    source::EventSource, sys::unix::parse::parse_event, timeout::PollTimeout, InternalEvent,
+ };
+ use crate::terminal::sys::file_descriptor::{tty_fd, FileDesc};
+ 
+ // Tokens to identify file descriptor
+ const TTY_TOKEN: Token = Token(0);
++#[cfg(not(target_os = "ios"))]
+ const SIGNAL_TOKEN: Token = Token(1);
+ #[cfg(feature = "event-stream")]
+ const WAKE_TOKEN: Token = Token(2);
+@@ -27,6 +31,7 @@
+     parser: Parser,
+     tty_buffer: [u8; TTY_BUFFER_SIZE],
+     tty_fd: FileDesc<'static>,
++    #[cfg(not(target_os = "ios"))]
+     signals: Signals,
+     #[cfg(feature = "event-stream")]
+     waker: Waker,
+@@ -45,7 +50,9 @@
+         let mut tty_ev = SourceFd(&tty_raw_fd);
+         registry.register(&mut tty_ev, TTY_TOKEN, Interest::READABLE)?;
+ 
++        #[cfg(not(target_os = "ios"))]
+         let mut signals = Signals::new([signal_hook::consts::SIGWINCH])?;
++        #[cfg(not(target_os = "ios"))]
+         registry.register(&mut signals, SIGNAL_TOKEN, Interest::READABLE)?;
+ 
+         #[cfg(feature = "event-stream")]
+@@ -57,6 +64,7 @@
+             parser: Parser::default(),
+             tty_buffer: [0u8; TTY_BUFFER_SIZE],
+             tty_fd: input_fd,
++            #[cfg(not(target_os = "ios"))]
+             signals,
+             #[cfg(feature = "event-stream")]
+             waker,
+@@ -119,6 +127,7 @@
+                             }
+                         }
+                     }
++                    #[cfg(not(target_os = "ios"))]
+                     SIGNAL_TOKEN => {
+                         if self.signals.pending().next() == Some(signal_hook::consts::SIGWINCH) {
+                             // TODO Should we remove tput?

@@ -31,7 +31,9 @@ var bashmarksActivated = false
 func startLocalWebServer() {
     // Last file loaded: /node_modules/@wasmer/wasmfs/lib/index.cjs.js
     localServerApp.get("/*") { request, response, next in
+        #if DEBUG
         NSLog("Kitura request received: \(request.matchedPath)")
+        #endif
         // Load ~/Library/node_modules first if it exists:
         // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
@@ -181,7 +183,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        #if DEBUG
         NSLog("Application didFinishLaunchingWithOptions \(String(describing: launchOptions))")
+        #endif
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
@@ -369,7 +373,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when a new scene session is being created.
         // Use this method to select a configuration to create the new scene with.
         // Also the function called when a shortcut starts the App.
+        #if DEBUG
         NSLog("application configurationForConnecting connectingSceneSession \(connectingSceneSession)")
+        #endif
         startLocalWebServer()
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
