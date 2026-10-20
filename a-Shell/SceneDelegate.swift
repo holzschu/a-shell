@@ -1629,6 +1629,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (self.currentCommand == "") {
             lastUsedPrompt = parsePrompt()
             DispatchQueue.main.async {
+                // Editors may reset DECSCUSR to a block; the prompt uses the user's configured cursor.
+                let cursorShape = self.terminalCursorShape ?? factoryCursorShape
+                self.terminalView!.setCursorStyle(shape: cursorShape.lowercased())
                 // reset mouse mode to .off, so we can scroll:
                 // before the prompt, so it can be overridden by the prompt.
                 self.terminalView!.feed(text: self.escape + "[?1000l")
