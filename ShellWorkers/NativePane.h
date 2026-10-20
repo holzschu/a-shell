@@ -5,6 +5,9 @@
 extern "C" {
 #endif
 
+// Keep the public C ABI discoverable in Release builds with hidden visibility.
+#pragma GCC visibility push(default)
+
 // command/cwd must be nonempty UTF-8; cwd must be an absolute accessible directory.
 // envp is NULL or a NULL-terminated list of UTF-8 key=value overrides, copied before return.
 // Dimensions are 1..9999. Returns 0 or positive errno; failure sets outputs to -1/NULL.
@@ -38,6 +41,8 @@ int ashell_pane_interrupt(void *job);
 // Close the returned fd separately.
 // The handle is opaque and is NOT an OS pid: never pass it to kill/waitpid/process APIs.
 void ashell_pane_release(void *job);
+
+#pragma GCC visibility pop
 
 #ifdef __cplusplus
 }

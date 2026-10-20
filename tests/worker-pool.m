@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <signal.h>
+#include <sys/stat.h>
 
 
 // Keep each command alive at its public stdin boundary while the other slots start.
@@ -15,14 +16,16 @@ static int capacity_check(void) {
     void (*release)(void *) = dlsym(RTLD_DEFAULT, "ashell_pane_release");
     if (!spawn || !pollJob || !release) { fputs("worker pool unavailable: FAIL\n", thread_stdout); return 1; }
     NSString *root = [NSHomeDirectory() stringByAppendingPathComponent:[@"Documents/worker-pool-" stringByAppendingString:NSUUID.UUID.UUIDString]];
+    const int capacity = [[NSBundle.mainBundle objectForInfoDictionaryKey:@"ShellWorkerCount"] intValue];
+    if (capacity < 1 || capacity > 10) return 64;
     void *jobs[10] = {0};
     int descriptors[10];
     char output[10][2048] = {{0}};
     size_t used[10] = {0};
     int pids[10] = {0};
     BOOL passed = YES;
-    for (int i = 0; i < 10; i++) descriptors[i] = -1;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < capacity; i++) descriptors[i] = -1;
+    for (int i = 0; i < capacity; i++) {
         NSString *directory = [root stringByAppendingPathComponent:[NSString stringWithFormat:@"slot-%d", i]];
         if (![[NSFileManager defaultManager] createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil]) { passed = NO; break; }
         char value[32], command[256];
@@ -37,7 +40,7 @@ static int capacity_check(void) {
     BOOL allReady = NO;
     while (passed && NSProcessInfo.processInfo.systemUptime < deadline) {
         allReady = YES;
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < capacity; i++) {
             ssize_t count = read(descriptors[i], output[i] + used[i], sizeof(output[i]) - used[i] - 1);
             if (count > 0) used[i] += count;
             if (!strchr(output[i], '\n') || !strchr(strchr(output[i], '\n') + 1, '\n')) allReady = NO;
@@ -48,13 +51,19 @@ static int capacity_check(void) {
         usleep(10000);
     }
     if (!allReady) passed = NO;
-    for (int i = 0; passed && i < 10; i++) {
+    for (int i = 0; passed && i < capacity; i++) {
         char value[32];
         if (sscanf(output[i], "READY=%d,%31[^\n]", &pids[i], value) != 2 || pids[i] <= 0) { passed = NO; break; }
         char expectedValue[32];
         snprintf(expectedValue, sizeof(expectedValue), "slot-%d", i);
-        NSString *expectedDirectory = [[root stringByAppendingPathComponent:[NSString stringWithFormat:@"slot-%d", i]] stringByAppendingString:@"\n"];
-        if (strcmp(value, expectedValue) || strcmp(strchr(output[i], '\n') + 1, expectedDirectory.fileSystemRepresentation)) passed = NO;
+        NSString *expectedDirectory = [root stringByAppendingPathComponent:[NSString stringWithFormat:@"slot-%d", i]];
+        NSString *observedDirectory = [[NSString stringWithUTF8String:strchr(output[i], '\n') + 1] stringByTrimmingCharactersInSet:NSCharacterSet.newlineCharacterSet];
+        struct stat expectedStat, observedStat;
+        BOOL sameDirectory = stat(expectedDirectory.fileSystemRepresentation, &expectedStat) == 0 && stat(observedDirectory.fileSystemRepresentation, &observedStat) == 0 && expectedStat.st_dev == observedStat.st_dev && expectedStat.st_ino == observedStat.st_ino;
+        if (strcmp(value, expectedValue) || !sameDirectory) {
+            fprintf(thread_stdout, "expected cwd=%s\nactual=%s", expectedDirectory.fileSystemRepresentation, output[i]);
+            passed = NO;
+        }
         for (int j = 0; j < i; j++) if (pids[i] == pids[j]) passed = NO;
         fprintf(thread_stdout, "slot=%d real_pid=%d cwd/env=%s\n", i, pids[i], passed ? "PASS" : "FAIL");
     }
@@ -63,7 +72,7 @@ static int capacity_check(void) {
         void *job = NULL;
         int error = spawn("dash -c 'exit 0'", root.fileSystemRepresentation, 80, 24, NULL, &descriptor, &job);
         BOOL full = error == ENOSPC && descriptor == -1 && job == NULL;
-        fprintf(thread_stdout, "eleventh worker error=%d: %s\n", error, full ? "PASS" : "FAIL");
+        fprintf(thread_stdout, "worker=%d error=%d: %s\n", capacity + 1, error, full ? "PASS" : "FAIL");
         if (job) release(job);
         if (descriptor >= 0) close(descriptor);
         passed = full;
@@ -71,8 +80,8 @@ static int capacity_check(void) {
     // The same open sessions must still accept input after more than five seconds.
     if (passed) {
         sleep(6);
-        for (int i = 0; i < 10; i++) if (write(descriptors[i], "continue\n", 9) != 9) passed = NO;
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < capacity; i++) if (write(descriptors[i], "continue\n", 9) != 9) passed = NO;
+        for (int i = 0; i < capacity; i++) {
             BOOL exited = NO, eof = NO;
             int status = -1;
             deadline = NSProcessInfo.processInfo.systemUptime + 10;
@@ -90,12 +99,12 @@ static int capacity_check(void) {
             if (!completed) passed = NO;
         }
     }
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < capacity; i++) {
         if (jobs[i]) release(jobs[i]);
         if (descriptors[i] >= 0) close(descriptors[i]);
     }
     [[NSFileManager defaultManager] removeItemAtPath:root error:nil];
-    fprintf(thread_stdout, "ten-worker capacity: %s\n", passed ? "PASS" : "FAIL");
+    fprintf(thread_stdout, "workers=%d capacity: %s\n", capacity, passed ? "PASS" : "FAIL");
     return passed ? 0 : 1;
 }
 
@@ -111,7 +120,7 @@ static int lifecycle_check(BOOL busy, BOOL closeOnly) {
     int descriptors[3] = {-1, -1, -1}, pids[3] = {0};
     BOOL passed = YES;
     for (int i = 0; i < 3; i++) {
-        const char *command = busy && i == 0 ? "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; while :; do :; done'" : "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; read value; printf \"DONE=%s\\n\" \"$value\"; exit 7'";
+        const char *command = i == 1 ? "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; read value; worker-pool-crash'" : busy && i == 0 ? "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; while :; do :; done'" : "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; read value; printf \"DONE=%s\\n\" \"$value\"; exit 7'";
         int error = spawn(command, directory.fileSystemRepresentation, 80, 24, NULL, &descriptors[i], &jobs[i]);
         if (error) { fprintf(thread_stdout, "lifecycle slot=%d startup=%d: FAIL\n", i, error); passed = NO; break; }
         struct pollfd ready = {.fd = descriptors[i], .events = POLLIN};
@@ -138,9 +147,9 @@ static int lifecycle_check(BOOL busy, BOOL closeOnly) {
         close(descriptors[0]); descriptors[0] = -1;
     }
     if (passed) {
-        // Inject OS process loss only after that process identified itself through
-        // its public output and was proved distinct from the consumer and peers.
-        BOOL lost = kill(pids[1], SIGKILL) == 0;
+        // Ask the disposable crash command to terminate its own worker process.
+        // iOS denies a host process permission to signal an extension directly.
+        BOOL lost = write(descriptors[1], "crash\n", 6) == 6;
         int status = -1, result = 0;
         NSTimeInterval deadline = NSProcessInfo.processInfo.systemUptime + 5;
         while (lost && NSProcessInfo.processInfo.systemUptime < deadline) {
@@ -177,7 +186,6 @@ static int lifecycle_check(BOOL busy, BOOL closeOnly) {
     for (int i = 0; i < 3; i++) { if (jobs[i]) release(jobs[i]); if (descriptors[i] >= 0) close(descriptors[i]); }
     // Re-enter the full public capacity check after asynchronous teardown.
     if (passed) passed = capacity_check() == 0;
-    if (!passed && busy && pids[0] > 0 && pids[0] != getpid()) kill(pids[0], SIGKILL);
     fprintf(thread_stdout, "worker lifecycle and full capacity reuse: %s\n", passed ? "PASS" : "FAIL");
     return passed ? 0 : 1;
 }
@@ -223,4 +231,10 @@ int worker_pool_check_main(int argc, char **argv) {
         fprintf(thread_stdout, "worker stdout=%zu status=%d: %s\n", used, status, passed ? "PASS" : "FAIL");
         return passed ? 0 : 1;
     }
+}
+
+// Register only in disposable worker command catalogues for loss acceptance.
+int worker_pool_crash_main(int argc, char **argv) {
+    kill(getpid(), SIGKILL);
+    return 1;
 }

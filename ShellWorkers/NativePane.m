@@ -48,7 +48,7 @@ static _Atomic(pane_job *) foreground_pane;
 // which can be a shell blocked in ios_waitpid rather than the running command.
 static _Atomic int foreground_command_pid;
 
-__attribute__((used)) int ashell_pane_exchange_foreground_pid(int pid) {
+__attribute__((used, visibility("default"))) int ashell_pane_exchange_foreground_pid(int pid) {
     return atomic_exchange(&foreground_command_pid, pid);
 }
 
@@ -347,7 +347,7 @@ static int prepare_input_relay(pane_job *job) {
 // Wait on the editor's real input and resize event without changing process
 // signal handlers or inserting synthetic keys into the command stream.
 // Return 0 for an unrelated reader, 1 for input, 2 for resize, or -errno.
-__attribute__((used)) int ashell_pane_wait_editor_input(FILE *input) {
+__attribute__((used, visibility("default"))) int ashell_pane_wait_editor_input(FILE *input) {
     pane_job *job = atomic_load(&foreground_pane);
     if (!job || !job->input_relay || input != job->streams[0]) return 0;
     struct kevent event;
@@ -360,7 +360,7 @@ __attribute__((used)) int ashell_pane_wait_editor_input(FILE *input) {
     return event.filter == EVFILT_USER ? 2 : 1;
 }
 
-__attribute__((used)) int ashell_pane_begin_foreground_input(FILE **input, void **token) {
+__attribute__((used, visibility("default"))) int ashell_pane_begin_foreground_input(FILE **input, void **token) {
     if (!input || !token || *token) return EINVAL;
     pane_job *job = atomic_load(&foreground_pane);
     if (!job || !job->input_relay || *input != job->streams[0]) return 0;
@@ -416,7 +416,7 @@ __attribute__((used)) int ashell_pane_begin_foreground_input(FILE **input, void 
     return 0;
 }
 
-__attribute__((used)) int ashell_pane_end_foreground_input(void *token) {
+__attribute__((used, visibility("default"))) int ashell_pane_end_foreground_input(void *token) {
     command_input *command = token;
     if (!command) return EINVAL;
     int cancellation;

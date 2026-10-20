@@ -12,13 +12,13 @@
 // ios_system discovers these stock host callbacks with dlsym. Each extension
 // owns one shell; its socket already carries input directly to the command.
 static atomic_bool interactive_input;
-__attribute__((used)) void startInteractive(void) { atomic_store(&interactive_input, true); }
-__attribute__((used)) void stopInteractive(void) { atomic_store(&interactive_input, false); }
-__attribute__((used)) int storeInteractive(void) { return atomic_load(&interactive_input); }
+__attribute__((used, visibility("default"))) void startInteractive(void) { atomic_store(&interactive_input, true); }
+__attribute__((used, visibility("default"))) void stopInteractive(void) { atomic_store(&interactive_input, false); }
+__attribute__((used, visibility("default"))) int storeInteractive(void) { return atomic_load(&interactive_input); }
 
 // The stock host clear command calls its UIKit delegate. Workers clear through
 // the terminal stream, just like an external terminal command.
-__attribute__((used)) int clear(int argc, char **argv) {
+__attribute__((used, visibility("default"))) int clear(int argc, char **argv) {
     if (!thread_stdout) return 1;
     return fputs("\033[H\033[2J", thread_stdout) == EOF || fflush(thread_stdout) == EOF ? 1 : 0;
 }
