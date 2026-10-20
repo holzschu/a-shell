@@ -110,6 +110,16 @@ static int check_documents_write(NSURL *documents, NSString *probe) {
     [environment addObject:[@"TMPDIR=" stringByAppendingString:temporaryDirectory]];
     env = environment;
     initializeEnvironment();
+    // The host keeps its WebView route; this process uses the stock loader.
+    NSString *wasmCommands = [[NSBundle mainBundle] pathForResource:@"worker-wasm" ofType:@"plist"];
+    if (!wasmCommands) { [self releasePane]; reply(ENOENT, nil, getpid()); return; }
+    NSError *registrationError = addCommandList(wasmCommands);
+    if (registrationError) {
+        NSLog(@"Shell worker WASM registration failed: %@", registrationError);
+        [self releasePane];
+        reply(EIO, nil, getpid());
+        return;
+    }
     replaceCommand(@"clear", @"clear", true);
     // This process owns exactly one shell. Native Rust clients enumerate libc's
     // environment as well as ios_system's forked command environment.
