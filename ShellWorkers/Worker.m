@@ -57,9 +57,9 @@ static int check_documents_write(NSURL *documents, NSString *probe) {
     void *_pane;
     NSMutableArray<NSURL *> *_directories;
 }
-- (void)spawn:(NSString *)command cwd:(NSData *)cwd home:(NSData *)home documents:(NSData *)documents probe:(NSString *)probe env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows reply:(void (^)(int, NSFileHandle *, int))reply {
-    if (_pane) { reply(EBUSY, nil, getpid()); return; }
-    if (!cwd || !home || !documents || !probe) { reply(EINVAL, nil, getpid()); return; }
+- (void)spawn:(NSString *)command cwd:(NSData *)cwd home:(NSData *)home documents:(NSData *)documents probe:(NSString *)probe env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separateStderr reply:(void (^)(int, NSFileHandle *, NSFileHandle *, int))reply {
+    if (_pane) { reply(EBUSY, nil, nil, getpid()); return; }
+    if (!cwd || !home || !documents || !probe) { reply(EINVAL, nil, nil, getpid()); return; }
     // Resolve the host's ephemeral grants explicitly and retain them for this
     // pane, including HOME for shared command configuration and authentication.
     _directories = [NSMutableArray array];
@@ -77,7 +77,7 @@ static int check_documents_write(NSURL *documents, NSString *probe) {
         if (!url) {
             NSLog(@"Shell worker directory bookmark failed: %@", failure);
             [self releasePane];
-            reply([failure.domain isEqualToString:NSPOSIXErrorDomain] ? (int)failure.code : EIO, nil, getpid());
+            reply([failure.domain isEqualToString:NSPOSIXErrorDomain] ? (int)failure.code : EIO, nil, nil, getpid());
             return;
         }
         BOOL scoped = [url startAccessingSecurityScopedResource];
@@ -94,14 +94,14 @@ static int check_documents_write(NSURL *documents, NSString *probe) {
         NSLog(@"Shell worker directory capability: url=%@ read_error=%d", url.path, code);
         if (code && !readError) readError = code;
     }
-    if (readError) { [self releasePane]; reply(readError, nil, getpid()); return; }
+    if (readError) { [self releasePane]; reply(readError, nil, nil, getpid()); return; }
     int capabilityError = check_documents_write(documentsURL, probe);
     NSLog(@"Shell worker Documents capability: real_pid=%d read_write_error=%d", getpid(), capabilityError);
-    if (capabilityError) { [self releasePane]; reply(capabilityError, nil, getpid()); return; }
+    if (capabilityError) { [self releasePane]; reply(capabilityError, nil, nil, getpid()); return; }
     // ios_system globals are private to this extension. The adapter keeps its
     // original dedicated pthread and stream ownership/cleanup barrier.
     NSString *temporaryDirectory = NSTemporaryDirectory();
-    if (!temporaryDirectory.length) { [self releasePane]; reply(EIO, nil, getpid()); return; }
+    if (!temporaryDirectory.length) { [self releasePane]; reply(EIO, nil, nil, getpid()); return; }
     // The host's directory bookmark does not grant its tmp directory. Keep the
     // extension's stock Foundation/libc temp domain in both environment views.
     NSMutableArray<NSString *> *environment = [NSMutableArray arrayWithCapacity:env.count + 1];
@@ -115,20 +115,20 @@ static int check_documents_write(NSURL *documents, NSString *probe) {
     // environment as well as ios_system's forked command environment.
     for (NSString *value in env) {
         NSRange separator = [value rangeOfString:@"="];
-        if (separator.location == NSNotFound || separator.location == 0) { [self releasePane]; reply(EINVAL, nil, getpid()); return; }
+        if (separator.location == NSNotFound || separator.location == 0) { [self releasePane]; reply(EINVAL, nil, nil, getpid()); return; }
         if (setenv([value substringToIndex:separator.location].UTF8String,
-                   [value substringFromIndex:separator.location + 1].UTF8String, 1)) { int error = errno; [self releasePane]; reply(error, nil, getpid()); return; }
+                   [value substringFromIndex:separator.location + 1].UTF8String, 1)) { int error = errno; [self releasePane]; reply(error, nil, nil, getpid()); return; }
     }
     // Match stock SceneDelegate before libedit decodes Unicode or measures it.
-    if (setenv("LC_CTYPE", "UTF-8", 1)) { int error = errno; [self releasePane]; reply(error, nil, getpid()); return; }
+    if (setenv("LC_CTYPE", "UTF-8", 1)) { int error = errno; [self releasePane]; reply(error, nil, nil, getpid()); return; }
     const char *locale = setlocale(LC_CTYPE, "UTF-8");
-    if (!locale) { [self releasePane]; reply(EINVAL, nil, getpid()); return; }
+    if (!locale) { [self releasePane]; reply(EINVAL, nil, nil, getpid()); return; }
     NSLog(@"Shell worker locale: real_pid=%d ctype=%s", getpid(), locale);
     // The physical device has no kernel tty. Use the same socket-backed route
     // on Simulator so its acceptance cannot pass through a desktop-only PTY.
-    if (setenv("ASHELL_IOS_PTY", "0", 1)) { int error = errno; [self releasePane]; reply(error, nil, getpid()); return; }
+    if (setenv("ASHELL_IOS_PTY", "0", 1)) { int error = errno; [self releasePane]; reply(error, nil, nil, getpid()); return; }
     const char **values = calloc(env.count + 4, sizeof(char *));
-    if (!values) { [self releasePane]; reply(ENOMEM, nil, getpid()); return; }
+    if (!values) { [self releasePane]; reply(ENOMEM, nil, nil, getpid()); return; }
     for (NSUInteger i = 0; i < env.count; i++)
         values[i] = [env[i] hasPrefix:@"ASHELL_IOS_PTY="] ? "ASHELL_IOS_PTY=0" :
             [env[i] hasPrefix:@"LC_CTYPE="] ? "LC_CTYPE=UTF-8" : env[i].UTF8String;
@@ -137,11 +137,13 @@ static int check_documents_write(NSURL *documents, NSString *probe) {
     values[env.count + 1] = "LC_CTYPE=UTF-8";
     values[env.count + 2] = "ASHELL_IOS_SOCKET_INPUT=1";
     int fd = -1;
-    int error = ashell_pane_spawn(command.UTF8String, directory.path.UTF8String, cols, rows, values, &fd, &_pane);
+    ashell_pane_options options = {.size = sizeof(options), .tty = tty, .separate_stderr = separateStderr};
+    int error = ashell_pane_spawn_ex(command.UTF8String, directory.path.UTF8String, cols, rows, values, &options, &fd, &_pane);
     free(values);
     if (error) [self releasePane];
     NSFileHandle *handle = error ? nil : [[NSFileHandle alloc] initWithFileDescriptor:fd closeOnDealloc:YES];
-    reply(error, handle, getpid());
+    NSFileHandle *errorHandle = !error && options.stderr_fd >= 0 ? [[NSFileHandle alloc] initWithFileDescriptor:options.stderr_fd closeOnDealloc:YES] : nil;
+    reply(error, handle, errorHandle, getpid());
 }
 - (void)poll:(void (^)(int, int))reply {
     int status = 0;

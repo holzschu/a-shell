@@ -32,6 +32,8 @@ typedef struct {
     int peer_control, input_closed, is_pty;
     unsigned char eof_key;
     FILE *streams[3];
+    // Without a tty the session streams differ from the command streams, so stock isatty reports false.
+    FILE *session_in, *session_out, *session_err;
     void *registration;
     char key[64];
     char *command, *cwd, *previous_cwd;
@@ -260,6 +262,12 @@ static int request_input(pane_input_relay *relay, int request, command_input *co
     return error;
 }
 
+static void baseline_streams(pane_job *job, FILE *input) {
+    ios_setStreams(job->session_in ? job->session_in : input,
+                   job->session_out ? job->session_out : job->streams[1],
+                   job->session_err ? job->session_err : job->streams[2]);
+}
+
 static int stop_input_relay(pane_job *job) {
     pane_input_relay *relay = job->input_relay;
     if (!relay) return 0;
@@ -276,7 +284,7 @@ static int stop_input_relay(pane_job *job) {
     if (relay->command) {
         command_input *command = relay->command;
         ashell_wait_owned_streams(command->registration);
-        ios_setStreams(job->streams[0], job->streams[1], job->streams[2]);
+        baseline_streams(job, job->streams[0]);
         ios_settty(job->streams[0]);
         ashell_unregister_owned_streams(&command->registration);
         if (fclose(command->reader) && !error) error = errno;
@@ -409,7 +417,7 @@ __attribute__((used, visibility("default"))) int ashell_pane_begin_foreground_in
     *token = command;
     // Stock tty detection compares command streams against the session streams.
     // Keep baseline outputs so explicit redirects remain non-terminal streams.
-    ios_setStreams(command->reader, job->streams[1], job->streams[2]);
+    baseline_streams(job, command->reader);
     // Stock ios_opentty borrowers must receive this command's input as well.
     ios_settty(command->reader);
     pthread_setcancelstate(cancellation, NULL);
@@ -427,7 +435,7 @@ __attribute__((used, visibility("default"))) int ashell_pane_end_foreground_inpu
     // Dash. Borrow counts include asynchronous children through their cleanup.
     ashell_wait_owned_streams(command->registration);
     pane_job *job = command->job;
-    ios_setStreams(job->streams[0], job->streams[1], job->streams[2]);
+    baseline_streams(job, job->streams[0]);
     ios_settty(job->streams[0]);
     int retired = request_input(command->relay, INPUT_RETIRE, command);
     if (!error) error = retired;
@@ -467,6 +475,11 @@ static int close_streams(pane_job *job) {
         if (job->streams[i] && fclose(job->streams[i]) && !error) error = errno;
         job->streams[i] = NULL;
     }
+    FILE **session[3] = {&job->session_in, &job->session_out, &job->session_err};
+    for (int i = 0; i < 3; i++) {
+        if (*session[i] && fclose(*session[i]) && !error) error = errno;
+        *session[i] = NULL;
+    }
     return error;
 }
 
@@ -484,7 +497,7 @@ static void *run_pane(void *cookie) {
         // This runner is new: no parent session or TLS streams are switched or overwritten.
         ios_switchSession(job->key);
         ios_setContext(job->key);
-        ios_setStreams(job->streams[0], job->streams[1], job->streams[2]);
+        baseline_streams(job, job->streams[0]);
         ios_settty(job->streams[0]);
         thread_stdin = job->streams[0];
         thread_stdout = job->streams[1];
@@ -558,8 +571,18 @@ static void *run_pane(void *cookie) {
 
 int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols,
                      unsigned rows, const char *const *envp, int *fd_out, void **job_out) {
+    ashell_pane_options options = {.size = sizeof(options), .tty = 1};
+    return ashell_pane_spawn_ex(command, cwd, cols, rows, envp, &options, fd_out, job_out);
+}
+
+int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, unsigned rows,
+                         const char *const *envp, ashell_pane_options *options,
+                         int *fd_out, void **job_out) {
     if (fd_out) *fd_out = -1;
     if (job_out) *job_out = NULL;
+    if (!options || options->size < sizeof(*options)) return EINVAL;
+    options->stderr_fd = -1;
+    int peer_err = -1;
     if (!fd_out || !job_out || !command || !*command || !cwd || cwd[0] != '/' ||
         !cols || cols > 9999 || !rows || rows > 9999) return EINVAL;
     @autoreleasepool {
@@ -647,8 +670,18 @@ int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols,
         error = job->is_pty ? (fcntl(job->peer_control, F_SETFD, FD_CLOEXEC) ? errno : 0) : socket_options(job->peer_control);
         if (!error && job->is_pty && fcntl(peer, F_SETFD, FD_CLOEXEC)) error = errno;
         if (error) { close(child); goto failed; }
+        int err_child = -1;
+        if (options->separate_stderr) {
+            int pair[2];
+            if (socketpair(AF_UNIX, SOCK_STREAM, 0, pair)) { error = errno; goto failed; }
+            peer_err = pair[0];
+            err_child = pair[1];
+            error = socket_options(peer_err);
+            if (!error) error = socket_options(err_child);
+            if (error) { close(err_child); goto failed; }
+        }
         for (int i = 0; i < 3; i++) {
-            int fd = i == 0 ? child : dup(child);
+            int fd = i == 0 ? child : i == 2 && err_child >= 0 ? err_child : dup(child);
             if (fd < 0) { error = errno; goto failed; }
             job->streams[i] = fdopen(fd, i == 0 ? "r" : "w");
             if (!job->streams[i]) { error = errno; close(fd); goto failed; }
@@ -656,6 +689,12 @@ int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols,
             /* Match terminal stdout: libedit flushes each completed redraw. */
             int buffering = !job->is_pty && i == 1 ? _IOLBF : _IONBF;
             if (setvbuf(job->streams[i], NULL, buffering, 0)) { error = EIO; goto failed; }
+        }
+        if (!options->tty) {
+            job->session_in = fopen("/dev/null", "r");
+            job->session_out = fopen("/dev/null", "w");
+            job->session_err = fopen("/dev/null", "w");
+            if (!job->session_in || !job->session_out || !job->session_err) { error = errno; goto failed; }
         }
         if (!job->is_pty) error = prepare_input_relay(job);
         if (!error) error = ashell_register_owned_streams(job->streams[0], job->streams[1], job->streams[2], &job->registration);
@@ -673,13 +712,15 @@ int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols,
         while (!job->initialized) pthread_cond_wait(&job->ready, &job->mutex);
         error = job->startup_error;
         pthread_mutex_unlock(&job->mutex);
-        if (error) { close(peer); drop_reference(job); return error; }
+        if (error) { close(peer); if (peer_err >= 0) close(peer_err); drop_reference(job); return error; }
         *fd_out = peer;
+        options->stderr_fd = peer_err;
         *job_out = job;
         return 0;
 failed:
         close_streams(job);
         if (peer >= 0) close(peer);
+        if (peer_err >= 0) close(peer_err);
         drop_reference(job);
         atomic_store(&pane_in_flight, 0);
         return error;

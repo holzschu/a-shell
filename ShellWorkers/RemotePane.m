@@ -25,6 +25,7 @@ static void log_host_library(const char *phase) {
 @property(nonatomic, strong) NSXPCConnection *connection;
 @property(nonatomic, strong) id<AShellPaneWire> proxy;
 @property(nonatomic, strong) NSFileHandle *output;
+@property(nonatomic, strong) NSFileHandle *errorOutput;
 @property(atomic) BOOL interrupted;
 @property(nonatomic, strong) NSMutableArray<NSURL *> *directories;
 @property(nonatomic, copy) NSString *probeDirectory;
@@ -32,6 +33,7 @@ static void log_host_library(const char *phase) {
 @implementation RemotePane
 - (void)dealloc {
     [_output closeAndReturnError:NULL];
+    [_errorOutput closeAndReturnError:NULL];
     // Only remove our empty disposable directory, never a project tree.
     if (_probeDirectory) rmdir(_probeDirectory.fileSystemRepresentation);
     log_host_library("before_scope_release");
@@ -46,8 +48,14 @@ static void log_host_library(const char *phase) {
 int ashell_pane_capacity(void) { return ashell_extension_capacity(); }
 
 int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, int *fd_out, void **job_out) {
+    ashell_pane_options options = {.size = sizeof(options), .tty = 1};
+    return ashell_pane_spawn_ex(command, cwd, cols, rows, envp, &options, fd_out, job_out);
+}
+int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
     if (fd_out) *fd_out = -1;
     if (job_out) *job_out = NULL;
+    if (!options || options->size < sizeof(*options)) return EINVAL;
+    options->stderr_fd = -1;
     if (!command || !cwd || !fd_out || !job_out || !cols || !rows) return EINVAL;
     if (NSThread.isMainThread) return EDEADLK;
     @autoreleasepool {
@@ -114,15 +122,23 @@ int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols, unsig
         pane.proxy = [pane.connection synchronousRemoteObjectProxyWithErrorHandler:^(NSError *failure) { error = EPIPE; }];
         NSMutableArray *env = [NSMutableArray array];
         for (size_t i = 0; envp && envp[i]; i++) [env addObject:@(envp[i])];
-        __block int fd = -1;
-        [pane.proxy spawn:@(command) cwd:cwdBookmark home:homeBookmark documents:documentsBookmark probe:pane.probeDirectory env:env cols:cols rows:rows reply:^(int code, NSFileHandle *handle, int pid) {
+        __block int fd = -1, err_fd = -1;
+        BOOL separate = options->separate_stderr != 0;
+        [pane.proxy spawn:@(command) cwd:cwdBookmark home:homeBookmark documents:documentsBookmark probe:pane.probeDirectory env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:separate reply:^(int code, NSFileHandle *handle, NSFileHandle *errorHandle, int pid) {
             error = code;
-            if (!code && !handle) error = EPROTO;
+            if (!code && (!handle || (separate && !errorHandle))) error = EPROTO;
             if (!error) {
                 fd = dup(handle.fileDescriptor);
                 if (fd < 0) error = errno;
                 else if (fcntl(fd, F_SETFD, FD_CLOEXEC)) { error = errno; close(fd); fd = -1; }
                 else pane.output = handle;
+            }
+            if (!error && separate) {
+                err_fd = dup(errorHandle.fileDescriptor);
+                if (err_fd < 0) error = errno;
+                else if (fcntl(err_fd, F_SETFD, FD_CLOEXEC)) { error = errno; close(err_fd); err_fd = -1; }
+                else pane.errorOutput = errorHandle;
+                if (error && fd >= 0) { close(fd); fd = -1; }
             }
             NSLog(@"Shell extension spawn: real_pid=%d error=%d startup_ms=%.3f", pid, error, (NSProcessInfo.processInfo.systemUptime - started) * 1000);
         }];
@@ -130,6 +146,7 @@ int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols, unsig
         if (!error && fd < 0) error = EPROTO;
         if (error) { ashell_extension_disconnect(pane.connection); return error; }
         *fd_out = fd;
+        options->stderr_fd = err_fd;
         *job_out = (__bridge_retained void *)pane;
         return 0;
     }

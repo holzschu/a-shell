@@ -1,6 +1,8 @@
 #ifndef ASHELL_NATIVE_PANE_H
 #define ASHELL_NATIVE_PANE_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,6 +24,25 @@ int ashell_pane_capacity(void);
 // The caller may set O_NONBLOCK on its returned descriptor.
 int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols,
                      unsigned rows, const char *const *envp, int *fd_out, void **job_out);
+
+// Options for ashell_pane_spawn_ex. The caller sets size to sizeof(ashell_pane_options).
+typedef struct ashell_pane_options {
+    size_t size;
+    // Nonzero: the command sees a terminal on stdin, stdout and stderr (isatty is true).
+    // Zero: it sees plain streams, as when the caller redirects them to a file or a pipe.
+    int tty;
+    // Nonzero: stderr is a separate stream; its read side is written to stderr_fd.
+    int separate_stderr;
+    // Output, -1 unless separate_stderr succeeded. The caller owns and closes it. Drain it
+    // as well as the main fd; a full unread stderr blocks the command like a full stdout.
+    int stderr_fd;
+} ashell_pane_options;
+
+// ashell_pane_spawn with options. ashell_pane_spawn is this call with tty = 1 and
+// separate_stderr = 0, so its behaviour is unchanged. Returns 0 or positive errno.
+int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, unsigned rows,
+                         const char *const *envp, ashell_pane_options *options,
+                         int *fd_out, void **job_out);
 
 // Returns 0 running, 1 exited (writes final command status), or -errno.
 // Repeated polling after exit preserves status. Drain the returned fd to EOF independently.
