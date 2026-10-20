@@ -761,3 +761,45 @@ index 27dc452..cc2faab 100644
      num::{NonZeroU8, NonZeroUsize},
      path::{Path, PathBuf},
      pin::Pin,
+diff --git i/helix-loader/src/lib.rs w/helix-loader/src/lib.rs
+--- i/helix-loader/src/lib.rs
++++ w/helix-loader/src/lib.rs
+@@ -11,14 +11,22 @@
+ static RUNTIME_DIRS: once_cell::sync::Lazy<Vec<PathBuf>> =
+     once_cell::sync::Lazy::new(prioritize_runtime_dirs);
+ 
++#[cfg(not(target_os = "ios"))]
+ static CONFIG_FILE: once_cell::sync::OnceCell<PathBuf> = once_cell::sync::OnceCell::new();
++#[cfg(target_os = "ios")]
++static CONFIG_FILE: std::sync::Mutex<Option<PathBuf>> = std::sync::Mutex::new(None);
+ 
+ static LOG_FILE: once_cell::sync::OnceCell<PathBuf> = once_cell::sync::OnceCell::new();
+ 
+ pub fn initialize_config_file(specified_file: Option<PathBuf>) {
+     let config_file = specified_file.unwrap_or_else(default_config_file);
+     ensure_parent_dir(&config_file);
++    #[cfg(not(target_os = "ios"))]
+     CONFIG_FILE.set(config_file).ok();
++    #[cfg(target_os = "ios")]
++    {
++        *CONFIG_FILE.lock().unwrap() = Some(config_file);
++    }
+ }
+ 
+ pub fn initialize_log_file(specified_file: Option<PathBuf>) {
+@@ -133,7 +141,14 @@
+ }
+ 
+ pub fn config_file() -> PathBuf {
+-    CONFIG_FILE.get().map(|path| path.to_path_buf()).unwrap()
++    #[cfg(not(target_os = "ios"))]
++    {
++        CONFIG_FILE.get().map(|path| path.to_path_buf()).unwrap()
++    }
++    #[cfg(target_os = "ios")]
++    {
++        CONFIG_FILE.lock().unwrap().as_ref().unwrap().clone()
++    }
+ }
+ 
+ pub fn log_file() -> PathBuf {
