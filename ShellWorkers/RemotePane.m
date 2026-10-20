@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <stdatomic.h>
 #include <unistd.h>
 
@@ -22,12 +23,14 @@ static void log_host_library(const char *phase) {
 @interface RemotePane : NSObject
 @property(nonatomic, strong) NSXPCConnection *connection;
 @property(nonatomic, strong) id<AShellPaneWire> proxy;
+@property(nonatomic, strong) NSFileHandle *output;
 @property(atomic) BOOL interrupted;
 @property(nonatomic, strong) NSMutableArray<NSURL *> *directories;
 @property(nonatomic, copy) NSString *probeDirectory;
 @end
 @implementation RemotePane
 - (void)dealloc {
+    [_output closeAndReturnError:NULL];
     // Only remove our empty disposable directory, never a project tree.
     if (_probeDirectory) rmdir(_probeDirectory.fileSystemRepresentation);
     log_host_library("before_scope_release");
@@ -116,6 +119,7 @@ int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols, unsig
                 fd = dup(handle.fileDescriptor);
                 if (fd < 0) error = errno;
                 else if (fcntl(fd, F_SETFD, FD_CLOEXEC)) { error = errno; close(fd); fd = -1; }
+                else pane.output = handle;
             }
             NSLog(@"Shell extension spawn: real_pid=%d error=%d startup_ms=%.3f", pid, error, (NSProcessInfo.processInfo.systemUptime - started) * 1000);
         }];
@@ -132,6 +136,14 @@ int ashell_pane_poll(void *job, int *status_out) {
     if (!pane || !status_out) return -EINVAL;
     // 137 is this backend's lost-worker status, not a recovered waitpid status.
     if (pane.interrupted) { *status_out = 137; return 1; }
+    // The worker closes its socket streams before publishing completion. A
+    // hangup is observable even with unread output; keep polling local until
+    // then instead of waking the worker with an XPC request on every poll.
+    struct pollfd output = {.fd = pane.output.fileDescriptor, .events = POLLIN};
+    int ready = poll(&output, 1, 0);
+    if (ready < 0) return errno == EINTR ? 0 : -errno;
+    if (output.revents & POLLNVAL) return -EBADF;
+    if (!(output.revents & (POLLHUP | POLLERR))) return 0;
     __block int result = -EPIPE;
     [pane.proxy poll:^(int value, int status) { result = value; *status_out = status; }];
     if (result == -EPIPE) { pane.interrupted = YES; *status_out = 137; return 1; }

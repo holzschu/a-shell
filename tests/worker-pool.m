@@ -190,9 +190,39 @@ static int lifecycle_check(BOOL busy, BOOL closeOnly) {
     return passed ? 0 : 1;
 }
 
+// Exit status must not depend on the consumer draining pending output first.
+static int completion_check(void) {
+    int (*spawn)(const char *, const char *, unsigned, unsigned, const char *const *, int *, void **) = dlsym(RTLD_DEFAULT, "ashell_pane_spawn");
+    int (*pollJob)(void *, int *) = dlsym(RTLD_DEFAULT, "ashell_pane_poll");
+    void (*release)(void *) = dlsym(RTLD_DEFAULT, "ashell_pane_release");
+    if (!spawn || !pollJob || !release) return 1;
+    NSString *directory = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
+    int descriptor = -1, status = -1, result = 0;
+    void *job = NULL;
+    int error = spawn("dash -c 'printf pending-output; exit 7'", directory.fileSystemRepresentation, 80, 24, NULL, &descriptor, &job);
+    if (error) { fprintf(thread_stdout, "completion startup=%d: FAIL\n", error); return 1; }
+    NSTimeInterval deadline = NSProcessInfo.processInfo.systemUptime + 10;
+    while (!result && NSProcessInfo.processInfo.systemUptime < deadline) {
+        result = pollJob(job, &status);
+        if (!result) usleep(10000);
+    }
+    BOOL passed = result == 1 && status == 7;
+    status = -1;
+    passed = passed && pollJob(job, &status) == 1 && status == 7;
+    char output[64] = {0};
+    ssize_t count = passed ? read(descriptor, output, sizeof(output) - 1) : -1;
+    passed = passed && count == 14 && !strcmp(output, "pending-output");
+    if (passed) passed = read(descriptor, output, 1) == 0;
+    release(job);
+    close(descriptor);
+    fprintf(thread_stdout, "status before output drain and repeated status: %s\n", passed ? "PASS" : "FAIL");
+    return passed ? 0 : 1;
+}
+
 // Run as a real app command. The same consumer must fail on the stock app.
 int worker_pool_check_main(int argc, char **argv) {
     @autoreleasepool {
+        if (argc == 2 && !strcmp(argv[1], "completion")) return completion_check();
         if (argc == 2 && !strcmp(argv[1], "capacity")) return capacity_check();
         if (argc == 2 && !strcmp(argv[1], "lifecycle")) return lifecycle_check(NO, NO);
         if (argc == 2 && !strcmp(argv[1], "lifecycle-busy")) return lifecycle_check(YES, NO);

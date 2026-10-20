@@ -8,6 +8,7 @@ Use the matching ios_system session/stream and Dash terminal changes, then run t
 
 ```sh
 worker-pool-check
+worker-pool-check completion
 worker-pool-check capacity
 worker-pool-check lifecycle
 worker-pool-check lifecycle-busy
@@ -15,6 +16,8 @@ worker-pool-check lifecycle-close
 ```
 
 Each command returns zero on success and prints assertions to its output stream. The capacity check reads `ShellWorkerCount` from the host Info.plist (1 through 10), keeps that many commands open, requires distinct real process IDs and independent cwd/environment, rejects one additional request with `ENOSPC`, then sends input after six seconds and checks exact exit statuses and output EOF. It compares directory device/inode pairs because the phone can return `/private/var/...` for a cwd requested through its `/var/...` alias.
+
+The completion check leaves output unread until polling reports status 7, checks that a second poll preserves it, then reads the exact pending output and EOF.
 
 The lifecycle checks cancel or close one worker, ask a second worker to terminate itself with `SIGKILL`, verify the surviving worker's input/output/status, and repeat the full capacity check. The busy variants make the first command ignore EOF. iOS denies host-to-extension `kill` with `EPERM`, so process loss is injected by the normal disposable command inside the worker. Run these checks only in a disposable build: they deliberately terminate its worker processes.
 
