@@ -586,7 +586,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     func sendArrow(direction: String) {
-        NSLog("Received sendArrow. direction: \(direction)")
+        // NSLog("Received sendArrow. direction: \(direction)")
         guard let terminalView = terminalView else { return }
         DispatchQueue.main.async {
             switch (direction) {
@@ -605,7 +605,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     @objc private func systemAction(_ sender: UIBarButtonItem) {
-        NSLog("Received systemAction. Position x = \(tapPosition.x) y = \(tapPosition.y)")
+        // NSLog("Received systemAction. Position x = \(tapPosition.x) y = \(tapPosition.y)")
         if let title = title(sender) {
             if (terminalView != nil) && terminalView!.isFirstResponder {
                 switch (title) {
@@ -632,7 +632,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         sendArrow(direction: "left")
                     }
                 case "up.down.left.right":
-                    NSLog("up.down.left.right: \(tapPosition.x) -- \(tapPosition.y)")
+                    // NSLog("up.down.left.right: \(tapPosition.x) -- \(tapPosition.y)")
                     if abs(tapPosition.x) > abs(tapPosition.y) {
                         if (tapPosition.x > 0) {
                             sendArrow(direction: "right")
@@ -697,7 +697,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         commandString = "var event = new KeyboardEvent('keydown', {which:37, keyCode:37, key:'Left', code:'Left', bubbles:true});document.activeElement.dispatchEvent(event);"
                     }
                 case "up.down.left.right":
-                    NSLog("up.down.left.right: \(tapPosition.x) -- \(tapPosition.y)")
+                    // NSLog("up.down.left.right: \(tapPosition.x) -- \(tapPosition.y)")
                     if abs(tapPosition.x) > abs(tapPosition.y) {
                         if (tapPosition.x > 0) {
                             commandString = "var event = new KeyboardEvent('keydown', {which:39, keyCode:39, key:'Right', code:'Right', bubbles:true});document.activeElement.dispatchEvent(event);"
@@ -1020,7 +1020,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         // smaller than 15 won't change the button size (but it will change the label size!)
                         // larger than 22 feels much larger than the keyboard keys
                         buttonFontSize =  min(max(screenWidth/(multiplier * CGFloat(numButtons)), 15.0), 22)
+                        #if DEBUG
                         NSLog("button size: \(buttonFontSize): \(screenWidth)/\(multiplier) * \(numButtons)")
+                        #endif
                         // With liquiglass, 8 buttons is the maximum for an iPhone screen
                     }
                 }
@@ -1316,7 +1318,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             continuousButtonTimer.invalidate()
             return
         }
+        #if DEBUG
         NSLog("long press action, sender.state: \(sender.state): \(tapPosition.x) -- \(tapPosition.y) bounds: \(sender.view!.frame.width) -- \(sender.view!.frame.height)")
+        #endif
         if (sender.state == .began) || (sender.state == .changed) {
             tapPosition = sender.location(in: sender.view)
             if (sender.view != nil) {
@@ -1392,7 +1396,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             var useLiquidGlass = false
             if #available(iOS 26, *) {
                 if let preference = Bundle.main.infoDictionary?["UIDesignRequiresCompatibility"] as? Bool {
+                    #if DEBUG
                     NSLog("stored UIDesignRequiresCompatibility: \(preference)")
+                    #endif
                     useLiquidGlass = !preference
                 }
             }
@@ -3815,7 +3821,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Was this window created with a purpose?
             // Case 1: url to open is inside urlContexts
+            #if DEBUG
             NSLog("connectionOptions.urlContexts: \(connectionOptions.urlContexts.first)")
+            #endif
             if let urlContext = connectionOptions.urlContexts.first {
                 // let sendingAppID = urlContext.options.sourceApplication
                 let fileURL = urlContext.url

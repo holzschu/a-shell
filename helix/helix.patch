@@ -1,0 +1,763 @@
+diff --git i/Cargo.lock w/Cargo.lock
+index b4a663c..2a936ee 100644
+--- i/Cargo.lock
++++ w/Cargo.lock
+@@ -262,8 +262,6 @@ checksum = "22ec99545bb0ed0ea7bb9b8e1e9122ea386ff8a48c0922e43f36d45ab09e0e80"
+ [[package]]
+ name = "crossterm"
+ version = "0.28.1"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "829d955a0bb380ef178a640b91779e3987da38c9aea133b20614cfed8cdea9c6"
+ dependencies = [
+  "bitflags",
+  "crossterm_winapi",
+@@ -1592,6 +1590,7 @@ dependencies = [
+  "cassowary",
+  "crossterm",
+  "helix-core",
++ "helix-stdx",
+  "helix-view",
+  "log",
+  "once_cell",
+diff --git i/Cargo.toml w/Cargo.toml
+index 4296ac9..07aad5f 100644
+--- i/Cargo.toml
++++ w/Cargo.toml
+@@ -60,3 +60,6 @@ repository = "https://github.com/helix-editor/helix"
+ homepage = "https://helix-editor.com"
+ license = "MPL-2.0"
+ rust-version = "1.82"
++
++[patch.crates-io]
++crossterm = { path = "ios-crossterm" }
+diff --git i/helix-dap/src/client.rs w/helix-dap/src/client.rs
+index e5824a7..a5eda6a 100644
+--- i/helix-dap/src/client.rs
++++ w/helix-dap/src/client.rs
+@@ -58,6 +58,7 @@ pub async fn process(
+         port_arg: Option<&str>,
+         id: DebugAdapterId,
+     ) -> Result<(Self, UnboundedReceiver<(DebugAdapterId, Payload)>)> {
++        if cfg!(target_os = "ios") { return Err(Error::Other(anyhow!("DAP process adapters are disabled on iOS"))); }
+         if command.is_empty() {
+             return Result::Err(Error::Other(anyhow!("Command not provided")));
+         }
+diff --git i/helix-event/src/runtime.rs w/helix-event/src/runtime.rs
+index 02d66fb..54bc747 100644
+--- i/helix-event/src/runtime.rs
++++ w/helix-event/src/runtime.rs
+@@ -6,21 +6,22 @@
+ //! local but instead of being local to a single thread, the statics are local to
+ //! a single tokio-runtime. The implementation requires locking so it's not exactly efficient.
+ //!
+-//! Therefore this function is only enabled during integration tests and behaves like
++//! Embedded iOS commands also need independent state for each editor runtime.
++//! This function is enabled during integration tests and on iOS, and behaves like
+ //! a normal static otherwise. I would prefer this module to be fully private and to only
+ //! export the macro but the macro still need to construct these internals so it's marked
+ //! `doc(hidden)` instead
+ 
+ use std::ops::Deref;
+ 
+-#[cfg(not(feature = "integration_test"))]
++#[cfg(not(any(feature = "integration_test", target_os = "ios")))]
+ pub struct RuntimeLocal<T: 'static> {
+     /// inner API used in the macro, not part of public API
+     #[doc(hidden)]
+     pub __data: T,
+ }
+ 
+-#[cfg(not(feature = "integration_test"))]
++#[cfg(not(any(feature = "integration_test", target_os = "ios")))]
+ impl<T> Deref for RuntimeLocal<T> {
+     type Target = T;
+ 
+@@ -29,7 +30,7 @@ fn deref(&self) -> &Self::Target {
+     }
+ }
+ 
+-#[cfg(not(feature = "integration_test"))]
++#[cfg(not(any(feature = "integration_test", target_os = "ios")))]
+ #[macro_export]
+ macro_rules! runtime_local {
+     ($($(#[$attr:meta])* $vis: vis static $name:ident: $ty: ty = $init: expr;)*) => {
+@@ -39,7 +40,7 @@ macro_rules! runtime_local {
+     };
+ }
+ 
+-#[cfg(feature = "integration_test")]
++#[cfg(any(feature = "integration_test", target_os = "ios"))]
+ pub struct RuntimeLocal<T: 'static> {
+     data: parking_lot::RwLock<
+         hashbrown::HashMap<tokio::runtime::Id, &'static T, foldhash::fast::FixedState>,
+@@ -47,7 +48,7 @@ pub struct RuntimeLocal<T: 'static> {
+     init: fn() -> T,
+ }
+ 
+-#[cfg(feature = "integration_test")]
++#[cfg(any(feature = "integration_test", target_os = "ios"))]
+ impl<T> RuntimeLocal<T> {
+     /// inner API used in the macro, not part of public API
+     #[doc(hidden)]
+@@ -61,7 +62,7 @@ pub const fn __new(init: fn() -> T) -> Self {
+     }
+ }
+ 
+-#[cfg(feature = "integration_test")]
++#[cfg(any(feature = "integration_test", target_os = "ios"))]
+ impl<T> Deref for RuntimeLocal<T> {
+     type Target = T;
+     fn deref(&self) -> &T {
+@@ -80,7 +81,7 @@ fn deref(&self) -> &T {
+     }
+ }
+ 
+-#[cfg(feature = "integration_test")]
++#[cfg(any(feature = "integration_test", target_os = "ios"))]
+ #[macro_export]
+ macro_rules! runtime_local {
+     ($($(#[$attr:meta])* $vis: vis static $name:ident: $ty: ty = $init: expr;)*) => {
+diff --git i/helix-loader/src/grammar.rs w/helix-loader/src/grammar.rs
+index 362d3ba..1e7e3ff 100644
+--- i/helix-loader/src/grammar.rs
++++ w/helix-loader/src/grammar.rs
+@@ -65,7 +65,7 @@ pub fn get_language(name: &str) -> Result<Option<Grammar>> {
+     unimplemented!()
+ }
+ 
+-#[cfg(not(target_arch = "wasm32"))]
++#[cfg(not(any(target_arch = "wasm32", target_os = "ios")))]
+ pub fn get_language(name: &str) -> Result<Option<Grammar>> {
+     let mut rel_library_path = PathBuf::new().join("grammars").join(name);
+     rel_library_path.set_extension(DYLIB_EXTENSION);
+@@ -84,6 +84,7 @@ fn ensure_git_is_available() -> Result<()> {
+ }
+ 
+ pub fn fetch_grammars() -> Result<()> {
++    if cfg!(target_os = "ios") { bail!("Grammar fetching is disabled on iOS; grammars are linked at build time"); }
+     ensure_git_is_available()?;
+ 
+     // We do not need to fetch local grammars.
+@@ -145,6 +146,7 @@ pub fn fetch_grammars() -> Result<()> {
+ }
+ 
+ pub fn build_grammars(target: Option<String>) -> Result<()> {
++    if cfg!(target_os = "ios") { bail!("Grammar compilation is disabled on iOS; grammars are linked at build time"); }
+     ensure_git_is_available()?;
+ 
+     let grammars = get_grammar_configs()?;
+@@ -591,3 +593,15 @@ pub fn load_runtime_file(language: &str, filename: &str) -> Result<String, std::
+     let path = crate::runtime_file(PathBuf::new().join("queries").join(language).join(filename));
+     std::fs::read_to_string(path)
+ }
++
++#[cfg(target_os = "ios")]
++pub fn get_language(name: &str) -> Result<Option<Grammar>> {
++    extern "C" { fn hx_static_grammar(name: *const std::ffi::c_char) -> *mut std::ffi::c_void; }
++    let name = std::ffi::CString::new(name)?;
++    let ptr = unsafe { hx_static_grammar(name.as_ptr()) };
++    if ptr.is_null() { return Ok(None); }
++    // Grammar is repr(transparent) over a non-null static TSLanguage pointer in tree-house-bindings 0.2.1.
++    let grammar: Grammar = unsafe { std::mem::transmute(std::ptr::NonNull::new(ptr).unwrap()) };
++    anyhow::ensure!((13..=15).contains(&grammar.abi_version()), "Incompatible static grammar ABI");
++    Ok(Some(grammar))
++}
+diff --git i/helix-stdx/src/env.rs w/helix-stdx/src/env.rs
+index 6f9a091..9a6bc8a 100644
+--- i/helix-stdx/src/env.rs
++++ w/helix-stdx/src/env.rs
+@@ -47,6 +47,12 @@ pub fn set_current_working_dir(path: impl AsRef<Path>) -> std::io::Result<Option
+     Ok(cwd.replace(path))
+ }
+ 
++/// Forget the cached working directory so the next call reads it again.
++#[cfg(target_os = "ios")]
++pub fn reset_current_working_dir() {
++    *CWD.write().unwrap() = None;
++}
++
+ /// Checks if the given environment variable is set.
+ pub fn env_var_is_set(env_var_name: &str) -> bool {
+     std::env::var_os(env_var_name).is_some()
+diff --git i/helix-stdx/src/ios_io.rs w/helix-stdx/src/ios_io.rs
+new file mode 100644
+index 0000000..7cfdaa9
+--- /dev/null
++++ w/helix-stdx/src/ios_io.rs
+@@ -0,0 +1,18 @@
++use std::{fs::File, io::{self, Read, Write}, os::fd::{AsRawFd, RawFd, FromRawFd}};
++extern "C" { fn hx_io_fd(index: i32) -> i32; fn dup(fd: i32) -> i32; }
++pub struct Stream(File);
++impl Stream { pub fn lock(&self) -> File { self.0.try_clone().expect("duplicate Helix stream") } }
++impl AsRawFd for Stream { fn as_raw_fd(&self) -> RawFd { self.0.as_raw_fd() } }
++impl Read for Stream { fn read(&mut self, data: &mut [u8]) -> io::Result<usize> { self.0.read(data) } }
++impl Write for Stream {
++    fn write(&mut self, data: &[u8]) -> io::Result<usize> { self.0.write(data) }
++    fn flush(&mut self) -> io::Result<()> { self.0.flush() }
++}
++fn stream(index: i32) -> Stream {
++    let fd = unsafe { dup(hx_io_fd(index)) };
++    assert!(fd >= 0, "cannot duplicate owned Helix stream");
++    Stream(unsafe { File::from_raw_fd(fd) })
++}
++pub fn stdin() -> Stream { stream(0) }
++pub fn stdout() -> Stream { stream(1) }
++pub fn stderr() -> Stream { stream(2) }
+diff --git i/helix-stdx/src/lib.rs w/helix-stdx/src/lib.rs
+index e371f39..8975e47 100644
+--- i/helix-stdx/src/lib.rs
++++ w/helix-stdx/src/lib.rs
+@@ -8,3 +8,6 @@
+ pub mod rope;
+ 
+ pub use range::Range;
++
++#[cfg(target_os = "ios")]
++pub mod ios_io;
+diff --git i/helix-term/Cargo.toml w/helix-term/Cargo.toml
+index 5e4367f..e3371c6 100644
+--- i/helix-term/Cargo.toml
++++ w/helix-term/Cargo.toml
+@@ -36,6 +36,9 @@ unicode-lines = ["helix-core/unicode-lines", "helix-view/unicode-lines"]
+ integration = ["helix-event/integration_test"]
+ git = ["helix-vcs/git"]
+ 
++[lib]
++crate-type = ["rlib", "staticlib"]
++
+ [[bin]]
+ name = "hx"
+ path = "src/main.rs"
+diff --git i/helix-term/src/application.rs w/helix-term/src/application.rs
+index cf09aac..d786722 100644
+--- i/helix-term/src/application.rs
++++ w/helix-term/src/application.rs
+@@ -1,3 +1,10 @@
++macro_rules! port_print { ($($arg:tt)*) => {{ use std::io::Write; let _ = write!(port_io::stdout(), $($arg)*); }}; }
++macro_rules! port_println { ($($arg:tt)*) => {{ use std::io::Write; let _ = writeln!(port_io::stdout(), $($arg)*); }}; }
++macro_rules! port_eprintln { ($($arg:tt)*) => {{ use std::io::Write; let _ = writeln!(port_io::stderr(), $($arg)*); }}; }
++#[cfg(target_os = "ios")]
++use helix_stdx::ios_io as port_io;
++#[cfg(not(target_os = "ios"))]
++use std::io as port_io;
+ use arc_swap::{access::Map, ArcSwap};
+ use futures_util::Stream;
+ use helix_core::{diagnostic::Severity, pos_at_coords, syntax, Range, Selection};
+@@ -31,17 +38,21 @@
+ 
+ use log::{debug, error, info, warn};
+ #[cfg(not(feature = "integration"))]
++#[cfg(not(target_os = "ios"))]
+ use std::io::stdout;
+-use std::{io::stdin, path::Path, sync::Arc};
++#[cfg(target_os = "ios")]
++use port_io::stdout;
++use std::{path::Path, sync::Arc};
++use port_io::stdin;
+ 
+-#[cfg(not(windows))]
++#[cfg(not(any(windows, target_os = "ios")))]
+ use anyhow::Context;
+ use anyhow::Error;
+ 
+ use crossterm::{event::Event as CrosstermEvent, tty::IsTty};
+-#[cfg(not(windows))]
++#[cfg(not(any(windows, target_os = "ios")))]
+ use {signal_hook::consts::signal, signal_hook_tokio::Signals};
+-#[cfg(windows)]
++#[cfg(any(windows, target_os = "ios"))]
+ type Signals = futures_util::stream::Empty<()>;
+ 
+ #[cfg(not(feature = "integration"))]
+@@ -51,7 +62,13 @@
+ use tui::backend::TestBackend;
+ 
+ #[cfg(not(feature = "integration"))]
+-type TerminalBackend = CrosstermBackend<std::io::Stdout>;
++#[cfg(target_os = "ios")]
++type PortStdout = port_io::Stream;
++#[cfg(not(target_os = "ios"))]
++type PortStdout = std::io::Stdout;
++
++#[cfg(not(feature = "integration"))]
++type TerminalBackend = CrosstermBackend<PortStdout>;
+ 
+ #[cfg(feature = "integration")]
+ type TerminalBackend = TestBackend;
+@@ -88,7 +105,7 @@ fn setup_integration_logging() {
+             ))
+         })
+         .level(level)
+-        .chain(std::io::stdout())
++        .chain(port_io::stdout())
+         .apply();
+ }
+ 
+@@ -222,9 +239,9 @@ pub fn new(args: Args, config: Config, lang_loader: syntax::Loader) -> Result<Se
+                 .unwrap_or_else(|_| editor.new_file(Action::VerticalSplit));
+         }
+ 
+-        #[cfg(windows)]
++        #[cfg(any(windows, target_os = "ios"))]
+         let signals = futures_util::stream::empty();
+-        #[cfg(not(windows))]
++        #[cfg(not(any(windows, target_os = "ios")))]
+         let signals = Signals::new([
+             signal::SIGTSTP,
+             signal::SIGCONT,
+@@ -460,13 +477,13 @@ fn load_configured_theme(editor: &mut Editor, config: &Config) {
+         editor.set_theme(theme);
+     }
+ 
+-    #[cfg(windows)]
++    #[cfg(any(windows, target_os = "ios"))]
+     // no signal handling available on windows
+     pub async fn handle_signals(&mut self, _signal: ()) -> bool {
+         true
+     }
+ 
+-    #[cfg(not(windows))]
++    #[cfg(not(any(windows, target_os = "ios")))]
+     pub async fn handle_signals(&mut self, signal: i32) -> bool {
+         match signal {
+             signal::SIGTSTP => {
+@@ -493,7 +510,7 @@ pub async fn handle_signals(&mut self, signal: i32) -> bool {
+ 
+                 if res != 0 {
+                     let err = std::io::Error::last_os_error();
+-                    eprintln!("{}", err);
++                    port_eprintln!("{}", err);
+                     let res = err.raw_os_error().unwrap_or(1);
+                     std::process::exit(res);
+                 }
+@@ -1138,7 +1155,7 @@ pub async fn run<S>(&mut self, input_stream: &mut S) -> Result<i32, Error>
+ 
+         for err in close_errs {
+             self.editor.exit_code = 1;
+-            eprintln!("Error: {}", err);
++            port_eprintln!("Error: {}", err);
+         }
+ 
+         Ok(self.editor.exit_code)
+diff --git i/helix-term/src/args.rs w/helix-term/src/args.rs
+index 9b1b440..335346d 100644
+--- i/helix-term/src/args.rs
++++ w/helix-term/src/args.rs
+@@ -21,10 +21,16 @@ pub struct Args {
+     pub working_directory: Option<PathBuf>,
+ }
+ 
++#[cfg(target_os = "ios")]
++thread_local! { pub(crate) static IOS_ARGS: std::cell::RefCell<Vec<String>> = const { std::cell::RefCell::new(Vec::new()) }; }
++
+ impl Args {
+     pub fn parse_args() -> Result<Args> {
+         let mut args = Args::default();
++        #[cfg(not(target_os = "ios"))]
+         let mut argv = std::env::args().peekable();
++        #[cfg(target_os = "ios")]
++        let mut argv = IOS_ARGS.with(|slot| slot.borrow().clone()).into_iter().peekable();
+         let mut line_number = 0;
+ 
+         let mut insert_file_with_position = |file_with_position: &str| {
+diff --git i/helix-term/src/health.rs w/helix-term/src/health.rs
+index 180e065..59e0bfe 100644
+--- i/helix-term/src/health.rs
++++ w/helix-term/src/health.rs
+@@ -1,3 +1,7 @@
++#[cfg(target_os = "ios")]
++use helix_stdx::ios_io as port_io;
++#[cfg(not(target_os = "ios"))]
++use std::io as port_io;
+ use crate::config::{Config, ConfigLoadError};
+ use crossterm::{
+     style::{Color, StyledContent, Stylize},
+@@ -46,7 +50,7 @@ pub fn short_title(&self) -> &'static str {
+ 
+ /// Display general diagnostics.
+ pub fn general() -> std::io::Result<()> {
+-    let stdout = std::io::stdout();
++    let stdout = port_io::stdout();
+     let mut stdout = stdout.lock();
+ 
+     let config_file = helix_loader::config_file();
+@@ -96,7 +100,7 @@ pub fn general() -> std::io::Result<()> {
+ }
+ 
+ pub fn clipboard() -> std::io::Result<()> {
+-    let stdout = std::io::stdout();
++    let stdout = port_io::stdout();
+     let mut stdout = stdout.lock();
+ 
+     let config = match Config::load_default() {
+@@ -134,13 +138,13 @@ pub fn clipboard() -> std::io::Result<()> {
+ }
+ 
+ pub fn languages_all() -> std::io::Result<()> {
+-    let stdout = std::io::stdout();
++    let stdout = port_io::stdout();
+     let mut stdout = stdout.lock();
+ 
+     let mut syn_loader_conf = match user_lang_config() {
+         Ok(conf) => conf,
+         Err(err) => {
+-            let stderr = std::io::stderr();
++            let stderr = port_io::stderr();
+             let mut stderr = stderr.lock();
+ 
+             writeln!(
+@@ -162,7 +166,7 @@ pub fn languages_all() -> std::io::Result<()> {
+ 
+     let terminal_cols = crossterm::terminal::size().map(|(c, _)| c).unwrap_or(80);
+     let column_width = terminal_cols as usize / headings.len();
+-    let is_terminal = std::io::stdout().is_tty();
++    let is_terminal = port_io::stdout().is_tty();
+ 
+     let fit = |s: &str| -> StyledContent<String> {
+         format!(
+@@ -236,13 +240,13 @@ pub fn languages_all() -> std::io::Result<()> {
+ /// Display diagnostics pertaining to a particular language (LSP,
+ /// highlight queries, etc).
+ pub fn language(lang_str: String) -> std::io::Result<()> {
+-    let stdout = std::io::stdout();
++    let stdout = port_io::stdout();
+     let mut stdout = stdout.lock();
+ 
+     let syn_loader_conf = match user_lang_config() {
+         Ok(conf) => conf,
+         Err(err) => {
+-            let stderr = std::io::stderr();
++            let stderr = port_io::stderr();
+             let mut stderr = stderr.lock();
+ 
+             writeln!(
+@@ -315,7 +319,7 @@ pub fn language(lang_str: String) -> std::io::Result<()> {
+ }
+ 
+ fn probe_parser(grammar_name: &str) -> std::io::Result<()> {
+-    let stdout = std::io::stdout();
++    let stdout = port_io::stdout();
+     let mut stdout = stdout.lock();
+ 
+     write!(stdout, "Tree-sitter parser: ")?;
+@@ -331,7 +335,7 @@ fn probe_protocols<'a, I: Iterator<Item = (&'a str, &'a str)> + 'a>(
+     protocol_name: &str,
+     server_cmds: I,
+ ) -> std::io::Result<()> {
+-    let stdout = std::io::stdout();
++    let stdout = port_io::stdout();
+     let mut stdout = stdout.lock();
+     let mut server_cmds = server_cmds.peekable();
+ 
+@@ -355,7 +359,7 @@ fn probe_protocols<'a, I: Iterator<Item = (&'a str, &'a str)> + 'a>(
+ 
+ /// Display diagnostics about LSP and DAP.
+ fn probe_protocol(protocol_name: &str, server_cmd: Option<String>) -> std::io::Result<()> {
+-    let stdout = std::io::stdout();
++    let stdout = port_io::stdout();
+     let mut stdout = stdout.lock();
+ 
+     write!(stdout, "Configured {}:", protocol_name)?;
+@@ -377,7 +381,7 @@ fn probe_protocol(protocol_name: &str, server_cmd: Option<String>) -> std::io::R
+ /// Display diagnostics about a feature that requires tree-sitter
+ /// query files (highlights, textobjects, etc).
+ fn probe_treesitter_feature(lang: &str, feature: TsFeature) -> std::io::Result<()> {
+-    let stdout = std::io::stdout();
++    let stdout = port_io::stdout();
+     let mut stdout = stdout.lock();
+ 
+     let found = match load_runtime_file(lang, feature.runtime_filename()).is_ok() {
+@@ -396,7 +400,7 @@ pub fn print_health(health_arg: Option<String>) -> std::io::Result<()> {
+         None | Some("all") => {
+             general()?;
+             clipboard()?;
+-            writeln!(std::io::stdout().lock())?;
++            writeln!(port_io::stdout().lock())?;
+             languages_all()?;
+         }
+         Some(lang) => language(lang.to_string())?,
+diff --git i/helix-term/src/lib.rs w/helix-term/src/lib.rs
+index 75b6747..6ef6c78 100644
+--- i/helix-term/src/lib.rs
++++ w/helix-term/src/lib.rs
+@@ -1,6 +1,10 @@
+ #[macro_use]
+ extern crate helix_view;
+ 
++#[cfg(target_os = "ios")]
++#[path = "main.rs"]
++mod embedded;
++
+ pub mod application;
+ pub mod args;
+ pub mod commands;
+diff --git i/helix-term/src/main.rs w/helix-term/src/main.rs
+index 31ab85c..34e440e 100644
+--- i/helix-term/src/main.rs
++++ w/helix-term/src/main.rs
+@@ -1,3 +1,12 @@
++macro_rules! port_print { ($($arg:tt)*) => {{ use std::io::Write; let _ = write!(port_io::stdout(), $($arg)*); }}; }
++macro_rules! port_println { ($($arg:tt)*) => {{ use std::io::Write; let _ = writeln!(port_io::stdout(), $($arg)*); }}; }
++macro_rules! port_eprintln { ($($arg:tt)*) => {{ use std::io::Write; let _ = writeln!(port_io::stderr(), $($arg)*); }}; }
++#[cfg(target_os = "ios")]
++use helix_stdx::ios_io as port_io;
++#[cfg(not(target_os = "ios"))]
++use std::io as port_io;
++#[cfg(target_os = "ios")]
++use crate as helix_term;
+ use anyhow::{Context, Error, Result};
+ use crossterm::event::EventStream;
+ use helix_loader::VERSION_AND_GIT_HASH;
+@@ -33,6 +42,7 @@ fn setup_logging(verbosity: u64) -> Result<()> {
+     Ok(())
+ }
+ 
++#[cfg(not(target_os = "ios"))]
+ fn main() -> Result<()> {
+     let exit_code = main_impl()?;
+     std::process::exit(exit_code);
+@@ -47,7 +57,7 @@ async fn main_impl() -> Result<i32> {
+ 
+     // Help has a higher priority and should be handled separately.
+     if args.display_help {
+-        print!(
++        port_print!(
+             "\
+ {} {}
+ {}
+@@ -82,12 +92,12 @@ async fn main_impl() -> Result<i32> {
+             env!("CARGO_PKG_DESCRIPTION"),
+             helix_loader::default_log_file().display(),
+         );
+-        std::process::exit(0);
++        return Ok(0);
+     }
+ 
+     if args.display_version {
+-        println!("helix {}", VERSION_AND_GIT_HASH);
+-        std::process::exit(0);
++        port_println!("helix {}", VERSION_AND_GIT_HASH);
++        return Ok(0);
+     }
+ 
+     if args.health {
+@@ -99,7 +109,7 @@ async fn main_impl() -> Result<i32> {
+             }
+         }
+ 
+-        std::process::exit(0);
++        return Ok(0);
+     }
+ 
+     if args.fetch_grammars {
+@@ -112,7 +122,8 @@ async fn main_impl() -> Result<i32> {
+         return Ok(0);
+     }
+ 
+-    setup_logging(args.verbosity).context("failed to initialize logging")?;
++    static LOGGING: std::sync::Once = std::sync::Once::new();
++    LOGGING.call_once(|| { let _ = setup_logging(args.verbosity); });
+ 
+     // NOTE: Set the working directory early so the correct configuration is loaded. Be aware that
+     // Application::new() depends on this logic so it must be updated if this changes.
+@@ -123,34 +134,69 @@ async fn main_impl() -> Result<i32> {
+         helix_stdx::env::set_current_working_dir(path)?;
+     }
+ 
+-    let config = match Config::load_default() {
++    let mut config = match Config::load_default() {
+         Ok(config) => config,
+         Err(ConfigLoadError::Error(err)) if err.kind() == std::io::ErrorKind::NotFound => {
+             Config::default()
+         }
+         Err(ConfigLoadError::Error(err)) => return Err(Error::new(err)),
+         Err(ConfigLoadError::BadConfig(err)) => {
+-            eprintln!("Bad config: {}", err);
+-            eprintln!("Press <ENTER> to continue with default config");
++            port_eprintln!("Bad config: {}", err);
++            port_eprintln!("Press <ENTER> to continue with default config");
+             use std::io::Read;
+-            let _ = std::io::stdin().read(&mut []);
++            let _ = port_io::stdin().read(&mut []);
+             Config::default()
+         }
+     };
+ 
++    #[cfg(target_os = "ios")]
++    { config.editor.lsp.enable = false; }
++
+     let lang_loader = helix_core::config::user_lang_loader().unwrap_or_else(|err| {
+-        eprintln!("{}", err);
+-        eprintln!("Press <ENTER> to continue with default language config");
++        port_eprintln!("{}", err);
++        port_eprintln!("Press <ENTER> to continue with default language config");
+         use std::io::Read;
+         // This waits for an enter press.
+-        let _ = std::io::stdin().read(&mut []);
++        let _ = port_io::stdin().read(&mut []);
+         helix_core::config::default_lang_loader()
+     });
+ 
+     // TODO: use the thread local executor to spawn the application task separately from the work pool
+     let mut app = Application::new(args, config, lang_loader).context("unable to start Helix")?;
+ 
+-    let exit_code = app.run(&mut EventStream::new()).await?;
++    #[cfg(target_os = "ios")]
++    crossterm::event::reset_ios_input();
++    // Poll the command-owned PTY, including geometry changes without process signals.
++    let events = futures_util::stream::unfold((0, 0), |mut size| async move {
++        loop {
++            if let Ok(next) = crossterm::terminal::size() {
++                if next != size { size = next; return Some((Ok(crossterm::event::Event::Resize(next.0, next.1)), size)); }
++            }
++            match crossterm::event::poll(std::time::Duration::ZERO) {
++                Ok(true) => return Some((crossterm::event::read(), size)),
++                Ok(false) => tokio::time::sleep(std::time::Duration::from_millis(10)).await,
++                Err(err) => return Some((Err(err), size)),
++            }
++        }
++    });
++    let exit_code = app.run(&mut Box::pin(events)).await?;
++    #[cfg(target_os = "ios")]
++    crossterm::event::reset_ios_input();
+ 
+     Ok(exit_code)
+ }
++
++#[cfg(target_os = "ios")]
++#[no_mangle]
++pub unsafe extern "C" fn hx_embedded_run(argc: i32, argv: *const *const std::ffi::c_char) -> i32 {
++    let args: Vec<String> = (0..argc).map(|i| std::ffi::CStr::from_ptr(*argv.add(i as usize)).to_string_lossy().into_owned()).collect();
++    match std::thread::Builder::new().name("helix-ios".into()).stack_size(16 * 1024 * 1024).spawn(move || {
++        crate::args::IOS_ARGS.with(|slot| *slot.borrow_mut() = args);
++        // The embedded process outlives each command; the cwd belongs to this command.
++        helix_stdx::env::reset_current_working_dir();
++        match main_impl() { Ok(code) => code, Err(err) => { port_eprintln!("Helix: {err:#}"); 1 } }
++    }) {
++        Ok(thread) => thread.join().unwrap_or(1),
++        Err(err) => { port_eprintln!("Cannot start Helix: {err}"); 1 }
++    }
++}
+diff --git i/helix-tui/Cargo.toml w/helix-tui/Cargo.toml
+index 2b5767a..028a1a8 100644
+--- i/helix-tui/Cargo.toml
++++ w/helix-tui/Cargo.toml
+@@ -15,6 +15,7 @@ homepage.workspace = true
+ default = ["crossterm"]
+ 
+ [dependencies]
++helix-stdx = { path = "../helix-stdx" }
+ helix-view = { path = "../helix-view", features = ["term"] }
+ helix-core = { path = "../helix-core" }
+ 
+diff --git i/helix-tui/src/backend/crossterm.rs w/helix-tui/src/backend/crossterm.rs
+index 28e2041..e1519eb 100644
+--- i/helix-tui/src/backend/crossterm.rs
++++ w/helix-tui/src/backend/crossterm.rs
+@@ -1,3 +1,7 @@
++#[cfg(target_os = "ios")]
++use helix_stdx::ios_io as port_io;
++#[cfg(not(target_os = "ios"))]
++use std::io as port_io;
+ use crate::{backend::Backend, buffer::Cell, terminal::Config};
+ use crossterm::{
+     cursor::{Hide, MoveTo, SetCursorStyle, Show},
+@@ -224,7 +228,7 @@ fn restore(&mut self, config: Config) -> io::Result<()> {
+     }
+ 
+     fn force_restore() -> io::Result<()> {
+-        let mut stdout = io::stdout();
++        let mut stdout = port_io::stdout();
+ 
+         // reset cursor shape
+         write!(stdout, "\x1B[0 q")?;
+diff --git i/helix-view/src/clipboard.rs w/helix-view/src/clipboard.rs
+index 1cf6334..b89d2a6 100644
+--- i/helix-view/src/clipboard.rs
++++ w/helix-view/src/clipboard.rs
+@@ -1,3 +1,7 @@
++#[cfg(target_os = "ios")]
++use helix_stdx::ios_io as port_io;
++#[cfg(not(target_os = "ios"))]
++use std::io as port_io;
+ // Implementation reference: https://github.com/neovim/neovim/blob/f2906a4669a2eef6d7bf86a29648793d63c98949/runtime/autoload/provider/clipboard.vim#L68-L152
+ 
+ use serde::{Deserialize, Serialize};
+@@ -103,6 +107,8 @@ pub enum ClipboardProvider {
+     }
+ 
+     impl Default for ClipboardProvider {
++        #[cfg(target_os = "ios")]
++        fn default() -> Self { Self::Pasteboard }
+         #[cfg(windows)]
+         fn default() -> Self {
+             use helix_stdx::env::binary_exists;
+@@ -130,7 +136,7 @@ fn default() -> Self {
+             }
+         }
+ 
+-        #[cfg(not(any(windows, target_os = "macos")))]
++        #[cfg(not(any(windows, target_os = "macos", target_os = "ios")))]
+         fn default() -> Self {
+             use helix_stdx::env::{binary_exists, env_var_is_set};
+ 
+@@ -209,6 +215,8 @@ fn builtin_name<'a>(
+         }
+ 
+         pub fn get_contents(&self, clipboard_type: &ClipboardType) -> Result<String> {
++            #[cfg(target_os = "ios")]
++            { let _ = clipboard_type; return Err(ClipboardError::ReadingNotSupported); }
+             fn yank_from_builtin(
+                 provider: CommandProvider,
+                 clipboard_type: &ClipboardType,
+@@ -255,6 +263,12 @@ fn yank_from_builtin(
+         }
+ 
+         pub fn set_contents(&self, content: &str, clipboard_type: ClipboardType) -> Result<()> {
++            #[cfg(target_os = "ios")]
++            {
++                extern "C" { fn hx_pbcopy(data: *const u8, len: usize) -> i32; }
++                let _ = clipboard_type;
++                return if unsafe { hx_pbcopy(content.as_ptr(), content.len()) } == 0 { Ok(()) } else { Err(ClipboardError::CommandFailed) };
++            }
+             fn paste_to_builtin(
+                 provider: CommandProvider,
+                 content: &str,
+@@ -293,7 +307,7 @@ fn paste_to_builtin(
+                 #[cfg(feature = "term")]
+                 Self::Termcode => {
+                     crossterm::queue!(
+-                        std::io::stdout(),
++                        port_io::stdout(),
+                         osc52::SetClipboardCommand::new(content, clipboard_type)
+                     )?;
+                     Ok(())
+diff --git i/helix-view/src/editor.rs w/helix-view/src/editor.rs
+index 27dc452..cc2faab 100644
+--- i/helix-view/src/editor.rs
++++ w/helix-view/src/editor.rs
+@@ -1,3 +1,7 @@
++#[cfg(target_os = "ios")]
++use helix_stdx::ios_io as port_io;
++#[cfg(not(target_os = "ios"))]
++use std::io as port_io;
+ use crate::{
+     annotations::diagnostics::{DiagnosticFilter, InlineDiagnosticsConfig},
+     clipboard::ClipboardProvider,
+@@ -14,6 +18,7 @@
+     tree::{self, Tree},
+     Document, DocumentId, View, ViewId,
+ };
++use port_io::stdin;
+ use helix_event::dispatch;
+ use helix_vcs::DiffProviderRegistry;
+ 
+@@ -27,7 +32,7 @@
+     cell::Cell,
+     collections::{BTreeMap, HashMap, HashSet},
+     fs,
+-    io::{self, stdin},
++    io::{self},
+     num::{NonZeroU8, NonZeroUsize},
+     path::{Path, PathBuf},
+     pin::Pin,

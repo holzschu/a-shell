@@ -51,6 +51,13 @@
 		<string></string>
 		<string>no</string>
 	</array>
+	<key>hx</key>
+	<array>
+		<string>helix.framework/helix</string>
+		<string>hx_ios_main</string>
+		<string>hVgc:v</string>
+		<string>file</string>
+	</array>
 	<key>alias</key>
 	<array>
 		<string>SELF</string>
@@ -511,6 +518,13 @@
 		<string>shell.framework/shell</string>
 		<string>realpath_main</string>
 		<string>q</string>
+		<string>file</string>
+	</array>
+	<key>rg</key>
+	<array>
+		<string>rg.framework/rg</string>
+		<string>rg_ios_main</string>
+		<string></string>
 		<string>file</string>
 	</array>
 	<key>rlogin</key>
