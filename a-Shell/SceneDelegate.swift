@@ -3610,6 +3610,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             terminalView = contentView?.terminalview.view
+            if let terminalFont = terminalView?.font {
+                basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
+            }
             terminalView?.terminalDelegate = self
             terminalView?.optionAsMetaKey = false
             /*  tell SwiftTerm to use Metal rendering:
