@@ -5295,7 +5295,7 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 585;
+				CURRENT_PROJECT_VERSION = 595;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -5308,7 +5308,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell.LongCommands";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -5327,7 +5327,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 585;
+				CURRENT_PROJECT_VERSION = 592;
 				INFOPLIST_FILE = "a-Shell-LongCommands/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -5336,7 +5336,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.LongCommands";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -5354,7 +5354,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 585;
+				CURRENT_PROJECT_VERSION = 592;
 				INFOPLIST_FILE = "a-Shell-LongCommands/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -5363,7 +5363,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.LongCommands";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -5383,7 +5383,7 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 585;
+				CURRENT_PROJECT_VERSION = 595;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -5396,7 +5396,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell.LongCommands";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
