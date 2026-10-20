@@ -1,0 +1,323 @@
+diff --git i/Cargo.toml w/Cargo.toml
+index 02f9ff7..862a814 100644
+--- i/Cargo.toml
++++ w/Cargo.toml
+@@ -13,6 +13,9 @@ license = "Apache-2.0 OR MIT"
+ edition = "2021"
+ exclude = ["assets/"]
+ 
++[lib]
++crate-type = ["rlib", "staticlib"]
++
+ [features]
+ integration-test = []
+ 
+diff --git i/src/bin/heliocron.rs w/src/bin/heliocron.rs
+index f5cb028..9e07eaa 100644
+--- i/src/bin/heliocron.rs
++++ w/src/bin/heliocron.rs
+@@ -7,13 +7,13 @@ async fn run_heliocron() -> Result<(), errors::HeliocronError> {
+     let solar_calculations = calc::SolarCalculations::new(config.date, config.coordinates);
+ 
+     match config.action {
+-        domain::Action::Report { json } => subcommands::display_report(solar_calculations, json)?,
++        domain::Action::Report { json } => subcommands::display_report(solar_calculations, json, &mut std::io::stdout())?,
+         domain::Action::Wait {
+             event,
+             offset,
+             run_missed_task,
+-        } => subcommands::wait(event, offset, solar_calculations, run_missed_task).await?,
+-        domain::Action::Poll { watch, json } => subcommands::poll(solar_calculations, watch, json)?,
++        } => subcommands::wait(event, offset, solar_calculations, run_missed_task, &mut std::io::stdout()).await?,
++        domain::Action::Poll { watch, json } => subcommands::poll(solar_calculations, watch, json, &mut std::io::stdout())?,
+     }
+     Ok(())
+ }
+diff --git i/src/cli.rs w/src/cli.rs
+index 2d98281..09f32a2 100644
+--- i/src/cli.rs
++++ w/src/cli.rs
+@@ -10,7 +10,7 @@ type Result<T, E = HeliocronError> = result::Result<T, E>;
+ 
+ #[derive(Parser)]
+ #[clap(version, about)]
+-struct Cli {
++pub(crate) struct Cli {
+     /// Set the date for which the calculations should be run. If specified, it should be in 'yyyy-mm-dd' format, otherwise it defaults
+     /// to the the current local date
+     #[clap(
+@@ -154,7 +154,10 @@ pub struct Config {
+ /// command line take precedence over values found in configuration files, which, in turn, takes precedence over
+ /// any hard coded default values.
+ pub fn parse_config() -> Result<Config, HeliocronError> {
+-    let cli_args = Cli::parse();
++    parse_config_from(Cli::parse(), &mut std::io::stderr())
++}
++
++pub(crate) fn parse_config_from(cli_args: Cli, errors: &mut dyn std::io::Write) -> Result<Config, HeliocronError> {
+ 
+     let coordinates = {
+         // First try the command line arguments...
+@@ -170,7 +173,7 @@ pub fn parse_config() -> Result<Config, HeliocronError> {
+                     match res {
+                         Ok(coords) => Some(coords),
+                         Err(e) => {
+-                            eprintln!("Warning - couldn't parse configuration file due to the following reason: {e}\n. Proceeding with default coordinates.");
++                            let _ = writeln!(errors, "Warning - couldn't parse configuration file due to the following reason: {e}\n. Proceeding with default coordinates.");
+                             None
+                         }
+                         }
+diff --git i/src/errors.rs w/src/errors.rs
+index 7415ffd..b42f6d4 100644
+--- i/src/errors.rs
++++ w/src/errors.rs
+@@ -89,6 +89,12 @@ impl From<chrono::ParseError> for HeliocronError {
+     }
+ }
+ 
++impl From<std::io::Error> for HeliocronError {
++    fn from(err: std::io::Error) -> Self {
++        sleep::Error::from(err).into()
++    }
++}
++
+ impl From<sleep::Error> for HeliocronError {
+     fn from(err: sleep::Error) -> Self {
+         HeliocronError::Runtime(RuntimeErrorKind::SleepError(err))
+diff --git i/src/lib.rs w/src/lib.rs
+index 9503336..f9e7711 100644
+--- i/src/lib.rs
++++ w/src/lib.rs
+@@ -7,3 +7,6 @@ mod sleep;
+ pub mod subcommands;
+ pub mod traits;
+ pub mod utils;
++
++#[cfg(target_os = "ios")]
++mod native;
+diff --git i/src/native.rs w/src/native.rs
+new file mode 100644
+index 0000000..b5485b4
+--- /dev/null
++++ w/src/native.rs
+@@ -0,0 +1,45 @@
++use std::{ffi::{c_char, CStr, OsString}, io::Write, os::{fd::BorrowedFd, unix::ffi::OsStrExt}};
++use clap::Parser;
++use crate::{calc, cli, domain, subcommands};
++
++// The host owns process lifetime and streams; invocation state stays local.
++#[unsafe(no_mangle)]
++pub unsafe extern "C" fn heliocron_embedded_run(argc: i32, argv: *const *const c_char, output: i32, errors: i32) -> i32 {
++    if argc < 1 || argv.is_null() { return 2; }
++    let Ok(stdout) = (unsafe { BorrowedFd::borrow_raw(output) }).try_clone_to_owned() else { return 1; };
++    let Ok(stderr) = (unsafe { BorrowedFd::borrow_raw(errors) }).try_clone_to_owned() else { return 1; };
++    let mut stdout = std::fs::File::from(stdout);
++    let mut stderr = std::fs::File::from(stderr);
++    let args: Vec<OsString> = (0..argc).map(|i| {
++        let bytes = unsafe { CStr::from_ptr(*argv.add(i as usize)) }.to_bytes();
++        std::ffi::OsStr::from_bytes(bytes).to_owned()
++    }).collect();
++    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
++        let args = match cli::Cli::try_parse_from(args) {
++            Ok(args) => args,
++            Err(error) => {
++                let status = if error.use_stderr() { 2 } else { 0 };
++                let stream = if error.use_stderr() { &mut stderr } else { &mut stdout };
++                let _ = write!(stream, "{error}");
++                return status;
++            }
++        };
++        let result = (|| -> Result<(), Box<dyn std::error::Error>> {
++            let config = cli::parse_config_from(args, &mut stderr)?;
++            let calculations = calc::SolarCalculations::new(config.date, config.coordinates);
++            match config.action {
++                domain::Action::Report { json } => subcommands::display_report(calculations, json, &mut stdout)?,
++                domain::Action::Wait { event, offset, run_missed_task } => {
++                    let runtime = tokio::runtime::Builder::new_current_thread().enable_time().build()?;
++                    runtime.block_on(subcommands::wait(event, offset, calculations, run_missed_task, &mut stdout))?;
++                }
++                domain::Action::Poll { watch, json } => subcommands::poll(calculations, watch, json, &mut stdout)?,
++            }
++            Ok(())
++        })();
++        match result {
++            Ok(()) => 0,
++            Err(error) => { let _ = writeln!(stderr, "{error}"); 1 }
++        }
++    })).unwrap_or(1)
++}
+diff --git i/src/sleep.rs w/src/sleep.rs
+index 60836db..629b32e 100644
+--- i/src/sleep.rs
++++ w/src/sleep.rs
+@@ -1,6 +1,9 @@
+ use chrono::{DateTime, Utc};
++#[cfg(not(target_vendor = "apple"))]
+ use errno::errno;
++#[cfg(not(target_vendor = "apple"))]
+ use std::{mem::MaybeUninit, ptr};
++#[cfg(not(target_vendor = "apple"))]
+ use tokio::signal::unix::{signal, SignalKind};
+ 
+ #[derive(Debug)]
+@@ -33,6 +36,7 @@ impl std::fmt::Display for Error {
+ 
+ type Result<T> = std::result::Result<T, Error>;
+ 
++#[cfg(not(target_vendor = "apple"))]
+ unsafe fn arm_timer(duration: i64) -> Result<libc::timer_t> {
+     // First, initialize our timer
+     let mut timer: libc::timer_t = MaybeUninit::zeroed().assume_init();
+@@ -71,6 +75,7 @@ unsafe fn arm_timer(duration: i64) -> Result<libc::timer_t> {
+ 
+     Ok(timer)
+ }
++#[cfg(not(target_vendor = "apple"))]
+ unsafe fn disarm_timer(timer: libc::timer_t) -> Result<()> {
+     if libc::timer_delete(timer) != 0 {
+         return Err(Error::from(errno()));
+@@ -78,7 +83,7 @@ unsafe fn disarm_timer(timer: libc::timer_t) -> Result<()> {
+     Ok(())
+ }
+ 
+-#[cfg(unix)]
++#[cfg(all(unix, not(target_vendor = "apple")))]
+ pub async fn sleep_until<Tz: chrono::TimeZone>(time: DateTime<Tz>) -> Result<()> {
+     let time = time.with_timezone(&Utc);
+     // we must schedule our signal handler before the first signal appears
+@@ -97,3 +102,15 @@ pub async fn sleep_until<Tz: chrono::TimeZone>(time: DateTime<Tz>) -> Result<()>
+     }
+     Ok(())
+ }
++
++// Darwin has no POSIX timer_create. Recheck wall time after bounded Tokio waits.
++#[cfg(target_vendor = "apple")]
++pub async fn sleep_until<Tz: chrono::TimeZone>(time: DateTime<Tz>) -> Result<()> {
++    let deadline = time.with_timezone(&Utc);
++    loop {
++        let remaining = deadline.signed_duration_since(Utc::now());
++        let Ok(duration) = remaining.to_std() else { return Ok(()); };
++        if duration.is_zero() { return Ok(()); }
++        tokio::time::sleep(duration.min(std::time::Duration::from_secs(1))).await;
++    }
++}
+diff --git i/src/subcommands.rs w/src/subcommands.rs
+index f354329..65589a9 100644
+--- i/src/subcommands.rs
++++ w/src/subcommands.rs
+@@ -8,14 +8,14 @@ use super::{calc, domain, errors, report, utils};
+ 
+ type Result<T> = result::Result<T, errors::HeliocronError>;
+ 
+-pub fn display_report(solar_calculations: calc::SolarCalculations, json: bool) -> Result<()> {
++pub fn display_report(solar_calculations: calc::SolarCalculations, json: bool, stream: &mut dyn Write) -> Result<()> {
+     let report = report::Report::new(solar_calculations);
+     let output = if json {
+         serde_json::to_string(&report).unwrap()
+     } else {
+         report.to_string()
+     };
+-    println!("{output}");
++    writeln!(stream, "{output}")?;
+     Ok(())
+ }
+ 
+@@ -24,13 +24,14 @@ pub async fn wait(
+     offset: Duration,
+     solar_calculations: calc::SolarCalculations,
+     run_missed_task: bool,
++    output: &mut dyn Write,
+ ) -> Result<()> {
+     let event_time = solar_calculations.event_time(event);
+ 
+     match event_time.0 {
+         Some(datetime) => {
+             let wait_until = datetime + offset;
+-            utils::wait(wait_until).await?;
++            utils::wait(wait_until, output).await?;
+ 
+             // If the device running heliocron is asleep for whetever reason, it is possible that this future
+             // will return after `wait_until`. As such, we need to handle whether to run or skip the task
+@@ -57,7 +58,7 @@ pub async fn wait(
+     }
+ }
+ 
+-pub fn poll(solar_calculations: calc::SolarCalculations, watch: bool, json: bool) -> Result<()> {
++pub fn poll(solar_calculations: calc::SolarCalculations, watch: bool, json: bool, stream: &mut dyn Write) -> Result<()> {
+     let mut report = report::PollReport::new(&solar_calculations);
+     let output = if json {
+         serde_json::to_string(&report).unwrap()
+@@ -66,20 +67,20 @@ pub fn poll(solar_calculations: calc::SolarCalculations, watch: bool, json: bool
+     };
+ 
+     if !watch {
+-        println!("{output}");
++        writeln!(stream, "{output}")?;
+     } else {
+         if !json {
+-            println!("Displaying solar calculations in real time. Press ctrl+C to cancel.\n");
++            writeln!(stream, "Displaying solar calculations in real time.\n")?;
+         }
+ 
+         // Set up stdout and make a record of the current cursor location. We unwrap
+-        let mut stdout = std::io::stdout();
++        let stdout = stream;
+         stdout.queue(cursor::SavePosition).unwrap();
+         stdout.execute(cursor::Hide).unwrap();
+ 
+         loop {
+             if json {
+-                println!("{}", serde_json::to_string(&report).unwrap());
++                writeln!(stdout, "{}", serde_json::to_string(&report).unwrap())?;
+             } else {
+                 stdout.queue(cursor::RestorePosition).unwrap();
+                 stdout
+diff --git i/src/utils.rs w/src/utils.rs
+index 4e2f619..0440667 100644
+--- i/src/utils.rs
++++ w/src/utils.rs
+@@ -7,16 +7,16 @@ use super::errors::{HeliocronError, RuntimeErrorKind};
+ 
+ type Result<T> = result::Result<T, HeliocronError>;
+ 
+-async fn sleep(time: DateTime<FixedOffset>) -> Result<()> {
++async fn sleep(time: DateTime<FixedOffset>, output: &mut dyn std::io::Write) -> Result<()> {
+     if cfg!(feature = "integration-test") {
+-        println!("Fake sleep until {time}.");
++        writeln!(output, "Fake sleep until {time}.")?;
+     } else {
+         sleep::sleep_until(time).await?;
+     }
+     Ok(())
+ }
+ 
+-pub(crate) async fn wait(wait_until: DateTime<FixedOffset>) -> Result<()> {
++pub(crate) async fn wait(wait_until: DateTime<FixedOffset>, output: &mut dyn std::io::Write) -> Result<()> {
+     let local_time = Local::now();
+     let local_time = local_time.with_timezone(&FixedOffset::from_offset(local_time.offset()));
+ 
+@@ -31,12 +31,12 @@ pub(crate) async fn wait(wait_until: DateTime<FixedOffset>) -> Result<()> {
+         ))),
+     }?;
+ 
+-    println!(
+-        "Thread going to sleep for {} seconds until {}. Press ctrl+C to cancel.",
++    writeln!(output,
++        "Thread going to sleep for {} seconds until {}.",
+         duration_to_wait.as_secs(),
+         wait_until
+-    );
+-    sleep(wait_until).await?;
++    )?;
++    sleep(wait_until, output).await?;
+     Ok(())
+ }
+ 
+@@ -51,6 +51,6 @@ mod tests {
+ 
+         // Some time improbably far in the future.
+         let wait_until = FixedOffset::west(0).timestamp(9999999999, 0);
+-        wait(wait_until).await.unwrap();
++        wait(wait_until, &mut std::io::sink()).await.unwrap();
+     }
+ }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A59000000000000000000001 /* heliocron.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A59000000000000000000002 /* heliocron.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907B2ADD0999006DB9CC /* freetype.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000001 /* freetype.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907C2ADD0999006DB9CC /* harfbuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000002 /* harfbuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907D2ADD0999006DB9CC /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000003 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1442,6 +1443,7 @@
 				2243B1B12840ADBF00588B51 /* vimproc.xcframework in Embed Frameworks */,
 				2243B1BA284278F500588B51 /* dash.xcframework in Embed Frameworks */,
 				A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */,
+				A59000000000000000000001 /* heliocron.xcframework in Embed Frameworks */,
 				2243B1BB284278F500588B51 /* dashA.xcframework in Embed Frameworks */,
 				2243B1BC284278F500588B51 /* dashB.xcframework in Embed Frameworks */,
 				2243B1BD284278F500588B51 /* dashC.xcframework in Embed Frameworks */,
@@ -1915,6 +1917,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A59000000000000000000002 /* heliocron.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = heliocron/heliocron.xcframework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000001 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = "xcfs/.build/artifacts/xcfs/freetype/freetype.xcframework"; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = "xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework"; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = "xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework"; sourceTree = SOURCE_ROOT; };
@@ -3032,6 +3035,7 @@
 			children = (
 				227F058230867C0300FCC674 /* node.xcframework */,
 				A22000000000000000000002 /* rg/rg.xcframework */,
+				A59000000000000000000002 /* heliocron.xcframework */,
 				AE1100000000000000000002 /* helix/helix.xcframework */,
 				227A5409308519E1007EA879 /* fd.xcframework */,
 				227A540730850D06007EA879 /* fzf.xcframework */,

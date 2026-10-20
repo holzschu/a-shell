@@ -156,3 +156,5 @@ touch Resources/bin/texluac
 touch Resources/bin/node
 touch Resources/bin/npm
 touch Resources/bin/npx
+
+touch Resources/bin/heliocron
