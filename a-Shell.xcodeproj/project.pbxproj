@@ -234,6 +234,7 @@
 		227EE36E2F0913C000636757 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 227EE36D2F0913C000636757 /* SwiftTerm */; };
 		227F058330867D0500FCC674 /* node.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227F058230867C0300FCC674 /* node.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227F0FB930868CE400FCC674 /* npm in Resources */ = {isa = PBXBuildFile; fileRef = 227F0FB830868CE300FCC674 /* npm */; };
+		22F0FE7B3A1C4B0D00A1B2C3 /* node-fetch in Resources */ = {isa = PBXBuildFile; fileRef = 22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */; };
 		228503772F47806F00E4DA17 /* listTeXscripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221DA54B26F7688100BEA92A /* listTeXscripts.swift */; };
 		228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		228E13F725C95F430065D825 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -2042,6 +2043,7 @@
 		227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_worker_wasm.js; sourceTree = "<group>"; };
 		227F058230867C0300FCC674 /* node.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = node.xcframework; path = xcfs/node.xcframework; sourceTree = "<group>"; };
 		227F0FB830868CE300FCC674 /* npm */ = {isa = PBXFileReference; lastKnownFileType = folder; name = npm; path = Resources/npm; sourceTree = "<group>"; };
+		22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node-fetch; path = Resources/node-fetch; sourceTree = "<group>"; };
 		228E13F225C95F2D0065D825 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = xcfs/.build/artifacts/xcfs/ios_system/ios_system.xcframework; sourceTree = "<group>"; };
 		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIColor+hexString.swift"; path = "Util/UIColor+hexString.swift"; sourceTree = SOURCE_ROOT; };
 		22942C3F263F15B1004BEA41 /* perl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perl.xcframework; path = xcfs/.build/artifacts/xcfs/perl/perl.xcframework; sourceTree = SOURCE_ROOT; };
@@ -3093,6 +3095,7 @@
 			isa = PBXGroup;
 			children = (
 				227F0FB830868CE300FCC674 /* npm */,
+				22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */,
 				22D1335C2E61E35900E76E2E /* Library */,
 				227B248A2BE12FEE003A8031 /* wasm_withWorker.js */,
 				227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */,
@@ -4156,6 +4159,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				227F0FB930868CE400FCC674 /* npm in Resources */,
+				22F0FE7B3A1C4B0D00A1B2C3 /* node-fetch in Resources */,
 				22D1335D2E61E35B00E76E2E /* Library in Resources */,
 				227B24842BE01ED5003A8031 /* localCertificate.pem in Resources */,
 				227B24852BE01ED5003A8031 /* localCertificateKey.pem in Resources */,

@@ -401,6 +401,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("PYTHONUSERBASE", libraryURL.path, 1)
         setenv("PYTHON_HISTORY", documentsUrl.appendingPathComponent(".python_history").path, 1)
         setenv("PYZMQ_BACKEND", "cffi", 1)
+        // Node modules installed in ~/Library/node_modules resolve from any directory; npm itself is in $APPDIR/npm.
+        setenv("NODE_PATH", libraryURL.path + "/node_modules", 1)
         // Frameworks are in $APPDIR/Frameworks:
         setenv("DYLD_FRAMEWORK_PATH", Bundle.main.resourcePath! + "/Frameworks", 1)
         setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
