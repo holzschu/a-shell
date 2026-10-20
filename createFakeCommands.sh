@@ -158,3 +158,4 @@ touch Resources/bin/npm
 touch Resources/bin/npx
 
 touch Resources/bin/heliocron
+touch Resources_mini/bin/heliocron

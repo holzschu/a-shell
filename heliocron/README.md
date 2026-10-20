@@ -12,7 +12,7 @@ Install Rust 1.96.1 with `rustup toolchain install 1.96.1 --profile minimal`. Pr
 CARGO_BUILD_JOBS=2 nice -n 15 bash heliocron/build.sh xcframework DEVICE_FRAMEWORKS SIMULATOR_FRAMEWORKS
 ```
 
-The recipe adds the required Rust targets. Its output, `heliocron/heliocron.xcframework`, is ignored by Git. Inputs and intermediates use a temporary cache; set `HELIOCRON_BUILD_CACHE` to retain them elsewhere. `build.sh framework FRAMEWORKS device|simulator` builds one slice. Both slices target arm64 and iOS 14. The project embeds the framework in full a-Shell and registers `heliocron` with a Dash lookup placeholder.
+The recipe adds the required Rust targets. Its output, `heliocron/heliocron.xcframework`, is ignored by Git. Inputs and intermediates use a temporary cache; set `HELIOCRON_BUILD_CACHE` to retain them elsewhere. `build.sh framework FRAMEWORKS device|simulator` builds one slice. Both slices target arm64 and iOS 14. The project embeds the framework in both full a-Shell and a-Shell mini and registers `heliocron` with a Dash lookup placeholder.
 
 ## Use
 
