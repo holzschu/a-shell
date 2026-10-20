@@ -7,6 +7,29 @@ extension AppExtensionPoint {
     static var shellWorker: AppExtensionPoint { Name("ShellWorker") }
 }
 
+// Concurrent workers: the user's "worker_limit" setting (0 or unset = automatic, the physical
+// core count), never more than the bundled ShellWorkerCount extensions. 0 means no workers.
+enum ShellWorkerCapacity {
+    static var bundled: Int {
+        let configured = Bundle.main.object(forInfoDictionaryKey: "ShellWorkerCount")
+        return (configured as? NSNumber)?.intValue ?? Int(configured as? String ?? "") ?? 0
+    }
+
+    static var physicalCores: Int {
+        var count: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        return sysctlbyname("hw.physicalcpu", &count, &size, nil, 0) == 0 ? Int(count) : 1
+    }
+
+    static var current: Int {
+        let requested = UserDefaults.standard.integer(forKey: "worker_limit")
+        return min(requested > 0 ? requested : physicalCores, bundled)
+    }
+}
+
+@_cdecl("ashell_extension_capacity")
+func shellExtensionCapacity() -> Int32 { Int32(ShellWorkerCapacity.current) }
+
 // Process lifetime and discovery belong to MainActor. Blocking C ABI calls wait
 // only on the calling runner thread, never on the UI actor.
 @available(iOS 26.0, *)
@@ -31,8 +54,7 @@ final class ShellWorkerPool {
         }
         let monitor = try await AppExtensionPoint.Monitor(appExtensionPoint: .shellWorker)
         for _ in 0..<100 {
-            let configured = Bundle.main.object(forInfoDictionaryKey: "ShellWorkerCount")
-            let capacity = (configured as? NSNumber)?.intValue ?? Int(configured as? String ?? "") ?? 0
+            let capacity = ShellWorkerCapacity.current
             if capacity > 0 && slots.count >= capacity {
                 throw NSError(domain: NSPOSIXErrorDomain, code: Int(ENOSPC), userInfo: [NSLocalizedDescriptionKey: "All shell workers are in use. Close a pane before opening another."])
             }

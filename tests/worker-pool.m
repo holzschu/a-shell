@@ -7,7 +7,10 @@
 #include <errno.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <sys/sysctl.h>
 
+
+#define MAX_WORKERS 64
 
 // Keep each command alive at its public stdin boundary while the other slots start.
 static int capacity_check(void) {
@@ -16,13 +19,16 @@ static int capacity_check(void) {
     void (*release)(void *) = dlsym(RTLD_DEFAULT, "ashell_pane_release");
     if (!spawn || !pollJob || !release) { fputs("worker pool unavailable: FAIL\n", thread_stdout); return 1; }
     NSString *root = [NSHomeDirectory() stringByAppendingPathComponent:[@"Documents/worker-pool-" stringByAppendingString:NSUUID.UUID.UUIDString]];
-    const int capacity = [[NSBundle.mainBundle objectForInfoDictionaryKey:@"ShellWorkerCount"] intValue];
-    if (capacity < 1 || capacity > 10) return 64;
-    void *jobs[10] = {0};
-    int descriptors[10];
-    char output[10][2048] = {{0}};
-    size_t used[10] = {0};
-    int pids[10] = {0};
+    // The cap in force now: the setting or the core count, limited to the bundled extensions.
+    int (*capacityOf)(void) = dlsym(RTLD_DEFAULT, "ashell_pane_capacity");
+    const int capacity = capacityOf ? capacityOf() : [[NSBundle.mainBundle objectForInfoDictionaryKey:@"ShellWorkerCount"] intValue];
+    if (capacity < 1 || capacity > MAX_WORKERS) return 64;
+    void *jobs[MAX_WORKERS] = {0};
+    int descriptors[MAX_WORKERS];
+    static char output[MAX_WORKERS][2048];
+    memset(output, 0, sizeof(output));
+    size_t used[MAX_WORKERS] = {0};
+    int pids[MAX_WORKERS] = {0};
     BOOL passed = YES;
     for (int i = 0; i < capacity; i++) descriptors[i] = -1;
     for (int i = 0; i < capacity; i++) {
@@ -219,11 +225,43 @@ static int completion_check(void) {
     return passed ? 0 : 1;
 }
 
+// The cap follows the setting: default is the physical core count, a larger setting allows more
+// concurrent workers up to the bundled count, a smaller one fewer, and ENOSPC comes right after it.
+static int limit_check(void) {
+    int (*capacityOf)(void) = dlsym(RTLD_DEFAULT, "ashell_pane_capacity");
+    if (!capacityOf) { fputs("worker pool capacity unavailable: FAIL\n", thread_stdout); return 1; }
+    int bundled = [[NSBundle.mainBundle objectForInfoDictionaryKey:@"ShellWorkerCount"] intValue];
+    int cores = 0;
+    size_t size = sizeof(cores);
+    if (sysctlbyname("hw.physicalcpu", &cores, &size, NULL, 0) || cores < 1) return 64;
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    id previous = [defaults objectForKey:@"worker_limit"];
+    BOOL passed = YES;
+    [defaults removeObjectForKey:@"worker_limit"];
+    int expected = cores < bundled ? cores : bundled;
+    fprintf(thread_stdout, "default capacity=%d expected=%d (cores=%d bundled=%d): %s\n", capacityOf(), expected, cores, bundled, capacityOf() == expected ? "PASS" : "FAIL");
+    passed = capacityOf() == expected;
+    if (passed) passed = capacity_check() == 0;
+    // A setting of 2, the bundled count and more than the bundled count.
+    int settings[] = {2, bundled, bundled + 5};
+    for (int i = 0; passed && i < 3; i++) {
+        [defaults setInteger:settings[i] forKey:@"worker_limit"];
+        expected = settings[i] < bundled ? settings[i] : bundled;
+        passed = capacityOf() == expected;
+        fprintf(thread_stdout, "worker_limit=%d capacity=%d expected=%d: %s\n", settings[i], capacityOf(), expected, passed ? "PASS" : "FAIL");
+        if (passed) passed = capacity_check() == 0;
+    }
+    if (previous) [defaults setObject:previous forKey:@"worker_limit"]; else [defaults removeObjectForKey:@"worker_limit"];
+    fprintf(thread_stdout, "worker limit setting: %s\n", passed ? "PASS" : "FAIL");
+    return passed ? 0 : 1;
+}
+
 // Run as a real app command. The same consumer must fail on the stock app.
 int worker_pool_check_main(int argc, char **argv) {
     @autoreleasepool {
         if (argc == 2 && !strcmp(argv[1], "completion")) return completion_check();
         if (argc == 2 && !strcmp(argv[1], "capacity")) return capacity_check();
+        if (argc == 2 && !strcmp(argv[1], "limit")) return limit_check();
         if (argc == 2 && !strcmp(argv[1], "lifecycle")) return lifecycle_check(NO, NO);
         if (argc == 2 && !strcmp(argv[1], "lifecycle-busy")) return lifecycle_check(YES, NO);
         if (argc == 2 && !strcmp(argv[1], "lifecycle-close")) return lifecycle_check(YES, YES);

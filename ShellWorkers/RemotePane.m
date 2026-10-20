@@ -9,6 +9,7 @@
 
 extern void ashell_extension_connect(void (^)(NSXPCConnection *, NSError *));
 extern void ashell_extension_disconnect(NSXPCConnection *);
+extern int ashell_extension_capacity(void);
 
 static void log_host_library(const char *phase) {
     int saved = errno;
@@ -41,6 +42,8 @@ static void log_host_library(const char *phase) {
     log_host_library("after_scope_release");
 }
 @end
+
+int ashell_pane_capacity(void) { return ashell_extension_capacity(); }
 
 int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, int *fd_out, void **job_out) {
     if (fd_out) *fd_out = -1;

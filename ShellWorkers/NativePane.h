@@ -8,6 +8,11 @@ extern "C" {
 // Keep the public C ABI discoverable in Release builds with hidden visibility.
 #pragma GCC visibility push(default)
 
+// Host only: how many panes can run at once, so ashell_pane_spawn returns ENOSPC for the next one.
+// The "worker_limit" setting (0 = automatic) or else the device's physical core count,
+// limited to the bundled worker extensions. Read on every spawn, so a change applies at once.
+int ashell_pane_capacity(void);
+
 // command/cwd must be nonempty UTF-8; cwd must be an absolute accessible directory.
 // envp is NULL or a NULL-terminated list of UTF-8 key=value overrides, copied before return.
 // Dimensions are 1..9999. Returns 0 or positive errno; failure sets outputs to -1/NULL.
