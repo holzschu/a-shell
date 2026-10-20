@@ -473,6 +473,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
         // Detect changes in user settings (preferences):
         NotificationCenter.default.addObserver(self, selector: #selector(self.settingsChanged), name: UserDefaults.didChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.settingsChanged), name: UIApplication.didBecomeActiveNotification, object: nil)
         // Also notification if user changes accessibility settings:
         NotificationCenter.default.addObserver(self, selector: #selector(self.voiceOverChanged), name:  UIAccessibility.voiceOverStatusDidChangeNotification, object: nil)
         if #available(iOS 17.0, *) {

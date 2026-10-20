@@ -1246,6 +1246,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.terminalView?.inputAccessoryView = self.editorToolbar
                 self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             }
+            self.terminalView?.reloadInputViews()
         }
     }
     
