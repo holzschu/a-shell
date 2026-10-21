@@ -138,6 +138,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var avplayer: AVPlayer? = nil
     var avcontroller: AVPlayerViewController? = nil
     var avControllerPiPEnabled = false
+    private var restorePreviewFocus: (() -> Void)?
+    private var restorePlayerFocus: (() -> Void)?
     // for repetitive buttons
     var continuousButtonAction = false
     var buttonFontSize: CGFloat = 19.0 // default value for iPads
@@ -2428,6 +2430,22 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         pickerDispatchGroup.leave()
     }
     
+    private func suspendTerminalForMedia() -> () -> Void {
+        guard let terminal = terminalView, terminal.isFirstResponder else { return {} }
+        terminal.resignFirstResponder()
+        return { [weak self, weak terminal] in
+            guard let self = self, let terminal = terminal, let window = self.window,
+                  self.windowScene?.activationState == .foregroundActive,
+                  window.isKeyWindow, terminal.window === window else { return }
+            func hasFirstResponder(_ view: UIView) -> Bool {
+                return view.isFirstResponder || view.subviews.contains(where: hasFirstResponder)
+            }
+            // A field selected while the media was open keeps its focus.
+            guard !hasFirstResponder(window) else { return }
+            terminal.becomeFirstResponder()
+        }
+    }
+
     func play_media(arguments: [String]?) -> Int32 {
         guard (arguments != nil) else { return -1 }
         guard (arguments!.count >= 2) else { return -1 } // There must be at least one file
@@ -2475,7 +2493,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Modally present the player and call the player's play() method when complete.
             let rootVC = self.window?.rootViewController
             DispatchQueue.main.async {
-                rootVC?.present(self.avcontroller!, animated: true) {
+                guard let rootVC = rootVC, rootVC.presentedViewController == nil else { return }
+                self.restorePlayerFocus = self.suspendTerminalForMedia()
+                rootVC.present(self.avcontroller!, animated: true) {
                     self.avplayer!.play()
                 }
             }
@@ -2500,7 +2520,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let preview = UIDocumentInteractionController(url: url)
             preview.delegate = self
             DispatchQueue.main.async {
-                preview.presentPreview(animated: false)
+                guard self.window?.rootViewController?.presentedViewController == nil else { return }
+                self.restorePreviewFocus = self.suspendTerminalForMedia()
+                if !preview.presentPreview(animated: false) {
+                    self.restorePreviewFocus?()
+                    self.restorePreviewFocus = nil
+                }
             }
             return 0
         } else {
@@ -2617,6 +2642,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return self
         } else {
             return rootVC!
+        }
+    }
+
+    func documentInteractionControllerDidEndPreview(_ controller: UIDocumentInteractionController) {
+        // Quick Look may still own the key window during this callback.
+        let restoreFocus = restorePreviewFocus
+        restorePreviewFocus = nil
+        DispatchQueue.main.async {
+            restoreFocus?()
         }
     }
     
@@ -4743,6 +4777,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
 }
     
 extension SceneDelegate: AVPlayerViewControllerDelegate {
+    func playerViewController(_ playerViewController: AVPlayerViewController,
+                              willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animate(alongsideTransition: nil) { context in
+            guard !context.isCancelled else { return }
+            self.restorePlayerFocus?()
+            self.restorePlayerFocus = nil
+        }
+    }
+
     func playerViewControllerWillStartPictureInPicture(_ playerViewController: AVPlayerViewController){
         NSLog("playerViewControllerWillStartPictureInPicture")
         avControllerPiPEnabled = true
