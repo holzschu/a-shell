@@ -64,7 +64,23 @@
      }
  
      let otel = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-@@ -825,7 +836,7 @@
+@@ -694,7 +705,6 @@
+     let local_runtime_paths = local_runtime_paths.with_allowed_symlinked_codex_home(
+         codex_config::allowed_symlinked_codex_home(&config.config_layer_stack, &config.codex_home),
+     );
+-    let state_db = codex_core::init_state_db(&config).await;
+     let environment_manager = if run_loader_overrides.ignore_user_config {
+         EnvironmentManager::from_env(
+             Some(local_runtime_paths),
+@@ -709,6 +719,7 @@
+         )
+         .await?
+     };
++    let state_db = codex_core::init_state_db(&config).await;
+     let in_process_start_args = InProcessClientStartArgs {
+         arg0_paths,
+         config: std::sync::Arc::new(config.clone()),
+@@ -825,12 +836,34 @@
              } else {
                  eprintln!("Error loading config.toml: {err}");
              }
@@ -73,7 +89,34 @@
          }
      }
  }
-@@ -979,7 +990,7 @@
+ 
+ async fn run_exec_session(args: ExecRunArgs) -> anyhow::Result<()> {
++    #[cfg(target_os = "ios")]
++    {
++        use futures::FutureExt;
++
++        let state_db = args.state_db.clone();
++        let result = std::panic::AssertUnwindSafe(run_exec_session_inner(args))
++            .catch_unwind()
++            .await;
++        // Close pools before the embedded runtime exits, including errors and CLI exits.
++        if let Some(state_db) = state_db {
++            state_db.close().await;
++        }
++        match result {
++            Ok(result) => result,
++            Err(payload) => std::panic::resume_unwind(payload),
++        }
++    }
++    #[cfg(not(target_os = "ios"))]
++    run_exec_session_inner(args).await
++}
++
++async fn run_exec_session_inner(args: ExecRunArgs) -> anyhow::Result<()> {
+     let ExecRunArgs {
+         in_process_start_args,
+         state_db,
+@@ -979,7 +1012,7 @@
          && get_git_repo_root(&default_cwd).is_none()
      {
          eprintln!("Not inside a trusted directory and --skip-git-repo-check was not specified.");
@@ -82,7 +125,7 @@
      }
  
      let mut request_ids = RequestIdSequencer::new();
-@@ -1320,7 +1331,7 @@
+@@ -1320,7 +1353,7 @@
      }
      event_processor.print_final_output();
      if error_seen {
@@ -91,7 +134,7 @@
      }
  
      Ok(())
-@@ -2140,7 +2151,7 @@
+@@ -2140,7 +2173,7 @@
                  "Failed to read output schema file {}: {err}",
                  path.display()
              );
@@ -100,7 +143,7 @@
          }
      };
  
-@@ -2151,7 +2162,7 @@
+@@ -2151,7 +2184,7 @@
                  "Output schema file {} is not valid JSON: {err}",
                  path.display()
              );
@@ -109,7 +152,7 @@
          }
      }
  }
-@@ -2237,7 +2248,7 @@
+@@ -2237,7 +2270,7 @@
              eprintln!(
                  "No prompt provided. Either specify one as an argument or pipe the prompt into stdin."
              );
@@ -118,7 +161,7 @@
          }
          StdinPromptBehavior::RequiredIfPiped => {
              eprintln!("Reading prompt from stdin...");
-@@ -2252,14 +2263,14 @@
+@@ -2252,14 +2285,14 @@
      let mut bytes = Vec::new();
      if let Err(e) = std::io::stdin().read_to_end(&mut bytes) {
          eprintln!("Failed to read prompt from stdin: {e}");
@@ -135,7 +178,7 @@
          }
      };
  
-@@ -2268,7 +2279,7 @@
+@@ -2268,7 +2301,7 @@
              StdinPromptBehavior::OptionalAppend => None,
              StdinPromptBehavior::RequiredIfPiped | StdinPromptBehavior::Forced => {
                  eprintln!("No prompt provided via stdin.");
@@ -184,3 +227,25 @@
      let rlim = libc::rlimit {
          rlim_cur: 0,
          rlim_max: 0,
+--- a/exec/Cargo.toml
++++ b/exec/Cargo.toml
+@@ -66,6 +66,9 @@
+ uuid = { workspace = true }
+ 
+ 
++[target.'cfg(target_os = "ios")'.dependencies]
++futures = { workspace = true }
++
+ [dev-dependencies]
+ assert_cmd = { workspace = true }
+ codex-apply-patch = { workspace = true }
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -3153,6 +3153,7 @@
+  "codex-utils-sandbox-summary",
+  "codex-worktree",
+  "core_test_support",
++ "futures",
+  "libc",
+  "opentelemetry",
+  "opentelemetry_sdk",
