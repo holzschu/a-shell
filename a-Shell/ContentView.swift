@@ -285,12 +285,7 @@ struct ContentView: View {
                                 ToolbarItem(placement: .navigationBarLeading) {
                                     Button(action: {
                                         // reload wams.html at this position in history:
-                                        if (appVersion != "a-Shell-mini") {
-                                            webview.webView.load(URLRequest(url: URL(string: "https://localhost:8443/wasm.html")!))
-                                        } else {
-                                            NSLog("Loding wasm.html from 8334 (sceneWillEnterForeground)")
-                                            webview.webView.load(URLRequest(url: URL(string: "https://localhost:8334/wasm.html")!))
-                                        }
+                                        webview.webView.load(URLRequest(url: LocalServerPorts.wasmURL))
                                         localShowWebView = false
                                         showWebView = false
                                         showKeyboardAtStartup = true

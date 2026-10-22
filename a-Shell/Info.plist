@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>WasmServerPort</key>
+	<integer>8443</integer>
+	<key>RelayServerPort</key>
+	<integer>8765</integer>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Relay lets a trusted computer run commands in a-Shell when you enable it.</string>
 	<key>CFBundleDevelopmentRegion</key>

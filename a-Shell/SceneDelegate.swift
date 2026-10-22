@@ -3185,7 +3185,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Reload the web page:
             webView?.reloadFromOrigin()
         } else if (cmd.hasPrefix("setHomeDir:")) {
-            NSLog("Kitura: setHomeDir received")
+            NSLog("WASM: setHomeDir received")
             let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                       in: .userDomainMask,
                                                       appropriateFor: nil,
@@ -3859,13 +3859,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             commandQueue.async { // Make sure this is loaded after the .profile + .bashrc + restoreEnvironment
                 // (because it causes a crash otherwise)
                 DispatchQueue.main.async {
-                    if (appVersion != "a-Shell-mini") {
-                        NSLog("Loding wasm.html from 8443 (sceneWillEnterForeground)")
-                        self.webView?.load(URLRequest(url: URL(string: "https://localhost:8443/wasm.html")!))
-                    } else {
-                        NSLog("Loding wasm.html from 8334 (sceneWillEnterForeground)")
-                        self.webView?.load(URLRequest(url: URL(string: "https://localhost:8334/wasm.html")!))
-                    }
+                    self.webView?.load(URLRequest(url: LocalServerPorts.wasmURL))
                 }
             }
             // Was this window created with a purpose?

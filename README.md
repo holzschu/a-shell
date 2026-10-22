@@ -111,6 +111,10 @@ If you enable VoiceOver in Settings, a-Shell will work with VoiceOver: reading c
 
 ## Run commands remotely with relay
 
+The loopback HTTPS server used by WebAssembly and the optional relay share a Network.framework HTTP/1.1 transport. Their listeners and routes are separate: the WASM listener serves files from Library first, then the app bundle; the relay listener serves only authenticated command requests.
+
+Each app target sets `WasmServerPort` and `RelayServerPort` in its Info.plist. Full a-Shell uses 8443 and 8765; mini uses 8334 and 8766. Missing or invalid keys fall back to 8443 and 8765. Additional variants, including a-Shell-noPython, should set both keys to their own unused ports. The WASM page URL reads the same `WasmServerPort` key as the listener. The relay key supplies the initial `.relay.json` port; an existing config always keeps its explicit override. The WASM listener always binds to loopback and cannot execute relay commands. Turning relay off leaves the WASM listener running.
+
 `relay` is an optional HTTPS server built into the app. It is off by default. It executes commands in a separate, noninteractive a-Shell session with stdin connected to `/dev/null`. It does not expose the terminal screen or keyboard. iOS can suspend the app when it leaves the foreground; enabling relay does not grant background execution time.
 
 Run `relay status` once to create `~/Documents/.relay.json` with a random token. Edit that file to configure the listener, then run `relay on`. This starts the listener and saves `enabled: true` so it starts at the next app launch. `relay off` stops the listener and saves `enabled: false`. `relay` or `relay help` prints usage.
@@ -125,7 +129,7 @@ Every field below except `indicator` is required in `.relay.json`. Changes take 
 | --- | --- | --- |
 | `enabled` | `false` | Start at app launch. `relay on` and `relay off` update this field. |
 | `bind` | `"127.0.0.1"` | Numeric IPv4 or IPv6 address. Loopback accepts connections only from this device. Set `"0.0.0.0"` for all IPv4 interfaces, `"::"` for IPv6, or a specific interface address to connect from a Mac. |
-| `port` | `8765` | TCP port, from 0 to 65535. Zero asks the OS to choose a port; `relay status` reports it. |
+| `port` | `8765` (full), `8766` (mini) | TCP port, from 0 to 65535. Zero asks the OS to choose a port; `relay status` reports it. |
 | `mutualTLS` | `true` | Require a client certificate signed by the CA enrolled in `.relay-client-ca.der`. Missing or invalid enrollment prevents startup. Set `false` explicitly to accept clients without certificates. HTTPS and the token remain required. |
 | `indicator` | `true` | Show a small yellow dot while listening and a green dot with the active connection count when clients connect. Set `false` to hide it. Older config files that omit this field use `true`. |
 | `token` | Random 256-bit value | Value of the `X-Token` request header. Must contain 32 to 256 printable ASCII characters without spaces. Use `relay tokens` to retrieve it; `relay status` also prints it when mutual TLS is off. |

@@ -4,7 +4,7 @@ import Security
 import CryptoKit
 import CNIOBoringSSL
 
-// Use the crypto implementation already linked by the host's NIOSSL dependency.
+// Use the crypto implementation from the NIOSSL package for certificate generation.
 struct RelayTLS {
     // PKCS#12 needs a nonempty passphrase for Security.framework interoperability.
     // File permissions and iOS data protection secure the persisted private key.
@@ -39,13 +39,7 @@ struct RelayTLS {
         }
         try Self.protect(file)
         let data = try Data(contentsOf: file)
-        var items: CFArray?
-        var options: [String: Any] = [kSecImportExportPassphrase as String: Self.passphrase]
-        if #available(iOS 18, macOS 15, *) { options[kSecImportToMemoryOnly as String] = true }
-        let status = SecPKCS12Import(data as CFData, options as CFDictionary, &items)
-        guard status == errSecSuccess, let item = (items as? [[String: Any]])?.first,
-              let value = item[kSecImportItemIdentity as String] else { throw Self.failure("load TLS identity", code: Int(status)) }
-        identity = value as! SecIdentity
+        identity = try Self.importIdentity(data, passphrase: Self.passphrase)
         var certificate: SecCertificate?
         guard SecIdentityCopyCertificate(identity, &certificate) == errSecSuccess, let certificate else { throw Self.failure("read TLS certificate") }
         let der = SecCertificateCopyData(certificate) as Data
@@ -58,6 +52,21 @@ struct RelayTLS {
         let pem = Data(("-----BEGIN CERTIFICATE-----\n" + lines.joined(separator: "\n") + "\n-----END CERTIFICATE-----\n").utf8)
         let publicFile = directory.appendingPathComponent(".relay-cert.pem")
         if (try? Data(contentsOf: publicFile)) != pem { try pem.write(to: publicFile, options: .atomic) }
+    }
+
+    init(pkcs12: Data, passphrase: String) throws {
+        identity = try Self.importIdentity(pkcs12, passphrase: passphrase)
+        clientCA = nil
+    }
+
+    private static func importIdentity(_ data: Data, passphrase: String) throws -> SecIdentity {
+        var items: CFArray?
+        var options: [String: Any] = [kSecImportExportPassphrase as String: passphrase]
+        if #available(iOS 18, macOS 15, *) { options[kSecImportToMemoryOnly as String] = true }
+        let status = SecPKCS12Import(data as CFData, options as CFDictionary, &items)
+        guard status == errSecSuccess, let item = (items as? [[String: Any]])?.first,
+              let value = item[kSecImportItemIdentity as String] else { throw Self.failure("load TLS identity", code: Int(status)) }
+        return value as! SecIdentity
     }
 
     private static func failure(_ operation: String, code: Int = 1) -> NSError {
@@ -129,7 +138,7 @@ struct RelayTLS {
 struct RelayConfiguration: Codable {
     var enabled = false
     var bind = "127.0.0.1"
-    var port: UInt16 = 8765
+    var port: UInt16 = LocalServerPorts.relay
     var mutualTLS = true
     var token: String
     var indicator = true
@@ -233,60 +242,61 @@ struct RelayConfiguration: Codable {
     }
 }
 
-// One HTTP request per TLS connection. Commands are serialized independently of network I/O.
-final class RelayServer {
-    struct Result: Codable {
-        let stdout: String
-        let stderr: String
-        let status: Int
-        var outputExceeded = false
-
-        private enum CodingKeys: String, CodingKey { case stdout, stderr, status }
+// All variants, including private noPython targets, configure both ports in Info.plist.
+enum LocalServerPorts {
+    private static func port(_ key: String, fallback: UInt16) -> UInt16 {
+        guard let value = Bundle.main.object(forInfoDictionaryKey: key) as? NSNumber,
+              value.intValue > 0, value.intValue <= 65535 else { return fallback }
+        return value.uint16Value
     }
-    static let outputLimitMessage = "relay: command output exceeded 8 MiB; redirect output to a file.\n"
-    fileprivate let configuration: RelayConfiguration
-    fileprivate let tls: RelayTLS
-    private let execute: (String, String, @escaping () -> Void) -> Result
-    private let stateChanged: (Int?) -> Void
-    private let directory: URL
-    private let queue = DispatchQueue(label: "relay.http")
-    private static let commands = DispatchQueue(label: "relay.commands", qos: .utility)
-    private static let executionLock = NSLock()
-    private static var refusingCommands = false
+
+    static let wasm = port("WasmServerPort", fallback: 8443)
+    static let relay = port("RelayServerPort", fallback: 8765)
+    static var wasmURL: URL { URL(string: "https://localhost:\(wasm)/wasm.html")! }
+}
+
+// Shared transport for the loopback WASM server and the opt-in command relay.
+// Each TLS connection carries one bounded HTTP/1.1 request and closes after its response.
+final class LocalHTTPServer {
+    let queue: DispatchQueue
+    var request: ((NWConnection, String, String, [String: String], Data) -> Void)?
+    var stateChanged: ((Int?) -> Void)?
+    private let requiresContentLength: Bool
+    private let connectionLimit: Int
     private var listener: NWListener?
     private var connections: [UUID: NWConnection] = [:]
     private var receiving: Set<UUID> = []
     private var activeConnections: Set<UUID> = []
-    private var pending = 0
-    private var queuedConnections: [NWConnection] = []
     var port: UInt16? { queue.sync { listener?.port?.rawValue } }
+    var isRunning: Bool { listener != nil }
 
-    init(configuration: RelayConfiguration, directory: URL, execute: @escaping (String, String, @escaping () -> Void) -> Result, stateChanged: @escaping (Int?) -> Void) throws {
-        self.configuration = configuration
-        self.directory = directory
-        self.execute = execute
-        self.stateChanged = stateChanged
-        tls = try RelayTLS(directory: directory, mutualTLS: configuration.mutualTLS)
+    init(queue: DispatchQueue, requiresContentLength: Bool, connectionLimit: Int) {
+        self.queue = queue
+        self.requiresContentLength = requiresContentLength
+        self.connectionLimit = connectionLimit
     }
 
-    func start(ready: @escaping (Swift.Result<UInt16, Error>) -> Void) throws {
-        let parameters = try tls.parameters()
-        parameters.requiredLocalEndpoint = .hostPort(host: NWEndpoint.Host(configuration.bind), port: NWEndpoint.Port(rawValue: configuration.port)!)
+    func contains(_ connection: NWConnection) -> Bool {
+        connections.values.contains { $0 === connection }
+    }
+
+    func start(parameters: NWParameters, ready: @escaping (Swift.Result<UInt16, Error>) -> Void) throws {
         let listener = try NWListener(using: parameters)
         self.listener = listener
-        listener.stateUpdateHandler = { state in
+        listener.stateUpdateHandler = { [weak self, weak listener] state in
+            guard let self, let listener else { return }
             switch state {
             case .ready:
                 guard let port = listener.port else { return }
-                self.stateChanged(0)
+                self.stateChanged?(0)
                 ready(.success(port.rawValue))
-            case .failed(let error): self.stateChanged(nil); ready(.failure(error))
-            case .cancelled: self.stateChanged(nil)
+            case .failed(let error): self.stateChanged?(nil); ready(.failure(error))
+            case .cancelled: self.stateChanged?(nil)
             default: break
             }
         }
         listener.newConnectionHandler = { [weak self] connection in
-            guard let self, self.connections.count < 8 else { connection.cancel(); return }
+            guard let self, self.connections.count < self.connectionLimit else { connection.cancel(); return }
             let id = UUID()
             self.connections[id] = connection
             self.receiving.insert(id)
@@ -295,12 +305,12 @@ final class RelayServer {
                 switch state {
                 case .ready:
                     self.activeConnections.insert(id)
-                    if self.listener != nil { self.stateChanged(self.activeConnections.count) }
+                    if self.listener != nil { self.stateChanged?(self.activeConnections.count) }
                 case .failed, .cancelled:
                     self.connections.removeValue(forKey: id)
                     self.receiving.remove(id)
                     self.activeConnections.remove(id)
-                    if self.listener != nil { self.stateChanged(self.activeConnections.count) }
+                    if self.listener != nil { self.stateChanged?(self.activeConnections.count) }
                 default: break
                 }
             }
@@ -319,7 +329,7 @@ final class RelayServer {
             self.connections.removeAll()
             self.receiving.removeAll()
             self.activeConnections.removeAll()
-            self.stateChanged(nil)
+            self.stateChanged?(nil)
             guard let listener = self.listener else { stopped(); return }
             self.listener = nil
             switch listener.state {
@@ -354,12 +364,12 @@ final class RelayServer {
                     headers[key] = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
                 }
                 guard headers["transfer-encoding"] == nil,
-                      let length = Int(headers["content-length"] ?? ""), length >= 0, length <= 1024 * 1024 else {
+                      let length = Int(headers["content-length"] ?? (self.requiresContentLength ? "" : "0")), length >= 0, length <= 1024 * 1024 else {
                     self.send(connection, status: 400, text: "Content-Length required (up to 1 MiB)\n"); return
                 }
                 if data.count - end.upperBound >= length {
                     self.receiving.remove(id)
-                    self.route(connection, method: request[0], target: request[1], headers: headers, body: Data(data[end.upperBound..<(end.upperBound + length)]))
+                    self.request?(connection, request[0], request[1], headers, Data(data[end.upperBound..<(end.upperBound + length)]))
                     return
                 }
             } else if data.count > 16384 { self.send(connection, status: 431, text: "headers too large\n"); return }
@@ -367,6 +377,68 @@ final class RelayServer {
             self.receive(connection, id: id, accumulated: data)
         }
     }
+
+
+    static func send(_ connection: NWConnection, status: Int, body: Data, headers: [String: String]) {
+        var fields = headers
+        fields["Content-Length"] = String(body.count)
+        fields["Connection"] = "close"
+        let header = "HTTP/1.1 \(status) \(HTTPURLResponse.localizedString(forStatusCode: status))\r\n" + fields.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)\r\n" }.joined() + "\r\n"
+        connection.send(content: Data(header.utf8) + body, completion: .contentProcessed { _ in connection.cancel() })
+    }
+
+    private func send(_ connection: NWConnection, status: Int, text: String) {
+        Self.send(connection, status: status, body: Data(text.utf8), headers: ["Content-Type": "text/plain; charset=utf-8"])
+    }
+}
+
+// One HTTP request per TLS connection. Commands are serialized independently of network I/O.
+final class RelayServer {
+    struct Result: Codable {
+        let stdout: String
+        let stderr: String
+        let status: Int
+        var outputExceeded = false
+
+        private enum CodingKeys: String, CodingKey { case stdout, stderr, status }
+    }
+    static let outputLimitMessage = "relay: command output exceeded 8 MiB; redirect output to a file.\n"
+    fileprivate let configuration: RelayConfiguration
+    fileprivate let tls: RelayTLS
+    private let execute: (String, String, @escaping () -> Void) -> Result
+    private let stateChanged: (Int?) -> Void
+    private let directory: URL
+    private let queue = DispatchQueue(label: "relay.http")
+    private static let commands = DispatchQueue(label: "relay.commands", qos: .utility)
+    private static let executionLock = NSLock()
+    private static var refusingCommands = false
+    private lazy var http: LocalHTTPServer = {
+        let server = LocalHTTPServer(queue: queue, requiresContentLength: true, connectionLimit: 8)
+        server.request = { [weak self] connection, method, target, headers, body in
+            self?.route(connection, method: method, target: target, headers: headers, body: body)
+        }
+        server.stateChanged = stateChanged
+        return server
+    }()
+    private var pending = 0
+    private var queuedConnections: [NWConnection] = []
+    var port: UInt16? { http.port }
+
+    init(configuration: RelayConfiguration, directory: URL, execute: @escaping (String, String, @escaping () -> Void) -> Result, stateChanged: @escaping (Int?) -> Void) throws {
+        self.configuration = configuration
+        self.directory = directory
+        self.execute = execute
+        self.stateChanged = stateChanged
+        tls = try RelayTLS(directory: directory, mutualTLS: configuration.mutualTLS)
+    }
+
+    func start(ready: @escaping (Swift.Result<UInt16, Error>) -> Void) throws {
+        let parameters = try tls.parameters()
+        parameters.requiredLocalEndpoint = .hostPort(host: NWEndpoint.Host(configuration.bind), port: NWEndpoint.Port(rawValue: configuration.port)!)
+        try http.start(parameters: parameters, ready: ready)
+    }
+
+    func stop(_ stopped: @escaping () -> Void) { http.stop(stopped) }
 
     private func route(_ connection: NWConnection, method: String, target: String, headers: [String: String], body: Data) {
         let expected = Array(configuration.token.utf8), given = Array((headers["x-token"] ?? "").utf8)
@@ -394,7 +466,7 @@ final class RelayServer {
             let active = self.queue.sync { () -> Bool in
                 let queued = self.queuedConnections.contains { $0 === connection }
                 self.queuedConnections.removeAll { $0 === connection }
-                return queued && self.listener != nil && self.connections.values.contains { $0 === connection }
+                return queued && self.http.isRunning && self.http.contains(connection)
             }
             guard active else { self.queue.async { self.pending -= 1 }; return }
             let result = self.execute(command, cwd.path) {
@@ -426,8 +498,7 @@ final class RelayServer {
     }
 
     private func send(_ connection: NWConnection, status: Int, body: Data, contentType: String) {
-        let header = "HTTP/1.1 \(status) \(HTTPURLResponse.localizedString(forStatusCode: status))\r\nContent-Length: \(body.count)\r\nContent-Type: \(contentType)\r\nConnection: close\r\n\r\n"
-        connection.send(content: Data(header.utf8) + body, completion: .contentProcessed { _ in connection.cancel() })
+        LocalHTTPServer.send(connection, status: status, body: body, headers: ["Content-Type": contentType])
     }
 }
 
