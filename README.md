@@ -108,3 +108,13 @@ TeX files are not installed by default. Type any TeX command and the system will
 ## VoiceOver
 
 If you enable VoiceOver in Settings, a-Shell will work with VoiceOver: reading commands as you type them, reading the result, letting you read the screen with your finger...
+
+## Terminal fonts
+
+`config -n picker` opens the font picker without a monospace-trait filter, since some terminal fonts do not declare that trait. Listing user-installed system fonts requires the Fonts capability (Use Installed Fonts) on the signing team; the project already requests its entitlement. Installed fonts can also be selected by PostScript name with `config -n "face name"`. Choose a fixed-width face for aligned terminal output. The selected face is kept, including its weight and style.
+
+For font files, create `~/Documents/Fonts` and drop `.ttf` or `.otf` files there using Files. Run `config --fonts` to register them and list available face names. Select a face with `config -n "face name"`, or select the first face in a file with `config -n "filename.ttf"`. The picker also lists these local faces. Files are registered only for a-Shell's process; no font is installed system-wide or bundled with the app. Use a user-supplied Nerd Font for Powerline and icon glyphs.
+
+`config -n "face name" -s 17 -g` updates all open windows and saves the font and size. `-p` saves the current window's settings without applying them to other windows. In iOS Settings, open a-Shell or a-Shell mini and use "Font", "Custom font name", and "Font size". Choose "Custom" for another installed face or a file in `Documents/Fonts`. Changes apply when returning to the app and survive relaunch. Reopen the app's Settings page to refresh values changed from the terminal.
+
+Font files are refreshed when running `config` or returning to the app. Removing a file unregisters it; a window using an unavailable font displays Menlo until the file returns or another face is selected. An invalid name passed to `config -n` reports an error and keeps the current selection.

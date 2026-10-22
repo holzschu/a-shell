@@ -584,6 +584,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     @objc func settingsChanged() {
+        DispatchQueue.main.async {
+            let fontErrors = TerminalFonts.refresh()
+            for error in fontErrors { NSLog("%@", error) }
+            let fontChanged = TerminalFonts.synchronizeSettings()
+            for scene in UIApplication.shared.connectedScenes {
+                if let delegate = scene.delegate as? SceneDelegate {
+                    if fontChanged {
+                        delegate.terminalFontName = TerminalFonts.savedName ?? factoryFontName
+                        delegate.terminalFontSize = TerminalFonts.savedSize ?? factoryFontSize
+                    }
+                    delegate.writeConfigWindow()
+                }
+            }
+        }
         // UserDefaults.didChangeNotification is called every time the window becomes active
         // We only act if things have really changed.
         // bookmarks management, copied from zshmarks: https://github.com/jocelynmallon/zshmarks
