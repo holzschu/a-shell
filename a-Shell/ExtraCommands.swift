@@ -10,6 +10,8 @@
 import Foundation
 import UIKit
 import ios_system
+import Photos
+import CryptoKit
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
@@ -130,6 +132,7 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 
 - customize appearance with config
 - pickFolder: open, bookmark and access a directory anywhere (another app, iCloud, WorkingCopy, file providers...)
+- photos: export accessible Photos originals to a read-only cache in ~/Documents/Photos
 - newWindow: open a new window
 - exit: close the current window
 
@@ -1302,6 +1305,187 @@ public func downloadRemoteFile(fileURL: URL) -> Bool {
         // print(error)
     }
     return false
+}
+
+private struct PhotoCacheEntry: Codable {
+    let modified: Date?
+    let files: [String: UInt64]
+}
+
+private let photosLock = NSLock()
+
+private func photoCacheName(_ identifier: String) -> String {
+    return SHA256.hash(data: Data(identifier.utf8)).map { String(format: "%02x", $0) }.joined()
+}
+
+private func writePhotoResource(_ resource: PHAssetResource, to url: URL) throws {
+    guard FileManager.default.createFile(atPath: url.path, contents: nil) else {
+        throw CocoaError(.fileWriteUnknown)
+    }
+    let file = try FileHandle(forWritingTo: url)
+    let lock = NSLock()
+    let finished = DispatchSemaphore(value: 0)
+    var failure: Error?
+    var closed = false
+    let options = PHAssetResourceRequestOptions()
+    options.isNetworkAccessAllowed = true
+    let manager = PHAssetResourceManager.default()
+    let request = manager.requestData(for: resource, options: options, dataReceivedHandler: { data in
+        lock.lock()
+        defer { lock.unlock() }
+        if !closed && failure == nil {
+            do { try file.write(contentsOf: data) } catch { failure = error }
+        }
+    }, completionHandler: { error in
+        lock.lock()
+        if failure == nil { failure = error }
+        lock.unlock()
+        finished.signal()
+    })
+    let timedOut = finished.wait(timeout: .now() + 300) == .timedOut
+    lock.lock()
+    closed = true
+    let error = failure
+    lock.unlock()
+    if timedOut { manager.cancelDataRequest(request) }
+    try file.close()
+    if timedOut { throw URLError(.timedOut) }
+    if let error = error { throw error }
+}
+
+private func removePhotoCacheItem(_ url: URL) throws {
+    let values = try url.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
+    if values.isDirectory == true && values.isSymbolicLink != true {
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: url.path)
+    }
+    try FileManager.default.removeItem(at: url)
+}
+
+@_cdecl("photos_main")
+public func photosMain(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    let usage = "photos: sync accessible Photos originals to ~/Documents/Photos and print its path.\nUsage: photos [--help]\nRequests system Photos access (full or limited). Includes Live Photo video and RAW originals.\nFiles are read-only copies, reused on later syncs; edits do not change Photos.\nA sync removes cached assets no longer accessible. Copies made elsewhere remain.\niCloud resources may download; each resource has a 5-minute timeout.\n"
+    if args.count == 2 && (args[1] == "--help" || args[1] == "-h") {
+        fputs(usage, thread_stdout)
+        return 0
+    }
+    guard args.count == 1 else {
+        fputs(usage, thread_stderr)
+        return 1
+    }
+    guard !runningInExtension && !Thread.isMainThread else {
+        fputs("photos: run this command in the a-Shell app.\n", thread_stderr)
+        return 1
+    }
+    guard photosLock.try() else {
+        fputs("photos: a sync is already running.\n", thread_stderr)
+        return 1
+    }
+    defer { photosLock.unlock() }
+    var authorization = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    if authorization == .notDetermined {
+        let answered = DispatchSemaphore(value: 0)
+        DispatchQueue.main.async {
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { _ in answered.signal() }
+        }
+        guard answered.wait(timeout: .now() + 120) == .success else {
+            fputs("photos: permission request timed out; run again after answering the system prompt.\n", thread_stderr)
+            return 1
+        }
+        authorization = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    }
+    let allowed = authorization == .authorized || authorization == .limited
+    do {
+        let manager = FileManager.default
+        var root = manager.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("Photos", isDirectory: true)
+        let marker = root.appendingPathComponent(".photos-cache")
+        let index = root.appendingPathComponent(".photos-index.json")
+        if manager.fileExists(atPath: root.path) {
+            let values = try root.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
+            guard values.isSymbolicLink != true && values.isDirectory == true && (try? String(contentsOf: marker, encoding: .utf8)) == "a-Shell Photos cache 1\n" else {
+                throw NSError(domain: "photos", code: 1, userInfo: [NSLocalizedDescriptionKey: "~/Documents/Photos already exists and is not a managed Photos cache. Move it before running photos."])
+            }
+        } else if allowed {
+            try manager.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            try "a-Shell Photos cache 1\n".write(to: marker, atomically: true, encoding: .utf8)
+        } else {
+            fputs("photos: Photos access denied. Allow full or limited access in Settings.\n", thread_stderr)
+            return 1
+        }
+        var rootValues = URLResourceValues()
+        rootValues.isExcludedFromBackup = true
+        try root.setResourceValues(rootValues)
+        let assets = allowed ? PHAsset.fetchAssets(with: nil) : PHAsset.fetchAssets(withLocalIdentifiers: [], options: nil)
+        var visible = Set<String>()
+        for i in 0..<assets.count { visible.insert(photoCacheName(assets.object(at: i).localIdentifier)) }
+        // Prune before downloading so a failed network request cannot retain revoked assets.
+        for child in try manager.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) {
+            let name = child.lastPathComponent
+            let assetDirectory = name.count == 64 && name.allSatisfy { "0123456789abcdef".contains($0) }
+            if (assetDirectory && !visible.contains(name)) || name.hasPrefix(".photos-stage-") {
+                try removePhotoCacheItem(child)
+            }
+        }
+        let previous = (try? JSONDecoder().decode([String: PhotoCacheEntry].self, from: Data(contentsOf: index))) ?? [:]
+        var entries: [String: PhotoCacheEntry] = [:]
+        var failed = false
+        for i in 0..<assets.count {
+            let asset = assets.object(at: i)
+            let name = photoCacheName(asset.localIdentifier)
+            let destination = root.appendingPathComponent(name, isDirectory: true)
+            let resources = PHAssetResource.assetResources(for: asset).filter {
+                [.photo, .video, .audio, .alternatePhoto, .pairedVideo].contains($0.type)
+            }
+            let names = resources.enumerated().map { offset, resource -> String in
+                let filename: String
+                if #available(iOS 27.0, *) {
+                    filename = resource.filename ?? "original"
+                } else {
+                    filename = resource.originalFilename
+                }
+                return "\(resource.type.rawValue)-\(offset)-\((filename as NSString).lastPathComponent)"
+            }
+            let old = previous[name]
+            let directoryValues = try? destination.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
+            if let old = old, old.modified == asset.modificationDate && Set(old.files.keys) == Set(names) && directoryValues?.isDirectory == true && directoryValues?.isSymbolicLink != true {
+                let intact = names.allSatisfy { filename in
+                    let values = try? destination.appendingPathComponent(filename).resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey, .isSymbolicLinkKey])
+                    return values?.isRegularFile == true && values?.isSymbolicLink != true && values?.fileSize.map { UInt64($0) } == old.files[filename]
+                }
+                if intact { entries[name] = old; continue }
+            }
+            let stage = root.appendingPathComponent(".photos-stage-" + UUID().uuidString, isDirectory: true)
+            do {
+                try manager.createDirectory(at: stage, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+                var files: [String: UInt64] = [:]
+                for (offset, resource) in resources.enumerated() {
+                    let file = stage.appendingPathComponent(names[offset])
+                    try writePhotoResource(resource, to: file)
+                    let attributes = try manager.attributesOfItem(atPath: file.path)
+                    files[names[offset]] = (attributes[.size] as? NSNumber)?.uint64Value
+                    try manager.setAttributes([.posixPermissions: 0o400], ofItemAtPath: file.path)
+                }
+                if manager.fileExists(atPath: destination.path) { try removePhotoCacheItem(destination) }
+                try manager.moveItem(at: stage, to: destination)
+                try manager.setAttributes([.posixPermissions: 0o500], ofItemAtPath: destination.path)
+                entries[name] = PhotoCacheEntry(modified: asset.modificationDate, files: files)
+            } catch {
+                try? removePhotoCacheItem(stage)
+                fputs("photos: could not export asset \(name): \(error.localizedDescription)\n", thread_stderr)
+                failed = true
+            }
+        }
+        try JSONEncoder().encode(entries).write(to: index, options: .atomic)
+        if !allowed {
+            fputs("photos: Photos access denied; cached originals removed. Allow full or limited access in Settings.\n", thread_stderr)
+            return 1
+        }
+        fputs(root.path + "\n", thread_stdout)
+        return failed ? 1 : 0
+    } catch {
+        fputs("photos: \(error.localizedDescription)\n", thread_stderr)
+        return 1
+    }
 }
 
 // hide the on-screen keyboard
