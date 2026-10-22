@@ -15,6 +15,7 @@ import Intents // for shortcuts
 import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
 import Network // for our local HTTPS server for WebAssembly
+import UniformTypeIdentifiers
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
@@ -24,12 +25,21 @@ let localServerQueue = DispatchQueue(label: "localWebServer", qos: .userInteract
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
 private var localServer: LocalHTTPServer?
+private var localServerReady: [() -> Void] = []
 var zshmarksActivated = false
 var bashmarksActivated = false
 
-func startLocalWebServer() {
+func startLocalWebServer(ready: (() -> Void)? = nil) {
     localServerQueue.async {
-        guard localServer == nil else { return }
+        if let server = localServer, !server.isRunning { localServer = nil }
+        if let server = localServer {
+            if let ready {
+                if server.isReady { DispatchQueue.main.async(execute: ready) }
+                else { localServerReady.append(ready) }
+            }
+            return
+        }
+        if let ready { localServerReady.append(ready) }
         do {
             let data = try Data(contentsOf: Bundle.main.resourceURL!.appendingPathComponent("localCertificate.pfx"))
             let tls = try RelayTLS(pkcs12: data, passphrase: "password")
@@ -50,17 +60,17 @@ func startLocalWebServer() {
                 let roots = [library, Bundle.main.resourceURL!]
                 var file: URL?
                 for root in roots {
+                    let root = root.resolvingSymlinksInPath()
                     let candidate = root.appendingPathComponent(String(path.dropFirst())).standardizedFileURL.resolvingSymlinksInPath()
-                    let base = root.resolvingSymlinksInPath().path + "/"
+                    let base = root.path + "/"
+                    var isDirectory: ObjCBool = false
+                    guard FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDirectory), !isDirectory.boolValue else { continue }
                     guard candidate.path.hasPrefix(base) else {
                         LocalHTTPServer.send(connection, status: 403, body: Data(), headers: [:])
                         return
                     }
-                    var isDirectory: ObjCBool = false
-                    if FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDirectory), !isDirectory.boolValue {
-                        file = candidate
-                        break
-                    }
+                    file = candidate
+                    break
                 }
                 guard let file else {
                     LocalHTTPServer.send(connection, status: 404, body: Data(), headers: [:])
@@ -70,7 +80,7 @@ func startLocalWebServer() {
                 case "html": headers["Content-Type"] = "text/html"
                 case "js": headers["Content-Type"] = "application/javascript"
                 case "wasm": headers["Content-Type"] = "application/wasm"
-                default: headers["Content-Type"] = "application/octet-stream"
+                default: headers["Content-Type"] = UTType(filenameExtension: file.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
                 }
                 do {
                     let body = try Data(contentsOf: file, options: .mappedIfSafe)
@@ -80,10 +90,20 @@ func startLocalWebServer() {
                 }
             }
             localServer = server
-            try server.start(parameters: parameters) { result in
-                if case .failure(let error) = result {
+            var becameReady = false
+            try server.start(parameters: parameters) { [weak server] result in
+                guard let server, localServer === server else { return }
+                switch result {
+                case .success:
+                    becameReady = true
+                    let callbacks = localServerReady
+                    localServerReady.removeAll()
+                    DispatchQueue.main.async { callbacks.forEach { $0() } }
+                case .failure(let error):
                     NSLog("Local WASM server failed: \(error)")
                     localServer = nil
+                    // A startup failure waits for the next foreground; a failed live listener retries once.
+                    if becameReady { startLocalWebServer() }
                 }
             }
         } catch {
@@ -92,6 +112,7 @@ func startLocalWebServer() {
         }
     }
 }
+
 
 
 // Which version of the app are we running? a-Shell, a-Shell-mini, a-Shell-pro...? (no spaces in name)

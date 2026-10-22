@@ -242,7 +242,7 @@ struct RelayConfiguration: Codable {
     }
 }
 
-// All variants, including private noPython targets, configure both ports in Info.plist.
+// App variants configure both ports in Info.plist.
 enum LocalServerPorts {
     private static func port(_ key: String, fallback: UInt16) -> UInt16 {
         guard let value = Bundle.main.object(forInfoDictionaryKey: key) as? NSNumber,
@@ -268,7 +268,17 @@ final class LocalHTTPServer {
     private var receiving: Set<UUID> = []
     private var activeConnections: Set<UUID> = []
     var port: UInt16? { queue.sync { listener?.port?.rawValue } }
-    var isRunning: Bool { listener != nil }
+    var isRunning: Bool {
+        guard let listener else { return false }
+        switch listener.state {
+        case .failed, .cancelled: return false
+        default: return true
+        }
+    }
+    var isReady: Bool {
+        if case .ready? = listener?.state { return true }
+        return false
+    }
 
     init(queue: DispatchQueue, requiresContentLength: Bool, connectionLimit: Int) {
         self.queue = queue
@@ -290,7 +300,7 @@ final class LocalHTTPServer {
                 guard let port = listener.port else { return }
                 self.stateChanged?(0)
                 ready(.success(port.rawValue))
-            case .failed(let error): self.stateChanged?(nil); ready(.failure(error))
+            case .failed(let error): listener.cancel(); self.stateChanged?(nil); ready(.failure(error))
             case .cancelled: self.stateChanged?(nil)
             default: break
             }
@@ -378,7 +388,6 @@ final class LocalHTTPServer {
         }
     }
 
-
     static func send(_ connection: NWConnection, status: Int, body: Data, headers: [String: String]) {
         var fields = headers
         fields["Content-Length"] = String(body.count)
@@ -408,18 +417,12 @@ final class RelayServer {
     private let execute: (String, String, @escaping () -> Void) -> Result
     private let stateChanged: (Int?) -> Void
     private let directory: URL
-    private let queue = DispatchQueue(label: "relay.http")
+    private let queue: DispatchQueue
     private static let commands = DispatchQueue(label: "relay.commands", qos: .utility)
     private static let executionLock = NSLock()
     private static var refusingCommands = false
-    private lazy var http: LocalHTTPServer = {
-        let server = LocalHTTPServer(queue: queue, requiresContentLength: true, connectionLimit: 8)
-        server.request = { [weak self] connection, method, target, headers, body in
-            self?.route(connection, method: method, target: target, headers: headers, body: body)
-        }
-        server.stateChanged = stateChanged
-        return server
-    }()
+    private static var cancellationWaiters: [UUID: () -> Void] = [:]
+    private let http: LocalHTTPServer
     private var pending = 0
     private var queuedConnections: [NWConnection] = []
     var port: UInt16? { http.port }
@@ -429,7 +432,14 @@ final class RelayServer {
         self.directory = directory
         self.execute = execute
         self.stateChanged = stateChanged
+        let queue = DispatchQueue(label: "relay.http")
+        self.queue = queue
         tls = try RelayTLS(directory: directory, mutualTLS: configuration.mutualTLS)
+        http = LocalHTTPServer(queue: queue, requiresContentLength: true, connectionLimit: 8)
+        http.request = { [weak self] connection, method, target, headers, body in
+            self?.route(connection, method: method, target: target, headers: headers, body: body)
+        }
+        http.stateChanged = stateChanged
     }
 
     func start(ready: @escaping (Swift.Result<UInt16, Error>) -> Void) throws {
@@ -455,20 +465,40 @@ final class RelayServer {
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: cwd.path, isDirectory: &isDirectory), isDirectory.boolValue else { send(connection, status: 400, text: "X-Cwd is not a directory\n"); return }
         Self.executionLock.lock()
-        let refusing = Self.refusingCommands
+        if Self.refusingCommands {
+            let id = UUID()
+            Self.cancellationWaiters[id] = { [weak self, weak connection] in
+                guard let self else { return }
+                self.queue.async { [weak self, weak connection] in
+                    guard let self, let connection, self.http.isRunning, self.http.contains(connection) else { return }
+                    self.route(connection, method: method, target: target, headers: headers, body: body)
+                }
+            }
+            Self.executionLock.unlock()
+            queue.asyncAfter(deadline: .now() + .seconds(2)) { [weak self, weak connection] in
+                Self.executionLock.lock()
+                let expired = Self.cancellationWaiters.removeValue(forKey: id) != nil
+                Self.executionLock.unlock()
+                guard expired else { return }
+                guard let self, let connection, self.http.isRunning, self.http.contains(connection) else { return }
+                self.send(connection, status: 503, text: "previous command is still stopping after output overflow\n")
+            }
+            return
+        }
         Self.executionLock.unlock()
-        guard !refusing else { send(connection, status: 503, text: "previous command is still stopping after output overflow\n"); return }
         guard pending < 8 else { send(connection, status: 503, text: "command queue full\n"); return }
         pending += 1
         queuedConnections.append(connection)
         Self.commands.async {
             // A command already running is allowed to finish when relay is stopped.
             let active = self.queue.sync { () -> Bool in
-                let queued = self.queuedConnections.contains { $0 === connection }
+                guard self.queuedConnections.contains(where: { $0 === connection }) else { return false }
                 self.queuedConnections.removeAll { $0 === connection }
-                return queued && self.http.isRunning && self.http.contains(connection)
+                let active = self.http.isRunning && self.http.contains(connection)
+                if !active { self.pending -= 1 }
+                return active
             }
-            guard active else { self.queue.async { self.pending -= 1 }; return }
+            guard active else { return }
             let result = self.execute(command, cwd.path) {
                 Self.executionLock.lock()
                 Self.refusingCommands = true
@@ -478,14 +508,18 @@ final class RelayServer {
                     for waiting in self.queuedConnections {
                         self.send(waiting, status: 503, text: "previous command is still stopping after output overflow\n")
                     }
+                    self.pending -= self.queuedConnections.count
                     self.queuedConnections.removeAll()
                 }
             }
-            Self.executionLock.lock()
-            Self.refusingCommands = false
-            Self.executionLock.unlock()
-            self.queue.async {
+            self.queue.sync {
                 self.pending -= 1
+                Self.executionLock.lock()
+                Self.refusingCommands = false
+                let waiters = Array(Self.cancellationWaiters.values)
+                Self.cancellationWaiters.removeAll()
+                Self.executionLock.unlock()
+                waiters.forEach { $0() }
                 guard !result.outputExceeded else { return }
                 guard let body = try? JSONEncoder().encode(result) else { self.send(connection, status: 500, text: "could not encode result\n"); return }
                 self.send(connection, status: 200, body: body, contentType: "application/json")

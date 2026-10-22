@@ -3858,7 +3858,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Now load wasm.html:
             commandQueue.async { // Make sure this is loaded after the .profile + .bashrc + restoreEnvironment
                 // (because it causes a crash otherwise)
-                DispatchQueue.main.async {
+                startLocalWebServer {
                     self.webView?.load(URLRequest(url: LocalServerPorts.wasmURL))
                 }
             }
@@ -4407,8 +4407,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Use this method to undo the changes made on entering the background.
         // Reload the webAssembly interpreter (this will also check if the local server is still running):
         sceneIsInForeground = true
-        if (showWebView) {
-            webView?.reloadFromOrigin()
+        startLocalWebServer {
+            if (showWebView) {
+                self.webView?.reloadFromOrigin()
+            }
         }
         // Was this window created with a purpose?
         let userActivity = scene.userActivity
