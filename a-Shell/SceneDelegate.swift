@@ -138,6 +138,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var avplayer: AVPlayer? = nil
     var avcontroller: AVPlayerViewController? = nil
     var avControllerPiPEnabled = false
+    private var restorePreviewFocus: (() -> Void)?
+    private var restorePlayerFocus: (() -> Void)?
     // for repetitive buttons
     var continuousButtonAction = false
     var buttonFontSize: CGFloat = 19.0 // default value for iPads
@@ -1246,6 +1248,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.terminalView?.inputAccessoryView = self.editorToolbar
                 self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             }
+            self.terminalView?.reloadInputViews()
         }
     }
     
@@ -1389,6 +1392,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     public lazy var editorToolbar: UIToolbar = {
         var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: screenWidth - 20, height: toolbarHeight))
         toolbar.tintColor = .label
+        toolbar.backgroundColor = terminalBackgroundColor
         if (leftButtonGroup.count == 0) {
             toolbar.items = rightButtonGroup
         } else {
@@ -1629,6 +1633,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (self.currentCommand == "") {
             lastUsedPrompt = parsePrompt()
             DispatchQueue.main.async {
+                // Editors may reset DECSCUSR to a block; the prompt uses the user's configured cursor.
+                let cursorShape = self.terminalCursorShape ?? factoryCursorShape
+                self.terminalView!.setCursorStyle(shape: cursorShape.lowercased())
                 // reset mouse mode to .off, so we can scroll:
                 // before the prompt, so it can be overridden by the prompt.
                 self.terminalView!.feed(text: self.escape + "[?1000l")
@@ -2216,6 +2223,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {  // SwiftTerm changes to the UI must happen on the main thread
             // Force writing all config to term. Used when we changed many parameters.
             self.terminalView?.backgroundColor = backgroundColor
+            self.terminalView?.inputAccessoryView?.backgroundColor = self.terminalBackgroundColor
+            self.window?.rootViewController?.view.backgroundColor = self.terminalBackgroundColor ?? .systemBackground
             self.terminalView?.nativeBackgroundColor = backgroundColor
             self.terminalView?.getTerminal().backgroundColor = (backgroundColor.toSwiftTermColor())
             self.terminalView?.tintColor = foregroundColor
@@ -2251,6 +2260,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let backgroundColor = backgroundColor {
                 self.terminalBackgroundColor = backgroundColor
                 self.terminalView?.backgroundColor = backgroundColor
+                self.terminalView?.inputAccessoryView?.backgroundColor = backgroundColor
+                self.window?.rootViewController?.view.backgroundColor = backgroundColor
                 self.terminalView?.nativeBackgroundColor = backgroundColor
                 // We need to act on the getTerminal() colors as well, otherwise the default color is not very visible.
                 self.terminalView?.getTerminal().backgroundColor = (backgroundColor.toSwiftTermColor())
@@ -2419,6 +2430,22 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         pickerDispatchGroup.leave()
     }
     
+    private func suspendTerminalForMedia() -> () -> Void {
+        guard let terminal = terminalView, terminal.isFirstResponder else { return {} }
+        terminal.resignFirstResponder()
+        return { [weak self, weak terminal] in
+            guard let self = self, let terminal = terminal, let window = self.window,
+                  self.windowScene?.activationState == .foregroundActive,
+                  window.isKeyWindow, terminal.window === window else { return }
+            func hasFirstResponder(_ view: UIView) -> Bool {
+                return view.isFirstResponder || view.subviews.contains(where: hasFirstResponder)
+            }
+            // A field selected while the media was open keeps its focus.
+            guard !hasFirstResponder(window) else { return }
+            terminal.becomeFirstResponder()
+        }
+    }
+
     func play_media(arguments: [String]?) -> Int32 {
         guard (arguments != nil) else { return -1 }
         guard (arguments!.count >= 2) else { return -1 } // There must be at least one file
@@ -2466,7 +2493,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Modally present the player and call the player's play() method when complete.
             let rootVC = self.window?.rootViewController
             DispatchQueue.main.async {
-                rootVC?.present(self.avcontroller!, animated: true) {
+                guard let rootVC = rootVC, rootVC.presentedViewController == nil else { return }
+                self.restorePlayerFocus = self.suspendTerminalForMedia()
+                rootVC.present(self.avcontroller!, animated: true) {
                     self.avplayer!.play()
                 }
             }
@@ -2491,7 +2520,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let preview = UIDocumentInteractionController(url: url)
             preview.delegate = self
             DispatchQueue.main.async {
-                preview.presentPreview(animated: false)
+                guard self.window?.rootViewController?.presentedViewController == nil else { return }
+                self.restorePreviewFocus = self.suspendTerminalForMedia()
+                if !preview.presentPreview(animated: false) {
+                    self.restorePreviewFocus?()
+                    self.restorePreviewFocus = nil
+                }
             }
             return 0
         } else {
@@ -2608,6 +2642,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return self
         } else {
             return rootVC!
+        }
+    }
+
+    func documentInteractionControllerDidEndPreview(_ controller: UIDocumentInteractionController) {
+        // Quick Look may still own the key window during this callback.
+        let restoreFocus = restorePreviewFocus
+        restorePreviewFocus = nil
+        DispatchQueue.main.async {
+            restoreFocus?()
         }
     }
     
@@ -3613,6 +3656,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             terminalView = contentView?.terminalview.view
+            if let terminalFont = terminalView?.font {
+                basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
+            }
             terminalView?.terminalDelegate = self
             terminalView?.optionAsMetaKey = false
             /*  tell SwiftTerm to use Metal rendering:
@@ -4314,6 +4360,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             terminalView?.tintColor = foregroundColor
             terminalView?.caretColor = cursorColor
             terminalView?.backgroundColor = backgroundColor
+            terminalView?.inputAccessoryView?.backgroundColor = terminalBackgroundColor
+            window?.rootViewController?.view.backgroundColor = terminalBackgroundColor ?? .systemBackground
             terminalView?.selectedTextBackgroundColor = cursorColor.makeTransparent()
             self.terminalView?.nativeForegroundColor = foregroundColor
             // This is also required otherwise we get light gray writing
@@ -4729,6 +4777,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
 }
     
 extension SceneDelegate: AVPlayerViewControllerDelegate {
+    func playerViewController(_ playerViewController: AVPlayerViewController,
+                              willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animate(alongsideTransition: nil) { context in
+            guard !context.isCancelled else { return }
+            self.restorePlayerFocus?()
+            self.restorePlayerFocus = nil
+        }
+    }
+
     func playerViewControllerWillStartPictureInPicture(_ playerViewController: AVPlayerViewController){
         NSLog("playerViewControllerWillStartPictureInPicture")
         avControllerPiPEnabled = true

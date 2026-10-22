@@ -52,7 +52,7 @@ echo 'import n from "./dependency.mjs"; console.log(n)' >import.mjs
 node import.mjs </dev/null >import.out 2>import.err
 check "$?" 0 esm-status
 check "$(cat import.out)" 46 esm-output
-node --import "$APPDIR/Frameworks/node.framework/fetch-preload.mjs" -e 'fetch("https://example.com").then(r=>console.log(r.status)).catch(e=>{console.error(e);process.exitCode=1})' </dev/null >fetch.out 2>fetch.err
+node --import "$APPDIR/node-fetch/fetch-preload.mjs" -e 'fetch("https://example.com").then(r=>console.log(r.status)).catch(e=>{console.error(e);process.exitCode=1})' </dev/null >fetch.out 2>fetch.err
 check "$?" 0 https-status
 check "$(cat fetch.out)" 200 https-output
 node -e 'console.log("alive",process.memoryUsage().rss)' </dev/null >memory.out 2>memory.err

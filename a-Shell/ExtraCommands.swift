@@ -1429,7 +1429,6 @@ public func jump(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
 public func play_media(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let args = convertCArguments(argc: argc, argv: argv)
     if let delegate = currentDelegate {
-        delegate.resignFirstResponder()
         return delegate.play_media(arguments: args)
     }
     return 0
@@ -1439,7 +1438,6 @@ public func play_media(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
 public func preview(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let args = convertCArguments(argc: argc, argv: argv)
     if let delegate = currentDelegate {
-        delegate.resignFirstResponder()
         return delegate.preview(arguments: args)
     }
     return 0
