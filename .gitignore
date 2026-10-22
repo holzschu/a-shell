@@ -79,8 +79,14 @@ fastlane/test_output
 # a-Shell
 
 Configuration.xcconfig
+
+# Locally built native ripgrep framework
+/rg/rg.xcframework/
+helix/helix.xcframework/
 /ruff/Ruff.xcframework/
 gitoxide/gitoxide.xcframework/
 xcfs/node.xcframework/
+Resources/npm/
+Resources/node-fetch/
 /fzf/fzf.xcframework/
 /navi/navi.xcframework/

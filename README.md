@@ -24,21 +24,40 @@ a-Shell is now <a href="https://holzschu.github.io/a-Shell_iOS/">available on th
 
 ## How to compile it?
 
-If you want to compile the project yourself, you will need the following steps: 
-* download the entire project and its sub-modules: `git submodule update --init --recursive`
-* download all the xcFrameworks: `downloadFrameworks.sh`
-    * this will download the standard Apple frameworks (in `xcfs/.build/artefacts/xcfs`, with checksum control).
-    * There are too many Python frameworks (more than 2000) for automatic download. You can either remove them from the "Embed" step in the project, or compile them: 
-        * You'll need the Xcode command line tools, if you don't already have them: `sudo xcode-select --install` 
-        * You also need the OpenSSL libraries (libssl and libcrypto), XQuartz (freetype), and Node.js (npm) for macOS (we provide the versions for iOS and simulator).
-        * change directory to `cpython`: `cd cpython`
-        * build Python 3.11 and all the associated libraries / frameworks: `sh ./downloadAndCompile.sh` (this step takes several hours on a 2GHz i5 MBP, YMMV).
+Use macOS with Xcode and its iOS SDKs installed. Start with `a-Shell-noPython`, which uses the publicly downloadable frameworks. Both `a-Shell` and `a-Shell-mini` embed Python and need prebuilt Python frameworks, which are not currently published.
 
-If you want to compile for the devices, you will need the following additional steps:
-* copy `Configuration.sample.xcconfig` to create `Configuration.xcconfig`
-* replace the team ID and prefixes with your own ones in `Configuration.xcconfig`
+```sh
+git clone https://github.com/holzschu/a-shell.git
+cd a-shell
+git submodule update --init SwiftTerm
+./downloadFrameworks.sh
+```
 
-a-Shell now runs on the devices. a-Shell mini can run on the devices and the simulator.
+In an existing checkout, run `git submodule sync` before updating initialized submodules. Avoid `--recursive`: the pinned CPython tree contains nested SSH URLs and an unavailable rasterio commit.
+
+`downloadFrameworks.sh` installs the binary targets from `xcfs/Package.swift` under `xcfs/.build/artifacts/xcfs`, with Swift Package Manager checksum verification. Its `pythonInstall.tar.gz` contains Python 3.9 files, while the Python targets require Python 3.13.
+
+Additional prerequisites:
+
+- Python and its associated libraries cannot be built from this clone alone: they require an iOS Fortran compiler built from a patched gcc. The Python targets therefore need prebuilt frameworks, which are not currently published; see [the build discussion](https://github.com/holzschu/a-shell/pull/1100#issuecomment-6265206051).
+- For full `a-Shell`, build the local frameworks using [node/README.md](node/README.md), [fd/README.md](fd/README.md), [fzf/README.md](fzf/README.md), [navi/README.md](navi/README.md), [gitoxide/README.md](gitoxide/README.md), [ruff/README.md](ruff/README.md), [rg/README.md](rg/README.md) and [helix/README.md](helix/README.md).
+- The Python targets also reference inputs absent from the downloads, including `openrsync`/`openrsyncA`, `curl-impersonate`, `WasmKitCommand` and `blink`; full `a-Shell` references additional TeX, `cbc` and `perlC` frameworks. This list is not exhaustive; see [#1005](https://github.com/holzschu/a-shell/issues/1005).
+
+Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. To build an unsigned app for iOS devices:
+
+```sh
+xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -configuration Debug -destination 'generic/platform=iOS' IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
+```
+
+Xcode 27.1 rejects the project's 14.0 deployment target with "the range of supported deployment target versions is 15.0 to 27.1.x", so this command sets 15.0. To build a signed app, copy `Configuration.sample.xcconfig` to `Configuration.xcconfig`, replace the team ID and prefixes with your own, and omit `CODE_SIGNING_ALLOWED=NO`.
+
+For an x86_64 Simulator build:
+
+```sh
+xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-noPython -configuration Debug -destination 'generic/platform=iOS Simulator' ARCHS=x86_64 IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build
+```
+
+The Simulator build needs the same deployment-target override on Xcode 27.1. The downloaded Simulator slices have mixed architectures: ImageMagick and its freetype/harfbuzz/libpng dependencies are x86_64-only, while `bc_ios` is arm64-only. A successful build does not make every command runnable on the same Simulator.
 
 Because Python 3.x uses functions that are only available on the iOS 14 SDK, I've set the minimum iOS version to 14.0. It also reduces the size of the binaries, so `ios_system` and the other frameworks have the same settings. If you need to run it on an iOS 13 device, you'll have to recompile most frameworks.
 
