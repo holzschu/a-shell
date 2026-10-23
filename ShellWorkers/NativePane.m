@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <pthread.h>
 #include <poll.h>
+#include <signal.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -827,6 +828,7 @@ int ashell_pane_interrupt(void *handle) {
     pthread_mutex_lock(&job->mutex);
     int error = job->done ? ESRCH : 0;
     pthread_t foreground = 0;
+    int pid = 0;
     struct termios settings;
     if (!error && job->is_pty) {
         if (tcgetattr(job->peer_control, &settings)) error = errno;
@@ -838,7 +840,7 @@ int ashell_pane_interrupt(void *handle) {
         const char *name = ios_progname();
         if (!name || !strcmp(name, "dash") || !strcmp(name, "sh")) error = ENOTSUP;
         else {
-            int pid = atomic_load(&foreground_command_pid);
+            pid = atomic_load(&foreground_command_pid);
             foreground = pid > 0 ? ios_getThreadId(pid) : NULL;
             if (!foreground || foreground == (pthread_t)-1) error = ESRCH;
         }
@@ -847,7 +849,8 @@ int ashell_pane_interrupt(void *handle) {
     if (error) return error;
     // Never cancel a shell waiter: cancellation of pthread_cond_wait can leave
     // the stock completion mutex locked. Raw TUIs already use the ETX path.
-    return pthread_equal(foreground, pthread_self()) ? ESRCH : pthread_cancel(foreground);
+    // The runtime records SIGINT for worker proxies before cancelling them.
+    return pthread_equal(foreground, pthread_self()) ? ESRCH : ios_killpid(pid, SIGINT);
 }
 
 int ashell_pane_cancel(void *handle) {
