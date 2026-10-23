@@ -13,6 +13,10 @@ grep -qx ASHELL_SSH_EXEC_OK "$work/exec"
 grep -Eq '^[[:space:]]*3$' "$work/exec"
 ssh "${options[@]}" "$user@$host" 'test -n "$GROUP" && echo ASHELL_SSH_GROUP_PRESENT' > "$work/environment"
 grep -qx ASHELL_SSH_GROUP_PRESENT "$work/environment"
+# Without a PTY request the server supplies its documented 80x24 default.
+# Startup terminal dimensions must not overwrite the new session's values.
+ssh "${options[@]}" "$user@$host" 'printf "ASHELL_SSH_DIMS_%s_%s_END\n" "$COLUMNS" "$LINES"' > "$work/dimensions"
+grep -qx ASHELL_SSH_DIMS_80_24_END "$work/dimensions"
 # Keep this input in one burst followed by EOF: a retired command lease must
 # return queued commands before the relay closes the editor pipe.
 # shellcheck disable=SC2016 # Arithmetic must run in the remote shell.

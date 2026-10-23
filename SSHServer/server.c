@@ -169,21 +169,26 @@ static int resize(ssh_session s, ssh_channel ch, int cols, int rows, int x, int 
 
 static int start_pane(Client *c, const char *command) {
     if (c->pane) return 1;
-    char home_env[PATH_MAX + 6], term_env[sizeof(c->term) + 6];
+    char home_env[PATH_MAX + 6], term_env[sizeof(c->term) + 6], cols_env[32], rows_env[32];
     snprintf(home_env, sizeof(home_env), "HOME=%s", home);
     snprintf(term_env, sizeof(term_env), "TERM=%s", c->term);
+    snprintf(cols_env, sizeof(cols_env), "COLUMNS=%u", c->cols);
+    snprintf(rows_env, sizeof(rows_env), "LINES=%u", c->rows);
     size_t count = 0, used = 0;
     while (server_environment[count]) count++;
-    const char **env = calloc(count + 4, sizeof(*env));
+    const char **env = calloc(count + 6, sizeof(*env));
     if (!env) return 1;
     const char *host_commands = "";
     for (size_t i = 0; i < count; i++) {
         if (!strncmp(server_environment[i], "ASHELL_HOST_COMMANDS=", 21)) host_commands = server_environment[i] + 21;
-        else if (strncmp(server_environment[i], "HOME=", 5) && strncmp(server_environment[i], "TERM=", 5)) env[used++] = server_environment[i];
+        else if (strncmp(server_environment[i], "HOME=", 5) && strncmp(server_environment[i], "TERM=", 5) &&
+            strncmp(server_environment[i], "COLUMNS=", 8) && strncmp(server_environment[i], "LINES=", 6) &&
+            strncmp(server_environment[i], "PWD=", 4) && strncmp(server_environment[i], "OLDPWD=", 7)) env[used++] = server_environment[i];
     }
     char *host_env = NULL;
     if (asprintf(&host_env, "ASHELL_HOST_COMMANDS=%s codex", host_commands) < 0) { free(env); return 1; }
-    env[used++] = home_env; env[used++] = term_env; env[used] = host_env;
+    env[used++] = home_env; env[used++] = term_env;
+    env[used++] = cols_env; env[used++] = rows_env; env[used] = host_env;
     ashell_pane_options options = {.size = sizeof(options), .tty = c->tty, .separate_stderr = !c->tty};
     int error = host.spawn(command, documents, c->cols, c->rows, env, &options, &c->pane_fd, &c->pane);
     free(host_env);
