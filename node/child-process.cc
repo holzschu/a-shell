@@ -34,6 +34,7 @@ struct Child {
   FILE* streams[3]{};
   void* registration = nullptr;
   std::string command;
+  std::string context;
   std::string cwd;
   std::vector<std::string> env;
   int status = 1;
@@ -98,6 +99,8 @@ extern "C" int AShellUVSpawn(uv_loop_t* loop, uv_process_t* process,
   if (child_active.exchange(true)) return UV_EBUSY;
   auto child = std::make_unique<Child>();
   child->process = process;
+  if (const auto* context = static_cast<const char*>(ios_getContext()))
+    child->context = context;
   child->cwd = options->cwd ? options->cwd : "";
   if (options->env) for (char** p = options->env; *p; ++p) child->env.emplace_back(*p);
   // Shell=true arrives as /bin/sh -c. Use the app's actual Dash command.
@@ -158,6 +161,9 @@ extern "C" int AShellUVSpawn(uv_loop_t* loop, uv_process_t* process,
         NSString* previous = [NSFileManager.defaultManager currentDirectoryPath];
         std::string session = "node-child-" + std::to_string(owned->id);
         ios_switchSession(session.c_str());
+        // Keep separate command streams/environments but share the terminal's
+        // interrupt group with npm/npx and their Node children.
+        if (!owned->context.empty()) ios_setContext(owned->context.c_str());
         ios_setStreams(owned->streams[0], owned->streams[1], owned->streams[2]);
         thread_stdin = owned->streams[0];
         thread_stdout = owned->streams[1];

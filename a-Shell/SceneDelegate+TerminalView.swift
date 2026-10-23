@@ -1557,7 +1557,7 @@ extension SceneDelegate {
             if myData.count == 1, let key = myData.first, key == 3 || key == 4 {
                 ios_switchSession(self.persistentIdentifier?.toCString())
                 ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
-                if let program = ios_progname(), String(cString: program) == "node" {
+                if let program = ios_progname(), String(cString: program) == "node" || (key == 3 && ["npm", "npx"].contains(String(cString: program))) {
                     send(source: source, inputString: key == 3 ? interrupt : endOfTransmission)
                     return
                 }
