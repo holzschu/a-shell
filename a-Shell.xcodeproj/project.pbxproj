@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		731400000000000000000001 /* SSHServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731400000000000000000002 /* SSHServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907B2ADD0999006DB9CC /* freetype.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000001 /* freetype.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907C2ADD0999006DB9CC /* harfbuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000002 /* harfbuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907D2ADD0999006DB9CC /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000003 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1382,6 +1383,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				731400000000000000000001 /* SSHServer.framework in Embed Frameworks */,
 				2269076E2F97BBD20071F551 /* curl-impersonate.framework in Embed Frameworks */,
 				22D1424B2E62091700E76E2E /* Python.framework in Embed Frameworks */,
 				22D1424C2E62091700E76E2E /* Python-_cffi_backend.framework in Embed Frameworks */,
@@ -2201,6 +2203,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		731400000000000000000002 /* SSHServer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SSHServer.framework; path = SSHServer/build/sdk/SSHServer.framework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000001 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = "xcfs/.build/artifacts/xcfs/freetype/freetype.xcframework"; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = "xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework"; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = "xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework"; sourceTree = SOURCE_ROOT; };

@@ -2239,6 +2239,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
             }
             self.terminalView?.setCursorStyle(shape: cursorShape.lowercased())
+            NotificationCenter.default.post(name: .init("terminalThemeChanged"), object: self.terminalView)
         }
     }
     
@@ -2293,6 +2294,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (fontLigature != nil) {
                 self.terminalFontLigature = fontLigature
             }
+            NotificationCenter.default.post(name: .init("terminalThemeChanged"), object: self.terminalView)
         }
     }
     
@@ -4370,6 +4372,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             terminalView?.getTerminal().backgroundColor = backgroundColor.toSwiftTermColor()
             terminalView?.getTerminal().cursorColor = cursorColor.toSwiftTermColor()
             self.terminalView?.setCursorStyle(shape: cursorShape.lowercased())
+            NotificationCenter.default.post(name: .init("terminalThemeChanged"), object: self.terminalView)
         }
         // TODO: Ligatures are enabled by default on iOS, they're a property of NSAttributeString, not the font.
         NSLog("Enabling font: \(fontName)")
