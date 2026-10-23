@@ -453,7 +453,8 @@ int ashell_sshd_main(int argc, char **argv) {
     if (!strcmp(command, "off")) { stop_server(); fprintf(thread_stdout, "sshd: stopped\n"); }
     else if (!strcmp(command, "on") || !strcmp(command, "status")) {
         if (!strcmp(command, "on") && !atomic_load(&running)) error = start_server();
-        if (error) fprintf(thread_stderr, "sshd: %s (require Documents/.ssh mode 700 and authorized_keys mode 600)\n", strerror(error));
+        if (error) fprintf(thread_stderr, "sshd: %s%s\n", strerror(error),
+            error == EACCES ? " (require Documents/.ssh mode 700 and authorized_keys mode 600)" : "");
         else if (!atomic_load(&running)) fprintf(thread_stdout, "sshd: stopped (default)\n");
         else {
             fprintf(thread_stdout, "sshd: listening; key-only; user %s; port %d\n", account, PORT);

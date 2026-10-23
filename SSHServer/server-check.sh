@@ -15,8 +15,9 @@ ssh "${options[@]}" "$user@$host" 'test -n "$GROUP" && echo ASHELL_SSH_GROUP_PRE
 grep -qx ASHELL_SSH_GROUP_PRESENT "$work/environment"
 # Keep this input in one burst followed by EOF: a retired command lease must
 # return queued commands before the relay closes the editor pipe.
-printf 'echo ASHELL_SSH_PROMPT_OK\nprintf abc | wc\nexit\n' | ssh -tt "${options[@]}" "$user@$host" > "$work/shell" 2>&1
-grep -Eq '(^|[[:space:]])ASHELL_SSH_PROMPT_OK$' "$work/shell"
+# shellcheck disable=SC2016 # Arithmetic must run in the remote shell.
+printf 'echo ASHELL_SSH_PROMPT_$((40+2))\nprintf abc | wc\nexit\n' | ssh -tt "${options[@]}" "$user@$host" > "$work/shell" 2>&1
+grep -Eq '(^|[[:space:]])ASHELL_SSH_PROMPT_42$' "$work/shell"
 grep -Eq '(^|[[:space:]])0[[:space:]]+1[[:space:]]+3[[:space:]]*$' "$work/shell"
 if ssh "${options[@]}" -o PubkeyAuthentication=no -o PasswordAuthentication=yes -o KbdInteractiveAuthentication=no "$user@$host" true > "$work/password" 2>&1; then
     echo 'Password-only login unexpectedly succeeded' >&2
