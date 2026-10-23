@@ -13,6 +13,9 @@
 
 #define MAX_WORKERS 64
 
+// Dash fixture commands must not source the user's login profile.
+static const char *const nonlogin_environment[] = {"_DASH_LOGIN_SHELL=1", NULL};
+
 // Keep each command alive at its public stdin boundary while the other slots start.
 static int capacity_check(void) {
     int (*spawn)(const char *, const char *, unsigned, unsigned, const char *const *, int *, void **) = dlsym(RTLD_DEFAULT, "ashell_pane_spawn");
@@ -37,7 +40,7 @@ static int capacity_check(void) {
         if (![[NSFileManager defaultManager] createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil]) { passed = NO; break; }
         char value[32], command[256];
         snprintf(value, sizeof(value), "POOL_VALUE=slot-%d", i);
-        const char *environment[] = {value, NULL};
+        const char *environment[] = {value, "_DASH_LOGIN_SHELL=1", NULL};
         snprintf(command, sizeof(command), "dash -c 'printf \"READY=%%s,%%s\\n\" \"$ASHELL_WORKER_PID\" \"$POOL_VALUE\"; pwd; read value; printf \"END=%%s\\n\" \"$value\"; exit %d'", i);
         int error = spawn(command, directory.fileSystemRepresentation, 80, 24, environment, &descriptors[i], &jobs[i]);
         if (error) { fprintf(thread_stdout, "slot=%d startup error=%d: FAIL\n", i, error); passed = NO; break; }
@@ -77,7 +80,7 @@ static int capacity_check(void) {
     if (passed) {
         int descriptor = -1;
         void *job = NULL;
-        int error = spawn("dash -c 'exit 0'", root.fileSystemRepresentation, 80, 24, NULL, &descriptor, &job);
+        int error = spawn("dash -c 'exit 0'", root.fileSystemRepresentation, 80, 24, nonlogin_environment, &descriptor, &job);
         BOOL full = error == ENOSPC && descriptor == -1 && job == NULL;
         fprintf(thread_stdout, "worker=%d error=%d: %s\n", capacity + 1, error, full ? "PASS" : "FAIL");
         if (job) release(job);
@@ -128,7 +131,7 @@ static int lifecycle_check(BOOL busy, BOOL closeOnly) {
     BOOL passed = YES;
     for (int i = 0; i < 3; i++) {
         const char *command = i == 1 ? "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; read value; worker-pool-crash'" : busy && i == 0 ? "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; while :; do :; done'" : "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; read value; printf \"DONE=%s\\n\" \"$value\"; exit 7'";
-        int error = spawn(command, directory.fileSystemRepresentation, 80, 24, NULL, &descriptors[i], &jobs[i]);
+        int error = spawn(command, directory.fileSystemRepresentation, 80, 24, nonlogin_environment, &descriptors[i], &jobs[i]);
         if (error) { fprintf(thread_stdout, "lifecycle slot=%d startup=%d: FAIL\n", i, error); passed = NO; break; }
         struct pollfd ready = {.fd = descriptors[i], .events = POLLIN};
         char output[128] = {0};
@@ -206,9 +209,9 @@ static int completion_check(BOOL identity) {
     NSString *directory = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
     int descriptor = -1, status = -1, result = 0;
     void *job = NULL;
-    const char *environment[] = {"ASHELL_WORKER_PID=-1", "ASHELL_WORKER_ROOT_PID=-1", NULL};
+    const char *environment[] = {"ASHELL_WORKER_PID=-1", "ASHELL_WORKER_ROOT_PID=-1", "_DASH_LOGIN_SHELL=1", NULL};
     const char *command = identity ? "dash -c 'test \"$ASHELL_WORKER_PID\" -gt 0 && test \"$ASHELL_WORKER_ROOT_PID\" -gt 0 && dash -c \"test \\\"\\$ASHELL_WORKER_PID\\\" -gt 0 && test \\\"\\$ASHELL_WORKER_ROOT_PID\\\" -gt 0\" && printf pending-output; exit 7'" : "dash -c 'printf pending-output; exit 7'";
-    int error = spawn(command, directory.fileSystemRepresentation, 80, 24, identity ? environment : NULL, &descriptor, &job);
+    int error = spawn(command, directory.fileSystemRepresentation, 80, 24, identity ? environment : nonlogin_environment, &descriptor, &job);
     if (error) { fprintf(thread_stdout, "completion startup=%d: FAIL\n", error); return 1; }
     NSTimeInterval deadline = NSProcessInfo.processInfo.systemUptime + 10;
     while (!result && NSProcessInfo.processInfo.systemUptime < deadline) {
@@ -420,7 +423,7 @@ int worker_pool_check_main(int argc, char **argv) {
             return 1;
         }
         NSString *directory = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
-        const char *environment[] = {"POOL_VALUE=isolated", NULL};
+        const char *environment[] = {"POOL_VALUE=isolated", "_DASH_LOGIN_SHELL=1", NULL};
         int descriptor = -1;
         void *job = NULL;
         int error = spawn("dash -c 'printf \"WORKER=%s\\n\" \"$POOL_VALUE\"'", directory.fileSystemRepresentation, 80, 24, environment, &descriptor, &job);
