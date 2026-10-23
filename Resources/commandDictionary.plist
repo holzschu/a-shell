@@ -557,8 +557,8 @@
 	</array>
 	<key>scp</key>
 	<array>
-		<string>ssh_cmd.framework/ssh_cmd</string>
-		<string>scp_main</string>
+		<string>SCPStock.framework/SCPStock</string>
+		<string>ashell_scp_main</string>
 		<string>12346ABCTdfpqrtvF:J:P:S:c:i:l:o:</string>
 		<string>file</string>
 	</array>
@@ -585,8 +585,8 @@
 	</array>
 	<key>sftp</key>
 	<array>
-		<string>ssh_cmd.framework/ssh_cmd</string>
-		<string>sftp_main</string>
+		<string>SFTPStock.framework/SFTPStock</string>
+		<string>ashell_sftp_main</string>
 		<string>1246AafhNpqrvCc:D:i:l:o:s:S:b:B:F:J:P:R:</string>
 		<string>file</string>
 	</array>
@@ -599,15 +599,15 @@
 	</array>
 	<key>ssh</key>
 	<array>
-		<string>ssh_cmd.framework/ssh_cmd</string>
-		<string>ssh_main</string>
+		<string>SSHStock.framework/SSHStock</string>
+		<string>ashell_ssh_main</string>
 		<string>1246ab:c:e:fgi:kl:m:no:p:qstvxAB:CD:E:F:GI:J:KL:MNO:PQ:R:S:TVw:W:XYy</string>
 		<string>no</string>
 	</array>
 	<key>ssh-keygen</key>
 	<array>
-		<string>ssh_cmd.framework/ssh_cmd</string>
-		<string>sshkeygen_main</string>
+		<string>SSHKeygenStock.framework/SSHKeygenStock</string>
+		<string>ashell_ssh_keygen_main</string>
 		<string>ABHLQXceghiklopquvxyC:D:E:F:G:I:J:K:M:N:O:P:R:S:T:V:W:Z:a:b:f:g:j:m:n:r:s:t:z:</string>
 		<string>file</string>
 	</array>

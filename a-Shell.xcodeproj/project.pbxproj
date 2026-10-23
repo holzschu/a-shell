@@ -1256,6 +1256,18 @@
 		610000000000000000000011 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
 		610000000000000000000012 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
 		610000000000000000000013 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
+		731431410000000000000000 /* SSHStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000000 /* SSHStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000001 /* SSHStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000000 /* SSHStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000002 /* SSHStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000000 /* SSHStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000100 /* SCPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000001 /* SCPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000101 /* SCPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000001 /* SCPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000102 /* SCPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000001 /* SCPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000200 /* SFTPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000002 /* SFTPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000201 /* SFTPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000002 /* SFTPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000202 /* SFTPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000002 /* SFTPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000300 /* SSHKeygenStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000003 /* SSHKeygenStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000301 /* SSHKeygenStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000003 /* SSHKeygenStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000302 /* SSHKeygenStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000003 /* SSHKeygenStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1330,6 +1342,10 @@
 				224A906E2ADD0999006DB9CC /* shell.xcframework in Embed Frameworks */,
 				225479362B73BE06005041FF /* ssh_cmdA.xcframework in Embed Frameworks */,
 				224A906F2ADD0999006DB9CC /* ssh_cmd.xcframework in Embed Frameworks */,
+				731431410000000000000300 /* SSHKeygenStock.xcframework in Embed Frameworks */,
+				731431410000000000000200 /* SFTPStock.xcframework in Embed Frameworks */,
+				731431410000000000000100 /* SCPStock.xcframework in Embed Frameworks */,
+				731431410000000000000000 /* SSHStock.xcframework in Embed Frameworks */,
 				224A90702ADD0999006DB9CC /* tar.xcframework in Embed Frameworks */,
 				224A90712ADD0999006DB9CC /* text.xcframework in Embed Frameworks */,
 				224A90722ADD0999006DB9CC /* mandoc.xcframework in Embed Frameworks */,
@@ -1576,6 +1592,10 @@
 				229D24A4257931E4004A78AC /* files.xcframework in Embed Frameworks */,
 				229D24A7257931E4004A78AC /* shell.xcframework in Embed Frameworks */,
 				229D24A8257931E4004A78AC /* ssh_cmd.xcframework in Embed Frameworks */,
+				731431410000000000000301 /* SSHKeygenStock.xcframework in Embed Frameworks */,
+				731431410000000000000201 /* SFTPStock.xcframework in Embed Frameworks */,
+				731431410000000000000101 /* SCPStock.xcframework in Embed Frameworks */,
+				731431410000000000000001 /* SSHStock.xcframework in Embed Frameworks */,
 				225479342B73B77C005041FF /* ssh_cmdA.xcframework in Embed Frameworks */,
 				229D24A9257931E4004A78AC /* tar.xcframework in Embed Frameworks */,
 				229D24AA257931E4004A78AC /* text.xcframework in Embed Frameworks */,
@@ -1665,6 +1685,10 @@
 				22DC1F992570139D0068004E /* shell.xcframework in Embed Frameworks */,
 				225479352B73B790005041FF /* ssh_cmdA.xcframework in Embed Frameworks */,
 				22DC1F9A2570139D0068004E /* ssh_cmd.xcframework in Embed Frameworks */,
+				731431410000000000000302 /* SSHKeygenStock.xcframework in Embed Frameworks */,
+				731431410000000000000202 /* SFTPStock.xcframework in Embed Frameworks */,
+				731431410000000000000102 /* SCPStock.xcframework in Embed Frameworks */,
+				731431410000000000000002 /* SSHStock.xcframework in Embed Frameworks */,
 				22DC1F9B2570139D0068004E /* tar.xcframework in Embed Frameworks */,
 				22DC1F9C2570139D0068004E /* text.xcframework in Embed Frameworks */,
 				22BA51D1258E478900923893 /* mandoc.xcframework in Embed Frameworks */,
@@ -3167,6 +3191,10 @@
 		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework; sourceTree = SOURCE_ROOT; };
 		AE1100000000000000000002 /* helix/helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
 		610000000000000000000010 /* Themes */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Themes; path = Resources/Themes; sourceTree = SOURCE_ROOT; };
+		731431400000000000000000 /* SSHStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SSHStock.xcframework; path = xcfs/SSHStock.xcframework; sourceTree = SOURCE_ROOT; };
+		731431400000000000000001 /* SCPStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SCPStock.xcframework; path = xcfs/SCPStock.xcframework; sourceTree = SOURCE_ROOT; };
+		731431400000000000000002 /* SFTPStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SFTPStock.xcframework; path = xcfs/SFTPStock.xcframework; sourceTree = SOURCE_ROOT; };
+		731431400000000000000003 /* SSHKeygenStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SSHKeygenStock.xcframework; path = xcfs/SSHKeygenStock.xcframework; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -4346,6 +4374,10 @@
 				22DC1F89257012F50068004E /* files.xcframework */,
 				22DC1F90257012F50068004E /* shell.xcframework */,
 				22DC1F8B257012F50068004E /* ssh_cmd.xcframework */,
+				731431400000000000000003 /* SSHKeygenStock.xcframework */,
+				731431400000000000000002 /* SFTPStock.xcframework */,
+				731431400000000000000001 /* SCPStock.xcframework */,
+				731431400000000000000000 /* SSHStock.xcframework */,
 				225478B52B7380A5005041FF /* ssh_cmdA.xcframework */,
 				224DF74B2B76428800F13C58 /* ssh_agent.xcframework */,
 				223EF3432B97490600A8ED5A /* sshd.xcframework */,

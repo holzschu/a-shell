@@ -146,3 +146,22 @@ For font files, create `~/Documents/Fonts` and drop `.ttf` or `.otf` files there
 `config -n "face name" -s 17 -g` updates all open windows and saves the font and size. `-p` saves the current window's settings without applying them to other windows. In iOS Settings, open a-Shell or a-Shell mini and use "Font", "Custom font name", and "Font size". Choose "Custom" for another installed face or a file in `Documents/Fonts`. Changes apply when returning to the app and survive relaunch. Reopen the app's Settings page to refresh values changed from the terminal.
 
 Font files are refreshed when running `config` or returning to the app. Removing a file unregisters it; a window using an unavailable font displays Menlo until the file returns or another face is selected. An invalid name passed to `config -n` reports an error and keeps the current selection.
+
+## Stock OpenSSH clients
+
+The SSH client update requires the matching OpenSSH 10.6p1 recipe and worker-aware runtime from `holzschu/ios_system`, on top of ios_system#201. Build `SSHStock`, `SCPStock`, `SFTPStock` and `SSHKeygenStock` with that recipe for each SDK you package, using matching ios_system and OpenSSL framework inputs. Keep each SDK's output in a separate directory. No SSH server or security-key provider is required for these four clients.
+
+Package the resulting frameworks with Apple's `xcodebuild -create-xcframework`. For example, with the two recipe output directories in `SSH_DEVICE_OUTPUT` and `SSH_SIMULATOR_OUTPUT`:
+
+```sh
+for name in SSHStock SCPStock SFTPStock SSHKeygenStock; do
+    xcodebuild -create-xcframework \
+        -framework "$SSH_DEVICE_OUTPUT/sdk/$name.framework" \
+        -framework "$SSH_SIMULATOR_OUTPUT/sdk/$name.framework" \
+        -output "xcfs/$name.xcframework"
+done
+```
+
+For a Simulator-only build, omit the device framework argument. Use fresh output paths when changing inputs. The existing Embed Frameworks phases sign these XCFrameworks. The main and mini command catalogs select their public entry points; extension catalogs are generated from the mini catalog. Application startup appends the four commands to the existing worker selection, preserving any configured commands. The matching runtime runs each admitted root once and requires a fresh worker for nested client invocations; missing worker APIs or exhausted admission return status 127.
+
+Run the producer's `phone-client.sh` through the app against a disposable SSH account with throwaway keys. Check version, key generation, strict login, scp/sftp byte round trips, multiple-source SCP errors and a following successful login. Keep existing config, keys and known_hosts for migration checks. Compilation and catalog validation alone do not prove these runtime behaviors.

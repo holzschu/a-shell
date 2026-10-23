@@ -187,6 +187,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NSLog("Application didFinishLaunchingWithOptions \(String(describing: launchOptions))")
         #endif
         _ = TerminalThemes.synchronizeSelection()
+        let workerCommands = getenv("ASHELL_WORKER_COMMANDS").map { String(cString: $0) } ?? ""
+        setenv("ASHELL_WORKER_COMMANDS", workerCommands + " ssh scp sftp ssh-keygen", 1)
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
