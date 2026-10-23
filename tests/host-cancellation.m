@@ -6,11 +6,20 @@
 #include <stdatomic.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <dlfcn.h>
 extern int ios_unsetenv_pid(const char *, int);
 extern int numDashCommands;
 static _Atomic(void *) liveJob;
 static atomic_int spawnEntered, releaseSpawn;
-static int beforeSpawn, cooked;
+static int beforeSpawn, cooked, startup;
+static atomic_int dashEntered, releaseDash;
+static int (*dashMain)(int, char **);
+int host_gated_dash_main(int argc, char **argv) {
+    atomic_store(&dashEntered,1);
+    while(!atomic_load(&releaseDash))usleep(1000);
+    return dashMain(argc,argv);
+}
+static atomic_int sessionChanged;
 static int releasedFinished=-1,releasedStatus=-1;
 int ashell_worker_host_spawn_ex(const char *command,const char *cwd,unsigned cols,unsigned rows,const char *const *env,ashell_pane_options *options,int *fd,void **job) {
     const char *clean[256]; size_t n=0;
@@ -22,10 +31,10 @@ int ashell_worker_host_spawn_ex(const char *command,const char *cwd,unsigned col
     ios_unsetenv_pid("ASHELL_WORKER_PID",0);
     ios_unsetenv("ASHELL_WORKER_PID");
     int result=ashell_host_pane_spawn_ex(command,cwd,cols,rows,clean,options,fd,job);
-    if(beforeSpawn) {
+    if(beforeSpawn || startup) {
         dprintf(1,"SPAWN_ENTERED\n");
         atomic_store(&spawnEntered,1);
-        while(!atomic_load(&releaseSpawn))usleep(1000);
+        if(beforeSpawn)while(!atomic_load(&releaseSpawn))usleep(1000);
     }
     if(!result)liveJob=*job;
     return result;
@@ -33,9 +42,10 @@ int ashell_worker_host_spawn_ex(const char *command,const char *cwd,unsigned col
 int ashell_worker_host_poll(void *j,int *s){return ashell_host_pane_poll(j,s);}
 int ashell_worker_host_close_stdin(void *j){return ashell_host_pane_close_stdin(j);}
 int ashell_worker_host_interrupt(void *j){
+    const void *caller=ios_getContext();
     int error=ashell_host_pane_interrupt(j);
-    // The real broker executes this call in a different process.
-    ios_switchSession("host-policy-cancel-consumer");
+    if(ios_getContext()!=caller) { atomic_store(&sessionChanged,1); dprintf(1,"interrupt changed caller session: FAIL\n"); }
+    if(startup && !atomic_load(&releaseDash)) { dprintf(1,"startup_first_interrupt=%d\n",error); atomic_store(&releaseDash,1); }
     return error;
 }
 int ashell_worker_host_cancel(void *j){return ashell_host_pane_cancel(j);}
@@ -50,19 +60,30 @@ int host_fixture_main(int argc, char **argv) {
 }
 int main(int argc, char **argv) {@autoreleasepool {
     if(argc<2||argc>3)return 2;
-    cooked=argc==3&&!strcmp(argv[2],"cooked");
+    startup=argc==3&&!strcmp(argv[2],"startup");
+    cooked=startup||(argc==3&&!strcmp(argv[2],"cooked"));
     beforeSpawn=argc==3&&!strcmp(argv[2],"before-spawn");
-    alarm(10);numDashCommands=1;initializeEnvironment();ios_switchSession("host-policy-cancel-consumer");
+    alarm(10);numDashCommands=1;initializeEnvironment();ios_switchSession("host-policy-cancel-consumer");ios_setContext("host-policy-cancel-consumer");
     ios_setenv("ASHELL_WORKER_PID","999",1);ios_setenv("ASHELL_HOST_COMMANDS","sleep",1);
     ios_setenv("PATH",argv[1],1);
     FILE *input=tmpfile(),*output=tmpfile(),*error=tmpfile();void *registration=NULL;
     if(!input||!output||!error||ashell_register_owned_streams(input,output,error,&registration))return 2;
     ios_setStreams(input,output,error);joinMainThread=false;
     replaceCommand(@"sleep", @"host_fixture_main", false);
+    if(startup) {
+        NSString *library=[NSBundle.mainBundle.bundlePath stringByAppendingPathComponent:@"Frameworks/dash.framework/dash"];
+        void *image=dlopen(library.fileSystemRepresentation,RTLD_NOW|RTLD_LOCAL);
+        dashMain=image?dlsym(image,"main"):NULL;
+        if(!dashMain)return 2;
+        replaceCommand(@"dash",@"host_gated_dash_main",false);
+    }
     pid_t pid=ios_fork();ios_system("sleep 2");
     for(int i=0;i<200&&!(beforeSpawn?atomic_load(&spawnEntered):liveJob!=NULL);i++)usleep(10000);
     if(!(beforeSpawn?atomic_load(&spawnEntered):liveJob!=NULL)){dprintf(1,"host spawn was not reached\n");return 2;}
-    if(!beforeSpawn)usleep(100000);
+    if(startup) {
+        for(int i=0;i<200&&!atomic_load(&dashEntered);i++)usleep(10000);
+        if(!atomic_load(&dashEntered))return 2;
+    } else if(!beforeSpawn)usleep(100000);
     dprintf(1,"interrupt before_spawn=%d pid=%d\n",beforeSpawn,pid);
     int killed=ios_interruptpid(pid);
     atomic_store(&releaseSpawn,1);
@@ -70,9 +91,9 @@ int main(int argc, char **argv) {@autoreleasepool {
     int expected=cooked?130:7;
     int status=ios_getCommandStatus(),actual=releasedStatus,finished=releasedFinished;
     dprintf(1,"kill=%d command_status=%d host_finished=%d host_status=%d %s\n",killed,status,finished,actual,status==expected&&finished==1&&actual==expected?"PASS":"FAIL");
-    int passed=status==expected&&finished==1&&actual==expected;
+    int passed=status==expected&&finished==1&&actual==expected&&!atomic_load(&sessionChanged);
     if(cooked&&passed) {
-        cooked=0; liveJob=NULL;
+        cooked=0; startup=0; liveJob=NULL;
         ios_setenv("ASHELL_WORKER_PID","999",1);
         pid=ios_fork();ios_system("sleep 2");ios_waitpid(pid);
         ashell_wait_owned_streams(registration);

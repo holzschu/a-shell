@@ -16,8 +16,11 @@ int storeInteractive(void) { return interactive; }
 
 // A real terminal consumer, registered through the command catalogue API.
 int pane_raw_reader_main(int argc, char **argv) {
-    (void)argc;
-    (void)argv;
+    if(argc>1&&!strcmp(argv[1],"leave")) {
+        ios_startInteractive();
+        fputs("RAW_READY\n",thread_stdout);fflush(thread_stdout);
+        return 0;
+    }
     int tty = ios_gettty();
     struct termios saved, raw;
     int has_tty = tty >= 0 && tcgetattr(tty, &saved) == 0;
@@ -68,10 +71,11 @@ int main(int argc, char **argv) {
         initializeEnvironment();
         BOOL cookedIsolation = argc > 1 && !strcmp(argv[1], "cooked-isolation");
         BOOL isolation = argc > 1 && !strcmp(argv[1], "raw-socket-isolation");
+        BOOL pipelineError = argc > 1 && !strcmp(argv[1], "pipeline-error-cooked");
         BOOL sequence = argc > 1 && !strcmp(argv[1], "raw-then-cooked");
         BOOL raw = isolation || (argc > 1 && (!strcmp(argv[1], "raw") || !strcmp(argv[1], "raw-socket")));
         BOOL pty = raw && !isolation && strcmp(argv[1], "raw-socket");
-        if (raw || sequence) replaceCommand(@"pane-raw-reader", @"pane_raw_reader_main", false);
+        if (raw || sequence || pipelineError) replaceCommand(@"pane-raw-reader", @"pane_raw_reader_main", false);
         NSString *path = [@"PATH=" stringByAppendingString:[NSBundle.mainBundle.bundlePath stringByAppendingPathComponent:@"bin"]];
         const char *env[] = {"ASHELL_IOS_SOCKET_INPUT=1", pty ? "ASHELL_IOS_PTY=1" : "ASHELL_IOS_PTY=0", "PS1=PANE_PROMPT>", path.UTF8String, NULL};
         ashell_pane_options options = {.size = sizeof(options), .tty = 1};
@@ -92,6 +96,9 @@ int main(int argc, char **argv) {
             if (error != ENOTSUP || send_line(fd, "\003x")) return 1;
         } else {
             if (read_marker(fd, "PANE_PROMPT>")) return 1;
+            if(pipelineError) {
+                if(send_line(fd,"{ read release; export 1bad=value; } | pane-raw-reader leave\n") || read_marker(fd,"RAW_READY") || send_line(fd,"release\n") || read_marker(fd,"PANE_PROMPT>"))return 1;
+            }
             if (sequence) {
                 if (send_line(fd, "pane-raw-reader\n") || read_marker(fd, "RAW_READY")) return 1;
                 if (ashell_pane_interrupt(job) != ENOTSUP || send_line(fd, "\003x")) return 1;
@@ -112,6 +119,7 @@ int main(int argc, char **argv) {
             // The marker precedes dispatch; allow the real sleep to enter its wait.
             usleep(200000);
             error = ashell_pane_interrupt(job);
+            dprintf(1,"cooked interrupt=%d expected=0\n",error);
             if (error || read_marker(fd, "PANE_PROMPT>")) return 1;
             if (send_line(fd, "printf 'PANE_STATUS_%s_END\\n' \"$?\"\n") || read_marker(fd, "PANE_STATUS_130_END\n")) return 1;
             if (send_line(fd, "printf 'PANE_NEXT_OK\\n'; exit 0\n") || read_marker(fd, "PANE_NEXT_OK\n")) return 1;

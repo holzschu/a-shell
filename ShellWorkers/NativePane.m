@@ -850,14 +850,11 @@ int ashell_pane_interrupt(void *handle) {
         if (atomic_load(&job->interactive)) error = ENOTSUP;
     }
     if (!error) {
-        ios_switchSession(job->key);
-        const char *name = ios_progname();
-        if (!name || !strcmp(name, "dash") || !strcmp(name, "sh")) error = ENOTSUP;
-        else {
-            pid = atomic_load(&foreground_command_pid);
-            foreground = pid > 0 ? ios_getThreadId(pid) : NULL;
-            if (!foreground || foreground == (pthread_t)-1) error = ESRCH;
-        }
+        // Scoped Dash publication uses negative PIDs for shell waiters.
+        // Inspect the target without changing the caller's session or cwd.
+        pid = atomic_load(&foreground_command_pid);
+        foreground = pid > 0 ? ios_getThreadId(pid) : NULL;
+        if (!foreground || foreground == (pthread_t)-1) error = ESRCH;
     }
     pthread_mutex_unlock(&job->mutex);
     if (error) return error;
