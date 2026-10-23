@@ -194,8 +194,18 @@ static void *relay_input(void *cookie) {
         if (relay->command && (relay->command_eof || relay->input_eof) &&
             !relay->command_queue.length)
             close_input_writer(&relay->command->writer);
-        if (relay->input_eof && !relay->editor_queue.length)
-            close_input_writer(&relay->editor_writer);
+        // A command lease can return typeahead, including bytes already in the
+        // editor pipe. Deliver EOF only after both places have drained.
+        int drain_editor = 0;
+        if (relay->input_eof && !relay->command && !relay->editor_queue.length &&
+            relay->editor_writer >= 0) {
+            struct pollfd pending = {.fd = relay->editor_reader, .events = POLLIN};
+            int available = poll(&pending, 1, 0);
+            if (available < 0 && errno != EINTR) { relay->error = errno; break; }
+            if (pending.revents & (POLLERR | POLLNVAL)) { relay->error = EIO; break; }
+            if (!available) close_input_writer(&relay->editor_writer);
+            else drain_editor = 1;
+        }
         // Backpressure bounds queued input. Each pipe also has its kernel
         // buffer; transition queues have room to drain that existing typeahead.
         int can_read = !relay->input_eof && relay->editor_queue.length < 61440 &&
@@ -208,7 +218,8 @@ static void *relay_input(void *cookie) {
              .events = POLLOUT}
         };
         pthread_mutex_unlock(&relay->mutex);
-        int result = poll(fds, 4, -1);
+        // Pipe readers do not wake this relay when they drain its final bytes.
+        int result = poll(fds, 4, drain_editor ? 100 : -1);
         int poll_error = errno;
         pthread_mutex_lock(&relay->mutex);
         if (result < 0) {
