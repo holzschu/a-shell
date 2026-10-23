@@ -129,6 +129,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     // Customizable user interface:
     var terminalFontSize: Float?
     var terminalFontName: String?
+    var terminalThemeName = ""
+    var terminalTheme: TerminalTheme?
     var terminalBackgroundColor: UIColor?
     var terminalForegroundColor: UIColor?
     var terminalCursorColor: UIColor?
@@ -2150,6 +2152,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     // display the current configuration of the window.
     func showConfigWindow() {
+        fputs("theme: \(terminalThemeName.isEmpty ? "system" : terminalThemeName)\n", thread_stdout)
+        if let theme = terminalTheme {
+            fputs("ANSI: " + theme.colors.dropFirst(3).map { $0.uppercased() }.joined(separator: " ") + "\n", thread_stdout)
+        }
         if (terminalFontName != nil) {
             fputs(terminalFontName! + " ", thread_stdout)
         } else {
@@ -2209,9 +2215,50 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         fputs("\n", thread_stdout)
     }
     
+    func applyTheme(_ theme: TerminalTheme?, name: String) {
+        let update = {
+            self.terminalThemeName = name
+            self.terminalTheme = theme
+            self.terminalBackgroundColor = theme.map { UIColor(hexString: $0.colors[0]) }
+            self.terminalForegroundColor = theme.map { UIColor(hexString: $0.colors[1]) }
+            self.terminalCursorColor = theme.map { UIColor(hexString: $0.colors[2]) }
+            self.writeConfigWindow()
+        }
+        if Thread.isMainThread { update() } else { DispatchQueue.main.sync(execute: update) }
+    }
+
+    func themeColorOverrides() -> (background: UIColor?, foreground: UIColor?, cursor: UIColor?) {
+        guard let theme = terminalTheme else {
+            return (terminalBackgroundColor, terminalForegroundColor, terminalCursorColor)
+        }
+        return (
+            terminalBackgroundColor?.toHexString() == UIColor(hexString: theme.colors[0]).toHexString() ? nil : terminalBackgroundColor,
+            terminalForegroundColor?.toHexString() == UIColor(hexString: theme.colors[1]).toHexString() ? nil : terminalForegroundColor,
+            terminalCursorColor?.toHexString() == UIColor(hexString: theme.colors[2]).toHexString() ? nil : terminalCursorColor
+        )
+    }
+
+    func restoreTheme(_ name: String?) {
+        do {
+            let theme = try name.map { try TerminalThemes.load($0) }
+            terminalThemeName = name ?? ""
+            terminalTheme = theme
+            terminalBackgroundColor = theme.map { UIColor(hexString: $0.colors[0]) }
+            terminalForegroundColor = theme.map { UIColor(hexString: $0.colors[1]) }
+            terminalCursorColor = theme.map { UIColor(hexString: $0.colors[2]) }
+        } catch {
+            terminalThemeName = ""
+            terminalTheme = nil
+            terminalBackgroundColor = (UserDefaults.standard.string(forKey: "backgroundColor")).map { UIColor(hexString: $0) }
+            terminalForegroundColor = (UserDefaults.standard.string(forKey: "foregroundColor")).map { UIColor(hexString: $0) }
+            terminalCursorColor = (UserDefaults.standard.string(forKey: "cursorColor")).map { UIColor(hexString: $0) }
+            terminalView?.feed(text: "Theme \(name ?? ""): \(error.localizedDescription) Using stored or system colors.\r\n")
+        }
+    }
+
     func writeConfigWindow() {
         // Force rewrite of all color parameters. Used for reset.
-        let traitCollection = terminalView!.traitCollection
+        let traitCollection = window?.windowScene?.traitCollection ?? terminalView!.traitCollection
         // Set scene parameters (unless they were set before)
         let backgroundColor = terminalBackgroundColor ?? UIColor.systemBackground.resolvedColor(with: traitCollection)
         let foregroundColor = terminalForegroundColor ?? UIColor.placeholderText.resolvedColor(with: traitCollection)
@@ -2223,10 +2270,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let fontLigature = terminalFontLigature ?? factoryFontLigature
         DispatchQueue.main.async {  // SwiftTerm changes to the UI must happen on the main thread
             // Force writing all config to term. Used when we changed many parameters.
+            self.terminalView?.installColors(self.terminalTheme?.colors.dropFirst(3).map { UIColor(hexString: $0).toSwiftTermColor() } ?? SwiftTerm.Color.defaultInstalledColors)
             self.terminalView?.backgroundColor = backgroundColor
             self.terminalView?.inputAccessoryView?.backgroundColor = self.terminalBackgroundColor
             self.window?.rootViewController?.view.backgroundColor = self.terminalBackgroundColor ?? .systemBackground
             self.terminalView?.nativeBackgroundColor = backgroundColor
+            self.setEnvironmentFGBG(foregroundColor: foregroundColor, backgroundColor: backgroundColor)
             self.terminalView?.getTerminal().backgroundColor = (backgroundColor.toSwiftTermColor())
             self.terminalView?.tintColor = foregroundColor
             self.terminalView?.nativeForegroundColor = foregroundColor
@@ -3358,15 +3407,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
            let fontName = userInfo["fontName"] as? String {
             terminalFontName = fontName
         }
-        // We store colors as hex strings:
-        if let backgroundColor = userInfo["backgroundColor"] as? String {
-            terminalBackgroundColor = UIColor(hexString: backgroundColor)
-        }
-        if let foregroundColor = userInfo["foregroundColor"] as? String {
-            terminalForegroundColor =  UIColor(hexString: foregroundColor)
-        }
-        if let cursorColor = userInfo["cursorColor"] as? String {
-            terminalCursorColor = UIColor(hexString: cursorColor)
+        let savedTheme = TerminalThemes.savedName
+        let previousDefault = userInfo["terminalThemeDefault"] as? String ?? ""
+        if (savedTheme ?? "") == previousDefault && (savedTheme.map { (try? TerminalThemes.load($0)) != nil } ?? true) {
+            let theme = userInfo["terminalTheme"] as? String
+            if let theme = theme { restoreTheme(theme.isEmpty ? nil : theme) }
+            // Keep the system fallback if a window's theme file has disappeared.
+            if theme == nil || theme == terminalThemeName {
+                // We store colors as hex strings:
+                if let backgroundColor = userInfo["backgroundColor"] as? String, !backgroundColor.isEmpty {
+                    terminalBackgroundColor = UIColor(hexString: backgroundColor)
+                }
+                if let foregroundColor = userInfo["foregroundColor"] as? String, !foregroundColor.isEmpty {
+                    terminalForegroundColor =  UIColor(hexString: foregroundColor)
+                }
+                if let cursorColor = userInfo["cursorColor"] as? String, !cursorColor.isEmpty {
+                    terminalCursorColor = UIColor(hexString: cursorColor)
+                }
+            }
         }
         if let cursorShape = userInfo["cursorShape"] as? String {
             terminalCursorShape = cursorShape
@@ -3765,6 +3823,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let name = TerminalFonts.savedName {
                 terminalFontName = name
             }
+            restoreTheme(TerminalThemes.savedName)
             if let hexColor = UserDefaults.standard.value(forKey: "backgroundColor") as? String {
                 terminalBackgroundColor = UIColor(hexString: hexColor)
             }
@@ -4221,10 +4280,23 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {
             self.window?.overrideUserInterfaceStyle = style // required on iPhones with iOS 26.
             self.overrideUserInterfaceStyle = style
+            if UserDefaults.standard.string(forKey: "toolbar_color") != "screen", self.terminalView?.keyboardAppearance != .default {
+                self.terminalView?.keyboardAppearance = .default
+                self.terminalView?.reloadInputViews()
+            }
         }
     }
     
     func setEnvironmentFGBG(foregroundColor: UIColor, backgroundColor: UIColor)  {
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        backgroundColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        let luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+        let followsScreen = UserDefaults.standard.string(forKey: "toolbar_color") == "screen"
+        let keyboardAppearance: UIKeyboardAppearance = followsScreen ? (luminance < 0.5 ? .dark : .light) : .default
+        if self.terminalView?.keyboardAppearance != keyboardAppearance {
+            self.terminalView?.keyboardAppearance = keyboardAppearance
+            self.terminalView?.reloadInputViews()
+        }
         // Are we in light mode or dark mode?
         // This could be improved now that we can be in a whole set of situations
         // If the user is running one window in light mode and one in dark mode,
@@ -4381,6 +4453,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             terminalView?.font = terminalFont
             basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
         }
+        terminalView?.installColors(terminalTheme?.colors.dropFirst(3).map { UIColor(hexString: $0).toSwiftTermColor() } ?? SwiftTerm.Color.defaultInstalledColors)
         setEnvironmentFGBG(foregroundColor: foregroundColor, backgroundColor: backgroundColor)
         if (showKeyboardAtStartup) {
             if let termView = self.terminalView {
@@ -4497,17 +4570,27 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (terminalFontName != nil) {
             scene.session.stateRestorationActivity?.userInfo!["fontName"] = terminalFontName
         }
+        scene.session.stateRestorationActivity?.userInfo!["terminalTheme"] = terminalThemeName
+        scene.session.stateRestorationActivity?.userInfo!["terminalThemeDefault"] = UserDefaults.standard.string(forKey: "appliedTerminalTheme") ?? ""
         scene.session.stateRestorationActivity?.userInfo!["terminalFontDefault"] = TerminalFonts.savedName
         scene.session.stateRestorationActivity?.userInfo!["terminalFontSizeDefault"] = TerminalFonts.savedSize
         // Must store information in userinfo as String or Float, not UIColor.
-        if (terminalBackgroundColor != nil) && (terminalBackgroundColor != .systemBackground) {
-            scene.session.stateRestorationActivity?.userInfo!["backgroundColor"] = terminalBackgroundColor!.toHexString()
+        let colors = themeColorOverrides()
+        // Empty values clear overrides recorded by earlier snapshots.
+        if let color = colors.background, color != .systemBackground {
+            scene.session.stateRestorationActivity?.userInfo!["backgroundColor"] = color.toHexString()
+        } else {
+            scene.session.stateRestorationActivity?.userInfo!["backgroundColor"] = ""
         }
-        if (terminalForegroundColor != nil) && (terminalForegroundColor != .placeholderText) {
-            scene.session.stateRestorationActivity?.userInfo!["foregroundColor"] = terminalForegroundColor!.toHexString()
+        if let color = colors.foreground, color != .placeholderText {
+            scene.session.stateRestorationActivity?.userInfo!["foregroundColor"] = color.toHexString()
+        } else {
+            scene.session.stateRestorationActivity?.userInfo!["foregroundColor"] = ""
         }
-        if (terminalCursorColor != nil) && (terminalForegroundColor != .link) {
-            scene.session.stateRestorationActivity?.userInfo!["cursorColor"] = terminalCursorColor!.toHexString()
+        if let color = colors.cursor, color != .link {
+            scene.session.stateRestorationActivity?.userInfo!["cursorColor"] = color.toHexString()
+        } else {
+            scene.session.stateRestorationActivity?.userInfo!["cursorColor"] = ""
         }
         if (terminalCursorShape != nil) {
             scene.session.stateRestorationActivity?.userInfo!["cursorShape"] = terminalCursorShape!

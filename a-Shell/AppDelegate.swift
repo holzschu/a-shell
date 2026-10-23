@@ -186,6 +186,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         #if DEBUG
         NSLog("Application didFinishLaunchingWithOptions \(String(describing: launchOptions))")
         #endif
+        _ = TerminalThemes.synchronizeSelection()
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
@@ -585,6 +586,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     @objc func settingsChanged() {
         DispatchQueue.main.async {
+            if TerminalThemes.synchronizeSelection() {
+                let themeName = TerminalThemes.savedName
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate = scene.delegate as? SceneDelegate {
+                        if let themeName = themeName {
+                            delegate.restoreTheme(themeName)
+                            if let hexColor = UserDefaults.standard.string(forKey: "backgroundColor") {
+                                delegate.terminalBackgroundColor = UIColor(hexString: hexColor)
+                            }
+                            if let hexColor = UserDefaults.standard.string(forKey: "foregroundColor") {
+                                delegate.terminalForegroundColor = UIColor(hexString: hexColor)
+                            }
+                            if let hexColor = UserDefaults.standard.string(forKey: "cursorColor") {
+                                delegate.terminalCursorColor = UIColor(hexString: hexColor)
+                            }
+                            delegate.writeConfigWindow()
+                        } else {
+                            delegate.applyTheme(nil, name: "")
+                        }
+                    }
+                }
+            }
             let fontErrors = TerminalFonts.refresh()
             for error in fontErrors { NSLog("%@", error) }
             let fontChanged = TerminalFonts.synchronizeSettings()

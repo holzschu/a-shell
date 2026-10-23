@@ -311,9 +311,9 @@
  #define HAVE_SYS_SELECT_H 1
 --- a/src/crypto/crypto_context.cc
 +++ b/src/crypto/crypto_context.cc
-@@ -20,6 +20,7 @@
- #include <openssl/rand.h>
+@@ -23,6 +23,7 @@
  #include <openssl/x509.h>
+ #include <openssl/x509v3.h>
  #ifdef __APPLE__
 +#include <TargetConditionals.h>
  #include <Security/Security.h>

@@ -13,6 +13,16 @@
 
 #define MAX_WORKERS 64
 
+// Dash fixture commands must not source the user's login profile.
+static const char *const nonlogin_environment[] = {"_DASH_LOGIN_SHELL=1", NULL};
+
+// Host bookmarks can resolve /var and /private/var to the same HOME directory.
+static BOOL same_directory(const char *left, const char *right) {
+    struct stat a, b;
+    return left && right && stat(left, &a) == 0 && stat(right, &b) == 0 &&
+        S_ISDIR(a.st_mode) && S_ISDIR(b.st_mode) && a.st_dev == b.st_dev && a.st_ino == b.st_ino;
+}
+
 // Keep each command alive at its public stdin boundary while the other slots start.
 static int capacity_check(void) {
     int (*spawn)(const char *, const char *, unsigned, unsigned, const char *const *, int *, void **) = dlsym(RTLD_DEFAULT, "ashell_pane_spawn");
@@ -37,7 +47,7 @@ static int capacity_check(void) {
         if (![[NSFileManager defaultManager] createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil]) { passed = NO; break; }
         char value[32], command[256];
         snprintf(value, sizeof(value), "POOL_VALUE=slot-%d", i);
-        const char *environment[] = {value, NULL};
+        const char *environment[] = {value, "_DASH_LOGIN_SHELL=1", NULL};
         snprintf(command, sizeof(command), "dash -c 'printf \"READY=%%s,%%s\\n\" \"$ASHELL_WORKER_PID\" \"$POOL_VALUE\"; pwd; read value; printf \"END=%%s\\n\" \"$value\"; exit %d'", i);
         int error = spawn(command, directory.fileSystemRepresentation, 80, 24, environment, &descriptors[i], &jobs[i]);
         if (error) { fprintf(thread_stdout, "slot=%d startup error=%d: FAIL\n", i, error); passed = NO; break; }
@@ -77,7 +87,7 @@ static int capacity_check(void) {
     if (passed) {
         int descriptor = -1;
         void *job = NULL;
-        int error = spawn("dash -c 'exit 0'", root.fileSystemRepresentation, 80, 24, NULL, &descriptor, &job);
+        int error = spawn("dash -c 'exit 0'", root.fileSystemRepresentation, 80, 24, nonlogin_environment, &descriptor, &job);
         BOOL full = error == ENOSPC && descriptor == -1 && job == NULL;
         fprintf(thread_stdout, "worker=%d error=%d: %s\n", capacity + 1, error, full ? "PASS" : "FAIL");
         if (job) release(job);
@@ -128,7 +138,7 @@ static int lifecycle_check(BOOL busy, BOOL closeOnly) {
     BOOL passed = YES;
     for (int i = 0; i < 3; i++) {
         const char *command = i == 1 ? "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; read value; worker-pool-crash'" : busy && i == 0 ? "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; while :; do :; done'" : "dash -c 'printf \"READY=%s\\n\" \"$ASHELL_WORKER_PID\"; read value; printf \"DONE=%s\\n\" \"$value\"; exit 7'";
-        int error = spawn(command, directory.fileSystemRepresentation, 80, 24, NULL, &descriptors[i], &jobs[i]);
+        int error = spawn(command, directory.fileSystemRepresentation, 80, 24, nonlogin_environment, &descriptors[i], &jobs[i]);
         if (error) { fprintf(thread_stdout, "lifecycle slot=%d startup=%d: FAIL\n", i, error); passed = NO; break; }
         struct pollfd ready = {.fd = descriptors[i], .events = POLLIN};
         char output[128] = {0};
@@ -206,22 +216,39 @@ static int completion_check(BOOL identity) {
     NSString *directory = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
     int descriptor = -1, status = -1, result = 0;
     void *job = NULL;
-    const char *environment[] = {"ASHELL_WORKER_PID=-1", "ASHELL_WORKER_ROOT_PID=-1", NULL};
+    const char *environment[] = {"ASHELL_WORKER_PID=-1", "ASHELL_WORKER_ROOT_PID=-1", "_DASH_LOGIN_SHELL=1", NULL};
     const char *command = identity ? "dash -c 'test \"$ASHELL_WORKER_PID\" -gt 0 && test \"$ASHELL_WORKER_ROOT_PID\" -gt 0 && dash -c \"test \\\"\\$ASHELL_WORKER_PID\\\" -gt 0 && test \\\"\\$ASHELL_WORKER_ROOT_PID\\\" -gt 0\" && printf pending-output; exit 7'" : "dash -c 'printf pending-output; exit 7'";
-    int error = spawn(command, directory.fileSystemRepresentation, 80, 24, identity ? environment : NULL, &descriptor, &job);
+    int error = spawn(command, directory.fileSystemRepresentation, 80, 24, identity ? environment : nonlogin_environment, &descriptor, &job);
     if (error) { fprintf(thread_stdout, "completion startup=%d: FAIL\n", error); return 1; }
     NSTimeInterval deadline = NSProcessInfo.processInfo.systemUptime + 10;
     while (!result && NSProcessInfo.processInfo.systemUptime < deadline) {
         result = pollJob(job, &status);
         if (!result) usleep(10000);
     }
+    int first_status = status, repeated_result = 0, repeated_status = -1;
     BOOL passed = result == 1 && status == 7;
     status = -1;
-    passed = passed && pollJob(job, &status) == 1 && status == 7;
+    if (passed) {
+        repeated_result = pollJob(job, &status);
+        repeated_status = status;
+        passed = repeated_result == 1 && status == 7;
+    }
     char output[64] = {0};
     ssize_t count = passed ? read(descriptor, output, sizeof(output) - 1) : -1;
-    passed = passed && count == 14 && !strcmp(output, "pending-output");
-    if (passed) passed = read(descriptor, output, 1) == 0;
+    int read_error = passed && count < 0 ? errno : 0;
+    BOOL output_matches = count == 14 && !strcmp(output, "pending-output");
+    passed = passed && output_matches;
+    ssize_t eof = -1;
+    if (passed) {
+        eof = read(descriptor, output, 1);
+        if (eof < 0) read_error = errno;
+        passed = eof == 0;
+    }
+    if (!passed) {
+        struct pollfd ready = {.fd = descriptor, .events = POLLIN};
+        int ready_result = poll(&ready, 1, 0);
+        fprintf(thread_stdout, "completion result=%d status=%d repeated_result=%d repeated_status=%d bytes=%zd output_matches=%d eof=%zd read_errno=%d readiness=%d revents=%#x\n", result, first_status, repeated_result, repeated_status, count, output_matches, eof, read_error, ready_result, ready.revents);
+    }
     release(job);
     close(descriptor);
     fprintf(thread_stdout, "%s: %s\n", identity ? "Dash identity and nested command lookup" : "status before output drain and repeated status", passed ? "PASS" : "FAIL");
@@ -265,7 +292,8 @@ static int spawn_contract(BOOL nested, BOOL host) {
     int (*pollJob)(void *, int *, struct rusage *, int *) = dlsym(RTLD_DEFAULT, nested ? (host ? "ashell_worker_host_poll_usage" : "ashell_worker_poll_usage") : "ashell_pane_poll_usage");
     void (*release)(void *) = dlsym(RTLD_DEFAULT, nested ? (host ? "ashell_worker_host_release" : "ashell_worker_release") : "ashell_pane_release");
     if (!spawn || !pollJob || !release) { fputs("spawn contract unavailable: FAIL\n", thread_stdout); return 1; }
-    NSString *home = nested ? @(getenv("HOME")) : NSHomeDirectory();
+    // Exercise a caller HOME spelling that the worker bookmark may normalize.
+    NSString *home = nested ? @(getenv("HOME")) : [NSHomeDirectory() stringByAppendingString:@"/."];
     NSString *directory = [home stringByAppendingPathComponent:@"Documents"];
     NSString *homeValue = [@"HOME=" stringByAppendingString:home];
     NSString *expected = [@"POOL_EXPECTED_HOME=" stringByAppendingString:home];
@@ -313,7 +341,11 @@ static int spawn_contract(BOOL nested, BOOL host) {
 int worker_pool_nested_main(int argc, char **argv) {
     const char *home = getenv("HOME"), *expected = getenv("POOL_EXPECTED_HOME");
     const char *root = ios_getenv("ASHELL_WORKER_ROOT_PID");
-    if (!root || atoi(root) != ios_currentPid() || !home || !expected || strcmp(home, expected) || spawn_contract(YES, NO)) return 1;
+    if (!root || atoi(root) != ios_currentPid() || !same_directory(home, expected)) {
+        fprintf(thread_stderr, "nested context root=%s pid=%d home_same=%d home=%s expected=%s\n", root ?: "missing", ios_currentPid(), same_directory(home, expected), home ?: "missing", expected ?: "missing");
+        return 1;
+    }
+    if (spawn_contract(YES, NO)) return 1;
     fputs("PAYLOAD\n", thread_stdout);
     fputs("ERROR\n", thread_stderr);
     return 7;
@@ -366,9 +398,9 @@ int worker_pool_payload_main(int argc, char **argv) {
     const char *temporary = getenv("TMPDIR");
     const char *parent = getenv("POOL_PARENT_PID");
     const char *root = ios_getenv("ASHELL_WORKER_ROOT_PID");
-    if (!root || atoi(root) != ios_currentPid() || !home || !expected || strcmp(home, expected) || !temporary ||
+    if (!root || atoi(root) != ios_currentPid() || !home || !expected || !same_directory(home, expected) || !temporary ||
         strcmp(temporary, NSTemporaryDirectory().fileSystemRepresentation) || !parent || getpid() == atoi(parent) || ios_isatty(1)) {
-        fprintf(thread_stderr, "payload root=%s pid=%d home=%d tmp_domain=%d process_distinct=%d tty=%d\n", root ?: "missing", ios_currentPid(), home && expected && !strcmp(home, expected), temporary && !strcmp(temporary, NSTemporaryDirectory().fileSystemRepresentation), parent && getpid() != atoi(parent), ios_isatty(1));
+        fprintf(thread_stderr, "payload root=%s pid=%d home=%d tmp_domain=%d process_distinct=%d tty=%d\n", root ?: "missing", ios_currentPid(), home && expected && same_directory(home, expected), temporary && !strcmp(temporary, NSTemporaryDirectory().fileSystemRepresentation), parent && getpid() != atoi(parent), ios_isatty(1));
         return 1;
     }
     NSString *file = [@(temporary) stringByAppendingPathComponent:NSUUID.UUID.UUIDString];
@@ -403,7 +435,7 @@ int worker_pool_check_main(int argc, char **argv) {
             return 1;
         }
         NSString *directory = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
-        const char *environment[] = {"POOL_VALUE=isolated", NULL};
+        const char *environment[] = {"POOL_VALUE=isolated", "_DASH_LOGIN_SHELL=1", NULL};
         int descriptor = -1;
         void *job = NULL;
         int error = spawn("dash -c 'printf \"WORKER=%s\\n\" \"$POOL_VALUE\"'", directory.fileSystemRepresentation, 80, 24, environment, &descriptor, &job);
