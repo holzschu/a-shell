@@ -517,7 +517,7 @@
 	<array>
 		<string>SSHKeygenStock.framework/SSHKeygenStock</string>
 		<string>ashell_ssh_keygen_main</string>
-		<string>ABHLQXceghiklopquvxyC:D:E:F:G:I:J:K:M:N:O:P:R:S:T:V:W:Z:a:b:f:g:j:m:n:r:s:t:z:</string>
+		<string>ABHLQXceghiklopquvxyC:D:E:F:G:I:J:K:M:N:O:P:R:S:T:V:W:Y:Z:a:b:f:g:j:m:n:r:s:t:w:z:</string>
 		<string>file</string>
 	</array>
 	<key>ssh-agent</key>
