@@ -117,15 +117,21 @@ def audit_binary(binary: Path, platform: str, maximum: str, signed: bool) -> dic
 def audit_framework(root: Path, maximum: str) -> list[dict]:
     with (root / "Info.plist").open("rb") as source:
         libraries = plistlib.load(source)["AvailableLibraries"]
+    simulator_id = (
+        "ios-arm64-simulator"
+        if root.name == "node.xcframework"
+        else "ios-arm64_x86_64-simulator"
+    )
+    simulator_arches = {"arm64"} if root.name == "node.xcframework" else {"arm64", "x86_64"}
     expected = {
         "ios-arm64": {"arm64"},
-        "ios-arm64_x86_64-simulator": {"arm64", "x86_64"},
+        simulator_id: simulator_arches,
     }
     if len(libraries) != 2 or {item["LibraryIdentifier"] for item in libraries} != set(
         expected
     ):
         raise ValueError(
-            "Require exactly ios-arm64 and ios-arm64_x86_64-simulator slices"
+            f"Require exactly ios-arm64 and {simulator_id} slices"
         )
     rows, destinations = [], set()
     for library in libraries:
@@ -155,12 +161,10 @@ def audit_framework(root: Path, maximum: str) -> list[dict]:
             raise ValueError(f"{product}: duplicate platform/architecture")
         destinations.update((variant, arch) for arch in actual)
         rows.append(row)
-    if destinations != {
-        ("device", "arm64"),
-        ("simulator", "arm64"),
-        ("simulator", "x86_64"),
+    if destinations != {("device", "arm64")} | {
+        ("simulator", arch) for arch in simulator_arches
     }:
-        raise ValueError("Require arm64 device and universal arm64/x86_64 Simulator")
+        raise ValueError(f"Require arm64 device and {simulator_id}")
     return rows
 
 

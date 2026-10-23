@@ -77,7 +77,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [device, simulator, simulator-x86_64]
+        platform: [device, simulator]
     steps:
       - uses: actions/checkout@v7
         with:

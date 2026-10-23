@@ -11,7 +11,6 @@ stage=${1:-node}
 ios_system=${IOS_SYSTEM_XCFRAMEWORK:-$app/xcfs/.build/artifacts/xcfs/ios_system/ios_system.xcframework}
 node_framework=${NODE_IOS_XCFRAMEWORK:-$app/xcfs/node.xcframework}
 jobs=${NODE_IOS_JOBS:-4}
-simulator_arch=${NODE_IOS_SIMULATOR_ARCH:-arm64}
 platforms=${NODE_IOS_PLATFORMS:-"simulator device"}
 simulator_slice=${IOS_SYSTEM_SIMULATOR_SLICE:-ios-arm64-simulator}
 libraries="ada brotli cares crdtp icui18n icuucx icudata icustubdata histogram llhttp nbytes ncrypto ncrypto_engine nghttp2 sfparse merve node node_base openssl simdjson simdutf sqlite uv uvwasi ffi highway v8_base_without_compiler v8_compiler v8_initializers v8_libbase v8_libplatform v8_snapshot v8_zlib v8_init abseil zlib zlib_data_chunk_simd zlib_adler32_simd zstd"
@@ -42,7 +41,6 @@ apply_patches() {
 }
 check() {
   [[ $(uname -m) == arm64 ]] || die "Apple Silicon is required."
-  [[ $simulator_arch == arm64 || $simulator_arch == x86_64 ]] || die "Simulator architecture must be arm64 or x86_64."
   command -v xcodebuild >/dev/null || die "xcodebuild not found; install Xcode."
   case $stage in
     node | device)
@@ -159,11 +157,9 @@ apply() (
         cd "$source"
         # configure probes the bundled OpenSSL with $CC and the include variables; drop user overrides so the build matches a clean shell.
         unset CC CXX CC_host CXX_host CC_target CXX_target CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH
-        local cpu=$simulator_arch
-        [[ $cpu != x86_64 ]] || cpu=x64
-        [[ $stage != device ]] || cpu=arm64
+        local cpu=arm64
         # GYP suppresses -arch during cross compilation; give its target compilers an explicit triple.
-        local target=$simulator_arch-apple-ios16.0-simulator
+        local target=arm64-apple-ios16.0-simulator
         [[ $stage != device ]] || target=arm64-apple-ios16.0
         export CC_target="$(xcrun -f clang) -target $target"
         export CXX_target="$(xcrun -f clang++) -target $target"
@@ -231,7 +227,7 @@ PYABI
       for platform in $platforms; do
         [[ -d $cache/$platform-libs ]] || continue
         sdk=iphonesimulator
-        target=$simulator_arch-apple-ios16.0-simulator
+        target=arm64-apple-ios16.0-simulator
         slice=$simulator_slice
         if [[ $platform == device ]]; then
           sdk=iphoneos

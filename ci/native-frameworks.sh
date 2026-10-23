@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Build one pinned app command, including both Simulator architectures.
+# Build one pinned app command for device and Simulator.
 set -euo pipefail
 app=$(cd "$(dirname "$0")/.." && pwd -P)
 product=${1:?Usage: ci/native-frameworks.sh helix|fd|fzf|navi|gitoxide|Ruff|rg|node}
 recipe=$product
 node_slice=${2:-}
 case $node_slice in
-  ""|device|simulator|simulator-x86_64) ;;
+  ""|device|simulator) ;;
   *) echo "Unknown Node slice: $node_slice" >&2; exit 2 ;;
 esac
 [[ -z $node_slice || $product == node ]] || { echo "Only Node accepts a slice argument." >&2; exit 2; }
@@ -60,17 +60,12 @@ fi
 
 if [[ $product == node ]]; then
   if [[ -n $node_slice ]]; then
-    arch -x86_64 /usr/bin/true || {
-      echo 'Rosetta 2 is required for Node x64 build-time tools.' >&2
-      exit 1
-    }
     [[ ! -d $work/ios_system.xcframework ]] || rm -rf "$work/ios_system.xcframework"
     xcodebuild -create-xcframework -framework "$work/sdk/$node_slice/ios_system.framework" \
       -output "$work/ios_system.xcframework"
     export IOS_SYSTEM_XCFRAMEWORK=$work/ios_system.xcframework
     export NODE_IOS_XCFRAMEWORK=$work/node-package.xcframework NODE_IOS_JOBS=4
     export IOS_SYSTEM_SIMULATOR_SLICE=ios-arm64-simulator
-    [[ $node_slice != simulator-x86_64 ]] || export IOS_SYSTEM_SIMULATOR_SLICE=ios-x86_64-simulator
     export NODE_IOS_CACHE=$work/node-$node_slice
     node_platform=simulator
     node_stage=node
@@ -78,8 +73,7 @@ if [[ $product == node ]]; then
       node_platform=device
       node_stage=device
     fi
-    export NODE_IOS_PLATFORMS=$node_platform NODE_IOS_SIMULATOR_ARCH=arm64
-    [[ $node_slice != simulator-x86_64 ]] || export NODE_IOS_SIMULATOR_ARCH=x86_64
+    export NODE_IOS_PLATFORMS=$node_platform
     bash "$app/node/build.sh" "$node_stage"
     bash "$app/node/build.sh" package
     tar -czf "$dist/node-$node_slice.tar.gz" -C "$NODE_IOS_CACHE/framework" "$node_platform"
@@ -93,16 +87,15 @@ if [[ $product == node ]]; then
     (cd "$dist"; shasum -a 256 "${files[@]}" >"node-$node_slice.sha256")
     exit 0
   fi
-  # Join the three immutable slice artifacts; this job never recompiles Node.
+  # Join the two immutable slice artifacts; this job never recompiles Node.
   input=$app/.build/node-slices
-  for platform in device simulator simulator-x86_64; do
+  for platform in device simulator; do
     (cd "$input"; shasum -a 256 -c "node-$platform.sha256")
     mkdir -p "$work/prebuilt/$platform"
     tar -xzf "$input/node-$platform.tar.gz" -C "$work/prebuilt/$platform"
   done
   device=$work/prebuilt/device/device/node.framework
   simulator=$work/prebuilt/simulator/simulator/node.framework
-  intel=$work/prebuilt/simulator-x86_64/simulator/node.framework
   cp "$input/node-npm.zip" "$input/node-fetch.zip" "$dist/"
 else
   recipe=$product
@@ -117,12 +110,13 @@ else
   device=$work/command/device/$product.framework
   simulator=$work/command/simulator/$product.framework
   intel=$work/command/simulator-x86_64/$product.framework
+  mkdir -p "$work/universal"
+  ditto "$simulator" "$work/universal/$product.framework"
+  xcrun lipo -create "$simulator/$product" "$intel/$product" \
+    -output "$work/universal/$product.framework/$product"
+  simulator=$work/universal/$product.framework
 fi
 
-mkdir -p "$work/universal"
-ditto "$simulator" "$work/universal/$product.framework"
-xcrun lipo -create "$simulator/$product" "$intel/$product" \
-  -output "$work/universal/$product.framework/$product"
 case $product in
   helix) symbols=hx_ios_main ;;
   gitoxide) symbols=gix_ios_main ;;
@@ -132,7 +126,7 @@ case $product in
 esac
 printf 'slice\tstripped_bytes\tgzip_bytes\n' >"$dist/$product.sizes.tsv"
 slice=device
-for binary in "$device/$product" "$work/universal/$product.framework/$product"; do
+for binary in "$device/$product" "$simulator/$product"; do
   xcrun strip -S -x "$binary"
   for arch in $(xcrun lipo -archs "$binary"); do
     exports=$(xcrun nm -arch "$arch" -gU "$binary")
@@ -148,7 +142,7 @@ for binary in "$device/$product" "$work/universal/$product.framework/$product"; 
 done
 [[ ! -d $work/$product.xcframework ]] || rm -rf "$work/$product.xcframework"
 xcodebuild -create-xcframework -framework "$device" \
-  -framework "$work/universal/$product.framework" -output "$work/$product.xcframework"
+  -framework "$simulator" -output "$work/$product.xcframework"
 ditto -c -k --norsrc --keepParent "$work/$product.xcframework" "$dist/$product.xcframework.zip"
 minimum=14.0
 [[ $product != node ]] || minimum=16.0
@@ -167,7 +161,7 @@ shasum -a 256 "$dist/$product.xcframework.zip"
 cat >"$dist/$product.release.md" <<EOF
 ## $product
 
-Device arm64 and universal arm64/x86_64 Simulator; minimum iOS $minimum.
+Device arm64; Simulator arm64 for Node, universal arm64/x86_64 for other products; minimum iOS $minimum.
 Sources and patches: the repository's $recipe/build.sh recipe.
 Link dependency: ios_system $revision, archive SHA256 $checksum.
 Build source: ${GITHUB_SHA:-local}.
