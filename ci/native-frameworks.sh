@@ -4,6 +4,12 @@ set -euo pipefail
 app=$(cd "$(dirname "$0")/.." && pwd -P)
 product=${1:?Usage: ci/native-frameworks.sh helix|fd|fzf|navi|gitoxide|Ruff|rg|node}
 recipe=$product
+node_slice=${2:-}
+case $node_slice in
+  ""|device|simulator|simulator-x86_64) ;;
+  *) echo "Unknown Node slice: $node_slice" >&2; exit 2 ;;
+esac
+[[ -z $node_slice || $product == node ]] || { echo "Only Node accepts a slice argument." >&2; exit 2; }
 case $product in
   helix|fd|fzf|navi|gitoxide|Ruff|rg|node) ;;
   *) echo "Unknown native product: $product" >&2; exit 2 ;;
@@ -22,61 +28,82 @@ export GITOXIDE_BUILD_CACHE=$work/command RUFF_BUILD_CACHE=$work/command RG_BUIL
 # All commands link the same public ios_system ABI. Never use a developer's SDK cache.
 revision=df998e76cea0266bd3615bb9a1f4f7d745f318a2
 checksum=6d2201c1dee131b831b8108b578ede560277d1c205fd8c64f2fb9dcd70e7baca
-if [[ ! -f $work/ios-system.tar.gz ]]; then
-  curl -fLsS --retry 2 --connect-timeout 15 --max-time 300 \
-    "https://codeload.github.com/holzschu/ios_system/tar.gz/$revision" -o "$work/ios-system.tar.gz.part"
-  echo "$checksum  $work/ios-system.tar.gz.part" | shasum -a 256 -c -
-  mv "$work/ios-system.tar.gz.part" "$work/ios-system.tar.gz"
-fi
-echo "$checksum  $work/ios-system.tar.gz" | shasum -a 256 -c -
-if [[ ! -d $work/ios-system ]]; then
-  mkdir -p "$work/ios-system"
-  tar -xzf "$work/ios-system.tar.gz" --strip-components=1 -C "$work/ios-system"
-fi
-for platform in device simulator simulator-x86_64; do
-  sdk=iphonesimulator
-  arch=arm64
-  [[ $platform != device ]] || sdk=iphoneos
-  [[ $platform != simulator-x86_64 ]] || arch=x86_64
-  if ! xcodebuild -project "$work/ios-system/ios_system.xcodeproj" -target ios_system \
-    -configuration Release -sdk "$sdk" -jobs 4 ARCHS="$arch" ONLY_ACTIVE_ARCH=NO \
-    IPHONEOS_DEPLOYMENT_TARGET=14.0 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
-    CONFIGURATION_BUILD_DIR="$work/sdk/$platform" build >"$work/sdk-$platform.log" 2>&1; then
-    tail -n 60 "$work/sdk-$platform.log" >&2
-    exit 1
+if [[ $product != node || -n $node_slice ]]; then
+  if [[ ! -f $work/ios-system.tar.gz ]]; then
+    curl -fLsS --retry 2 --connect-timeout 15 --max-time 300 \
+      "https://codeload.github.com/holzschu/ios_system/tar.gz/$revision" -o "$work/ios-system.tar.gz.part"
+    echo "$checksum  $work/ios-system.tar.gz.part" | shasum -a 256 -c -
+    mv "$work/ios-system.tar.gz.part" "$work/ios-system.tar.gz"
   fi
-done
+  echo "$checksum  $work/ios-system.tar.gz" | shasum -a 256 -c -
+  if [[ ! -d $work/ios-system ]]; then
+    mkdir -p "$work/ios-system"
+    tar -xzf "$work/ios-system.tar.gz" --strip-components=1 -C "$work/ios-system"
+  fi
+  sdk_platforms="device simulator simulator-x86_64"
+  [[ $product != node ]] || sdk_platforms=$node_slice
+  for platform in $sdk_platforms; do
+    sdk=iphonesimulator
+    arch=arm64
+    [[ $platform != device ]] || sdk=iphoneos
+    [[ $platform != simulator-x86_64 ]] || arch=x86_64
+    if ! xcodebuild -project "$work/ios-system/ios_system.xcodeproj" -target ios_system \
+      -configuration Release -sdk "$sdk" -jobs 4 ARCHS="$arch" ONLY_ACTIVE_ARCH=NO \
+      IPHONEOS_DEPLOYMENT_TARGET=14.0 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+      CONFIGURATION_BUILD_DIR="$work/sdk/$platform" build >"$work/sdk-$platform.log" 2>&1; then
+      tail -n 60 "$work/sdk-$platform.log" >&2
+      exit 1
+    fi
+  done
+
+fi
 
 if [[ $product == node ]]; then
-  arch -x86_64 /usr/bin/true || {
-    echo 'Rosetta 2 is required for Node x64 build-time tools.' >&2
-    exit 1
-  }
-  # Node's packaging recipe consumes an xcframework rather than loose frameworks.
-  mkdir -p "$work/sdk/universal"
-  ditto "$work/sdk/simulator/ios_system.framework" "$work/sdk/universal/ios_system.framework"
-  xcrun lipo -create "$work/sdk/simulator/ios_system.framework/ios_system" \
-    "$work/sdk/simulator-x86_64/ios_system.framework/ios_system" \
-    -output "$work/sdk/universal/ios_system.framework/ios_system"
-  [[ ! -d $work/ios_system.xcframework ]] || rm -rf "$work/ios_system.xcframework"
-  xcodebuild -create-xcframework -framework "$work/sdk/device/ios_system.framework" \
-    -framework "$work/sdk/universal/ios_system.framework" -output "$work/ios_system.xcframework"
-  export IOS_SYSTEM_XCFRAMEWORK=$work/ios_system.xcframework
-  export NODE_IOS_XCFRAMEWORK=$work/node-package.xcframework
-  export IOS_SYSTEM_SIMULATOR_SLICE=ios-arm64_x86_64-simulator NODE_IOS_JOBS=4
-  export NODE_IOS_CACHE=$work/node-arm64
-  bash "$app/node/build.sh" node
-  bash "$app/node/build.sh" device
-  bash "$app/node/build.sh" package
-  export NODE_IOS_CACHE=$work/node-x86_64 NODE_IOS_SIMULATOR_ARCH=x86_64 NODE_IOS_PLATFORMS=simulator
-  bash "$app/node/build.sh" node
-  bash "$app/node/build.sh" package
-  device=$work/node-arm64/framework/device/node.framework
-  simulator=$work/node-arm64/framework/simulator/node.framework
-  intel=$work/node-x86_64/framework/simulator/node.framework
-  # These scripts belong in app resources, never inside a signed framework.
-  ditto -c -k --norsrc "$app/Resources/npm" "$dist/node-npm.zip"
-  ditto -c -k --norsrc "$app/Resources/node-fetch" "$dist/node-fetch.zip"
+  if [[ -n $node_slice ]]; then
+    arch -x86_64 /usr/bin/true || {
+      echo 'Rosetta 2 is required for Node x64 build-time tools.' >&2
+      exit 1
+    }
+    [[ ! -d $work/ios_system.xcframework ]] || rm -rf "$work/ios_system.xcframework"
+    xcodebuild -create-xcframework -framework "$work/sdk/$node_slice/ios_system.framework" \
+      -output "$work/ios_system.xcframework"
+    export IOS_SYSTEM_XCFRAMEWORK=$work/ios_system.xcframework
+    export NODE_IOS_XCFRAMEWORK=$work/node-package.xcframework NODE_IOS_JOBS=4
+    export IOS_SYSTEM_SIMULATOR_SLICE=ios-arm64-simulator
+    [[ $node_slice != simulator-x86_64 ]] || export IOS_SYSTEM_SIMULATOR_SLICE=ios-x86_64-simulator
+    export NODE_IOS_CACHE=$work/node-$node_slice
+    node_platform=simulator
+    node_stage=node
+    if [[ $node_slice == device ]]; then
+      node_platform=device
+      node_stage=device
+    fi
+    export NODE_IOS_PLATFORMS=$node_platform NODE_IOS_SIMULATOR_ARCH=arm64
+    [[ $node_slice != simulator-x86_64 ]] || export NODE_IOS_SIMULATOR_ARCH=x86_64
+    bash "$app/node/build.sh" "$node_stage"
+    bash "$app/node/build.sh" package
+    tar -czf "$dist/node-$node_slice.tar.gz" -C "$NODE_IOS_CACHE/framework" "$node_platform"
+    files=("node-$node_slice.tar.gz")
+    if [[ $node_slice == device ]]; then
+      # These scripts belong in app resources, never in a signed framework.
+      ditto -c -k --norsrc "$app/Resources/npm" "$dist/node-npm.zip"
+      ditto -c -k --norsrc "$app/Resources/node-fetch" "$dist/node-fetch.zip"
+      files+=(node-npm.zip node-fetch.zip)
+    fi
+    (cd "$dist"; shasum -a 256 "${files[@]}" >"node-$node_slice.sha256")
+    exit 0
+  fi
+  # Join the three immutable slice artifacts; this job never recompiles Node.
+  input=$app/.build/node-slices
+  for platform in device simulator simulator-x86_64; do
+    (cd "$input"; shasum -a 256 -c "node-$platform.sha256")
+    mkdir -p "$work/prebuilt/$platform"
+    tar -xzf "$input/node-$platform.tar.gz" -C "$work/prebuilt/$platform"
+  done
+  device=$work/prebuilt/device/device/node.framework
+  simulator=$work/prebuilt/simulator/simulator/node.framework
+  intel=$work/prebuilt/simulator-x86_64/simulator/node.framework
+  cp "$input/node-npm.zip" "$input/node-fetch.zip" "$dist/"
 else
   recipe=$product
   [[ $product != Ruff ]] || recipe=ruff

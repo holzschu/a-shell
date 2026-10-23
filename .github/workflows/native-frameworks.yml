@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        product: [helix, fd, fzf, navi, gitoxide, Ruff, rg, node]
+        product: [helix, fd, fzf, navi, gitoxide, Ruff, rg]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -33,7 +33,7 @@ jobs:
           go-version: '1.27.2'
           cache: false
       - name: Rust toolchain
-        if: matrix.product != 'fzf' && matrix.product != 'node'
+        if: matrix.product != 'fzf'
         env:
           PRODUCT: ${{ matrix.product }}
         run: |
@@ -71,8 +71,66 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
           path: .build/native/**/*.log
+  node-slice:
+    runs-on: macos-26
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [device, simulator, simulator-x86_64]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Toolchain and resources
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphonesimulator --show-sdk-version
+          df -h .
+          sysctl hw.memsize
+          sysctl vm.swapusage
+      - name: Build pinned Node slice
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: nice -n 15 bash ci/native-frameworks.sh node "$PLATFORM"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: node-slice-${{ matrix.platform }}
+          include-hidden-files: true
+          if-no-files-found: error
+          path: .build/dist/*
+      - name: Retain diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: node-slice-${{ matrix.platform }}-logs
+          include-hidden-files: true
+          if-no-files-found: ignore
+          path: .build/native/**/*.log
+  node:
+    needs: node-slice
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: node-slice-*
+          merge-multiple: true
+          path: .build/node-slices
+      - name: Package and audit Node
+        run: nice -n 15 bash ci/native-frameworks.sh node
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-node
+          include-hidden-files: true
+          if-no-files-found: error
+          path: .build/dist/*
   release:
-    needs: build
+    needs: [build, node]
     if: github.repository == 'holzschu/a-shell' && startsWith(github.ref, 'refs/tags/native-')
     runs-on: ubuntu-latest
     permissions:

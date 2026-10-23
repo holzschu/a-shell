@@ -66,11 +66,11 @@ check() {
           }
         done
       done
-      [[ -f $ios_system/ios-arm64/ios_system.framework/Headers/ios_system.h && -f $ios_system/$simulator_slice/ios_system.framework/Headers/ios_system.h ]] || die "IOS_SYSTEM_XCFRAMEWORK $ios_system has no ios_system slices; run build.sh sdk."
       local slice
       for platform in $platforms; do
         slice=$simulator_slice
         [[ $platform != device ]] || slice=ios-arm64
+        [[ -f $ios_system/$slice/ios_system.framework/Headers/ios_system.h ]] || die "IOS_SYSTEM_XCFRAMEWORK $ios_system has no $slice headers; run build.sh sdk."
         if ! xcrun nm -gU "$ios_system/$slice/ios_system.framework/ios_system" | grep ' T _ashell_register_owned_streams$' >/dev/null; then
           echo 'Build the patched ios_system first: build.sh sdk' >&2
           exit 1
@@ -158,10 +158,15 @@ apply() (
       (
         cd "$source"
         # configure probes the bundled OpenSSL with $CC and the include variables; drop user overrides so the build matches a clean shell.
-        unset CC CXX CC_host CXX_host CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH
+        unset CC CXX CC_host CXX_host CC_target CXX_target CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH
         local cpu=$simulator_arch
         [[ $cpu != x86_64 ]] || cpu=x64
         [[ $stage != device ]] || cpu=arm64
+        # GYP suppresses -arch during cross compilation; give its target compilers an explicit triple.
+        local target=$simulator_arch-apple-ios16.0-simulator
+        [[ $stage != device ]] || target=arm64-apple-ios16.0
+        export CC_target="$(xcrun -f clang) -target $target"
+        export CXX_target="$(xcrun -f clang++) -target $target"
         export GYP_DEFINES="target_arch=$cpu host_os=mac target_os=ios v8_enable_turbofan=0 v8_enable_sparkplug=0 v8_enable_maglev=0 v8_enable_drumbrake=0"
         # GYP's lite flag does not itself disable compiler source sets in this branch.
         local iossim=true
@@ -171,7 +176,7 @@ apply() (
         else
           configure_args+=(--ios-simulator)
         fi
-        if [[ ! -f config.gypi ]] || ! python3 -c 'import json,sys; v=json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]; sys.exit(not (v["iossim"] == sys.argv[1] and v["target_arch"] == sys.argv[2] and v["icu_small"] == "true" and v["v8_enable_lite_mode"] == 1 and v["v8_enable_webassembly"] == 0 and v["v8_enable_pointer_compression"] == 0 and v["v8_enable_maglev"] == 0 and v["node_v8_options"] == "--jitless" and v["openssl_version"] >= 0x3000000f))' "$iossim" "$cpu" || [[ tools/v8_gypfiles/v8.gyp -nt out/Makefile || tools/v8_gypfiles/features.gypi -nt out/Makefile || tools/gyp/pylib/gyp/generator/make.py -nt out/Makefile || common.gypi -nt out/Makefile ]]; then
+        if [[ ! -f config.gypi ]] || ! python3 -c 'import json,sys; v=json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]; sys.exit(not (v["iossim"] == sys.argv[1] and v["target_arch"] == sys.argv[2] and v["icu_small"] == "true" and v["v8_enable_lite_mode"] == 1 and v["v8_enable_webassembly"] == 0 and v["v8_enable_pointer_compression"] == 0 and v["v8_enable_maglev"] == 0 and v["node_v8_options"] == "--jitless" and v["openssl_version"] >= 0x3000000f))' "$iossim" "$cpu" || [[ tools/v8_gypfiles/v8.gyp -nt out/Makefile || tools/v8_gypfiles/features.gypi -nt out/Makefile || tools/gyp/pylib/gyp/generator/make.py -nt out/Makefile || common.gypi -nt out/Makefile || $here/build.sh -nt config.gypi ]]; then
           logged "$cache/configure.log" ./configure "${configure_args[@]}"
         fi
         # A failed probe leaves openssl_version 0 (only a warning); engine.cc then builds without engine compat and make dies in ncrypto.
