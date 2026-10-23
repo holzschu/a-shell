@@ -1,4 +1,5 @@
 #import "PaneWire.h"
+#import "HostPane.h"
 #include "NativePane.h"
 #include <errno.h>
 #include <dirent.h>
@@ -28,6 +29,7 @@ static void log_host_library(const char *phase) {
 @property(nonatomic, strong) NSFileHandle *output;
 @property(nonatomic, strong) NSFileHandle *errorOutput;
 @property(atomic) BOOL interrupted;
+@property(atomic) BOOL cancelled;
 @property(nonatomic, strong) NSMutableArray<NSURL *> *directories;
 @property(nonatomic, copy) NSString *probeDirectory;
 @end
@@ -49,9 +51,10 @@ static void log_host_library(const char *phase) {
 // A connection owns its descendants; invalidation releases the whole subtree.
 @interface BrokerChild : NSObject
 @property(nonatomic) void *job;
+@property(nonatomic) BOOL host;
 @end
 @implementation BrokerChild
-- (void)dealloc { if (_job) ashell_pane_release(_job); }
+- (void)dealloc { if (_job) { if (_host) ashell_host_pane_release(_job); else ashell_pane_release(_job); } }
 @end
 
 @interface SpawnBroker : NSObject <AShellSpawnBrokerWire>
@@ -63,14 +66,27 @@ static void log_host_library(const char *phase) {
     return self;
 }
 - (void)spawnChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
-    const char **values = calloc(env.count + 1, sizeof(*values));
+    [self spawn:command cwd:cwd env:env cols:cols rows:rows tty:tty separateStderr:separate host:NO reply:reply];
+}
+- (void)spawnHostChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
+    [self spawn:command cwd:cwd env:env cols:cols rows:rows tty:tty separateStderr:separate host:YES reply:reply];
+}
+- (void)spawn:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate host:(BOOL)host reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
+    const char **values = calloc(env.count + 2, sizeof(*values));
     if (!values) { reply(ENOMEM, nil, nil, nil); return; }
-    for (NSUInteger i = 0; i < env.count; i++) values[i] = env[i].UTF8String;
+    NSUInteger count = 0;
+    for (NSString *value in env) {
+        if (host && ([value hasPrefix:@"ASHELL_WORKER_PID="] || [value hasPrefix:@"ASHELL_WORKER_ROOT_PID="] || [value hasPrefix:@"TMPDIR="])) continue;
+        values[count++] = value.UTF8String;
+    }
+    NSString *temporary = host ? [@"TMPDIR=" stringByAppendingString:NSTemporaryDirectory()] : nil;
+    if (temporary) values[count++] = temporary.UTF8String;
     int fd = -1;
     BrokerChild *child = [BrokerChild new];
+    child.host = host;
     ashell_pane_options options = { .size = sizeof(options), .tty = tty, .separate_stderr = separate };
     void *job = NULL;
-    int error = ashell_pane_spawn_ex(command.UTF8String, cwd.fileSystemRepresentation, cols, rows, values, &options, &fd, &job);
+    int error = (host ? ashell_host_pane_spawn_ex : ashell_pane_spawn_ex)(command.UTF8String, cwd.fileSystemRepresentation, cols, rows, values, &options, &fd, &job);
     free(values);
     if (error) { reply(error, nil, nil, nil); return; }
     child.job = job;
@@ -89,16 +105,24 @@ static void log_host_library(const char *phase) {
     int status = 0;
     int available = 0;
     struct rusage usage;
-    int result = child ? ashell_pane_poll_usage(child.job, &status, &usage, &available) : -ESRCH;
+    int result = child ? (child.host ? ashell_host_pane_poll_usage : ashell_pane_poll_usage)(child.job, &status, &usage, &available) : -ESRCH;
     reply(result, status, result == 1 && available ? [NSData dataWithBytes:&usage length:sizeof(usage)] : nil);
 }
 - (void)closeChildInput:(NSString *)token reply:(void (^)(int))reply {
     BrokerChild *child = [self child:token];
-    reply(child ? ashell_pane_close_stdin(child.job) : ESRCH);
+    reply(child ? (child.host ? ashell_host_pane_close_stdin : ashell_pane_close_stdin)(child.job) : ESRCH);
 }
 - (void)cancelChild:(NSString *)token reply:(void (^)(int))reply {
     BrokerChild *child = [self child:token];
-    reply(child ? ashell_pane_cancel(child.job) : ESRCH);
+    reply(child ? (child.host ? ashell_host_pane_cancel : ashell_pane_cancel)(child.job) : ESRCH);
+}
+- (void)resizeChild:(NSString *)token cols:(unsigned)cols rows:(unsigned)rows reply:(void (^)(int))reply {
+    BrokerChild *child = [self child:token];
+    reply(child ? (child.host ? ashell_host_pane_resize : ashell_pane_resize)(child.job, cols, rows) : ESRCH);
+}
+- (void)interruptChild:(NSString *)token reply:(void (^)(int))reply {
+    BrokerChild *child = [self child:token];
+    reply(child ? (child.host ? ashell_host_pane_interrupt : ashell_pane_interrupt)(child.job) : ESRCH);
 }
 - (void)releaseChild:(NSString *)token { @synchronized (self) { [self.children removeObjectForKey:token]; } }
 @end
@@ -224,8 +248,8 @@ int ashell_pane_poll_usage(void *job, int *status_out, struct rusage *usage_out,
     if (usage_available) *usage_available = 0;
     RemotePane *pane = (__bridge RemotePane *)job;
     if (!pane || !status_out) return -EINVAL;
-    // 137 is this backend's lost-worker status, not a recovered waitpid status.
-    if (pane.interrupted) { *status_out = 137; return 1; }
+    if (pane.cancelled) { *status_out = 137; return 1; }
+    if (pane.interrupted) return -EPIPE;
     // The worker closes its socket streams before publishing completion. A
     // hangup is observable even with unread output; keep polling local until
     // then instead of waking the worker with an XPC request on every poll.
@@ -243,7 +267,7 @@ int ashell_pane_poll_usage(void *job, int *status_out, struct rusage *usage_out,
             if (usage_available) *usage_available = 1;
         }
     }];
-    if (result == -EPIPE) { pane.interrupted = YES; *status_out = 137; return 1; }
+    if (result == -EPIPE) pane.interrupted = YES;
     return result;
 }
 int ashell_pane_resize(void *job, unsigned cols, unsigned rows) {
@@ -270,6 +294,7 @@ int ashell_pane_interrupt(void *job) {
 int ashell_pane_cancel(void *job) {
     RemotePane *pane = (__bridge RemotePane *)job;
     if (!pane) return EINVAL;
+    pane.cancelled = YES;
     pane.interrupted = YES;
     [pane.proxy terminate:^{}];
     ashell_extension_disconnect(pane.connection);

@@ -524,11 +524,14 @@ static void *run_pane(void *cookie) {
                 if (ios_setenv_pid(job->env[i], equals + 1, 1, pid)) error = EINVAL;
                 *equals = '=';
             }
+#ifndef ASHELL_HOST_PANE
             // Identify this worker's root by its reserved command PID. Setup
             // calls cannot consume it, and nested children have different PIDs.
             char root_pid[32];
             snprintf(root_pid, sizeof(root_pid), "%d", pid);
             if (ios_setenv_pid("ASHELL_WORKER_ROOT_PID", root_pid, 1, pid)) error = EINVAL;
+            if (setenv("ASHELL_WORKER_ROOT_PID", root_pid, 1)) error = errno;
+#endif
             pthread_mutex_lock(&job->mutex);
             job->initialized = 1;
             pthread_cond_signal(&job->ready);

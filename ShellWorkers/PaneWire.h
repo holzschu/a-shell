@@ -18,10 +18,13 @@ NSObject<AShellPaneWire> *ashell_worker_service(void);
 // A worker asks its owning host to allocate another isolated process.
 @protocol AShellSpawnBrokerWire
 - (void)spawnChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply;
+- (void)spawnHostChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply;
 - (void)pollChild:(NSString *)token reply:(void (^)(int, int))reply;
 - (void)pollChildUsage:(NSString *)token reply:(void (^)(int, int, NSData *))reply;
 - (void)closeChildInput:(NSString *)token reply:(void (^)(int))reply;
 - (void)cancelChild:(NSString *)token reply:(void (^)(int))reply;
+- (void)resizeChild:(NSString *)token cols:(unsigned)cols rows:(unsigned)rows reply:(void (^)(int))reply;
+- (void)interruptChild:(NSString *)token reply:(void (^)(int))reply;
 - (void)releaseChild:(NSString *)token;
 @end
 

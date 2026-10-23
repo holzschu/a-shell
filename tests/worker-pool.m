@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/sysctl.h>
+#include "../ShellWorkers/NativePane.h"
 
 
 #define MAX_WORKERS 64
@@ -163,8 +164,8 @@ static int lifecycle_check(BOOL busy, BOOL closeOnly) {
             if (result) break;
             usleep(10000);
         }
-        lost = lost && result == 1 && status == 137;
-        fprintf(thread_stdout, "lost worker status=%d: %s\n", status, lost ? "PASS" : "FAIL");
+        lost = lost && result == -EPIPE && status == -1;
+        fprintf(thread_stdout, "lost worker result=%d status=%d: %s\n", result, status, lost ? "PASS" : "FAIL");
         passed = lost;
         release(jobs[1]); jobs[1] = NULL;
         close(descriptors[1]); descriptors[1] = -1;
@@ -197,7 +198,7 @@ static int lifecycle_check(BOOL busy, BOOL closeOnly) {
 }
 
 // Exit status must not depend on the consumer draining pending output first.
-static int completion_check(void) {
+static int completion_check(BOOL identity) {
     int (*spawn)(const char *, const char *, unsigned, unsigned, const char *const *, int *, void **) = dlsym(RTLD_DEFAULT, "ashell_pane_spawn");
     int (*pollJob)(void *, int *) = dlsym(RTLD_DEFAULT, "ashell_pane_poll");
     void (*release)(void *) = dlsym(RTLD_DEFAULT, "ashell_pane_release");
@@ -205,7 +206,9 @@ static int completion_check(void) {
     NSString *directory = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
     int descriptor = -1, status = -1, result = 0;
     void *job = NULL;
-    int error = spawn("dash -c 'printf pending-output; exit 7'", directory.fileSystemRepresentation, 80, 24, NULL, &descriptor, &job);
+    const char *environment[] = {"ASHELL_WORKER_PID=-1", "ASHELL_WORKER_ROOT_PID=-1", NULL};
+    const char *command = identity ? "dash -c 'test \"$ASHELL_WORKER_PID\" -gt 0 && test \"$ASHELL_WORKER_ROOT_PID\" -gt 0 && dash -c \"test \\\"\\$ASHELL_WORKER_PID\\\" -gt 0 && test \\\"\\$ASHELL_WORKER_ROOT_PID\\\" -gt 0\" && printf pending-output; exit 7'" : "dash -c 'printf pending-output; exit 7'";
+    int error = spawn(command, directory.fileSystemRepresentation, 80, 24, identity ? environment : NULL, &descriptor, &job);
     if (error) { fprintf(thread_stdout, "completion startup=%d: FAIL\n", error); return 1; }
     NSTimeInterval deadline = NSProcessInfo.processInfo.systemUptime + 10;
     while (!result && NSProcessInfo.processInfo.systemUptime < deadline) {
@@ -221,7 +224,7 @@ static int completion_check(void) {
     if (passed) passed = read(descriptor, output, 1) == 0;
     release(job);
     close(descriptor);
-    fprintf(thread_stdout, "status before output drain and repeated status: %s\n", passed ? "PASS" : "FAIL");
+    fprintf(thread_stdout, "%s: %s\n", identity ? "Dash identity and nested command lookup" : "status before output drain and repeated status", passed ? "PASS" : "FAIL");
     return passed ? 0 : 1;
 }
 
@@ -256,10 +259,137 @@ static int limit_check(void) {
     return passed ? 0 : 1;
 }
 
+// Exercise the same public ABI from a host command and from its real worker child.
+static int spawn_contract(BOOL nested, BOOL host) {
+    int (*spawn)(const char *, const char *, unsigned, unsigned, const char *const *, ashell_pane_options *, int *, void **) = dlsym(RTLD_DEFAULT, nested ? (host ? "ashell_worker_host_spawn_ex" : "ashell_worker_spawn_ex") : "ashell_pane_spawn_ex");
+    int (*pollJob)(void *, int *, struct rusage *, int *) = dlsym(RTLD_DEFAULT, nested ? (host ? "ashell_worker_host_poll_usage" : "ashell_worker_poll_usage") : "ashell_pane_poll_usage");
+    void (*release)(void *) = dlsym(RTLD_DEFAULT, nested ? (host ? "ashell_worker_host_release" : "ashell_worker_release") : "ashell_pane_release");
+    if (!spawn || !pollJob || !release) { fputs("spawn contract unavailable: FAIL\n", thread_stdout); return 1; }
+    NSString *home = nested ? @(getenv("HOME")) : NSHomeDirectory();
+    NSString *directory = [home stringByAppendingPathComponent:@"Documents"];
+    NSString *homeValue = [@"HOME=" stringByAppendingString:home];
+    NSString *expected = [@"POOL_EXPECTED_HOME=" stringByAppendingString:home];
+    NSString *parent = [NSString stringWithFormat:@"POOL_PARENT_PID=%d", getpid()];
+    NSString *hostPID = nested ? @(getenv("POOL_HOST_PID") ?: "") : [NSString stringWithFormat:@"%d", getpid()];
+    NSString *hostValue = [@"POOL_HOST_PID=" stringByAppendingString:hostPID];
+    const char *environment[] = {homeValue.UTF8String, expected.UTF8String, parent.UTF8String, hostValue.UTF8String, NULL};
+    ashell_pane_options options = {.size = sizeof(options), .tty = 0, .separate_stderr = 1};
+    int fd = -1, status = -1;
+    void *job = NULL;
+    const char *command = nested ? (host ? "worker-pool-host-payload" : "worker-pool-payload") : (host ? "worker-pool-nested-host" : "worker-pool-nested");
+    int error = spawn(command, directory.fileSystemRepresentation, 80, 24, environment, &options, &fd, &job);
+    if (error) { fprintf(thread_stdout, "spawn contract startup=%d: FAIL\n", error); return 1; }
+    int descriptors[] = {fd, options.stderr_fd};
+    char bytes[2][256] = {{0}};
+    size_t used[2] = {0};
+    BOOL eof[2] = {NO, NO}, completed = NO, valid = YES;
+    for (int i = 0; i < 2; i++)
+        if (fcntl(descriptors[i], F_SETFL, O_NONBLOCK) || !(fcntl(descriptors[i], F_GETFD) & FD_CLOEXEC)) valid = NO;
+    NSTimeInterval deadline = NSProcessInfo.processInfo.systemUptime + 20;
+    struct rusage usage;
+    int available = 0;
+    while (valid && NSProcessInfo.processInfo.systemUptime < deadline && (!completed || !eof[0] || !eof[1])) {
+        for (int i = 0; i < 2; i++) {
+            ssize_t count = read(descriptors[i], bytes[i] + used[i], sizeof(bytes[i]) - used[i] - 1);
+            if (count > 0) used[i] += count;
+            else if (!count) eof[i] = YES;
+            else if (errno != EAGAIN && errno != EINTR) valid = NO;
+        }
+        int result = pollJob(job, &status, &usage, &available);
+        if (result < 0) valid = NO;
+        if (result == 1) completed = YES;
+        if (!completed || !eof[0] || !eof[1]) usleep(10000);
+    }
+    BOOL passed = valid && completed && eof[0] && eof[1] && available && status == 7 &&
+        !strcmp(bytes[0], "PAYLOAD\n") && !strcmp(bytes[1], "ERROR\n");
+    if (!passed) fprintf(thread_stderr, "spawn contract nested=%d valid=%d completed=%d eof=%d,%d usage=%d status=%d stdout=[%s] stderr=[%s]\n", nested, valid, completed, eof[0], eof[1], available, status, bytes[0], bytes[1]);
+    release(job);
+    close(fd);
+    close(options.stderr_fd);
+    if (!nested) fprintf(thread_stdout, "nested %s streams/tty/home/tmpdir/status/usage: %s\n", host ? "host" : "worker", passed ? "PASS" : "FAIL");
+    return passed ? 0 : 1;
+}
+
+int worker_pool_nested_main(int argc, char **argv) {
+    const char *home = getenv("HOME"), *expected = getenv("POOL_EXPECTED_HOME");
+    const char *root = ios_getenv("ASHELL_WORKER_ROOT_PID");
+    if (!root || atoi(root) != ios_currentPid() || !home || !expected || strcmp(home, expected) || spawn_contract(YES, NO)) return 1;
+    fputs("PAYLOAD\n", thread_stdout);
+    fputs("ERROR\n", thread_stderr);
+    return 7;
+}
+
+int worker_pool_nested_host_main(int argc, char **argv) {
+    if (spawn_contract(YES, YES)) return 1;
+    fputs("PAYLOAD\n", thread_stdout);
+    fputs("ERROR\n", thread_stderr);
+    return 7;
+}
+
+int worker_pool_host_payload_main(int argc, char **argv) {
+    const char *host = ios_getenv("POOL_HOST_PID");
+    if (!host || atoi(host) != getpid() || ios_getenv("ASHELL_WORKER_PID") || ios_getenv("ASHELL_WORKER_ROOT_PID") || ios_isatty(1)) return 1;
+    int (*spawn)(const char *, const char *, unsigned, unsigned, const char *const *, int *, void **) = dlsym(RTLD_DEFAULT, "ashell_host_pane_spawn");
+    int fd = -1;
+    void *job = NULL;
+    NSString *directory = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
+    if (!spawn || spawn("worker-pool-host-payload", directory.fileSystemRepresentation, 80, 24, NULL, &fd, &job) != EBUSY || fd != -1 || job) return 1;
+    fputs("PAYLOAD\n", thread_stdout);
+    fputs("ERROR\n", thread_stderr);
+    return 7;
+}
+
+static int loss_check(void) {
+    int (*spawn)(const char *, const char *, unsigned, unsigned, const char *const *, int *, void **) = dlsym(RTLD_DEFAULT, "ashell_pane_spawn");
+    int (*pollJob)(void *, int *) = dlsym(RTLD_DEFAULT, "ashell_pane_poll");
+    void (*release)(void *) = dlsym(RTLD_DEFAULT, "ashell_pane_release");
+    if (!spawn || !pollJob || !release) return 1;
+    int fd = -1, status = -1, result = 0;
+    void *job = NULL;
+    NSString *directory = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
+    int error = spawn("worker-pool-crash", directory.fileSystemRepresentation, 80, 24, NULL, &fd, &job);
+    if (error) return 1;
+    NSTimeInterval deadline = NSProcessInfo.processInfo.systemUptime + 5;
+    while (!result && NSProcessInfo.processInfo.systemUptime < deadline) {
+        result = pollJob(job, &status);
+        if (!result) usleep(10000);
+    }
+    BOOL passed = result == -EPIPE && status == -1;
+    fprintf(thread_stdout, "lost worker result=%d status=%d: %s\n", result, status, passed ? "PASS" : "FAIL");
+    release(job);
+    close(fd);
+    return passed ? 0 : 1;
+}
+
+int worker_pool_payload_main(int argc, char **argv) {
+    const char *home = getenv("HOME"), *expected = getenv("POOL_EXPECTED_HOME");
+    const char *temporary = getenv("TMPDIR");
+    const char *parent = getenv("POOL_PARENT_PID");
+    const char *root = ios_getenv("ASHELL_WORKER_ROOT_PID");
+    if (!root || atoi(root) != ios_currentPid() || !home || !expected || strcmp(home, expected) || !temporary ||
+        strcmp(temporary, NSTemporaryDirectory().fileSystemRepresentation) || !parent || getpid() == atoi(parent) || ios_isatty(1)) {
+        fprintf(thread_stderr, "payload root=%s pid=%d home=%d tmp_domain=%d process_distinct=%d tty=%d\n", root ?: "missing", ios_currentPid(), home && expected && !strcmp(home, expected), temporary && !strcmp(temporary, NSTemporaryDirectory().fileSystemRepresentation), parent && getpid() != atoi(parent), ios_isatty(1));
+        return 1;
+    }
+    NSString *file = [@(temporary) stringByAppendingPathComponent:NSUUID.UUID.UUIDString];
+    int fd = open(file.fileSystemRepresentation, O_CREAT | O_EXCL | O_RDWR, 0600);
+    if (fd < 0) return 1;
+    BOOL passed = write(fd, "x", 1) == 1;
+    if (close(fd) || unlink(file.fileSystemRepresentation)) passed = NO;
+    if (!passed) return 1;
+    fputs("PAYLOAD\n", thread_stdout);
+    fputs("ERROR\n", thread_stderr);
+    return 7;
+}
+
 // Run as a real app command. The same consumer must fail on the stock app.
 int worker_pool_check_main(int argc, char **argv) {
     @autoreleasepool {
-        if (argc == 2 && !strcmp(argv[1], "completion")) return completion_check();
+        if (argc == 2 && !strcmp(argv[1], "nested")) return spawn_contract(NO, NO);
+        if (argc == 2 && !strcmp(argv[1], "host")) return spawn_contract(NO, YES);
+        if (argc == 2 && !strcmp(argv[1], "loss")) return loss_check();
+        if (argc == 2 && !strcmp(argv[1], "completion")) return completion_check(NO);
+        if (argc == 2 && !strcmp(argv[1], "identity")) return completion_check(YES);
         if (argc == 2 && !strcmp(argv[1], "capacity")) return capacity_check();
         if (argc == 2 && !strcmp(argv[1], "limit")) return limit_check();
         if (argc == 2 && !strcmp(argv[1], "lifecycle")) return lifecycle_check(NO, NO);

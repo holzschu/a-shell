@@ -48,6 +48,8 @@ int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, un
 // Returns 0 running, 1 exited (writes final command status), or -errno.
 // Repeated polling after exit preserves status. Drain the returned fd to EOF independently.
 // A cleanup/restore error returns -errno after completion instead of hiding the failure.
+// Lost XPC returns -EPIPE without inventing an exit status. Explicit cancellation
+// returns 137; that status does not identify the cause of an unexpected process loss.
 int ashell_pane_poll(void *job, int *status_out);
 // Optional usage is the worker's RUSAGE_SELF snapshot at exit, unavailable for lost workers.
 int ashell_pane_poll_usage(void *job, int *status_out, struct rusage *usage_out, int *usage_available);

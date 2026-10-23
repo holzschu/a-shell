@@ -63,7 +63,7 @@ static id<AShellSpawnBrokerWire> spawnBroker;
 - (void)dealloc { if (_token) [_broker releaseChild:_token]; }
 @end
 
-__attribute__((used, visibility("default"))) int ashell_worker_spawn_ex(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
+static int broker_spawn(BOOL host, const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
     if (fd_out) *fd_out = -1;
     if (job_out) *job_out = NULL;
     if (!options || options->size < sizeof(*options)) return EINVAL;
@@ -75,7 +75,7 @@ __attribute__((used, visibility("default"))) int ashell_worker_spawn_ex(const ch
     BrokerRemoteChild *child = [BrokerRemoteChild new];
     child.broker = spawnBroker;
     __block int error = EPIPE;
-    [child.broker spawnChild:@(command) cwd:@(cwd) env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:options->separate_stderr != 0 reply:^(int code, NSString *token, NSFileHandle *output, NSFileHandle *errors) {
+    void (^reply)(int, NSString *, NSFileHandle *, NSFileHandle *) = ^(int code, NSString *token, NSFileHandle *output, NSFileHandle *errors) {
         error = code;
         if (error) return;
         child.token = token;
@@ -95,10 +95,18 @@ __attribute__((used, visibility("default"))) int ashell_worker_spawn_ex(const ch
             }
             if (error) { close(*fd_out); *fd_out = -1; }
         }
-    }];
+    };
+    if (host) [child.broker spawnHostChild:@(command) cwd:@(cwd) env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:options->separate_stderr != 0 reply:reply];
+    else [child.broker spawnChild:@(command) cwd:@(cwd) env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:options->separate_stderr != 0 reply:reply];
     if (error) return error;
     *job_out = (__bridge_retained void *)child;
     return 0;
+}
+__attribute__((used, visibility("default"))) int ashell_worker_spawn_ex(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
+    return broker_spawn(NO, command, cwd, cols, rows, envp, options, fd_out, job_out);
+}
+__attribute__((used, visibility("default"))) int ashell_worker_host_spawn_ex(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
+    return broker_spawn(YES, command, cwd, cols, rows, envp, options, fd_out, job_out);
 }
 __attribute__((used, visibility("default"))) int ashell_worker_poll_usage(void *handle, int *status, struct rusage *usage_out, int *usage_available) {
     if (usage_available) *usage_available = 0;
@@ -108,11 +116,10 @@ __attribute__((used, visibility("default"))) int ashell_worker_poll_usage(void *
     if (poll(&fd, 1, 0) < 0) return errno == EINTR ? 0 : -errno;
     if (fd.revents & POLLNVAL) return -EBADF;
     if (!(fd.revents & (POLLHUP | POLLERR))) return 0;
-    __block int result = 1;
-    *status = 137;
+    __block int result = -EPIPE;
     [child.broker pollChildUsage:child.token reply:^(int value, int code, NSData *usage) {
         result = value;
-        *status = code;
+        if (value == 1) *status = code;
         if (value == 1 && usage.length == sizeof(struct rusage)) {
             if (usage_out) memcpy(usage_out, usage.bytes, sizeof(struct rusage));
             if (usage_available) *usage_available = 1;
@@ -140,6 +147,27 @@ __attribute__((used, visibility("default"))) int ashell_worker_cancel(void *hand
 __attribute__((used, visibility("default"))) void ashell_worker_release(void *handle) {
     BrokerRemoteChild *child = (__bridge_transfer BrokerRemoteChild *)handle;
     (void)child;
+}
+
+// Host children use the same broker tokens and stream ownership as extension children.
+__attribute__((used, visibility("default"))) int ashell_worker_host_poll(void *job, int *status) { return ashell_worker_poll(job, status); }
+__attribute__((used, visibility("default"))) int ashell_worker_host_poll_usage(void *job, int *status, struct rusage *usage, int *available) { return ashell_worker_poll_usage(job, status, usage, available); }
+__attribute__((used, visibility("default"))) int ashell_worker_host_close_stdin(void *job) { return ashell_worker_close_stdin(job); }
+__attribute__((used, visibility("default"))) int ashell_worker_host_cancel(void *job) { return ashell_worker_cancel(job); }
+__attribute__((used, visibility("default"))) void ashell_worker_host_release(void *job) { ashell_worker_release(job); }
+__attribute__((used, visibility("default"))) int ashell_worker_host_resize(void *job, unsigned cols, unsigned rows) {
+    if (!job) return EINVAL;
+    BrokerRemoteChild *child = (__bridge BrokerRemoteChild *)job;
+    __block int result = EPIPE;
+    [child.broker resizeChild:child.token cols:cols rows:rows reply:^(int code) { result = code; }];
+    return result;
+}
+__attribute__((used, visibility("default"))) int ashell_worker_host_interrupt(void *job) {
+    if (!job) return EINVAL;
+    BrokerRemoteChild *child = (__bridge BrokerRemoteChild *)job;
+    __block int result = EPIPE;
+    [child.broker interruptChild:child.token reply:^(int code) { result = code; }];
+    return result;
 }
 
 @interface PaneService : NSObject <AShellPaneWire>
@@ -201,13 +229,16 @@ __attribute__((used, visibility("default"))) void ashell_worker_release(void *ha
     if (!temporaryDirectory.length) { [self releasePane]; reply(EIO, nil, nil, getpid()); return; }
     // The host's directory bookmark does not grant its tmp directory. Keep the
     // extension's stock Foundation/libc temp domain in both environment views.
-    NSMutableArray<NSString *> *environment = [NSMutableArray arrayWithCapacity:env.count + 2];
+    NSMutableArray<NSString *> *environment = [NSMutableArray arrayWithCapacity:env.count + 3];
     for (NSString *value in env)
-        if (![value hasPrefix:@"TMPDIR="] && ![value hasPrefix:@"HOME="]) [environment addObject:value];
+        if (![value hasPrefix:@"TMPDIR="] && ![value hasPrefix:@"HOME="] &&
+            ![value hasPrefix:@"ASHELL_WORKER_PID="] && ![value hasPrefix:@"ASHELL_WORKER_ROOT_PID="]) [environment addObject:value];
     [environment addObject:[@"TMPDIR=" stringByAppendingString:temporaryDirectory]];
     // A home-root bookmark can resolve relative to the extension's own home.
     // Documents retains the host path; nested spawns need that same host HOME.
     [environment addObject:[@"HOME=" stringByAppendingString:documentsURL.URLByDeletingLastPathComponent.path]];
+    // Dash imports libc environ when it initializes its own variable table.
+    [environment addObject:[NSString stringWithFormat:@"ASHELL_WORKER_PID=%d", getpid()]];
     env = environment;
     initializeEnvironment();
     replaceCommand(@"clear", @"clear", true);
@@ -227,15 +258,13 @@ __attribute__((used, visibility("default"))) void ashell_worker_release(void *ha
     // The physical device has no kernel tty. Use the same socket-backed route
     // on Simulator so its acceptance cannot pass through a desktop-only PTY.
     if (setenv("ASHELL_IOS_PTY", "0", 1)) { int error = errno; [self releasePane]; reply(error, nil, nil, getpid()); return; }
-    const char **values = calloc(env.count + 4, sizeof(char *));
+    const char **values = calloc(env.count + 3, sizeof(char *));
     if (!values) { [self releasePane]; reply(ENOMEM, nil, nil, getpid()); return; }
     for (NSUInteger i = 0; i < env.count; i++)
         values[i] = [env[i] hasPrefix:@"ASHELL_IOS_PTY="] ? "ASHELL_IOS_PTY=0" :
             [env[i] hasPrefix:@"LC_CTYPE="] ? "LC_CTYPE=UTF-8" : env[i].UTF8String;
-    NSString *identity = [NSString stringWithFormat:@"ASHELL_WORKER_PID=%d", getpid()];
-    values[env.count] = identity.UTF8String;
-    values[env.count + 1] = "LC_CTYPE=UTF-8";
-    values[env.count + 2] = "ASHELL_IOS_SOCKET_INPUT=1";
+    values[env.count] = "LC_CTYPE=UTF-8";
+    values[env.count + 1] = "ASHELL_IOS_SOCKET_INPUT=1";
     int fd = -1;
     ashell_pane_options options = {.size = sizeof(options), .tty = tty, .separate_stderr = separateStderr};
     int error = ashell_pane_spawn_ex(command.UTF8String, directory.path.UTF8String, cols, rows, values, &options, &fd, &_pane);

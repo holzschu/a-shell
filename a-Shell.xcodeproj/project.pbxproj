@@ -996,6 +996,10 @@
 			isa = "PBXBuildFile";
 			fileRef = "D847238C57D48CADF264887A";
 		};
+		601A00000000000000000001 = {
+			isa = "PBXBuildFile";
+			fileRef = "601A00000000000000000002";
+		};
 		C608987E0D35D7D8C92CF091 = {
 			isa = "PBXBuildFile";
 			fileRef = "11189940A2AF26A6542BDEAF";
@@ -3062,6 +3066,11 @@
 		D847238C57D48CADF264887A = {
 			isa = "PBXFileReference";
 			path = "ShellWorkers/Host.swift";
+			sourceTree = "SOURCE_ROOT";
+		};
+		601A00000000000000000002 = {
+			isa = "PBXFileReference";
+			path = "ShellWorkers/HostPane.m";
 			sourceTree = "SOURCE_ROOT";
 		};
 		11189940A2AF26A6542BDEAF = {
@@ -5257,6 +5266,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C608987E0D35D7D8C92CF091,
+				"601A00000000000000000001",
 				7A025EB47CCEBDAA7E49CB3E,
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
 				707000000000000000000003 /* TerminalFont.swift in Sources */,
