@@ -9,8 +9,6 @@ on:
       - '.github/workflows/pico-framework.yml'
   workflow_dispatch:
   push:
-    branches:
-      - 'ci/native-pico'
     tags:
       - 'pico-v*'
 permissions:
