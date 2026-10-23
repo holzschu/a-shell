@@ -1,0 +1,112 @@
+name: Pico framework
+on:
+  pull_request:
+    paths:
+      - 'scripts/build-pico.sh'
+      - 'patches/pico-ios.patch'
+      - 'tests/pico/**'
+      - 'ci/audit-artifact.py'
+      - '.github/workflows/pico-framework.yml'
+  workflow_dispatch:
+  push:
+    branches:
+      - 'ci/native-pico'
+    tags:
+      - 'pico-v*'
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+      - name: Build Pico for iOS and Simulator
+        run: |
+          xcodebuild -version
+          bash scripts/build-pico.sh
+      - name: Exercise packaged editor reentry on Simulator
+        run: |
+          build="$PWD/.build/pico"
+          app="$build/pico-runtime.app"
+          frameworks="$app/Frameworks"
+          mkdir -p "$frameworks" "$build/runtime-output"
+          unzip -q "$build/dist/pico.xcframework.zip" -d "$build/runtime-input"
+          cp -R "$build/runtime-input/pico.xcframework/ios-arm64_x86_64-simulator/pico.framework" "$frameworks/"
+          cp -R "$build/dependencies/ios_system.xcframework/ios-arm64_x86_64-simulator/ios_system.framework" "$frameworks/"
+          xcrun --sdk iphonesimulator clang -target arm64-apple-ios14.0-simulator -fobjc-arc tests/pico/main.m \
+            -F"$frameworks" -framework ios_system -framework Foundation \
+            -Wl,-rpath,@executable_path/Frameworks -o "$app/pico-runtime"
+          cat > "$app/Info.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0"><dict>
+          <key>CFBundleExecutable</key><string>pico-runtime</string>
+          <key>CFBundleIdentifier</key><string>org.alpine.pico.runtime</string>
+          <key>CFBundleName</key><string>pico-runtime</string>
+          <key>CFBundlePackageType</key><string>APPL</string>
+          <key>CFBundleVersion</key><string>1</string>
+          </dict></plist>
+          PLIST
+          /usr/libexec/PlistBuddy -c 'Add :pico array' "$app/commandDictionary.plist"
+          /usr/libexec/PlistBuddy -c "Add :pico:0 string $frameworks/pico.framework/pico" "$app/commandDictionary.plist"
+          /usr/libexec/PlistBuddy -c 'Add :pico:1 string main' "$app/commandDictionary.plist"
+          /usr/libexec/PlistBuddy -c 'Add :pico:2 string ""' "$app/commandDictionary.plist"
+          /usr/libexec/PlistBuddy -c 'Add :pico:3 string file' "$app/commandDictionary.plist"
+          codesign --force --sign - "$frameworks/pico.framework"
+          codesign --force --sign - "$frameworks/ios_system.framework"
+          codesign --force --sign - "$app"
+          runtime=$(xcrun simctl list runtimes -j | jq -r '[.runtimes[] | select(.isAvailable and (.identifier | contains("iOS")) and any(.supportedDeviceTypes[]?; .identifier == "com.apple.CoreSimulator.SimDeviceType.iPhone-17"))] | sort_by(.version | split(".") | map(tonumber)) | last.identifier // empty')
+          test -n "$runtime"
+          device=$(xcrun simctl create Pico-Runtime com.apple.CoreSimulator.SimDeviceType.iPhone-17 "$runtime")
+          trap 'xcrun simctl shutdown "$device"; xcrun simctl delete "$device"' EXIT
+          xcrun simctl boot "$device"
+          xcrun simctl bootstatus "$device" -b
+          result=0
+          xcrun simctl spawn "$device" "$app/pico-runtime" "$PWD/terminfo" "$build/runtime-output" > "$build/dist/pico-runtime.log" 2>&1 || result=$?
+          cat "$build/dist/pico-runtime.log"
+          test "$result" = 0
+          test "$(grep -c '^PICO_RESULT .*status=0 ' "$build/dist/pico-runtime.log")" = 20
+          grep -q '^PICO_EDIT_REENTRY_PASSED$' "$build/dist/pico-runtime.log"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pico
+          include-hidden-files: true
+          if-no-files-found: error
+          path: |
+            .build/pico/dist/*.zip
+            .build/pico/dist/*.json
+            .build/pico/dist/*.txt
+            .build/pico/dist/*.md
+            .build/pico/dist/*.log
+  release:
+    needs: build
+    if: github.repository == 'holzschu/a-shell' && startsWith(github.ref, 'refs/tags/pico-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: pico
+          path: dist
+      - name: Publish Pico archives
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist
+          shasum -a 256 -c checksums.txt
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" pico.xcframework.zip checksums.txt
+          else
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --latest=false \
+              --title "Pico $GITHUB_REF_NAME" --notes-file release.md pico.xcframework.zip checksums.txt
+          fi
