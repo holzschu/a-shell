@@ -259,6 +259,8 @@ func colorFromArgument(arg: [String], position: Int) -> UIColor? {
 @_cdecl("config")
 public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     // Configuration: setting font, font size, BG color, FG color...
+    for error in TerminalFonts.refresh() { fputs(error + "\n", thread_stderr) }
+    currentDelegate?.writeConfigWindow()
     // First, let's scan the arguments:
     var terminalFontSize: Float?
     var terminalFontName: String?
@@ -273,7 +275,9 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     For all parameters: "default" to get the default value currently stored, "factory" to get a-Shell factory defaults (\(factoryFontName), \(factoryFontSize) pts, colors from system).
     Colors can be defined by names, RGB triplets "red green blue" or HexStrings "#00FF00"
     -s | --size: set font size
-    -n | --name: set font name. Nothing or "picker" to get the system font picker.
+    -n | --name: set a font name or a file name from Documents/Fonts. Nothing or "picker" opens the font picker.
+    --fonts: refresh Documents/Fonts (.ttf/.otf) and list available face names
+    Font and size changes with -g also save the selection in Settings.
     -b | --background: set background color
     -f | --foreground: set foreground color
     -c | --cursor: set cursor and highlight color
@@ -316,16 +320,19 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         case "-h", "--help":
             fputs(usageString, thread_stdout)
             return 0
+        case "--fonts":
+            for name in TerminalFonts.names() { fputs(name + "\n", thread_stdout) }
+            return 0
         case "-s", "--size":
             argumentsSet = true
             if (i + 1 < args.count) {
                 if !args[i+1].hasPrefix("-") {
-                    if let s = Float(args[i+1]) {
+                    if let s = Float(args[i+1]), s.isFinite, s > 0 {
                         terminalFontSize = s
                         skipNextArgument = 1
                     } else {
                         if args[i+1] == "default" {
-                            if let storedSize = UserDefaults.standard.object(forKey: "fontSize") as? Float {
+                            if let storedSize = TerminalFonts.savedSize {
                                 terminalFontSize = storedSize
                             } else {
                                 terminalFontSize = factoryFontSize
@@ -360,20 +367,18 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
                     // NSLog("Name received: \(terminalFontName)")
                 }
             } else if name == "default" {
-                if let storedName = UserDefaults.standard.object(forKey: "fontName") as? String {
+                if let storedName = TerminalFonts.savedName {
                     terminalFontName = storedName
                 } else {
                     terminalFontName = factoryFontName
                 }
             } else if name == "factory" {
                 terminalFontName = factoryFontName
-            } /* else if (FileManager().fileExists(atPath: name) && (name.hasSuffix(".ttf") || name.hasSuffix(".otf"))) {
-                 // attempt to load fonts from file. Failed. 
-                terminalFontName = name
-            } */ else if UIFont(name: name, size: 13) != nil {
-                terminalFontName     = name
+            } else if let font = TerminalFonts.font(named: name, size: 13) {
+                terminalFontName = font.fontName
             } else {
                 fputs("Could not load font: \(name)\n", thread_stderr)
+                return 1
             }
             continue
         case "-b", "--background":
@@ -606,12 +611,12 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         delegate?.writeConfigWindow()
     } else if (revertToDefault) {
         // "default" = what is stored in User Preferences, if it exists, and factory default otherwise.
-        if let storedSize = UserDefaults.standard.object(forKey: "fontSize") as? Float {
+        if let storedSize = TerminalFonts.savedSize {
             delegate?.terminalFontSize = storedSize
         } else {
             delegate?.terminalFontSize = factoryFontSize
         }
-        if let storedName = UserDefaults.standard.object(forKey: "fontName") as? String {
+        if let storedName = TerminalFonts.savedName {
             delegate?.terminalFontName = storedName
         } else {
             delegate?.terminalFontName = factoryFontName
@@ -664,6 +669,10 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             }
         }
     }
+    if makeGlobal && (terminalFontName != nil || terminalFontSize != nil) {
+        let save = { TerminalFonts.save(name: terminalFontName, size: terminalFontSize) }
+        if Thread.isMainThread { save() } else { DispatchQueue.main.sync(execute: save) }
+    }
     if (makePermanent) {
         // Store these settings
         // If nothing except "-p" (and possibly -d or -r): make current window settings permanent
@@ -698,11 +707,9 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
                 UserDefaults.standard.removeObject(forKey: "fontLigature")
             }
         }
-        if terminalFontSize != nil {
-            UserDefaults.standard.set(terminalFontSize, forKey: "fontSize")
-        }
-        if terminalFontName != nil {
-            UserDefaults.standard.set(terminalFontName, forKey: "fontName")
+        if terminalFontName != nil || terminalFontSize != nil {
+            let save = { TerminalFonts.save(name: terminalFontName, size: terminalFontSize) }
+            if Thread.isMainThread { save() } else { DispatchQueue.main.sync(execute: save) }
         }
         if terminalBackgroundColor != nil && terminalBackgroundColor != .systemBackground {
             UserDefaults.standard.set(terminalBackgroundColor?.toHexString(), forKey: "backgroundColor")
@@ -1429,7 +1436,6 @@ public func jump(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
 public func play_media(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let args = convertCArguments(argc: argc, argv: argv)
     if let delegate = currentDelegate {
-        delegate.resignFirstResponder()
         return delegate.play_media(arguments: args)
     }
     return 0
@@ -1439,7 +1445,6 @@ public func play_media(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
 public func preview(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let args = convertCArguments(argc: argc, argv: argv)
     if let delegate = currentDelegate {
-        delegate.resignFirstResponder()
         return delegate.preview(arguments: args)
     }
     return 0

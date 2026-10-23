@@ -45,7 +45,7 @@ struct javascriptCommand {
 let myToolbarTip = toolbarTip()
 var internalBrowserStarted = false
 
-class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate, TerminalViewDelegate {
+class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIAdaptivePresentationControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate, TerminalViewDelegate {
     var window: UIWindow?
     var screen: UIScreen?
     var windowScene: UIWindowScene?
@@ -120,6 +120,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var windowHistory = ""
     var pid: pid_t = 0
     private var selectedFont = ""
+    private var fontSelectionCompleted = DispatchSemaphore(value: 0)
     // Store these for session restore:
     var currentDirectory = ""
     var previousDirectory = ""
@@ -138,6 +139,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var avplayer: AVPlayer? = nil
     var avcontroller: AVPlayerViewController? = nil
     var avControllerPiPEnabled = false
+    private var restorePreviewFocus: (() -> Void)?
+    private var restorePlayerFocus: (() -> Void)?
     // for repetitive buttons
     var continuousButtonAction = false
     var buttonFontSize: CGFloat = 19.0 // default value for iPads
@@ -1246,6 +1249,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.terminalView?.inputAccessoryView = self.editorToolbar
                 self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             }
+            self.terminalView?.reloadInputViews()
         }
     }
     
@@ -1389,6 +1393,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     public lazy var editorToolbar: UIToolbar = {
         var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: screenWidth - 20, height: toolbarHeight))
         toolbar.tintColor = .label
+        toolbar.backgroundColor = terminalBackgroundColor
         if (leftButtonGroup.count == 0) {
             toolbar.items = rightButtonGroup
         } else {
@@ -1629,6 +1634,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (self.currentCommand == "") {
             lastUsedPrompt = parsePrompt()
             DispatchQueue.main.async {
+                // Editors may reset DECSCUSR to a block; the prompt uses the user's configured cursor.
+                let cursorShape = self.terminalCursorShape ?? factoryCursorShape
+                self.terminalView!.setCursorStyle(shape: cursorShape.lowercased())
                 // reset mouse mode to .off, so we can scroll:
                 // before the prompt, so it can be overridden by the prompt.
                 self.terminalView!.feed(text: self.escape + "[?1000l")
@@ -1790,9 +1798,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         webAssemblyCommand.webAssemblyGroup?.enter()
         webAssemblyCommand.webAssemblyGroup?.wait()
         
-        if (stdout_file != nil && fileno(webAssemblyCommand.thread_stdout_copy) != fileno(stdout_file)) {
-            fclose(webAssemblyCommand.thread_stdout_copy)
-        }
+        // The command borrows its caller's streams; leave their cleanup to the caller.
         
         // if resultStack[commandNumber] does not exist, something went wrong.
         // Don't crash, but raise the issue.
@@ -1808,6 +1814,25 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    func copyOutputFile(_ path: String, toDescriptor descriptor: Int32, group: DispatchGroup) {
+        group.enter()
+        DispatchQueue.global().async {
+            defer {
+                try? FileManager().removeItem(atPath: path)
+                group.leave()
+            }
+            do {
+                if let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+                    let output = FileHandle(fileDescriptor: descriptor, closeOnDealloc: false)
+                    try output.write(contentsOf: data)
+                }
+            }
+            catch {
+                NSLog("Something went wrong in writing the data from \(path) to \(descriptor): \(error).")
+            }
+        }
+    }
+
     func executeWebAssemblyCommands() {
         // since we're multi-threaded, we could be executing this while executeWebAssembly() is still running. So we wait.
         NSLog("executeWebAssemblyCommands: url: \(webView?.url)")
@@ -1884,40 +1909,26 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // Strangely, the letters typed after ^D do not appear on screen. We force two carriage return to get the prompt visible:
                 terminalView?.feed(text: "\n\n")
             }
+            // The next command in the queue may be the reader of this output: copy it from a
+            // background thread, and release the caller (which closes its streams) once it is written.
+            let copies = DispatchGroup()
             if (command!.stdout_fileName != "") {
                 fflush(thread_stdout_copy)
                 fclose(thread_stdout_copy)
-                do {
-                    if let outData = try? Data(contentsOf: URL(fileURLWithPath: command!.stdout_fileName)) {
-                        let stdout_file = FileHandle(fileDescriptor: fileno(command!.thread_stdout_copy))
-                        try stdout_file.write(contentsOf: outData)
-                        try stdout_file.close() // necessary?
-                        try FileManager().removeItem(atPath: command!.stdout_fileName)
-                     }
-                }
-                catch {
-                    NSLog("Something went wrong in writing the stdout data from \(command!.stdout_fileName) to \(fileno(command!.thread_stdout_copy)): \(error).")
-                }
+                copyOutputFile(command!.stdout_fileName, toDescriptor: fileno(command!.thread_stdout_copy), group: copies)
             }
             if (command!.stderr_fileName != "") {
                 fflush(thread_stderr_copy)
                 fclose(thread_stderr_copy)
-                do {
-                    if let errData = try? Data(contentsOf: URL(fileURLWithPath: command!.stderr_fileName)) {
-                        let stderr_file = FileHandle(fileDescriptor: fileno(command!.thread_stderr_copy))
-                        try stderr_file.write(contentsOf: errData)
-                        try stderr_file.close() // necessary? 
-                        try FileManager().removeItem(atPath: command!.stderr_fileName)
-                    }
-                }
-                catch {
-                    NSLog("Something went wrong in writing the stderr data from \(command!.stderr_fileName) to \(fileno(command!.thread_stderr_copy)): \(error).")
-                }
+                copyOutputFile(command!.stderr_fileName, toDescriptor: fileno(command!.thread_stderr_copy), group: copies)
             }
             // Do not close thread_stdin because if it's a pipe, processes could still be writing into it
             // fclose(thread_stdin)
             // Wait until the command is done, signal is sent by prompt()
-            command!.webAssemblyGroup?.leave()
+            let commandGroup = command!.webAssemblyGroup
+            copies.notify(queue: DispatchQueue.global()) {
+                commandGroup?.leave()
+            }
         }
         NSLog("Ended executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack)")
         
@@ -2213,6 +2224,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         DispatchQueue.main.async {  // SwiftTerm changes to the UI must happen on the main thread
             // Force writing all config to term. Used when we changed many parameters.
             self.terminalView?.backgroundColor = backgroundColor
+            self.terminalView?.inputAccessoryView?.backgroundColor = self.terminalBackgroundColor
+            self.window?.rootViewController?.view.backgroundColor = self.terminalBackgroundColor ?? .systemBackground
             self.terminalView?.nativeBackgroundColor = backgroundColor
             self.terminalView?.getTerminal().backgroundColor = (backgroundColor.toSwiftTermColor())
             self.terminalView?.tintColor = foregroundColor
@@ -2221,7 +2234,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             self.terminalView?.caretColor = cursorColor
             self.terminalView?.getTerminal().cursorColor = (cursorColor.toSwiftTermColor())
             self.terminalView?.selectedTextBackgroundColor = cursorColor.makeTransparent()
-            if let terminalFont = UIFont(name: fontName, size: CGFloat(fontSize)) {
+            if let terminalFont = TerminalFonts.font(named: fontName, size: CGFloat(fontSize)) ?? UIFont(name: factoryFontName, size: CGFloat(fontSize)) {
                 self.terminalView?.font = terminalFont
                 self.basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
             }
@@ -2248,6 +2261,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let backgroundColor = backgroundColor {
                 self.terminalBackgroundColor = backgroundColor
                 self.terminalView?.backgroundColor = backgroundColor
+                self.terminalView?.inputAccessoryView?.backgroundColor = backgroundColor
+                self.window?.rootViewController?.view.backgroundColor = backgroundColor
                 self.terminalView?.nativeBackgroundColor = backgroundColor
                 // We need to act on the getTerminal() colors as well, otherwise the default color is not very visible.
                 self.terminalView?.getTerminal().backgroundColor = (backgroundColor.toSwiftTermColor())
@@ -2287,56 +2302,50 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     // Creates the iOS 13 Font picker, returns the name of the font selected.
     func pickFont() -> String? {
+        fontSelectionCompleted = DispatchSemaphore(value: 0)
         DispatchQueue.main.sync {
-            let fontPickerConfig = UIFontPickerViewController.Configuration()
-            fontPickerConfig.includeFaces = true
-            fontPickerConfig.filteredTraits = .traitMonoSpace
-            // Create the font picker
-            fontPicker = UIFontPickerViewController(configuration: fontPickerConfig)
+            selectedFont = ""
+            let configuration = UIFontPickerViewController.Configuration()
+            configuration.includeFaces = true
+            // Installed terminal fonts do not always declare the monospace trait.
+            configuration.filteredTraits = []
+            fontPicker = UIFontPickerViewController(configuration: configuration)
             fontPicker.delegate = self
-            // Present the font picker
-            self.selectedFont = ""
-            // Main issue: the user can dismiss the fontPicker by sliding upwards.
-            // So we need to check if it was, indeed dismissed:
-            let rootVC = self.window?.rootViewController
-            rootVC?.present(fontPicker, animated: false, completion: nil)
+            window?.rootViewController?.present(fontPicker, animated: false)
+            fontPicker.presentationController?.delegate = self
         }
-        // Wait until fontPicker is dismissed or a font has been selected:
-        while (!self.fontPicker.isBeingDismissed) && (self.selectedFont == "") { }
-        DispatchQueue.main.async {
-            self.fontPicker.dismiss(animated: false)
-        }
-        if (selectedFont != "cancel") && (selectedFont != "") {
-            return selectedFont
-        }
-        return nil
+        fontSelectionCompleted.wait()
+        return selectedFont.isEmpty ? nil : selectedFont
     }
-    
+
+    func finishFontSelection(_ name: String?) {
+        selectedFont = name ?? ""
+        let complete = {
+            self.terminalView?.becomeFirstResponder()
+            self.fontSelectionCompleted.signal()
+        }
+        if let root = window?.rootViewController, root.presentedViewController != nil {
+            root.dismiss(animated: false, completion: complete)
+        } else {
+            complete()
+        }
+    }
+
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        if presentationController.presentedViewController === fontPicker {
+            finishFontSelection(nil)
+        }
+    }
+
     func fontPickerViewControllerDidCancel(_ viewController: UIFontPickerViewController) {
-        // User cancelled the font picker delegate
-        // NSLog("Cancelled font")
-        selectedFont = "cancel"
+        finishFontSelection(nil)
     }
-    
-    
+
     func fontPickerViewControllerDidPickFont(_ viewController: UIFontPickerViewController) {
-        // We got a font!
-        if let descriptor = viewController.selectedFontDescriptor {
-            if let name = descriptor.fontAttributes[.family] as? String {
-                // NSLog("Selected font: \(name)")
-                // "Regular" variants of the font:
-                selectedFont = name
-                return
-            } else if let name = descriptor.fontAttributes[.name] as? String {
-                // This is for Light, Medium, ExtraLight variants of the font:
-                // NSLog("Selected font: \(name)")
-                selectedFont = name
-                return
-            }
-        }
-        selectedFont = "cancel"
+        let name = viewController.selectedFontDescriptor.map { UIFont(descriptor: $0, size: 13).fontName }
+        finishFontSelection(name)
     }
-    
+
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
         pickerDispatchGroup.leave()
     }
@@ -2416,6 +2425,22 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         pickerDispatchGroup.leave()
     }
     
+    private func suspendTerminalForMedia() -> () -> Void {
+        guard let terminal = terminalView, terminal.isFirstResponder else { return {} }
+        terminal.resignFirstResponder()
+        return { [weak self, weak terminal] in
+            guard let self = self, let terminal = terminal, let window = self.window,
+                  self.windowScene?.activationState == .foregroundActive,
+                  window.isKeyWindow, terminal.window === window else { return }
+            func hasFirstResponder(_ view: UIView) -> Bool {
+                return view.isFirstResponder || view.subviews.contains(where: hasFirstResponder)
+            }
+            // A field selected while the media was open keeps its focus.
+            guard !hasFirstResponder(window) else { return }
+            terminal.becomeFirstResponder()
+        }
+    }
+
     func play_media(arguments: [String]?) -> Int32 {
         guard (arguments != nil) else { return -1 }
         guard (arguments!.count >= 2) else { return -1 } // There must be at least one file
@@ -2463,7 +2488,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Modally present the player and call the player's play() method when complete.
             let rootVC = self.window?.rootViewController
             DispatchQueue.main.async {
-                rootVC?.present(self.avcontroller!, animated: true) {
+                guard let rootVC = rootVC, rootVC.presentedViewController == nil else { return }
+                self.restorePlayerFocus = self.suspendTerminalForMedia()
+                rootVC.present(self.avcontroller!, animated: true) {
                     self.avplayer!.play()
                 }
             }
@@ -2488,7 +2515,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let preview = UIDocumentInteractionController(url: url)
             preview.delegate = self
             DispatchQueue.main.async {
-                preview.presentPreview(animated: false)
+                guard self.window?.rootViewController?.presentedViewController == nil else { return }
+                self.restorePreviewFocus = self.suspendTerminalForMedia()
+                if !preview.presentPreview(animated: false) {
+                    self.restorePreviewFocus?()
+                    self.restorePreviewFocus = nil
+                }
             }
             return 0
         } else {
@@ -2605,6 +2637,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return self
         } else {
             return rootVC!
+        }
+    }
+
+    func documentInteractionControllerDidEndPreview(_ controller: UIDocumentInteractionController) {
+        // Quick Look may still own the key window during this callback.
+        let restoreFocus = restorePreviewFocus
+        restorePreviewFocus = nil
+        DispatchQueue.main.async {
+            restoreFocus?()
         }
     }
     
@@ -3305,10 +3346,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         guard (scene.session.stateRestorationActivity != nil) else { return }
         guard let userInfo = scene.session.stateRestorationActivity!.userInfo else { return }
         // Window preferences, stored on a per-session basis:
-        if let fontSize = userInfo["fontSize"] as? Float {
+        if (userInfo["terminalFontDefault"] as? String) == TerminalFonts.savedName,
+           (userInfo["terminalFontSizeDefault"] as? Float) == TerminalFonts.savedSize,
+           let fontSize = userInfo["fontSize"] as? Float {
             terminalFontSize = fontSize
         }
-        if let fontName = userInfo["fontName"] as? String {
+        if (userInfo["terminalFontDefault"] as? String) == TerminalFonts.savedName,
+           (userInfo["terminalFontSizeDefault"] as? Float) == TerminalFonts.savedSize,
+           let fontName = userInfo["fontName"] as? String {
             terminalFontName = fontName
         }
         // We store colors as hex strings:
@@ -3610,6 +3655,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
             terminalView = contentView?.terminalview.view
+            if let terminalFont = terminalView?.font {
+                basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
+            }
             terminalView?.terminalDelegate = self
             terminalView?.optionAsMetaKey = false
             /*  tell SwiftTerm to use Metal rendering:
@@ -3707,11 +3755,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 webView?.isFindInteractionEnabled = true
             }
             // End WkWebView settings
+            for error in TerminalFonts.refresh() { NSLog("%@", error) }
             // Restore colors and settings from global preference (if set):
-            if let size = UserDefaults.standard.value(forKey: "fontSize") as? Float {
+            if let size = TerminalFonts.savedSize {
                 terminalFontSize = size
             }
-            if let name = UserDefaults.standard.value(forKey: "fontName") as? String {
+            if let name = TerminalFonts.savedName {
                 terminalFontName = name
             }
             if let hexColor = UserDefaults.standard.value(forKey: "backgroundColor") as? String {
@@ -4311,6 +4360,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             terminalView?.tintColor = foregroundColor
             terminalView?.caretColor = cursorColor
             terminalView?.backgroundColor = backgroundColor
+            terminalView?.inputAccessoryView?.backgroundColor = terminalBackgroundColor
+            window?.rootViewController?.view.backgroundColor = terminalBackgroundColor ?? .systemBackground
             terminalView?.selectedTextBackgroundColor = cursorColor.makeTransparent()
             self.terminalView?.nativeForegroundColor = foregroundColor
             // This is also required otherwise we get light gray writing
@@ -4322,7 +4373,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         // TODO: Ligatures are enabled by default on iOS, they're a property of NSAttributeString, not the font.
         NSLog("Enabling font: \(fontName)")
-        if let terminalFont = UIFont(name: fontName, size: CGFloat(fontSize)) {
+        if let terminalFont = TerminalFonts.font(named: fontName, size: CGFloat(fontSize)) ?? UIFont(name: factoryFontName, size: CGFloat(fontSize)) {
             NSLog("Enabling terminalFont: \(terminalFont)")
             terminalView?.font = terminalFont
             basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
@@ -4443,6 +4494,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (terminalFontName != nil) {
             scene.session.stateRestorationActivity?.userInfo!["fontName"] = terminalFontName
         }
+        scene.session.stateRestorationActivity?.userInfo!["terminalFontDefault"] = TerminalFonts.savedName
+        scene.session.stateRestorationActivity?.userInfo!["terminalFontSizeDefault"] = TerminalFonts.savedSize
         // Must store information in userinfo as String or Float, not UIColor.
         if (terminalBackgroundColor != nil) && (terminalBackgroundColor != .systemBackground) {
             scene.session.stateRestorationActivity?.userInfo!["backgroundColor"] = terminalBackgroundColor!.toHexString()
@@ -4726,6 +4779,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
 }
     
 extension SceneDelegate: AVPlayerViewControllerDelegate {
+    func playerViewController(_ playerViewController: AVPlayerViewController,
+                              willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animate(alongsideTransition: nil) { context in
+            guard !context.isCancelled else { return }
+            self.restorePlayerFocus?()
+            self.restorePlayerFocus = nil
+        }
+    }
+
     func playerViewControllerWillStartPictureInPicture(_ playerViewController: AVPlayerViewController){
         NSLog("playerViewControllerWillStartPictureInPicture")
         avControllerPiPEnabled = true

@@ -117,6 +117,7 @@
 		2249E13A2E7546E5003F03EE /* PythonA_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1382E7546C6003F03EE /* PythonA_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2249E13B2E7546E5003F03EE /* Python-_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1392E7546D2003F03EE /* Python-_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		707000000000000000000002 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		224A903E2ADD0999006DB9CC /* Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223A1C1B2A5EDCA700B1B9AD /* Tips.swift */; };
 		224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
@@ -234,6 +235,7 @@
 		227EE36E2F0913C000636757 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 227EE36D2F0913C000636757 /* SwiftTerm */; };
 		227F058330867D0500FCC674 /* node.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227F058230867C0300FCC674 /* node.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227F0FB930868CE400FCC674 /* npm in Resources */ = {isa = PBXBuildFile; fileRef = 227F0FB830868CE300FCC674 /* npm */; };
+		22F0FE7B3A1C4B0D00A1B2C3 /* node-fetch in Resources */ = {isa = PBXBuildFile; fileRef = 22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */; };
 		228503772F47806F00E4DA17 /* listTeXscripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221DA54B26F7688100BEA92A /* listTeXscripts.swift */; };
 		228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		228E13F725C95F430065D825 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -251,6 +253,7 @@
 		22984EF722C93DBF00069497 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF622C93DBF00069497 /* Preview Assets.xcassets */; };
 		22984EFA22C93DBF00069497 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF822C93DBF00069497 /* LaunchScreen.storyboard */; };
 		229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		707000000000000000000003 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		229D2478257931E4004A78AC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		229D2479257931E4004A78AC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
 		229D247B257931E4004A78AC /* UIColor+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291286622D9DAC40004A5EA /* UIColor+hexString.swift */; };
@@ -942,6 +945,7 @@
 		22D146662E62098800E76E2E /* PythonAxxlimited.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146672E62098800E76E2E /* PythonAxxlimited_35.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		707000000000000000000004 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		22DC1F942570139D0068004E /* awk.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F8E257012F50068004E /* awk.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F952570139D0068004E /* curl_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F91257012F50068004E /* curl_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F962570139D0068004E /* files.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F89257012F50068004E /* files.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -2320,6 +2324,7 @@
 		227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_worker_wasm.js; sourceTree = "<group>"; };
 		227F058230867C0300FCC674 /* node.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = node.xcframework; path = xcfs/node.xcframework; sourceTree = "<group>"; };
 		227F0FB830868CE300FCC674 /* npm */ = {isa = PBXFileReference; lastKnownFileType = folder; name = npm; path = Resources/npm; sourceTree = "<group>"; };
+		22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node-fetch; path = Resources/node-fetch; sourceTree = "<group>"; };
 		228E13F225C95F2D0065D825 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = xcfs/.build/artifacts/xcfs/ios_system/ios_system.xcframework; sourceTree = "<group>"; };
 		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIColor+hexString.swift"; path = "Util/UIColor+hexString.swift"; sourceTree = SOURCE_ROOT; };
 		22942C3F263F15B1004BEA41 /* perl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perl.xcframework; path = xcfs/.build/artifacts/xcfs/perl/perl.xcframework; sourceTree = SOURCE_ROOT; };
@@ -3004,6 +3009,7 @@
 		22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited.framework; path = Resources/Frameworks/PythonAxxlimited.framework; sourceTree = SOURCE_ROOT; };
 		22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited_35.framework; path = Resources/Frameworks/PythonAxxlimited_35.framework; sourceTree = SOURCE_ROOT; };
 		22D23117231940B2005B0C12 /* ExtraCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraCommands.swift; sourceTree = "<group>"; };
+		707000000000000000000001 /* TerminalFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalFont.swift; sourceTree = "<group>"; };
 		22DC1F6425700F7E0068004E /* bibtex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bibtex.xcframework; path = xcfs/.build/artifacts/xcfs/bibtex/bibtex.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F6525700F7E0068004E /* kpathsea.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpathsea.xcframework; path = xcfs/.build/artifacts/xcfs/kpathsea/kpathsea.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F6625700F7E0068004E /* luatex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luatex.xcframework; path = xcfs/.build/artifacts/xcfs/luatex/luatex.xcframework; sourceTree = SOURCE_ROOT; };
@@ -3405,6 +3411,7 @@
 				22B1B83322CBC53700F7C452 /* a-Shell.entitlements */,
 				22984EED22C93DBC00069497 /* AppDelegate.swift */,
 				22D23117231940B2005B0C12 /* ExtraCommands.swift */,
+				707000000000000000000001 /* TerminalFont.swift */,
 				22984EEF22C93DBC00069497 /* SceneDelegate.swift */,
 				224754D42EFBDF2C007C35FE /* SceneDelegate+TerminalView.swift */,
 				22984EF122C93DBC00069497 /* ContentView.swift */,
@@ -3551,6 +3558,7 @@
 			isa = PBXGroup;
 			children = (
 				227F0FB830868CE300FCC674 /* npm */,
+				22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */,
 				22D1335C2E61E35900E76E2E /* Library */,
 				227B248A2BE12FEE003A8031 /* wasm_withWorker.js */,
 				227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */,
@@ -4815,6 +4823,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				227F0FB930868CE400FCC674 /* npm in Resources */,
+				22F0FE7B3A1C4B0D00A1B2C3 /* node-fetch in Resources */,
 				22D1335D2E61E35B00E76E2E /* Library in Resources */,
 				227B24842BE01ED5003A8031 /* localCertificate.pem in Resources */,
 				227B24852BE01ED5003A8031 /* localCertificateKey.pem in Resources */,
@@ -5192,6 +5201,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
+				707000000000000000000002 /* TerminalFont.swift in Sources */,
 				224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */,
 				224A903E2ADD0999006DB9CC /* Tips.swift in Sources */,
 				224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */,
@@ -5219,6 +5229,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
+				707000000000000000000004 /* TerminalFont.swift in Sources */,
 				22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */,
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
 				223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */,
@@ -5248,6 +5259,7 @@
 				C608987E0D35D7D8C92CF091,
 				7A025EB47CCEBDAA7E49CB3E,
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
+				707000000000000000000003 /* TerminalFont.swift in Sources */,
 				229D2478257931E4004A78AC /* AppDelegate.swift in Sources */,
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				224754D72EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,
