@@ -16,6 +16,13 @@
 // Dash fixture commands must not source the user's login profile.
 static const char *const nonlogin_environment[] = {"_DASH_LOGIN_SHELL=1", NULL};
 
+// Host bookmarks can resolve /var and /private/var to the same HOME directory.
+static BOOL same_directory(const char *left, const char *right) {
+    struct stat a, b;
+    return left && right && stat(left, &a) == 0 && stat(right, &b) == 0 &&
+        S_ISDIR(a.st_mode) && S_ISDIR(b.st_mode) && a.st_dev == b.st_dev && a.st_ino == b.st_ino;
+}
+
 // Keep each command alive at its public stdin boundary while the other slots start.
 static int capacity_check(void) {
     int (*spawn)(const char *, const char *, unsigned, unsigned, const char *const *, int *, void **) = dlsym(RTLD_DEFAULT, "ashell_pane_spawn");
@@ -285,7 +292,8 @@ static int spawn_contract(BOOL nested, BOOL host) {
     int (*pollJob)(void *, int *, struct rusage *, int *) = dlsym(RTLD_DEFAULT, nested ? (host ? "ashell_worker_host_poll_usage" : "ashell_worker_poll_usage") : "ashell_pane_poll_usage");
     void (*release)(void *) = dlsym(RTLD_DEFAULT, nested ? (host ? "ashell_worker_host_release" : "ashell_worker_release") : "ashell_pane_release");
     if (!spawn || !pollJob || !release) { fputs("spawn contract unavailable: FAIL\n", thread_stdout); return 1; }
-    NSString *home = nested ? @(getenv("HOME")) : NSHomeDirectory();
+    // Exercise a caller HOME spelling that the worker bookmark may normalize.
+    NSString *home = nested ? @(getenv("HOME")) : [NSHomeDirectory() stringByAppendingString:@"/."];
     NSString *directory = [home stringByAppendingPathComponent:@"Documents"];
     NSString *homeValue = [@"HOME=" stringByAppendingString:home];
     NSString *expected = [@"POOL_EXPECTED_HOME=" stringByAppendingString:home];
@@ -333,7 +341,11 @@ static int spawn_contract(BOOL nested, BOOL host) {
 int worker_pool_nested_main(int argc, char **argv) {
     const char *home = getenv("HOME"), *expected = getenv("POOL_EXPECTED_HOME");
     const char *root = ios_getenv("ASHELL_WORKER_ROOT_PID");
-    if (!root || atoi(root) != ios_currentPid() || !home || !expected || strcmp(home, expected) || spawn_contract(YES, NO)) return 1;
+    if (!root || atoi(root) != ios_currentPid() || !same_directory(home, expected)) {
+        fprintf(thread_stderr, "nested context root=%s pid=%d home_same=%d home=%s expected=%s\n", root ?: "missing", ios_currentPid(), same_directory(home, expected), home ?: "missing", expected ?: "missing");
+        return 1;
+    }
+    if (spawn_contract(YES, NO)) return 1;
     fputs("PAYLOAD\n", thread_stdout);
     fputs("ERROR\n", thread_stderr);
     return 7;
@@ -386,9 +398,9 @@ int worker_pool_payload_main(int argc, char **argv) {
     const char *temporary = getenv("TMPDIR");
     const char *parent = getenv("POOL_PARENT_PID");
     const char *root = ios_getenv("ASHELL_WORKER_ROOT_PID");
-    if (!root || atoi(root) != ios_currentPid() || !home || !expected || strcmp(home, expected) || !temporary ||
+    if (!root || atoi(root) != ios_currentPid() || !home || !expected || !same_directory(home, expected) || !temporary ||
         strcmp(temporary, NSTemporaryDirectory().fileSystemRepresentation) || !parent || getpid() == atoi(parent) || ios_isatty(1)) {
-        fprintf(thread_stderr, "payload root=%s pid=%d home=%d tmp_domain=%d process_distinct=%d tty=%d\n", root ?: "missing", ios_currentPid(), home && expected && !strcmp(home, expected), temporary && !strcmp(temporary, NSTemporaryDirectory().fileSystemRepresentation), parent && getpid() != atoi(parent), ios_isatty(1));
+        fprintf(thread_stderr, "payload root=%s pid=%d home=%d tmp_domain=%d process_distinct=%d tty=%d\n", root ?: "missing", ios_currentPid(), home && expected && same_directory(home, expected), temporary && !strcmp(temporary, NSTemporaryDirectory().fileSystemRepresentation), parent && getpid() != atoi(parent), ios_isatty(1));
         return 1;
     }
     NSString *file = [@(temporary) stringByAppendingPathComponent:NSUUID.UUID.UUIDString];
