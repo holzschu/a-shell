@@ -43,7 +43,7 @@ typedef struct {
     ssh_session session;
     ssh_channel channel;
     struct ssh_channel_callbacks_struct callbacks;
-    int authenticated, attempts, tty, cols, rows, pane_fd, error_fd;
+    int authenticated, attempts, tty, cols, rows, pane_fd, error_fd, channel_closed;
     char term[128];
     void *pane;
 } Client;
@@ -232,6 +232,11 @@ static void signal_request(ssh_session s, ssh_channel ch, const char *name, void
     }
 }
 
+static void channel_closed(ssh_session s, ssh_channel ch, void *data) {
+    (void)s; (void)ch;
+    ((Client *)data)->channel_closed = 1;
+}
+
 static ssh_channel open_channel(ssh_session session, void *data) {
     Client *c = data;
     if (!c->authenticated || c->channel) return NULL;
@@ -261,7 +266,7 @@ static void *serve_client(void *data) {
     Client *c = data;
     ssh_session session = c->session;
     struct ssh_server_callbacks_struct callbacks = {.userdata = c, .auth_pubkey_function = authenticate, .channel_open_request_session_function = open_channel};
-    c->callbacks = (struct ssh_channel_callbacks_struct){.userdata = c, .channel_pty_request_function = pty_request, .channel_pty_window_change_function = resize, .channel_shell_request_function = shell_request, .channel_exec_request_function = exec_request, .channel_signal_function = signal_request};
+    c->callbacks = (struct ssh_channel_callbacks_struct){.userdata = c, .channel_pty_request_function = pty_request, .channel_pty_window_change_function = resize, .channel_shell_request_function = shell_request, .channel_exec_request_function = exec_request, .channel_signal_function = signal_request, .channel_close_function = channel_closed};
     ssh_callbacks_init(&callbacks);
     ssh_callbacks_init(&c->callbacks);
     ssh_set_server_callbacks(session, &callbacks);
@@ -319,6 +324,11 @@ static void *serve_client(void *data) {
             ssh_channel_request_send_exit_status(c->channel, status);
             ssh_channel_send_eof(c->channel);
             ssh_channel_close(c->channel);
+            // Let the peer acknowledge close before disconnecting the transport.
+            // Closing a socket with unread channel replies can reset the connection.
+            for (int i = 0; i < 50 && !c->channel_closed && atomic_load(&running) && ssh_is_connected(session); i++) {
+                if (ssh_event_dopoll(event, 100) == SSH_ERROR) break;
+            }
             break;
         }
     }

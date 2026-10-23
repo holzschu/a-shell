@@ -33,6 +33,18 @@ grep -Eq '(^|[[:space:]])0[[:space:]]+1[[:space:]]+3[[:space:]]*$' "$work/shell"
     printf 'printf "ASHELL_SSH_INTERRUPT_%%s_END\\n" "$?"\nexit\n'
 } | ssh -tt "${options[@]}" "$user@$host" > "$work/interrupt" 2>&1
 grep -Eq '(^|[[:space:]])ASHELL_SSH_INTERRUPT_130_END$' "$work/interrupt"
+# A normal channel close must preserve the remote exit status, not SSH's 255.
+for expected in 0 7 0; do
+    set +e
+    ssh -tt "${options[@]}" "$user@$host" "exit $expected" > "$work/close" 2>&1
+    actual=$?
+    set -e
+    if [ "$actual" -ne "$expected" ]; then
+        echo "Remote exit $expected returned SSH status $actual" >&2
+        cat "$work/close" >&2
+        exit 1
+    fi
+done
 if ssh "${options[@]}" -o PubkeyAuthentication=no -o PasswordAuthentication=yes -o KbdInteractiveAuthentication=no "$user@$host" true > "$work/password" 2>&1; then
     echo 'Password-only login unexpectedly succeeded' >&2
     exit 1
