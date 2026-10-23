@@ -67,7 +67,7 @@ The [App build workflow](.github/workflows/app-build.yml) builds `a-Shell-noPyth
 
 CI initializes only the SwiftTerm submodule and runs `./downloadFrameworks.sh --jobs 4`; the script passes extra arguments to `swift package`. It uses `swift package resolve` to download the binary targets and verify their checksums against `xcfs/Package.swift`. A failed download or checksum mismatch stops the script, and a failed `xcodebuild` fails the job. Swift package downloads are cached. The workflow token has read-only access to repository contents.
 
-CI uses the same 15.0 deployment-target override as the commands above; it does not change the project's 14.0 setting. The Python variants remain outside CI because their required Python 3.13 frameworks are not publicly available.
+CI preserves the project's iOS 14.0 deployment target with Xcode 26.3. The Python variants remain outside CI because their required Python 3.13 frameworks are not publicly available.
 
 ## Home directory
 
