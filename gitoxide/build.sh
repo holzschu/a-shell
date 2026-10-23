@@ -46,8 +46,13 @@ framework() {
       target=aarch64-apple-ios-sim
       triple=arm64-apple-ios14.0-simulator
       ;;
+    simulator-x86_64)
+      sdk_name=iphonesimulator
+      target=x86_64-apple-ios
+      triple=x86_64-apple-ios14.0-simulator
+      ;;
     *)
-      echo 'Expected device or simulator' >&2
+      echo 'Expected device, simulator or simulator-x86_64' >&2
       return 2
       ;;
   esac
@@ -59,7 +64,7 @@ framework() {
   sdk=$(xcrun --sdk "$sdk_name" --show-sdk-path)
   output=$cache/$platform/gitoxide.framework
   mkdir -p "$output"
-  xcrun --sdk "$sdk_name" clang -target "$triple" -isysroot "$sdk" -Wall -Wextra -Werror \
+  xcrun --sdk "$sdk_name" clang -target "$triple" -isysroot "$sdk" -Oz -Wall -Wextra -Werror \
     -I "$frameworks/ios_system.framework/Headers" -F "$frameworks" -dynamiclib \
     "$here/command.m" "$cache/target/$target/release/libgitoxide.a" -framework ios_system \
     -framework Foundation -framework Security -framework SystemConfiguration -lc++ -lz -liconv \
