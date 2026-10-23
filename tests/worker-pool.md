@@ -19,7 +19,7 @@ worker-pool-check lifecycle-close
 
 Each command returns zero on success and prints assertions to its output stream. The capacity check asks the host for the effective cap (`ashell_pane_capacity`: the `worker_limit` setting, or the physical core count when unset, at most `ShellWorkerCount` from the host Info.plist), keeps that many commands open, requires distinct real process IDs and independent cwd/environment, rejects one additional request with `ENOSPC`, then sends input after six seconds and checks exact exit statuses and output EOF. It compares directory device/inode pairs because the phone can return `/private/var/...` for a cwd requested through its `/var/...` alias.
 
-The completion check leaves output unread until polling reports status 7, checks that a second poll preserves it, then reads the exact pending output and EOF.
+The completion check leaves output unread until polling reports status 7, checks that a second poll preserves it, then reads the exact pending output and EOF. On failure it prints the first and repeated poll results and statuses, byte count, output match, EOF result, read errno and socket readiness. A skipped repeated poll or read retains its initial sentinel; the diagnostic does not drain output before the status checks.
 
 The identity check supplies stale worker markers and runs real Dash with a nested Dash command. Both shells must see positive worker and root markers through their own environment import, and the nested command must resolve through the host's packaged PATH. It also checks status, pending output and EOF through the public pane API.
 

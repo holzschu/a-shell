@@ -215,13 +215,30 @@ static int completion_check(BOOL identity) {
         result = pollJob(job, &status);
         if (!result) usleep(10000);
     }
+    int first_status = status, repeated_result = 0, repeated_status = -1;
     BOOL passed = result == 1 && status == 7;
     status = -1;
-    passed = passed && pollJob(job, &status) == 1 && status == 7;
+    if (passed) {
+        repeated_result = pollJob(job, &status);
+        repeated_status = status;
+        passed = repeated_result == 1 && status == 7;
+    }
     char output[64] = {0};
     ssize_t count = passed ? read(descriptor, output, sizeof(output) - 1) : -1;
-    passed = passed && count == 14 && !strcmp(output, "pending-output");
-    if (passed) passed = read(descriptor, output, 1) == 0;
+    int read_error = passed && count < 0 ? errno : 0;
+    BOOL output_matches = count == 14 && !strcmp(output, "pending-output");
+    passed = passed && output_matches;
+    ssize_t eof = -1;
+    if (passed) {
+        eof = read(descriptor, output, 1);
+        if (eof < 0) read_error = errno;
+        passed = eof == 0;
+    }
+    if (!passed) {
+        struct pollfd ready = {.fd = descriptor, .events = POLLIN};
+        int ready_result = poll(&ready, 1, 0);
+        fprintf(thread_stdout, "completion result=%d status=%d repeated_result=%d repeated_status=%d bytes=%zd output_matches=%d eof=%zd read_errno=%d readiness=%d revents=%#x\n", result, first_status, repeated_result, repeated_status, count, output_matches, eof, read_error, ready_result, ready.revents);
+    }
     release(job);
     close(descriptor);
     fprintf(thread_stdout, "%s: %s\n", identity ? "Dash identity and nested command lookup" : "status before output drain and repeated status", passed ? "PASS" : "FAIL");
