@@ -61,6 +61,14 @@ The Simulator build needs the same deployment-target override on Xcode 27.1. The
 
 Because Python 3.x uses functions that are only available on the iOS 14 SDK, I've set the minimum iOS version to 14.0. It also reduces the size of the binaries, so `ios_system` and the other frameworks have the same settings. If you need to run it on an iOS 13 device, you'll have to recompile most frameworks.
 
+### Continuous integration
+
+The [App build workflow](.github/workflows/app-build.yml) builds `a-Shell-noPython` on every pull request and can also be run manually with `workflow_dispatch`. It builds unsigned Debug apps for generic iOS devices (arm64) and Simulator (x86_64) with Xcode 26.3 on `macos-15`. These are build checks; they do not run the app or its commands.
+
+CI initializes only the SwiftTerm submodule and runs `./downloadFrameworks.sh --jobs 4`; the script passes extra arguments to `swift package`. It uses `swift package resolve` to download the binary targets and verify their checksums against `xcfs/Package.swift`. A failed download or checksum mismatch stops the script, and a failed `xcodebuild` fails the job. Swift package downloads are cached. The workflow token has read-only access to repository contents.
+
+CI uses the same 15.0 deployment-target override as the commands above; it does not change the project's 14.0 setting. The Python variants remain outside CI because their required Python 3.13 frameworks are not publicly available.
+
 ## Home directory
 
  In iOS, you cannot write in the `~` directory, only in `~/Documents/`, `~/Library/` and `~/tmp`. Most Unix programs assume the configuration files are in `$HOME`. 
