@@ -1,0 +1,40 @@
+--- a/flist.c
++++ b/flist.c
+@@ -1765,6 +1765,8 @@
+ 			sess->total_errors++;
+ 			return false;
+ 		}
++	} else {
++		froot_acquire(froot);
+ 	}
+ 
+ 	cargv[0] = root;
+@@ -1985,7 +1987,7 @@
+ 		if (sess->opts->checksum && S_ISREG(f->st.mode)) {
+ 			rc = hash_file_by_path(AT_FDCWD, f->path,
+ 			    f->st.size, f->md);
+-			if (rc) {
++			if (!rc) {
+ 				ERR("%s: hash_file_by_path", f->path);
+ 				sess->total_errors++;
+ 				fl_pop(fl);
+@@ -2006,6 +2008,7 @@
+ 	rc = true;
+ out:
+ 	fts_close(fts);
++	froot_release(froot);
+ 	return rc;
+ }
+ 
+--- a/uploader.c
++++ b/uploader.c
+@@ -1853,7 +1853,8 @@
+ 	size_t		 idx; /* index of current file */
+ 
+ 	assert(p->state != UPLOAD_WRITE);
+-	if (p->nextack == p->flsz)
++	/* An unframed client stream cannot carry tagged acknowledgements. */
++	if (!sess->mplex_writes || p->nextack == p->flsz)
+ 		return;
+ 
+ 	/*
