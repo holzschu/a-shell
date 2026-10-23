@@ -9,19 +9,32 @@
 #include <termios.h>
 #include <unistd.h>
 
+static int interactive;
+void startInteractive(void) { interactive = 1; }
+void stopInteractive(void) { interactive = 0; }
+int storeInteractive(void) { return interactive; }
+
 // A real terminal consumer, registered through the command catalogue API.
 int pane_raw_reader_main(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
     int tty = ios_gettty();
     struct termios saved, raw;
-    if (tcgetattr(tty, &saved)) return 2;
-    raw = saved;
-    cfmakeraw(&raw);
-    if (tcsetattr(tty, TCSANOW, &raw)) return 2;
+    int has_tty = tty >= 0 && tcgetattr(tty, &saved) == 0;
+    if (has_tty) {
+        raw = saved;
+        cfmakeraw(&raw);
+        if (tcsetattr(tty, TCSANOW, &raw)) return 2;
+    } else {
+        tty = fileno(thread_stdin);
+        ios_startInteractive();
+    }
     fputs("RAW_READY\n", thread_stdout);
     fflush(thread_stdout);
-    char byte = 0;
-    int result = read(tty, &byte, 1) == 1 && byte == 'x' ? 0 : 3;
-    tcsetattr(tty, TCSANOW, &saved);
+    char bytes[2] = {0};
+    int result = read(tty, bytes, 1) == 1 && bytes[0] == 3 &&
+        read(tty, bytes + 1, 1) == 1 && bytes[1] == 'x' ? 0 : 3;
+    if (has_tty) tcsetattr(tty, TCSANOW, &saved);
     return result;
 }
 
@@ -53,10 +66,11 @@ int main(int argc, char **argv) {
     @autoreleasepool {
         alarm(15);
         initializeEnvironment();
-        BOOL raw = argc > 1 && !strcmp(argv[1], "raw");
+        BOOL raw = argc > 1 && (!strcmp(argv[1], "raw") || !strcmp(argv[1], "raw-socket"));
+        BOOL pty = raw && strcmp(argv[1], "raw-socket");
         if (raw) replaceCommand(@"pane-raw-reader", @"pane_raw_reader_main", false);
         NSString *path = [@"PATH=" stringByAppendingString:[NSBundle.mainBundle.bundlePath stringByAppendingPathComponent:@"bin"]];
-        const char *env[] = {"ASHELL_IOS_SOCKET_INPUT=1", raw ? "ASHELL_IOS_PTY=1" : "ASHELL_IOS_PTY=0", "PS1=PANE_PROMPT>", path.UTF8String, NULL};
+        const char *env[] = {"ASHELL_IOS_SOCKET_INPUT=1", pty ? "ASHELL_IOS_PTY=1" : "ASHELL_IOS_PTY=0", "PS1=PANE_PROMPT>", path.UTF8String, NULL};
         ashell_pane_options options = {.size = sizeof(options), .tty = 1};
         int fd = -1;
         void *job = NULL;
@@ -66,7 +80,7 @@ int main(int argc, char **argv) {
         if (raw) {
             if (read_marker(fd, "RAW_READY")) return 1;
             error = ashell_pane_interrupt(job);
-            if (error != ENOTSUP || send_line(fd, "x")) return 1;
+            if (error != ENOTSUP || send_line(fd, "\003x")) return 1;
         } else {
             if (read_marker(fd, "PANE_PROMPT>")) return 1;
             if (send_line(fd, "printf 'PANE_RUNNING\\n'; sleep 30\n") || read_marker(fd, "PANE_RUNNING\n")) return 1;

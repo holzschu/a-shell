@@ -291,7 +291,7 @@ static void *serve_client(void *data) {
                 if (!length) {
                     int error = host.interrupt(c->pane);
                     if (!error) { input.offset++; input.length--; continue; }
-                    if (error != ENOTSUP) break;
+                    if (error != ENOTSUP) { input.offset++; input.length--; continue; }
                     length = 1;
                 }
             }

@@ -835,6 +835,10 @@ int ashell_pane_interrupt(void *handle) {
         // Raw readers (libedit, Codex, Helix) own their Ctrl-C binding.
         else if (!(settings.c_lflag & ICANON)) error = ENOTSUP;
     }
+    if (!error && !job->is_pty && job->input_relay) {
+        pane_input_relay *relay = job->input_relay;
+        if (relay->interactive && relay->interactive()) error = ENOTSUP;
+    }
     if (!error) {
         ios_switchSession(job->key);
         const char *name = ios_progname();
@@ -850,7 +854,7 @@ int ashell_pane_interrupt(void *handle) {
     // Never cancel a shell waiter: cancellation of pthread_cond_wait can leave
     // the stock completion mutex locked. Raw TUIs already use the ETX path.
     // The runtime records SIGINT for worker proxies before cancelling them.
-    return pthread_equal(foreground, pthread_self()) ? ESRCH : ios_killpid(pid, SIGINT);
+    return pthread_equal(foreground, pthread_self()) ? ESRCH : ios_interruptpid(pid);
 }
 
 int ashell_pane_cancel(void *handle) {
