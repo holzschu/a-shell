@@ -66,9 +66,12 @@ int main(int argc, char **argv) {
     @autoreleasepool {
         alarm(15);
         initializeEnvironment();
-        BOOL raw = argc > 1 && (!strcmp(argv[1], "raw") || !strcmp(argv[1], "raw-socket"));
-        BOOL pty = raw && strcmp(argv[1], "raw-socket");
-        if (raw) replaceCommand(@"pane-raw-reader", @"pane_raw_reader_main", false);
+        BOOL cookedIsolation = argc > 1 && !strcmp(argv[1], "cooked-isolation");
+        BOOL isolation = argc > 1 && !strcmp(argv[1], "raw-socket-isolation");
+        BOOL sequence = argc > 1 && !strcmp(argv[1], "raw-then-cooked");
+        BOOL raw = isolation || (argc > 1 && (!strcmp(argv[1], "raw") || !strcmp(argv[1], "raw-socket")));
+        BOOL pty = raw && !isolation && strcmp(argv[1], "raw-socket");
+        if (raw || sequence) replaceCommand(@"pane-raw-reader", @"pane_raw_reader_main", false);
         NSString *path = [@"PATH=" stringByAppendingString:[NSBundle.mainBundle.bundlePath stringByAppendingPathComponent:@"bin"]];
         const char *env[] = {"ASHELL_IOS_SOCKET_INPUT=1", pty ? "ASHELL_IOS_PTY=1" : "ASHELL_IOS_PTY=0", "PS1=PANE_PROMPT>", path.UTF8String, NULL};
         ashell_pane_options options = {.size = sizeof(options), .tty = 1};
@@ -77,19 +80,51 @@ int main(int argc, char **argv) {
         int error = ashell_pane_spawn_ex(raw ? "pane-raw-reader" : "dash -i",
             NSTemporaryDirectory().fileSystemRepresentation, 80, 24, env, &options, &fd, &job);
         if (error) { dprintf(2, "spawn=%d\n", error); return 2; }
+        FILE *localInput=NULL,*localOutput=NULL,*localError=NULL;
+        void *localRegistration=NULL;
+        pid_t localPid=0;
         if (raw) {
             if (read_marker(fd, "RAW_READY")) return 1;
+            // The embedding UI leaves its local interactive command while the pane stays raw.
+            if (isolation) stopInteractive();
             error = ashell_pane_interrupt(job);
+            if (isolation) dprintf(1, "local mode stopped; remote raw interrupt=%d expected=%d\n", error, ENOTSUP);
             if (error != ENOTSUP || send_line(fd, "\003x")) return 1;
         } else {
             if (read_marker(fd, "PANE_PROMPT>")) return 1;
+            if (sequence) {
+                if (send_line(fd, "pane-raw-reader\n") || read_marker(fd, "RAW_READY")) return 1;
+                if (ashell_pane_interrupt(job) != ENOTSUP || send_line(fd, "\003x")) return 1;
+                if (read_marker(fd, "PANE_PROMPT>")) return 1;
+            }
             if (send_line(fd, "printf 'PANE_RUNNING\\n'; sleep 30\n") || read_marker(fd, "PANE_RUNNING\n")) return 1;
+            if (cookedIsolation) {
+                ios_switchSession("embedding-local-dash");
+                ios_setContext("embedding-local-dash-context");
+                localInput=tmpfile();localOutput=tmpfile();localError=tmpfile();
+                if(!localInput||!localOutput||!localError||ashell_register_owned_streams(localInput,localOutput,localError,&localRegistration))return 2;
+                ios_setStreams(localInput,localOutput,localError);
+                ios_setenv("PATH",path.UTF8String+5,1);
+                ios_setenv("ASHELL_IOS_SOCKET_INPUT","0",1);
+                joinMainThread=false;
+                localPid=ios_fork();ios_system("dash -c 'sleep 1; result=$?; printf LOCAL_COMPLETE; exit $result'");
+            }
             // The marker precedes dispatch; allow the real sleep to enter its wait.
             usleep(200000);
             error = ashell_pane_interrupt(job);
             if (error || read_marker(fd, "PANE_PROMPT>")) return 1;
             if (send_line(fd, "printf 'PANE_STATUS_%s_END\\n' \"$?\"\n") || read_marker(fd, "PANE_STATUS_130_END\n")) return 1;
             if (send_line(fd, "printf 'PANE_NEXT_OK\\n'; exit 0\n") || read_marker(fd, "PANE_NEXT_OK\n")) return 1;
+        }
+        if (cookedIsolation) {
+            ios_switchSession("embedding-local-dash");
+            ios_waitpid(localPid);ashell_wait_owned_streams(localRegistration);
+            int localStatus=ios_getCommandStatus();
+            dprintf(1,"unrelated local Dash status=%d expected=0\n",localStatus);
+            if(localStatus!=0)return 1;
+            ashell_unregister_owned_streams(&localRegistration);
+            ios_setStreams(stdin,stdout,stderr);
+            fclose(localInput);fclose(localOutput);fclose(localError);
         }
         int status = -1, finished = 0;
         for (int i = 0; i < 100 && !(finished = ashell_pane_poll(job, &status)); i++) usleep(10000);

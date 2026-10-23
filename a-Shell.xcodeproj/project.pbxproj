@@ -4342,6 +4342,7 @@
 		22DC1F88257012E60068004E /* ios_system */ = {
 			isa = PBXGroup;
 			children = (
+				731400000000000000000002 /* SSHServer.framework */,
 				228E13F225C95F2D0065D825 /* ios_system.xcframework */,
 				22BA51D0258E476A00923893 /* mandoc.xcframework */,
 				22DC1F8E257012F50068004E /* awk.xcframework */,

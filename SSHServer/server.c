@@ -295,7 +295,6 @@ static void *serve_client(void *data) {
                 length = (size_t)(etx - (input.bytes + input.offset));
                 if (!length) {
                     int error = host.interrupt(c->pane);
-                    if (!error) { input.offset++; input.length--; continue; }
                     if (error != ENOTSUP) { input.offset++; input.length--; continue; }
                     length = 1;
                 }
@@ -326,8 +325,16 @@ static void *serve_client(void *data) {
             ssh_channel_close(c->channel);
             // Let the peer acknowledge close before disconnecting the transport.
             // Closing a socket with unread channel replies can reset the connection.
-            for (int i = 0; i < 50 && !c->channel_closed && atomic_load(&running) && ssh_is_connected(session); i++) {
-                if (ssh_event_dopoll(event, 100) == SSH_ERROR) break;
+            struct timespec close_deadline, now;
+            if (clock_gettime(CLOCK_MONOTONIC, &close_deadline) == 0) {
+                close_deadline.tv_sec += 5;
+                while (!c->channel_closed && atomic_load(&running) && ssh_is_connected(session)) {
+                    if (clock_gettime(CLOCK_MONOTONIC, &now)) break;
+                    long remaining = (close_deadline.tv_sec - now.tv_sec) * 1000 +
+                        (close_deadline.tv_nsec - now.tv_nsec) / 1000000;
+                    if (remaining <= 0) break;
+                    if (ssh_event_dopoll(event, remaining < 100 ? (int)remaining : 100) == SSH_ERROR) break;
+                }
             }
             break;
         }

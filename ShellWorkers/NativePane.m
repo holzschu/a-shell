@@ -33,6 +33,7 @@ typedef struct {
     struct rusage usage;
     int usage_available;
     int peer_control, input_closed, is_pty;
+    atomic_int interactive;
     unsigned char eof_key;
     FILE *streams[3];
     // Without a tty the session streams differ from the command streams, so stock isatty reports false.
@@ -48,12 +49,23 @@ typedef struct {
 // One pane owns this process. Dash's optional evaluation hook borrows a fresh
 // stdin pipe, while the relay keeps the editor pipe and socket alive.
 static _Atomic(pane_job *) foreground_pane;
+
+// ios_system asks the owning pane before calling visible-terminal callbacks.
+// A different session returns -1 so the app's existing UI behavior is retained.
+__attribute__((used, visibility("default"))) int ashell_pane_interactive(const void *context, int mode) {
+    pane_job *job = atomic_load(&foreground_pane);
+    if (!job || context != job->key) return -1;
+    if (mode >= 0) atomic_store(&job->interactive, mode != 0);
+    return atomic_load(&job->interactive);
+}
 // Dash publishes the synthetic child PID before dispatch and restores its
 // parent's PID after waiting. lastThreadId instead names the first descendant,
 // which can be a shell blocked in ios_waitpid rather than the running command.
 static _Atomic int foreground_command_pid;
 
 __attribute__((used, visibility("default"))) int ashell_pane_exchange_foreground_pid(int pid) {
+    pane_job *job = atomic_load(&foreground_pane);
+    if (!job || ios_getContext() != job->key) return 0;
     return atomic_exchange(&foreground_command_pid, pid);
 }
 
@@ -79,7 +91,6 @@ typedef struct pane_input_relay {
     int request, request_done, request_error;
     command_input *command, *requested_command;
     input_queue editor_queue, command_queue;
-    int (*interactive)(void);
 } pane_input_relay;
 
 enum { INPUT_BEGIN = 1, INPUT_END, INPUT_RETIRE };
@@ -125,7 +136,7 @@ static int route_input(pane_input_relay *relay, const unsigned char *bytes, size
     for (size_t i = 0; i < length; i++) {
         unsigned char byte = bytes[i];
         int foreground = relay->command && !relay->command_eof;
-        int raw = foreground && relay->interactive && relay->interactive();
+        int raw = foreground && atomic_load(&relay->command->job->interactive);
         if (foreground && !raw && byte == 4) {
             relay->command_eof = 1;
             continue;
@@ -330,7 +341,6 @@ static int prepare_input_relay(pane_job *job) {
     relay->editor_writer = input[1];
     relay->wake[0] = wake[0]; relay->wake[1] = wake[1];
     relay->editor_events = kqueue();
-    relay->interactive = dlsym(RTLD_DEFAULT, "storeInteractive");
     int error = relay->socket < 0 || relay->editor_reader < 0 || relay->editor_events < 0 ? errno : 0;
     if (!error && setvbuf(reader, NULL, _IONBF, 0)) error = EIO;
     int descriptors[] = {relay->socket, input[0], input[1], relay->editor_reader, wake[0], wake[1], relay->editor_events};
@@ -626,6 +636,7 @@ int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, un
         int error = ENOMEM, peer = -1, child = -1, err_child = -1;
         pane_job *job = calloc(1, sizeof(*job));
         if (!job) { atomic_store(&pane_in_flight, 0); return ENOMEM; }
+        atomic_init(&job->interactive, 0);
         job->peer_control = -1;
         error = pthread_mutex_init(&job->mutex, NULL);
         if (error) { free(job); atomic_store(&pane_in_flight, 0); return error; }
@@ -836,8 +847,7 @@ int ashell_pane_interrupt(void *handle) {
         else if (!(settings.c_lflag & ICANON)) error = ENOTSUP;
     }
     if (!error && !job->is_pty && job->input_relay) {
-        pane_input_relay *relay = job->input_relay;
-        if (relay->interactive && relay->interactive()) error = ENOTSUP;
+        if (atomic_load(&job->interactive)) error = ENOTSUP;
     }
     if (!error) {
         ios_switchSession(job->key);
