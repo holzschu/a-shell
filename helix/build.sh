@@ -92,12 +92,12 @@ PYCODE
       patch -s -f -F 0 --dry-run -p1 -d "$dependency" <"$here/crossterm.patch" >/dev/null
       patch -s -f -F 0 -p1 -d "$dependency" <"$here/crossterm.patch"
     fi
-    if ! git -C "$source" apply --reverse --check "$here/helix.patch" 2>/dev/null; then
-      git -C "$source" apply --check "$here/helix.patch"
+    if ! patch -s -f -F 0 --dry-run -R -p1 -d "$source" <"$here/helix.patch" >/dev/null 2>&1; then
+      patch -s -f -F 0 --dry-run -p1 -d "$source" <"$here/helix.patch"
       echo 'Apply embedded iOS boundary patch'
-      git -C "$source" apply "$here/helix.patch"
+      patch -s -f -F 0 -p1 -d "$source" <"$here/helix.patch"
     fi
-    patch -s -f -F 0 --dry-run -p1 -d "$source" <"$here/ashell-terminal.patch" >/dev/null
+    patch -s -f -F 0 --dry-run -p1 -d "$source" <"$here/ashell-terminal.patch"
     patch -s -f -F 0 -p1 -d "$source" <"$here/ashell-terminal.patch"
   fi
   cmp -s "$here/ios-terminal.rs" "$dependency/src/terminal/sys/ios.rs" || cp "$here/ios-terminal.rs" "$dependency/src/terminal/sys/ios.rs"
