@@ -279,7 +279,18 @@ static void *serve_client(void *data) {
             if (ssh_channel_is_eof(c->channel)) input.eof = 1;
         }
         if (input.length) {
-            ssize_t n = write(c->pane_fd, input.bytes + input.offset, input.length);
+            size_t length = input.length;
+            unsigned char *etx = c->tty ? memchr(input.bytes + input.offset, 3, length) : NULL;
+            if (etx) {
+                length = (size_t)(etx - (input.bytes + input.offset));
+                if (!length) {
+                    int error = host.interrupt(c->pane);
+                    if (!error) { input.offset++; input.length--; continue; }
+                    if (error != ENOTSUP) break;
+                    length = 1;
+                }
+            }
+            ssize_t n = write(c->pane_fd, input.bytes + input.offset, length);
             if (n > 0) { input.offset += n; input.length -= n; }
             else if (n < 0 && errno != EAGAIN && errno != EINTR) break;
         }
@@ -447,6 +458,10 @@ static int start_server(void) {
 }
 
 int ashell_sshd_main(int argc, char **argv) {
+    if (ios_getenv("ASHELL_WORKER_PID")) {
+        fprintf(thread_stderr, "sshd: control the service from the application terminal\n");
+        return 1;
+    }
     pthread_mutex_lock(&control);
     const char *command = argc == 2 ? argv[1] : "help";
     int error = 0;

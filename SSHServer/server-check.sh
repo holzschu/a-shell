@@ -19,10 +19,20 @@ grep -qx ASHELL_SSH_GROUP_PRESENT "$work/environment"
 printf 'echo ASHELL_SSH_PROMPT_$((40+2))\nprintf abc | wc\nexit\n' | ssh -tt "${options[@]}" "$user@$host" > "$work/shell" 2>&1
 grep -Eq '(^|[[:space:]])ASHELL_SSH_PROMPT_42$' "$work/shell"
 grep -Eq '(^|[[:space:]])0[[:space:]]+1[[:space:]]+3[[:space:]]*$' "$work/shell"
+# An SSH PTY sends ETX as channel data while a foreground command owns input.
+# The next command must observe interruption rather than a successful sleep.
+{
+    printf 'sleep 30\n'
+    sleep 1
+    printf '\003'
+    sleep 1
+    printf 'printf "ASHELL_SSH_INTERRUPT_%%s_END\\n" "$?"\nexit\n'
+} | ssh -tt "${options[@]}" "$user@$host" > "$work/interrupt" 2>&1
+grep -Eq '(^|[[:space:]])ASHELL_SSH_INTERRUPT_130_END$' "$work/interrupt"
 if ssh "${options[@]}" -o PubkeyAuthentication=no -o PasswordAuthentication=yes -o KbdInteractiveAuthentication=no "$user@$host" true > "$work/password" 2>&1; then
     echo 'Password-only login unexpectedly succeeded' >&2
     exit 1
 fi
 grep -q 'Permission denied (publickey)' "$work/password"
 echo ASHELL_SSH_SERVER_CORE_PASS
-echo 'Still required: terminal resize, real Codex TUI, shared serving indicator, off/closed port, background mode and locked phone.'
+echo 'This fixture covers SSH exec, shell input, interruption and authentication. Check resize, TUIs, the service indicator, shutdown and background lifetime separately.'
