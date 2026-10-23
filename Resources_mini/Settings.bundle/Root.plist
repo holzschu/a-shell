@@ -210,6 +210,64 @@
 			<key>AutocorrectionType</key>
 			<string>No</string>
 		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>Terminal font</string>
+			<key>FooterText</key>
+			<string>Put .ttf or .otf files in Documents/Fonts. Installed system fonts are listed only when the app is signed with the Fonts capability (Use Installed Fonts). Choose an installed font by name with config -n &lt;PostScript name&gt;.</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Font</string>
+			<key>Key</key>
+			<string>terminalFont</string>
+			<key>DefaultValue</key>
+			<string>custom</string>
+			<key>Titles</key>
+			<array>
+				<string>Menlo</string>
+				<string>Courier</string>
+				<string>Courier New</string>
+				<string>Custom</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>Menlo</string>
+				<string>Courier</string>
+				<string>CourierNewPSMT</string>
+				<string>custom</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSTextFieldSpecifier</string>
+			<key>Title</key>
+			<string>Custom font name</string>
+			<key>Key</key>
+			<string>fontName</string>
+			<key>DefaultValue</key>
+			<string>Menlo</string>
+			<key>AutocapitalizationType</key>
+			<string>None</string>
+			<key>AutocorrectionType</key>
+			<string>No</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSTextFieldSpecifier</string>
+			<key>Title</key>
+			<string>Font size</string>
+			<key>Key</key>
+			<string>fontSize</string>
+			<key>DefaultValue</key>
+			<real>13</real>
+			<key>KeyboardType</key>
+			<string>DecimalPad</string>
+		</dict>
 	</array>
 </dict>
 </plist>

@@ -82,6 +82,8 @@ do
 	# change direct_url.json files to have a more meaningful URL:
 	find $directory -type f -name direct_url.json -exec sed -i bak  "s/file:.*packages/${APP}/g" {} \; -print
 	find $directory -type f -name direct_url.jsonbak -delete
+	find $directory -type f -name direct_url.json -exec sed -i bak  "s/dir_info/archive_info/g" {} \; -print
+	find $directory -type f -name direct_url.jsonbak -delete
 	# Change the supported platform so "pip check" accepts it:
 	for wheelFile in `find $directory -type f -name WHEEL` 
 	do
