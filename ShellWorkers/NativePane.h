@@ -2,6 +2,7 @@
 #define ASHELL_NATIVE_PANE_H
 
 #include <stddef.h>
+#include <sys/resource.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,6 +49,8 @@ int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, un
 // Repeated polling after exit preserves status. Drain the returned fd to EOF independently.
 // A cleanup/restore error returns -errno after completion instead of hiding the failure.
 int ashell_pane_poll(void *job, int *status_out);
+// Optional usage is the worker's RUSAGE_SELF snapshot at exit, unavailable for lost workers.
+int ashell_pane_poll_usage(void *job, int *status_out, struct rusage *usage_out, int *usage_available);
 
 // These operations return 0 or POSITIVE errno, unlike poll.
 // Resize updates the worker command dimensions through ios_setWindowSize.

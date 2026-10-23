@@ -29,6 +29,8 @@ typedef struct {
     pthread_cond_t ready;
     unsigned refs;
     int initialized, startup_error, done, status, completion_error;
+    struct rusage usage;
+    int usage_available;
     int peer_control, input_closed, is_pty;
     unsigned char eof_key;
     FILE *streams[3];
@@ -522,6 +524,11 @@ static void *run_pane(void *cookie) {
                 if (ios_setenv_pid(job->env[i], equals + 1, 1, pid)) error = EINVAL;
                 *equals = '=';
             }
+            // Identify this worker's root by its reserved command PID. Setup
+            // calls cannot consume it, and nested children have different PIDs.
+            char root_pid[32];
+            snprintf(root_pid, sizeof(root_pid), "%d", pid);
+            if (ios_setenv_pid("ASHELL_WORKER_ROOT_PID", root_pid, 1, pid)) error = EINVAL;
             pthread_mutex_lock(&job->mutex);
             job->initialized = 1;
             pthread_cond_signal(&job->ready);
@@ -556,6 +563,7 @@ static void *run_pane(void *cookie) {
         job->startup_error = job->initialized ? 0 : error;
         job->completion_error = error;
         job->initialized = 1;
+        job->usage_available = getrusage(RUSAGE_SELF, &job->usage) == 0;
         job->done = 1;
         NSLog(@"Shell pane lifecycle: exit key=%s status=%d error=%d", job->key, job->status, error);
         // Close the retained peer before announcing exit so output EOF is observable.
@@ -728,11 +736,20 @@ failed:
 }
 
 int ashell_pane_poll(void *handle, int *status_out) {
+    return ashell_pane_poll_usage(handle, status_out, NULL, NULL);
+}
+
+int ashell_pane_poll_usage(void *handle, int *status_out, struct rusage *usage_out, int *usage_available) {
+    if (usage_available) *usage_available = 0;
     if (!handle || !status_out) return -EINVAL;
     pane_job *job = handle;
     pthread_mutex_lock(&job->mutex);
     int result = job->completion_error ? -job->completion_error : job->done;
-    if (job->done) *status_out = job->status;
+    if (job->done) {
+        *status_out = job->status;
+        if (usage_out && job->usage_available) *usage_out = job->usage;
+        if (usage_available) *usage_available = job->usage_available;
+    }
     pthread_mutex_unlock(&job->mutex);
     return result;
 }

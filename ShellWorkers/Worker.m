@@ -8,6 +8,8 @@
 #include <fcntl.h>
 #include <locale.h>
 #include <signal.h>
+#undef kill
+#include <poll.h>
 
 // ios_system discovers these stock host callbacks with dlsym. Each extension
 // owns one shell; its socket already carries input directly to the command.
@@ -50,6 +52,96 @@ static int check_documents_write(NSURL *documents, NSString *probe) {
     return code;
 }
 
+static id<AShellSpawnBrokerWire> spawnBroker;
+@interface BrokerRemoteChild : NSObject
+@property(nonatomic, strong) id<AShellSpawnBrokerWire> broker;
+@property(nonatomic, copy) NSString *token;
+@property(nonatomic, strong) NSFileHandle *output;
+@property(nonatomic, strong) NSFileHandle *errors;
+@end
+@implementation BrokerRemoteChild
+- (void)dealloc { if (_token) [_broker releaseChild:_token]; }
+@end
+
+__attribute__((used, visibility("default"))) int ashell_worker_spawn_ex(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
+    if (fd_out) *fd_out = -1;
+    if (job_out) *job_out = NULL;
+    if (!options || options->size < sizeof(*options)) return EINVAL;
+    options->stderr_fd = -1;
+    if (!command || !*command || !cwd || cwd[0] != '/' || !cols || cols > 9999 || !rows || rows > 9999 || !fd_out || !job_out) return EINVAL;
+    if (!spawnBroker) return ENOTSUP;
+    NSMutableArray *env = [NSMutableArray new];
+    for (size_t i = 0; envp && envp[i]; i++) [env addObject:@(envp[i])];
+    BrokerRemoteChild *child = [BrokerRemoteChild new];
+    child.broker = spawnBroker;
+    __block int error = EPIPE;
+    [child.broker spawnChild:@(command) cwd:@(cwd) env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:options->separate_stderr != 0 reply:^(int code, NSString *token, NSFileHandle *output, NSFileHandle *errors) {
+        error = code;
+        if (error) return;
+        child.token = token;
+        child.output = output;
+        child.errors = errors;
+        if (!token || !output || (options->separate_stderr && !errors)) { error = EPROTO; return; }
+        *fd_out = dup(output.fileDescriptor);
+        if (*fd_out < 0) { error = errno; return; }
+        if (fcntl(*fd_out, F_SETFD, FD_CLOEXEC)) { error = errno; close(*fd_out); *fd_out = -1; return; }
+        if (errors) {
+            options->stderr_fd = dup(errors.fileDescriptor);
+            if (options->stderr_fd < 0) error = errno;
+            else if (fcntl(options->stderr_fd, F_SETFD, FD_CLOEXEC)) {
+                error = errno;
+                close(options->stderr_fd);
+                options->stderr_fd = -1;
+            }
+            if (error) { close(*fd_out); *fd_out = -1; }
+        }
+    }];
+    if (error) return error;
+    *job_out = (__bridge_retained void *)child;
+    return 0;
+}
+__attribute__((used, visibility("default"))) int ashell_worker_poll_usage(void *handle, int *status, struct rusage *usage_out, int *usage_available) {
+    if (usage_available) *usage_available = 0;
+    if (!handle || !status) return -EINVAL;
+    BrokerRemoteChild *child = (__bridge BrokerRemoteChild *)handle;
+    struct pollfd fd = { child.output.fileDescriptor, POLLIN, 0 };
+    if (poll(&fd, 1, 0) < 0) return errno == EINTR ? 0 : -errno;
+    if (fd.revents & POLLNVAL) return -EBADF;
+    if (!(fd.revents & (POLLHUP | POLLERR))) return 0;
+    __block int result = 1;
+    *status = 137;
+    [child.broker pollChildUsage:child.token reply:^(int value, int code, NSData *usage) {
+        result = value;
+        *status = code;
+        if (value == 1 && usage.length == sizeof(struct rusage)) {
+            if (usage_out) memcpy(usage_out, usage.bytes, sizeof(struct rusage));
+            if (usage_available) *usage_available = 1;
+        }
+    }];
+    return result;
+}
+__attribute__((used, visibility("default"))) int ashell_worker_poll(void *handle, int *status) {
+    return ashell_worker_poll_usage(handle, status, NULL, NULL);
+}
+__attribute__((used, visibility("default"))) int ashell_worker_close_stdin(void *handle) {
+    if (!handle) return EINVAL;
+    BrokerRemoteChild *child = (__bridge BrokerRemoteChild *)handle;
+    __block int result = EPIPE;
+    [child.broker closeChildInput:child.token reply:^(int code) { result = code; }];
+    return result;
+}
+__attribute__((used, visibility("default"))) int ashell_worker_cancel(void *handle) {
+    if (!handle) return EINVAL;
+    BrokerRemoteChild *child = (__bridge BrokerRemoteChild *)handle;
+    __block int result = EPIPE;
+    [child.broker cancelChild:child.token reply:^(int code) { result = code; }];
+    return result;
+}
+__attribute__((used, visibility("default"))) void ashell_worker_release(void *handle) {
+    BrokerRemoteChild *child = (__bridge_transfer BrokerRemoteChild *)handle;
+    (void)child;
+}
+
 @interface PaneService : NSObject <AShellPaneWire>
 @end
 
@@ -59,6 +151,11 @@ static int check_documents_write(NSURL *documents, NSString *probe) {
 }
 - (void)spawn:(NSString *)command cwd:(NSData *)cwd home:(NSData *)home documents:(NSData *)documents probe:(NSString *)probe env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separateStderr reply:(void (^)(int, NSFileHandle *, NSFileHandle *, int))reply {
     if (_pane) { reply(EBUSY, nil, nil, getpid()); return; }
+    NSXPCConnection *connection = NSXPCConnection.currentConnection;
+    connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(AShellSpawnBrokerWire)];
+    spawnBroker = [connection synchronousRemoteObjectProxyWithErrorHandler:^(NSError *failure) {
+        NSLog(@"Shell worker spawn broker disconnected: %@", failure);
+    }];
     if (!cwd || !home || !documents || !probe) { reply(EINVAL, nil, nil, getpid()); return; }
     // Resolve the host's ephemeral grants explicitly and retain them for this
     // pane, including HOME for shared command configuration and authentication.
@@ -104,10 +201,13 @@ static int check_documents_write(NSURL *documents, NSString *probe) {
     if (!temporaryDirectory.length) { [self releasePane]; reply(EIO, nil, nil, getpid()); return; }
     // The host's directory bookmark does not grant its tmp directory. Keep the
     // extension's stock Foundation/libc temp domain in both environment views.
-    NSMutableArray<NSString *> *environment = [NSMutableArray arrayWithCapacity:env.count + 1];
+    NSMutableArray<NSString *> *environment = [NSMutableArray arrayWithCapacity:env.count + 2];
     for (NSString *value in env)
-        if (![value hasPrefix:@"TMPDIR="]) [environment addObject:value];
+        if (![value hasPrefix:@"TMPDIR="] && ![value hasPrefix:@"HOME="]) [environment addObject:value];
     [environment addObject:[@"TMPDIR=" stringByAppendingString:temporaryDirectory]];
+    // A home-root bookmark can resolve relative to the extension's own home.
+    // Documents retains the host path; nested spawns need that same host HOME.
+    [environment addObject:[@"HOME=" stringByAppendingString:documentsURL.URLByDeletingLastPathComponent.path]];
     env = environment;
     initializeEnvironment();
     replaceCommand(@"clear", @"clear", true);
@@ -146,9 +246,14 @@ static int check_documents_write(NSURL *documents, NSString *probe) {
     reply(error, handle, errorHandle, getpid());
 }
 - (void)poll:(void (^)(int, int))reply {
+    [self pollUsage:^(int result, int status, NSData *usage) { reply(result, status); }];
+}
+- (void)pollUsage:(void (^)(int, int, NSData *))reply {
     int status = 0;
-    int result = _pane ? ashell_pane_poll(_pane, &status) : -ESRCH;
-    reply(result, status);
+    int available = 0;
+    struct rusage usage;
+    int result = _pane ? ashell_pane_poll_usage(_pane, &status, &usage, &available) : -ESRCH;
+    reply(result, status, result == 1 && available ? [NSData dataWithBytes:&usage length:sizeof(usage)] : nil);
 }
 - (void)resize:(unsigned)cols rows:(unsigned)rows reply:(void (^)(int))reply {
     reply(_pane ? ashell_pane_resize(_pane, cols, rows) : ESRCH);
