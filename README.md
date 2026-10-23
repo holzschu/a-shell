@@ -109,6 +109,24 @@ TeX files are not installed by default. Type any TeX command and the system will
 
 If you enable VoiceOver in Settings, a-Shell will work with VoiceOver: reading commands as you type them, reading the result, letting you read the screen with your finger...
 
+## Terminal color themes
+
+Use `config --theme` to list bundled presets and JSON files in `~/Documents/Themes`. Select a theme with `config --theme dracula`. Add `-g` to update every open window and save the theme in Settings, for example `config --theme catppuccin-latte -g`. Use `-p` to save the current window settings, including font and color overrides. Choosing a theme in Settings or with `config --theme name -g` or `config --theme name -p` clears saved background, foreground and cursor overrides. The presets include all four Catppuccin flavors and Catppuccin OLED, adapted from Mocha with a pure black background and distinct neutral ANSI colors ordered from black through bright white. Catppuccin Latte and Rose Pine Dawn are light presets. Existing font and color options still work. `config --theme default` restores the saved theme and color overrides without changing the font. `config --theme factory` restores system foreground, background and cursor colors and the default ANSI palette; `config -r` also resets the other terminal settings.
+
+For a custom theme, the recommended path is to put `name.json` in `~/Documents/Themes`, run `config --theme` to list it, then run `config --theme name -g` to apply and save it. Settings automatically shows "Custom file" and its name. You can also select themes in iOS Settings: open a-Shell or a-Shell mini and choose "Terminal theme". For "Custom file", enter the file name with or without `.json` in "Custom theme file name"; names ignore case. An unknown name reports the available files in `Documents/Themes` when you return to the terminal. A Settings change updates open windows when returning to the app. After changing a theme from the terminal, reopen the a-Shell settings page to refresh a selection that was already on screen.
+
+To make a theme, create the visible `Themes` folder in a-Shell Documents and copy a preset into it:
+
+```sh
+mkdir -p ~/Documents/Themes
+cp "$APPDIR/Themes/dracula.json" ~/Documents/Themes/my-theme.json
+config --theme
+config --theme my-theme -g
+```
+
+Edit the JSON file in Files or a text editor. It uses the Windows Terminal color scheme format: `background`, `foreground`, `cursorColor`, `black`, `red`, `green`, `yellow`, `blue`, `purple`, `cyan`, `white`, followed by `brightBlack`, `brightRed`, `brightGreen`, `brightYellow`, `brightBlue`, `brightPurple`, `brightCyan` and `brightWhite`. Every color must be a `#RRGGBB` string. Extra fields such as `name`, `selectionBackground` and attribution are allowed. Files must be regular JSON files of at most 64 KiB inside the Themes folder. Bundled preset names and `default`/`factory` are reserved; choose another file name for edits.
+
+Files are read again whenever themes are listed or selected, so adding or editing one needs no rebuild or restart. Selecting an invalid file from the terminal reports an error and keeps the current colors. An invalid saved theme falls back to the stored or system colors with a message. Each bundled JSON file records its pinned upstream source and license; the corresponding notices are in `Themes/Licenses` inside the app.
 ## Terminal fonts
 
 `config -n picker` opens the font picker without a monospace-trait filter, since some terminal fonts do not declare that trait. Listing user-installed system fonts requires the Fonts capability (Use Installed Fonts) on the signing team; the project already requests its entitlement. Installed fonts can also be selected by PostScript name with `config -n "face name"`. Choose a fixed-width face for aligned terminal output. The selected face is kept, including its weight and style.

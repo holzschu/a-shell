@@ -107,6 +107,7 @@
 		2249E13A2E7546E5003F03EE /* PythonA_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1382E7546C6003F03EE /* PythonA_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2249E13B2E7546E5003F03EE /* Python-_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1392E7546D2003F03EE /* Python-_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		610000000000000000000002 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
 		707000000000000000000002 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		224A903E2ADD0999006DB9CC /* Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223A1C1B2A5EDCA700B1B9AD /* Tips.swift */; };
@@ -245,6 +246,7 @@
 		22984EF722C93DBF00069497 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF622C93DBF00069497 /* Preview Assets.xcassets */; };
 		22984EFA22C93DBF00069497 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF822C93DBF00069497 /* LaunchScreen.storyboard */; };
 		229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		610000000000000000000003 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
 		707000000000000000000003 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		229D2478257931E4004A78AC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		229D2479257931E4004A78AC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
@@ -937,6 +939,7 @@
 		22D146662E62098800E76E2E /* PythonAxxlimited.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146672E62098800E76E2E /* PythonAxxlimited_35.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		610000000000000000000004 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
 		707000000000000000000004 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		22DC1F942570139D0068004E /* awk.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F8E257012F50068004E /* awk.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F952570139D0068004E /* curl_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F91257012F50068004E /* curl_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -988,6 +991,9 @@
 		A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22000000000000000000002 /* rg/rg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AE1100000000000000000001 /* helix/helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix/helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		610000000000000000000011 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
+		610000000000000000000012 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
+		610000000000000000000013 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2716,6 +2722,7 @@
 		22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited.framework; path = Resources/Frameworks/PythonAxxlimited.framework; sourceTree = SOURCE_ROOT; };
 		22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited_35.framework; path = Resources/Frameworks/PythonAxxlimited_35.framework; sourceTree = SOURCE_ROOT; };
 		22D23117231940B2005B0C12 /* ExtraCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraCommands.swift; sourceTree = "<group>"; };
+		610000000000000000000001 /* TerminalTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTheme.swift; sourceTree = "<group>"; };
 		707000000000000000000001 /* TerminalFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalFont.swift; sourceTree = "<group>"; };
 		22DC1F6425700F7E0068004E /* bibtex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bibtex.xcframework; path = xcfs/.build/artifacts/xcfs/bibtex/bibtex.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F6525700F7E0068004E /* kpathsea.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpathsea.xcframework; path = xcfs/.build/artifacts/xcfs/kpathsea/kpathsea.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2772,6 +2779,7 @@
 		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework; sourceTree = SOURCE_ROOT; };
 		AE1100000000000000000002 /* helix/helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
+		610000000000000000000010 /* Themes */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Themes; path = Resources/Themes; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2942,6 +2950,8 @@
 				22B1B83322CBC53700F7C452 /* a-Shell.entitlements */,
 				22984EED22C93DBC00069497 /* AppDelegate.swift */,
 				22D23117231940B2005B0C12 /* ExtraCommands.swift */,
+				610000000000000000000010 /* Themes */,
+				610000000000000000000001 /* TerminalTheme.swift */,
 				707000000000000000000001 /* TerminalFont.swift */,
 				22984EEF22C93DBC00069497 /* SceneDelegate.swift */,
 				224754D42EFBDF2C007C35FE /* SceneDelegate+TerminalView.swift */,
@@ -4127,6 +4137,7 @@
 				224A90542ADD0999006DB9CC /* man in Resources */,
 				224A90552ADD0999006DB9CC /* usr in Resources */,
 				224A90562ADD0999006DB9CC /* commandDictionary.plist in Resources */,
+				610000000000000000000012 /* Themes in Resources */,
 				224A90572ADD0999006DB9CC /* defaultToolbar.txt in Resources */,
 				22B3D35B2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */,
 				224A90582ADD0999006DB9CC /* gestures.js in Resources */,
@@ -4168,6 +4179,7 @@
 				22942C42264037B9004BEA41 /* Perl in Resources */,
 				2231A522258923E200B5EDFD /* ImageMagick-7 in Resources */,
 				229F51152473BBCA0053AC03 /* commandDictionary.plist in Resources */,
+				610000000000000000000013 /* Themes in Resources */,
 				22E337EC2949F4CF00A8F76C /* defaultToolbar.txt in Resources */,
 				22B3D35C2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */,
 				22372B722448E85D0033FE07 /* usr in Resources */,
@@ -4206,6 +4218,7 @@
 				229D2489257931E4004A78AC /* man in Resources */,
 				229D25C22579369B004A78AC /* usr in Resources */,
 				229D25C32579369B004A78AC /* commandDictionary.plist in Resources */,
+				610000000000000000000011 /* Themes in Resources */,
 				2253E950295B0D0A00EBE1F3 /* defaultToolbar.txt in Resources */,
 				22B3D35D2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */,
 				229D25C42579369B004A78AC /* bin in Resources */,
@@ -4268,6 +4281,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
+				610000000000000000000002 /* TerminalTheme.swift in Sources */,
 				707000000000000000000002 /* TerminalFont.swift in Sources */,
 				224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */,
 				224A903E2ADD0999006DB9CC /* Tips.swift in Sources */,
@@ -4296,6 +4310,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
+				610000000000000000000004 /* TerminalTheme.swift in Sources */,
 				707000000000000000000004 /* TerminalFont.swift in Sources */,
 				22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */,
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
@@ -4324,6 +4339,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
+				610000000000000000000003 /* TerminalTheme.swift in Sources */,
 				707000000000000000000003 /* TerminalFont.swift in Sources */,
 				229D2478257931E4004A78AC /* AppDelegate.swift in Sources */,
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,

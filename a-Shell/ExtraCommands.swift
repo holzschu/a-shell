@@ -262,6 +262,9 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     for error in TerminalFonts.refresh() { fputs(error + "\n", thread_stderr) }
     currentDelegate?.writeConfigWindow()
     // First, let's scan the arguments:
+    var selectedTheme: (String, TerminalTheme?)?
+    var restoreSavedTheme = false
+    var showSettings = false
     var terminalFontSize: Float?
     var terminalFontName: String?
     var terminalBackgroundColor: UIColor?
@@ -269,9 +272,9 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     var terminalCursorColor: UIColor?
     var terminalCursorShape: String?
     var terminalFontLigature: String?
-    let shortUsage = "usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-dgpr]\n"
+    let shortUsage = "usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-dgpr][--theme [name]][--show]\n"
     let usageString = """
-    usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-g][-p][-d][-r]
+    usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-g][-p][-d][-r][--theme [name]][--show]
     For all parameters: "default" to get the default value currently stored, "factory" to get a-Shell factory defaults (\(factoryFontName), \(factoryFontSize) pts, colors from system).
     Colors can be defined by names, RGB triplets "red green blue" or HexStrings "#00FF00"
     -s | --size: set font size
@@ -284,11 +287,17 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     -k | --cursorShape: set cursor shape (beam, block or underline, steady or blinking)
     -l | --ligatures: normal, contextual, none...
     -t | --toolbar: create a configuration file to change the toolbar
-    -g | --global: extend settings to all windows currently open
+    -g | --global: extend settings to all windows currently open; with --theme, also save the selection
     -p | --permanent: store settings as default values
     -d | --default: reset all settings to default values
     -r | --reset: reset all settings to factory default
-    --show: show current settings
+    --theme [name]: list themes, or select a bundled preset or ~/Documents/Themes/name.json
+    Custom themes: put name.json in Documents/Themes; config --theme lists them.
+    config --theme name -g applies and saves; Settings shows Custom file and its name.
+    Names accept an optional .json extension and ignore case.
+    --theme factory: use system colors and the default ANSI palette
+    --theme default: restore the saved theme and color overrides without changing font settings
+    --show: show current settings and the selected ANSI palette
     Sample uses:
     config -p: make settings for current window the default for future windows.
     config -dgp: revert all open and future windows to stored default.
@@ -320,6 +329,23 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         case "-h", "--help":
             fputs(usageString, thread_stdout)
             return 0
+        case "--theme":
+            guard i + 1 < args.count, !args[i + 1].hasPrefix("-") else {
+                for name in TerminalThemes.names() { fputs(name + "\n", thread_stdout) }
+                return 0
+            }
+            let requested = args[i + 1]
+            restoreSavedTheme = requested == "default"
+            let name = requested == "factory" ? nil : (requested == "default" ? TerminalThemes.savedName : requested)
+            do {
+                selectedTheme = (name ?? "", try name.map { try TerminalThemes.load($0) })
+            } catch {
+                fputs("Theme \(requested): \(error.localizedDescription)\n", thread_stderr)
+                return 1
+            }
+            argumentsSet = true
+            skipNextArgument = 1
+            continue
         case "--fonts":
             for name in TerminalFonts.names() { fputs(name + "\n", thread_stdout) }
             return 0
@@ -567,7 +593,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             continue
 
         case "--show":
-            delegate?.showConfigWindow()
+            showSettings = true
             continue
         case "--default":
             revertToDefault = true
@@ -669,20 +695,85 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             }
         }
     }
+    if revertToFactory {
+        selectedTheme = ("", nil)
+    } else if revertToDefault {
+        let name = TerminalThemes.savedName
+        do {
+            selectedTheme = (name ?? "", try name.map { try TerminalThemes.load($0) })
+        } catch {
+            fputs("Theme \(name ?? ""): \(error.localizedDescription) Using stored or system colors.\n", thread_stderr)
+            selectedTheme = ("", nil)
+        }
+    }
+    if let (name, theme) = selectedTheme {
+        delegate?.applyTheme(theme, name: name)
+        if makeGlobal {
+            for scene in UIApplication.shared.connectedScenes {
+                (scene.delegate as? SceneDelegate)?.applyTheme(theme, name: name)
+            }
+        }
+    } else if makeGlobal && !argumentsSet, let source = delegate {
+        let update = {
+            for scene in UIApplication.shared.connectedScenes {
+                if let target = scene.delegate as? SceneDelegate, target !== source {
+                    target.terminalThemeName = source.terminalThemeName
+                    target.terminalTheme = source.terminalTheme
+                    target.terminalBackgroundColor = source.terminalBackgroundColor
+                    target.terminalForegroundColor = source.terminalForegroundColor
+                    target.terminalCursorColor = source.terminalCursorColor
+                    target.writeConfigWindow()
+                }
+            }
+        }
+        if Thread.isMainThread { update() } else { DispatchQueue.main.async(execute: update) }
+    }
+    if revertToDefault {
+        terminalBackgroundColor = (UserDefaults.standard.string(forKey: "backgroundColor")).map { UIColor(hexString: $0) }
+        terminalForegroundColor = (UserDefaults.standard.string(forKey: "foregroundColor")).map { UIColor(hexString: $0) }
+        terminalCursorColor = (UserDefaults.standard.string(forKey: "cursorColor")).map { UIColor(hexString: $0) }
+    }
+    if restoreSavedTheme && !revertToFactory && !revertToDefault {
+        terminalBackgroundColor = terminalBackgroundColor ?? UserDefaults.standard.string(forKey: "backgroundColor").map { UIColor(hexString: $0) }
+        terminalForegroundColor = terminalForegroundColor ?? UserDefaults.standard.string(forKey: "foregroundColor").map { UIColor(hexString: $0) }
+        terminalCursorColor = terminalCursorColor ?? UserDefaults.standard.string(forKey: "cursorColor").map { UIColor(hexString: $0) }
+    }
+    if selectedTheme != nil && !revertToFactory {
+        var targets = makeGlobal ? UIApplication.shared.connectedScenes.compactMap { $0.delegate as? SceneDelegate } : []
+        if !makeGlobal, let delegate = delegate { targets = [delegate] }
+        for target in targets {
+            target.configWindow(fontSize: nil, fontName: nil, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor, cursorShape: nil, fontLigature: nil)
+        }
+    }
+    if !Thread.isMainThread { DispatchQueue.main.sync {} }
+    if showSettings { delegate?.showConfigWindow() }
+    if (makePermanent && (!argumentsSet || selectedTheme != nil)) || (makeGlobal && selectedTheme != nil && !revertToDefault && !revertToFactory && !restoreSavedTheme) {
+        let name = delegate?.terminalThemeName ?? ""
+        let saveTheme = {
+            TerminalThemes.save(name)
+        }
+        if Thread.isMainThread { saveTheme() } else { DispatchQueue.main.sync(execute: saveTheme) }
+        if selectedTheme != nil {
+            for key in ["backgroundColor", "foregroundColor", "cursorColor"] {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+    }
     if makeGlobal && (terminalFontName != nil || terminalFontSize != nil) {
         let save = { TerminalFonts.save(name: terminalFontName, size: terminalFontSize) }
         if Thread.isMainThread { save() } else { DispatchQueue.main.sync(execute: save) }
     }
-    if (makePermanent) {
+    if makePermanent {
         // Store these settings
         // If nothing except "-p" (and possibly -d or -r): make current window settings permanent
         // Otherwise, take settings from current window and make them permanent
         if (!argumentsSet) {
             terminalFontSize = delegate?.terminalFontSize
             terminalFontName = delegate?.terminalFontName
-            terminalBackgroundColor = delegate?.terminalBackgroundColor
-            terminalForegroundColor = delegate?.terminalForegroundColor
-            terminalCursorColor = delegate?.terminalCursorColor
+            let colors = delegate?.themeColorOverrides()
+            terminalBackgroundColor = colors?.background
+            terminalForegroundColor = colors?.foreground
+            terminalCursorColor = colors?.cursor
             terminalCursorShape = delegate?.terminalCursorShape
             terminalFontLigature = delegate?.terminalFontLigature
             if terminalFontSize == nil {
