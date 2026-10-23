@@ -47,5 +47,5 @@ jobs:
             -scheme a-Shell-noPython -configuration Debug \
             -destination "generic/platform=$PLATFORM" \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" -jobs 4 \
-            ARCHS="$ARCH" IPHONEOS_DEPLOYMENT_TARGET=15.0 \
+            ARCHS="$ARCH" \
             CODE_SIGNING_ALLOWED=NO build
