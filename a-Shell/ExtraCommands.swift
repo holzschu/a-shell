@@ -262,6 +262,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     for error in TerminalFonts.refresh() { fputs(error + "\n", thread_stderr) }
     currentDelegate?.writeConfigWindow()
     // First, let's scan the arguments:
+    var selectedPrompt: String?
     var selectedTheme: (String, TerminalTheme?)?
     var restoreSavedTheme = false
     var showSettings = false
@@ -272,9 +273,9 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     var terminalCursorColor: UIColor?
     var terminalCursorShape: String?
     var terminalFontLigature: String?
-    let shortUsage = "usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-dgpr][--theme [name]][--show]\n"
+    let shortUsage = "usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-dgpr][--theme [name]][--prompt [name]][--show]\n"
     let usageString = """
-    usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-g][-p][-d][-r][--theme [name]][--show]
+    usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-g][-p][-d][-r][--theme [name]][--prompt [name]][--show]
     For all parameters: "default" to get the default value currently stored, "factory" to get a-Shell factory defaults (\(factoryFontName), \(factoryFontSize) pts, colors from system).
     Colors can be defined by names, RGB triplets "red green blue" or HexStrings "#00FF00"
     -s | --size: set font size
@@ -287,16 +288,20 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     -k | --cursorShape: set cursor shape (beam, block or underline, steady or blinking)
     -l | --ligatures: normal, contextual, none...
     -t | --toolbar: create a configuration file to change the toolbar
-    -g | --global: extend settings to all windows currently open; with --theme, also save the selection
+    -g | --global: extend settings to all windows currently open; with --theme or --prompt, also save the selection
     -p | --permanent: store settings as default values
     -d | --default: reset all settings to default values
     -r | --reset: reset all settings to factory default
     --theme [name]: list themes, or select a bundled preset or ~/Documents/Themes/name.json
     Custom themes: put name.json in Documents/Themes; config --theme lists them.
     config --theme name -g applies and saves; Settings shows Custom file and its name.
-    Names accept an optional .json extension and ignore case.
+    Theme names accept an optional .json extension and ignore case.
     --theme factory: use system colors and the default ANSI palette
     --theme default: restore the saved theme and color overrides without changing font settings
+    --prompt [name]: list prompt presets, or select one for this window
+    --prompt custom: use PS1 unchanged (including a PS1 set in .profile)
+    --prompt default: use the prompt saved in Settings; -g applies it to all windows
+    Presets use the theme ANSI palette and take precedence over PS1 until Custom is selected.
     --show: show current settings and the selected ANSI palette
     Sample uses:
     config -p: make settings for current window the default for future windows.
@@ -329,6 +334,21 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         case "-h", "--help":
             fputs(usageString, thread_stdout)
             return 0
+        case "--prompt":
+            guard i + 1 < args.count, !args[i + 1].hasPrefix("-") else {
+                for name in TerminalPrompts.names { fputs(name + "\n", thread_stdout) }
+                return 0
+            }
+            let requested = args[i + 1].lowercased()
+            let name = requested == "default" ? TerminalPrompts.savedName : (requested == "factory" ? "custom" : requested)
+            guard TerminalPrompts.names.contains(name) else {
+                fputs("Unknown prompt: \(requested). Use config --prompt to list presets.\n", thread_stderr)
+                return 1
+            }
+            selectedPrompt = name
+            argumentsSet = true
+            skipNextArgument = 1
+            continue
         case "--theme":
             guard i + 1 < args.count, !args[i + 1].hasPrefix("-") else {
                 for name in TerminalThemes.names() { fputs(name + "\n", thread_stdout) }
@@ -744,6 +764,27 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         for target in targets {
             target.configWindow(fontSize: nil, fontName: nil, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor, cursorShape: nil, fontLigature: nil)
         }
+    }
+    if revertToFactory { selectedPrompt = "custom" }
+    else if revertToDefault { selectedPrompt = TerminalPrompts.savedName }
+    if let name = selectedPrompt {
+        delegate?.applyPrompt(name)
+        if makeGlobal {
+            for scene in UIApplication.shared.connectedScenes {
+                (scene.delegate as? SceneDelegate)?.applyPrompt(name)
+            }
+        }
+    } else if makeGlobal && !argumentsSet, let source = delegate {
+        for scene in UIApplication.shared.connectedScenes {
+            (scene.delegate as? SceneDelegate)?.applyPrompt(source.terminalPromptName)
+        }
+    }
+    if (makePermanent && (!argumentsSet || selectedPrompt != nil)) || (makeGlobal && selectedPrompt != nil && !revertToDefault && !revertToFactory) {
+        let name = delegate?.terminalPromptName ?? "custom"
+        let savePrompt = {
+            TerminalPrompts.save(name)
+        }
+        if Thread.isMainThread { savePrompt() } else { DispatchQueue.main.sync(execute: savePrompt) }
     }
     if !Thread.isMainThread { DispatchQueue.main.sync {} }
     if showSettings { delegate?.showConfigWindow() }
