@@ -4620,8 +4620,8 @@
 		};
 		265206496F54531C61AB6A9F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = "a-Shell-LongCommands";
-			target = 1D1C6DB1924CE909F07BB047 /* a-Shell-LongCommands */;
+			name = "a-Shell-mini-LongCommands";
+			target = 05CD0AC3A045D4B4D1258F0B /* a-Shell-mini-LongCommands */;
 			targetProxy = F33F299FD852DC4CD1764F55 /* PBXContainerItemProxy */;
 		};
 		73952D30D61DB3A43B5B2988 /* PBXTargetDependency */ = {
