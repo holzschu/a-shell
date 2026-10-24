@@ -214,5 +214,7 @@
 	<true/>
 	<key>AppGroupIdentifier</key>
 	<string>group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell</string>
+	<key>ShellWorkerCount</key>
+	<integer>10</integer>
 </dict>
 </plist>
