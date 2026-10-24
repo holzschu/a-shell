@@ -231,6 +231,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("repeatCommand", "repeatCommand", true)
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
+        replaceCommand("photos", "photos_main", true)
         replaceCommand("hideKeyboard", "hideKeyboard", true)
         replaceCommand("hideToolbar", "hideToolbar", true)
         replaceCommand("showToolbar", "showToolbar", true)

@@ -144,7 +144,9 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>a-Shell would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>a-Shell would like to access to your photo library to view images</string>
+	<string>a-Shell reads the photos and videos you allow to view them and export originals for shell commands.</string>
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
 	<key>NSRemindersFullAccessUsageDescription</key>
 	<string>a-Shell would like to access your reminders to read and write events</string>
 	<key>NSUbiquitousContainers</key>
