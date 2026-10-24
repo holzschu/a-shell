@@ -393,7 +393,12 @@ final class LocalHTTPServer {
         fields["Content-Length"] = String(body.count)
         fields["Connection"] = "close"
         let header = "HTTP/1.1 \(status) \(HTTPURLResponse.localizedString(forStatusCode: status))\r\n" + fields.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)\r\n" }.joined() + "\r\n"
-        connection.send(content: Data(header.utf8) + body, completion: .contentProcessed { _ in connection.cancel() })
+        connection.send(content: Data(header.utf8) + body, contentContext: .finalMessage, isComplete: true, completion: .contentProcessed { [connection] error in
+            guard error == nil else { connection.cancel(); return }
+            // Let the peer consume queued TLS records before closing the connection.
+            connection.receive(minimumIncompleteLength: 1, maximumLength: 1) { _, _, _, _ in connection.cancel() }
+            connection.queue?.asyncAfter(deadline: .now() + 15) { [weak connection] in connection?.cancel() }
+        })
     }
 
     private func send(_ connection: NWConnection, status: Int, text: String) {

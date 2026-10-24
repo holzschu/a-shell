@@ -25,6 +25,17 @@ done
 request --fail --header "X-Token: $RELAY_TOKEN" \
     --data-binary 'echo relay-pipe | cat' "$RELAY_URL/run" > "$work/result"
 jq -e '.stdout == "relay-pipe\n" and .stderr == "" and .status == 0' "$work/result"
+for bytes in 872767 1048576 4194304; do
+    # Slow the consumer so queued TLS records must drain before close.
+    request --fail --max-time 90 --limit-rate 128k --header "X-Token: $RELAY_TOKEN" \
+        --data-binary "awk 'BEGIN { for (i = 0; i < $bytes; i++) printf \"x\" }'" \
+        "$RELAY_URL/run" > "$work/large-result"
+    jq -e --argjson bytes "$bytes" '(.stdout | utf8bytelength) == $bytes and .stderr == "" and .status == 0' "$work/large-result"
+    request --fail --max-time 2 --header "X-Token: $RELAY_TOKEN" \
+        --data-binary 'echo relay-after-large' "$RELAY_URL/run" > "$work/next"
+    jq -e '.stdout == "relay-after-large\n" and .stderr == "" and .status == 0' "$work/next"
+    printf 'relay large response %s bytes PASS\n' "$bytes"
+done
 code=$(request -o "$work/bad-token" -w '%{http_code}' -H 'X-Token: invalid' --data-binary true "$RELAY_URL/run")
 [ "$code" = 401 ]
 code=$(request -o "$work/missing-token" -w '%{http_code}' --data-binary true "$RELAY_URL/run")
