@@ -17,6 +17,17 @@
    }
  
    let inputEnd = () => {}
+--- a/node_modules/@npmcli/run-script/lib/signal-manager.js
++++ b/node_modules/@npmcli/run-script/lib/signal-manager.js
+@@ -12,6 +12,8 @@
+ // to ourselves. see the catch handler at the bottom of run-script-pkg.js
+ const handleSignal = signal => {
++  // a-Shell already delivers Ctrl-C to Node children in the terminal group.
++  if (signal === 'SIGINT') return
+   for (const proc of runningProcs) {
+     proc.kill(signal)
+   }
+ }
 --- a/node_modules/bin-links/lib/link-bins.js
 +++ b/node_modules/bin-links/lib/link-bins.js
 @@ -1,7 +1,7 @@
@@ -51,4 +62,23 @@
 +      binSet.push(b + '.cmd')
 +      binSet.push(b + '.ps1')
      }
+   }
+--- a/node_modules/cmd-shim/lib/index.js
++++ b/node_modules/cmd-shim/lib/index.js
+@@ -152,11 +152,13 @@
++  // ios_system's exec bridge loses the nested command's exit status.
++  // Let Dash wait for the command and return its status normally.
+   if (shLongProg) {
+     sh = sh
+        + `if [ -x ${shLongProg} ]; then\n`
+-       + `  exec ${variables}${shLongProg} ${args} ${shTarget} "$@"\n`
++       + `  ${variables}${shLongProg} ${args} ${shTarget} "$@"\n`
+        + 'else \n'
+-       + `  exec ${variables}${shProg} ${args} ${shTarget} "$@"\n`
++       + `  ${variables}${shProg} ${args} ${shTarget} "$@"\n`
+        + 'fi\n'
+   } else {
+     sh = sh
+-       + `exec ${shProg} ${args} ${shTarget} "$@"\n`
++       + `${shProg} ${args} ${shTarget} "$@"\n`
    }
