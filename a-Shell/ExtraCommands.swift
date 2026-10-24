@@ -1195,17 +1195,13 @@ func downloadRemoteFileFromCloud(fileURL: URL, waitForDownload: Bool = true) -> 
         if values?.ubiquitousItemDownloadingStatus == .current { return true }
         try manager.startDownloadingUbiquitousItem(at: target)
         if !waitForDownload { return true }
-        let deadline = Date().addingTimeInterval(5)
-        repeat {
-            target.removeAllCachedResourceValues()
-            let state = try? target.resourceValues(forKeys: [.ubiquitousItemDownloadingStatusKey, .ubiquitousItemDownloadingErrorKey])
-            if let error = state?.ubiquitousItemDownloadingError { throw error }
-            if state?.ubiquitousItemDownloadingStatus == .current || state?.ubiquitousItemDownloadingStatus == .downloaded {
-                return true
-            }
-            Thread.sleep(forTimeInterval: 0.05)
-        } while Date() < deadline
-        throw NSError(domain: NSURLErrorDomain, code: NSURLErrorTimedOut, userInfo: [NSLocalizedDescriptionKey: "Download did not finish within 5 seconds; iCloud may continue downloading. Run the command again to check."])
+        var coordinationError: NSError?
+        var downloaded = false
+        NSFileCoordinator().coordinate(readingItemAt: target, options: [], error: &coordinationError) { _ in
+            downloaded = true
+        }
+        if let error = coordinationError { throw error }
+        return downloaded
     } catch {
         if waitForDownload {
             fputs("\(target.path): \(error.localizedDescription)\n", thread_stderr)
@@ -1223,7 +1219,7 @@ public func downloadFile(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
         return 1
     }
     let commandName = String(cString: commandNameC)
-    let usage = "downloadFile: download iCloud files (wait up to 5 seconds per file).\nUsage: " + commandName + " name [.name.icloud ...]\n"
+    let usage = "downloadFile: download iCloud files and wait until available.\nUsage: " + commandName + " name [.name.icloud ...]\n"
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
     if args.count == 1 {
         fputs(usage, thread_stdout)
@@ -1247,7 +1243,7 @@ public func downloadFolder(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutable
         return 1
     }
     let commandName = String(cString: commandNameC)
-    let usage = "downloadFolder: download iCloud files, including hidden files (5 seconds per file).\nUsage: " + commandName + " [-r] [--] [folder ...] (default is current directory)\n-r: include subfolders; symbolic links are not followed.\n"
+    let usage = "downloadFolder: download iCloud files, including hidden files, and wait until available.\nUsage: " + commandName + " [-r] [--] [folder ...] (default is current directory)\n-r: include subfolders; symbolic links are not followed.\n"
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
     if args.dropFirst().first == "-h" || args.dropFirst().first == "--help" {
         fputs(usage, thread_stdout)
