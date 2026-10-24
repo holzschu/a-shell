@@ -1307,7 +1307,7 @@ public func downloadRemoteFile(fileURL: URL) -> Bool {
         }
         return true
     }
-    return downloadRemoteFileFromCloud(fileURL: fileURL)
+    return downloadRemoteFileFromCloud(fileURL: fileURL, waitForDownload: !Thread.isMainThread) && FileManager.default.fileExists(atPath: fileURL.path)
 }
 
 // hide the on-screen keyboard

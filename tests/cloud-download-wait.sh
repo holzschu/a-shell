@@ -56,6 +56,11 @@ guard started.wait(timeout: .now() + 10) == .success else {
     fatalError("Could not acquire provider write coordination")
 }
 var arguments = [strdup("downloadFile"), strdup(target.path), nil]
+let automaticBegin = ProcessInfo.processInfo.systemUptime
+let automatic = downloadRemoteFile(fileURL: target)
+let automaticElapsed = ProcessInfo.processInfo.systemUptime - automaticBegin
+print("automatic main-thread status=\(automatic) elapsed=\(automaticElapsed)")
+guard !automatic && automaticElapsed < 1 else { exit(1) }
 let begin = ProcessInfo.processInfo.systemUptime
 let status = arguments.withUnsafeMutableBufferPointer { downloadFile(argc: 2, argv: $0.baseAddress) }
 let elapsed = ProcessInfo.processInfo.systemUptime - begin
@@ -64,5 +69,5 @@ print("downloadFile status=\(status) elapsed=\(elapsed)")
 guard status == 0 && elapsed >= 5.8 else { exit(1) }
 print("CLOUD_DELAYED_DOWNLOAD_GREEN")
 SWIFT
-nice -n 15 xcrun --sdk macosx swiftc -j 4 -module-cache-path "$work/modules" "$work/Host.swift" "$work/main.swift" -o "$work/check"
+xcrun --sdk macosx swiftc -module-cache-path "$work/modules" "$work/Host.swift" "$work/main.swift" -o "$work/check"
 "$work/check" "$work/remote.bin"
