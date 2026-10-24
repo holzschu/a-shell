@@ -14,8 +14,8 @@ import Compression
 import Intents // for shortcuts
 import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
-import Kitura // for our local server for WebAssembly
-import NIOSSL // for TLS (https) authentification
+import Network // for our local HTTPS server for WebAssembly
+import UniformTypeIdentifiers
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
@@ -24,72 +24,92 @@ let localServerQueue = DispatchQueue(label: "localWebServer", qos: .userInteract
 // Need SDK install to be over before starting commands.
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
-var localServerApp = Router()
+private var localServer: LocalHTTPServer?
+private var localServerReady: [() -> Void] = []
 var zshmarksActivated = false
 var bashmarksActivated = false
 
-func startLocalWebServer() {
-    // Last file loaded: /node_modules/@wasmer/wasmfs/lib/index.cjs.js
-    localServerApp.get("/*") { request, response, next in
-        #if DEBUG
-        NSLog("Kitura request received: \(request.matchedPath)")
-        #endif
-        // Load ~/Library/node_modules first if it exists:
-        // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
-        let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                in: .userDomainMask,
-                                                appropriateFor: nil,
-                                                create: true)
-        let requestedFileURL = URL(fileURLWithPath: request.matchedPath)
-        let pathExtension = requestedFileURL.pathExtension
-        let localFilePath = libraryURL.path + request.matchedPath
-        let rootFilePath = Bundle.main.resourcePath! + request.matchedPath
-        var fileName: String? = nil
-        // NSLog("Kitura file requested: \(request.matchedPath). Trying \(localFilePath)  and \(rootFilePath)")
-        if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
-            fileName = localFilePath
-        } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
-            fileName = rootFilePath
+func startLocalWebServer(ready: (() -> Void)? = nil) {
+    localServerQueue.async {
+        if let server = localServer, !server.isRunning { localServer = nil }
+        if let server = localServer {
+            if let ready {
+                if server.isReady { DispatchQueue.main.async(execute: ready) }
+                else { localServerReady.append(ready) }
+            }
+            return
         }
-        if let filePath = fileName {
-            if (pathExtension == "html") {
-                response.headers["Content-Type"] = "text/html"
-            } else if (pathExtension == "js") {
-                response.headers["Content-Type"] = "application/javascript"
-            } else if (pathExtension == "wasm") {
-                response.headers["Content-Type"] = "application/wasm"
+        if let ready { localServerReady.append(ready) }
+        do {
+            let data = try Data(contentsOf: Bundle.main.resourceURL!.appendingPathComponent("localCertificate.pfx"))
+            let tls = try RelayTLS(pkcs12: data, passphrase: "password")
+            let parameters = try tls.parameters()
+            parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: LocalServerPorts.wasm)!)
+            let server = LocalHTTPServer(queue: localServerQueue, requiresContentLength: false, connectionLimit: 64)
+            server.request = { connection, method, target, _, _ in
+                var headers = ["Cross-Origin-Embedder-Policy": "require-corp",
+                               "Cross-Origin-Opener-Policy": "same-origin",
+                               "Cross-Origin-Resource-Policy": "same-origin"]
+                guard method == "GET",
+                      let path = target.split(separator: "?", maxSplits: 1).first?.removingPercentEncoding,
+                      path.hasPrefix("/"), !path.utf8.contains(0) else {
+                    LocalHTTPServer.send(connection, status: 404, body: Data(), headers: [:])
+                    return
+                }
+                let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+                let roots = [library, Bundle.main.resourceURL!]
+                var file: URL?
+                for root in roots {
+                    let root = root.resolvingSymlinksInPath()
+                    let candidate = root.appendingPathComponent(String(path.dropFirst())).standardizedFileURL.resolvingSymlinksInPath()
+                    let base = root.path + "/"
+                    var isDirectory: ObjCBool = false
+                    guard FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDirectory), !isDirectory.boolValue else { continue }
+                    guard candidate.path.hasPrefix(base) else {
+                        LocalHTTPServer.send(connection, status: 403, body: Data(), headers: [:])
+                        return
+                    }
+                    file = candidate
+                    break
+                }
+                guard let file else {
+                    LocalHTTPServer.send(connection, status: 404, body: Data(), headers: [:])
+                    return
+                }
+                switch file.pathExtension {
+                case "html": headers["Content-Type"] = "text/html"
+                case "js": headers["Content-Type"] = "application/javascript"
+                case "wasm": headers["Content-Type"] = "application/wasm"
+                default: headers["Content-Type"] = UTType(filenameExtension: file.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
+                }
+                do {
+                    let body = try Data(contentsOf: file, options: .mappedIfSafe)
+                    LocalHTTPServer.send(connection, status: 200, body: body, headers: headers)
+                } catch {
+                    LocalHTTPServer.send(connection, status: 403, body: Data("Loading \(file.path) failed".utf8), headers: headers)
+                }
             }
-            // These headers get us a "crossOriginIsolated == true;" on OSX Safari
-            response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
-            response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-            response.headers["Cross-Origin-Resource-Policy"] =  "same-origin"
-            do {
-                // NSLog("Kitura file found: \(filePath)")
-                try response.send(fileName: filePath)
+            localServer = server
+            var becameReady = false
+            try server.start(parameters: parameters) { [weak server] result in
+                guard let server, localServer === server else { return }
+                switch result {
+                case .success:
+                    becameReady = true
+                    let callbacks = localServerReady
+                    localServerReady.removeAll()
+                    DispatchQueue.main.async { callbacks.forEach { $0() } }
+                case .failure(let error):
+                    NSLog("Local WASM server failed: \(error)")
+                    localServer = nil
+                    // A startup failure waits for the next foreground; a failed live listener retries once.
+                    if becameReady { startLocalWebServer() }
+                }
             }
-            catch {
-                // NSLog("Kitura failure: \(filePath)")
-                response.statusCode = .forbidden
-                response.send("Loading \(filePath) failed")
-            }
-        } else {
-            // NSLog("Kitura file not found: \(request.matchedPath)")
-            response.statusCode = .notFound
-            response.send("")
-            next()
+        } catch {
+            localServer = nil
+            NSLog("Local WASM server setup failed: \(error)")
         }
-    }
-    let sslConfig =  SSLConfig(withChainFilePath: Bundle.main.resourcePath! + "/localCertificate.pfx",
-                               withPassword: "password",
-                               usingSelfSignedCerts: true)
-    if (appVersion != "a-Shell-mini") {
-        Kitura.addHTTPServer(onPort: 8443, with: localServerApp, withSSL: sslConfig)
-    } else {
-        Kitura.addHTTPServer(onPort: 8334, with: localServerApp, withSSL: sslConfig)
-    }
-    localServerQueue.async{
-        NSLog("starting server timestamp")
-        Kitura.run(exitOnFailure: false)
     }
 }
 
@@ -212,6 +232,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         initializeEnvironment()
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
+        replaceCommand("relay", "relay_main", true)
         replaceCommand("history", "history", true)
         replaceCommand("help", "help", true)
         replaceCommand("clear", "clear", true)
@@ -492,6 +513,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         catch {
             // print("Setting category to AVAudioSessionCategoryPlayback failed.")
         }
+        Relay.shared.restore()
         return true
     }
 

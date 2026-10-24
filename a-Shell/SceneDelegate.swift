@@ -3229,7 +3229,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Reload the web page:
             webView?.reloadFromOrigin()
         } else if (cmd.hasPrefix("setHomeDir:")) {
-            NSLog("Kitura: setHomeDir received")
+            NSLog("WASM: setHomeDir received")
             let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                       in: .userDomainMask,
                                                       appropriateFor: nil,
@@ -3917,14 +3917,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Now load wasm.html:
             commandQueue.async { // Make sure this is loaded after the .profile + .bashrc + restoreEnvironment
                 // (because it causes a crash otherwise)
-                DispatchQueue.main.async {
-                    if (appVersion != "a-Shell-mini") {
-                        NSLog("Loding wasm.html from 8443 (sceneWillEnterForeground)")
-                        self.webView?.load(URLRequest(url: URL(string: "https://localhost:8443/wasm.html")!))
-                    } else {
-                        NSLog("Loding wasm.html from 8334 (sceneWillEnterForeground)")
-                        self.webView?.load(URLRequest(url: URL(string: "https://localhost:8334/wasm.html")!))
-                    }
+                startLocalWebServer {
+                    self.webView?.load(URLRequest(url: LocalServerPorts.wasmURL))
                 }
             }
             // Was this window created with a purpose?
@@ -4486,8 +4480,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Use this method to undo the changes made on entering the background.
         // Reload the webAssembly interpreter (this will also check if the local server is still running):
         sceneIsInForeground = true
-        if (showWebView) {
-            webView?.reloadFromOrigin()
+        startLocalWebServer {
+            if (showWebView) {
+                self.webView?.reloadFromOrigin()
+            }
         }
         // Was this window created with a purpose?
         let userActivity = scene.userActivity
