@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A59000000000000000000001 /* heliocron.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A59000000000000000000002 /* heliocron.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A59000000000000000000003 /* heliocron.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A59000000000000000000002 /* heliocron.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2203367A28C4B8070027664C /* pico.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2232245E289695A9001BAE04 /* pico.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22068CC62F51C11A004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
 		22068CC72F51CE47004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
@@ -1119,6 +1121,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				A59000000000000000000003 /* heliocron.xcframework in Embed Frameworks */,
 				2269076E2F97BBD20071F551 /* curl-impersonate.framework in Embed Frameworks */,
 				22D1424B2E62091700E76E2E /* Python.framework in Embed Frameworks */,
 				22D1424C2E62091700E76E2E /* Python-_cffi_backend.framework in Embed Frameworks */,
@@ -1445,6 +1448,7 @@
 				2243B1B12840ADBF00588B51 /* vimproc.xcframework in Embed Frameworks */,
 				2243B1BA284278F500588B51 /* dash.xcframework in Embed Frameworks */,
 				A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */,
+				A59000000000000000000001 /* heliocron.xcframework in Embed Frameworks */,
 				2243B1BB284278F500588B51 /* dashA.xcframework in Embed Frameworks */,
 				2243B1BC284278F500588B51 /* dashB.xcframework in Embed Frameworks */,
 				2243B1BD284278F500588B51 /* dashC.xcframework in Embed Frameworks */,
@@ -1918,6 +1922,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A59000000000000000000002 /* heliocron.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = heliocron/heliocron.xcframework; sourceTree = SOURCE_ROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
@@ -3038,6 +3043,7 @@
 			children = (
 				227F058230867C0300FCC674 /* node.xcframework */,
 				A22000000000000000000002 /* rg/rg.xcframework */,
+				A59000000000000000000002 /* heliocron.xcframework */,
 				AE1100000000000000000002 /* helix/helix.xcframework */,
 				227A5409308519E1007EA879 /* fd.xcframework */,
 				227A540730850D06007EA879 /* fzf.xcframework */,
