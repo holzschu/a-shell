@@ -110,7 +110,7 @@ lipo "$universal/pico" -verify_arch arm64
 lipo "$universal/pico" -verify_arch x86_64
 if [[ -d $build/dist/pico.xcframework ]]; then rm -rf "${build:?}/dist/pico.xcframework"; fi
 xcodebuild -create-xcframework -framework "$build/iphoneos-arm64/pico.framework" -framework "$universal" -output "$build/dist/pico.xcframework"
-ditto -c -k --keepParent "$build/dist/pico.xcframework" "$build/dist/pico.xcframework.zip"
+ditto -c -k --norsrc --keepParent "$build/dist/pico.xcframework" "$build/dist/pico.xcframework.zip"
 (cd "$build/dist" && shasum -a 256 pico.xcframework.zip > checksums.txt)
 checksum=$(awk '{print $1}' "$build/dist/checksums.txt")
 test "$(swift package compute-checksum "$build/dist/pico.xcframework.zip")" = "$checksum"
