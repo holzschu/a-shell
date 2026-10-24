@@ -11,10 +11,15 @@ extern int ios_unsetenv_pid(const char *, int);
 extern int numDashCommands;
 static _Atomic(void *) liveJob;
 static atomic_int spawnEntered, releaseSpawn;
-static int beforeSpawn, cooked, startup;
+static int beforeSpawn, cooked, startup, sequential;
+static atomic_int foreignReady;
+static int startupFirst;
+int host_foreign_main(int argc,char **argv){atomic_store(&foreignReady,1);sleep(3);return 0;}
+int host_churn_main(int argc,char **argv){return 0;}
 static atomic_int dashEntered, releaseDash;
 static int (*dashMain)(int, char **);
 int host_gated_dash_main(int argc, char **argv) {
+    if(!startup)return dashMain(argc,argv);
     atomic_store(&dashEntered,1);
     while(!atomic_load(&releaseDash))usleep(1000);
     return dashMain(argc,argv);
@@ -45,7 +50,7 @@ int ashell_worker_host_interrupt(void *j){
     const void *caller=ios_getContext();
     int error=ashell_host_pane_interrupt(j);
     if(ios_getContext()!=caller) { atomic_store(&sessionChanged,1); dprintf(1,"interrupt changed caller session: FAIL\n"); }
-    if(startup && !atomic_load(&releaseDash)) { dprintf(1,"startup_first_interrupt=%d\n",error); atomic_store(&releaseDash,1); }
+    if(startup && !atomic_load(&releaseDash)) { startupFirst=error; dprintf(1,"startup_first_interrupt=%d\n",error); atomic_store(&releaseDash,1); }
     return error;
 }
 int ashell_worker_host_cancel(void *j){return ashell_host_pane_cancel(j);}
@@ -60,22 +65,43 @@ int host_fixture_main(int argc, char **argv) {
 }
 int main(int argc, char **argv) {@autoreleasepool {
     if(argc<2||argc>3)return 2;
+    sequential=argc==3&&!strcmp(argv[2],"sequential-startup");
     startup=argc==3&&!strcmp(argv[2],"startup");
-    cooked=startup||(argc==3&&!strcmp(argv[2],"cooked"));
+    cooked=sequential||startup||(argc==3&&!strcmp(argv[2],"cooked"));
     beforeSpawn=argc==3&&!strcmp(argv[2],"before-spawn");
-    alarm(10);numDashCommands=1;initializeEnvironment();ios_switchSession("host-policy-cancel-consumer");ios_setContext("host-policy-cancel-consumer");
+    alarm(20);numDashCommands=1;initializeEnvironment();ios_switchSession("host-policy-cancel-consumer");ios_setContext("host-policy-cancel-consumer");
     ios_setenv("ASHELL_WORKER_PID","999",1);ios_setenv("ASHELL_HOST_COMMANDS","sleep",1);
     ios_setenv("PATH",argv[1],1);
     FILE *input=tmpfile(),*output=tmpfile(),*error=tmpfile();void *registration=NULL;
     if(!input||!output||!error||ashell_register_owned_streams(input,output,error,&registration))return 2;
     ios_setStreams(input,output,error);joinMainThread=false;
     replaceCommand(@"sleep", @"host_fixture_main", false);
-    if(startup) {
+    if(startup||sequential) {
         NSString *library=[NSBundle.mainBundle.bundlePath stringByAppendingPathComponent:@"Frameworks/dash.framework/dash"];
         void *image=dlopen(library.fileSystemRepresentation,RTLD_NOW|RTLD_LOCAL);
         dashMain=image?dlsym(image,"main"):NULL;
         if(!dashMain)return 2;
         replaceCommand(@"dash",@"host_gated_dash_main",false);
+    }
+    int passed=0;
+    for(int iteration=0;iteration<(sequential?2:1);iteration++) {
+    FILE *foreignInput=NULL,*foreignOutput=NULL,*foreignError=NULL;void *foreignRegistration=NULL;pid_t foreignPid=0;
+    if(sequential&&iteration==1) {
+        // Cross a virtual-PID wrap with a foreign session alive during B startup.
+        replaceCommand(@"host-churn",@"host_churn_main",false);
+        replaceCommand(@"host-foreign",@"host_foreign_main",false);
+        ios_switchSession("host-foreign-consumer");ios_setContext("host-foreign-consumer");
+        ios_setenv("PATH",argv[1],1);
+        foreignInput=tmpfile();foreignOutput=tmpfile();foreignError=tmpfile();
+        if(!foreignInput||!foreignOutput||!foreignError||ashell_register_owned_streams(foreignInput,foreignOutput,foreignError,&foreignRegistration))return 2;
+        ios_setStreams(foreignInput,foreignOutput,foreignError);
+        for(int i=0;i<128;i++){pid_t p=ios_fork();ios_system("host-churn");ios_waitpid(p);}
+        foreignPid=ios_fork();ios_system("host-foreign");
+        for(int i=0;i<200&&!atomic_load(&foreignReady);i++)usleep(10000);
+        if(!atomic_load(&foreignReady))return 2;
+        ios_switchSession("host-policy-cancel-consumer");ios_setContext("host-policy-cancel-consumer");ios_setStreams(input,output,error);
+        ios_setenv("ASHELL_WORKER_PID","999",1);liveJob=NULL;startup=1;
+        atomic_store(&dashEntered,0);atomic_store(&releaseDash,0);atomic_store(&spawnEntered,0);
     }
     pid_t pid=ios_fork();ios_system("sleep 2");
     for(int i=0;i<200&&!(beforeSpawn?atomic_load(&spawnEntered):liveJob!=NULL);i++)usleep(10000);
@@ -91,11 +117,22 @@ int main(int argc, char **argv) {@autoreleasepool {
     int expected=cooked?130:7;
     int status=ios_getCommandStatus(),actual=releasedStatus,finished=releasedFinished;
     dprintf(1,"kill=%d command_status=%d host_finished=%d host_status=%d %s\n",killed,status,finished,actual,status==expected&&finished==1&&actual==expected?"PASS":"FAIL");
-    int passed=status==expected&&finished==1&&actual==expected&&!atomic_load(&sessionChanged);
+    passed=status==expected&&finished==1&&actual==expected&&!atomic_load(&sessionChanged);
+    if(sequential&&iteration==1)passed=passed&&startupFirst!=0;
+    if(!passed)return 1;
+    if(sequential&&iteration==1) {
+        ios_switchSession("host-foreign-consumer");ios_waitpid(foreignPid);ashell_wait_owned_streams(foreignRegistration);
+        int foreignStatus=ios_getCommandStatus();dprintf(1,"foreign_status=%d expected=0 %s\n",foreignStatus,foreignStatus==0?"PASS":"FAIL");
+        if(foreignStatus!=0)return 1;
+        ashell_unregister_owned_streams(&foreignRegistration);ios_setStreams(stdin,stdout,stderr);
+        fclose(foreignInput);fclose(foreignOutput);fclose(foreignError);
+        ios_switchSession("host-policy-cancel-consumer");ios_setStreams(input,output,error);
+    }
+    }
     if(cooked&&passed) {
         cooked=0; startup=0; liveJob=NULL;
         ios_setenv("ASHELL_WORKER_PID","999",1);
-        pid=ios_fork();ios_system("sleep 2");ios_waitpid(pid);
+        pid_t pid=ios_fork();ios_system("sleep 2");ios_waitpid(pid);
         ashell_wait_owned_streams(registration);
         int next=ios_getCommandStatus();
         passed=next==7&&releasedFinished==1&&releasedStatus==7;

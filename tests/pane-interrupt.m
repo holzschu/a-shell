@@ -16,7 +16,8 @@ int storeInteractive(void) { return interactive; }
 
 // A real terminal consumer, registered through the command catalogue API.
 int pane_raw_reader_main(int argc, char **argv) {
-    if(argc>1&&!strcmp(argv[1],"leave")) {
+    if(argc>1&&(!strcmp(argv[1],"leave")||!strcmp(argv[1],"delayed"))) {
+        if(!strcmp(argv[1],"delayed"))usleep(200000);
         ios_startInteractive();
         fputs("RAW_READY\n",thread_stdout);fflush(thread_stdout);
         return 0;
@@ -71,11 +72,12 @@ int main(int argc, char **argv) {
         initializeEnvironment();
         BOOL cookedIsolation = argc > 1 && !strcmp(argv[1], "cooked-isolation");
         BOOL isolation = argc > 1 && !strcmp(argv[1], "raw-socket-isolation");
+        BOOL delayedError = argc > 1 && !strcmp(argv[1], "pipeline-error-delayed");
         BOOL pipelineError = argc > 1 && !strcmp(argv[1], "pipeline-error-cooked");
         BOOL sequence = argc > 1 && !strcmp(argv[1], "raw-then-cooked");
         BOOL raw = isolation || (argc > 1 && (!strcmp(argv[1], "raw") || !strcmp(argv[1], "raw-socket")));
         BOOL pty = raw && !isolation && strcmp(argv[1], "raw-socket");
-        if (raw || sequence || pipelineError) replaceCommand(@"pane-raw-reader", @"pane_raw_reader_main", false);
+        if (raw || sequence || pipelineError || delayedError) replaceCommand(@"pane-raw-reader", @"pane_raw_reader_main", false);
         NSString *path = [@"PATH=" stringByAppendingString:[NSBundle.mainBundle.bundlePath stringByAppendingPathComponent:@"bin"]];
         const char *env[] = {"ASHELL_IOS_SOCKET_INPUT=1", pty ? "ASHELL_IOS_PTY=1" : "ASHELL_IOS_PTY=0", "PS1=PANE_PROMPT>", path.UTF8String, NULL};
         ashell_pane_options options = {.size = sizeof(options), .tty = 1};
@@ -96,6 +98,9 @@ int main(int argc, char **argv) {
             if (error != ENOTSUP || send_line(fd, "\003x")) return 1;
         } else {
             if (read_marker(fd, "PANE_PROMPT>")) return 1;
+            if(delayedError) {
+                if(send_line(fd,"export 1bad=value | pane-raw-reader delayed\n") || read_marker(fd,"RAW_READY"))return 1;
+            }
             if(pipelineError) {
                 if(send_line(fd,"{ read release; export 1bad=value; } | pane-raw-reader leave\n") || read_marker(fd,"RAW_READY") || send_line(fd,"release\n") || read_marker(fd,"PANE_PROMPT>"))return 1;
             }

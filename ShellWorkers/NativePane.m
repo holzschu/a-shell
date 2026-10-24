@@ -34,6 +34,7 @@ typedef struct {
     int usage_available;
     int peer_control, input_closed, is_pty;
     atomic_int interactive;
+    atomic_int foreground_command_pid;
     unsigned char eof_key;
     FILE *streams[3];
     // Without a tty the session streams differ from the command streams, so stock isatty reports false.
@@ -61,12 +62,11 @@ __attribute__((used, visibility("default"))) int ashell_pane_interactive(const v
 // Dash publishes the synthetic child PID before dispatch and restores its
 // parent's PID after waiting. lastThreadId instead names the first descendant,
 // which can be a shell blocked in ios_waitpid rather than the running command.
-static _Atomic int foreground_command_pid;
 
 __attribute__((used, visibility("default"))) int ashell_pane_exchange_foreground_pid(int pid) {
     pane_job *job = atomic_load(&foreground_pane);
     if (!job || ios_getContext() != job->key) return 0;
-    return atomic_exchange(&foreground_command_pid, pid);
+    return atomic_exchange(&job->foreground_command_pid, pid);
 }
 
 typedef struct {
@@ -589,6 +589,7 @@ static void *run_pane(void *cookie) {
         job->completion_error = error;
         job->initialized = 1;
         job->usage_available = getrusage(RUSAGE_SELF, &job->usage) == 0;
+        atomic_store(&job->foreground_command_pid, 0);
         job->done = 1;
         NSLog(@"Shell pane lifecycle: exit key=%s status=%d error=%d", job->key, job->status, error);
         // Close the retained peer before announcing exit so output EOF is observable.
@@ -852,7 +853,7 @@ int ashell_pane_interrupt(void *handle) {
     if (!error) {
         // Scoped Dash publication uses negative PIDs for shell waiters.
         // Inspect the target without changing the caller's session or cwd.
-        pid = atomic_load(&foreground_command_pid);
+        pid = atomic_load(&job->foreground_command_pid);
         foreground = pid > 0 ? ios_getThreadId(pid) : NULL;
         if (!foreground || foreground == (pthread_t)-1) error = ESRCH;
     }
