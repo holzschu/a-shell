@@ -97,13 +97,11 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSMinimumSystemVersion</key>
-	<string>12.0.0</string>
+	<string>$(MINIMUM_MACOS_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
-	<key>NFCReaderUsageDescription</key>
-	<string>a-Shell mini requests permission to access your NFC scanner</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -121,26 +119,26 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>a-Shell mini requests permission to access your Bluetooth devices.</string>
-	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>a-Shell mini uses Bluetooth to connect to nearby devices from scripts and commands.</string>
-	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>a-Shell would like to access your calendars to read and write events</string>
-	<key>NSCameraUsageDescription</key>
-	<string>a-Shell mini would like to access your camera</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>a-Shell mini requests permission to access your NFC scanner</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>a-Shell mini would like to access your calendars to read and write events</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>a-Shell would like to access your reminders to read and write events</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>$(BLUETOOTH_USAGE_DESCRIPTION)</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>a-Shell mini uses Bluetooth to connect to nearby devices from scripts and commands.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>a-Shell mini would like to access your camera</string>
 	<key>NSContactsUsageDescription</key>
 	<string>a-Shell mini would like to access your contacts</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>a-Shell mini would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>a-Shell mini reads the photos and videos you allow to view them and export originals for shell commands.</string>
+	<string>$(PHOTO_LIBRARY_USAGE_DESCRIPTION)</string>
 	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
 	<true/>
-	<key>NSRemindersFullAccessUsageDescription</key>
-	<string>a-Shell would like to access your reminders to read and write events</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
 		<key>iCloud.$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell</key>

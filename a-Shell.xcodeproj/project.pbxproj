@@ -1966,7 +1966,6 @@
 		22372B712448E85C0033FE07 /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources/usr; sourceTree = "<group>"; };
 		2237DC3028549CB8003E4738 /* jq.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = jq.xcframework; path = xcfs/.build/artifacts/xcfs/jq/jq.xcframework; sourceTree = "<group>"; };
 		223A1C1B2A5EDCA700B1B9AD /* Tips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tips.swift; sourceTree = "<group>"; };
-		223AF28E2D8B2E2300A4A62D /* a-Shell-mini copy2-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "a-Shell-mini copy2-Info.plist"; path = "/Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell-mini copy2-Info.plist"; sourceTree = "<absolute>"; };
 		223E91E52EC11C7500A81615 /* openrsyncA.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = openrsyncA.framework; path = xcfs/.build/artifacts/xcfs/openrsyncA.framework; sourceTree = "<group>"; };
 		223EF3432B97490600A8ED5A /* sshd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = sshd.xcframework; path = xcfs/.build/artifacts/xcfs/sshd/sshd.xcframework; sourceTree = "<group>"; };
 		223FC3C22611F57C00CDC89F /* wasm.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = wasm.html; sourceTree = "<group>"; };
@@ -2019,7 +2018,6 @@
 		226B0BF72E9FD5C300B14A3F /* openrsync.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = openrsync.framework; path = xcfs/.build/artifacts/xcfs/openrsync.framework; sourceTree = "<group>"; };
 		226B3B4A26F27E330007C281 /* forbidden */ = {isa = PBXFileReference; lastKnownFileType = folder; name = forbidden; path = ODR/forbidden; sourceTree = "<group>"; };
 		226FBED72C1257B000400751 /* jsc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = jsc.swift; sourceTree = "<group>"; };
-		2271BAFE2D8B064D00A809E5 /* a-Shell-noPython copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "a-Shell-noPython copy-Info.plist"; path = "/Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell-noPython copy-Info.plist"; sourceTree = "<absolute>"; };
 		227318AC28F02E170027A736 /* multimarkdown.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = multimarkdown.framework; path = xcfs/.build/artifacts/xcfs/multimarkdown.framework; sourceTree = "<group>"; };
 		2275AFAA26CA9B6D00B5BE45 /* ffmpeg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffmpeg.xcframework; path = xcfs/.build/artifacts/xcfs/ffmpeg/ffmpeg.xcframework; sourceTree = "<group>"; };
 		2275AFAB26CA9B6D00B5BE45 /* ffprobe.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffprobe.xcframework; path = xcfs/.build/artifacts/xcfs/ffprobe/ffprobe.xcframework; sourceTree = "<group>"; };
@@ -2923,8 +2921,6 @@
 				22178F03257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI */,
 				22984EEB22C93DBC00069497 /* Products */,
 				22B1B80D22CB9A5A00F7C452 /* Frameworks */,
-				2271BAFE2D8B064D00A809E5 /* a-Shell-noPython copy-Info.plist */,
-				223AF28E2D8B2E2300A4A62D /* a-Shell-mini copy2-Info.plist */,
 				898384A83061A39800A1E18D /* Build.xcconfig */,
 			);
 			sourceTree = "<group>";
@@ -4567,6 +4563,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
+				BLUETOOTH_USAGE_DESCRIPTION = "a-Shell mini uses Bluetooth to connect to nearby devices from scripts and commands.";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -4580,7 +4577,7 @@
 					"$(PROJECT_DIR)/Frameworks",
 					"$(PROJECT_DIR)",
 				);
-				INFOPLIST_FILE = "a-Shell-mini copy-Info.plist";
+				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4596,6 +4593,8 @@
 					"-L",
 					Frameworks/,
 				);
+				MINIMUM_MACOS_VERSION = 11.0.0;
+				PHOTO_LIBRARY_USAGE_DESCRIPTION = "a-Shell mini would like to access to your photo library to upload images";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -4616,6 +4615,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
+				BLUETOOTH_USAGE_DESCRIPTION = "a-Shell mini uses Bluetooth to connect to nearby devices from scripts and commands.";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -4629,7 +4629,7 @@
 					"$(PROJECT_DIR)/Frameworks",
 					"$(PROJECT_DIR)",
 				);
-				INFOPLIST_FILE = "a-Shell-mini copy-Info.plist";
+				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4645,6 +4645,8 @@
 					"-L",
 					Frameworks/,
 				);
+				MINIMUM_MACOS_VERSION = 11.0.0;
+				PHOTO_LIBRARY_USAGE_DESCRIPTION = "a-Shell mini would like to access to your photo library to upload images";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -4888,6 +4890,7 @@
 			buildSettings = {
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
+				BLUETOOTH_USAGE_DESCRIPTION = "a-Shell mini requests permission to access your Bluetooth devices.";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
@@ -4920,6 +4923,8 @@
 					"-L",
 					Frameworks/,
 				);
+				MINIMUM_MACOS_VERSION = 12.0.0;
+				PHOTO_LIBRARY_USAGE_DESCRIPTION = "a-Shell mini reads the photos and videos you allow to view them and export originals for shell commands.";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -4941,6 +4946,7 @@
 			buildSettings = {
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
+				BLUETOOTH_USAGE_DESCRIPTION = "a-Shell mini requests permission to access your Bluetooth devices.";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
@@ -4973,6 +4979,8 @@
 					"-L",
 					Frameworks/,
 				);
+				MINIMUM_MACOS_VERSION = 12.0.0;
+				PHOTO_LIBRARY_USAGE_DESCRIPTION = "a-Shell mini reads the photos and videos you allow to view them and export originals for shell commands.";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
