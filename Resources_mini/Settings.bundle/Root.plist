@@ -144,6 +144,130 @@
 			<key>DefaultValue</key>
 			<false/>
 		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>FooterText</key>
+			<string>Recommended: put name.json in Documents/Themes, run config --theme to list, then config --theme name -g to apply and save. Settings shows Custom file and its name automatically. You can also enter a name here with or without .json; case is ignored.</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Terminal theme</string>
+			<key>Key</key>
+			<string>terminalTheme</string>
+			<key>DefaultValue</key>
+			<string></string>
+			<key>Titles</key>
+			<array>
+				<string>System colors</string>
+				<string>Dracula</string>
+				<string>Catppuccin Latte</string>
+				<string>Catppuccin Frappe</string>
+				<string>Catppuccin Macchiato</string>
+				<string>Catppuccin Mocha</string>
+				<string>Catppuccin OLED</string>
+				<string>Tokyo Night</string>
+				<string>Kanagawa</string>
+				<string>Rose Pine</string>
+				<string>Rose Pine Dawn</string>
+				<string>Nord</string>
+				<string>Gruvbox Dark</string>
+				<string>Everforest Dark</string>
+				<string>Custom file</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string></string>
+				<string>dracula</string>
+				<string>catppuccin-latte</string>
+				<string>catppuccin-frappe</string>
+				<string>catppuccin-macchiato</string>
+				<string>catppuccin-mocha</string>
+				<string>catppuccin-oled</string>
+				<string>tokyo-night</string>
+				<string>kanagawa</string>
+				<string>rose-pine</string>
+				<string>rose-pine-dawn</string>
+				<string>nord</string>
+				<string>gruvbox-dark</string>
+				<string>everforest-dark</string>
+				<string>custom</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSTextFieldSpecifier</string>
+			<key>Title</key>
+			<string>Custom theme file name</string>
+			<key>Key</key>
+			<string>customTerminalTheme</string>
+			<key>DefaultValue</key>
+			<string></string>
+			<key>AutocapitalizationType</key>
+			<string>None</string>
+			<key>AutocorrectionType</key>
+			<string>No</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>Terminal font</string>
+			<key>FooterText</key>
+			<string>Put .ttf or .otf files in Documents/Fonts. Installed system fonts are listed only when the app is signed with the Fonts capability (Use Installed Fonts). Choose an installed font by name with config -n &lt;PostScript name&gt;.</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Font</string>
+			<key>Key</key>
+			<string>terminalFont</string>
+			<key>DefaultValue</key>
+			<string>custom</string>
+			<key>Titles</key>
+			<array>
+				<string>Menlo</string>
+				<string>Courier</string>
+				<string>Courier New</string>
+				<string>Custom</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>Menlo</string>
+				<string>Courier</string>
+				<string>CourierNewPSMT</string>
+				<string>custom</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSTextFieldSpecifier</string>
+			<key>Title</key>
+			<string>Custom font name</string>
+			<key>Key</key>
+			<string>fontName</string>
+			<key>DefaultValue</key>
+			<string>Menlo</string>
+			<key>AutocapitalizationType</key>
+			<string>None</string>
+			<key>AutocorrectionType</key>
+			<string>No</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSTextFieldSpecifier</string>
+			<key>Title</key>
+			<string>Font size</string>
+			<key>Key</key>
+			<string>fontSize</string>
+			<key>DefaultValue</key>
+			<real>13</real>
+			<key>KeyboardType</key>
+			<string>DecimalPad</string>
+		</dict>
 	</array>
 </dict>
 </plist>

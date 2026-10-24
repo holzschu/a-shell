@@ -31,7 +31,9 @@ var bashmarksActivated = false
 func startLocalWebServer() {
     // Last file loaded: /node_modules/@wasmer/wasmfs/lib/index.cjs.js
     localServerApp.get("/*") { request, response, next in
+        #if DEBUG
         NSLog("Kitura request received: \(request.matchedPath)")
+        #endif
         // Load ~/Library/node_modules first if it exists:
         // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
         let libraryURL = try! FileManager().url(for: .libraryDirectory,
@@ -181,7 +183,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        #if DEBUG
         NSLog("Application didFinishLaunchingWithOptions \(String(describing: launchOptions))")
+        #endif
+        _ = TerminalThemes.synchronizeSelection()
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
@@ -398,6 +403,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("PYTHONUSERBASE", libraryURL.path, 1)
         setenv("PYTHON_HISTORY", documentsUrl.appendingPathComponent(".python_history").path, 1)
         setenv("PYZMQ_BACKEND", "cffi", 1)
+        // Node modules installed in ~/Library/node_modules resolve from any directory; npm itself is in $APPDIR/npm.
+        setenv("NODE_PATH", libraryURL.path + "/node_modules", 1)
         // Frameworks are in $APPDIR/Frameworks:
         setenv("DYLD_FRAMEWORK_PATH", Bundle.main.resourcePath! + "/Frameworks", 1)
         setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
@@ -468,6 +475,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
         // Detect changes in user settings (preferences):
         NotificationCenter.default.addObserver(self, selector: #selector(self.settingsChanged), name: UserDefaults.didChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.settingsChanged), name: UIApplication.didBecomeActiveNotification, object: nil)
         // Also notification if user changes accessibility settings:
         NotificationCenter.default.addObserver(self, selector: #selector(self.voiceOverChanged), name:  UIAccessibility.voiceOverStatusDidChangeNotification, object: nil)
         if #available(iOS 17.0, *) {
@@ -505,7 +513,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when a new scene session is being created.
         // Use this method to select a configuration to create the new scene with.
         // Also the function called when a shortcut starts the App.
+        #if DEBUG
         NSLog("application configurationForConnecting connectingSceneSession \(connectingSceneSession)")
+        #endif
         startLocalWebServer()
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
@@ -576,6 +586,42 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     @objc func settingsChanged() {
+        DispatchQueue.main.async {
+            if TerminalThemes.synchronizeSelection() {
+                let themeName = TerminalThemes.savedName
+                for scene in UIApplication.shared.connectedScenes {
+                    if let delegate = scene.delegate as? SceneDelegate {
+                        if let themeName = themeName {
+                            delegate.restoreTheme(themeName)
+                            if let hexColor = UserDefaults.standard.string(forKey: "backgroundColor") {
+                                delegate.terminalBackgroundColor = UIColor(hexString: hexColor)
+                            }
+                            if let hexColor = UserDefaults.standard.string(forKey: "foregroundColor") {
+                                delegate.terminalForegroundColor = UIColor(hexString: hexColor)
+                            }
+                            if let hexColor = UserDefaults.standard.string(forKey: "cursorColor") {
+                                delegate.terminalCursorColor = UIColor(hexString: hexColor)
+                            }
+                            delegate.writeConfigWindow()
+                        } else {
+                            delegate.applyTheme(nil, name: "")
+                        }
+                    }
+                }
+            }
+            let fontErrors = TerminalFonts.refresh()
+            for error in fontErrors { NSLog("%@", error) }
+            let fontChanged = TerminalFonts.synchronizeSettings()
+            for scene in UIApplication.shared.connectedScenes {
+                if let delegate = scene.delegate as? SceneDelegate {
+                    if fontChanged {
+                        delegate.terminalFontName = TerminalFonts.savedName ?? factoryFontName
+                        delegate.terminalFontSize = TerminalFonts.savedSize ?? factoryFontSize
+                    }
+                    delegate.writeConfigWindow()
+                }
+            }
+        }
         // UserDefaults.didChangeNotification is called every time the window becomes active
         // We only act if things have really changed.
         // bookmarks management, copied from zshmarks: https://github.com/jocelynmallon/zshmarks
