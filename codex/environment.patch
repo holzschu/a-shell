@@ -1,0 +1,420 @@
+--- a/codex-mcp/src/rmcp_client.rs
++++ b/codex-mcp/src/rmcp_client.rs
+@@ -884,7 +884,7 @@
+         ));
+     }
+ 
+-    match env::var(env_var) {
++    match codex_protocol::shell_environment::local_env_var(env_var) {
+         Ok(value) => {
+             if value.is_empty() {
+                 Err(anyhow!(
+--- a/core/src/config/mod.rs
++++ b/core/src/config/mod.rs
+@@ -268,7 +268,7 @@
+ const CONFIG_PROFILE_V2_SUFFIX: &str = ".config.toml";
+ 
+ fn resolve_sqlite_home_env(resolved_cwd: &Path) -> Option<AbsolutePathBuf> {
+-    let raw = std::env::var(codex_state::SQLITE_HOME_ENV).ok()?;
++    let raw = codex_protocol::shell_environment::local_env_var(codex_state::SQLITE_HOME_ENV).ok()?;
+     let trimmed = raw.trim();
+     if trimmed.is_empty() {
+         return None;
+@@ -4208,7 +4208,7 @@
+         {
+             let cwd = PathUri::from_abs_path(&resolved_cwd);
+             let user_home_dir = PathUri::from_host_native_path("~").ok();
+-            let temporary_directories = std::env::var_os("TMPDIR")
++            let temporary_directories = codex_protocol::shell_environment::local_env_var_os("TMPDIR")
+                 .filter(|path| !path.is_empty())
+                 .and_then(|path| AbsolutePathBuf::from_absolute_path(PathBuf::from(path)).ok())
+                 .map(PathUri::from)
+--- a/core/src/shell_snapshot.rs
++++ b/core/src/shell_snapshot.rs
+@@ -630,7 +630,7 @@
+         .collect::<Vec<_>>();
+     let policy = &credential_broker.shell_environment_policy;
+     // Child visibility must not change the trusted destination of an inherited credential.
+-    let inherited_env = std::env::vars().collect();
++    let inherited_env = codex_protocol::shell_environment::local_env_vars().into_iter().collect();
+     let network_config = credential_broker.network_proxy.current_cfg().await?;
+     let inherited_env = network_config
+         .credential_broker_context
+@@ -1040,7 +1040,7 @@
+     let mut prepared_env = None;
+     if let Some(credential_broker) = credential_broker {
+         let policy = &credential_broker.shell_environment_policy;
+-        let mut env = create_env_from_vars(std::env::vars(), policy, /*thread_id*/ None);
++        let mut env = create_env_from_vars(codex_protocol::shell_environment::local_env_vars(), policy, /*thread_id*/ None);
+         if suppress_startup_files {
+             env.remove("BASH_ENV");
+             env.remove("ENV");
+@@ -1057,7 +1057,7 @@
+             .run(
+                 args,
+                 cwd,
+-                prepared_env.unwrap_or_else(|| std::env::vars().collect()),
++                prepared_env.unwrap_or_else(|| codex_protocol::shell_environment::local_env_vars().into_iter().collect()),
+                 snapshot_timeout,
+                 shell_name,
+                 snapshot_read_path,
+--- a/login/src/auth/agent_identity.rs
++++ b/login/src/auth/agent_identity.rs
+@@ -1,4 +1,3 @@
+-use std::env;
+ use std::future::Future;
+ use std::sync::Arc;
+ 
+@@ -30,7 +29,7 @@
+ const CODEX_AGENT_IDENTITY_JWKS_BASE_URL_ENV_VAR: &str = "CODEX_AGENT_IDENTITY_JWKS_BASE_URL";
+ 
+ fn agent_identity_endpoint_override(environment_variable: &str) -> Option<String> {
+-    env::var(environment_variable)
++    codex_protocol::shell_environment::local_env_var(environment_variable)
+         .ok()
+         .map(|base_url| base_url.trim().trim_end_matches('/').to_string())
+         .filter(|base_url| !base_url.is_empty())
+--- a/login/src/auth/default_client.rs
++++ b/login/src/auth/default_client.rs
+@@ -62,7 +62,7 @@
+ }
+ 
+ fn get_originator_value(provided: Option<String>) -> Originator {
+-    let value = std::env::var(CODEX_INTERNAL_ORIGINATOR_OVERRIDE_ENV_VAR)
++    let value = codex_protocol::shell_environment::local_env_var(CODEX_INTERNAL_ORIGINATOR_OVERRIDE_ENV_VAR)
+         .ok()
+         .or(provided)
+         .unwrap_or(DEFAULT_ORIGINATOR.to_string());
+@@ -104,7 +104,7 @@
+         return originator.clone();
+     }
+ 
+-    if std::env::var(CODEX_INTERNAL_ORIGINATOR_OVERRIDE_ENV_VAR).is_ok() {
++    if codex_protocol::shell_environment::local_env_var(CODEX_INTERNAL_ORIGINATOR_OVERRIDE_ENV_VAR).is_ok() {
+         let originator = get_originator_value(/*provided*/ None);
+         if let Ok(mut guard) = ORIGINATOR.write() {
+             match guard.as_ref() {
+@@ -469,7 +469,7 @@
+ }
+ 
+ fn is_sandboxed() -> bool {
+-    std::env::var("CODEX_SANDBOX").as_deref() == Ok("seatbelt")
++    codex_protocol::shell_environment::local_env_var("CODEX_SANDBOX").as_deref() == Ok("seatbelt")
+ }
+ 
+ #[cfg(test)]
+--- a/login/src/auth/manager.rs
++++ b/login/src/auth/manager.rs
+@@ -5,6 +5,7 @@
+ use serde::Deserialize;
+ #[cfg(test)]
+ use serial_test::serial;
++#[cfg(test)]
+ use std::env;
+ use std::fmt::Debug;
+ use std::future::Future;
+@@ -955,7 +956,7 @@
+ pub const CODEX_ACCESS_TOKEN_ENV_VAR: &str = "CODEX_ACCESS_TOKEN";
+ 
+ pub fn read_openai_api_key_from_env() -> Option<String> {
+-    env::var(OPENAI_API_KEY_ENV_VAR)
++    codex_protocol::shell_environment::local_env_var(OPENAI_API_KEY_ENV_VAR)
+         .ok()
+         .map(|value| value.trim().to_string())
+         .filter(|value| !value.is_empty())
+@@ -970,7 +971,7 @@
+ }
+ 
+ fn read_non_empty_env_var(key: &str) -> Option<String> {
+-    env::var(key)
++    codex_protocol::shell_environment::local_env_var(key)
+         .ok()
+         .map(|value| value.trim().to_string())
+         .filter(|value| !value.is_empty())
+@@ -1717,14 +1718,14 @@
+ pub const CLIENT_ID: &str = "app_EMoamEEZ73f0CkXaXp7hrann";
+ 
+ pub fn oauth_client_id() -> String {
+-    std::env::var(CLIENT_ID_OVERRIDE_ENV_VAR)
++    codex_protocol::shell_environment::local_env_var(CLIENT_ID_OVERRIDE_ENV_VAR)
+         .ok()
+         .filter(|client_id| !client_id.trim().is_empty())
+         .unwrap_or_else(|| CLIENT_ID.to_string())
+ }
+ 
+ fn refresh_token_endpoint() -> String {
+-    std::env::var(REFRESH_TOKEN_URL_OVERRIDE_ENV_VAR)
++    codex_protocol::shell_environment::local_env_var(REFRESH_TOKEN_URL_OVERRIDE_ENV_VAR)
+         .unwrap_or_else(|_| REFRESH_TOKEN_URL.to_string())
+ }
+ 
+--- a/login/src/auth/personal_access_token.rs
++++ b/login/src/auth/personal_access_token.rs
+@@ -2,7 +2,6 @@
+ use codex_protocol::account::PlanType as AccountPlanType;
+ use codex_protocol::auth::PlanType as InternalPlanType;
+ use serde::Deserialize;
+-use std::env;
+ use std::fmt;
+ 
+ use crate::default_client::create_default_auth_client;
+@@ -41,7 +40,7 @@
+         access_token: &str,
+         auth_route_config: &AuthRouteConfig,
+     ) -> std::io::Result<Self> {
+-        let authapi_base_url = env::var(CODEX_AUTHAPI_BASE_URL_ENV_VAR)
++        let authapi_base_url = codex_protocol::shell_environment::local_env_var(CODEX_AUTHAPI_BASE_URL_ENV_VAR)
+             .ok()
+             .map(|base_url| base_url.trim().trim_end_matches('/').to_string())
+             .filter(|base_url| !base_url.is_empty())
+--- a/login/src/auth/revoke.rs
++++ b/login/src/auth/revoke.rs
+@@ -132,11 +132,11 @@
+ }
+ 
+ fn revoke_token_endpoint() -> String {
+-    if let Ok(endpoint) = std::env::var(REVOKE_TOKEN_URL_OVERRIDE_ENV_VAR) {
++    if let Ok(endpoint) = codex_protocol::shell_environment::local_env_var(REVOKE_TOKEN_URL_OVERRIDE_ENV_VAR) {
+         return endpoint;
+     }
+ 
+-    if let Ok(refresh_endpoint) = std::env::var(REFRESH_TOKEN_URL_OVERRIDE_ENV_VAR)
++    if let Ok(refresh_endpoint) = codex_protocol::shell_environment::local_env_var(REFRESH_TOKEN_URL_OVERRIDE_ENV_VAR)
+         && let Some(endpoint) = derive_revoke_token_endpoint(&refresh_endpoint)
+     {
+         return endpoint;
+--- a/login/src/auth/workload_identity.rs
++++ b/login/src/auth/workload_identity.rs
+@@ -253,9 +253,9 @@
+ impl ProcessEnvironment {
+     fn read() -> Self {
+         Self {
+-            federation_rule_id: std::env::var_os(OPENAI_FEDERATION_RULE_ID_ENV_VAR),
+-            identity_token_file: std::env::var_os(OPENAI_IDENTITY_TOKEN_FILE_ENV_VAR),
+-            workload_identity_context: std::env::var_os(OPENAI_WORKLOAD_IDENTITY_CONTEXT_ENV_VAR),
++            federation_rule_id: codex_protocol::shell_environment::local_env_var_os(OPENAI_FEDERATION_RULE_ID_ENV_VAR),
++            identity_token_file: codex_protocol::shell_environment::local_env_var_os(OPENAI_IDENTITY_TOKEN_FILE_ENV_VAR),
++            workload_identity_context: codex_protocol::shell_environment::local_env_var_os(OPENAI_WORKLOAD_IDENTITY_CONTEXT_ENV_VAR),
+         }
+     }
+ 
+--- a/login/src/auth_env_telemetry.rs
++++ b/login/src/auth_env_telemetry.rs
+@@ -43,7 +43,7 @@
+ }
+ 
+ fn env_var_present(name: &str) -> bool {
+-    match std::env::var(name) {
++    match codex_protocol::shell_environment::local_env_var(name) {
+         Ok(value) => !value.trim().is_empty(),
+         Err(std::env::VarError::NotUnicode(_)) => true,
+         Err(std::env::VarError::NotPresent) => false,
+--- a/model-provider-info/src/lib.rs
++++ b/model-provider-info/src/lib.rs
+@@ -404,7 +404,7 @@
+ 
+         if let Some(env_headers) = &self.env_http_headers {
+             for (header, env_var) in env_headers {
+-                if let Ok(val) = std::env::var(env_var)
++                if let Ok(val) = codex_protocol::shell_environment::local_env_var(env_var)
+                     && !val.trim().is_empty()
+                     && let (Ok(name), Ok(value)) =
+                         (HeaderName::try_from(header), HeaderValue::try_from(val))
+@@ -474,7 +474,7 @@
+     pub fn api_key(&self) -> CodexResult<Option<String>> {
+         match &self.env_key {
+             Some(env_key) => {
+-                let api_key = std::env::var(env_key)
++                let api_key = codex_protocol::shell_environment::local_env_var(env_key)
+                     .ok()
+                     .filter(|v| !v.trim().is_empty())
+                     .ok_or_else(|| {
+@@ -730,14 +730,14 @@
+     // switch to reading values from config.toml instead.
+     let default_codex_oss_base_url = format!(
+         "http://localhost:{codex_oss_port}/v1",
+-        codex_oss_port = std::env::var("CODEX_OSS_PORT")
++        codex_oss_port = codex_protocol::shell_environment::local_env_var("CODEX_OSS_PORT")
+             .ok()
+             .filter(|value| !value.trim().is_empty())
+             .and_then(|value| value.parse::<u16>().ok())
+             .unwrap_or(default_provider_port)
+     );
+ 
+-    let codex_oss_base_url = std::env::var("CODEX_OSS_BASE_URL")
++    let codex_oss_base_url = codex_protocol::shell_environment::local_env_var("CODEX_OSS_BASE_URL")
+         .ok()
+         .filter(|v| !v.trim().is_empty())
+         .unwrap_or(default_codex_oss_base_url);
+--- a/model-provider/src/amazon_bedrock/auth.rs
++++ b/model-provider/src/amazon_bedrock/auth.rs
+@@ -137,14 +137,14 @@
+             })
+         }
+         BedrockAuthSource::EnvBearerToken => {
+-            let token = non_empty_env_var_from(AWS_BEARER_TOKEN_BEDROCK_ENV_VAR, std::env::var)
++            let token = non_empty_env_var_from(AWS_BEARER_TOKEN_BEDROCK_ENV_VAR, codex_protocol::shell_environment::local_env_var)
+                 .ok_or_else(|| {
+                     CodexErr::Fatal(
+                         "selected `AWS_BEARER_TOKEN_BEDROCK` credential is no longer available"
+                             .to_string(),
+                     )
+                 })?;
+-            let region = bearer_token_region(aws, std::env::var)?;
++            let region = bearer_token_region(aws, codex_protocol::shell_environment::local_env_var)?;
+             Ok(BedrockAuthMethod::EnvBearerToken { token, region })
+         }
+         BedrockAuthSource::ConfiguredAwsProfile => {
+--- a/model-provider/src/amazon_bedrock/mod.rs
++++ b/model-provider/src/amazon_bedrock/mod.rs
+@@ -88,7 +88,7 @@
+                 credential_export: None,
+                 auth_refresh: None,
+             });
+-        let auth_source = auth::auth_source(&provider_info, auth_manager.as_deref(), std::env::var);
++        let auth_source = auth::auth_source(&provider_info, auth_manager.as_deref(), codex_protocol::shell_environment::local_env_var);
+         let credential_export = if auth_source == auth::BedrockAuthSource::CredentialExport {
+             process_shared_state().aws_credential_export(&aws)
+         } else {
+@@ -130,7 +130,7 @@
+     }
+ 
+     fn auth_source(&self) -> auth::BedrockAuthSource {
+-        auth::auth_source(&self.info, self.auth_manager.as_deref(), std::env::var)
++        auth::auth_source(&self.info, self.auth_manager.as_deref(), codex_protocol::shell_environment::local_env_var)
+     }
+ 
+     fn managed_auth(&self) -> Option<CodexAuth> {
+--- a/protocol/src/shell_environment.rs
++++ b/protocol/src/shell_environment.rs
+@@ -49,13 +49,88 @@
+     }
+ }
+ 
++/// Read a named local invocation variable without changing the app environment.
++pub fn local_env_var<K: AsRef<std::ffi::OsStr>>(name: K) -> Result<String, std::env::VarError> {
++    #[cfg(target_os = "ios")]
++    {
++        local_env_var_os(name)
++            .ok_or(std::env::VarError::NotPresent)?
++            .into_string()
++            .map_err(std::env::VarError::NotUnicode)
++    }
++    #[cfg(not(target_os = "ios"))]
++    std::env::var(name)
++}
++
++/// Preserve non-UTF-8 values in the native command's immutable environment snapshot.
++pub fn local_env_var_os<K: AsRef<std::ffi::OsStr>>(name: K) -> Option<std::ffi::OsString> {
++    #[cfg(target_os = "ios")]
++    {
++        use std::os::unix::ffi::OsStrExt;
++        use std::os::unix::ffi::OsStringExt;
++        unsafe extern "C" {
++            fn codex_ios_command_getenv(name: *const std::ffi::c_char) -> *const std::ffi::c_char;
++        }
++        let name = name.as_ref().as_bytes();
++        if name.is_empty() || name.contains(&b'=') {
++            return None;
++        }
++        let name = std::ffi::CString::new(name).ok()?;
++        // The native command lock keeps the snapshot alive until runtime workers join.
++        let value = unsafe { codex_ios_command_getenv(name.as_ptr()) };
++        if value.is_null() {
++            return None;
++        }
++        Some(std::ffi::OsString::from_vec(
++            unsafe { std::ffi::CStr::from_ptr(value) }.to_bytes().to_vec(),
++        ))
++    }
++    #[cfg(not(target_os = "ios"))]
++    std::env::var_os(name)
++}
++
++/// Read the local invocation environment, including embedded command overrides.
++pub fn local_env_vars() -> impl Iterator<Item = (String, String)> {
++    #[cfg(target_os = "ios")]
++    {
++        use std::ffi::OsString;
++        use std::os::unix::ffi::OsStringExt;
++        unsafe extern "C" {
++            fn codex_ios_command_environment() -> *const *const std::ffi::c_char;
++        }
++        let mut entries = unsafe { codex_ios_command_environment() };
++        let mut vars = Vec::new();
++        if entries.is_null() {
++            vars.extend(std::env::vars_os());
++        } else {
++            loop {
++                let entry = unsafe { *entries };
++                if entry.is_null() {
++                    break;
++                }
++                let entry = unsafe { std::ffi::CStr::from_ptr(entry) }.to_bytes();
++                if let Some(split) = entry.iter().position(|byte| *byte == b'=') {
++                    vars.push((OsString::from_vec(entry[..split].to_vec()), OsString::from_vec(entry[split + 1..].to_vec())));
++                }
++                entries = unsafe { entries.add(1) };
++            }
++        }
++        // Like std::env::vars, validate UTF-8 when the consumer iterates.
++        return vars.into_iter().map(|(name, value)| {
++            (name.into_string().expect("native command environment name is not UTF-8"), value.into_string().expect("native command environment value is not UTF-8"))
++        });
++    }
++    #[cfg(not(target_os = "ios"))]
++    std::env::vars()
++}
++
+ /// Construct a shell environment from the supplied process environment and
+ /// shell-environment policy.
+ pub fn create_env(
+     policy: &ShellEnvironmentPolicy,
+     thread_id: Option<&str>,
+ ) -> HashMap<String, String> {
+-    create_env_from_vars(std::env::vars(), policy, thread_id)
++    create_env_from_vars(local_env_vars(), policy, thread_id)
+ }
+ 
+ pub fn create_env_from_vars<I>(
+--- a/rmcp-client/src/utils.rs
++++ b/rmcp-client/src/utils.rs
+@@ -8,7 +8,6 @@
+ use http::HeaderValue;
+ use http::header::USER_AGENT;
+ use std::collections::HashMap;
+-use std::env;
+ use std::ffi::OsString;
+ 
+ pub(crate) const MCP_USER_AGENT: &str = concat!("codex-mcp-client/", env!("CARGO_PKG_VERSION"));
+@@ -22,10 +21,10 @@
+         .iter()
+         .copied()
+         .chain(additional_env_vars)
+-        .filter_map(|var| env::var_os(var).map(|value| (OsString::from(var), value)))
++        .filter_map(|var| codex_protocol::shell_environment::local_env_var_os(var).map(|value| (OsString::from(var), value)))
+         .collect();
+     for name in CUSTOM_CA_ENV_KEYS {
+-        let Some(value) = env::var_os(name) else {
++        let Some(value) = codex_protocol::shell_environment::local_env_var_os(name) else {
+             continue;
+         };
+         if value.is_empty() {
+@@ -68,7 +67,7 @@
+     let mut env: HashMap<OsString, OsString> = env_vars
+         .iter()
+         .filter(|var| !var.is_remote_source())
+-        .filter_map(|var| env::var_os(var.name()).map(|value| (OsString::from(var.name()), value)))
++        .filter_map(|var| codex_protocol::shell_environment::local_env_var_os(var.name()).map(|value| (OsString::from(var.name()), value)))
+         .chain(extra_env.unwrap_or_default())
+         .collect();
+     env.retain(|name, _| {
+@@ -129,7 +128,7 @@
+ 
+     if let Some(env_headers) = env_http_headers {
+         for (name, env_var) in env_headers {
+-            if let Ok(value) = env::var(&env_var) {
++            if let Ok(value) = codex_protocol::shell_environment::local_env_var(&env_var) {
+                 if value.trim().is_empty() {
+                     continue;
+                 }

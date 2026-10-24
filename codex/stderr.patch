@@ -1,0 +1,308 @@
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -3740,0 +3741 @@
++ "codex-utils-cli",
+@@ -3813,0 +3815 @@
++ "codex-utils-cli",
+@@ -4878,0 +4881 @@
++ "codex-utils-cli",
+--- a/app-server/src/lib.rs
++++ b/app-server/src/lib.rs
+@@ -2,0 +3,4 @@
++
++#[cfg(target_os = "ios")]
++#[macro_use]
++extern crate codex_utils_cli;
+@@ -717 +721 @@
+-            .with_writer(std::io::stderr)
++            .with_writer(codex_utils_cli::stdio::stderr)
+@@ -722 +726 @@
+-            .with_writer(std::io::stderr)
++            .with_writer(codex_utils_cli::stdio::stderr)
+--- a/cli/src/daemon_install.rs
++++ b/cli/src/daemon_install.rs
+@@ -17 +17 @@
+-        std::io::stdin().is_terminal() && std::io::stderr().is_terminal(),
++        std::io::stdin().is_terminal() && codex_utils_cli::stdio::stderr().is_terminal(),
+--- a/cli/src/doctor/progress.rs
++++ b/cli/src/doctor/progress.rs
+@@ -32 +32 @@
+-        io::stderr().is_terminal(),
++        codex_utils_cli::stdio::stderr().is_terminal(),
+@@ -71 +71 @@
+-        let mut stderr = io::stderr().lock();
++        let mut stderr = codex_utils_cli::stdio::stderr().lock();
+@@ -96 +96 @@
+-        let mut stderr = io::stderr().lock();
++        let mut stderr = codex_utils_cli::stdio::stderr().lock();
+--- a/cli/src/doctor.rs
++++ b/cli/src/doctor.rs
+@@ -1705 +1705 @@
+-            stderr_is_terminal: std::io::stderr().is_terminal(),
++            stderr_is_terminal: codex_utils_cli::stdio::stderr().is_terminal(),
+--- a/cli/src/exec_server_telemetry.rs
++++ b/cli/src/exec_server_telemetry.rs
+@@ -24 +24 @@
+-        .with_writer(std::io::stderr)
++        .with_writer(codex_utils_cli::stdio::stderr)
+--- a/cli/src/lib.rs
++++ b/cli/src/lib.rs
+@@ -0,0 +1,4 @@
++#[cfg(target_os = "ios")]
++#[macro_use]
++extern crate codex_utils_cli;
++
+--- a/cli/src/main.rs
++++ b/cli/src/main.rs
+@@ -2421 +2421 @@
+-        if !(std::io::stdin().is_terminal() && std::io::stderr().is_terminal()) {
++        if !(std::io::stdin().is_terminal() && codex_utils_cli::stdio::stderr().is_terminal()) {
+@@ -4938 +4938,6 @@
+-            error.print()?;
++            use std::io::Write as _;
++            if error.use_stderr() {
++                write!(codex_utils_cli::stdio::stderr(), "{error}")?;
++            } else {
++                write!(std::io::stdout(), "{error}")?;
++            }
+--- a/cli/src/mcp_login.rs
++++ b/cli/src/mcp_login.rs
+@@ -206 +206 @@
+-    io::stderr()
++    codex_utils_cli::stdio::stderr()
+--- a/cli/src/migrate_rollouts.rs
++++ b/cli/src/migrate_rollouts.rs
+@@ -168 +168 @@
+-        } else if io::stderr().is_terminal()
++        } else if codex_utils_cli::stdio::stderr().is_terminal()
+@@ -203 +203 @@
+-                let mut stderr = io::stderr().lock();
++                let mut stderr = codex_utils_cli::stdio::stderr().lock();
+@@ -227 +227 @@
+-        let mut stderr = io::stderr().lock();
++        let mut stderr = codex_utils_cli::stdio::stderr().lock();
+--- a/cli/src/state_db_recovery.rs
++++ b/cli/src/state_db_recovery.rs
+@@ -66 +66 @@
+-    if std::io::stdin().is_terminal() && std::io::stderr().is_terminal() {
++    if std::io::stdin().is_terminal() && codex_utils_cli::stdio::stderr().is_terminal() {
+--- a/exec/src/event_processor_with_human_output.rs
++++ b/exec/src/event_processor_with_human_output.rs
+@@ -406 +406 @@
+-            std::io::stderr().is_terminal(),
++            codex_utils_cli::stdio::stderr().is_terminal(),
+@@ -416 +416 @@
+-            std::io::stderr().is_terminal(),
++            codex_utils_cli::stdio::stderr().is_terminal(),
+--- a/exec/src/lib.rs
++++ b/exec/src/lib.rs
+@@ -6,0 +7,4 @@
++
++#[cfg(target_os = "ios")]
++#[macro_use]
++extern crate codex_utils_cli;
+@@ -336 +340 @@
+-        .with_writer(std::io::stderr)
++        .with_writer(codex_utils_cli::stdio::stderr)
+--- a/login/Cargo.toml
++++ b/login/Cargo.toml
+@@ -45,0 +46,3 @@
++[target.'cfg(target_os = "ios")'.dependencies]
++codex-utils-cli = { workspace = true }
++
+--- a/login/src/lib.rs
++++ b/login/src/lib.rs
+@@ -0,0 +1,4 @@
++#[cfg(target_os = "ios")]
++#[macro_use]
++extern crate codex_utils_cli;
++
+--- a/tui/src/lib.rs
++++ b/tui/src/lib.rs
+@@ -6,0 +7,4 @@
++#[cfg(target_os = "ios")]
++#[macro_use]
++extern crate codex_utils_cli;
++
+@@ -1158,3 +1162,11 @@
+-        static REPORT_HOOK: std::sync::OnceLock<Result<(), String>> = std::sync::OnceLock::new();
+-        REPORT_HOOK
+-            .get_or_init(|| color_eyre::install().map_err(|error| error.to_string()))
++        static REPORT_HOOK: std::sync::OnceLock<
++            Result<std::sync::Arc<color_eyre::config::PanicHook>, String>,
++        > = std::sync::OnceLock::new();
++        let hook = REPORT_HOOK
++            .get_or_init(|| {
++                let (panic_hook, eyre_hook) = color_eyre::config::HookBuilder::default()
++                    .try_into_hooks()
++                    .map_err(|error| error.to_string())?;
++                eyre_hook.install().map_err(|error| error.to_string())?;
++                Ok(std::sync::Arc::new(panic_hook))
++            })
+@@ -1162,0 +1175,4 @@
++        let hook = std::sync::Arc::clone(hook);
++        std::panic::set_hook(Box::new(move |info| {
++            eprintln!("{}", hook.panic_report(info));
++        }));
+--- a/tui/src/session_archive_commands.rs
++++ b/tui/src/session_archive_commands.rs
+@@ -197 +197 @@
+-    if !(std::io::stdin().is_terminal() && std::io::stderr().is_terminal()) {
++    if !(std::io::stdin().is_terminal() && codex_utils_cli::stdio::stderr().is_terminal()) {
+@@ -203 +203 @@
+-    let mut stderr = std::io::stderr().lock();
++    let mut stderr = codex_utils_cli::stdio::stderr().lock();
+--- a/tui/src/startup_recovery.rs
++++ b/tui/src/startup_recovery.rs
+@@ -173 +173 @@
+-        let _ = writeln!(std::io::stderr().lock(), "\nUnsent draft:\n{text}\n");
++        let _ = writeln!(codex_utils_cli::stdio::stderr().lock(), "\nUnsent draft:\n{text}\n");
+--- a/uds/Cargo.toml
++++ b/uds/Cargo.toml
+@@ -26,0 +27,3 @@
++[target.'cfg(target_os = "ios")'.dependencies]
++codex-utils-cli = { workspace = true }
++
+--- a/uds/src/lib.rs
++++ b/uds/src/lib.rs
+@@ -1,0 +2,4 @@
++
++#[cfg(target_os = "ios")]
++#[macro_use]
++extern crate codex_utils_cli;
+--- a/utils/cli/src/lib.rs
++++ b/utils/cli/src/lib.rs
+@@ -0,0 +1,20 @@
++pub mod stdio;
++
++#[cfg(target_os = "ios")]
++#[macro_export]
++macro_rules! eprint {
++    ($($arg:tt)*) => {{
++        use std::io::Write as _;
++        write!($crate::stdio::stderr(), $($arg)*).expect("cannot write Codex stderr");
++    }};
++}
++
++#[cfg(target_os = "ios")]
++#[macro_export]
++macro_rules! eprintln {
++    ($($arg:tt)*) => {{
++        use std::io::Write as _;
++        writeln!($crate::stdio::stderr(), $($arg)*).expect("cannot write Codex stderr");
++    }};
++}
++
+--- /dev/null
++++ b/utils/cli/src/stderr_ios.rs
+@@ -0,0 +1,99 @@
++//! Invocation-owned diagnostics; the surrounding app retains process stderr.
++use std::fs::File;
++use std::io::{self, Write};
++use std::os::fd::BorrowedFd;
++use std::sync::{Mutex, MutexGuard};
++
++static OUTPUT: Mutex<Option<File>> = Mutex::new(None);
++
++/// Keep the duplicated stream alive until all command workers have joined.
++pub struct StderrGuard {
++    _private: (),
++}
++
++pub fn capture_stderr(fd: BorrowedFd<'_>) -> io::Result<StderrGuard> {
++    let mut output = OUTPUT.lock().unwrap_or_else(|error| error.into_inner());
++    if output.is_some() {
++        return Err(io::Error::new(
++            io::ErrorKind::AlreadyExists,
++            "Codex stderr is already captured",
++        ));
++    }
++    *output = Some(File::from(fd.try_clone_to_owned()?));
++    Ok(StderrGuard { _private: () })
++}
++
++impl Drop for StderrGuard {
++    fn drop(&mut self) {
++        OUTPUT
++            .lock()
++            .unwrap_or_else(|error| error.into_inner())
++            .take();
++    }
++}
++
++pub struct Stderr;
++pub struct StderrLock<'a>(MutexGuard<'a, Option<File>>);
++
++pub fn stderr() -> Stderr {
++    Stderr
++}
++
++impl Stderr {
++    pub fn is_terminal(&self) -> bool {
++        #[cfg(target_os = "ios")]
++        {
++            unsafe extern "C" {
++                fn codex_ios_terminal_isatty(fd: i32) -> i32;
++            }
++            unsafe { codex_ios_terminal_isatty(2) != 0 }
++        }
++        #[cfg(not(target_os = "ios"))]
++        {
++            use std::io::IsTerminal;
++            OUTPUT
++                .lock()
++                .unwrap_or_else(|error| error.into_inner())
++                .as_ref()
++                .is_some_and(IsTerminal::is_terminal)
++        }
++    }
++
++    pub fn lock(&self) -> StderrLock<'static> {
++        StderrLock(OUTPUT.lock().unwrap_or_else(|error| error.into_inner()))
++    }
++}
++
++impl Write for StderrLock<'_> {
++    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
++        self.0
++            .as_mut()
++            .ok_or_else(|| {
++                io::Error::new(io::ErrorKind::NotConnected, "Codex stderr is not captured")
++            })?
++            .write(bytes)
++    }
++
++    fn flush(&mut self) -> io::Result<()> {
++        self.0
++            .as_mut()
++            .ok_or_else(|| {
++                io::Error::new(io::ErrorKind::NotConnected, "Codex stderr is not captured")
++            })?
++            .flush()
++    }
++}
++
++impl Write for Stderr {
++    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
++        self.lock().write(bytes)
++    }
++
++    fn flush(&mut self) -> io::Result<()> {
++        self.lock().flush()
++    }
++
++    fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> io::Result<()> {
++        self.lock().write_fmt(args)
++    }
++}
+--- /dev/null
++++ b/utils/cli/src/stdio.rs
+@@ -0,0 +1,8 @@
++//! Diagnostic streams for CLI consumers and embedded iOS invocations.
++#[cfg(target_os = "ios")]
++#[path = "stderr_ios.rs"]
++mod ios;
++#[cfg(target_os = "ios")]
++pub use ios::{capture_stderr, stderr};
++#[cfg(not(target_os = "ios"))]
++pub use std::io::stderr;

@@ -1,0 +1,75 @@
+--- a/tui/src/terminal_palette.rs
++++ b/tui/src/terminal_palette.rs
+@@ -11,6 +11,7 @@
+     Unknown,
+ }
+ 
++#[cfg(not(target_os = "ios"))]
+ pub fn stdout_color_level() -> StdoutColorLevel {
+     match supports_color::on_cached(supports_color::Stream::Stdout) {
+         Some(level) if level.has_16m => StdoutColorLevel::TrueColor,
+@@ -20,6 +21,55 @@
+     }
+ }
+ 
++// The embedded host owns logical terminals and invocation-local environment.
++// Kernel fd 1 and supports-color's process cache describe the app, not this command.
++#[cfg(target_os = "ios")]
++pub fn stdout_color_level() -> StdoutColorLevel {
++    use codex_protocol::shell_environment::local_env_var as variable;
++    use crossterm::tty::IsTerminal;
++
++    // Keep supports-color's explicit override precedence without mutating global env.
++    let force = variable("FORCE_COLOR")
++        .ok()
++        .map(|value| match value.as_str() {
++            "true" | "" => 1,
++            "false" => 0,
++            _ => value.parse::<usize>().unwrap_or(1).min(3),
++        })
++        .unwrap_or_else(|| usize::from(variable("CLICOLOR_FORCE").is_ok_and(|v| v != "0")));
++    let level = if force > 0 {
++        force
++    } else if variable("NO_COLOR").is_ok_and(|v| v != "0")
++        || variable("TERM").as_deref() == Ok("dumb")
++        || !(std::io::stdout().is_terminal()
++            || variable("IGNORE_IS_TERMINAL").is_ok_and(|v| v != "0"))
++    {
++        0
++    } else if variable("COLORTERM").is_ok_and(|v| matches!(v.as_str(), "truecolor" | "24bit"))
++        || variable("TERM").is_ok_and(|v| v.ends_with("direct") || v.ends_with("truecolor"))
++        || variable("TERM_PROGRAM").as_deref() == Ok("iTerm.app")
++    {
++        3
++    } else if variable("TERM_PROGRAM").as_deref() == Ok("Apple_Terminal")
++        || variable("TERM").is_ok_and(|v| v.ends_with("256") || v.ends_with("256color"))
++    {
++        2
++    } else if variable("COLORTERM").is_ok()
++        || variable("TERM").is_ok_and(|v| v != "dumb")
++        || variable("CLICOLOR").is_ok_and(|v| v != "0")
++    {
++        1
++    } else {
++        0
++    };
++    match level {
++        3 => StdoutColorLevel::TrueColor,
++        2 => StdoutColorLevel::Ansi256,
++        1 => StdoutColorLevel::Ansi16,
++        _ => StdoutColorLevel::Unknown,
++    }
++}
++
+ #[allow(clippy::disallowed_methods)]
+ pub fn rgb_color((r, g, b): (u8, u8, u8)) -> Color {
+     Color::Rgb(r, g, b)
+@@ -50,7 +100,7 @@
+         stdout_color_level(),
+         terminal_info().name,
+         std::env::var_os("WT_SESSION").is_some(),
+-        std::env::var_os("FORCE_COLOR").is_some(),
++        codex_protocol::shell_environment::local_env_var_os("FORCE_COLOR").is_some(),
+     )
+ }
+ 

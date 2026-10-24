@@ -1,0 +1,549 @@
+--- a/utils/pty/src/lib.rs
++++ b/utils/pty/src/lib.rs
+@@ -1,3 +1,5 @@
++#[cfg(target_os = "ios")]
++mod ios;
+ mod child;
+ pub use child::Child;
+ mod child_command;
+--- a/utils/pty/src/pipe.rs
++++ b/utils/pty/src/pipe.rs
+@@ -326,6 +326,14 @@
+     arg0: &Option<String>,
+     inherited_fds: &[i32],
+ ) -> Result<SpawnedProcess> {
++    #[cfg(target_os = "ios")]
++    {
++        if !inherited_fds.is_empty() {
++            anyhow::bail!("native iOS commands cannot isolate inherited descriptors");
++        }
++        return crate::ios::spawn(program.as_ref(), args, cwd, env, arg0, true).await;
++    }
++    #[cfg(not(target_os = "ios"))]
+     spawn_process_with_stdin_mode(
+         program.as_ref(),
+         args,
+@@ -349,6 +357,14 @@
+     arg0: &Option<String>,
+     inherited_fds: &[i32],
+ ) -> Result<SpawnedProcess> {
++    #[cfg(target_os = "ios")]
++    {
++        if !inherited_fds.is_empty() {
++            anyhow::bail!("native iOS commands cannot isolate inherited descriptors");
++        }
++        return crate::ios::spawn(program.as_ref(), args, cwd, env, arg0, false).await;
++    }
++    #[cfg(not(target_os = "ios"))]
+     spawn_process_with_stdin_mode(
+         program.as_ref(),
+         args,
+--- a/utils/pty/src/pty.rs
++++ b/utils/pty/src/pty.rs
+@@ -157,6 +157,14 @@
+         anyhow::bail!("missing program for PTY spawn");
+     }
+ 
++    #[cfg(target_os = "ios")]
++    {
++        if !inherited_fds.as_slice().is_empty() {
++            anyhow::bail!("native iOS commands cannot isolate inherited descriptors");
++        }
++        anyhow::bail!("interactive tool terminals are unsupported on iOS; use tty=false");
++    }
++
+     #[cfg(not(unix))]
+     let _ = inherited_fds;
+ 
+@@ -172,12 +180,13 @@
+         return spawn_process_preserving_fds(program, args, cwd, env, arg0, size, inherited_fds)
+             .await;
+     }
+-    #[cfg(unix)]
++    #[cfg(all(unix, not(target_os = "ios")))]
+     if !inherited_fds.as_slice().is_empty() {
+         return spawn_process_preserving_fds(program, args, cwd, env, arg0, size, inherited_fds)
+             .await;
+     }
+ 
++    #[cfg(not(target_os = "ios"))]
+     spawn_process_portable(program, args, cwd, env, arg0, size).await
+ }
+ 
+--- a/utils/pty/src/process.rs
++++ b/utils/pty/src/process.rs
+@@ -290,6 +290,13 @@
+             return self.kill();
+         }
+ 
++        #[cfg(target_os = "ios")]
++        {
++            // Native command trees use scoped pthread cancellation, never host signals.
++            let _ = signal;
++            self.kill()
++        }
++        #[cfg(not(target_os = "ios"))]
+         Err(unsupported_signal(signal))
+     }
+ 
+--- a/utils/pty/src/child.rs
++++ b/utils/pty/src/child.rs
+@@ -29,6 +29,8 @@
+ 
+ pub(super) enum ChildKind {
+     Tokio(tokio::process::Child),
++    #[cfg(target_os = "ios")]
++    Ios(crate::ios::NativeChild),
+     #[cfg(unix)]
+     TokioReapOnly {
+         child: Option<tokio::process::Child>,
+@@ -42,6 +44,9 @@
+     pub fn id(&self) -> Option<u32> {
+         match &self.inner {
+             ChildKind::Tokio(child) => child.id(),
++            // Native jobs have no Darwin PID or process group.
++            #[cfg(target_os = "ios")]
++            ChildKind::Ios(_) => None,
+             #[cfg(unix)]
+             ChildKind::TokioReapOnly { child, .. } => {
+                 child.as_ref().and_then(tokio::process::Child::id)
+@@ -56,6 +61,8 @@
+         self.stdin.take();
+         match &mut self.inner {
+             ChildKind::Tokio(child) => child.wait().await,
++            #[cfg(target_os = "ios")]
++            ChildKind::Ios(child) => child.wait().await,
+             #[cfg(unix)]
+             ChildKind::TokioReapOnly { child, .. } => {
+                 child
+@@ -106,6 +113,8 @@
+         self.stdin.take();
+         match &mut self.inner {
+             ChildKind::Tokio(child) => child.kill().await,
++            #[cfg(target_os = "ios")]
++            ChildKind::Ios(child) => child.kill().await,
+             #[cfg(unix)]
+             ChildKind::TokioReapOnly { child, .. } => {
+                 child
+--- a/utils/pty/src/child_command.rs
++++ b/utils/pty/src/child_command.rs
+@@ -17,6 +17,7 @@
+ use winapi::um::winbase::CREATE_NO_WINDOW;
+ 
+ use crate::child::Child;
++#[cfg(not(target_os = "ios"))]
+ use crate::child::ChildKind;
+ 
+ /// Relationship between a child and its parent's session and process group.
+@@ -256,6 +257,14 @@
+         Ok(())
+     }
+ 
++    /// Launch in the existing app through ios_system, without a Darwin child PID.
++    #[cfg(target_os = "ios")]
++    pub fn spawn(self) -> io::Result<Child> {
++        self.validate()?;
++        crate::ios::spawn_child(self)
++    }
++
++    #[cfg(not(target_os = "ios"))]
+     /// Launch with native platform settings and the existing compatibility fallback.
+     pub fn spawn(mut self) -> io::Result<Child> {
+         #[cfg(unix)]
+--- /dev/null
++++ b/utils/pty/src/ios.rs
+@@ -0,0 +1,394 @@
++//! ios_system command transport. Native jobs own their descriptors and command tree.
++
++use std::collections::HashMap;
++use std::ffi::{CString, OsStr, c_char, c_int, c_void};
++use std::fs::File;
++use std::io;
++use std::os::fd::AsRawFd;
++use std::os::unix::ffi::OsStrExt;
++use std::os::unix::net::UnixStream as StdStream;
++use std::path::Path;
++use std::sync::Arc;
++
++use anyhow::{Context, Result};
++use tokio::io::{AsyncReadExt, AsyncWriteExt};
++use tokio::net::UnixStream;
++use tokio::sync::{broadcast, mpsc, oneshot};
++
++use crate::{ProcessDriver, SpawnedProcess, spawn_from_driver};
++
++unsafe extern "C" {
++    fn codex_ios_tool_start(
++        cwd: *const c_char,
++        argv: *const *const c_char,
++        env: *const *const c_char,
++        input: c_int,
++        output: c_int,
++        diagnostic: c_int,
++        handle: *mut *mut c_void,
++    ) -> c_int;
++    fn codex_ios_tool_cancel(handle: *mut c_void) -> c_int;
++    fn codex_ios_tool_wait(handle: *mut c_void, status: *mut c_int) -> c_int;
++    fn codex_ios_tool_release(handle: *mut *mut c_void) -> c_int;
++}
++
++struct NativeJob(*mut c_void);
++// C serializes cancellation with registration teardown. The sole wait task joins
++// the runner; Arc retains its handle until every cancellation accessor has returned.
++unsafe impl Send for NativeJob {}
++unsafe impl Sync for NativeJob {}
++
++impl Drop for NativeJob {
++    fn drop(&mut self) {
++        let error = unsafe { codex_ios_tool_release(&mut self.0) };
++        if error != 0 {
++            // Keep a runner's storage alive if joining failed; never free live C state.
++            eprintln!(
++                "Cannot release native tool job: {}",
++                io::Error::from_raw_os_error(error)
++            );
++        }
++    }
++}
++
++fn stream_pair() -> io::Result<(StdStream, UnixStream)> {
++    let (native, parent) = StdStream::pair()?;
++    parent.set_nonblocking(true)?;
++    Ok((native, UnixStream::from_std(parent)?))
++}
++
++fn read_output(mut stream: UnixStream, output: broadcast::Sender<Vec<u8>>) {
++    tokio::spawn(async move {
++        let mut bytes = vec![0; 8192];
++        loop {
++            match stream.read(&mut bytes).await {
++                Ok(0) => break,
++                Ok(count) => {
++                    let _ = output.send(bytes[..count].to_vec());
++                }
++                Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
++                Err(_) => break,
++            }
++        }
++    });
++}
++
++fn start_job(
++    program: &OsStr,
++    args: &[String],
++    cwd: &Path,
++    env: &HashMap<String, String>,
++    arg0: &Option<String>,
++    descriptors: [i32; 3],
++) -> Result<Arc<NativeJob>> {
++    if let Some(arg0) = arg0
++        && OsStr::new(arg0) != program
++    {
++        anyhow::bail!("ios_system cannot dispatch an executable with a different argv[0]");
++    }
++    let cwd = CString::new(cwd.as_os_str().as_bytes()).context("invalid native tool cwd")?;
++    let mut argv = vec![CString::new(program.as_bytes()).context("invalid native tool program")?];
++    for arg in args {
++        argv.push(CString::new(arg.as_bytes()).context("invalid native tool argument")?);
++    }
++    let env = env
++        .iter()
++        .map(|(key, value)| {
++            if key.is_empty() || key.contains('=') {
++                anyhow::bail!("invalid native tool environment key");
++            }
++            Ok(CString::new(format!("{key}={value}"))
++                .context("invalid native tool environment value")?)
++        })
++        .collect::<Result<Vec<_>>>()?;
++    let argv_ptrs = argv
++        .iter()
++        .map(|arg| arg.as_ptr())
++        .chain([std::ptr::null()])
++        .collect::<Vec<_>>();
++    let env_ptrs = env
++        .iter()
++        .map(|arg| arg.as_ptr())
++        .chain([std::ptr::null()])
++        .collect::<Vec<_>>();
++    let mut handle = std::ptr::null_mut();
++    let error = unsafe {
++        codex_ios_tool_start(
++            cwd.as_ptr(),
++            argv_ptrs.as_ptr(),
++            env_ptrs.as_ptr(),
++            descriptors[0],
++            descriptors[1],
++            descriptors[2],
++            &mut handle,
++        )
++    };
++    if error != 0 {
++        return Err(io::Error::from_raw_os_error(error).into());
++    }
++    Ok(Arc::new(NativeJob(handle)))
++}
++
++pub(crate) async fn spawn(
++    program: &OsStr,
++    args: &[String],
++    cwd: &Path,
++    env: &HashMap<String, String>,
++    arg0: &Option<String>,
++    stdin_open: bool,
++) -> Result<SpawnedProcess> {
++    let (input, parent) = StdStream::pair()?;
++    // Keep the read half alive through join. Darwin rejects F_SETNOSIGPIPE on
++    // a socket whose peer has closed; native commands duplicate stdin after EOF.
++    let input_peer = parent.try_clone()?;
++    parent.set_nonblocking(true)?;
++    let mut writer = UnixStream::from_std(parent)?;
++    let (output, reader) = stream_pair()?;
++    let (diagnostic, error_reader) = stream_pair()?;
++    let job = start_job(
++        program,
++        args,
++        cwd,
++        env,
++        arg0,
++        [
++            input.as_raw_fd(),
++            output.as_raw_fd(),
++            diagnostic.as_raw_fd(),
++        ],
++    )?;
++    // start() copied the strings and duplicated these blocking command-side sockets.
++    drop((input, output, diagnostic));
++    let (writer_tx, mut writer_rx) = mpsc::channel::<Vec<u8>>(128);
++    let writer_handle = tokio::spawn(async move {
++        if stdin_open {
++            while let Some(bytes) = writer_rx.recv().await {
++                if writer.write_all(&bytes).await.is_err() {
++                    break;
++                }
++            }
++        }
++        let _ = writer.shutdown().await;
++    });
++    let (stdout_tx, stdout_rx) = broadcast::channel(256);
++    let (stderr_tx, stderr_rx) = broadcast::channel(256);
++    read_output(reader, stdout_tx);
++    read_output(error_reader, stderr_tx.clone());
++    let exit_rx = wait_for_job(Arc::clone(&job), &stderr_tx, input_peer);
++    let cancel_errors = stderr_tx.downgrade();
++    drop(stderr_tx);
++    Ok(spawn_from_driver(ProcessDriver {
++        writer_tx,
++        stdout_rx,
++        stderr_rx: Some(stderr_rx),
++        exit_rx,
++        terminator: Some(Box::new(move || {
++            let error = unsafe { codex_ios_tool_cancel(job.0) };
++            if error != 0
++                && let Some(stderr_tx) = cancel_errors.upgrade()
++            {
++                let _ = stderr_tx.send(
++                    format!(
++                        "Native tool cancellation failed: {}\n",
++                        io::Error::from_raw_os_error(error)
++                    )
++                    .into_bytes(),
++                );
++            }
++        })),
++        writer_handle: Some(writer_handle),
++        resizer: None,
++    }))
++}
++
++fn wait_for_job(
++    job: Arc<NativeJob>,
++    stderr_tx: &broadcast::Sender<Vec<u8>>,
++    input_peer: StdStream,
++) -> oneshot::Receiver<i32> {
++    let (exit_tx, exit_rx) = oneshot::channel();
++    let wait_job = job;
++    let wait_errors = stderr_tx.clone();
++    tokio::task::spawn_blocking(move || {
++        let mut status = 1;
++        let error = unsafe { codex_ios_tool_wait(wait_job.0, &mut status) };
++        drop(input_peer);
++        if error != 0 {
++            let _ = wait_errors.send(
++                format!(
++                    "Native tool transport failed: {}\n",
++                    io::Error::from_raw_os_error(error)
++                )
++                .into_bytes(),
++            );
++            status = 1;
++        }
++        let _ = exit_tx.send(status);
++    });
++    exit_rx
++}
++
++/// Native implementation of the existing local Child API, used by command hooks.
++pub(crate) struct NativeChild {
++    job: Arc<NativeJob>,
++    exit_rx: oneshot::Receiver<io::Result<i32>>,
++    exit_status: Option<i32>,
++    cancel_on_drop: bool,
++}
++
++impl NativeChild {
++    pub(crate) async fn wait(&mut self) -> io::Result<std::process::ExitStatus> {
++        use std::os::unix::process::ExitStatusExt;
++        let code = match self.exit_status {
++            Some(code) => code,
++            None => {
++                let code = (&mut self.exit_rx)
++                    .await
++                    .map_err(|_| io::Error::other("native command wait task ended"))??;
++                self.exit_status = Some(code);
++                code
++            }
++        };
++        Ok(std::process::ExitStatus::from_raw(code << 8))
++    }
++
++    pub(crate) async fn kill(&mut self) -> io::Result<()> {
++        let error = unsafe { codex_ios_tool_cancel(self.job.0) };
++        if error != 0 {
++            return Err(io::Error::from_raw_os_error(error));
++        }
++        self.wait().await.map(|_| ())
++    }
++}
++
++impl Drop for NativeChild {
++    fn drop(&mut self) {
++        if self.cancel_on_drop && self.exit_status.is_none() {
++            let error = unsafe { codex_ios_tool_cancel(self.job.0) };
++            if error != 0 {
++                eprintln!(
++                    "Native command cancellation failed: {}",
++                    io::Error::from_raw_os_error(error)
++                );
++            }
++        }
++    }
++}
++
++pub(crate) fn spawn_child(command: crate::Command) -> io::Result<crate::Child> {
++    use crate::child::ChildKind;
++    use crate::child_command::ChildDropPolicy;
++    use std::os::fd::OwnedFd;
++
++    if matches!(command.process_mode, crate::ProcessMode::NewGroup) {
++        // Local MCP servers require independent group lifetime and stdio FD isolation.
++        // Holding the app's cwd/env ownership for a persistent server blocks tool jobs.
++        return Err(io::Error::new(
++            io::ErrorKind::Unsupported,
++            "iOS native commands cannot own an independent process group; use an HTTP MCP server or an external executor",
++        ));
++    }
++    if command.inner.as_std().get_program().is_empty() {
++        return Err(io::Error::new(
++            io::ErrorKind::InvalidInput,
++            "missing native command program",
++        ));
++    }
++    if !command.inherited_fds.is_empty() {
++        return Err(io::Error::new(
++            io::ErrorKind::Unsupported,
++            "native iOS commands cannot isolate inherited descriptors",
++        ));
++    }
++    let std_command = command.inner.as_std();
++    let program = std_command.get_program();
++    let utf8 = |value: &OsStr| {
++        value.to_str().map(str::to_owned).ok_or_else(|| {
++            io::Error::new(
++                io::ErrorKind::InvalidInput,
++                "native command requires UTF-8 arguments and environment",
++            )
++        })
++    };
++    let args = std_command
++        .get_args()
++        .map(utf8)
++        .collect::<io::Result<Vec<_>>>()?;
++    let env = std_command
++        .get_envs()
++        .filter_map(|(key, value)| value.map(|value| (key, value)))
++        .map(|(key, value)| Ok((utf8(key)?, utf8(value)?)))
++        .collect::<io::Result<HashMap<_, _>>>()?;
++    let arg0 = command.arg0.as_deref().map(utf8).transpose()?;
++    let fallback_cwd = std::env::current_dir()?;
++    let cwd = std_command.get_current_dir().unwrap_or(&fallback_cwd);
++
++    let mut stdin = None;
++    let input: File = match command.stdin {
++        crate::ChildStdin::Piped => {
++            let (native, parent) = StdStream::pair()?;
++            // Tokio owns and sets nonblocking mode on the parent descriptor only.
++            let parent = std::process::ChildStdin::from(OwnedFd::from(parent));
++            stdin = Some(tokio::process::ChildStdin::from_std(parent)?);
++            File::from(OwnedFd::from(native))
++        }
++        crate::ChildStdin::Null => File::open("/dev/null")?,
++        crate::ChildStdin::File(fd) => fd.into(),
++    };
++    let mut stdout = None;
++    let output: File = match command.stdout_file {
++        Some(fd) => fd.into(),
++        None => {
++            let (native, parent) = StdStream::pair()?;
++            let parent = std::process::ChildStdout::from(OwnedFd::from(parent));
++            stdout = Some(tokio::process::ChildStdout::from_std(parent)?);
++            File::from(OwnedFd::from(native))
++        }
++    };
++    let mut stderr = None;
++    let diagnostic: File = match command.stderr_file {
++        Some(fd) => fd.into(),
++        None => {
++            let (native, parent) = StdStream::pair()?;
++            let parent = std::process::ChildStderr::from(OwnedFd::from(parent));
++            stderr = Some(tokio::process::ChildStderr::from_std(parent)?);
++            File::from(OwnedFd::from(native))
++        }
++    };
++    let job = start_job(
++        program,
++        &args,
++        cwd,
++        &env,
++        &arg0,
++        [
++            input.as_raw_fd(),
++            output.as_raw_fd(),
++            diagnostic.as_raw_fd(),
++        ],
++    )
++    .map_err(|error| io::Error::other(error.to_string()))?;
++    let wait_job = Arc::clone(&job);
++    let (exit_tx, exit_rx) = oneshot::channel();
++    tokio::task::spawn_blocking(move || {
++        let mut status = 1;
++        let error = unsafe { codex_ios_tool_wait(wait_job.0, &mut status) };
++        let result = if error == 0 {
++            Ok(status)
++        } else {
++            Err(io::Error::from_raw_os_error(error))
++        };
++        let _ = exit_tx.send(result);
++    });
++    Ok(crate::Child {
++        stdin,
++        stdout,
++        stderr,
++        inner: ChildKind::Ios(NativeChild {
++            job,
++            exit_rx,
++            exit_status: None,
++            cancel_on_drop: matches!(command.drop_policy, ChildDropPolicy::KillAndReap),
++        }),
++    })
++}

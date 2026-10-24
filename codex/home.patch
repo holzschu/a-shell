@@ -1,0 +1,58 @@
+--- a/utils/home-dir/src/lib.rs
++++ b/utils/home-dir/src/lib.rs
+@@ -11,10 +11,32 @@
+ /// - If `CODEX_HOME` is not set, this function does not verify that the
+ ///   directory exists.
+ pub fn find_codex_home() -> std::io::Result<AbsolutePathBuf> {
+-    let codex_home_env = std::env::var("CODEX_HOME")
++    let codex_home_env = command_var("CODEX_HOME")
+         .ok()
+         .filter(|val| !val.is_empty());
+     find_codex_home_from_env(codex_home_env.as_deref())
++}
++
++#[cfg(not(target_os = "ios"))]
++fn command_var(name: &str) -> Result<String, std::env::VarError> {
++    std::env::var(name)
++}
++
++#[cfg(target_os = "ios")]
++fn command_var(name: &str) -> Result<String, std::env::VarError> {
++    use std::os::unix::ffi::OsStringExt;
++    unsafe extern "C" {
++        fn codex_ios_command_getenv(name: *const std::ffi::c_char) -> *const std::ffi::c_char;
++    }
++    let name = std::ffi::CString::new(name).map_err(|_| std::env::VarError::NotPresent)?;
++    let value = unsafe { codex_ios_command_getenv(name.as_ptr()) };
++    if value.is_null() {
++        return Err(std::env::VarError::NotPresent);
++    }
++    let bytes = unsafe { std::ffi::CStr::from_ptr(value) }.to_bytes().to_vec();
++    String::from_utf8(bytes).map_err(|error| {
++        std::env::VarError::NotUnicode(std::ffi::OsString::from_vec(error.into_bytes()))
++    })
+ }
+ 
+ fn find_codex_home_from_env(codex_home_env: Option<&str>) -> std::io::Result<AbsolutePathBuf> {
+@@ -50,12 +72,20 @@
+             }
+         }
+         None => {
+-            let mut p = home_dir().ok_or_else(|| {
++            #[cfg(target_os = "ios")]
++            let home = command_var("GROUP").ok().filter(|value| !value.is_empty()).map(PathBuf::from);
++            #[cfg(not(target_os = "ios"))]
++            let home = home_dir();
++            let mut p = home.ok_or_else(|| {
+                 std::io::Error::new(
+                     std::io::ErrorKind::NotFound,
+                     "Could not find home directory",
+                 )
+             })?;
++            // The host and extensions share the App Group; never fall back to private HOME.
++            #[cfg(target_os = "ios")]
++            p.push("Library/codex");
++            #[cfg(not(target_os = "ios"))]
+             p.push(".codex");
+             AbsolutePathBuf::from_absolute_path(p)
+         }

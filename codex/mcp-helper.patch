@@ -1,0 +1,107 @@
+--- a/rmcp-client/src/http_headers.rs
++++ b/rmcp-client/src/http_headers.rs
+@@ -4,6 +4,7 @@
+ use std::os::windows::process::CommandExt;
+ use std::path::Path;
+ use std::path::PathBuf;
++#[cfg(not(target_os = "ios"))]
+ use std::process::Stdio;
+ use std::sync::Arc;
+ use std::sync::Mutex;
+@@ -19,7 +20,7 @@
+ use codex_exec_server::HttpRequestParams;
+ use codex_exec_server::HttpRequestResponse;
+ use codex_exec_server::HttpResponseBodyStream;
+-#[cfg(unix)]
++#[cfg(all(unix, not(target_os = "ios")))]
+ use codex_utils_pty::process_group::kill_process_group;
+ use futures::FutureExt;
+ use futures::future::BoxFuture;
+@@ -31,7 +32,9 @@
+ use serde::de::MapAccess;
+ use serde::de::Visitor;
+ use tokio::io::AsyncReadExt;
++#[cfg(not(target_os = "ios"))]
+ use tokio::process::Child;
++#[cfg(not(target_os = "ios"))]
+ use tokio::process::Command;
+ use tokio::time::Instant;
+ use url::Origin;
+@@ -69,6 +72,7 @@
+     provider: HttpHeadersProvider,
+ }
+ 
++#[cfg(not(target_os = "ios"))]
+ struct HelperProcess {
+     child: Child,
+     #[cfg(unix)]
+@@ -119,6 +123,7 @@
+     }
+ }
+ 
++#[cfg(not(target_os = "ios"))]
+ impl Drop for HelperProcess {
+     fn drop(&mut self) {
+         #[cfg(unix)]
+@@ -428,6 +433,61 @@
+     }
+ }
+ 
++#[cfg(target_os = "ios")]
++async fn run_helper(command: &str, cwd: &Path) -> Result<HeaderMap> {
++    let mut process = codex_utils_pty::Command::new("dash");
++    process
++        .args(["-c", command])
++        .stdin(codex_utils_pty::ChildStdin::Null)
++        .current_dir(cwd)
++        .envs(create_env_for_mcp_server(/*extra_env*/ None, &[])?);
++    let mut child = process
++        .spawn()
++        .map_err(|error| anyhow!("MCP HTTP headers helper failed to start: {error}"))?;
++    let stdout = child
++        .stdout
++        .take()
++        .ok_or_else(|| anyhow!("MCP HTTP headers helper stdout was unavailable"))?;
++    let mut stderr = child
++        .stderr
++        .take()
++        .ok_or_else(|| anyhow!("MCP HTTP headers helper stderr was unavailable"))?;
++    // Native commands own a scoped command tree rather than a Darwin process group.
++    // Retain Child outside the timeout future so every early return cancels it.
++    let output = tokio::time::timeout(HELPER_TIMEOUT, async {
++        let (output, _, status) = tokio::try_join!(
++            async {
++                let mut output = Vec::new();
++                stdout
++                    .take((MAX_HELPER_OUTPUT_BYTES + 1) as u64)
++                    .read_to_end(&mut output)
++                    .await?;
++                if output.len() > MAX_HELPER_OUTPUT_BYTES {
++                    return Err(anyhow!("MCP HTTP headers helper output exceeds 64 KiB"));
++                }
++                Ok(output)
++            },
++            async {
++                // Match the desktop null stderr without retaining or logging credentials.
++                tokio::io::copy(&mut stderr, &mut tokio::io::sink())
++                    .await
++                    .map_err(anyhow::Error::from)
++            },
++            async { child.wait().await.map_err(anyhow::Error::from) },
++        )?;
++        if !status.success() {
++            return Err(anyhow!(
++                "MCP HTTP headers helper exited with status {status}"
++            ));
++        }
++        Ok(output)
++    })
++    .await
++    .map_err(|_| anyhow!("MCP HTTP headers helper timed out after 10 seconds"))??;
++    parse_helper_output(output)
++}
++
++#[cfg(not(target_os = "ios"))]
+ async fn run_helper(command: &str, cwd: &Path) -> Result<HeaderMap> {
+     #[cfg(windows)]
+     let shell = std::env::var_os("COMSPEC").unwrap_or_else(|| "cmd.exe".into());

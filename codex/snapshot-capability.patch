@@ -1,0 +1,26 @@
+--- a/features/src/lib.rs
++++ b/features/src/lib.rs
+@@ -1015,7 +1015,8 @@
+         id: Feature::ShellSnapshot,
+         key: "shell_snapshot",
+         stage: Stage::Stable,
+-        default_enabled: true,
++        // Native Dash snapshots can deadlock the process-wide ios_system command queue.
++        default_enabled: !cfg!(target_os = "ios"),
+     },
+     FeatureSpec {
+         id: Feature::PowerShellShellVersion,
+--- a/core/src/shell_snapshot.rs
++++ b/core/src/shell_snapshot.rs
+@@ -1030,6 +1030,11 @@
+     credential_broker: Option<&SnapshotCredentialBroker>,
+     sandbox: Option<&ShellSnapshotSandbox>,
+ ) -> Result<String> {
++    // An explicit feature override must not enqueue the unsupported startup pipeline.
++    // Reject before native allocation, so neither timeout nor shutdown can leave tool_active held.
++    if cfg!(target_os = "ios") {
++        bail!("Shell snapshots are unavailable in the embedded iOS command runtime");
++    }
+     let suppress_startup_files =
+         credential_broker.is_some() && matches!(shell_mode, SnapshotShellMode::Validation(_));
+     let mut args = shell.derive_exec_args(script, matches!(shell_mode, SnapshotShellMode::Login));

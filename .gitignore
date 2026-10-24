@@ -80,6 +80,8 @@ fastlane/test_output
 
 Configuration.xcconfig
 
+# Locally built native Codex framework
+/codex/codex.xcframework/
 # Locally built native ripgrep framework
 /rg/rg.xcframework/
 helix/helix.xcframework/
