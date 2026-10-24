@@ -4062,6 +4062,7 @@
 				224A90682ADD0999006DB9CC /* Embed Frameworks */,
 				224A916A2ADD0999006DB9CC /* Embed App Extensions */,
 				9B427E6638A792BDC5802FE8 /* Embed Foundation Extensions */,
+				7031073A0000000000000001 /* Match LongCommands version */,
 			);
 			buildRules = (
 			);
@@ -4430,6 +4431,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7031073A0000000000000001 /* Match LongCommands version */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(EXTENSIONS_FOLDER_PATH)/a-Shell-mini-LongCommands.appex/Info.plist",
+			);
+			name = "Match LongCommands version";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\nextension=\"${TARGET_BUILD_DIR}/${EXTENSIONS_FOLDER_PATH}/a-Shell-mini-LongCommands.appex\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString ${MARKETING_VERSION}\" \"$extension/Info.plist\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion ${CURRENT_PROJECT_VERSION}\" \"$extension/Info.plist\"\nif [ \"${CODE_SIGNING_ALLOWED:-YES}\" != \"NO\" ]; then\n    /usr/bin/codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY:--}\" --preserve-metadata=identifier,entitlements,flags --generate-entitlement-der \"$extension\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		22178EF4257BBBA4008EB2B4 /* Sources */ = {
