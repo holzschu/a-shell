@@ -45,7 +45,7 @@ struct javascriptCommand {
 let myToolbarTip = toolbarTip()
 var internalBrowserStarted = false
 
-class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate, TerminalViewDelegate {
+class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIAdaptivePresentationControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate, TerminalViewDelegate {
     var window: UIWindow?
     var screen: UIScreen?
     var windowScene: UIWindowScene?
@@ -120,6 +120,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var windowHistory = ""
     var pid: pid_t = 0
     private var selectedFont = ""
+    private var fontSelectionCompleted = DispatchSemaphore(value: 0)
     // Store these for session restore:
     var currentDirectory = ""
     var previousDirectory = ""
@@ -2316,7 +2317,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             self.terminalView?.caretColor = cursorColor
             self.terminalView?.getTerminal().cursorColor = (cursorColor.toSwiftTermColor())
             self.terminalView?.selectedTextBackgroundColor = cursorColor.makeTransparent()
-            if let terminalFont = UIFont(name: fontName, size: CGFloat(fontSize)) {
+            if let terminalFont = TerminalFonts.font(named: fontName, size: CGFloat(fontSize)) ?? UIFont(name: factoryFontName, size: CGFloat(fontSize)) {
                 self.terminalView?.font = terminalFont
                 self.basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
             }
@@ -2384,56 +2385,50 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     // Creates the iOS 13 Font picker, returns the name of the font selected.
     func pickFont() -> String? {
+        fontSelectionCompleted = DispatchSemaphore(value: 0)
         DispatchQueue.main.sync {
-            let fontPickerConfig = UIFontPickerViewController.Configuration()
-            fontPickerConfig.includeFaces = true
-            fontPickerConfig.filteredTraits = .traitMonoSpace
-            // Create the font picker
-            fontPicker = UIFontPickerViewController(configuration: fontPickerConfig)
+            selectedFont = ""
+            let configuration = UIFontPickerViewController.Configuration()
+            configuration.includeFaces = true
+            // Installed terminal fonts do not always declare the monospace trait.
+            configuration.filteredTraits = []
+            fontPicker = UIFontPickerViewController(configuration: configuration)
             fontPicker.delegate = self
-            // Present the font picker
-            self.selectedFont = ""
-            // Main issue: the user can dismiss the fontPicker by sliding upwards.
-            // So we need to check if it was, indeed dismissed:
-            let rootVC = self.window?.rootViewController
-            rootVC?.present(fontPicker, animated: false, completion: nil)
+            window?.rootViewController?.present(fontPicker, animated: false)
+            fontPicker.presentationController?.delegate = self
         }
-        // Wait until fontPicker is dismissed or a font has been selected:
-        while (!self.fontPicker.isBeingDismissed) && (self.selectedFont == "") { }
-        DispatchQueue.main.async {
-            self.fontPicker.dismiss(animated: false)
-        }
-        if (selectedFont != "cancel") && (selectedFont != "") {
-            return selectedFont
-        }
-        return nil
+        fontSelectionCompleted.wait()
+        return selectedFont.isEmpty ? nil : selectedFont
     }
-    
+
+    func finishFontSelection(_ name: String?) {
+        selectedFont = name ?? ""
+        let complete = {
+            self.terminalView?.becomeFirstResponder()
+            self.fontSelectionCompleted.signal()
+        }
+        if let root = window?.rootViewController, root.presentedViewController != nil {
+            root.dismiss(animated: false, completion: complete)
+        } else {
+            complete()
+        }
+    }
+
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        if presentationController.presentedViewController === fontPicker {
+            finishFontSelection(nil)
+        }
+    }
+
     func fontPickerViewControllerDidCancel(_ viewController: UIFontPickerViewController) {
-        // User cancelled the font picker delegate
-        // NSLog("Cancelled font")
-        selectedFont = "cancel"
+        finishFontSelection(nil)
     }
-    
-    
+
     func fontPickerViewControllerDidPickFont(_ viewController: UIFontPickerViewController) {
-        // We got a font!
-        if let descriptor = viewController.selectedFontDescriptor {
-            if let name = descriptor.fontAttributes[.family] as? String {
-                // NSLog("Selected font: \(name)")
-                // "Regular" variants of the font:
-                selectedFont = name
-                return
-            } else if let name = descriptor.fontAttributes[.name] as? String {
-                // This is for Light, Medium, ExtraLight variants of the font:
-                // NSLog("Selected font: \(name)")
-                selectedFont = name
-                return
-            }
-        }
-        selectedFont = "cancel"
+        let name = viewController.selectedFontDescriptor.map { UIFont(descriptor: $0, size: 13).fontName }
+        finishFontSelection(name)
     }
-    
+
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
         pickerDispatchGroup.leave()
     }
@@ -3435,10 +3430,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         guard (scene.session.stateRestorationActivity != nil) else { return }
         guard let userInfo = scene.session.stateRestorationActivity!.userInfo else { return }
         // Window preferences, stored on a per-session basis:
-        if let fontSize = userInfo["fontSize"] as? Float {
+        if (userInfo["terminalFontDefault"] as? String) == TerminalFonts.savedName,
+           (userInfo["terminalFontSizeDefault"] as? Float) == TerminalFonts.savedSize,
+           let fontSize = userInfo["fontSize"] as? Float {
             terminalFontSize = fontSize
         }
-        if let fontName = userInfo["fontName"] as? String {
+        if (userInfo["terminalFontDefault"] as? String) == TerminalFonts.savedName,
+           (userInfo["terminalFontSizeDefault"] as? Float) == TerminalFonts.savedSize,
+           let fontName = userInfo["fontName"] as? String {
             terminalFontName = fontName
         }
         if TerminalPrompts.savedName == (userInfo["terminalPromptDefault"] as? String ?? "custom"),
@@ -3853,11 +3852,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 webView?.isFindInteractionEnabled = true
             }
             // End WkWebView settings
+            for error in TerminalFonts.refresh() { NSLog("%@", error) }
             // Restore colors and settings from global preference (if set):
-            if let size = UserDefaults.standard.value(forKey: "fontSize") as? Float {
+            if let size = TerminalFonts.savedSize {
                 terminalFontSize = size
             }
-            if let name = UserDefaults.standard.value(forKey: "fontName") as? String {
+            if let name = TerminalFonts.savedName {
                 terminalFontName = name
             }
             restoreTheme(TerminalThemes.savedName)
@@ -4484,7 +4484,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         // TODO: Ligatures are enabled by default on iOS, they're a property of NSAttributeString, not the font.
         NSLog("Enabling font: \(fontName)")
-        if let terminalFont = UIFont(name: fontName, size: CGFloat(fontSize)) {
+        if let terminalFont = TerminalFonts.font(named: fontName, size: CGFloat(fontSize)) ?? UIFont(name: factoryFontName, size: CGFloat(fontSize)) {
             NSLog("Enabling terminalFont: \(terminalFont)")
             terminalView?.font = terminalFont
             basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
@@ -4610,6 +4610,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         scene.session.stateRestorationActivity?.userInfo!["terminalPrompt"] = terminalPromptName
         scene.session.stateRestorationActivity?.userInfo!["terminalPromptDefault"] = UserDefaults.standard.string(forKey: "appliedTerminalPrompt") ?? "custom"
         scene.session.stateRestorationActivity?.userInfo!["terminalThemeDefault"] = UserDefaults.standard.string(forKey: "appliedTerminalTheme") ?? ""
+        scene.session.stateRestorationActivity?.userInfo!["terminalFontDefault"] = TerminalFonts.savedName
+        scene.session.stateRestorationActivity?.userInfo!["terminalFontSizeDefault"] = TerminalFonts.savedSize
         // Must store information in userinfo as String or Float, not UIColor.
         let colors = themeColorOverrides()
         // Empty values clear overrides recorded by earlier snapshots.

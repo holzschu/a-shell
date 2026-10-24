@@ -609,6 +609,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     }
                 }
             }
+            let fontErrors = TerminalFonts.refresh()
+            for error in fontErrors { NSLog("%@", error) }
+            let fontChanged = TerminalFonts.synchronizeSettings()
+            for scene in UIApplication.shared.connectedScenes {
+                if let delegate = scene.delegate as? SceneDelegate {
+                    if fontChanged {
+                        delegate.terminalFontName = TerminalFonts.savedName ?? factoryFontName
+                        delegate.terminalFontSize = TerminalFonts.savedSize ?? factoryFontSize
+                    }
+                    delegate.writeConfigWindow()
+                }
+            }
             if TerminalPrompts.synchronizeSelection() {
                 let promptName = TerminalPrompts.savedName
                 for scene in UIApplication.shared.connectedScenes {
