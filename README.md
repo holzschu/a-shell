@@ -136,3 +136,9 @@ For font files, create `~/Documents/Fonts` and drop `.ttf` or `.otf` files there
 `config -n "face name" -s 17 -g` updates all open windows and saves the font and size. `-p` saves the current window's settings without applying them to other windows. In iOS Settings, open a-Shell or a-Shell mini and use "Font", "Custom font name", and "Font size". Choose "Custom" for another installed face or a file in `Documents/Fonts`. Changes apply when returning to the app and survive relaunch. Reopen the app's Settings page to refresh values changed from the terminal.
 
 Font files are refreshed when running `config` or returning to the app. Removing a file unregisters it; a window using an unavailable font displays Menlo until the file returns or another face is selected. An invalid name passed to `config -n` reports an error and keeps the current selection.
+
+## Build Pico
+
+`bash scripts/build-pico.sh` builds Pico 5.09 from checksum-pinned Alpine 2.26 using Xcode. The output under `.build/pico/dist` includes `pico.xcframework.zip`, checksums and an artifact audit. The framework targets iOS 14 with arm64 device and universal arm64/x86_64 Simulator slices. The framework includes the Apache-2.0 and ios_system BSD-3-Clause licenses and the Alpine and IMAP NOTICE files.
+
+The port uses ios_system streams, terminal geometry and interactive mode. It restores signal handlers on command exit. Job suspension reports an error. The workflow checks 20 edit/save invocations through ios_system, including UTF-8 output, reentry and descriptor counts, on an arm64 Simulator.
