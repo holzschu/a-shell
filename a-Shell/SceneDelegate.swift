@@ -4149,7 +4149,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if (isSecuredURL) {
                     fileURL.stopAccessingSecurityScopedResource()
                 }
-                NSLog("Couldn't download %@, stopAccessingSecurityScopedResource", fileURL.absoluteString)
+                NSLog("Couldn't download %@, stopAccessingSecurityScopedResource", String(describing: fileURL))
                 return
             }
             if (!isReadableWithoutSecurity) {

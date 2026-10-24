@@ -21,7 +21,7 @@ while [ "$attempt" -lt 100 ]; do
         printf 'FAIL: app exited while opening a URL containing %%s\n' >&2
         exit 1
     fi
-    if [ -f "$receipt" ]; then
+    if [ -s "$receipt" ]; then
         actual=$(cat "$receipt")
         if [ "$actual" != "$literal" ]; then
             printf 'FAIL: command output did not preserve literal %%s\n' >&2
