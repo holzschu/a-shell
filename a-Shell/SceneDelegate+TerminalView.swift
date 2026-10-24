@@ -9,6 +9,11 @@ import SwiftTerm // for the terminal window
 import ios_system
 import TipKit // for helpful tips
 
+#if HERDR_EMBEDDED
+@_silgen_name("herdr_ios_resize")
+private func herdrResize(_ cols: UInt16, _ rows: UInt16)
+#endif
+
 extension SceneDelegate {
     
     func longestCommonPrefix(_ strs: [String]) -> String {
@@ -632,6 +637,9 @@ extension SceneDelegate {
     func sizeChanged(source: SwiftTerm.TerminalView, newCols: Int, newRows: Int) {
         if (newRows != height) || (newCols != width) {
             ios_setWindowSize(Int32(newCols), Int32(newRows), self.persistentIdentifier?.toCString())
+            #if HERDR_EMBEDDED
+            herdrResize(UInt16(clamping: newCols), UInt16(clamping: newRows))
+            #endif
         }
         if (newRows != height) {
             height = newRows

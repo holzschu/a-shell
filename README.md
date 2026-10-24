@@ -109,6 +109,20 @@ TeX files are not installed by default. Type any TeX command and the system will
 
 If you enable VoiceOver in Settings, a-Shell will work with VoiceOver: reading commands as you type them, reading the result, letting you read the screen with your finger...
 
+## Independent shell workers
+
+On iOS 26 and later, the mini target includes ten dedicated Generic Non-UI extensions, `ShellWorkerA` through `ShellWorkerJ`. Each worker owns one native command and its ios_system state. The original Intents and IntentsUI targets remain separate. Consumers call `ashell_pane_spawn` from a background thread, read the returned full-duplex descriptor, poll completion and release the opaque handle. The API and stream ownership rules are in `ShellWorkers/NativePane.h`.
+
+The host retains each `AppExtensionProcess` and XPC connection until release or interruption. A full pool returns `ENOSPC`; earlier iOS versions return `ENOTSUP`. Cancel and release terminate the dedicated worker through XPC before freeing its reservation; releasing an ExtensionFoundation assertion alone permits process reuse. Commands that ignore EOF therefore cannot retain a released slot. A lost worker reports status 137 while the host and other workers remain available. Directory access uses security-scoped bookmarks and is checked with actual file operations in the worker.
+
+Workers share the host's command libraries. Build with ios_system changes #179–#184 and dash_iOS#1–#2, including the matched libedit dependency described there. The build derives each worker's catalogue and executable markers from `Resources_mini/commandDictionary.plist`; it generates the ExtensionFoundation binding from `PRODUCT_BUNDLE_PREFIX`. Keep worker versions in `ShellWorkers/Worker.xcconfig` aligned with the containing app. The mini bundle suffixes are `.ShellWorkerA` through `.ShellWorkerJ`; each requires its own App ID and profile for a device build.
+
+`tests/worker-pool.m` is a real app-command consumer for Simulator qualification. Device memory limits, background execution without other host background modes, and App Store acceptance require separate validation. Retaining the process handle provides no promise of unlimited background execution.
+
+## Embedded Herdr
+
+The mini target registers `herdr` as a native embedded command. Build its pinned static archive with `./Herdr/build.sh aarch64-apple-ios-sim` before a Simulator build, or select `aarch64-apple-ios` for a device build. See [Herdr/README.md](Herdr/README.md) for toolchain requirements, supported operations and qualification limits.
+
 ## Terminal color themes
 
 Use `config --theme` to list bundled presets and JSON files in `~/Documents/Themes`. Select a theme with `config --theme dracula`. Add `-g` to update every open window and save the theme in Settings, for example `config --theme catppuccin-latte -g`. Use `-p` to save the current window settings, including font and color overrides. Choosing a theme in Settings or with `config --theme name -g` or `config --theme name -p` clears saved background, foreground and cursor overrides. The presets include all four Catppuccin flavors and Catppuccin OLED, adapted from Mocha with a pure black background and distinct neutral ANSI colors ordered from black through bright white. Catppuccin Latte and Rose Pine Dawn are light presets. Existing font and color options still work. `config --theme default` restores the saved theme and color overrides without changing the font. `config --theme factory` restores system foreground, background and cursor colors and the default ANSI palette; `config -r` also resets the other terminal settings.

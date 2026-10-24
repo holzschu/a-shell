@@ -210,6 +210,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             viewBehavior = .ignoreSafeArea
         }
         initializeEnvironment()
+        #if HERDR_EMBEDDED
+        replaceCommand("herdr", "herdr_ios_main", false)
+        #endif
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
         replaceCommand("history", "history", true)

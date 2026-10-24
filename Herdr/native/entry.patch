@@ -1,0 +1,86 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -19,6 +19,11 @@
+     "LICENSE",
+     "Cargo.toml",
+ ]
++
++[lib]
++name = "herdr_ios"
++path = "src/main.rs"
++crate-type = ["staticlib"]
+ 
+ [workspace]
+ members = ["crates/ghostty-vt"]
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -1,3 +1,20 @@
++#[cfg(target_os = "ios")]
++macro_rules! print { ($($arg:tt)*) => { crate::ios_entry::output(false, format_args!($($arg)*)) }; }
++#[cfg(target_os = "ios")]
++macro_rules! println {
++    () => { print!("\n") };
++    ($($arg:tt)*) => { print!("{}\n", format_args!($($arg)*)) };
++}
++#[cfg(target_os = "ios")]
++macro_rules! eprint { ($($arg:tt)*) => { crate::ios_entry::output(true, format_args!($($arg)*)) }; }
++#[cfg(target_os = "ios")]
++macro_rules! eprintln {
++    () => { eprint!("\n") };
++    ($($arg:tt)*) => { eprint!("{}\n", format_args!($($arg)*)) };
++}
++#[cfg(target_os = "ios")]
++mod ios_entry;
++
+ use std::io;
+ 
+ pub(crate) const HERDR_ENV_VAR: &str = "HERDR_ENV";
+@@ -512,9 +529,14 @@
+             std::process::exit(2);
+         }
+     };
++    run_main(raw_args)
++}
++
++fn run_main(raw_args: Vec<String>) -> io::Result<()> {
+     if let Some(outcome) = cli::maybe_run_machine(&raw_args) {
+         return finish_cli(outcome);
+     }
++    #[cfg(not(target_os = "ios"))]
+     let args = match session::configure_from_args(&raw_args) {
+         Ok(args) => args,
+         Err(err) => {
+@@ -523,6 +545,8 @@
+             std::process::exit(2);
+         }
+     };
++    #[cfg(target_os = "ios")]
++    let args = raw_args;
+     let (args, remote_launch) = match remote::extract_remote_args(&args) {
+         Ok(parsed) => parsed,
+         Err(err) => {
+--- a/src/platform/unix_common.rs
++++ b/src/platform/unix_common.rs
+@@ -253,10 +253,12 @@
+     }
+ }
+ 
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn begin_cli_output() {
+     set_sigpipe_disposition(libc::SIG_DFL);
+ }
+ 
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn end_cli_output() {
+     set_sigpipe_disposition(libc::SIG_IGN);
+ }
+@@ -634,3 +636,9 @@
+         std::fs::remove_dir_all(dir).unwrap();
+     }
+ }
++
++// The embedding host owns signal dispositions, not an informational command.
++#[cfg(target_os = "ios")]
++pub(crate) fn begin_cli_output() {}
++#[cfg(target_os = "ios")]
++pub(crate) fn end_cli_output() {}
