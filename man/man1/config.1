@@ -1,4 +1,4 @@
-.TH CONFIG 1 "14 June 2021"
+.TH CONFIG 1 "October 23, 2026"
 .SH NAME
 config \- Configure \fIa-Shell\fP.
 .SH SYNOPSIS
@@ -14,6 +14,8 @@ config \- Configure \fIa-Shell\fP.
   [ -p | --permanent ]
   [ -r | --reset ]
   [ -d | --default ]
+  [ --fonts ]
+  [ --theme [ \fItheme_name\fP ] ]
   [ --show ]
 .SH DESCRIPTION
 \fBconfig\fP can change the settings of the current session,
@@ -26,7 +28,7 @@ specify "\fIdefault\fP" to get the default value currently stored,
 .PP
 Colors can be defined by names,
 RGB triplets (i.e. red green blue),
-or HexStrings (i.e. '#00FF00'). 
+or HexStrings (i.e. '#00FF00').
 .PP
 Valid color names: systemBlue, systemGreen, systemIndigo, systemOrange, systemPink, systemPurple, systemRed, systemTeal, systemYellow, systemGray, systemGray2, systemGray3, systemGray4, systemGray5, systemGray6, black, blue, brown, cyan, darkGray, gray, green, lightGray, magenta, orange, purple, red, white, yellow.
 .SS Options
@@ -40,10 +42,8 @@ This should be a number.
 Don't include units.
 .TP
 \fB-n | --name\fP \fINAME\fP?
-Set font name to \fINAME\fP or show a font picker dialog.
-.sp
-If \fINAME\fP is not given or is \fIpicker\fP,
-the system font picker dialog is shown.
+Set a font name or a file name from \fIDocuments/Fonts\fP.
+Nothing or "\fIpicker\fP" opens the font picker.
 .TP
 \fB-b | --background\fP [ \fIFULL_COLOR\fP | \fICOLOR_R COLOR_G COLOR_B\fP ]
 Set background color to \fIFULL_COLOR\fP
@@ -66,7 +66,10 @@ Possible values for \fILIGATURES\fP: normal, contextual, none...
 Create a configuration file to change the toolbar.
 .TP
 \fB-g | --global\fP
-Apply settings to all windows currently open.
+Extend settings to all windows currently open; with \fB--theme\fP, also save
+the selection.
+.sp
+Font and size changes with \fB-g\fP also save the selection in Settings.
 .TP
 \fB-p | --permanent\fP
 Store settings as default values.
@@ -77,8 +80,27 @@ Reset all settings to default values.
 \fB-r | --reset\fP
 Reset all settings to factory defaults.
 .TP
+\fB--fonts\fP
+Refresh \fIDocuments/Fonts\fP (.ttf/.otf) and list available face names.
+.TP
+\fB--theme\fP [ \fINAME\fP ]
+List themes, or select a bundled preset or \fI~/Documents/Themes/<NAME>.json\fP.
+.sp
+Custom themes: put \fI<NAME>.json\fP in \fIDocuments/Themes\fP;
+\fBconfig --theme\fP lists them.
+.sp
+\fBconfig --theme\fP \fINAME\fP \fB-g\fP applies and saves;
+Settings shows Custom file and its name.
+.sp
+Names accept an optional \fI.json\fP extension and ignore case.
+.sp
+\fB--theme factory\fP: use system colors and the default ANSI palette.
+.sp
+\fB--theme default\fP: restore the saved theme and color overrides without
+changing font settings.
+.TP
 \fB--show\fP
-Show current settings.
+Show current settings and the selected ANSI palette.
 .SS Examples
 .TP
 \fBconfig -p\fP
