@@ -4105,12 +4105,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     
     func scene(_ scene: UIScene, openURLContexts: Set<UIOpenURLContext>) {
-        NSLog("Calling openURLContexts with \(openURLContexts)")
+        NSLog("Calling openURLContexts with %@", String(describing: openURLContexts))
         for urlContext in openURLContexts {
             // Is it one of our URLs?
             let fileURL = urlContext.url
             if ((fileURL.scheme ?? "").hasPrefix("ashell")) {
-                NSLog("We received an URL in openURLContexts: \(fileURL.absoluteString.removingPercentEncoding)") // received "ashell://ls"
+                NSLog("We received an URL in openURLContexts: %@", String(describing: fileURL.absoluteString.removingPercentEncoding)) // received "ashell://ls"
                 if (UIDevice.current.model.hasPrefix("iPad")) {
                     // iPad, so always open a new window to execute the command
                     let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.ExecuteCommand")
@@ -4136,7 +4136,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Otherwise, ensure the URL is a file URL
             if (!fileURL.isFileURL) { continue }
-            NSLog("openURLContexts: \(fileURL.path)")
+            NSLog("openURLContexts: %@", fileURL.path)
             let isReadableWithoutSecurity = FileManager().isReadableFile(atPath: fileURL.path)
             let isSecuredURL = fileURL.startAccessingSecurityScopedResource()
             let isReadable = FileManager().isReadableFile(atPath: fileURL.path)
@@ -4149,7 +4149,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if (isSecuredURL) {
                     fileURL.stopAccessingSecurityScopedResource()
                 }
-                NSLog("Couldn't download \(fileURL), stopAccessingSecurityScopedResource")
+                NSLog("Couldn't download %@, stopAccessingSecurityScopedResource", String(describing: fileURL))
                 return
             }
             if (!isReadableWithoutSecurity) {
@@ -4166,14 +4166,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 } else {
                     // sceneWillEnterForeground will be called soon, will call cwd.
                     if var userInfo = scene.session.stateRestorationActivity?.userInfo {
-                        NSLog("Passing the directory to sceneWillEnterForeground: \(fileURL.path)")
+                        NSLog("Passing the directory to sceneWillEnterForeground: %@", fileURL.path)
                         if (currentDirectory == "") {
                             currentDirectory = FileManager().currentDirectoryPath
                         }
                         userInfo["prev_wd"] = currentDirectory
                         userInfo["cwd"] = fileURL.path
                     } else {
-                        NSLog("Calling changeDirectory: \(fileURL.path)")
+                        NSLog("Calling changeDirectory: %@", fileURL.path)
                         commandQueue.async {
                             changeDirectory(path: fileURL.path) // call cd_main and checks secured bookmarked URLs
                             self.closeAfterCommandTerminates = false
