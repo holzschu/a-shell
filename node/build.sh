@@ -3,8 +3,8 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 app=$(cd "$here/.." && pwd)
-rev=v26.11.1
-sha=9aae9ac942395f4cb1f4e3c430409f9878897573ade738e732a14a19b91b5c9c
+rev=v26.12.1
+sha=717244a8d757672ec86aae5077fca31e50f84b094441ec51bdf397aab12c304e
 cache=${NODE_IOS_CACHE:-$HOME/.cache/a-shell-node/$rev}
 source=$cache/source
 stage=${1:-node}
@@ -271,25 +271,29 @@ PYABI
 </dict></plist>
 EOF
         fi
-        cp "$here/fetch-preload.mjs" "$framework/fetch-preload.mjs"
-        cp "$here/fetch-lock.json" "$framework/fetch-lock.json"
         cp "$source/LICENSE" "$framework/LICENSE"
-        mkdir -p "$framework/fetch"
-        rsync -a --delete "$cache/fetch/node_modules" "$framework/fetch/"
-        # Node's pinned tree ships its matching npm, including its dependency tree.
-        mkdir -p "$framework/npm"
-        rsync -a --delete "$source/deps/npm/" "$framework/npm/"
-        patch -s -F 0 -p1 -d "$framework/npm" <"$here/npm-native.patch"
         framework_args+=(-framework "$framework")
-        if [[ $relink == 1 ]] || ! cmp -s "$framework/Info.plist" "$app/xcfs/node.xcframework/$slice/node.framework/Info.plist" || ! cmp -s "$framework/npm/npmrc" "$app/xcfs/node.xcframework/$slice/node.framework/npm/npmrc" || ! cmp -s "$framework/node" "$app/xcfs/node.xcframework/$slice/node.framework/node" || ! cmp -s "$here/fetch-preload.mjs" "$app/xcfs/node.xcframework/$slice/node.framework/fetch-preload.mjs" || ! cmp -s "$here/fetch-lock.json" "$app/xcfs/node.xcframework/$slice/node.framework/fetch-lock.json" || ! cmp -s "$framework/npm/node_modules/@npmcli/run-script/lib/run-script-pkg.js" "$app/xcfs/node.xcframework/$slice/node.framework/npm/node_modules/@npmcli/run-script/lib/run-script-pkg.js" || ! cmp -s "$framework/npm/node_modules/bin-links/lib/link-bins.js" "$app/xcfs/node.xcframework/$slice/node.framework/npm/node_modules/bin-links/lib/link-bins.js" || ! cmp -s "$framework/npm/node_modules/bin-links/lib/get-paths.js" "$app/xcfs/node.xcframework/$slice/node.framework/npm/node_modules/bin-links/lib/get-paths.js"; then
+        if [[ $relink == 1 ]] || ! cmp -s "$framework/Info.plist" "$app/xcfs/node.xcframework/$slice/node.framework/Info.plist" || ! cmp -s "$framework/node" "$app/xcfs/node.xcframework/$slice/node.framework/node" || [[ -e $app/xcfs/node.xcframework/$slice/node.framework/npm || -e $app/xcfs/node.xcframework/$slice/node.framework/fetch ]]; then
           package_changed=1
         fi
       done
+      # The App Store treats every .js and .py file inside a framework as unsigned code, so the
+      # JavaScript lives in the app bundle's resources: the project copies these two folders to
+      # $APPDIR/npm and $APPDIR/node-fetch. Node's pinned tree ships its matching npm, including its dependency tree.
+      mkdir -p "$app/Resources/npm" "$app/Resources/node-fetch/fetch"
+      rsync -a --delete "$source/deps/npm/" "$app/Resources/npm/"
+      patch -s -F 0 -p1 -d "$app/Resources/npm" <"$here/npm-native.patch"
+      cp "$here/fetch-preload.mjs" "$here/fetch-lock.json" "$app/Resources/node-fetch/"
+      rsync -a --delete "$cache/fetch/node_modules" "$app/Resources/node-fetch/fetch/"
       if [[ $package_changed == 1 || ! -d $app/xcfs/node.xcframework ]]; then
         if [[ -d $app/xcfs/node.xcframework ]]; then
           rm -rf "$app/xcfs/node.xcframework"
         fi
         logged "$cache/framework.log" xcodebuild -create-xcframework "${framework_args[@]}" -output "$app/xcfs/node.xcframework"
+      fi
+      # The App Store rejects the upload when a framework holds script files it cannot sign.
+      if scripts=$(find "$app/xcfs/node.xcframework" \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.py' \) -print -quit) && [[ -n $scripts ]]; then
+        die "$scripts is a script inside node.xcframework; app-store frameworks must hold none."
       fi
       ;;
   esac
