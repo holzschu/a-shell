@@ -50,7 +50,7 @@ static int send_line(int fd, const char *line) {
 static int read_marker(int fd, const char *marker) {
     char output[32768] = {0};
     size_t used = 0;
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 200; i++) {
         struct pollfd ready = {.fd = fd, .events = POLLIN};
         if (poll(&ready, 1, 50) <= 0) continue;
         ssize_t count = read(fd, output + used, sizeof(output) - used - 1);
@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
         initializeEnvironment();
         BOOL cookedIsolation = argc > 1 && !strcmp(argv[1], "cooked-isolation");
         BOOL isolation = argc > 1 && !strcmp(argv[1], "raw-socket-isolation");
+        BOOL backgroundIdle = argc > 1 && !strcmp(argv[1], "background-idle");
         BOOL delayedError = argc > 1 && !strcmp(argv[1], "pipeline-error-delayed");
         BOOL pipelineError = argc > 1 && !strcmp(argv[1], "pipeline-error-cooked");
         BOOL sequence = argc > 1 && !strcmp(argv[1], "raw-then-cooked");
@@ -98,6 +99,13 @@ int main(int argc, char **argv) {
             if (error != ENOTSUP || send_line(fd, "\003x")) return 1;
         } else {
             if (read_marker(fd, "PANE_PROMPT>")) return 1;
+            if(backgroundIdle) {
+                if(send_line(fd,"sleep 1 & sleep 3; printf 'BACKGROUND_DONE\\n'\n") || read_marker(fd,"BACKGROUND_DONE\n"))return 1;
+                usleep(200000);
+                int idle=ashell_pane_interrupt(job);
+                dprintf(1,"background prompt interrupt=%d expected=%d %s\n",idle,ESRCH,idle==ESRCH?"PASS":"FAIL");
+                if(idle!=ESRCH)return 1;
+            }
             if(delayedError) {
                 if(send_line(fd,"export 1bad=value | pane-raw-reader delayed\n") || read_marker(fd,"RAW_READY"))return 1;
             }
