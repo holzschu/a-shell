@@ -72,7 +72,9 @@ extension String {
             return newTitle
         }
         catch {
+            #if DEBUG
             NSLog("Error converting \(self): \(error)")
+            #endif
         }
         return self
     }

@@ -3,8 +3,8 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 app=$(cd "$here/.." && pwd)
-rev=v26.11.1
-sha=9aae9ac942395f4cb1f4e3c430409f9878897573ade738e732a14a19b91b5c9c
+rev=v26.12.1
+sha=717244a8d757672ec86aae5077fca31e50f84b094441ec51bdf397aab12c304e
 cache=${NODE_IOS_CACHE:-$HOME/.cache/a-shell-node/$rev}
 source=$cache/source
 stage=${1:-node}
