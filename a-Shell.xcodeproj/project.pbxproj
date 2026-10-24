@@ -4435,15 +4435,16 @@
 /* Begin PBXShellScriptBuildPhase section */
 		7031073A0000000000000001 /* Match LongCommands version */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"$(TARGET_BUILD_DIR)/$(EXTENSIONS_FOLDER_PATH)/a-Shell-mini-LongCommands.appex/Info.plist",
+				"$(BUILT_PRODUCTS_DIR)/a-Shell-mini-LongCommands.appex",
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
 			);
 			name = "Match LongCommands version";
 			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(EXTENSIONS_FOLDER_PATH)/a-Shell-mini-LongCommands.appex/Info.plist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
