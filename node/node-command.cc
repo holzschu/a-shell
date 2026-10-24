@@ -233,6 +233,7 @@ extern "C" int node_ios_main(int argc, char** argv) {
                 "const fs = require('fs');"
                 "for (const key of Object.keys(process.env)) delete process.env[key];"
                 "Object.assign(process.env, environment);"
+                "require('module')._initPaths();"
                 "Object.defineProperty(process, 'execPath', {value: appdir + '/bin/node'});"
                 "const SyncWriteStream = require('internal/fs/sync_write_stream');"
                 "const signal = require('internal/process/signal');"
@@ -324,7 +325,7 @@ int npm_command(int argc, char** argv, const char* entry) {
     return 1;
   }
   std::vector<std::string> args = {"node", std::string(appdir) +
-      "/Frameworks/node.framework/npm/bin/" + entry};
+      "/npm/bin/" + entry};
   for (int i = 1; i < argc; ++i) args.emplace_back(argv[i]);
   std::vector<char*> pointers;
   for (auto& arg : args) pointers.push_back(arg.data());
