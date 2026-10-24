@@ -1,0 +1,162 @@
+name: App native frameworks
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+  push:
+    tags:
+      - 'native-*'
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        product: [helix, fd, fzf, navi, gitoxide, Ruff, rg]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-go@v6
+        if: matrix.product == 'fzf'
+        with:
+          go-version: '1.27.2'
+          cache: false
+      - name: Rust toolchain
+        if: matrix.product != 'fzf'
+        env:
+          PRODUCT: ${{ matrix.product }}
+        run: |
+          set -euo pipefail
+          version=1.96.1
+          [[ "$PRODUCT" != Ruff ]] || version=1.99.0
+          rustup toolchain install "$version" --profile minimal --no-self-update
+          rustup override set "$version"
+          rustup target add --toolchain "$version" aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+          rustc --version
+      - name: Toolchain and resources
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk iphonesimulator --show-sdk-version
+          uv --version
+          df -h .
+          sysctl hw.memsize
+          sysctl vm.swapusage
+      - name: Build and audit pinned product
+        env:
+          PRODUCT: ${{ matrix.product }}
+        run: nice -n 15 bash ci/native-frameworks.sh "$PRODUCT"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-${{ matrix.product }}
+          include-hidden-files: true
+          if-no-files-found: error
+          path: .build/dist/*
+      - name: Retain diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-${{ matrix.product }}-logs
+          include-hidden-files: true
+          if-no-files-found: ignore
+          path: .build/native/**/*.log
+  node-slice:
+    runs-on: macos-26
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [device, simulator]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Toolchain and resources
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphonesimulator --show-sdk-version
+          df -h .
+          sysctl hw.memsize
+          sysctl vm.swapusage
+      - name: Build pinned Node slice
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: nice -n 15 bash ci/native-frameworks.sh node "$PLATFORM"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: node-slice-${{ matrix.platform }}
+          include-hidden-files: true
+          if-no-files-found: error
+          path: .build/dist/*
+      - name: Retain diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: node-slice-${{ matrix.platform }}-logs
+          include-hidden-files: true
+          if-no-files-found: ignore
+          path: .build/native/**/*.log
+  node:
+    needs: node-slice
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: node-slice-*
+          merge-multiple: true
+          path: .build/node-slices
+      - name: Package and audit Node
+        run: nice -n 15 bash ci/native-frameworks.sh node
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-node
+          include-hidden-files: true
+          if-no-files-found: error
+          path: .build/dist/*
+  release:
+    needs: [build, node]
+    if: github.repository == 'holzschu/a-shell' && startsWith(github.ref, 'refs/tags/native-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: native-*
+          merge-multiple: true
+          path: dist
+      - name: Publish immutable assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd dist
+          for product in helix fd fzf navi gitoxide Ruff rg node; do
+            test -s "$product.xcframework.zip"
+            test -s "$product.audit.json"
+            test -s "$product.checksums.txt"
+            test -s "$product.release.md"
+          done
+          test -s node-npm.zip
+          test -s node-fetch.zip
+          cat ./*.checksums.txt > checksums.txt
+          shasum -a 256 -c checksums.txt
+          cat ./*.release.md > release.md
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --latest=false \
+            --title "Native frameworks $GITHUB_REF_NAME" --notes-file release.md ./*.zip checksums.txt ./*.audit.json ./*.sizes.tsv

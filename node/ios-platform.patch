@@ -353,3 +353,66 @@
    GetOpenSSLSystemCertificates(&system_store_certs);
  #endif
    return system_store_certs;
+--- a/deps/zlib/zlib.gyp
++++ b/deps/zlib/zlib.gyp
+@@ -7,6 +7,7 @@
+     'ZLIB_ROOT': '.',
+     'use_system_zlib%': 0,
+     'arm_fpu%': '',
++    # iOS x64 runs in the Simulator and supports the same SSE paths as macOS.
+   },
+   'conditions': [
+     ['use_system_zlib==0', {
+@@ -15,7 +16,7 @@
+           'target_name': 'zlib_adler32_simd',
+           'type': 'static_library',
+           'conditions': [
+-            ['target_arch in "ia32 x64" and OS!="ios"', {
++            ['target_arch=="x64" or (target_arch=="ia32" and OS!="ios")', {
+               'defines': [ 'ADLER32_SIMD_SSSE3' ],
+               'conditions': [
+                 ['OS=="win"', {
+@@ -43,7 +44,7 @@
+           'include_dirs': [ '<(ZLIB_ROOT)' ],
+           'direct_dependent_settings': {
+             'conditions': [
+-              ['target_arch in "ia32 x64" and OS!="ios"', {
++              ['target_arch=="x64" or (target_arch=="ia32" and OS!="ios")', {
+                 'defines': [ 'ADLER32_SIMD_SSSE3' ],
+                 'conditions': [
+                   ['OS=="win"', {
+@@ -142,7 +143,7 @@
+           'target_name': 'zlib_data_chunk_simd',
+           'type': 'static_library',
+           'conditions': [
+-            ['target_arch in "ia32 x64" and OS!="ios"', {
++            ['target_arch=="x64" or (target_arch=="ia32" and OS!="ios")', {
+               'defines': [ 'INFLATE_CHUNK_SIMD_SSE2' ],
+               'conditions': [
+                 ['target_arch=="x64"', {
+@@ -162,7 +163,7 @@
+           'include_dirs': [ '<(ZLIB_ROOT)' ],
+           'direct_dependent_settings': {
+             'conditions': [
+-              ['target_arch in "ia32 x64" and OS!="ios"', {
++              ['target_arch=="x64" or (target_arch=="ia32" and OS!="ios")', {
+                 'defines': [ 'INFLATE_CHUNK_SIMD_SSE2' ],
+               }],
+               ['arm_fpu=="neon"', {
+@@ -202,14 +203,14 @@
+               ],
+             }],
+             # Incorporate optimizations where possible.
+-            ['(target_arch in "ia32 x64" and OS!="ios") or arm_fpu=="neon"', {
++            ['(target_arch=="x64" or (target_arch=="ia32" and OS!="ios")) or arm_fpu=="neon"', {
+               'dependencies': [ 'zlib_data_chunk_simd' ],
+               'sources': [ '<(ZLIB_ROOT)/slide_hash_simd.h' ]
+             }, {
+               'defines': [ 'CPU_NO_SIMD' ],
+               'sources': [ '<(ZLIB_ROOT)/inflate.c' ],
+             }],
+-            ['target_arch in "ia32 x64" and OS!="ios"', {
++            ['target_arch=="x64" or (target_arch=="ia32" and OS!="ios")', {
+               'dependencies': [
+                 'zlib_adler32_simd',
+                 # Disabled due to memory corruption.

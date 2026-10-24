@@ -25,8 +25,14 @@ apple_target() {
       triple=arm64-apple-ios14.0-simulator
       mach_platform=IOSSIMULATOR
       ;;
+    simulator-x86_64)
+      sdk_name=iphonesimulator
+      target=x86_64-apple-ios
+      triple=x86_64-apple-ios14.0-simulator
+      mach_platform=IOSSIMULATOR
+      ;;
     *)
-      echo 'Expected device or simulator' >&2
+      echo 'Expected device, simulator or simulator-x86_64' >&2
       return 2
       ;;
   esac
@@ -86,12 +92,12 @@ PYCODE
       patch -s -f -F 0 --dry-run -p1 -d "$dependency" <"$here/crossterm.patch" >/dev/null
       patch -s -f -F 0 -p1 -d "$dependency" <"$here/crossterm.patch"
     fi
-    if ! git -C "$source" apply --reverse --check "$here/helix.patch" 2>/dev/null; then
-      git -C "$source" apply --check "$here/helix.patch"
+    if ! patch -s -f -F 0 --dry-run -R -p1 -d "$source" <"$here/helix.patch" >/dev/null 2>&1; then
+      patch -s -f -F 0 --dry-run -p1 -d "$source" <"$here/helix.patch"
       echo 'Apply embedded iOS boundary patch'
-      git -C "$source" apply "$here/helix.patch"
+      patch -s -f -F 0 -p1 -d "$source" <"$here/helix.patch"
     fi
-    patch -s -f -F 0 --dry-run -p1 -d "$source" <"$here/ashell-terminal.patch" >/dev/null
+    patch -s -f -F 0 --dry-run -p1 -d "$source" <"$here/ashell-terminal.patch"
     patch -s -f -F 0 -p1 -d "$source" <"$here/ashell-terminal.patch"
   fi
   cmp -s "$here/ios-terminal.rs" "$dependency/src/terminal/sys/ios.rs" || cp "$here/ios-terminal.rs" "$dependency/src/terminal/sys/ios.rs"
@@ -136,7 +142,7 @@ grammars() {
       object=$object_dir/$name-$(basename "$file").o
       if [[ ! -f $object || $file -nt $object ]]; then
         echo "Compile $name $(basename "$file")"
-        xcrun --sdk "$sdk_name" clang -target "$triple" -isysroot "$sdk" -O2 -fPIC -I "$src/$subpath/src" -c "$file" -o "$object"
+        xcrun --sdk "$sdk_name" clang -target "$triple" -isysroot "$sdk" -Oz -fPIC -I "$src/$subpath/src" -c "$file" -o "$object"
       fi
     done
   done <"$here/grammars.tsv"
@@ -154,7 +160,7 @@ framework() {
   output=$cache/$platform/helix.framework
   mkdir -p "$output"
   sdk=$(xcrun --sdk "$sdk_name" --show-sdk-path)
-  xcrun --sdk "$sdk_name" clang -target "$triple" -isysroot "$sdk" -Wall -Wextra -Werror \
+  xcrun --sdk "$sdk_name" clang -target "$triple" -isysroot "$sdk" -Oz -Wall -Wextra -Werror \
     -dynamiclib "$here/command.m" "$cache/out/$target/libhelix_term.a" "$cache/out/$target/libhelix_grammars.a" \
     -F "$frameworks" -framework ios_system -framework Foundation -framework Security -framework SystemConfiguration -lc++ -liconv \
     -Wl,-install_name,@rpath/helix.framework/helix -Wl,-exported_symbol,_hx_ios_main -o "$output/helix"

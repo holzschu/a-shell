@@ -43,8 +43,14 @@ framework() {
 		rust_target=aarch64-apple-ios-sim
 		mach_platform=IOSSIMULATOR
 		;;
+	simulator-x86_64)
+		sdk_name=iphonesimulator
+		target=x86_64-apple-ios14.0-simulator
+		rust_target=x86_64-apple-ios
+		mach_platform=IOSSIMULATOR
+		;;
 	*)
-		echo 'Expected device or simulator' >&2
+		echo 'Expected device, simulator or simulator-x86_64' >&2
 		return 2
 		;;
 	esac
@@ -58,7 +64,7 @@ framework() {
 	output=$cache/$platform/navi.framework
 	mkdir -p "$output"
 	xcrun --sdk "$sdk_name" clang -target "$target" -isysroot "$sdk" \
-		-Wall -Wextra -Werror -I "$frameworks/ios_system.framework/Headers" \
+		-Oz -Wall -Wextra -Werror -I "$frameworks/ios_system.framework/Headers" \
 		-dynamiclib "$here/command.m" "$cache/target/$rust_target/release/libnavi.a" \
 		-F "$frameworks" -framework ios_system -framework Foundation -framework UIKit -framework Security -liconv \
 		-Wl,-install_name,@rpath/navi.framework/navi -o "$output/navi"
