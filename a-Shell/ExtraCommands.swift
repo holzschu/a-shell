@@ -1178,35 +1178,48 @@ public func deletemark(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
     return 0
 }
 
-func downloadRemoteFileFromCloud(fileURL: URL) {
-    var lastPathComponent = fileURL.lastPathComponent
-    // Delete the "." which is at the beginning of the file name
-    lastPathComponent.removeFirst()
-    let folderPath = fileURL.deletingLastPathComponent().path
-    let downloadedFilePath = folderPath + "/" + lastPathComponent.replacingOccurrences(of: ".icloud", with: "")
-    do {
-        NSLog("Started downloading file \(downloadedFilePath) from iCloud")
-        try FileManager().startDownloadingUbiquitousItem(at: URL(fileURLWithPath: downloadedFilePath))
-        let startingTime = Date()
-        // try downloading the file for 5s, then give up:
-        while (!FileManager().fileExists(atPath: fileURL.path) && (Date().timeIntervalSince(startingTime) < 5)) { }
+@discardableResult
+func downloadRemoteFileFromCloud(fileURL: URL, waitForDownload: Bool = true) -> Bool {
+    var target = fileURL
+    let name = fileURL.lastPathComponent
+    // Strip only the placeholder wrapper, preserving dots in the original name.
+    if name.count > 8 && name.hasPrefix(".") && name.hasSuffix(".icloud") {
+        target = fileURL.deletingLastPathComponent().appendingPathComponent(String(name.dropFirst().dropLast(7)))
     }
-    catch {
-        NSLog("Could not download file \(downloadedFilePath) from iCloud")
-        // print(error)
+    do {
+        let manager = FileManager.default
+        let values = try? target.resourceValues(forKeys: [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey])
+        if manager.fileExists(atPath: target.path) && values?.isUbiquitousItem != true {
+            return true
+        }
+        if values?.ubiquitousItemDownloadingStatus == .current { return true }
+        try manager.startDownloadingUbiquitousItem(at: target)
+        if !waitForDownload { return true }
+        var coordinationError: NSError?
+        var downloaded = false
+        NSFileCoordinator().coordinate(readingItemAt: target, options: [], error: &coordinationError) { _ in
+            downloaded = true
+        }
+        if let error = coordinationError { throw error }
+        return downloaded
+    } catch {
+        if waitForDownload {
+            fputs("\(target.path): \(error.localizedDescription)\n", thread_stderr)
+        } else {
+            NSLog("Could not start iCloud download: \(error.localizedDescription)")
+        }
+        return false
     }
 }
 
 @_cdecl("downloadFile")
 public func downloadFile(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
-    // download a file from iCloud. Input: filename as ".file.icloud"
-    // Possible improvement: also delete the permission bookmark
     guard let commandNameC = argv?[0] else {
         fputs("downloadFile: Can't read command name\n", thread_stderr)
-        return 0
+        return 1
     }
     let commandName = String(cString: commandNameC)
-    let usage = "downloadFile: force download of files from iCloud\nUsage: " + commandName + " .name.icloud [.name1.icloud .name2.icloud ...]\n"
+    let usage = "downloadFile: download iCloud files and wait until available.\nUsage: " + commandName + " name [.name.icloud ...]\n"
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
     if args.count == 1 {
         fputs(usage, thread_stdout)
@@ -1216,92 +1229,85 @@ public func downloadFile(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
         fputs(usage, thread_stdout)
         return 0
     }
-    for i in 1..<args.count {
-        downloadRemoteFileFromCloud(fileURL: URL(fileURLWithPath: args[i]))
+    var succeeded = true
+    for path in args.dropFirst() {
+        if !downloadRemoteFileFromCloud(fileURL: URL(fileURLWithPath: path)) { succeeded = false }
     }
-    return 0
+    return succeeded ? 0 : 1
 }
 
 @_cdecl("downloadFolder")
 public func downloadFolder(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
-    // download a file from iCloud. Input: filename as ".file.icloud"
-    // Possible improvement: also delete the permission bookmark
     guard let commandNameC = argv?[0] else {
         fputs("downloadFolder: Can't read command name\n", thread_stderr)
-        return 0
+        return 1
     }
     let commandName = String(cString: commandNameC)
-    let usage = "downloadFolder: download all non-downloaded iCloud files for a folder.\nUsage: " + commandName + " [folder1 folder2 ...] (default is current directory)\n"
+    let usage = "downloadFolder: download iCloud files, including hidden files, and wait until available.\nUsage: " + commandName + " [-r] [--] [folder ...] (default is current directory)\n-r: include subfolders; symbolic links are not followed.\n"
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
-    if args.count == 1 {
-        downloadFilesFromRemoteFolder(fileURL: URL(fileURLWithPath: "."))
-        return 0
-    }
-    if ((args[1] == "-h") || (args[1] == "--help")) {
+    if args.dropFirst().first == "-h" || args.dropFirst().first == "--help" {
         fputs(usage, thread_stdout)
         return 0
     }
-    for i in 1..<args.count {
-        if (FileManager().fileExists(atPath: args[i])) {
-            let fileURL = URL(fileURLWithPath: args[i])
-            if (fileURL.isDirectory) {
-                downloadFilesFromRemoteFolder(fileURL: fileURL)
-            } else {
-                fputs("downloadFolder: file \(args[i]) is not a directory\n", thread_stdout)
-                fputs(usage, thread_stdout)
-                return 1
-            }
-        } else {
-            fputs("downloadFolder: file not found: \(args[i])\n", thread_stdout)
-            fputs(usage, thread_stdout)
-            return 1
-        }
+    var paths = Array(args.dropFirst())
+    let recursive = paths.first == "-r"
+    if recursive { paths.removeFirst() }
+    if paths.first == "--" { paths.removeFirst() }
+    if paths.isEmpty { paths = ["."] }
+    var succeeded = true
+    for path in paths {
+        if !downloadFilesFromRemoteFolder(fileURL: URL(fileURLWithPath: path), recursive: recursive) { succeeded = false }
     }
-    return 0
+    return succeeded ? 0 : 1
 }
 
-func downloadFilesFromRemoteFolder(fileURL: URL) {
-    // If it's a directory, download all files inside
-    if let urls = try? FileManager().contentsOfDirectory(at: fileURL, includingPropertiesForKeys: nil, options: []) {
+@discardableResult
+func downloadFilesFromRemoteFolder(fileURL: URL, recursive: Bool = false, waitForDownload: Bool = true) -> Bool {
+    do {
+        let keys: Set<URLResourceKey> = [.isDirectoryKey, .isSymbolicLinkKey, .isUbiquitousItemKey]
+        let urls = try FileManager.default.contentsOfDirectory(at: fileURL, includingPropertiesForKeys: Array(keys), options: [])
+        var succeeded = true
         for myURL in urls {
-            // We have our url
-            let lastPathComponent = myURL.lastPathComponent
-            if lastPathComponent.contains(".icloud") {
-                downloadRemoteFileFromCloud(fileURL: myURL)
+            do {
+                let values = try myURL.resourceValues(forKeys: keys)
+                if values.isSymbolicLink == true { continue }
+                let name = myURL.lastPathComponent
+                let placeholder = name.count > 8 && name.hasPrefix(".") && name.hasSuffix(".icloud")
+                if values.isDirectory != true && (placeholder || values.isUbiquitousItem == true) {
+                    if !downloadRemoteFileFromCloud(fileURL: myURL, waitForDownload: waitForDownload) { succeeded = false }
+                }
+                if recursive && values.isDirectory == true {
+                    if !downloadFilesFromRemoteFolder(fileURL: myURL, recursive: true, waitForDownload: waitForDownload) { succeeded = false }
+                }
+            } catch {
+                if waitForDownload {
+                    fputs("downloadFolder: \(myURL.path): \(error.localizedDescription)\n", thread_stderr)
+                } else {
+                    NSLog("Could not inspect iCloud item: \(error.localizedDescription)")
+                }
+                succeeded = false
             }
         }
+        return succeeded
+    } catch {
+        if waitForDownload {
+            fputs("downloadFolder: \(fileURL.path): \(error.localizedDescription)\n", thread_stderr)
+        } else {
+            NSLog("Could not enumerate iCloud folder: \(error.localizedDescription)")
+        }
+        return false
     }
 }
 
 public func downloadRemoteFile(fileURL: URL) -> Bool {
-    if (FileManager().fileExists(atPath: fileURL.path)) {
-        if (fileURL.isDirectory) {
-            downloadFilesFromRemoteFolder(fileURL: fileURL)
+    if FileManager.default.fileExists(atPath: fileURL.path) {
+        if fileURL.isDirectory {
+            // Picker, bookmark and URL-open paths keep best-effort shallow downloads.
+            downloadFilesFromRemoteFolder(fileURL: fileURL, waitForDownload: false)
         }
         return true
     }
-    NSLog("Try downloading file from iCloud: \(fileURL)")
-    do {
-        // this will work with iCloud, but not Dropbox or Microsoft OneDrive, who have a specific API.
-        // TODO: find out how to authorize a-Shell for Dropbox, OneDrive, GoogleDrive.
-        try FileManager().startDownloadingUbiquitousItem(at: fileURL)
-        let startingTime = Date()
-        // try downloading the file for 5s, then give up:
-        while (!FileManager().fileExists(atPath: fileURL.path) && (Date().timeIntervalSince(startingTime) < 5)) { }
-        // TODO: add an alert, ask if user wants to continue
-        // NSLog("Done downloading, new status: \(FileManager().fileExists(atPath: fileURL.path))")
-        if (FileManager().fileExists(atPath: fileURL.path)) {
-            if (fileURL.isDirectory) {
-                downloadFilesFromRemoteFolder(fileURL: fileURL)
-            }
-            return true
-        }
-    }
-    catch {
-        NSLog("Could not download file from iCloud")
-        // print(error)
-    }
-    return false
+    return downloadRemoteFileFromCloud(fileURL: fileURL, waitForDownload: !Thread.isMainThread) && FileManager.default.fileExists(atPath: fileURL.path)
 }
 
 // hide the on-screen keyboard
