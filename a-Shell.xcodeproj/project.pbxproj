@@ -991,7 +991,7 @@
 		66727EE1DC59BDA02721BFDF /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		6DA4290CEFD8AE8731971F7C /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
 		6E0E9C24B43A7139D193FA09 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
-		7F117665FA3CA0A131164904 /* a-Shell-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7F117665FA3CA0A131164904 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		8D581F458AB1D50B2B8214BC /* a-Shell-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9313D8BBB62B8827FA0F4BBE /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
 		9FA1E9A5C72AF598227B3351 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -1078,8 +1078,8 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 1D1C6DB1924CE909F07BB047;
-			remoteInfo = "a-Shell-LongCommands";
+			remoteGlobalIDString = 05CD0AC3A045D4B4D1258F0B;
+			remoteInfo = "a-Shell-mini-LongCommands";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1985,7 +1985,7 @@
 			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
 			dstSubfolderSpec = 16;
 			files = (
-				7F117665FA3CA0A131164904 /* a-Shell-LongCommands.appex in Embed Foundation Extensions */,
+				7F117665FA3CA0A131164904 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
