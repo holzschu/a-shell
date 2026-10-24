@@ -10,6 +10,273 @@ import SwiftUI
 import SwiftTerm
 import WebKit
 
+struct ServiceIndicator: Identifiable {
+    let id: String
+    let color: SwiftUI.Color
+    let title: String
+    let details: [String]
+    var stop: (() -> Void)? = nil
+}
+
+final class ServiceIndicators: ObservableObject {
+    static let shared = ServiceIndicators()
+    @Published private(set) var items: [ServiceIndicator] = []
+
+    func set(_ item: ServiceIndicator) {
+        DispatchQueue.main.async {
+            self.items.removeAll { $0.id == item.id }
+            self.items.append(item)
+            self.items.sort { $0.id < $1.id }
+        }
+    }
+
+    func remove(id: String) {
+        DispatchQueue.main.async { self.items.removeAll { $0.id == id } }
+    }
+}
+
+struct ServiceIndicatorSymbols: View {
+    let items: [ServiceIndicator]
+    let foreground: SwiftUI.Color
+    var controlHeight: CGFloat = 44
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(items) { item in
+                Circle()
+                    .fill(item.color)
+                    .overlay(Circle().stroke(foreground.opacity(0.7), lineWidth: 0.5))
+                    .frame(width: 8, height: 8)
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(minWidth: 44, minHeight: controlHeight)
+    }
+}
+
+struct ServiceIndicatorDetails: View {
+    let items: [ServiceIndicator]
+    let background: SwiftUI.Color
+    let foreground: SwiftUI.Color
+    let accent: SwiftUI.Color
+    let dismiss: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                ForEach(items) { item in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label {
+                            Text(item.title).font(.headline)
+                        } icon: {
+                            Circle().fill(item.color).frame(width: 8, height: 8)
+                        }
+                        .accessibilityIdentifier("service-title-" + item.id)
+                        ForEach(Array(item.details.enumerated()), id: \.offset) { _, line in
+                            Text(line).font(.subheadline).textSelection(.enabled)
+                        }
+                        if let stop = item.stop {
+                            Button("Stop " + item.title, role: .destructive) {
+                                stop()
+                                dismiss()
+                            }
+                            .foregroundColor(accent)
+                            .accessibilityIdentifier("service-stop-" + item.id)
+                        }
+                    }
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .foregroundColor(foreground)
+        .background(background)
+        .tint(accent)
+    }
+}
+
+struct ServiceIndicatorPlacement: UIViewRepresentable {
+    let terminal: TerminalView
+    let items: [ServiceIndicator]
+    let background: UIColor
+    let foreground: UIColor
+    let accent: UIColor
+
+    final class PlacementView: UIView {
+        var updatePlacement: (() -> Void)?
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            updatePlacement?()
+        }
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            updatePlacement?()
+        }
+        override func safeAreaInsetsDidChange() {
+            super.safeAreaInsetsDidChange()
+            updatePlacement?()
+        }
+    }
+
+    final class Coordinator: NSObject, UIAdaptivePresentationControllerDelegate {
+        var content: ServiceIndicatorPlacement?
+        var detailsHost: UIHostingController<ServiceIndicatorDetails>?
+        var statusHost: UIHostingController<AnyView>?
+        var toolbarItem: UIBarButtonItem?
+        weak var toolbar: UIToolbar?
+        var statusHeight: CGFloat?
+        var renderedContent: ServiceIndicatorPlacement?
+        var updating = false
+
+        func details(for content: ServiceIndicatorPlacement) -> ServiceIndicatorDetails {
+            ServiceIndicatorDetails(items: content.items, background: Color(uiColor: content.background), foreground: Color(uiColor: content.foreground), accent: Color(uiColor: content.accent), dismiss: { [weak self] in self?.dismissDetails() })
+        }
+
+        func dismissDetails() {
+            guard let host = detailsHost else { return }
+            detailsHost = nil
+            let terminal = content?.terminal
+            host.dismiss(animated: true) { terminal?.becomeFirstResponder() }
+        }
+
+        func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+            detailsHost = nil
+            content?.terminal.becomeFirstResponder()
+        }
+
+        func showDetails() {
+            guard detailsHost == nil, let content = content,
+                  let parent = content.terminal.window?.rootViewController else { return }
+            let host = UIHostingController(rootView: details(for: content))
+            host.view.backgroundColor = content.background
+            host.modalPresentationStyle = .pageSheet
+            host.presentationController?.delegate = self
+            detailsHost = host
+            content.terminal.resignFirstResponder()
+            parent.present(host, animated: true)
+        }
+
+        func detach() {
+            if let item = toolbarItem { toolbar?.items?.removeAll { $0 === item } }
+            toolbar = nil
+            toolbarItem = nil
+            dismissDetails()
+            statusHost?.willMove(toParent: nil)
+            statusHost?.view.removeFromSuperview()
+            statusHost?.removeFromParent()
+        }
+
+        func update() {
+            guard !updating else { return }
+            updating = true
+            defer { updating = false }
+            guard let content = content, !content.items.isEmpty,
+                  let window = content.terminal.window, let parent = window.rootViewController else {
+                detach()
+                return
+            }
+            let changed = renderedContent.map { previous in
+                previous.background != content.background || previous.foreground != content.foreground || previous.accent != content.accent || previous.items.count != content.items.count || zip(previous.items, content.items).contains {
+                    $0.id != $1.id || $0.color != $1.color || $0.title != $1.title || $0.details != $1.details
+                }
+            } ?? true
+            renderedContent = content
+            if changed, let detailsHost = detailsHost { detailsHost.rootView = details(for: content) }
+            let insets = window.safeAreaInsets
+            let width = max(44, CGFloat(content.items.count * 16 + 16))
+            let height = insets.top > 0 ? min(44, insets.top) : 44
+            let bounds = parent.view.bounds
+            let terminalFrame = content.terminal.convert(content.terminal.bounds, to: parent.view)
+            var frame: CGRect?
+            if insets.top > 0 {
+                frame = CGRect(x: bounds.width * 0.28 - width / 2, y: (insets.top - height) / 2, width: width, height: height)
+            } else if insets.right >= width {
+                frame = CGRect(x: bounds.maxX - (insets.right + width) / 2, y: terminalFrame.midY - height / 2, width: width, height: height)
+            } else if insets.left >= width {
+                frame = CGRect(x: (insets.left - width) / 2, y: terminalFrame.midY - height / 2, width: width, height: height)
+            }
+            if let frame = frame, !frame.intersects(terminalFrame) {
+                let status = AnyView(ServiceIndicatorSymbols(items: content.items, foreground: Color(uiColor: content.foreground), controlHeight: height)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Running services")
+                    .accessibilityValue(content.items.map(\.title).joined(separator: ", "))
+                    .accessibilityIdentifier("service-indicator-status"))
+                if statusHost == nil {
+                    statusHost = UIHostingController(rootView: status)
+                    if #available(iOS 16.4, *) { statusHost?.safeAreaRegions = [] }
+                    statusHost?.view.backgroundColor = .clear
+                    statusHost?.view.isUserInteractionEnabled = false
+                }
+                if let statusHost = statusHost {
+                    if changed || statusHeight != height { statusHost.rootView = status }
+                    statusHeight = height
+                    let attaching = statusHost.parent == nil
+                    if attaching { parent.addChild(statusHost) }
+                    if statusHost.view.superview !== parent.view { parent.view.addSubview(statusHost.view) }
+                    statusHost.view.frame = frame
+                    if attaching { statusHost.didMove(toParent: parent) }
+                }
+            } else {
+                // No free chrome: the stock keyboard toolbar still shows the status.
+                statusHost?.willMove(toParent: nil)
+                statusHost?.view.removeFromSuperview()
+                statusHost?.removeFromParent()
+            }
+            if let accessory = content.terminal.inputAccessoryView as? UIToolbar, accessory.bounds.height >= 44 {
+                if toolbar !== accessory || !(accessory.items ?? []).contains(where: { $0 === toolbarItem }) {
+                    if let item = toolbarItem { toolbar?.items?.removeAll { $0 === item } }
+                    let item = UIBarButtonItem(title: nil, image: UIImage(systemName: "info.circle"), primaryAction: UIAction { [weak self] _ in self?.showDetails() }, menu: nil)
+                    item.accessibilityIdentifier = "service-indicators"
+                    item.accessibilityLabel = "Running services"
+                    item.accessibilityValue = content.items.map(\.title).joined(separator: ", ")
+                    item.tintColor = content.accent
+                    toolbar = accessory
+                    toolbarItem = item
+                    // Keep the service control visible when UIKit overflows the toolbar.
+                    accessory.items = [item] + (accessory.items ?? [])
+                }
+                if changed {
+                    toolbarItem?.accessibilityValue = content.items.map(\.title).joined(separator: ", ")
+                    toolbarItem?.tintColor = content.accent
+                }
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+    func makeUIView(context: Context) -> PlacementView {
+        let view = PlacementView()
+        view.isUserInteractionEnabled = false
+        view.updatePlacement = { [weak coordinator = context.coordinator] in coordinator?.update() }
+        return view
+    }
+    func updateUIView(_ view: PlacementView, context: Context) {
+        context.coordinator.content = self
+        context.coordinator.update()
+    }
+    static func dismantleUIView(_ view: PlacementView, coordinator: Coordinator) {
+        view.updatePlacement = nil
+        coordinator.detach()
+    }
+}
+
+@_cdecl("ashell_sshd_status")
+public func sshdStatus(_ sessions: Int32, _ port: Int32, _ fingerprint: UnsafePointer<CChar>?, _ stop: (@convention(c) () -> Void)?) {
+    guard sessions >= 0 else {
+        ServiceIndicators.shared.remove(id: "sshd")
+        return
+    }
+    let hostKey = fingerprint.map { String(cString: $0) } ?? "unavailable"
+    ServiceIndicators.shared.set(ServiceIndicator(id: "sshd", color: sessions > 0 ? .green : .yellow, title: "SSH", details: [
+        "State: listening",
+        "Port: \(port)",
+        "Active sessions: \(sessions)",
+        "Host key: \(hostKey)"
+    ], stop: stop.map { action in
+        { DispatchQueue.global(qos: .userInitiated).async { action() } }
+    }))
+}
+
 // SwiftUI extension for fullscreen rendering
 public enum ViewBehavior: Int {
     case original
@@ -211,6 +478,10 @@ public var terminalViewHeight = 80
 private let edgeSwipeTarget = EdgeSwipeTarget()
 
 struct ContentView: View {
+    @ObservedObject private var services = ServiceIndicators.shared
+    @State private var serviceBackground = UIColor.systemBackground
+    @State private var serviceForeground = UIColor.label
+    @State private var serviceAccent = UIColor.link
     @State private var keyboardHeight: CGFloat = 0
     @State private var lastKeyboardHeight: CGFloat = 0
     @State private var frameHeight: CGFloat = 0
@@ -438,6 +709,17 @@ struct ContentView: View {
         .if(!(localShowWebView && showWebView)) {
             $0.ignoresSafeArea(.keyboard, edges: .bottom)
         }
+        .background(ServiceIndicatorPlacement(terminal: terminalview.view, items: services.items, background: serviceBackground, foreground: serviceForeground, accent: serviceAccent))
+        .onAppear { updateServiceTheme() }
+        .onReceive(NotificationCenter.default.publisher(for: .init("terminalThemeChanged"), object: terminalview.view)) { _ in
+            updateServiceTheme()
+        }
+    }
+
+    private func updateServiceTheme() {
+        serviceBackground = terminalview.view.nativeBackgroundColor
+        serviceForeground = terminalview.view.nativeForegroundColor
+        serviceAccent = terminalview.view.caretColor
     }
 }
 
