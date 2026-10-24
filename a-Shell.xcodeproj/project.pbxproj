@@ -7,16 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		224A907B2ADD0999006DB9CC /* freetype.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000001 /* freetype.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		224A907C2ADD0999006DB9CC /* harfbuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000002 /* harfbuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		224A907D2ADD0999006DB9CC /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000003 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		A22000000000000000000001 /* rg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22000000000000000000002 /* rg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		AE1100000000000000000001 /* helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		A22400000000000000000001 /* Ruff.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22400000000000000000002 /* Ruff.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		619225000000000000000001 /* gitoxide.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 619225000000000000000002 /* gitoxide.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		FD0000000000000000000001 /* fd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000000000000000000002 /* fd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		F2F000000000000000000001 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F2F000000000000000000002 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		AA7100000000000000000001 /* navi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AA7100000000000000000002 /* navi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2203367A28C4B8070027664C /* pico.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2232245E289695A9001BAE04 /* pico.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22068CC62F51C11A004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
 		22068CC72F51CE47004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
@@ -118,6 +108,8 @@
 		2249E13B2E7546E5003F03EE /* Python-_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1392E7546D2003F03EE /* Python-_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
 		A59100000000000000000001 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
+		610000000000000000000002 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
+		707000000000000000000002 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		224A903E2ADD0999006DB9CC /* Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223A1C1B2A5EDCA700B1B9AD /* Tips.swift */; };
 		224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
@@ -171,6 +163,9 @@
 		224A90762ADD0999006DB9CC /* xxd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D40265FA3500056AFD2 /* xxd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90772ADD0999006DB9CC /* libssh2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F822570120E0068004E /* libssh2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90782ADD0999006DB9CC /* openssl.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F83257012190068004E /* openssl.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		224A907B2ADD0999006DB9CC /* freetype.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000001 /* freetype.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		224A907C2ADD0999006DB9CC /* harfbuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000002 /* harfbuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		224A907D2ADD0999006DB9CC /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000003 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907E2ADD0999006DB9CC /* magick.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2231A5072588D8D100B5EDFD /* magick.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90802ADD0999006DB9CC /* vim.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5A0255846F300673D11 /* vim.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90952ADD0999006DB9CC /* lua_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F583255846A500673D11 /* lua_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -235,7 +230,6 @@
 		227EE36E2F0913C000636757 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 227EE36D2F0913C000636757 /* SwiftTerm */; };
 		227F058330867D0500FCC674 /* node.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227F058230867C0300FCC674 /* node.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227F0FB930868CE400FCC674 /* npm in Resources */ = {isa = PBXBuildFile; fileRef = 227F0FB830868CE300FCC674 /* npm */; };
-		22F0FE7B3A1C4B0D00A1B2C3 /* node-fetch in Resources */ = {isa = PBXBuildFile; fileRef = 22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */; };
 		228503772F47806F00E4DA17 /* listTeXscripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221DA54B26F7688100BEA92A /* listTeXscripts.swift */; };
 		228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		228E13F725C95F430065D825 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -254,6 +248,8 @@
 		22984EFA22C93DBF00069497 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF822C93DBF00069497 /* LaunchScreen.storyboard */; };
 		229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
 		A59100000000000000000002 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
+		610000000000000000000003 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
+		707000000000000000000003 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		229D2478257931E4004A78AC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		229D2479257931E4004A78AC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
 		229D247B257931E4004A78AC /* UIColor+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291286622D9DAC40004A5EA /* UIColor+hexString.swift */; };
@@ -946,6 +942,8 @@
 		22D146672E62098800E76E2E /* PythonAxxlimited_35.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
 		A59100000000000000000003 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
+		610000000000000000000004 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
+		707000000000000000000004 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		22DC1F942570139D0068004E /* awk.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F8E257012F50068004E /* awk.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F952570139D0068004E /* curl_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F91257012F50068004E /* curl_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F962570139D0068004E /* files.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F89257012F50068004E /* files.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -973,6 +971,7 @@
 		22E9F585255846A600673D11 /* lua_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F583255846A500673D11 /* lua_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22E9F5A2255846F400673D11 /* vim.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5A0255846F300673D11 /* vim.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22E9F5A72558470600673D11 /* bc_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5A52558470600673D11 /* bc_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22F0FE7B3A1C4B0D00A1B2C3 /* node-fetch in Resources */ = {isa = PBXBuildFile; fileRef = 22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */; };
 		22F75D41265FA3970056AFD2 /* xxd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D40265FA3500056AFD2 /* xxd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F75D42265FA3A30056AFD2 /* xxd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F75D40265FA3500056AFD2 /* xxd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22F8457F266FDB7C00A0BF11 /* lg2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2234FB14266F765A00702AD1 /* lg2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -995,6 +994,9 @@
 		A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22000000000000000000002 /* rg/rg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AE1100000000000000000001 /* helix/helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix/helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		610000000000000000000011 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
+		610000000000000000000012 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
+		610000000000000000000013 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1919,13 +1921,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		A53600000000000000000001 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = "xcfs/.build/artifacts/xcfs/freetype/freetype.xcframework"; sourceTree = SOURCE_ROOT; };
-		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = "xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework"; sourceTree = SOURCE_ROOT; };
-		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = "xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework"; sourceTree = SOURCE_ROOT; };
-		A22000000000000000000002 /* rg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = rg/rg.xcframework; sourceTree = SOURCE_ROOT; };
-		AE1100000000000000000002 /* helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
-		A22400000000000000000002 /* Ruff.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = ruff/Ruff.xcframework; sourceTree = SOURCE_ROOT; };
-		619225000000000000000002 /* gitoxide.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = gitoxide/gitoxide.xcframework; sourceTree = SOURCE_ROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
@@ -2046,7 +2041,6 @@
 		227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wasm_worker_wasm.js; sourceTree = "<group>"; };
 		227F058230867C0300FCC674 /* node.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = node.xcframework; path = xcfs/node.xcframework; sourceTree = "<group>"; };
 		227F0FB830868CE300FCC674 /* npm */ = {isa = PBXFileReference; lastKnownFileType = folder; name = npm; path = Resources/npm; sourceTree = "<group>"; };
-		22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node-fetch; path = Resources/node-fetch; sourceTree = "<group>"; };
 		228E13F225C95F2D0065D825 /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = xcfs/.build/artifacts/xcfs/ios_system/ios_system.xcframework; sourceTree = "<group>"; };
 		2291286622D9DAC40004A5EA /* UIColor+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIColor+hexString.swift"; path = "Util/UIColor+hexString.swift"; sourceTree = SOURCE_ROOT; };
 		22942C3F263F15B1004BEA41 /* perl.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perl.xcframework; path = xcfs/.build/artifacts/xcfs/perl/perl.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2732,6 +2726,8 @@
 		22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited_35.framework; path = Resources/Frameworks/PythonAxxlimited_35.framework; sourceTree = SOURCE_ROOT; };
 		22D23117231940B2005B0C12 /* ExtraCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraCommands.swift; sourceTree = "<group>"; };
 		A59100000000000000000004 /* Relay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relay.swift; sourceTree = "<group>"; };
+		610000000000000000000001 /* TerminalTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTheme.swift; sourceTree = "<group>"; };
+		707000000000000000000001 /* TerminalFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalFont.swift; sourceTree = "<group>"; };
 		22DC1F6425700F7E0068004E /* bibtex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bibtex.xcframework; path = xcfs/.build/artifacts/xcfs/bibtex/bibtex.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F6525700F7E0068004E /* kpathsea.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpathsea.xcframework; path = xcfs/.build/artifacts/xcfs/kpathsea/kpathsea.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F6625700F7E0068004E /* luatex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luatex.xcframework; path = xcfs/.build/artifacts/xcfs/luatex/luatex.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2767,6 +2763,7 @@
 		22EA905D266698DD00CC9B88 /* script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = script.js; sourceTree = "<group>"; };
 		22EF2AAE2ECFA00600E37233 /* Python-cv2.cv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-cv2.cv2.framework"; path = "Resources/Frameworks/Python-cv2.cv2.framework"; sourceTree = SOURCE_ROOT; };
 		22EF2AAF2ECFA02400E37233 /* PythonAcv2.cv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAcv2.cv2.framework; path = Resources/Frameworks/PythonAcv2.cv2.framework; sourceTree = SOURCE_ROOT; };
+		22F0FE7A3A1C4B0D00A1B2C3 /* node-fetch */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "node-fetch"; path = "Resources/node-fetch"; sourceTree = "<group>"; };
 		22F20174264E81E1004FBA5C /* perlA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlA.xcframework; path = xcfs/.build/artifacts/xcfs/perlA/perlA.xcframework; sourceTree = SOURCE_ROOT; };
 		22F20177265260B7004FBA5C /* perlB.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = perlB.xcframework; path = xcfs/.build/artifacts/xcfs/perlB/perlB.xcframework; sourceTree = SOURCE_ROOT; };
 		22F75D40265FA3500056AFD2 /* xxd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xxd.xcframework; path = xcfs/.build/artifacts/xcfs/xxd/xxd.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2782,7 +2779,11 @@
 		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
 		898384A83061A39800A1E18D /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
 		A22000000000000000000002 /* rg/rg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = rg/rg.xcframework; sourceTree = SOURCE_ROOT; };
+		A53600000000000000000001 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = xcfs/.build/artifacts/xcfs/freetype/freetype.xcframework; sourceTree = SOURCE_ROOT; };
+		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework; sourceTree = SOURCE_ROOT; };
+		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework; sourceTree = SOURCE_ROOT; };
 		AE1100000000000000000002 /* helix/helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
+		610000000000000000000010 /* Themes */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Themes; path = Resources/Themes; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2954,6 +2955,9 @@
 				22984EED22C93DBC00069497 /* AppDelegate.swift */,
 				22D23117231940B2005B0C12 /* ExtraCommands.swift */,
 				A59100000000000000000004 /* Relay.swift */,
+				610000000000000000000010 /* Themes */,
+				610000000000000000000001 /* TerminalTheme.swift */,
+				707000000000000000000001 /* TerminalFont.swift */,
 				22984EEF22C93DBC00069497 /* SceneDelegate.swift */,
 				224754D42EFBDF2C007C35FE /* SceneDelegate+TerminalView.swift */,
 				22984EF122C93DBC00069497 /* ContentView.swift */,
@@ -4138,6 +4142,7 @@
 				224A90542ADD0999006DB9CC /* man in Resources */,
 				224A90552ADD0999006DB9CC /* usr in Resources */,
 				224A90562ADD0999006DB9CC /* commandDictionary.plist in Resources */,
+				610000000000000000000012 /* Themes in Resources */,
 				224A90572ADD0999006DB9CC /* defaultToolbar.txt in Resources */,
 				22B3D35B2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */,
 				224A90582ADD0999006DB9CC /* gestures.js in Resources */,
@@ -4179,6 +4184,7 @@
 				22942C42264037B9004BEA41 /* Perl in Resources */,
 				2231A522258923E200B5EDFD /* ImageMagick-7 in Resources */,
 				229F51152473BBCA0053AC03 /* commandDictionary.plist in Resources */,
+				610000000000000000000013 /* Themes in Resources */,
 				22E337EC2949F4CF00A8F76C /* defaultToolbar.txt in Resources */,
 				22B3D35C2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */,
 				22372B722448E85D0033FE07 /* usr in Resources */,
@@ -4217,6 +4223,7 @@
 				229D2489257931E4004A78AC /* man in Resources */,
 				229D25C22579369B004A78AC /* usr in Resources */,
 				229D25C32579369B004A78AC /* commandDictionary.plist in Resources */,
+				610000000000000000000011 /* Themes in Resources */,
 				2253E950295B0D0A00EBE1F3 /* defaultToolbar.txt in Resources */,
 				22B3D35D2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */,
 				229D25C42579369B004A78AC /* bin in Resources */,
@@ -4280,6 +4287,8 @@
 			files = (
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
 				A59100000000000000000001 /* Relay.swift in Sources */,
+				610000000000000000000002 /* TerminalTheme.swift in Sources */,
+				707000000000000000000002 /* TerminalFont.swift in Sources */,
 				224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */,
 				224A903E2ADD0999006DB9CC /* Tips.swift in Sources */,
 				224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */,
@@ -4308,6 +4317,8 @@
 			files = (
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
 				A59100000000000000000003 /* Relay.swift in Sources */,
+				610000000000000000000004 /* TerminalTheme.swift in Sources */,
+				707000000000000000000004 /* TerminalFont.swift in Sources */,
 				22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */,
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
 				223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */,
@@ -4336,6 +4347,8 @@
 			files = (
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
 				A59100000000000000000002 /* Relay.swift in Sources */,
+				610000000000000000000003 /* TerminalTheme.swift in Sources */,
+				707000000000000000000003 /* TerminalFont.swift in Sources */,
 				229D2478257931E4004A78AC /* AppDelegate.swift in Sources */,
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				224754D72EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,
@@ -4789,7 +4802,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 595;
+				CURRENT_PROJECT_VERSION = 597;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4838,7 +4851,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 595;
+				CURRENT_PROJECT_VERSION = 597;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4886,7 +4899,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 592;
+				CURRENT_PROJECT_VERSION = 597;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4939,7 +4952,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 592;
+				CURRENT_PROJECT_VERSION = 597;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
