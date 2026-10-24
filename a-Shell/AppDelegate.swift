@@ -213,6 +213,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
         replaceCommand("history", "history", true)
+        replaceCommand("term", "ashell_term", true)
         replaceCommand("help", "help", true)
         replaceCommand("clear", "clear", true)
         replaceCommand("isForeground", "isForeground", true)

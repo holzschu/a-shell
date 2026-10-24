@@ -73,6 +73,7 @@ touch Resources/bin/tail
 touch Resources/bin/tar
 touch Resources/bin/tee
 touch Resources/bin/telnet
+touch Resources/bin/term
 touch Resources/bin/touch
 touch Resources/bin/tr
 touch Resources/bin/uname
