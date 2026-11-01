@@ -106,6 +106,7 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
     private var nativeToolbar: UIToolbar?
     private let glass = UIVisualEffectView()
     private let more = UIButton(type: .system)
+    private let keyFeedback = UIImpactFeedbackGenerator(style: .light)
     private var keys: [UIBarButtonItem] = []
     var insertSymbol: ((String) -> Void)?
     weak var outsideWindow: UIWindow?
@@ -184,6 +185,10 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                     key.addAction(UIAction(identifier: UIAction.Identifier("symbol-activation")) { [weak self] _ in self?.toggleSymbols() }, for: .primaryActionTriggered)
 
                 }
+                if item.possibleTitles?.contains("up.down.left.right") != true, let key = item.customView as? UIButton {
+                    key.removeTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+                    key.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+                }
             }
             setNeedsLayout()
         }
@@ -215,6 +220,7 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
         more.setImage(UIImage(systemName: "ellipsis", withConfiguration: Self.symbolConfiguration), for: .normal)
         more.accessibilityLabel = "More keys"
         more.showsMenuAsPrimaryAction = true
+        more.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
         addSubview(more)
         if #available(iOS 17, *) {
             registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (toolbar: PhoneKeyboardToolbar, _: UITraitCollection) in
@@ -259,6 +265,7 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
         configuration.baseForegroundColor = UIColor.label.resolvedColor(with: traitCollection)
         let paste = UIPasteControl(configuration: configuration)
         paste.target = target
+        paste.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
         return paste
     }
 
@@ -284,11 +291,14 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         guard window != nil else { return }
+        keyFeedback.prepare()
         DispatchQueue.main.async { [weak self] in
             guard let self, self.window != nil else { return }
             if #available(iOS 16, *) { self.rebuildPasteControls() }
         }
     }
+
+    @objc private func keyTouchDown() { keyFeedback.impactOccurred() }
 
     func animateKeyboardChange(_ changes: @escaping () -> Void) {
         if let coordinator = outsideWindow?.rootViewController?.transitionCoordinator {
@@ -445,6 +455,7 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
             cell.accessibilityIdentifier = "symbol-cell-" + name
             cell.frame = CGRect(x: 3 + CGFloat(index % panelColumns) * (panel.bounds.width - 6) / CGFloat(panelColumns), y: 3 + CGFloat(index / panelColumns) * 44, width: (panel.bounds.width - 6) / CGFloat(panelColumns), height: 44)
             cell.addAction(UIAction { [weak self] _ in self?.chooseSymbol(value, keepingPanelOpen: true) }, for: .touchUpInside)
+            cell.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
             face.frame = cell.frame.insetBy(dx: 3, dy: 3)
             panel.addSubview(face)
             symbolFaces.append(face)
