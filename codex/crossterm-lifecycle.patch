@@ -1,0 +1,67 @@
+--- a/src/event.rs
++++ b/src/event.rs
+@@ -148,6 +148,13 @@
+ /// This needs to be static because there can be one event reader.
+ static INTERNAL_EVENT_READER: Mutex<Option<InternalEventReader>> = parking_lot::const_mutex(None);
+ 
++/// Release terminal registrations before an embedded host replaces its descriptors.
++/// All event streams and blocking event readers must have stopped first.
++#[cfg(target_os = "ios")]
++pub fn reset_event_reader() {
++    *INTERNAL_EVENT_READER.lock() = None;
++}
++
+ pub(crate) fn lock_internal_event_reader() -> MappedMutexGuard<'static, InternalEventReader> {
+     MutexGuard::map(INTERNAL_EVENT_READER.lock(), |reader| {
+         reader.get_or_insert_with(InternalEventReader::default)
+--- a/src/event/stream.rs
++++ b/src/event/stream.rs
+@@ -35,13 +35,15 @@
+     stream_wake_task_executed: Arc<AtomicBool>,
+     stream_wake_task_should_shutdown: Arc<AtomicBool>,
+     task_sender: SyncSender<Task>,
++    #[cfg(target_os = "ios")]
++    poll_thread: Option<thread::JoinHandle<()>>,
+ }
+ 
+ impl Default for EventStream {
+     fn default() -> Self {
+         let (task_sender, receiver) = mpsc::sync_channel::<Task>(1);
+ 
+-        thread::spawn(move || {
++        let poll_thread = thread::spawn(move || {
+             while let Ok(task) = receiver.recv() {
+                 loop {
+                     if let Ok(true) = poll_internal(None, &EventFilter) {
+@@ -58,11 +60,16 @@
+             }
+         });
+ 
++        #[cfg(not(target_os = "ios"))]
++        drop(poll_thread);
++
+         EventStream {
+             poll_internal_waker: lock_internal_event_reader().waker(),
+             stream_wake_task_executed: Arc::new(AtomicBool::new(false)),
+             stream_wake_task_should_shutdown: Arc::new(AtomicBool::new(false)),
+             task_sender,
++            #[cfg(target_os = "ios")]
++            poll_thread: Some(poll_thread),
+         }
+     }
+ }
+@@ -142,5 +149,14 @@
+         self.stream_wake_task_should_shutdown
+             .store(true, Ordering::SeqCst);
+         let _ = self.poll_internal_waker.wake();
++        #[cfg(target_os = "ios")]
++        {
++            // A detached polling thread must not outlive the host's terminal.
++            // Close its work channel before joining, including an idle reader.
++            drop(std::mem::replace(&mut self.task_sender, mpsc::sync_channel(0).0));
++            if let Some(thread) = self.poll_thread.take() {
++                let _ = thread.join();
++            }
++        }
+     }
+ }

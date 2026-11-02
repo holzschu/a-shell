@@ -1,0 +1,26 @@
+--- a/core/src/thread_manager.rs
++++ b/core/src/thread_manager.rs
+@@ -556,0 +557,5 @@
++        // iOS cannot reserve V8's sandbox address space. Direct tools need no V8.
++        #[cfg(target_os = "ios")]
++        let code_mode_session_provider: Arc<dyn CodeModeSessionProvider> =
++            Arc::new(DisabledCodeModeSessionProvider);
++        #[cfg(not(target_os = "ios"))]
+--- a/core/src/tools/mod.rs
++++ b/core/src/tools/mod.rs
+@@ -74,0 +75,8 @@
++// Code-mode cells are unavailable in the embedded iOS process, including when
++// model metadata requests them. Keep the ordinary direct-tool surface.
++#[cfg(target_os = "ios")]
++pub(crate) fn requested_tool_mode(_turn_context: &TurnContext, _model_info: &ModelInfo) -> ToolMode {
++    ToolMode::Direct
++}
++
++#[cfg(not(target_os = "ios"))]
+--- a/core/src/session/code_mode_warning.rs
++++ b/core/src/session/code_mode_warning.rs
+@@ -11 +11,3 @@
+-    if !code_mode_enabled
++    // The iOS tool surface is deliberately Direct; installing a helper cannot enable V8.
++    if cfg!(target_os = "ios")
++        || !code_mode_enabled
