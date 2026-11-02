@@ -130,7 +130,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var terminalFontSize: Float?
     var terminalFontName: String?
     var terminalThemeName = ""
-    var terminalTheme: TerminalTheme?
+    var terminalTheme: TerminalTheme? {
+        didSet {
+            if (oldValue == nil) != (terminalTheme == nil) {
+                DispatchQueue.main.async {
+                    if self.terminalPromptName != "custom" { self.refreshPrompt() }
+                }
+            }
+        }
+    }
     var terminalBackgroundColor: UIColor?
     var terminalForegroundColor: UIColor?
     var terminalCursorColor: UIColor?
@@ -156,6 +164,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var noneTag = -1
     var fontPicker = UIFontPickerViewController()
     var navigationType: WKNavigationType = .other
+    var terminalPromptName = TerminalPrompts.savedName
     var lastUsedPrompt = "$"
     var extraBytes: Data? = nil
     // tap on multi-arrow buttons
@@ -1470,7 +1479,31 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return result
     }
     
+    func applyPrompt(_ name: String) {
+        let update = {
+            guard self.terminalPromptName != name else { return }
+            self.terminalPromptName = name
+            self.refreshPrompt()
+        }
+        if Thread.isMainThread { update() } else { DispatchQueue.main.sync(execute: update) }
+    }
+
+    private func refreshPrompt() {
+        // Never feed stdin or disturb a running command or partially typed input.
+        if currentCommand.isEmpty, let view = terminalView,
+           view.promptline > 0 || view.promptcolumn > 0,
+           view.getLastLine().isEmpty, parsePrompt() != lastUsedPrompt {
+            view.feed(text: "\r\n")
+            printPrompt()
+        }
+    }
+
     func parsePrompt() -> String {
+        if terminalPromptName != "custom" {
+            let directory = currentDirectory.isEmpty ? FileManager.default.currentDirectoryPath : currentDirectory
+            let path = String(cString: ios_getBookmarkedVersion(directory.utf8CString))
+            if let prompt = TerminalPrompts.render(terminalPromptName, path: path, colored: terminalTheme != nil) { return prompt }
+        }
         // Documentation from: https://www.cyberciti.biz/tips/howto-linux-unix-bash-shell-setup-prompt.html
         // Not implemented: \nnn (octal char), \[ \] (non-printing characters)
         // - get PS1 from environment:
@@ -2152,6 +2185,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     // display the current configuration of the window.
     func showConfigWindow() {
+        fputs("prompt: \(terminalPromptName)\n", thread_stdout)
         fputs("theme: \(terminalThemeName.isEmpty ? "system" : terminalThemeName)\n", thread_stdout)
         if let theme = terminalTheme {
             fputs("ANSI: " + theme.colors.dropFirst(3).map { $0.uppercased() }.joined(separator: " ") + "\n", thread_stdout)
@@ -3088,6 +3122,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     changeDirectory(path: self.resetDirectoryAfterCommandTerminates)
                 }
                 self.resetDirectoryAfterCommandTerminates = ""
+                self.currentDirectory = FileManager().currentDirectoryPath
             }
             // re-hide buttons after leaving command:
             DispatchQueue.main.async {
@@ -3404,6 +3439,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
            (userInfo["terminalFontSizeDefault"] as? Float) == TerminalFonts.savedSize,
            let fontName = userInfo["fontName"] as? String {
             terminalFontName = fontName
+        }
+        if TerminalPrompts.savedName == (userInfo["terminalPromptDefault"] as? String ?? "custom"),
+           let prompt = userInfo["terminalPrompt"] as? String, TerminalPrompts.names.contains(prompt) {
+            terminalPromptName = prompt
         }
         let savedTheme = TerminalThemes.savedName
         let previousDefault = userInfo["terminalThemeDefault"] as? String ?? ""
@@ -4568,6 +4607,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             scene.session.stateRestorationActivity?.userInfo!["fontName"] = terminalFontName
         }
         scene.session.stateRestorationActivity?.userInfo!["terminalTheme"] = terminalThemeName
+        scene.session.stateRestorationActivity?.userInfo!["terminalPrompt"] = terminalPromptName
+        scene.session.stateRestorationActivity?.userInfo!["terminalPromptDefault"] = UserDefaults.standard.string(forKey: "appliedTerminalPrompt") ?? "custom"
         scene.session.stateRestorationActivity?.userInfo!["terminalThemeDefault"] = UserDefaults.standard.string(forKey: "appliedTerminalTheme") ?? ""
         scene.session.stateRestorationActivity?.userInfo!["terminalFontDefault"] = TerminalFonts.savedName
         scene.session.stateRestorationActivity?.userInfo!["terminalFontSizeDefault"] = TerminalFonts.savedSize
