@@ -74,39 +74,39 @@ struct RelayTLS {
     }
 
     private static func generate() throws -> Data {
-        guard let key = CNIOBoringSSL_EVP_PKEY_new() else { throw failure("allocate TLS key") }
-        defer { CNIOBoringSSL_EVP_PKEY_free(key) }
-        guard let ec = CNIOBoringSSL_EC_KEY_new_by_curve_name(NID_X9_62_prime256v1) else { throw failure("allocate TLS curve") }
-        defer { CNIOBoringSSL_EC_KEY_free(ec) }
-        guard CNIOBoringSSL_EC_KEY_generate_key(ec) == 1, CNIOBoringSSL_EVP_PKEY_set1_EC_KEY(key, ec) == 1 else { throw failure("generate TLS key") }
-        guard let cert = CNIOBoringSSL_X509_new() else { throw failure("allocate TLS certificate") }
-        defer { CNIOBoringSSL_X509_free(cert) }
+        guard let key = EVP_PKEY_new() else { throw failure("allocate TLS key") }
+        defer { EVP_PKEY_free(key) }
+        guard let ec = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1) else { throw failure("allocate TLS curve") }
+        defer { EC_KEY_free(ec) }
+        guard EC_KEY_generate_key(ec) == 1, EVP_PKEY_set1_EC_KEY(key, ec) == 1 else { throw failure("generate TLS key") }
+        guard let cert = X509_new() else { throw failure("allocate TLS certificate") }
+        defer { X509_free(cert) }
         var serial: UInt32 = 0
         guard SecRandomCopyBytes(kSecRandomDefault, MemoryLayout.size(ofValue: serial), &serial) == errSecSuccess,
-              CNIOBoringSSL_X509_set_version(cert, 2) == 1,
-              CNIOBoringSSL_ASN1_INTEGER_set(CNIOBoringSSL_X509_get_serialNumber(cert), Int(serial) + 1) == 1,
-              CNIOBoringSSL_X509_gmtime_adj(CNIOBoringSSL_X509_getm_notBefore(cert), -300) != nil,
-              CNIOBoringSSL_X509_gmtime_adj(CNIOBoringSSL_X509_getm_notAfter(cert), 10 * 365 * 86400) != nil,
-              CNIOBoringSSL_X509_set_pubkey(cert, key) == 1,
-              let name = CNIOBoringSSL_X509_get_subject_name(cert) else { throw failure("initialize TLS certificate") }
+              X509_set_version(cert, 2) == 1,
+              ASN1_INTEGER_set(X509_get_serialNumber(cert), Int(serial) + 1) == 1,
+              X509_gmtime_adj(X509_getm_notBefore(cert), -300) != nil,
+              X509_gmtime_adj(X509_getm_notAfter(cert), 10 * 365 * 86400) != nil,
+              X509_set_pubkey(cert, key) == 1,
+              let name = X509_get_subject_name(cert) else { throw failure("initialize TLS certificate") }
         let commonName = Array("relay.local".utf8)
-        guard CNIOBoringSSL_X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, commonName, commonName.count, -1, 0) == 1,
-              CNIOBoringSSL_X509_set_issuer_name(cert, name) == 1 else { throw failure("name TLS certificate") }
+        guard X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, commonName, commonName.count, -1, 0) == 1,
+              X509_set_issuer_name(cert, name) == 1 else { throw failure("name TLS certificate") }
         for (nid, value) in [(NID_subject_alt_name, "DNS:relay.local,DNS:localhost,IP:127.0.0.1"), (NID_basic_constraints, "critical,CA:FALSE"), (NID_ext_key_usage, "serverAuth"), (NID_key_usage, "critical,digitalSignature")] {
-            guard let ext = CNIOBoringSSL_X509V3_EXT_nconf_nid(nil, nil, nid, value) else { throw failure("create TLS certificate extension") }
-            let result = CNIOBoringSSL_X509_add_ext(cert, ext, -1)
-            CNIOBoringSSL_X509_EXTENSION_free(ext)
+            guard let ext = X509V3_EXT_nconf_nid(nil, nil, nid, value) else { throw failure("create TLS certificate extension") }
+            let result = X509_add_ext(cert, ext, -1)
+            X509_EXTENSION_free(ext)
             guard result == 1 else { throw failure("add TLS certificate extension") }
         }
-        guard CNIOBoringSSL_X509_sign(cert, key, CNIOBoringSSL_EVP_sha256()) > 0,
-              let p12 = CNIOBoringSSL_PKCS12_create(passphrase, "relay", key, cert, nil, NID_pbe_WithSHA1And3_Key_TripleDES_CBC, NID_pbe_WithSHA1And3_Key_TripleDES_CBC, 0, 0, 0) else { throw failure("sign TLS identity") }
-        defer { CNIOBoringSSL_PKCS12_free(p12) }
-        let count = CNIOBoringSSL_i2d_PKCS12(p12, nil)
+        guard X509_sign(cert, key, EVP_sha256()) > 0,
+              let p12 = PKCS12_create(passphrase, "relay", key, cert, nil, NID_pbe_WithSHA1And3_Key_TripleDES_CBC, NID_pbe_WithSHA1And3_Key_TripleDES_CBC, 0, 0, 0) else { throw failure("sign TLS identity") }
+        defer { PKCS12_free(p12) }
+        let count = i2d_PKCS12(p12, nil)
         guard count > 0 else { throw failure("size TLS identity") }
         var result = Data(count: Int(count))
         let written = result.withUnsafeMutableBytes { buffer -> Int32 in
             var pointer = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self)
-            return CNIOBoringSSL_i2d_PKCS12(p12, &pointer)
+            return i2d_PKCS12(p12, &pointer)
         }
         guard written == count else { throw failure("encode TLS identity") }
         return result
