@@ -1,0 +1,51 @@
+name: App build
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: a-Shell-noPython (${{ matrix.platform }})
+    runs-on: macos-15
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: iOS
+            arch: arm64
+          - platform: iOS Simulator
+            arch: x86_64
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Initialize SwiftTerm
+        run: git submodule update --init SwiftTerm
+      - name: Cache Swift package artifacts
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: xcfs/.build
+          key: xcfs-${{ runner.os }}-${{ runner.arch }}-xcode26.3-${{ hashFiles('xcfs/Package.swift', 'xcfs/Package.resolved') }}
+      - name: Download frameworks and verify SPM checksums
+        run: nice -n 15 ./downloadFrameworks.sh --jobs 4
+      - name: Build unsigned app
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          nice -n 15 xcodebuild -project a-Shell.xcodeproj \
+            -scheme a-Shell-noPython -configuration Debug \
+            -destination "generic/platform=$PLATFORM" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" -jobs 4 \
+            ARCHS="$ARCH" \
+            CODE_SIGNING_ALLOWED=NO build
