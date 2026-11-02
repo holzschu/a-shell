@@ -4794,7 +4794,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 598;
+				CURRENT_PROJECT_VERSION = 599;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4818,7 +4818,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.3.0;
+				MARKETING_VERSION = 2.3.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4843,7 +4843,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 598;
+				CURRENT_PROJECT_VERSION = 599;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4867,7 +4867,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.3.0;
+				MARKETING_VERSION = 2.3.1;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4891,7 +4891,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 598;
+				CURRENT_PROJECT_VERSION = 599;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4914,7 +4914,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.3.0;
+				MARKETING_VERSION = 2.3.1;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
@@ -4944,7 +4944,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 598;
+				CURRENT_PROJECT_VERSION = 599;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4967,7 +4967,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.3.0;
+				MARKETING_VERSION = 2.3.1;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
