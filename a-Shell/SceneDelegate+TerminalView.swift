@@ -655,6 +655,19 @@ extension SceneDelegate {
         NSLog("hostCurrentDirectoryUpdate: \(directory)")
     }
     
+    private func synchronizeRecalledInputContext(_ source: SwiftTerm.TerminalView) {
+        guard source.markedTextRange == nil,
+              let range = source.textRange(from: source.beginningOfDocument, to: source.endOfDocument) else { return }
+        // History already changed the host editor. Update UIKit without sending it again.
+        let receiver = source.terminalDelegate
+        source.terminalDelegate = nil
+        defer { source.terminalDelegate = receiver }
+        source.replace(range, withText: commandBeforeCursor + commandAfterCursor)
+        if let caret = source.position(from: source.beginningOfDocument, offset: commandBeforeCursor.utf16.count) {
+            source.selectedTextRange = source.textRange(from: caret, to: caret)
+        }
+    }
+
     func send(source: SwiftTerm.TerminalView, inputString: String) {
         var string = inputString
         // print("string: \(string)")
@@ -893,6 +906,7 @@ extension SceneDelegate {
                         terminalView?.feed(text: history[historyPosition])
                         commandBeforeCursor = history[historyPosition]
                         commandAfterCursor = ""
+                        synchronizeRecalledInputContext(source)
                         delayedVoiceOver(message: commandBeforeCursor)
                     }
                 } else {
@@ -905,6 +919,7 @@ extension SceneDelegate {
                         terminalView?.feed(text: commandHistory[commandHistoryPosition])
                         commandBeforeCursor = commandHistory[commandHistoryPosition]
                         commandAfterCursor = ""
+                        synchronizeRecalledInputContext(source)
                         delayedVoiceOver(message: commandBeforeCursor)
                     }
                 }
@@ -934,6 +949,7 @@ extension SceneDelegate {
                             terminalView?.feed(text: history[historyPosition])
                             commandBeforeCursor = history[historyPosition]
                             commandAfterCursor = ""
+                            synchronizeRecalledInputContext(source)
                             delayedVoiceOver(message: commandBeforeCursor)
                         }
                     } else {
@@ -944,6 +960,7 @@ extension SceneDelegate {
                         terminalView?.updateDisplay()
                         commandBeforeCursor = ""
                         commandAfterCursor = ""
+                        synchronizeRecalledInputContext(source)
                         delayedVoiceOver(message: "empty line")
                     }
                 } else {
@@ -957,6 +974,7 @@ extension SceneDelegate {
                             terminalView?.feed(text: commandHistory[commandHistoryPosition])
                             commandBeforeCursor = commandHistory[commandHistoryPosition]
                             commandAfterCursor = ""
+                            synchronizeRecalledInputContext(source)
                             delayedVoiceOver(message: commandBeforeCursor)
                         }
                     } else {
@@ -967,6 +985,7 @@ extension SceneDelegate {
                         terminalView?.updateDisplay()
                         commandBeforeCursor = ""
                         commandAfterCursor = ""
+                        synchronizeRecalledInputContext(source)
                         delayedVoiceOver(message: " empty line ")
                     }
                 }
