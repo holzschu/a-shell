@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 import zipfile
 from pathlib import Path
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -35,7 +36,9 @@ MAGIC = {
 def run(*args: str, cwd: Path | None = None) -> str:
     result = subprocess.run(args, text=True, capture_output=True, check=False, cwd=cwd)
     if result.returncode:
-        raise ValueError(f"{args[0]} failed for {args[-1]}: {result.stderr.strip() or result.stdout.strip()}")
+        raise ValueError(
+            f"{args[0]} failed for {args[-1]}: {result.stderr.strip() or result.stdout.strip()}"
+        )
     return result.stdout
 
 
@@ -65,20 +68,41 @@ def audit_binary(binary: Path, platform: str, maximum: str, signed: bool) -> dic
             platforms = ["IOSSIMULATOR" if arch in {"i386", "x86_64"} else "IOS"]
             minimums = re.findall(r"^\s*version\s+(\S+)", build, re.MULTILINE)
         if platforms != [platform] or len(minimums) != 1:
-            raise ValueError(f"{binary} ({arch}): expected one {platform} build record, got {build.strip()}")
+            raise ValueError(
+                f"{binary} ({arch}): expected one {platform} build record, got {build.strip()}"
+            )
         if version(minimums[0]) > version(maximum):
-            raise ValueError(f"{binary} ({arch}): minimum OS {minimums[0]} exceeds {maximum}")
+            raise ValueError(
+                f"{binary} ({arch}): minimum OS {minimums[0]} exceeds {maximum}"
+            )
         dependencies = []
-        for line in run("xcrun", "otool", "-arch", arch, "-L", str(binary)).splitlines():
+        for line in run(
+            "xcrun", "otool", "-arch", arch, "-L", str(binary)
+        ).splitlines():
             if not line.startswith("\t"):
                 continue
             dependency = line.strip().split(" (", 1)[0]
             if not dependency.startswith(
-                ("/usr/lib/", "/System/Library/", "@rpath/", "@loader_path/", "@executable_path/")
+                (
+                    "/usr/lib/",
+                    "/System/Library/",
+                    "@rpath/",
+                    "@loader_path/",
+                    "@executable_path/",
+                )
             ):
-                raise ValueError(f"{binary} ({arch}): nonportable dependency {dependency}")
+                raise ValueError(
+                    f"{binary} ({arch}): nonportable dependency {dependency}"
+                )
             dependencies.append(dependency)
-        slices.append({"arch": arch, "platform": platforms[0], "minos": minimums[0], "dependencies": dependencies})
+        slices.append(
+            {
+                "arch": arch,
+                "platform": platforms[0],
+                "minos": minimums[0],
+                "dependencies": dependencies,
+            }
+        )
     if signed:
         run("codesign", "--verify", "--strict", str(binary))
     with binary.open("rb") as source:
@@ -93,14 +117,32 @@ def audit_binary(binary: Path, platform: str, maximum: str, signed: bool) -> dic
 def audit_framework(root: Path, maximum: str) -> list[dict]:
     with (root / "Info.plist").open("rb") as source:
         libraries = plistlib.load(source)["AvailableLibraries"]
-    if not libraries:
-        raise ValueError("Empty xcframework")
+    simulator_id = (
+        "ios-arm64-simulator"
+        if root.name == "node.xcframework"
+        else "ios-arm64_x86_64-simulator"
+    )
+    simulator_arches = {"arm64"} if root.name == "node.xcframework" else {"arm64", "x86_64"}
+    expected = {
+        "ios-arm64": {"arm64"},
+        simulator_id: simulator_arches,
+    }
+    if len(libraries) != 2 or {item["LibraryIdentifier"] for item in libraries} != set(
+        expected
+    ):
+        raise ValueError(
+            f"Require exactly ios-arm64 and {simulator_id} slices"
+        )
     rows, destinations = [], set()
     for library in libraries:
         if library["SupportedPlatform"] != "ios":
             raise ValueError("Only iOS xcframeworks are supported")
         variant = library.get("SupportedPlatformVariant", "device")
-        platform = {"device": "IOS", "simulator": "IOSSIMULATOR", "maccatalyst": "MACCATALYST"}[variant]
+        platform = {
+            "device": "IOS",
+            "simulator": "IOSSIMULATOR",
+            "maccatalyst": "MACCATALYST",
+        }[variant]
         member = within(root, library["LibraryIdentifier"])
         product = within(member, library["LibraryPath"])
         if product.suffix != ".framework":
@@ -111,21 +153,27 @@ def audit_framework(root: Path, maximum: str) -> list[dict]:
             executable = plistlib.load(source)["CFBundleExecutable"]
         row = audit_binary(within(product, executable), platform, maximum, signed=False)
         actual = {item["arch"] for item in row["slices"]}
+        if actual != expected[library["LibraryIdentifier"]]:
+            raise ValueError(f"{product}: unexpected slice architectures")
         if actual != set(library["SupportedArchitectures"]):
             raise ValueError(f"{product}: plist architectures differ from lipo")
         if any((variant, arch) in destinations for arch in actual):
             raise ValueError(f"{product}: duplicate platform/architecture")
         destinations.update((variant, arch) for arch in actual)
         rows.append(row)
-    if ("device", "arm64") not in destinations or not any(item[0] == "simulator" for item in destinations):
-        raise ValueError("Require arm64 device and at least one Simulator architecture")
+    if destinations != {("device", "arm64")} | {
+        ("simulator", arch) for arch in simulator_arches
+    }:
+        raise ValueError(f"Require arm64 device and {simulator_id}")
     return rows
 
 
 def audit_app(root: Path, maximum: str, platform: str) -> list[dict]:
     rows = []
     for candidate in sorted(root.rglob("*")):
-        if not candidate.is_file() or ".dSYM" in "".join(candidate.relative_to(root).parts):
+        if not candidate.is_file() or ".dSYM" in "".join(
+            candidate.relative_to(root).parts
+        ):
             continue
         within(root, str(candidate.relative_to(root)))
         with candidate.open("rb") as source:
@@ -140,12 +188,22 @@ def audit_app(root: Path, maximum: str, platform: str) -> list[dict]:
 
 @cli.command()
 def main(
-    artifact: Path = typer.Argument(
-        ..., exists=True, help="Dynamic .xcframework, signed .app, or ZIP containing one xcframework."
+    artifact: Annotated[
+        Path,
+        typer.Argument(
+            exists=True,
+            help="Dynamic .xcframework, signed .app, or ZIP containing one xcframework.",
+        ),
+    ],
+    max_minos: str = typer.Option(
+        "14.0", help="Reject any slice requiring a newer OS."
     ),
-    max_minos: str = typer.Option("14.0", help="Reject any slice requiring a newer OS."),
-    sha256: str | None = typer.Option(None, help="Required expected ZIP checksum from the owning release."),
-    platform: str = typer.Option("IOS", help="Expected app platform: IOS or IOSSIMULATOR."),
+    sha256: str | None = typer.Option(
+        None, help="Required expected ZIP checksum from the owning release."
+    ),
+    platform: str = typer.Option(
+        "IOS", help="Expected app platform: IOS or IOSSIMULATOR."
+    ),
 ) -> None:
     """Print a JSON audit on stdout; fail closed on a missing or incompatible product."""
     try:
@@ -156,12 +214,23 @@ def main(
         with tempfile.TemporaryDirectory(prefix="ios-artifact-") as temporary:
             if root.suffix == ".zip":
                 if not sha256:
-                    raise ValueError("ZIP audit requires --sha256 from the owning release")
+                    raise ValueError(
+                        "ZIP audit requires --sha256 from the owning release"
+                    )
                 with root.open("rb") as source:
                     actual = hashlib.file_digest(source, "sha256").hexdigest()
                 if actual != sha256.lower():
                     raise ValueError(f"ZIP SHA256 mismatch: {actual}")
-                if run("swift", "package", "compute-checksum", str(root), cwd=Path(temporary)).strip() != actual:
+                if (
+                    run(
+                        "swift",
+                        "package",
+                        "compute-checksum",
+                        str(root),
+                        cwd=Path(temporary),
+                    ).strip()
+                    != actual
+                ):
                     raise ValueError("Swift package checksum differs from SHA256")
                 with zipfile.ZipFile(root) as archive:
                     for member in archive.infolist():
@@ -188,13 +257,26 @@ def main(
                 rows = audit_app(root, max_minos, platform)
             else:
                 raise ValueError("Expected .xcframework, .app or .zip")
-            print(json.dumps({"artifact": str(artifact), "result": "PASS", "binaries": rows}, indent=2))
-            console.print(f"PASS: {len(rows)} binaries, {sum(len(row['slices']) for row in rows)} architecture slices")
+            print(
+                json.dumps(
+                    {"artifact": str(artifact), "result": "PASS", "binaries": rows},
+                    indent=2,
+                )
+            )
+            console.print(
+                f"PASS: {len(rows)} binaries, {sum(len(row['slices']) for row in rows)} architecture slices"
+            )
     except BrokenPipeError:
         raise typer.Exit(0) from None
     except KeyboardInterrupt:
         raise typer.Exit(130) from None
-    except (OSError, ValueError, KeyError, zipfile.BadZipFile, plistlib.InvalidFileException) as error:
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        zipfile.BadZipFile,
+        plistlib.InvalidFileException,
+    ) as error:
         console.print(f"[red]Error:[/] {escape(str(error))}")
         raise typer.Exit(1) from None
 
