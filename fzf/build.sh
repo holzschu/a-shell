@@ -20,8 +20,13 @@ apple_target() {
     clang_target=arm64-apple-ios14.0-simulator
     mach_platform=IOSSIMULATOR
     ;;
+  simulator-x86_64)
+    sdk_name=iphonesimulator
+    clang_target=x86_64-apple-ios14.0-simulator
+    mach_platform=IOSSIMULATOR
+    ;;
   *)
-    echo 'Expected device or simulator' >&2
+    echo 'Expected device, simulator or simulator-x86_64' >&2
     return 2
     ;;
   esac
@@ -61,11 +66,12 @@ archive() {
   host)
     go build -C "$source" -p 2 -trimpath -buildvcs=false -buildmode=c-archive -o "$cache/fzf-host.a" ./embedded
     ;;
-  device | simulator)
+  device | simulator | simulator-x86_64)
     local sdk sdk_name clang_target mach_platform
     apple_target "$platform"
     sdk=$(xcrun --sdk "$sdk_name" --show-sdk-path)
-    local runtime_source runtime_copy overlay
+    local runtime_source runtime_copy overlay goarch=arm64
+    [[ $platform != simulator-x86_64 ]] || goarch=amd64
     runtime_source=$(go env GOROOT)/src/runtime/os_workdir_ios_arm64.go
     runtime_copy=$cache/os_workdir_ios_arm64.go
     overlay=$cache/go-ios-overlay.json
@@ -78,10 +84,10 @@ archive() {
       '{Replace: {($original): $replacement}}' >"$overlay"
     # GOOS=ios supplies the ios/darwin tags on both platforms; clang selects
     # the Simulator ABI. A macOS Go archive is not a Simulator archive.
-    GOOS=ios GOARCH=arm64 CGO_ENABLED=1 CC="$(xcrun --sdk "$sdk_name" --find clang)" \
-    CGO_CFLAGS="-isysroot $sdk -target $clang_target" \
+    GOOS=ios GOARCH="$goarch" CGO_ENABLED=1 CC="$(xcrun --sdk "$sdk_name" --find clang)" \
+    CGO_CFLAGS="-Oz -isysroot $sdk -target $clang_target" \
     CGO_LDFLAGS="-isysroot $sdk -target $clang_target" \
-      go build -C "$source" -overlay "$overlay" -p 2 -trimpath -buildvcs=false -buildmode=c-archive -o "$cache/fzf-$platform.a" ./embedded
+      go build -C "$source" -ldflags="-s -w" -overlay "$overlay" -p 2 -trimpath -buildvcs=false -buildmode=c-archive -o "$cache/fzf-$platform.a" ./embedded
     ;;
   *) return 2 ;;
   esac
@@ -98,7 +104,7 @@ framework() {
   sdk=$(xcrun --sdk "$sdk_name" --show-sdk-path)
   mkdir -p "$output"
   xcrun --sdk "$sdk_name" clang -target "$clang_target" -isysroot "$sdk" \
-    -Wall -Wextra -Werror -I "$frameworks/ios_system.framework/Headers" \
+    -Oz -Wall -Wextra -Werror -I "$frameworks/ios_system.framework/Headers" \
     -dynamiclib "$here/command.m" "$cache/fzf-$platform.a" -F "$frameworks" -framework ios_system \
     -framework Foundation -framework UIKit -framework Security -lresolv \
     -Wl,-install_name,@rpath/fzf.framework/fzf -o "$output/fzf"

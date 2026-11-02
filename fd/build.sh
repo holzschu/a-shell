@@ -21,8 +21,14 @@ apple_target() {
     clang_target=arm64-apple-ios14.0-simulator
     mach_platform=IOSSIMULATOR
     ;;
+  simulator-x86_64)
+    sdk_name=iphonesimulator
+    rust_target=x86_64-apple-ios
+    clang_target=x86_64-apple-ios14.0-simulator
+    mach_platform=IOSSIMULATOR
+    ;;
   *)
-    echo 'Expected device or simulator' >&2
+    echo 'Expected device, simulator or simulator-x86_64' >&2
     return 2
     ;;
   esac
@@ -68,7 +74,7 @@ framework() {
   sdk=$(xcrun --sdk "$sdk_name" --show-sdk-path)
   mkdir -p "$output"
   xcrun --sdk "$sdk_name" clang -target "$clang_target" -isysroot "$sdk" \
-    -Wall -Wextra -Werror -I "$frameworks/ios_system.framework/Headers" \
+    -Oz -Wall -Wextra -Werror -I "$frameworks/ios_system.framework/Headers" \
     -F "$frameworks" -dynamiclib "$here/command.m" \
     "$cache/target/$rust_target/release/libfd_ios_embedded.a" -framework ios_system \
     -Wl,-install_name,@rpath/fd.framework/fd -Wl,-exported_symbol,_fd_ios_main -o "$output/fd"

@@ -61,6 +61,14 @@ The Simulator build needs the same deployment-target override on Xcode 27.1. The
 
 Because Python 3.x uses functions that are only available on the iOS 14 SDK, I've set the minimum iOS version to 14.0. It also reduces the size of the binaries, so `ios_system` and the other frameworks have the same settings. If you need to run it on an iOS 13 device, you'll have to recompile most frameworks.
 
+### Continuous integration
+
+The [App build workflow](.github/workflows/app-build.yml) builds `a-Shell-noPython` on every pull request and can also be run manually with `workflow_dispatch`. It builds unsigned Debug apps for generic iOS devices (arm64) and Simulator (x86_64) with Xcode 26.3 on `macos-15`. These are build checks; they do not run the app or its commands.
+
+CI initializes only the SwiftTerm submodule and runs `./downloadFrameworks.sh --jobs 4`; the script passes extra arguments to `swift package`. It uses `swift package resolve` to download the binary targets and verify their checksums against `xcfs/Package.swift`. A failed download or checksum mismatch stops the script, and a failed `xcodebuild` fails the job. Swift package downloads are cached. The workflow token has read-only access to repository contents.
+
+CI preserves the project's iOS 14.0 deployment target with Xcode 26.3. The Python variants remain outside CI because their required Python 3.13 frameworks are not publicly available.
+
 ## Home directory
 
  In iOS, you cannot write in the `~` directory, only in `~/Documents/`, `~/Library/` and `~/tmp`. Most Unix programs assume the configuration files are in `$HOME`. 
@@ -136,3 +144,9 @@ For font files, create `~/Documents/Fonts` and drop `.ttf` or `.otf` files there
 `config -n "face name" -s 17 -g` updates all open windows and saves the font and size. `-p` saves the current window's settings without applying them to other windows. In iOS Settings, open a-Shell or a-Shell mini and use "Font", "Custom font name", and "Font size". Choose "Custom" for another installed face or a file in `Documents/Fonts`. Changes apply when returning to the app and survive relaunch. Reopen the app's Settings page to refresh values changed from the terminal.
 
 Font files are refreshed when running `config` or returning to the app. Removing a file unregisters it; a window using an unavailable font displays Menlo until the file returns or another face is selected. An invalid name passed to `config -n` reports an error and keeps the current selection.
+
+## Build Pico
+
+`bash scripts/build-pico.sh` builds Pico 5.09 from checksum-pinned Alpine 2.26 using Xcode and uv. The output under `.build/pico/dist` includes `pico.xcframework.zip`, checksums and an artifact audit. The framework targets iOS 14 with arm64 device and universal arm64/x86_64 Simulator slices. The framework includes the Apache-2.0 and ios_system BSD-3-Clause licenses and the Alpine and IMAP NOTICE files.
+
+The port uses ios_system streams, terminal geometry and interactive mode. It restores signal handlers on command exit. Job suspension reports an error. The workflow checks 20 edit/save invocations through ios_system, including UTF-8 file contents, reentry and descriptor counts, on an arm64 Simulator.
