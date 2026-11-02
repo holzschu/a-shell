@@ -930,6 +930,35 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         root.present(alert, animated: true)
     }
 
+    func setRemoteService(_ kind: String, enabled: Bool) {
+        let services = ServiceIndicators.shared
+        services.controlError = nil
+        if !enabled, !self.currentCommand.isEmpty, let item = services.items.first(where: { $0.kind.rawValue == kind }) {
+            DispatchQueue.global(qos: .userInitiated).async { item.stop() }
+            return
+        }
+        guard self.currentCommand.isEmpty else {
+            services.controlError = "Finish the terminal command before starting a service."
+            return
+        }
+        let command = kind == "ssh" ? (enabled ? "sshd on" : "sshd off") : (enabled ? "relay on" : "relay off")
+        self.commandQueue.async {
+            DispatchQueue.main.sync {
+                self.terminalView?.moveToBeginningOfLine()
+                self.terminalView?.feed(text: "\r\u{1b}[J")
+            }
+        }
+        self.executeCommand(command: command)
+        self.commandQueue.async {
+            DispatchQueue.main.async {
+                self.terminalView?.feed(text: self.commandBeforeCursor)
+                self.terminalView?.saveCursorPosition()
+                self.terminalView?.feed(text: self.commandAfterCursor)
+                self.terminalView?.restoreCursorPosition()
+            }
+        }
+    }
+
     @objc func hideKeyboard() {
         DispatchQueue.main.async {
             guard self.terminalView != nil else { return }
@@ -2359,6 +2388,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
             }
             self.terminalView?.setCursorStyle(shape: cursorShape.lowercased())
+            NotificationCenter.default.post(name: .init("terminalThemeChanged"), object: self.terminalView)
         }
     }
     
@@ -2413,6 +2443,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (fontLigature != nil) {
                 self.terminalFontLigature = fontLigature
             }
+            NotificationCenter.default.post(name: .init("terminalThemeChanged"), object: self.terminalView)
         }
     }
     
@@ -3301,7 +3332,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Reload the web page:
             webView?.reloadFromOrigin()
         } else if (cmd.hasPrefix("setHomeDir:")) {
-            NSLog("Kitura: setHomeDir received")
+            NSLog("WASM: setHomeDir received")
             let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                       in: .userDomainMask,
                                                       appropriateFor: nil,
@@ -3995,14 +4026,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Now load wasm.html:
             commandQueue.async { // Make sure this is loaded after the .profile + .bashrc + restoreEnvironment
                 // (because it causes a crash otherwise)
-                DispatchQueue.main.async {
-                    if (appVersion != "a-Shell-mini") {
-                        NSLog("Loding wasm.html from 8443 (sceneWillEnterForeground)")
-                        self.webView?.load(URLRequest(url: URL(string: "https://localhost:8443/wasm.html")!))
-                    } else {
-                        NSLog("Loding wasm.html from 8334 (sceneWillEnterForeground)")
-                        self.webView?.load(URLRequest(url: URL(string: "https://localhost:8334/wasm.html")!))
-                    }
+                startLocalWebServer {
+                    self.webView?.load(URLRequest(url: LocalServerPorts.wasmURL))
                 }
             }
             // Was this window created with a purpose?
@@ -4520,6 +4545,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             terminalView?.getTerminal().backgroundColor = backgroundColor.toSwiftTermColor()
             terminalView?.getTerminal().cursorColor = cursorColor.toSwiftTermColor()
             self.terminalView?.setCursorStyle(shape: cursorShape.lowercased())
+            NotificationCenter.default.post(name: .init("terminalThemeChanged"), object: self.terminalView)
         }
         // TODO: Ligatures are enabled by default on iOS, they're a property of NSAttributeString, not the font.
         NSLog("Enabling font: \(fontName)")
@@ -4530,7 +4556,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         terminalView?.installColors(terminalTheme?.colors.dropFirst(3).map { UIColor(hexString: $0).toSwiftTermColor() } ?? SwiftTerm.Color.defaultInstalledColors)
         setEnvironmentFGBG(foregroundColor: foregroundColor, backgroundColor: backgroundColor)
-        if (showKeyboardAtStartup) {
+        if showKeyboardAtStartup, window?.rootViewController?.presentedViewController == nil {
             if let termView = self.terminalView {
                 if !termView.isFirstResponder {
                     _ = termView.becomeFirstResponder()
@@ -4564,8 +4590,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Use this method to undo the changes made on entering the background.
         // Reload the webAssembly interpreter (this will also check if the local server is still running):
         sceneIsInForeground = true
-        if (showWebView) {
-            webView?.reloadFromOrigin()
+        startLocalWebServer {
+            if (showWebView) {
+                self.webView?.reloadFromOrigin()
+            }
         }
         // Was this window created with a purpose?
         let userActivity = scene.userActivity

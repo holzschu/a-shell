@@ -4,6 +4,12 @@
 <dict>
 	<key>AppGroupIdentifier</key>
 	<string>group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell</string>
+	<key>WasmServerPort</key>
+	<integer>8443</integer>
+	<key>RelayServerPort</key>
+	<integer>8765</integer>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Relay lets a trusted computer run commands in a-Shell when you enable it.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDocumentTypes</key>
