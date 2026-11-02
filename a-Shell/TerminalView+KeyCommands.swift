@@ -59,11 +59,19 @@ extension TerminalView {
     }
 
 
+    @objc private func showRemoteAccess(_ sender: UIKeyCommand) {
+        guard let scene = window?.windowScene?.delegate else { return }
+        NotificationCenter.default.post(name: .init("remoteAccessShortcut"), object: scene)
+    }
+
     open override var keyCommands: [UIKeyCommand]? {
         // In case we need keyboard personalization for specific languages
         // var language = textInputMode?.primaryLanguage ?? "en-US"
         // command-W is now a system-based command, like command-backquote
+        let remote = UIKeyCommand(input: "r", modifierFlags: [.alternate, .command], action: #selector(showRemoteAccess), discoverabilityTitle: "Remote access")
+        if #available(iOS 15, *) { remote.wantsPriorityOverSystemBehavior = true }
         let basicKeyCommands = [
+            remote,
             // "discoverabilityTitle:)' was deprecated in iOS 13.0" but it's quite convenient
             // These shortcuts work through direct implementation in SwiftTerm
             UIKeyCommand(input: "k", modifierFlags:.command, action: #selector(clearScreen), discoverabilityTitle: "Clear screen"),
