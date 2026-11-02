@@ -13,7 +13,6 @@ import subprocess
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -141,9 +140,9 @@ def audit_app(root: Path, maximum: str, platform: str) -> list[dict]:
 
 @cli.command()
 def main(
-    artifact: Annotated[
-        Path, typer.Argument(exists=True, help="Dynamic .xcframework, signed .app, or ZIP containing one xcframework.")
-    ],
+    artifact: Path = typer.Argument(
+        ..., exists=True, help="Dynamic .xcframework, signed .app, or ZIP containing one xcframework."
+    ),
     max_minos: str = typer.Option("14.0", help="Reject any slice requiring a newer OS."),
     sha256: str | None = typer.Option(None, help="Required expected ZIP checksum from the owning release."),
     platform: str = typer.Option("IOS", help="Expected app platform: IOS or IOSSIMULATOR."),

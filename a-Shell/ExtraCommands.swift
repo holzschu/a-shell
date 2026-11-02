@@ -10,6 +10,9 @@
 import Foundation
 import UIKit
 import ios_system
+import Photos
+import PhotosUI
+import CryptoKit
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
@@ -130,6 +133,7 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
 
 - customize appearance with config
 - pickFolder: open, bookmark and access a directory anywhere (another app, iCloud, WorkingCopy, file providers...)
+- photos: export accessible Photos originals to a read-only cache in ~/Documents/Photos
 - newWindow: open a new window
 - exit: close the current window
 
@@ -262,6 +266,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     for error in TerminalFonts.refresh() { fputs(error + "\n", thread_stderr) }
     currentDelegate?.writeConfigWindow()
     // First, let's scan the arguments:
+    var selectedPrompt: String?
     var selectedTheme: (String, TerminalTheme?)?
     var restoreSavedTheme = false
     var showSettings = false
@@ -272,9 +277,9 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     var terminalCursorColor: UIColor?
     var terminalCursorShape: String?
     var terminalFontLigature: String?
-    let shortUsage = "usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-dgpr][--theme [name]][--show]\n"
+    let shortUsage = "usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-dgpr][--theme [name]][--prompt [name]][--show]\n"
     let usageString = """
-    usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-g][-p][-d][-r][--theme [name]][--show]
+    usage: config [-s font size][-n font name][-b background color][-f foreground color][-c cursor color][-g][-p][-d][-r][--theme [name]][--prompt [name]][--show]
     For all parameters: "default" to get the default value currently stored, "factory" to get a-Shell factory defaults (\(factoryFontName), \(factoryFontSize) pts, colors from system).
     Colors can be defined by names, RGB triplets "red green blue" or HexStrings "#00FF00"
     -s | --size: set font size
@@ -287,16 +292,20 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
     -k | --cursorShape: set cursor shape (beam, block or underline, steady or blinking)
     -l | --ligatures: normal, contextual, none...
     -t | --toolbar: create a configuration file to change the toolbar
-    -g | --global: extend settings to all windows currently open; with --theme, also save the selection
+    -g | --global: extend settings to all windows currently open; with --theme or --prompt, also save the selection
     -p | --permanent: store settings as default values
     -d | --default: reset all settings to default values
     -r | --reset: reset all settings to factory default
     --theme [name]: list themes, or select a bundled preset or ~/Documents/Themes/name.json
     Custom themes: put name.json in Documents/Themes; config --theme lists them.
     config --theme name -g applies and saves; Settings shows Custom file and its name.
-    Names accept an optional .json extension and ignore case.
+    Theme names accept an optional .json extension and ignore case.
     --theme factory: use system colors and the default ANSI palette
     --theme default: restore the saved theme and color overrides without changing font settings
+    --prompt [name]: list prompt presets, or select one for this window
+    --prompt custom: use PS1 unchanged (including a PS1 set in .profile)
+    --prompt default: use the prompt saved in Settings; -g applies it to all windows
+    Presets use the theme ANSI palette and take precedence over PS1 until Custom is selected.
     --show: show current settings and the selected ANSI palette
     Sample uses:
     config -p: make settings for current window the default for future windows.
@@ -329,6 +338,21 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         case "-h", "--help":
             fputs(usageString, thread_stdout)
             return 0
+        case "--prompt":
+            guard i + 1 < args.count, !args[i + 1].hasPrefix("-") else {
+                for name in TerminalPrompts.names { fputs(name + "\n", thread_stdout) }
+                return 0
+            }
+            let requested = args[i + 1].lowercased()
+            let name = requested == "default" ? TerminalPrompts.savedName : (requested == "factory" ? "custom" : requested)
+            guard TerminalPrompts.names.contains(name) else {
+                fputs("Unknown prompt: \(requested). Use config --prompt to list presets.\n", thread_stderr)
+                return 1
+            }
+            selectedPrompt = name
+            argumentsSet = true
+            skipNextArgument = 1
+            continue
         case "--theme":
             guard i + 1 < args.count, !args[i + 1].hasPrefix("-") else {
                 for name in TerminalThemes.names() { fputs(name + "\n", thread_stdout) }
@@ -744,6 +768,27 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
         for target in targets {
             target.configWindow(fontSize: nil, fontName: nil, backgroundColor: terminalBackgroundColor, foregroundColor: terminalForegroundColor, cursorColor: terminalCursorColor, cursorShape: nil, fontLigature: nil)
         }
+    }
+    if revertToFactory { selectedPrompt = "custom" }
+    else if revertToDefault { selectedPrompt = TerminalPrompts.savedName }
+    if let name = selectedPrompt {
+        delegate?.applyPrompt(name)
+        if makeGlobal {
+            for scene in UIApplication.shared.connectedScenes {
+                (scene.delegate as? SceneDelegate)?.applyPrompt(name)
+            }
+        }
+    } else if makeGlobal && !argumentsSet, let source = delegate {
+        for scene in UIApplication.shared.connectedScenes {
+            (scene.delegate as? SceneDelegate)?.applyPrompt(source.terminalPromptName)
+        }
+    }
+    if (makePermanent && (!argumentsSet || selectedPrompt != nil)) || (makeGlobal && selectedPrompt != nil && !revertToDefault && !revertToFactory) {
+        let name = delegate?.terminalPromptName ?? "custom"
+        let savePrompt = {
+            TerminalPrompts.save(name)
+        }
+        if Thread.isMainThread { savePrompt() } else { DispatchQueue.main.sync(execute: savePrompt) }
     }
     if !Thread.isMainThread { DispatchQueue.main.sync {} }
     if showSettings { delegate?.showConfigWindow() }
@@ -1178,130 +1223,388 @@ public func deletemark(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
     return 0
 }
 
-func downloadRemoteFileFromCloud(fileURL: URL) {
-    var lastPathComponent = fileURL.lastPathComponent
-    // Delete the "." which is at the beginning of the file name
-    lastPathComponent.removeFirst()
-    let folderPath = fileURL.deletingLastPathComponent().path
-    let downloadedFilePath = folderPath + "/" + lastPathComponent.replacingOccurrences(of: ".icloud", with: "")
-    do {
-        NSLog("Started downloading file \(downloadedFilePath) from iCloud")
-        try FileManager().startDownloadingUbiquitousItem(at: URL(fileURLWithPath: downloadedFilePath))
-        let startingTime = Date()
-        // try downloading the file for 5s, then give up:
-        while (!FileManager().fileExists(atPath: fileURL.path) && (Date().timeIntervalSince(startingTime) < 5)) { }
+@discardableResult
+func downloadRemoteFileFromCloud(fileURL: URL, waitForDownload: Bool = true, reportErrors: Bool = false) -> Bool {
+    var target = fileURL
+    let name = fileURL.lastPathComponent
+    // Strip only the placeholder wrapper, preserving dots in the original name.
+    if name.count > 8 && name.hasPrefix(".") && name.hasSuffix(".icloud") {
+        target = fileURL.deletingLastPathComponent().appendingPathComponent(String(name.dropFirst().dropLast(7)))
     }
-    catch {
-        NSLog("Could not download file \(downloadedFilePath) from iCloud")
-        // print(error)
+    do {
+        let manager = FileManager.default
+        let values = try? target.resourceValues(forKeys: [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey])
+        if manager.fileExists(atPath: target.path) && values?.isUbiquitousItem != true {
+            return true
+        }
+        if values?.ubiquitousItemDownloadingStatus == .current { return true }
+        try manager.startDownloadingUbiquitousItem(at: target)
+        if !waitForDownload { return true }
+        while true {
+            // Ctrl-C uses pthread cancellation for native a-Shell commands.
+            pthread_testcancel()
+            target.removeAllCachedResourceValues()
+            let state = try? target.resourceValues(forKeys: [.ubiquitousItemDownloadingStatusKey, .ubiquitousItemDownloadingErrorKey])
+            if let error = state?.ubiquitousItemDownloadingError { throw error }
+            if state?.ubiquitousItemDownloadingStatus == .current {
+                return true
+            }
+            usleep(50_000)
+        }
+    } catch {
+        if reportErrors {
+            fputs("\(target.path): \(error.localizedDescription)\n", thread_stderr)
+        } else {
+            NSLog("Could not start iCloud download: \(error.localizedDescription)")
+        }
+        return false
     }
 }
 
 @_cdecl("downloadFile")
 public func downloadFile(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
-    // download a file from iCloud. Input: filename as ".file.icloud"
-    // Possible improvement: also delete the permission bookmark
     guard let commandNameC = argv?[0] else {
         fputs("downloadFile: Can't read command name\n", thread_stderr)
-        return 0
+        return 1
     }
     let commandName = String(cString: commandNameC)
-    let usage = "downloadFile: force download of files from iCloud\nUsage: " + commandName + " .name.icloud [.name1.icloud .name2.icloud ...]\n"
+    let usage = "downloadFile: start iCloud downloads and return.\nUsage: " + commandName + " [-w|--wait] [--] name [.name.icloud ...]\n-w, --wait: wait until contents are available; Ctrl-C stops waiting, not the download.\n"
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
     if args.count == 1 {
         fputs(usage, thread_stdout)
         return 0
     }
-    if ((args[1] == "-h") || (args[1] == "--help")) {
-        fputs(usage, thread_stdout)
-        return 0
+    var paths = Array(args.dropFirst())
+    var waitForDownload = false
+    while let option = paths.first {
+        if option == "--" { paths.removeFirst(); break }
+        if option == "-w" || option == "--wait" {
+            waitForDownload = true
+            paths.removeFirst()
+            continue
+        }
+        if option == "-h" || option == "--help" {
+            fputs(usage, thread_stdout)
+            return 0
+        }
+        if option.hasPrefix("-") { fputs(usage, thread_stderr); return 1 }
+        break
     }
-    for i in 1..<args.count {
-        downloadRemoteFileFromCloud(fileURL: URL(fileURLWithPath: args[i]))
+    guard !paths.isEmpty else { fputs(usage, thread_stderr); return 1 }
+    if waitForDownload { set_session_errno(130) }
+    var succeeded = true
+    for path in paths {
+        if !downloadRemoteFileFromCloud(fileURL: URL(fileURLWithPath: path), waitForDownload: false, reportErrors: true) {
+            succeeded = false
+        }
     }
-    return 0
+    if waitForDownload && succeeded {
+        for path in paths {
+            if !downloadRemoteFileFromCloud(fileURL: URL(fileURLWithPath: path), waitForDownload: true, reportErrors: true) { succeeded = false }
+        }
+    }
+    return succeeded ? 0 : 1
 }
 
 @_cdecl("downloadFolder")
 public func downloadFolder(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
-    // download a file from iCloud. Input: filename as ".file.icloud"
-    // Possible improvement: also delete the permission bookmark
     guard let commandNameC = argv?[0] else {
         fputs("downloadFolder: Can't read command name\n", thread_stderr)
-        return 0
+        return 1
     }
     let commandName = String(cString: commandNameC)
-    let usage = "downloadFolder: download all non-downloaded iCloud files for a folder.\nUsage: " + commandName + " [folder1 folder2 ...] (default is current directory)\n"
+    let usage = "downloadFolder: start iCloud downloads, including hidden files, and return.\nUsage: " + commandName + " [-r] [-w|--wait] [--] [folder ...] (default is current directory)\n-r: include subfolders; symbolic links are not followed.\n-w, --wait: wait until contents are available; Ctrl-C stops waiting, not the downloads.\n"
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
-    if args.count == 1 {
-        downloadFilesFromRemoteFolder(fileURL: URL(fileURLWithPath: "."))
-        return 0
-    }
-    if ((args[1] == "-h") || (args[1] == "--help")) {
-        fputs(usage, thread_stdout)
-        return 0
-    }
-    for i in 1..<args.count {
-        if (FileManager().fileExists(atPath: args[i])) {
-            let fileURL = URL(fileURLWithPath: args[i])
-            if (fileURL.isDirectory) {
-                downloadFilesFromRemoteFolder(fileURL: fileURL)
-            } else {
-                fputs("downloadFolder: file \(args[i]) is not a directory\n", thread_stdout)
-                fputs(usage, thread_stdout)
-                return 1
-            }
-        } else {
-            fputs("downloadFolder: file not found: \(args[i])\n", thread_stdout)
+    var paths = Array(args.dropFirst())
+    var recursive = false
+    var waitForDownload = false
+    while let option = paths.first {
+        if option == "--" { paths.removeFirst(); break }
+        if option == "-r" { recursive = true; paths.removeFirst(); continue }
+        if option == "-w" || option == "--wait" {
+            waitForDownload = true
+            paths.removeFirst()
+            continue
+        }
+        if option == "-h" || option == "--help" {
             fputs(usage, thread_stdout)
-            return 1
+            return 0
+        }
+        if option.hasPrefix("-") { fputs(usage, thread_stderr); return 1 }
+        break
+    }
+    if paths.isEmpty { paths = ["."] }
+    if waitForDownload { set_session_errno(130) }
+    var succeeded = true
+    for path in paths {
+        if !downloadFilesFromRemoteFolder(fileURL: URL(fileURLWithPath: path), recursive: recursive, waitForDownload: false, reportErrors: true) {
+            succeeded = false
         }
     }
-    return 0
+    if waitForDownload && succeeded {
+        for path in paths {
+            if !downloadFilesFromRemoteFolder(fileURL: URL(fileURLWithPath: path), recursive: recursive, waitForDownload: true, reportErrors: true) { succeeded = false }
+        }
+    }
+    return succeeded ? 0 : 1
 }
 
-func downloadFilesFromRemoteFolder(fileURL: URL) {
-    // If it's a directory, download all files inside
-    if let urls = try? FileManager().contentsOfDirectory(at: fileURL, includingPropertiesForKeys: nil, options: []) {
+@discardableResult
+func downloadFilesFromRemoteFolder(fileURL: URL, recursive: Bool = false, waitForDownload: Bool = true, reportErrors: Bool = false) -> Bool {
+    do {
+        let keys: Set<URLResourceKey> = [.isDirectoryKey, .isSymbolicLinkKey, .isUbiquitousItemKey]
+        let urls = try FileManager.default.contentsOfDirectory(at: fileURL, includingPropertiesForKeys: Array(keys), options: [])
+        var succeeded = true
         for myURL in urls {
-            // We have our url
-            let lastPathComponent = myURL.lastPathComponent
-            if lastPathComponent.contains(".icloud") {
-                downloadRemoteFileFromCloud(fileURL: myURL)
+            do {
+                let values = try myURL.resourceValues(forKeys: keys)
+                if values.isSymbolicLink == true { continue }
+                let name = myURL.lastPathComponent
+                let placeholder = name.count > 8 && name.hasPrefix(".") && name.hasSuffix(".icloud")
+                if values.isDirectory != true && (placeholder || values.isUbiquitousItem == true) {
+                    if !downloadRemoteFileFromCloud(fileURL: myURL, waitForDownload: waitForDownload, reportErrors: reportErrors) { succeeded = false }
+                }
+                if recursive && values.isDirectory == true {
+                    if !downloadFilesFromRemoteFolder(fileURL: myURL, recursive: true, waitForDownload: waitForDownload, reportErrors: reportErrors) { succeeded = false }
+                }
+            } catch {
+                if reportErrors {
+                    fputs("downloadFolder: \(myURL.path): \(error.localizedDescription)\n", thread_stderr)
+                } else {
+                    NSLog("Could not inspect iCloud item: \(error.localizedDescription)")
+                }
+                succeeded = false
             }
         }
+        return succeeded
+    } catch {
+        if reportErrors {
+            fputs("downloadFolder: \(fileURL.path): \(error.localizedDescription)\n", thread_stderr)
+        } else {
+            NSLog("Could not enumerate iCloud folder: \(error.localizedDescription)")
+        }
+        return false
     }
 }
 
 public func downloadRemoteFile(fileURL: URL) -> Bool {
-    if (FileManager().fileExists(atPath: fileURL.path)) {
-        if (fileURL.isDirectory) {
-            downloadFilesFromRemoteFolder(fileURL: fileURL)
+    if FileManager.default.fileExists(atPath: fileURL.path) {
+        if fileURL.isDirectory {
+            // Picker, bookmark and URL-open paths keep best-effort shallow downloads.
+            downloadFilesFromRemoteFolder(fileURL: fileURL, waitForDownload: false)
         }
         return true
     }
-    NSLog("Try downloading file from iCloud: \(fileURL)")
-    do {
-        // this will work with iCloud, but not Dropbox or Microsoft OneDrive, who have a specific API.
-        // TODO: find out how to authorize a-Shell for Dropbox, OneDrive, GoogleDrive.
-        try FileManager().startDownloadingUbiquitousItem(at: fileURL)
-        let startingTime = Date()
-        // try downloading the file for 5s, then give up:
-        while (!FileManager().fileExists(atPath: fileURL.path) && (Date().timeIntervalSince(startingTime) < 5)) { }
-        // TODO: add an alert, ask if user wants to continue
-        // NSLog("Done downloading, new status: \(FileManager().fileExists(atPath: fileURL.path))")
-        if (FileManager().fileExists(atPath: fileURL.path)) {
-            if (fileURL.isDirectory) {
-                downloadFilesFromRemoteFolder(fileURL: fileURL)
-            }
-            return true
+    return downloadRemoteFileFromCloud(fileURL: fileURL, waitForDownload: !Thread.isMainThread) && FileManager.default.fileExists(atPath: fileURL.path)
+}
+
+private struct PhotoCacheEntry: Codable {
+    let modified: Date?
+    let files: [String: UInt64]
+}
+
+private let photosLock = NSLock()
+
+private func photoCacheName(_ identifier: String) -> String {
+    return SHA256.hash(data: Data(identifier.utf8)).map { String(format: "%02x", $0) }.joined()
+}
+
+private func writePhotoResource(_ resource: PHAssetResource, to url: URL) throws {
+    guard FileManager.default.createFile(atPath: url.path, contents: nil) else {
+        throw CocoaError(.fileWriteUnknown)
+    }
+    let file = try FileHandle(forWritingTo: url)
+    let lock = NSLock()
+    let finished = DispatchSemaphore(value: 0)
+    var failure: Error?
+    var closed = false
+    let options = PHAssetResourceRequestOptions()
+    options.isNetworkAccessAllowed = true
+    let manager = PHAssetResourceManager.default()
+    let request = manager.requestData(for: resource, options: options, dataReceivedHandler: { data in
+        lock.lock()
+        defer { lock.unlock() }
+        if !closed && failure == nil {
+            do { try file.write(contentsOf: data) } catch { failure = error }
         }
+    }, completionHandler: { error in
+        lock.lock()
+        if failure == nil { failure = error }
+        lock.unlock()
+        finished.signal()
+    })
+    let timedOut = finished.wait(timeout: .now() + 300) == .timedOut
+    lock.lock()
+    closed = true
+    let error = failure
+    lock.unlock()
+    if timedOut { manager.cancelDataRequest(request) }
+    try file.close()
+    if timedOut { throw URLError(.timedOut) }
+    if let error = error { throw error }
+}
+
+private func removePhotoCacheItem(_ url: URL) throws {
+    let values = try url.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
+    if values.isDirectory == true && values.isSymbolicLink != true {
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: url.path)
     }
-    catch {
-        NSLog("Could not download file from iCloud")
-        // print(error)
+    try FileManager.default.removeItem(at: url)
+}
+
+@_cdecl("photos_main")
+public func photosMain(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    let usage = "photos: sync accessible Photos originals to ~/Documents/Photos and print its path.\nUsage: photos [--select | --help]\n--select: change the limited Photos selection, then sync.\nRequests system Photos access (full or limited). Includes Live Photo video and RAW originals.\nFiles are read-only copies, reused on later syncs; edits do not change Photos.\nA sync removes cached assets no longer accessible. Copies made elsewhere remain.\niCloud resources may download; each resource has a 5-minute timeout.\n"
+    if args.count == 2 && (args[1] == "--help" || args[1] == "-h") {
+        fputs(usage, thread_stdout)
+        return 0
     }
-    return false
+    let select = args.count == 2 && args[1] == "--select"
+    guard args.count == 1 || select else {
+        fputs(usage, thread_stderr)
+        return 1
+    }
+    guard !runningInExtension && !Thread.isMainThread else {
+        fputs("photos: run this command in the a-Shell app.\n", thread_stderr)
+        return 1
+    }
+    guard photosLock.try() else {
+        fputs("photos: a sync is already running.\n", thread_stderr)
+        return 1
+    }
+    defer { photosLock.unlock() }
+    var authorization = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    if authorization == .notDetermined {
+        let answered = DispatchSemaphore(value: 0)
+        DispatchQueue.main.async {
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { _ in answered.signal() }
+        }
+        guard answered.wait(timeout: .now() + 120) == .success else {
+            fputs("photos: permission request timed out; run again after answering the system prompt.\n", thread_stderr)
+            return 1
+        }
+        authorization = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    }
+    if select {
+        guard authorization == .limited else {
+            fputs("photos: --select requires limited Photos access. Choose limited access in Settings.\n", thread_stderr)
+            return 1
+        }
+        let finished = DispatchSemaphore(value: 0)
+        var presented = false
+        DispatchQueue.main.async {
+            guard var controller = currentDelegate?.window?.rootViewController else {
+                finished.signal()
+                return
+            }
+            while let next = controller.presentedViewController { controller = next }
+            guard controller.view?.window != nil else {
+                finished.signal()
+                return
+            }
+            presented = true
+            PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: controller) { _ in finished.signal() }
+        }
+        finished.wait()
+        guard presented else {
+            fputs("photos: cannot present the selection picker. Open an a-Shell window and try again.\n", thread_stderr)
+            return 1
+        }
+        authorization = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    }
+    let allowed = authorization == .authorized || authorization == .limited
+    do {
+        let manager = FileManager.default
+        var root = manager.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("Photos", isDirectory: true)
+        let marker = root.appendingPathComponent(".photos-cache")
+        let index = root.appendingPathComponent(".photos-index.json")
+        if manager.fileExists(atPath: root.path) {
+            let values = try root.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
+            guard values.isSymbolicLink != true && values.isDirectory == true && (try? String(contentsOf: marker, encoding: .utf8)) == "a-Shell Photos cache 1\n" else {
+                throw NSError(domain: "photos", code: 1, userInfo: [NSLocalizedDescriptionKey: "~/Documents/Photos already exists and is not a managed Photos cache. Move it before running photos."])
+            }
+        } else if allowed {
+            try manager.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            try "a-Shell Photos cache 1\n".write(to: marker, atomically: true, encoding: .utf8)
+        } else {
+            fputs("photos: Photos access denied. Allow full or limited access in Settings.\n", thread_stderr)
+            return 1
+        }
+        var rootValues = URLResourceValues()
+        rootValues.isExcludedFromBackup = true
+        try root.setResourceValues(rootValues)
+        let assets = allowed ? PHAsset.fetchAssets(with: nil) : PHAsset.fetchAssets(withLocalIdentifiers: [], options: nil)
+        var visible = Set<String>()
+        for i in 0..<assets.count { visible.insert(photoCacheName(assets.object(at: i).localIdentifier)) }
+        // Prune before downloading so a failed network request cannot retain revoked assets.
+        for child in try manager.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) {
+            let name = child.lastPathComponent
+            let assetDirectory = name.count == 64 && name.allSatisfy { "0123456789abcdef".contains($0) }
+            if (assetDirectory && !visible.contains(name)) || name.hasPrefix(".photos-stage-") {
+                try removePhotoCacheItem(child)
+            }
+        }
+        let previous = (try? JSONDecoder().decode([String: PhotoCacheEntry].self, from: Data(contentsOf: index))) ?? [:]
+        var entries: [String: PhotoCacheEntry] = [:]
+        var failed = false
+        for i in 0..<assets.count {
+            let asset = assets.object(at: i)
+            let name = photoCacheName(asset.localIdentifier)
+            let destination = root.appendingPathComponent(name, isDirectory: true)
+            let resources = PHAssetResource.assetResources(for: asset).filter {
+                [.photo, .video, .audio, .alternatePhoto, .pairedVideo].contains($0.type)
+            }
+            let names = resources.enumerated().map { offset, resource -> String in
+                let filename: String
+                if #available(iOS 27.0, *) {
+                    filename = resource.filename ?? "original"
+                } else {
+                    filename = resource.originalFilename
+                }
+                return "\(resource.type.rawValue)-\(offset)-\((filename as NSString).lastPathComponent)"
+            }
+            let old = previous[name]
+            let directoryValues = try? destination.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
+            if let old = old, old.modified == asset.modificationDate && Set(old.files.keys) == Set(names) && directoryValues?.isDirectory == true && directoryValues?.isSymbolicLink != true {
+                let intact = names.allSatisfy { filename in
+                    let values = try? destination.appendingPathComponent(filename).resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey, .isSymbolicLinkKey])
+                    return values?.isRegularFile == true && values?.isSymbolicLink != true && values?.fileSize.map { UInt64($0) } == old.files[filename]
+                }
+                if intact { entries[name] = old; continue }
+            }
+            let stage = root.appendingPathComponent(".photos-stage-" + UUID().uuidString, isDirectory: true)
+            do {
+                try manager.createDirectory(at: stage, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+                var files: [String: UInt64] = [:]
+                for (offset, resource) in resources.enumerated() {
+                    let file = stage.appendingPathComponent(names[offset])
+                    try writePhotoResource(resource, to: file)
+                    let attributes = try manager.attributesOfItem(atPath: file.path)
+                    files[names[offset]] = (attributes[.size] as? NSNumber)?.uint64Value
+                    try manager.setAttributes([.posixPermissions: 0o400], ofItemAtPath: file.path)
+                }
+                if manager.fileExists(atPath: destination.path) { try removePhotoCacheItem(destination) }
+                try manager.moveItem(at: stage, to: destination)
+                try manager.setAttributes([.posixPermissions: 0o500], ofItemAtPath: destination.path)
+                entries[name] = PhotoCacheEntry(modified: asset.modificationDate, files: files)
+            } catch {
+                try? removePhotoCacheItem(stage)
+                fputs("photos: could not export asset \(name): \(error.localizedDescription)\n", thread_stderr)
+                failed = true
+            }
+        }
+        try JSONEncoder().encode(entries).write(to: index, options: .atomic)
+        if !allowed {
+            fputs("photos: Photos access denied; cached originals removed. Allow full or limited access in Settings.\n", thread_stderr)
+            return 1
+        }
+        fputs(String(cString: ios_getBookmarkedVersion(root.path.utf8CString)) + "\n", thread_stdout)
+        return failed ? 1 : 0
+    } catch {
+        fputs("photos: \(error.localizedDescription)\n", thread_stderr)
+        return 1
+    }
 }
 
 // hide the on-screen keyboard
@@ -1742,8 +2045,8 @@ public func call(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
     guard args != nil  else {
         return -1
     }
-    guard args!.count >= 1  else {
-        fputs("Usage: \(args![0]) [name]\n", thread_stderr)
+    guard args!.count >= 2  else {
+        fputs("Usage: \(args![0]) name\n", thread_stderr)
         return -1
     }
     var key = args![1]
