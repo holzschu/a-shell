@@ -982,6 +982,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // check issue with screen size and pico.
         // Scan the configuration file to generate the button groups:
         // Before iOS 26, or iPads, or VoiceOver active: single-arrow button
+        // TODO: iPhone Duo, iPad style is OK when opened. How to adjust?
         var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
         if #available(iOS 26, *) {
             if !UIAccessibility.isVoiceOverRunning && !UIDevice.current.model.hasPrefix("iPad") {
@@ -1016,7 +1017,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 var activeTag = 0
                 noneTag = -1
                 // iPhones, iOS 26+ only: recompute button font size based on number of buttons
-                // This a "liquiglass-only" issue, all other devices work well with default size of 19.
+                // This a "liquidglass-only" issue, all other devices work well with default size of 19.
                 if #available(iOS 26, *) {
                     if !UIDevice.current.model.hasPrefix("iPad") {
                         // parse the config file to get the number of buttons
@@ -1025,6 +1026,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         // smaller than 15 won't change the button size (but it will change the label size!)
                         // larger than 22 feels much larger than the keyboard keys
                         buttonFontSize =  min(max(screenWidth/(multiplier * CGFloat(numButtons)), 15.0), 22)
+                        if (UIDevice.current.name == "iPhone Duo") && (screenWidth == 466) {
+                            // vertical, closed iPhone Duo. This is the maximum size for 6 buttons
+                            // nothing can convince the closed iPhone Duo to display 7 buttons.
+                            buttonFontSize = 19.1
+                        }
                         #if DEBUG
                         NSLog("button size: \(buttonFontSize): \(screenWidth)/\(multiplier) * \(numButtons)")
                         #endif
@@ -1410,6 +1416,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             if useLiquidGlass {
+                NSLog("screen width: \(screenWidth) buttoncount: \(leftButtonGroup.count + rightButtonGroup.count) device: \(UIDevice.current.name) ")
                 // liquid glass makes the buttons larger, we can't have a middle space on small screens
                 // NSLog("leftButtonGroup: \(leftButtonGroup)")
                 // NSLog("rightButtonGroup: \(rightButtonGroup)")
@@ -1837,7 +1844,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
 
     func executeWebAssemblyCommands() {
         // since we're multi-threaded, we could be executing this while executeWebAssembly() is still running. So we wait.
-        NSLog("executeWebAssemblyCommands: url: \(webView?.url)")
+        // NSLog("executeWebAssemblyCommands: url: \(webView?.url)")
         var wasmEndedWithError = false;
         NSLog("Starting executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack) executeWebAssemblyCommandsRunning= \(executeWebAssemblyCommandsRunning)")
         if (commandsStack.isEmpty) {
@@ -3511,6 +3518,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     if name == "PERL_MB_OPT" { continue }
                     if name == "PERL_MM_OPT" { continue }
                     if name == "TZ" { continue }
+                    if name == "NODE_PATH" { continue }
+                    if name == "NPM_CONFIG_PREFIX" { continue }
                     if name == "TERMINFO" { continue }
                     // Don't override APPVERSION and others:
                     if name == "APPNAME" { continue }
