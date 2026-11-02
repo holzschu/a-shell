@@ -133,7 +133,7 @@
 	<string>a-Shell mini uses Bluetooth to connect to nearby devices from scripts and commands.</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
-		<key>iCloud.$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell</key>
+		<key>iCloud.AsheKube.app.a-Shell</key>
 		<dict>
 			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
 			<true/>
