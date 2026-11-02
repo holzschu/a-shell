@@ -11,6 +11,7 @@ import Foundation
 import UIKit
 import ios_system
 import Photos
+import PhotosUI
 import CryptoKit
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
@@ -1364,12 +1365,13 @@ private func removePhotoCacheItem(_ url: URL) throws {
 @_cdecl("photos_main")
 public func photosMain(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
-    let usage = "photos: sync accessible Photos originals to ~/Documents/Photos and print its path.\nUsage: photos [--help]\nRequests system Photos access (full or limited). Includes Live Photo video and RAW originals.\nFiles are read-only copies, reused on later syncs; edits do not change Photos.\nA sync removes cached assets no longer accessible. Copies made elsewhere remain.\niCloud resources may download; each resource has a 5-minute timeout.\n"
+    let usage = "photos: sync accessible Photos originals to ~/Documents/Photos and print its path.\nUsage: photos [--select | --help]\n--select: change the limited Photos selection, then sync.\nRequests system Photos access (full or limited). Includes Live Photo video and RAW originals.\nFiles are read-only copies, reused on later syncs; edits do not change Photos.\nA sync removes cached assets no longer accessible. Copies made elsewhere remain.\niCloud resources may download; each resource has a 5-minute timeout.\n"
     if args.count == 2 && (args[1] == "--help" || args[1] == "-h") {
         fputs(usage, thread_stdout)
         return 0
     }
-    guard args.count == 1 else {
+    let select = args.count == 2 && args[1] == "--select"
+    guard args.count == 1 || select else {
         fputs(usage, thread_stderr)
         return 1
     }
@@ -1390,6 +1392,33 @@ public func photosMain(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
         }
         guard answered.wait(timeout: .now() + 120) == .success else {
             fputs("photos: permission request timed out; run again after answering the system prompt.\n", thread_stderr)
+            return 1
+        }
+        authorization = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    }
+    if select {
+        guard authorization == .limited else {
+            fputs("photos: --select requires limited Photos access. Choose limited access in Settings.\n", thread_stderr)
+            return 1
+        }
+        let finished = DispatchSemaphore(value: 0)
+        var presented = false
+        DispatchQueue.main.async {
+            guard var controller = currentDelegate?.window?.rootViewController else {
+                finished.signal()
+                return
+            }
+            while let next = controller.presentedViewController { controller = next }
+            guard controller.view?.window != nil else {
+                finished.signal()
+                return
+            }
+            presented = true
+            PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: controller) { _ in finished.signal() }
+        }
+        finished.wait()
+        guard presented else {
+            fputs("photos: cannot present the selection picker. Open an a-Shell window and try again.\n", thread_stderr)
             return 1
         }
         authorization = PHPhotoLibrary.authorizationStatus(for: .readWrite)
