@@ -187,6 +187,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NSLog("Application didFinishLaunchingWithOptions \(String(describing: launchOptions))")
         #endif
         _ = TerminalThemes.synchronizeSelection()
+        _ = TerminalPrompts.synchronizeSelection()
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
@@ -231,6 +232,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("repeatCommand", "repeatCommand", true)
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
+        replaceCommand("photos", "photos_main", true)
         replaceCommand("hideKeyboard", "hideKeyboard", true)
         replaceCommand("hideToolbar", "hideToolbar", true)
         replaceCommand("showToolbar", "showToolbar", true)
@@ -407,6 +409,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setenv("PYZMQ_BACKEND", "cffi", 1)
         // Node modules installed in ~/Library/node_modules resolve from any directory; npm itself is in $APPDIR/npm.
         setenv("NODE_PATH", libraryURL.path + "/node_modules", 1)
+        setenv("NPM_CONFIG_PREFIX", libraryURL.path, 1)
         // Frameworks are in $APPDIR/Frameworks:
         setenv("DYLD_FRAMEWORK_PATH", Bundle.main.resourcePath! + "/Frameworks", 1)
         setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
@@ -621,6 +624,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                         delegate.terminalFontSize = TerminalFonts.savedSize ?? factoryFontSize
                     }
                     delegate.writeConfigWindow()
+                }
+            }
+            if TerminalPrompts.synchronizeSelection() {
+                let promptName = TerminalPrompts.savedName
+                for scene in UIApplication.shared.connectedScenes {
+                    (scene.delegate as? SceneDelegate)?.applyPrompt(promptName)
                 }
             }
         }

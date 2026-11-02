@@ -28,11 +28,23 @@ extension View {
     }
 }
 
+final class ConfirmingTerminalView: TerminalView {
+    override func paste(_ sender: Any?) {
+        guard let scene = terminalDelegate as? SceneDelegate, let text = UIPasteboard.general.string else { super.paste(sender); return }
+        if getTerminal().bracketedPasteMode || !text.contains(where: { $0.isNewline }) { super.paste(sender); return }
+        scene.confirmPaste(text, intoTerminal: true) { [weak self] in self?.pasteConfirmed(sender) }
+    }
+
+    private func pasteConfirmed(_ sender: Any?) {
+        super.paste(sender)
+    }
+}
+
 struct Termview : UIViewRepresentable {
     let view: TerminalView
     
     init() {
-        view = TerminalView()
+        view = ConfirmingTerminalView()
     }
     
     func makeUIView(context: Context) -> UIView {

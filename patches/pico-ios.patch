@@ -1,0 +1,262 @@
+diff --git i/configure w/configure
+index 5bfe4f1..ee595ee 100755
+--- i/configure
++++ w/configure
+@@ -18836,6 +18836,13 @@ fi
+       fi
+     fi
+     ;;
++  *-apple-ios*)
++    systype="BSD"
++    alpine_path_delim="/"
++    alpine_mode_readonly="(0600)"
++    alpine_c_client_target="bsf"
++    AM_CFLAGS="$AM_CFLAGS -Dbsd"
++    ;;
+   *-apple-darwin*)
+     systype="OSX"
+     alpine_path_delim="/"
+diff --git i/configure.ac w/configure.ac
+index 5491cc9..1fb8361 100644
+--- i/configure.ac
++++ w/configure.ac
+@@ -1206,6 +1206,13 @@ case "$host" in
+       fi
+     fi
+     ;;
++  *-apple-ios*)
++    systype="BSD"
++    alpine_path_delim="/"
++    alpine_mode_readonly="(0600)"
++    alpine_c_client_target="bsf"
++    AM_CFLAGS="$AM_CFLAGS -Dbsd"
++    ;;
+   *-apple-darwin*)
+     systype="OSX"
+     alpine_path_delim="/"
+diff --git i/include/system.h w/include/system.h
+index ef84c60..6044964 100644
+--- i/include/system.h
++++ w/include/system.h
+@@ -390,3 +390,20 @@ typedef int gid_t;
+ #endif
+ 
+ #endif /* _SYSTEM_INCLUDED */
++
++#if defined(PICO_IOS) && !defined(PICO_IOS_STREAMS)
++#define PICO_IOS_STREAMS
++#include "ios_error.h"
++#undef iswprint
++#undef stdin
++#undef stdout
++#undef stderr
++#define stdin thread_stdin
++#define stdout thread_stdout
++#define stderr thread_stderr
++#define printf(...) fprintf(stdout, __VA_ARGS__)
++#undef putchar
++static inline int pico_ios_putchar(int c) { return fputc(c, stdout); }
++#define putchar pico_ios_putchar
++#define isatty ios_isatty
++#endif
+diff --git i/pico/main.c w/pico/main.c
+index 65b6e3f..2ef60ae 100644
+--- i/pico/main.c
++++ w/pico/main.c
+@@ -169,6 +169,18 @@ NULL
+ };
+ 
+ 
++#ifdef PICO_IOS
++static void
++pico_ios_restore(void *context)
++{
++    const int signals[] = {SIGHUP, SIGTERM, SIGTSTP, SIGWINCH};
++    struct sigaction *previous = context;
++    for(int i = 0; i < 4; i++)
++      sigaction(signals[i], &previous[i], NULL);
++    ios_stopInteractive();
++}
++#endif
++
+ /*
+  * main standalone pico routine
+  */
+@@ -180,6 +192,14 @@ int
+ main(int argc, char *argv[])
+ #endif
+ {
++#ifdef PICO_IOS
++    const int signals[] = {SIGHUP, SIGTERM, SIGTSTP, SIGWINCH};
++    struct sigaction previous[4];
++    for(int i = 0; i < 4; i++)
++      if(sigaction(signals[i], NULL, &previous[i]) < 0)
++        return 1;
++    pthread_cleanup_push(pico_ios_restore, previous);
++#endif
+     UCS      c;
+     register int    f;
+     register int    n;
+@@ -484,6 +504,9 @@ main(int argc, char *argv[])
+ 					/* Do it.               */
+ 	execute(normalize_cmd(c, fkm, 1), f, n);
+     }
++#ifdef PICO_IOS
++    pthread_cleanup_pop(1);
++#endif
+ }
+ 
+ #ifndef _WINDOWS
+diff --git i/pico/osdep/altedit.c w/pico/osdep/altedit.c
+index 358a41f..f32873c 100644
+--- i/pico/osdep/altedit.c
++++ w/pico/osdep/altedit.c
+@@ -221,6 +221,11 @@ alt_editor(int f, int n)
+     }
+ #endif
+ 
++#ifdef PICO_IOS
++    trv = ios_system(fname_to_locale(eb));
++    snprintf(result, sizeof(result), "Alternate %%s returned status %d", trv);
++    if(trv != 0) { ret = -1; beep = 1; }
++#else
+     if((child = fork()) > 0){		/* wait for the child to finish */
+ 	ohup = signal(SIGHUP, SIG_IGN);	/* ignore signals for now */
+ 	oint = signal(SIGINT, SIG_IGN);
+@@ -290,6 +295,8 @@ alt_editor(int f, int n)
+ 	ret = -1;
+     }
+ 
++#endif
++
+ #ifdef	SIGCHLD
+     (void) signal(SIGCHLD,  SIG_DFL);
+ #endif
+diff --git i/pico/osdep/raw.c w/pico/osdep/raw.c
+index 96f630f..079b7a0 100644
+--- i/pico/osdep/raw.c
++++ w/pico/osdep/raw.c
+@@ -65,6 +65,13 @@ static short _inraw = 0;
+ int
+ Raw(int state)
+ {
++#ifdef PICO_IOS
++    if(state && !_inraw) ios_startInteractive();
++    if(!state && _inraw) ios_stopInteractive();
++    _inraw = state != 0;
++    return 0;
++#else
++
+     /** state is either ON or OFF, as indicated by call **/
+     /* Check return code only on first call. If it fails we're done for and
+        if it goes OK the others will probably go OK too. */
+@@ -167,6 +174,7 @@ Raw(int state)
+     }
+ 
+     return(0);
++#endif
+ }
+ 
+ 
+diff --git i/pico/osdep/raw.h w/pico/osdep/raw.h
+index cd5fa20..62dfce9 100644
+--- i/pico/osdep/raw.h
++++ w/pico/osdep/raw.h
+@@ -19,9 +19,15 @@
+ 
+ 
+ /* useful definitions */
+-#define STDIN_FD	0
+-#define STDOUT_FD	1
+-#define STDERR_FD	2
++#ifdef PICO_IOS
++#define STDIN_FD	fileno(stdin)
++#define STDOUT_FD	fileno(stdout)
++#define STDERR_FD	fileno(stderr)
++#else
++#define STDIN_FD	0
++#define STDOUT_FD	1
++#define STDERR_FD	2
++#endif
+ 
+ 
+ /* exported prototypes */
+diff --git i/pico/osdep/shell.c w/pico/osdep/shell.c
+index 3deb8af..f3ce85f 100644
+--- i/pico/osdep/shell.c
++++ w/pico/osdep/shell.c
+@@ -48,6 +48,11 @@ RETSIGTYPE rtfrmshell(int);
+ int
+ bktoshell(int f, int n)
+ {
++#ifdef PICO_IOS
++    emlwrite("Suspending the embedded editor is not supported", NULL);
++    return FALSE;
++#else
++
+     UCS z = CTRL | 'Z';
+ 
+     if(!(gmode&MDSSPD)){
+@@ -123,6 +128,7 @@ bktoshell(int f, int n)
+     }
+ 
+     return(TRUE);
++#endif
+ }
+ #else
+ #ifdef _WINDOWS
+diff --git i/pico/osdep/tty.c w/pico/osdep/tty.c
+index 773eebc..ec75d27 100644
+--- i/pico/osdep/tty.c
++++ w/pico/osdep/tty.c
+@@ -78,7 +78,7 @@ ttclose(void)
+ #ifdef  SIGCONT
+ 	signal(SIGCONT, SIG_DFL);
+ #endif
+-#if	defined(SIGWINCH) && defined(TIOCGWINSZ)
++#if	!defined(PICO_IOS) && defined(SIGWINCH) && defined(TIOCGWINSZ)
+ 	signal(SIGWINCH, SIG_DFL);
+ #endif
+     }
+@@ -233,12 +233,18 @@ void
+ ttgetwinsz(int *row, int *col)
+ {
+     extern int _tlines, _tcolumns;
++#ifdef PICO_IOS
++    const char *rows = getenv("LINES"), *cols = getenv("COLUMNS");
++    if(rows && atoi(rows) > 1) *row = atoi(rows) - 1;
++    if(cols && atoi(cols) > 0) *col = atoi(cols);
++#endif
++
+ 
+     if(*row < 0)
+       *row = (_tlines > 0) ? _tlines - 1 : NROW - 1;
+     if(*col <= 0)
+       *col = (_tcolumns > 0) ? _tcolumns : NCOL;
+-#if	defined(SIGWINCH) && defined(TIOCGWINSZ)
++#if	!defined(PICO_IOS) && defined(SIGWINCH) && defined(TIOCGWINSZ)
+     {
+ 	struct winsize win;
+ 
+--- i/configure
++++ w/configure
+@@ -22034,7 +22034,7 @@
+ #endif
+ 
+ extern void *base;
+-extern sortf(const void *, const void *);
++extern int sortf(const void *, const void *);
+ int sortf(a, b)
+   const void *a;
+   const void *b; { return 0; }
+--- i/configure.ac
++++ w/configure.ac
+@@ -1964,7 +1964,7 @@
+ #endif
+ 
+ extern void *base;
+-extern sortf(const void *, const void *);
++extern int sortf(const void *, const void *);
+ int sortf(a, b)
+   const void *a;
+   const void *b; { return 0; }
