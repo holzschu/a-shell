@@ -1480,7 +1480,7 @@ public func photosMain(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
             fputs("photos: Photos access denied; cached originals removed. Allow full or limited access in Settings.\n", thread_stderr)
             return 1
         }
-        fputs(root.path + "\n", thread_stdout)
+        fputs(String(cString: ios_getBookmarkedVersion(root.path.utf8CString)) + "\n", thread_stdout)
         return failed ? 1 : 0
     } catch {
         fputs("photos: \(error.localizedDescription)\n", thread_stderr)
