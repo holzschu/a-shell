@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A22600000000000000000001 /* codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2200010030F7400000000001 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2200010030F7400000000002 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2200010030F7400000000004 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
@@ -60,9 +61,9 @@
 		22207E0727BAAE7E00DB66C2 /* perlA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20174264E81E1004FBA5C /* perlA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22207E0827BAAE7E00DB66C2 /* perlB.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20177265260B7004FBA5C /* perlB.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22207E0927BAAE8100DB66C2 /* make.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DE173D2653DC960031A029 /* make.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		2225C10E2F685BCB0013F533 /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C10D2F685BCB0013F533 /* Kitura */; };
-		2225C1102F685BD50013F533 /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C10F2F685BD50013F533 /* Kitura */; };
-		2225C1122F685BDD0013F533 /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C1112F685BDD0013F533 /* Kitura */; };
+		2225C10E2F685BCB0013F533 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C10D2F685BCB0013F533 /* NIOSSL */; };
+		2225C1102F685BD50013F533 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C10F2F685BD50013F533 /* NIOSSL */; };
+		2225C1122F685BDD0013F533 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C1112F685BDD0013F533 /* NIOSSL */; };
 		222BE55B2BE2D512002E4272 /* wasm_withWorker.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248A2BE12FEE003A8031 /* wasm_withWorker.js */; };
 		222BE55C2BE2D519002E4272 /* wasm_worker_wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */; };
 		2230F40A257D47D100810B07 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2230F400257D479900810B07 /* Assets.xcassets */; };
@@ -110,6 +111,7 @@
 		2249E13A2E7546E5003F03EE /* PythonA_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1382E7546C6003F03EE /* PythonA_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2249E13B2E7546E5003F03EE /* Python-_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1392E7546D2003F03EE /* Python-_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		A59100000000000000000001 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
 		610000000000000000000002 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
 		620000000000000000000002 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
 		707000000000000000000002 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
@@ -249,6 +251,7 @@
 		22984EF722C93DBF00069497 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF622C93DBF00069497 /* Preview Assets.xcassets */; };
 		22984EFA22C93DBF00069497 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF822C93DBF00069497 /* LaunchScreen.storyboard */; };
 		229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		A59100000000000000000002 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
 		610000000000000000000003 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
 		620000000000000000000003 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
 		707000000000000000000003 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
@@ -943,6 +946,7 @@
 		22D146662E62098800E76E2E /* PythonAxxlimited.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146672E62098800E76E2E /* PythonAxxlimited_35.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
+		A59100000000000000000003 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
 		610000000000000000000004 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
 		620000000000000000000004 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
 		707000000000000000000004 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
@@ -1498,6 +1502,7 @@
 				225F45B0282A4B2D0010E698 /* texlua53A.xcframework in Embed Frameworks */,
 				2243B1B12840ADBF00588B51 /* vimproc.xcframework in Embed Frameworks */,
 				2243B1BA284278F500588B51 /* dash.xcframework in Embed Frameworks */,
+				A22600000000000000000001 /* codex.xcframework in Embed Frameworks */,
 				A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */,
 				2243B1BB284278F500588B51 /* dashA.xcframework in Embed Frameworks */,
 				2243B1BC284278F500588B51 /* dashB.xcframework in Embed Frameworks */,
@@ -2005,6 +2010,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A22600000000000000000002 /* codex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = codex/codex.xcframework; sourceTree = SOURCE_ROOT; };
 		2200010030F7400000000003 /* PhotosUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PhotosUI.framework; path = System/Library/Frameworks/PhotosUI.framework; sourceTree = SDKROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
@@ -2808,6 +2814,7 @@
 		22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited.framework; path = Resources/Frameworks/PythonAxxlimited.framework; sourceTree = SOURCE_ROOT; };
 		22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited_35.framework; path = Resources/Frameworks/PythonAxxlimited_35.framework; sourceTree = SOURCE_ROOT; };
 		22D23117231940B2005B0C12 /* ExtraCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraCommands.swift; sourceTree = "<group>"; };
+		A59100000000000000000004 /* Relay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relay.swift; sourceTree = "<group>"; };
 		610000000000000000000001 /* TerminalTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTheme.swift; sourceTree = "<group>"; };
 		620000000000000000000001 /* TerminalPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPrompt.swift; sourceTree = "<group>"; };
 		707000000000000000000001 /* TerminalFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalFont.swift; sourceTree = "<group>"; };
@@ -2901,7 +2908,7 @@
 			files = (
 				2200010030F7400000000004 /* PhotosUI.framework in Frameworks */,
 				224A904D2ADD0999006DB9CC /* ios_system.xcframework in Frameworks */,
-				2225C1122F685BDD0013F533 /* Kitura in Frameworks */,
+				2225C1122F685BDD0013F533 /* NIOSSL in Frameworks */,
 				227A13642F308E9C006FD5C1 /* SwiftTerm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2912,7 +2919,7 @@
 			files = (
 				2200010030F7400000000001 /* PhotosUI.framework in Frameworks */,
 				228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */,
-				2225C1102F685BD50013F533 /* Kitura in Frameworks */,
+				2225C1102F685BD50013F533 /* NIOSSL in Frameworks */,
 				227EE36E2F0913C000636757 /* SwiftTerm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2923,7 +2930,7 @@
 			files = (
 				2200010030F7400000000002 /* PhotosUI.framework in Frameworks */,
 				228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */,
-				2225C10E2F685BCB0013F533 /* Kitura in Frameworks */,
+				2225C10E2F685BCB0013F533 /* NIOSSL in Frameworks */,
 				2213EE132EE4A148001F0114 /* SwiftTerm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3067,6 +3074,7 @@
 				22B1B83322CBC53700F7C452 /* a-Shell.entitlements */,
 				22984EED22C93DBC00069497 /* AppDelegate.swift */,
 				22D23117231940B2005B0C12 /* ExtraCommands.swift */,
+				A59100000000000000000004 /* Relay.swift */,
 				610000000000000000000010 /* Themes */,
 				610000000000000000000001 /* TerminalTheme.swift */,
 				620000000000000000000001 /* TerminalPrompt.swift */,
@@ -3154,6 +3162,7 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A22600000000000000000002 /* codex.xcframework */,
 				2200010030F7400000000003 /* PhotosUI.framework */,
 				227F058230867C0300FCC674 /* node.xcframework */,
 				A22000000000000000000002 /* rg/rg.xcframework */,
@@ -4089,7 +4098,7 @@
 			name = "a-Shell-noPython";
 			packageProductDependencies = (
 				227A13632F308E9C006FD5C1 /* SwiftTerm */,
-				2225C1112F685BDD0013F533 /* Kitura */,
+				2225C1112F685BDD0013F533 /* NIOSSL */,
 			);
 			productName = "a-Shell";
 			productReference = 224A91702ADD0999006DB9CC /* a-Shell-noPython.app */;
@@ -4116,7 +4125,7 @@
 			name = "a-Shell";
 			packageProductDependencies = (
 				227EE36D2F0913C000636757 /* SwiftTerm */,
-				2225C10F2F685BD50013F533 /* Kitura */,
+				2225C10F2F685BD50013F533 /* NIOSSL */,
 			);
 			productName = "a-Shell";
 			productReference = 22984EEA22C93DBC00069497 /* a-Shell.app */;
@@ -4143,7 +4152,7 @@
 			name = "a-Shell-mini";
 			packageProductDependencies = (
 				2213EE122EE4A148001F0114 /* SwiftTerm */,
-				2225C10D2F685BCB0013F533 /* Kitura */,
+				2225C10D2F685BCB0013F533 /* NIOSSL */,
 			);
 			productName = "a-Shell";
 			productReference = 229D25A6257931E4004A78AC /* a-Shell-mini.app */;
@@ -4263,7 +4272,7 @@
 			mainGroup = 22984EE122C93DBC00069497;
 			packageReferences = (
 				2213EE112EE4A148001F0114 /* XCLocalSwiftPackageReference "SwiftTerm" */,
-				2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "Kitura" */,
+				2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */,
 			);
 			productRefGroup = 22984EEB22C93DBC00069497 /* Products */;
 			projectDirPath = "";
@@ -4493,6 +4502,7 @@
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
 				D91691CFCADBED6F76AE4E4E /* ProgressCommand.swift in Sources */,
 				535000000000000000000002 /* CommandEnvironment.swift in Sources */,
+				A59100000000000000000001 /* Relay.swift in Sources */,
 				610000000000000000000002 /* TerminalTheme.swift in Sources */,
 				620000000000000000000002 /* TerminalPrompt.swift in Sources */,
 				707000000000000000000002 /* TerminalFont.swift in Sources */,
@@ -4525,6 +4535,7 @@
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
 				BE8AFE2BBEDBF93A4910062F /* ProgressCommand.swift in Sources */,
 				535000000000000000000003 /* CommandEnvironment.swift in Sources */,
+				A59100000000000000000003 /* Relay.swift in Sources */,
 				610000000000000000000004 /* TerminalTheme.swift in Sources */,
 				620000000000000000000004 /* TerminalPrompt.swift in Sources */,
 				707000000000000000000004 /* TerminalFont.swift in Sources */,
@@ -4557,6 +4568,7 @@
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
 				B85B646A76EB1C3038FBC891 /* ProgressCommand.swift in Sources */,
 				535000000000000000000004 /* CommandEnvironment.swift in Sources */,
+				A59100000000000000000002 /* Relay.swift in Sources */,
 				610000000000000000000003 /* TerminalTheme.swift in Sources */,
 				620000000000000000000003 /* TerminalPrompt.swift in Sources */,
 				707000000000000000000003 /* TerminalFont.swift in Sources */,
@@ -5580,12 +5592,12 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "Kitura" */ = {
+		2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Kitura/Kitura";
+			repositoryURL = "https://github.com/apple/swift-nio-ssl";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 3.0.1;
+				minimumVersion = 2.37.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -5595,20 +5607,20 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = SwiftTerm;
 		};
-		2225C10D2F685BCB0013F533 /* Kitura */ = {
+		2225C10D2F685BCB0013F533 /* NIOSSL */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "Kitura" */;
-			productName = Kitura;
+			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */;
+			productName = NIOSSL;
 		};
-		2225C10F2F685BD50013F533 /* Kitura */ = {
+		2225C10F2F685BD50013F533 /* NIOSSL */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "Kitura" */;
-			productName = Kitura;
+			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */;
+			productName = NIOSSL;
 		};
-		2225C1112F685BDD0013F533 /* Kitura */ = {
+		2225C1112F685BDD0013F533 /* NIOSSL */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "Kitura" */;
-			productName = Kitura;
+			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */;
+			productName = NIOSSL;
 		};
 		227A13632F308E9C006FD5C1 /* SwiftTerm */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -76,10 +76,18 @@ extension WKWebView {
     }
 
 
+    @objc private func showRemoteAccess(_ sender: UIKeyCommand) {
+        guard let scene = window?.windowScene?.delegate else { return }
+        NotificationCenter.default.post(name: .init("remoteAccessShortcut"), object: scene)
+    }
+
     override open var keyCommands: [UIKeyCommand]? {
         // In case we need keyboard personalization for specific languages
         // var language = textInputMode?.primaryLanguage ?? "en-US"
+        let remote = UIKeyCommand(input: "r", modifierFlags: [.alternate, .command], action: #selector(showRemoteAccess), discoverabilityTitle: "Remote access")
+        if #available(iOS 15, *) { remote.wantsPriorityOverSystemBehavior = true }
         var basicKeyCommands = [
+            remote,
             // UIKeyCommand(input: UIKeyCommand.inputUpArrow, modifierFlags: [], action: #selector(upAction)),
             // UIKeyCommand(input: UIKeyCommand.inputDownArrow, modifierFlags: [], action: #selector(downAction)),
             // UIKeyCommand(input: UIKeyCommand.inputLeftArrow, modifierFlags: [], action: #selector(leftAction)),
