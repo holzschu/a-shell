@@ -24,7 +24,7 @@
 # add a regular expression. If that expression matches the current command, the buttons will 
 # show. A special regexp ("none") is for buttons that should only appear if no commands are running.
 
-# This file corresponds to the default toolbar: first tab, control and escape on the left,
+# This file corresponds to the default toolbar: first the tab, control and escape symbols on the left,
 # then a line with "separator" to indicate the separation between the two groups, 
 # then showBrowser and the arrows on the right (combined arrows on iPhones, 4 arrow buttons on iPads).
 # To customize the toolbar, simply edit this file. To go back to the default toolbar, remove it.
@@ -32,9 +32,9 @@
 # showBrowser remains hidden until you activate the internalbrowser
 
 # Button icon				action				parameter
-tab		insertString		\u{0009}
-ctrl			systemAction		control
-esc						insertString		\u{001B}
+arrow.right.to.line.alt		insertString		\u{0009}
+chevron.up.square			systemAction		control
+escape						insertString		\u{001B}
 
 [
 character.cursor.ibeam	insertString	[

@@ -1897,9 +1897,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     if buttonParts[1] == "systemAction", buttonParts[2] == "paste" {
                         button!.accessibilityLabel = "Paste"
                     }
-                    if buttonParts[0] == "tab" { button!.accessibilityLabel = "Tab" }
-                    if buttonParts[0] == "ctrl" { button!.accessibilityLabel = "Control" }
-                    if buttonParts[0] == "esc" { button!.accessibilityLabel = "Escape" }
+                    if buttonParts[0] == "tab" || buttonParts[0] == "arrow.right.to.line.alt" { button!.accessibilityLabel = "Tab" }
+                    if buttonParts[0] == "ctrl" || buttonParts[0] == "chevron.up.square" { button!.accessibilityLabel = "Control" }
+                    if buttonParts[0] == "esc" || buttonParts[0] == "escape" { button!.accessibilityLabel = "Escape" }
                     if buttonParts[0] == "." { button!.accessibilityLabel = "Period" }
                     if buttonParts[0] == "/" { button!.accessibilityLabel = "Slash" }
                     button!.tag = activeTag
