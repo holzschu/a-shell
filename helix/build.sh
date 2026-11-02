@@ -102,7 +102,9 @@ rust_build() {
   prepare
   rustup target add --toolchain 1.96.1 "$target"
   echo "Build Helix staticlib for $target"
-  (cd "$source" && "$cargo" +1.96.1 build --locked --release --target "$target" -p helix-term --lib --no-default-features) >"$cache/embedded-$target.log" 2>&1 || {
+  sdk=$(xcrun --sdk "$sdk_name" --show-sdk-path)
+  echo CFLAGS="-isysroot $sdk" 
+  (cd "$source" && env CFLAGS="-isysroot $sdk" "$cargo" +1.96.1 build --locked --release --target "$target" -p helix-term --lib --no-default-features) >"$cache/embedded-$target.log" 2>&1 || {
     tail -n 30 "$cache/embedded-$target.log" >&2
     return 1
   }
