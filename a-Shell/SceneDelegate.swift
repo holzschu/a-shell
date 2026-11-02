@@ -621,10 +621,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     @objc private func systemAction(_ sender: UIBarButtonItem) {
         // NSLog("Received systemAction. Position x = \(tapPosition.x) y = \(tapPosition.y)")
         if let title = title(sender) {
+            if title == "paste" {
+                if let text = UIPasteboard.general.string { confirmPaste(text) }
+                return
+            }
             if (terminalView != nil) && terminalView!.isFirstResponder {
                 switch (title) {
-                case "paste":
-                    terminalView?.paste(sender)
                 case "up":
                     sendArrow(direction: title)
                 case "down":
@@ -726,11 +728,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                     // These are more specific to ACE-editor:
-                case "paste":
-                    if let pastedString = UIPasteboard.general.string {
-                        // NSLog("Sending text to paste: \(pastedString)")
-                        webView?.paste(pastedString)
-                    }
                 case "copy":
                     commandString = "editor.commands.exec('copy');"
                 case "cut":
@@ -900,6 +897,39 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     
     
+    @objc func receiveToolbarPaste(_ text: String) {
+        confirmPaste(text)
+    }
+
+    func confirmPaste(_ text: String, intoTerminal: Bool? = nil, confirmedPaste: (() -> Void)? = nil) {
+        guard !text.isEmpty else { return }
+        let pasteIntoTerminal = intoTerminal ?? (terminalView?.isFirstResponder == true)
+        let promptBracketed = terminalView?.getTerminal().bracketedPasteMode == true
+        let send = { [weak self] in
+            guard let self else { return }
+            if !pasteIntoTerminal { self.webView?.paste(text) }
+            else if let terminal = self.terminalView {
+                if let confirmedPaste { confirmedPaste(); return }
+                let bracketed = terminal.getTerminal().bracketedPasteMode
+                if bracketed { terminal.send(data: Array("\u{1b}[200~".utf8)[...]) }
+                terminal.send(data: Array(text.utf8)[...])
+                if bracketed { terminal.send(data: Array("\u{1b}[201~".utf8)[...]) }
+            }
+        }
+        guard pasteIntoTerminal && !promptBracketed && text.contains(where: { $0.isNewline }) else { send(); return }
+        guard let root = window?.rootViewController, root.presentedViewController == nil else { return }
+        let alert = UIAlertController(title: "Paste multiple lines?", message: "Multiple lines may run shell commands.", preferredStyle: .alert)
+        let finish: (Bool) -> Void = { [weak self] confirmed in
+            if confirmed { send() }
+            DispatchQueue.main.async {
+                self?.terminalView?.becomeFirstResponder()
+            }
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in finish(false) })
+        alert.addAction(UIAlertAction(title: "Paste", style: .default) { _ in finish(true) })
+        root.present(alert, animated: true)
+    }
+
     @objc func hideKeyboard() {
         DispatchQueue.main.async {
             guard self.terminalView != nil else { return }
