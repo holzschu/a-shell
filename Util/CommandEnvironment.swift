@@ -135,6 +135,7 @@ working_dir = ~/Documents/sunpy
     setenv("PYZMQ_BACKEND", "cffi", 1)
     // Node modules installed in ~/Library/node_modules resolve from any directory; npm itself is in $APPDIR/npm.
     setenv("NODE_PATH", libraryURL.path + "/node_modules", 1)
+    setenv("NPM_CONFIG_PREFIX", libraryURL.path, 1)
     // Frameworks are in $APPDIR/Frameworks:
     setenv("DYLD_FRAMEWORK_PATH", hostBundle.resourcePath! + "/Frameworks", 1)
     setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
