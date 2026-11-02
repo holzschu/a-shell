@@ -1,0 +1,437 @@
+--- a/app-server-transport/src/transport/stdio.rs
++++ b/app-server-transport/src/transport/stdio.rs
+@@ -13,9 +13,11 @@
+ use codex_app_server_protocol::InitializeParams;
+ use codex_app_server_protocol::JSONRPCMessage;
+ use codex_app_server_protocol::JSONRPCRequest;
++#[cfg(not(target_os = "ios"))]
+ use std::io::BufRead;
+ use std::io::ErrorKind;
+ use std::io::Result as IoResult;
++#[cfg(not(target_os = "ios"))]
+ use std::io::Write;
+ use tokio::sync::mpsc;
+ use tokio::sync::oneshot;
+@@ -25,13 +27,16 @@
+ use tracing::error;
+ use tracing::info;
+ 
++#[cfg(target_os = "ios")]
++use codex_uds::OwnedStdio;
++
+ pub async fn start_stdio_connection(
+     transport_event_tx: mpsc::Sender<TransportEvent>,
+     initialize_client_name_tx: oneshot::Sender<String>,
+     install_shutdown_signal_handler: bool,
+ ) -> IoResult<JoinHandle<()>> {
+     let shutdown_signal = CancellationToken::new();
+-    #[cfg(unix)]
++    #[cfg(all(unix, not(target_os = "ios")))]
+     if install_shutdown_signal_handler {
+         use signal_hook::consts::SIGTERM;
+         use signal_hook::iterator::Signals;
+@@ -48,6 +53,18 @@
+                     shutdown_signal.cancel();
+                 }
+             })?;
++    }
++    #[cfg(target_os = "ios")]
++    let (native_input, mut native_output) = OwnedStdio::pair()?;
++    #[cfg(target_os = "ios")]
++    let io_shutdown = CancellationToken::new();
++    #[cfg(target_os = "ios")]
++    let io_cancel_guard = io_shutdown.clone().drop_guard();
++    #[cfg(target_os = "ios")]
++    if install_shutdown_signal_handler {
++        info!(
++            "Embedded iOS stdio closes on EOF; it does not own the app's SIGTERM handler or process-exit deadline"
++        );
+     }
+     let connection_id = next_connection_id();
+     let (writer_tx, mut writer_rx) = mpsc::channel::<QueuedOutgoingMessage>(CHANNEL_CAPACITY);
+@@ -67,6 +84,7 @@
+     // alive while the client leaves stdin open. This process-owned thread may
+     // remain blocked until process exit, but is not joined by the runtime.
+     let (stdin_tx, mut stdin_rx) = mpsc::channel(/*buffer*/ 1);
++    #[cfg(not(target_os = "ios"))]
+     std::thread::Builder::new()
+         .name("app-server-stdin".to_string())
+         .spawn(move || {
+@@ -77,10 +95,36 @@
+             }
+         })?;
+ 
++    #[cfg(target_os = "ios")]
++    let stdin_task = {
++        let shutdown = io_shutdown.clone();
++        tokio::spawn(async move {
++            use tokio::io::AsyncBufReadExt;
++            let mut lines = tokio::io::BufReader::new(native_input).lines();
++            tokio::select! {
++                _ = shutdown.cancelled() => {}
++                _ = async {
++                    loop {
++                        let line = match lines.next_line().await {
++                            Ok(Some(line)) => Ok(line),
++                            Ok(None) => break,
++                            Err(error) => Err(error),
++                        };
++                        let failed = line.is_err();
++                        if stdin_tx.send(line).await.is_err() || failed {
++                            break;
++                        }
++                    }
++                } => {}
++            }
++        })
++    };
++
+     // Keep stdout's blocking writes off Tokio's pool too. The forwarding future
+     // owns writer_rx so cancelling it also releases producers stuck on a full queue.
+     let (stdout_tx, mut stdout_rx) =
+         mpsc::channel::<(String, oneshot::Sender<()>)>(/*buffer*/ 1);
++    #[cfg(not(target_os = "ios"))]
+     std::thread::Builder::new()
+         .name("app-server-stdout".to_string())
+         .spawn(move || {
+@@ -93,6 +137,28 @@
+                 let _ = written_tx.send(());
+             }
+         })?;
++
++    #[cfg(target_os = "ios")]
++    let stdout_task = {
++        use tokio::io::AsyncWriteExt;
++        let shutdown = io_shutdown.clone();
++        let connection_shutdown = shutdown_signal.clone();
++        tokio::spawn(async move {
++            tokio::select! {
++                _ = shutdown.cancelled() => {}
++                _ = async {
++                    while let Some((json, written_tx)) = stdout_rx.recv().await {
++                        if let Err(err) = native_output.write_all(json.as_bytes()).await {
++                            error!("Failed to write to stdout: {err}");
++                            connection_shutdown.cancel();
++                            break;
++                        }
++                        let _ = written_tx.send(());
++                    }
++                } => {}
++            }
++        })
++    };
+ 
+     let transport_event_tx_for_reader = transport_event_tx.clone();
+     let read_messages = async move {
+@@ -124,6 +190,7 @@
+ 
+         // EOF can finish the transport before RPC or runtime cleanup. Start
+         // the same process deadline even if no SIGTERM arrives.
++        #[cfg(not(target_os = "ios"))]
+         if cfg!(unix) && install_shutdown_signal_handler {
+             start_shutdown_watchdog();
+         }
+@@ -151,20 +218,31 @@
+     };
+ 
+     Ok(tokio::spawn(async move {
++        #[cfg(target_os = "ios")]
++        let _io_cancel_guard = io_cancel_guard;
+         tokio::select! {
+             _ = shutdown_signal.cancelled() => {
+                 // Cancelling both forwarding futures drops their queues before
+                 // connection teardown, including when EOF already began draining.
++                #[cfg(not(target_os = "ios"))]
+                 info!("SIGTERM received; closing stdio connection (45s shutdown deadline)");
++                #[cfg(target_os = "ios")]
++                info!("Embedded stdio output closed; closing connection");
+                 let _ = transport_event_tx
+                     .send(TransportEvent::ConnectionClosed { connection_id })
+                     .await;
+             }
+             _ = async move { tokio::join!(read_messages, write_messages); } => {}
+         }
++        #[cfg(target_os = "ios")]
++        {
++            io_shutdown.cancel();
++            let _ = tokio::join!(stdin_task, stdout_task);
++        }
+     }))
+ }
+ 
++#[cfg(not(target_os = "ios"))]
+ fn start_shutdown_watchdog() {
+     // EOF and SIGTERM can both start cleanup; keep the first process deadline.
+     static STARTED: std::sync::Once = std::sync::Once::new();
+--- a/exec-server/src/server/transport.rs
++++ b/exec-server/src/server/transport.rs
+@@ -134,9 +134,13 @@
+     http_client_factory: HttpClientFactory,
+     request_dispatch_mode: RequestDispatchMode,
+ ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
++    #[cfg(target_os = "ios")]
++    let (reader, writer) = codex_uds::OwnedStdio::pair()?;
++    #[cfg(not(target_os = "ios"))]
++    let (reader, writer) = (io::stdin(), io::stdout());
+     run_stdio_connection_with_io(
+-        io::stdin(),
+-        io::stdout(),
++        reader,
++        writer,
+         runtime_paths,
+         telemetry,
+         http_client_factory,
+--- a/stdio-to-uds/src/lib.rs
++++ b/stdio-to-uds/src/lib.rs
+@@ -15,13 +15,18 @@
+         .with_context(|| format!("failed to connect to socket at {}", socket_path.display()))?;
+     let (mut socket_reader, mut socket_writer) = tokio::io::split(stream);
+ 
++    #[cfg(target_os = "ios")]
++    let (mut stdin, mut stdout) = codex_uds::OwnedStdio::pair()?;
++
+     let copy_socket_to_stdout = async {
++        #[cfg(not(target_os = "ios"))]
+         let mut stdout = tokio::io::stdout();
+         tokio::io::copy(&mut socket_reader, &mut stdout).await?;
+         stdout.flush().await?;
+         Ok(())
+     };
+     let copy_stdin_to_socket = async {
++        #[cfg(not(target_os = "ios"))]
+         let mut stdin = tokio::io::stdin();
+         tokio::io::copy(&mut stdin, &mut socket_writer)
+             .await
+--- a/uds/src/lib.rs
++++ b/uds/src/lib.rs
+@@ -1,4 +1,9 @@
+ //! Cross-platform async Unix domain socket helpers.
++
++#[cfg(target_os = "ios")]
++mod stdio_ios;
++#[cfg(target_os = "ios")]
++pub use stdio_ios::OwnedStdio;
+ 
+ #[cfg(unix)]
+ mod daemon_directory;
+--- /dev/null
++++ b/uds/src/stdio_ios.rs
+@@ -0,0 +1,218 @@
++//! Cancellable stdio owned by one embedded command, without global stdio locks.
++
++use std::fs::File;
++use std::io;
++use std::io::Read;
++use std::io::Write;
++use std::os::fd::AsRawFd;
++use std::os::fd::BorrowedFd;
++use std::pin::Pin;
++use std::sync::Arc;
++use std::task::Context;
++use std::task::Poll;
++use tokio::io::AsyncRead;
++use tokio::io::AsyncWrite;
++use tokio::io::ReadBuf;
++use tokio::io::unix::AsyncFd;
++
++// Xcode iOS SDK sys/fcntl.h; libc 0.2.186 does not export these Darwin commands.
++const F_SETNOSIGPIPE: libc::c_int = 73;
++const F_GETNOSIGPIPE: libc::c_int = 74;
++
++struct Descriptors {
++    files: [File; 2],
++    original_flags: [i32; 2],
++    // Sockets use per-write MSG_NOSIGNAL and keep their socket policy unchanged.
++    original_no_sigpipe: Option<i32>,
++}
++
++impl Drop for Descriptors {
++    fn drop(&mut self) {
++        for (file, flags) in self.files.iter().zip(self.original_flags) {
++            // Duplicates share file status flags with the caller. Restore only
++            // after both I/O tasks have released their descriptors.
++            if unsafe { libc::fcntl(file.as_raw_fd(), libc::F_SETFL, flags) } == -1 {
++                eprintln!(
++                    "Cannot restore app-server stdio flags: {}",
++                    io::Error::last_os_error()
++                );
++            }
++        }
++        if let Some(original) = self.original_no_sigpipe {
++            if unsafe { libc::fcntl(self.files[1].as_raw_fd(), F_SETNOSIGPIPE, original) } == -1 {
++                eprintln!(
++                    "Cannot restore app-server SIGPIPE flag: {}",
++                    io::Error::last_os_error()
++                );
++            }
++        }
++    }
++}
++
++struct Descriptor {
++    descriptors: Arc<Descriptors>,
++    index: usize,
++}
++
++impl Descriptor {
++    fn file(&self) -> &File {
++        &self.descriptors.files[self.index]
++    }
++}
++
++impl AsRawFd for Descriptor {
++    fn as_raw_fd(&self) -> i32 {
++        self.file().as_raw_fd()
++    }
++}
++
++/// Invocation-owned stdin/stdout with shared restoration after both are released.
++pub struct OwnedStdio {
++    fd: AsyncFd<Descriptor>,
++}
++
++impl OwnedStdio {
++    /// Duplicate the caller descriptors and snapshot both before enabling nonblocking I/O.
++    pub fn pair() -> io::Result<(Self, Self)> {
++        // The native command wrapper retains the caller's stdio while this runs.
++        let files = unsafe {
++            [
++                File::from(BorrowedFd::borrow_raw(0).try_clone_to_owned()?),
++                File::from(BorrowedFd::borrow_raw(1).try_clone_to_owned()?),
++            ]
++        };
++        let mut original_flags = [0; 2];
++        // Snapshot both before changing either: stdin and stdout may be dup'ed
++        // from the same PTY and therefore share their file status flags.
++        for (file, flags) in files.iter().zip(&mut original_flags) {
++            *flags = unsafe { libc::fcntl(file.as_raw_fd(), libc::F_GETFL) };
++            if *flags == -1 {
++                return Err(io::Error::last_os_error());
++            }
++        }
++        let mut output_stat = std::mem::MaybeUninit::<libc::stat>::uninit();
++        if unsafe { libc::fstat(files[1].as_raw_fd(), output_stat.as_mut_ptr()) } == -1 {
++            return Err(io::Error::last_os_error());
++        }
++        let output_is_socket =
++            unsafe { output_stat.assume_init() }.st_mode & libc::S_IFMT == libc::S_IFSOCK;
++        let original_no_sigpipe = if output_is_socket {
++            None
++        } else {
++            let original = unsafe { libc::fcntl(files[1].as_raw_fd(), F_GETNOSIGPIPE) };
++            if original == -1 {
++                return Err(io::Error::last_os_error());
++            }
++            Some(original)
++        };
++        let descriptors = Arc::new(Descriptors {
++            files,
++            original_flags,
++            original_no_sigpipe,
++        });
++        // Use Darwin's descriptor policy, not a process-wide signal handler or
++        // a thread mask that an asynchronous task could leave on another worker.
++        // A socket that has shut down rejects socket-option restoration (EINVAL).
++        // Use MSG_NOSIGNAL there; pipes and PTYs retain their descriptor policy.
++        if descriptors.original_no_sigpipe.is_some()
++            && unsafe { libc::fcntl(descriptors.files[1].as_raw_fd(), F_SETNOSIGPIPE, 1) } == -1
++        {
++            return Err(io::Error::last_os_error());
++        }
++        for (file, flags) in descriptors.files.iter().zip(original_flags) {
++            if unsafe { libc::fcntl(file.as_raw_fd(), libc::F_SETFL, flags | libc::O_NONBLOCK) }
++                == -1
++            {
++                return Err(io::Error::last_os_error());
++            }
++        }
++        let input = Self {
++            fd: AsyncFd::new(Descriptor {
++                descriptors: Arc::clone(&descriptors),
++                index: 0,
++            })?,
++        };
++        let output = Self {
++            fd: AsyncFd::new(Descriptor {
++                descriptors,
++                index: 1,
++            })?,
++        };
++        Ok((input, output))
++    }
++}
++
++impl AsyncRead for OwnedStdio {
++    fn poll_read(
++        self: Pin<&mut Self>,
++        cx: &mut Context<'_>,
++        buffer: &mut ReadBuf<'_>,
++    ) -> Poll<io::Result<()>> {
++        if buffer.remaining() == 0 {
++            return Poll::Ready(Ok(()));
++        }
++        loop {
++            let mut ready = std::task::ready!(self.fd.poll_read_ready(cx))?;
++            match ready.try_io(|fd| fd.get_ref().file().read(buffer.initialize_unfilled())) {
++                Ok(Ok(count)) => {
++                    buffer.advance(count);
++                    return Poll::Ready(Ok(()));
++                }
++                Ok(Err(error)) if error.kind() == io::ErrorKind::Interrupted => continue,
++                Ok(Err(error)) => return Poll::Ready(Err(error)),
++                Err(_) => continue,
++            }
++        }
++    }
++}
++
++impl AsyncWrite for OwnedStdio {
++    fn poll_write(
++        self: Pin<&mut Self>,
++        cx: &mut Context<'_>,
++        bytes: &[u8],
++    ) -> Poll<io::Result<usize>> {
++        if bytes.is_empty() {
++            return Poll::Ready(Ok(0));
++        }
++        loop {
++            let mut ready = std::task::ready!(self.fd.poll_write_ready(cx))?;
++            match ready.try_io(|fd| {
++                let descriptor = fd.get_ref();
++                if descriptor.descriptors.original_no_sigpipe.is_none() {
++                    let count = unsafe {
++                        libc::send(
++                            descriptor.as_raw_fd(),
++                            bytes.as_ptr().cast(),
++                            bytes.len(),
++                            libc::MSG_NOSIGNAL,
++                        )
++                    };
++                    if count == -1 {
++                        Err(io::Error::last_os_error())
++                    } else {
++                        Ok(count as usize)
++                    }
++                } else {
++                    descriptor.file().write(bytes)
++                }
++            }) {
++                Ok(Ok(count)) => return Poll::Ready(Ok(count)),
++                Ok(Err(error)) if error.kind() == io::ErrorKind::Interrupted => continue,
++                Ok(Err(error)) => return Poll::Ready(Err(error)),
++                Err(_) => continue,
++            }
++        }
++    }
++
++    fn poll_flush(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<io::Result<()>> {
++        // Writes go directly to the descriptor; this adapter has no buffer.
++        Poll::Ready(Ok(()))
++    }
++
++    fn poll_shutdown(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<io::Result<()>> {
++        // The caller owns the underlying stream. Closing its write side would
++        // affect other duplicated descriptors; dropping only releases ours.
++        Poll::Ready(Ok(()))
++    }
++}
