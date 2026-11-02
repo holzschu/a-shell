@@ -1,4 +1,4 @@
-.TH CONFIG 1 "October 23, 2026"
+.TH CONFIG 1 "November 3, 2026"
 .SH NAME
 config \- Configure \fIa-Shell\fP.
 .SH SYNOPSIS
@@ -16,6 +16,7 @@ config \- Configure \fIa-Shell\fP.
   [ -d | --default ]
   [ --fonts ]
   [ --theme [ \fItheme_name\fP ] ]
+  [ --prompt [ \fIprompt_name\fP ] ]
   [ --show ]
 .SH DESCRIPTION
 \fBconfig\fP can change the settings of the current session,
@@ -66,8 +67,8 @@ Possible values for \fILIGATURES\fP: normal, contextual, none...
 Create a configuration file to change the toolbar.
 .TP
 \fB-g | --global\fP
-Extend settings to all windows currently open; with \fB--theme\fP, also save
-the selection.
+Extend settings to all windows currently open; with \fB--theme\fP or
+\fB--prompt\fP, also save the selection.
 .sp
 Font and size changes with \fB-g\fP also save the selection in Settings.
 .TP
@@ -92,12 +93,24 @@ Custom themes: put \fI<NAME>.json\fP in \fIDocuments/Themes\fP;
 \fBconfig --theme\fP \fINAME\fP \fB-g\fP applies and saves;
 Settings shows Custom file and its name.
 .sp
-Names accept an optional \fI.json\fP extension and ignore case.
+Theme names accept an optional \fI.json\fP extension and ignore case.
 .sp
 \fB--theme factory\fP: use system colors and the default ANSI palette.
 .sp
 \fB--theme default\fP: restore the saved theme and color overrides without
 changing font settings.
+.TP
+\fB--prompt\fP [ \fINAME\fP ]
+List prompt presets, or select one for this window.
+.sp
+\fB--prompt custom\fP: use \fBPS1\fP unchanged (including a \fBPS1\fP set in
+\fI.profile\fP).
+.sp
+\fB--prompt default\fP: use the prompt saved in Settings; \fB-g\fP applies it to
+all windows.
+.sp
+Presets use the theme ANSI palette and take precedence over \fBPS1\fP until
+Custom is selected.
 .TP
 \fB--show\fP
 Show current settings and the selected ANSI palette.
