@@ -99,14 +99,15 @@ extension SceneDelegate {
             if autocompleteCommands {
                 // Autocompleting a command:
                 // The aliases go first:
-                let aliasArray = aliasesAsArray() as! [String]?
-                for suggestion in aliasArray! { // alphabetical order
-                    if suggestion.hasPrefix(mainCommand) {
-                        var shortenedSugg = suggestion
-                        shortenedSugg.removeFirst(mainCommand.count)
-                        if (!autocompleteSuggestions.contains(shortenedSugg)) && (!autocompleteSuggestions.contains(shortenedSugg + " ")) {
-                            // add a space so we're ready with the arguments
-                            autocompleteSuggestions.append(shortenedSugg + " ")
+                if let aliasArray = aliasesAsArray() as? [String]? {
+                    for suggestion in aliasArray! { // alphabetical order
+                        if suggestion.hasPrefix(mainCommand) {
+                            var shortenedSugg = suggestion
+                            shortenedSugg.removeFirst(mainCommand.count)
+                            if (!autocompleteSuggestions.contains(shortenedSugg)) && (!autocompleteSuggestions.contains(shortenedSugg + " ")) {
+                                // add a space so we're ready with the arguments
+                                autocompleteSuggestions.append(shortenedSugg + " ")
+                            }
                         }
                     }
                 }
@@ -643,7 +644,6 @@ extension SceneDelegate {
             setenv("COLUMNS", "\(width)".toCString(), 1)
             ios_setenv("COLUMNS", "\(width)".toCString(), 1)
         }
-        NSLog("Resized window: \(newCols) x \(newRows) == \(getenv("COLUMNS")) x \(getenv("LINES"))")
     }
     
     // None of these are called.
