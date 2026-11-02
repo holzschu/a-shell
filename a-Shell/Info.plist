@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>AppGroupIdentifier</key>
+	<string>group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDocumentTypes</key>
@@ -137,21 +139,17 @@
 	<string>a-Shell would like to access your calendars to read and write events</string>
 	<key>NSCameraUsageDescription</key>
 	<string>a-Shell would like to access your camera</string>
-	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>a-Shell would like to access your calendars to read and write events</string>
 	<key>NSContactsUsageDescription</key>
 	<string>a-Shell would like to access your contacts</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>a-Shell would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>a-Shell reads the photos and videos you allow to view them and export originals for shell commands.</string>
-	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
-	<true/>
 	<key>NSRemindersFullAccessUsageDescription</key>
 	<string>a-Shell would like to access your reminders to read and write events</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
-		<key>iCloud.$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell</key>
+		<key>iCloud.AsheKube.app.a-Shell</key>
 		<dict>
 			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
 			<true/>
@@ -167,6 +165,8 @@
 		<string>GetFileIntent</string>
 		<string>PutFileIntent</string>
 	</array>
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -220,7 +220,5 @@
 	</array>
 	<key>UISupportsDocumentBrowser</key>
 	<true/>
-	<key>AppGroupIdentifier</key>
-	<string>group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell</string>
 </dict>
 </plist>
