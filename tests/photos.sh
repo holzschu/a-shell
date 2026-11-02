@@ -3,6 +3,8 @@
 photos_contract() {
     photos > photos-root.txt 2> photos-first.err || return 1
     root=$(cat photos-root.txt)
+    case "$root" in '~/Documents/'*) ;; *) return 1 ;; esac
+    root="$HOME/${root#\~/}"
     test -f "$root/.photos-index.json" || return 1
     ls "$root" > photos-list.txt || return 1
     find "$root" -type f > photos-find.txt || return 1
