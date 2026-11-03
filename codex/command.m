@@ -15,7 +15,7 @@
 #import <UIKit/UIKit.h>
 #include "ios_system.h"
 
-extern int codex_embedded_run(int argc, const char *const *argv);
+extern int codex_embedded_run(int argc, const char *const *argv, int cancel_fd);
 extern int codex_embedded_uses_tui(int argc, const char *const *argv);
 extern int codex_ios_prepare_home(const char *const env[]);
 extern int ios_opentty(void);
@@ -23,6 +23,7 @@ extern void ios_closetty(void);
 static pthread_mutex_t command_lock = PTHREAD_MUTEX_INITIALIZER;
 static char **command_environment;
 static int command_error = -1;
+static int command_cancel = -1;
 static char **copy_tool_strings(const char *const *values);
 static void free_tool_strings(char **values);
 
@@ -55,19 +56,50 @@ static int default_codex_home(char ***environment) {
     return 0;
 }
 
-// The command lock and runtime join keep this immutable snapshot alive for workers.
+// The command lock and join retain this snapshot for runtime-owned workers.
 const char *const *codex_ios_command_environment(void) {
     return (const char *const *)command_environment;
 }
 
-// Rust duplicates this command-thread stream before starting any runtime workers.
+// Rust duplicates this captured stream on its joined thread before starting workers.
 int codex_ios_command_stderr(void) {
     return command_error;
 }
 
-// Capture errors occur on this command thread, before Rust has an owned writer.
+// The joined thread has a diagnostic stream before Rust has an owned writer.
 void codex_ios_stderr_capture_error(int error) {
     fprintf(thread_stderr, "Cannot capture Codex stderr (errno %d)\n", error);
+}
+
+// Confirm readiness without consuming the byte needed by synchronous readers.
+int codex_ios_cancellation_ready(void) {
+    struct pollfd descriptor = {command_cancel, POLLIN, 0};
+    int ready;
+    do { ready = poll(&descriptor, 1, 0); } while (ready < 0 && errno == EINTR);
+    if (ready < 0) return -errno;
+    if (descriptor.revents & POLLNVAL) return -EBADF;
+    if (descriptor.revents & POLLERR) return -EIO;
+    return (descriptor.revents & (POLLIN | POLLHUP)) != 0;
+}
+
+// Synchronous CLI prompts must wake too; otherwise runtime cancellation cannot
+// be polled and the host would wait forever for a blocked stdin read.
+ssize_t codex_ios_read_stdin(void *bytes, size_t length) {
+    if (!length) return 0;
+    struct pollfd descriptors[] = {{STDIN_FILENO, POLLIN, 0}, {command_cancel, POLLIN, 0}};
+    for (;;) {
+        int ready = poll(descriptors, 2, -1);
+        if (ready < 0) {
+            if (errno == EINTR) continue;
+            return -1;
+        }
+        if (descriptors[1].revents) { errno = ECANCELED; return -1; }
+        if (descriptors[0].revents) {
+            ssize_t count = read(STDIN_FILENO, bytes, length);
+            if (count < 0 && errno == EINTR) continue;
+            return count;
+        }
+    }
 }
 
 const char *codex_ios_command_getenv(const char *name) {
@@ -150,6 +182,13 @@ unsigned char *codex_ios_clipboard_png(size_t *length) {
 
 struct command_cleanup {
     int saved[2];
+    int cancel[2];
+    int argc;
+    char **argv;
+    FILE *error_stream;
+    pthread_t runtime_thread;
+    int runtime_started;
+    int returning;
     char **environment;
     int status;
     int opened_tty;
@@ -208,6 +247,32 @@ int codex_ios_terminal_size(unsigned short *columns, unsigned short *rows) {
 
 static void restore_command(void *context) {
     struct command_cleanup *state = context;
+    int prior_cancel_state;
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &prior_cancel_state);
+    if (state->runtime_started) {
+        // pthread cancellation does not drop Rust guards. Request shutdown and
+        // join before releasing any streams, environment or terminal state.
+        char cancel = 1;
+        while (write(state->cancel[1], &cancel, 1) < 0 && errno == EINTR) {}
+        int error = pthread_join(state->runtime_thread, NULL);
+        // Restoring borrowed streams after a failed join would race live Rust.
+        if (error) abort();
+    }
+    command_cancel = -1;
+    for (int fd = 0; fd < 2; fd++) {
+        if (state->cancel[fd] >= 0) close(state->cancel[fd]);
+    }
+    if (state->resize_handler_saved) {
+        struct sigaction handler;
+        if (sigaction(SIGWINCH, NULL, &handler)) {
+            state->status = 1;
+            fprintf(thread_stderr, "Cannot retain Codex resize handler (errno %d)\n", errno);
+        } else if (handler.sa_handler != SIG_DFL && handler.sa_handler != SIG_IGN &&
+                   (codex_resize_handler_saved || handler.sa_handler != state->resize_handler.sa_handler)) {
+            codex_resize_handler = handler;
+            codex_resize_handler_saved = 1;
+        }
+    }
     if (state->signal_mask_saved && pthread_sigmask(SIG_SETMASK, &state->signal_mask, NULL)) {
         state->status = 1;
         fprintf(thread_stderr, "Cannot restore Codex signal mask; restart the app\n");
@@ -238,6 +303,14 @@ static void restore_command(void *context) {
     command_error = -1;
     free_tool_strings(state->environment);
     pthread_mutex_unlock(&command_lock);
+    if (state->returning) pthread_setcancelstate(prior_cancel_state, NULL);
+}
+
+static void *run_command(void *context) {
+    struct command_cleanup *state = context;
+    thread_stderr = state->error_stream;
+    state->status = codex_embedded_run(state->argc, (const char *const *)state->argv, state->cancel[0]);
+    return NULL;
 }
 
 int codex_ios_main(int argc, char **argv) {
@@ -246,7 +319,8 @@ int codex_ios_main(int argc, char **argv) {
         return 1;
     }
     FILE *streams[] = {thread_stdin, thread_stdout, thread_stderr};
-    struct command_cleanup state = {.saved = {-1, -1}, .status = 1};
+    struct command_cleanup state = {.saved = {-1, -1}, .cancel = {-1, -1},
+        .argc = argc, .argv = argv, .error_stream = streams[2], .status = 1};
     // ios_system can terminate a command with pthread_exit or pthread_cancel.
     // Register before the first descriptor change; pop also covers normal returns.
     pthread_cleanup_push(restore_command, &state);
@@ -319,19 +393,32 @@ int codex_ios_main(int argc, char **argv) {
         }
     }
     terminal_has_mode = tcgetattr(terminal_input, &terminal_mode) == 0;
-    state.status = codex_embedded_run(argc, (const char *const *)argv);
-    if (state.resize_handler_saved) {
-        struct sigaction handler;
-        if (sigaction(SIGWINCH, NULL, &handler)) {
-            state.status = 1;
-            fprintf(thread_stderr, "Cannot retain Codex resize handler (errno %d)\n", errno);
-        } else if (handler.sa_handler != SIG_DFL && handler.sa_handler != SIG_IGN &&
-                   (codex_resize_handler_saved || handler.sa_handler != state.resize_handler.sa_handler)) {
-            codex_resize_handler = handler;
-            codex_resize_handler_saved = 1;
-        }
+    if (pipe(state.cancel) < 0 || fcntl(state.cancel[0], F_SETFL, O_NONBLOCK) < 0) {
+        fprintf(thread_stderr, "Cannot create Codex cancellation pipe (errno %d)\n", errno);
+        goto restore;
     }
+    command_cancel = state.cancel[0];
+    // Keep Rust off the cancellable ios_system thread and its small stack.
+    pthread_attr_t attributes;
+    int runtime_error = pthread_attr_init(&attributes);
+    if (!runtime_error) {
+        runtime_error = pthread_attr_setstacksize(&attributes, 16 * 1024 * 1024);
+        if (!runtime_error) runtime_error = pthread_create(&state.runtime_thread, &attributes, run_command, &state);
+        pthread_attr_destroy(&attributes);
+    }
+    if (runtime_error) {
+        fprintf(thread_stderr, "Cannot start Codex main thread (errno %d)\n", runtime_error);
+        goto restore;
+    }
+    state.runtime_started = 1;
+    runtime_error = pthread_join(state.runtime_thread, NULL);
+    if (runtime_error) {
+        fprintf(thread_stderr, "Cannot join Codex main thread (errno %d)\n", runtime_error);
+        goto restore;
+    }
+    state.runtime_started = 0;
 restore:
+    state.returning = 1;
     pthread_cleanup_pop(1);
     return state.status;
 }

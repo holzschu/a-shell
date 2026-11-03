@@ -29,9 +29,15 @@ pub unsafe extern "C" fn codex_embedded_uses_tui(argc: c_int, argv: *const *cons
 }
 
 /// The host serializes calls and supplies valid NUL-terminated argv entries.
-/// All runtime workers must finish before the host restores descriptors.
+/// cancel_fd is a nonblocking pipe reader, retained until this call returns.
+/// Cancellation leaves it readable until all runtime workers have finished.
+/// Runtime-owned workers must finish before the host restores descriptors.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn codex_embedded_run(argc: c_int, argv: *const *const c_char) -> c_int {
+pub unsafe extern "C" fn codex_embedded_run(
+    argc: c_int,
+    argv: *const *const c_char,
+    cancel_fd: c_int,
+) -> c_int {
     #[cfg(target_os = "ios")]
     let _stderr_guard = {
         use std::os::fd::BorrowedFd;
@@ -57,22 +63,8 @@ pub unsafe extern "C" fn codex_embedded_run(argc: c_int, argv: *const *const c_c
     std::panic::set_hook(Box::new(|info| eprintln!("{info}")));
     let result = std::panic::catch_unwind(|| {
         let args = unsafe { host_args(argc, argv) };
-        // Like upstream arg0_dispatch_or_else, keep the main future off the host's small stack.
-        let handle = match std::thread::Builder::new()
-            .name("codex-main".into())
-            .stack_size(16 * 1024 * 1024)
-            .spawn(move || run_args(args))
-        {
-            Ok(handle) => handle,
-            Err(error) => {
-                eprintln!("Cannot start Codex main thread: {error}");
-                return 1;
-            }
-        };
-        match handle.join() {
-            Ok(status) => status,
-            Err(payload) => std::panic::resume_unwind(payload),
-        }
+        // The C host supplies a joined 16 MiB thread, never pthread-cancelled.
+        run_args(args, cancel_fd)
     });
     // Every EventStream has joined its polling thread before this boundary.
     // The next invocation can supply a different captured terminal descriptor.
@@ -99,7 +91,7 @@ pub unsafe extern "C" fn codex_embedded_run(argc: c_int, argv: *const *const c_c
     }
 }
 
-fn run_args(args: Vec<String>) -> c_int {
+fn run_args(args: Vec<String>, cancel_fd: c_int) -> c_int {
     let runtime = match tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .worker_threads(2)
@@ -116,7 +108,27 @@ fn run_args(args: Vec<String>) -> c_int {
         codex_self_exe: std::env::current_exe().ok(),
         ..Default::default()
     };
-    match runtime.block_on(codex_cli::run_embedded(args, paths)) {
+    match runtime.block_on(async {
+        use std::os::fd::BorrowedFd;
+        // The host retains both pipe ends until this thread has joined.
+        let cancel = tokio::io::unix::AsyncFd::new(unsafe { BorrowedFd::borrow_raw(cancel_fd) })?;
+        tokio::select! {
+            ready = cancel.async_io(tokio::io::Interest::READABLE, |_| {
+                unsafe extern "C" {
+                    fn codex_ios_cancellation_ready() -> c_int;
+                }
+                match unsafe { codex_ios_cancellation_ready() } {
+                    0 => Err(std::io::ErrorKind::WouldBlock.into()),
+                    error if error < 0 => Err(std::io::Error::from_raw_os_error(-error)),
+                    _ => Ok(()),
+                }
+            }) => {
+                ready?;
+                Ok(130)
+            }
+            result = codex_cli::run_embedded(args, paths) => result,
+        }
+    }) {
         Ok(status) => status,
         Err(error) => {
             eprintln!("Codex: {error:#}");
