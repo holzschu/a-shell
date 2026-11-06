@@ -882,6 +882,7 @@ extension SceneDelegate {
                     UIAccessibility.post(notification: .announcement, argument: currentCommandVoiceOver)
                 }
             }
+            synchronizeRecalledInputContext(source)
         case "\u{0010}": // control P
             fallthrough
         case escape + "OA": // up arrow (application mode)
@@ -1037,6 +1038,7 @@ extension SceneDelegate {
                 commandBeforeCursor += string
                 terminalView?.feed(text: string) // prints the string
                 updateAutocomplete(text: string)
+                synchronizeRecalledInputContext(source)
 #if DEACTIVATED
                 if (commandBeforeCursor.hasSuffix("/") && (!autocompleteRunning || (autocompleteSuggestions[autocompletePosition].count == 0))) {
                     // We completed a directory. Let's list the content:
@@ -1442,6 +1444,7 @@ extension SceneDelegate {
             terminalView?.feed(text: string) // prints the string
             if autocompleteRunning {
                 updateAutocomplete(text: string)
+                synchronizeRecalledInputContext(source)
 #if DEACTIVATED
                 if (commandBeforeCursor.hasSuffix("/") && (!autocompleteRunning || (autocompleteSuggestions[autocompletePosition].count == 0))) {
                     // We just completed a directory. Let's list the content:
