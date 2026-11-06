@@ -1,0 +1,38 @@
+--- a/core/src/tools/handlers/unified_exec.rs
++++ b/core/src/tools/handlers/unified_exec.rs
+@@ -105,6 +105,11 @@
+     shell_mode: &UnifiedExecShellMode,
+     allow_login_shell: bool,
+ ) -> Result<ResolvedCommand, String> {
++    if cfg!(target_os = "ios") && args.shell.is_some() {
++        return Err(
++            "Shell overrides are unavailable in the embedded iOS runtime; omit `shell` to use native Dash.".to_string(),
++        );
++    }
+     let use_login_shell = match args.login {
+         Some(true) if !allow_login_shell => {
+             return Err(
+--- a/core/src/unified_exec/errors.rs
++++ b/core/src/unified_exec/errors.rs
+@@ -16,9 +16,18 @@
+     StdinApproval(crate::tools::sandboxing::ToolError),
+     #[error("failed to write to stdin")]
+     WriteToStdin,
+-    #[error(
++    #[cfg_attr(
++        not(target_os = "ios"),
++        error(
+-        "stdin is closed for this session; rerun exec_command with tty=true to keep stdin open"
++            "stdin is closed for this session; rerun exec_command with tty=true to keep stdin open"
+-    )]
++        )
++    )]
++    #[cfg_attr(
++        target_os = "ios",
++        error(
++            "stdin is closed for this session; interactive tool input is unavailable on iOS. Pass input in the command or a file with tty=false."
++        )
++    )]
+     StdinClosed,
+     #[error("missing command line for unified exec request")]
+     MissingCommandLine,

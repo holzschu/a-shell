@@ -1,0 +1,371 @@
+--- a/main.c
++++ b/main.c
+@@ -44,6 +44,79 @@
+ #include "extern.h"
+ #include "rules.h"
+ 
++#ifdef OPENRSYNC_IOS
++#include <stdatomic.h>
++static void fargs_free(struct fargs *);
++extern const void *ios_getContext(void);
++static _Atomic int ios_transport = -1;
++static _Atomic int ios_interrupted;
++static _Atomic(const void *) ios_owner;
++static struct sigaction ios_previous;
++void
++ios_socket_transport(int fd)
++{
++	ios_transport = fd;
++	if (fd >= 0 && ios_interrupted) shutdown(fd, SHUT_RDWR);
++}
++struct ios_transport_cleanup {
++	struct sigaction previous;
++	int installed;
++	int fd, peer, input, output;
++	pid_t child;
++	char **args;
++	struct fargs *fargs;
++};
++static void
++ios_interrupt(int sig)
++{
++	(void)sig;
++	if (ios_getContext() != ios_owner) {
++		if (!(ios_previous.sa_flags & SA_SIGINFO) &&
++		    ios_previous.sa_handler != SIG_DFL && ios_previous.sa_handler != SIG_IGN &&
++		    ios_previous.sa_handler != NULL)
++			ios_previous.sa_handler(sig);
++		return;
++	}
++	ios_interrupted = 1;
++	int fd = ios_transport;
++	if (fd >= 0) shutdown(fd, SHUT_RDWR);
++}
++static void
++ios_close_transport(void *opaque)
++{
++	struct ios_transport_cleanup *cleanup = opaque;
++	struct sigaction current;
++	if (cleanup->installed && sigaction(SIGINT, NULL, &current) == 0 &&
++	    current.sa_handler == ios_interrupt)
++		sigaction(SIGINT, &cleanup->previous, NULL);
++	ios_transport = -1;
++	ios_owner = NULL;
++	FILE *saved_input = thread_stdin, *saved_output = thread_stdout, *saved_error = thread_stderr;
++	FILE *old_input = NULL, *old_output = NULL, *old_error = NULL;
++	ios_activateChildStreams(&old_input, &old_output, &old_error);
++	if (thread_stdin != saved_input) fclose(thread_stdin);
++	if (thread_stdout != saved_output) fclose(thread_stdout);
++	thread_stdin = saved_input;
++	thread_stdout = saved_output;
++	thread_stderr = saved_error;
++	if (cleanup->fd >= 0) shutdown(cleanup->fd, SHUT_RDWR);
++	if (cleanup->child >= 0) {
++		int status;
++		ios_full_waitpid(cleanup->child, &status, 0);
++	}
++	if (cleanup->fd >= 0) close(cleanup->fd);
++	if (cleanup->peer >= 0) close(cleanup->peer);
++	if (cleanup->input >= 0) close(cleanup->input);
++	if (cleanup->output >= 0) close(cleanup->output);
++	if (cleanup->args != NULL) {
++		for (int i = 0; cleanup->args[i] != NULL; i++)
++			free(cleanup->args[i]);
++		free(cleanup->args);
++	}
++	if (cleanup->fargs != NULL) fargs_free(cleanup->fargs);
++}
++#endif
++
+ static struct opts opts; /* FIXME: no globals */
+ typedef int (rsync_option_filter)(struct sess *, int, const struct option *);
+ 
+@@ -1181,9 +1254,36 @@
+ 	return &opts;
+ }
+ 
++#ifdef OPENRSYNC_IOS
++static pthread_mutex_t ios_command_mutex = PTHREAD_MUTEX_INITIALIZER;
++static int ios_command_main(int, char **);
++static void
++ios_finish_command(void *unused)
++{
++	(void)unused;
++	/* Drop borrowed streams and stack-backed logging state before host cleanup. */
++	rsync_set_logfile(NULL, NULL);
++	rules_reset();
++	pthread_mutex_unlock(&ios_command_mutex);
++}
+ int
+ main(int argc, char *argv[])
+ {
++	int result;
++	if (pthread_mutex_trylock(&ios_command_mutex) != 0)
++		return ERR_IPC;
++	pthread_cleanup_push(ios_finish_command, NULL);
++	result = ios_command_main(argc, argv);
++	pthread_cleanup_pop(1);
++	return result;
++}
++static int
++ios_command_main(int argc, char *argv[])
++#else
++int
++main(int argc, char *argv[])
++#endif
++{
+ 	char 		 *msg, *ptr = NULL; /* temporary */
+ 	pid_t		  child; /* return value of fork() */
+ 	int		  fds[2], /* 0 is for parent, 1 for child */
+@@ -1198,6 +1298,11 @@
+ 	struct fargs	 *fargs;
+ 	char		**args;
+ 
++#ifdef OPENRSYNC_IOS
++	memset(&opts, 0, sizeof(opts));
++	verbose = poll_contimeout = poll_timeout = 0;
++#endif
++
+ 	/* 
+ 	 * We cannot safely log to stdout until we are certain that
+ 	 * we're the client (i.e., the server must enable multiplexing
+@@ -1281,12 +1386,39 @@
+ 
+ 	if (fargs->remote && opts.ssh_prog == NULL) {
+ 		assert(fargs->mode == FARGS_RECEIVER);
++#ifdef OPENRSYNC_IOS
++		struct ios_transport_cleanup cleanup = {
++			.fd = -1, .peer = -1, .input = -1, .output = -1,
++			.child = -1, .fargs = fargs
++		};
++		struct sigaction interrupt = { .sa_handler = ios_interrupt };
++		int cancel_state;
++		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cancel_state);
++		ios_interrupted = 0;
++		ios_owner = ios_getContext();
++		pthread_cleanup_push(ios_close_transport, &cleanup);
++		sigemptyset(&interrupt.sa_mask);
++		if (sigaction(SIGINT, NULL, &ios_previous) == -1 ||
++		    sigaction(SIGINT, &interrupt, &cleanup.previous) == -1)
++			err(ERR_IPC, "sigaction");
++		cleanup.installed = 1;
++		c = rsync_connect(&opts, &cleanup.fd, fargs);
++		if (c != 0)
++			cleanup.fd = -1; /* rsync_connect closed a failed socket. */
++		else if (!ios_interrupted)
++			c = rsync_socket(&opts, cleanup.fd, fargs);
++		pthread_cleanup_pop(1);
++		if (ios_interrupted) ios_exit(130);
++		pthread_setcancelstate(cancel_state, NULL);
++		exit(c);
++#else
+ 		if ((c = rsync_connect(&opts, &sd, fargs)) == 0) {
+ 			c = rsync_socket(&opts, sd, fargs);
+ 			close(sd);
+ 		}
+ 		fargs_free(fargs);
+ 		exit(c);
++#endif
+ 	}
+ 
+ 	/* Drop the dns/inet possibility. */
+@@ -1309,6 +1441,71 @@
+ 		err(ERR_IPC, "fcntl");
+ #endif
+ 
++#ifdef OPENRSYNC_IOS
++	/* ios_system starts a second framework image on a command thread. */
++	struct ios_transport_cleanup cleanup = {
++		.fd = fds[0], .peer = fds[1], .input = -1, .output = -1,
++		.child = -1, .fargs = fargs
++	};
++	struct sigaction interrupt = { .sa_handler = ios_interrupt };
++	int cancel_state;
++	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cancel_state);
++	ios_interrupted = 0;
++	ios_transport = fds[0];
++	ios_owner = ios_getContext();
++	pthread_cleanup_push(ios_close_transport, &cleanup);
++	sigemptyset(&interrupt.sa_mask);
++	if (sigaction(SIGINT, NULL, &ios_previous) == -1 ||
++	    sigaction(SIGINT, &interrupt, &cleanup.previous) == -1)
++		err(ERR_IPC, "sigaction");
++	cleanup.installed = 1;
++	/* Let the normal protocol error paths release files and buffers. */
++	memset(&sess, 0, sizeof(sess));
++	sess.opts = &opts;
++	args = cleanup.args = fargs_cmdline(&sess, fargs, NULL);
++	cleanup.input = dup(fds[1]);
++	cleanup.output = dup(fds[1]);
++	if (cleanup.input < 0 || cleanup.output < 0)
++		err(ERR_IPC, "dup");
++	child = ios_fork();
++	if (child < 0)
++		err(ERR_IPC, "ios_fork");
++	if (ios_dup2(cleanup.input, 0) < 0)
++		err(ERR_IPC, "ios_dup2");
++	cleanup.input = -1;
++	if (ios_dup2(cleanup.output, 1) < 0)
++		err(ERR_IPC, "ios_dup2");
++	cleanup.output = -1;
++	if (ios_execv(args[0], args) != 0)
++		errx(ERR_IPC, "cannot start %s", args[0]);
++	cleanup.child = child;
++	for (i = 0; args[i] != NULL; i++)
++		free(args[i]);
++	free(args);
++	cleanup.args = NULL;
++	close(fds[1]);
++	cleanup.peer = -1;
++	if (fargs->sink == NULL) {
++		fargs->sink = strdup(".");
++		if (fargs->sink == NULL)
++			err(ERR_NOMEM, NULL);
++	}
++	if (!fargs->remote)
++		rc = rsync_client(&opts, fds[0], fargs);
++	else
++		rc = rsync_socket(&opts, fds[0], fargs);
++	shutdown(fds[0], SHUT_RDWR);
++	if (ios_full_waitpid(child, &st, 0) == -1)
++		err(ERR_WAITPID, "ios_full_waitpid");
++	cleanup.child = -1;
++	cleanup.fargs = NULL;
++	pthread_cleanup_pop(1);
++	if (ios_interrupted) {
++		fargs_free(fargs);
++		ios_exit(130);
++	}
++	pthread_setcancelstate(cancel_state, NULL);
++#else
+ 	switch ((child = fork())) {
+ 	case -1:
+ 		err(ERR_IPC, "fork");
+@@ -1371,6 +1568,8 @@
+ 	if (waitpid(child, &st, 0) == -1)
+ 		err(ERR_WAITPID, "waitpid");
+ 
++#endif
++
+ 	/*
+ 	 * If the child exited abnormally then use its exit status as our exit
+ 	 * code.  Otherwise, use the return code from the fork parent operation.
+--- a/extern.h
++++ b/extern.h
+@@ -23,6 +23,29 @@
+ #include <stdio.h> /* FILE */
+ #include <time.h> /* struct timespec, gettimeofday(), etc. */
+ 
++#ifdef OPENRSYNC_IOS
++#include "ios_error.h"
++#include <assert.h>
++#undef assert
++#define assert(test) ((test) ? (void)0 : (fprintf(thread_stderr, \
++    "openrsync: assertion failed: %s\n", #test), ios_exit(ERR_IPC)))
++void ios_socket_transport(int);
++#undef stdin
++#undef stdout
++#undef stderr
++#define stdin thread_stdin
++#define stdout thread_stdout
++#define stderr thread_stderr
++#undef printf
++#define printf(...) fprintf(thread_stdout, __VA_ARGS__)
++#undef STDIN_FILENO
++#undef STDOUT_FILENO
++#undef STDERR_FILENO
++#define STDIN_FILENO fileno(thread_stdin)
++#define STDOUT_FILENO fileno(thread_stdout)
++#define STDERR_FILENO fileno(thread_stderr)
++#endif
++
+ #if !HAVE_PLEDGE
+ # define pledge(x, y) (1)
+ #endif
+--- a/rules.c
++++ b/rules.c
+@@ -116,6 +116,39 @@
+ 
+ static size_t rule_dir_depth;
+ 
++#ifdef OPENRSYNC_IOS
++static void
++rules_discard(struct ruleset *ruleset)
++{
++	for (size_t i = 0; i < ruleset->numrules; i++) {
++		struct rule *rule = &ruleset->rules[i];
++		if (rule->type == RULE_DIR_MERGE) {
++			struct merge_rule *merge;
++			while ((merge = TAILQ_FIRST(&rule->merge_rule_chain)) != NULL) {
++				TAILQ_REMOVE(&rule->merge_rule_chain, merge, entries);
++				rules_discard(merge->ruleset);
++				free(merge->ruleset);
++				free(merge->path);
++				free(merge);
++			}
++		}
++		free(rule->pattern);
++	}
++	free(ruleset->rules);
++}
++
++void
++rules_reset(void)
++{
++	rules_discard(&global_ruleset);
++	memset(&global_ruleset, 0, sizeof(global_ruleset));
++	global_ruleset.lclear = (size_t)-1;
++	rule_base[0] = '\0';
++	rule_base_cwdend = NULL;
++	rule_dir_depth = 0;
++}
++#endif
++
+ static void parse_file_impl(struct ruleset *, const char *, enum rule_type,
+     unsigned int, bool, char);
+ static bool parse_rule_impl(struct ruleset *, const char *, enum rule_type,
+--- a/rules.h
++++ b/rules.h
+@@ -18,6 +18,10 @@
+ #ifndef RULES_H
+ #define RULES_H
+ 
++#ifdef OPENRSYNC_IOS
++void rules_reset(void);
++#endif
++
+ /*
+  * Types of rules that may appear for directories or files.
+  */
+--- a/socket.c
++++ b/socket.c
+@@ -85,6 +85,9 @@
+ 	int		c;
+ 	int		optval;
+ 
++#ifdef OPENRSYNC_IOS
++	ios_socket_transport(-1);
++#endif
+ 	if (*sd != -1)
+ 		close(*sd);
+ 
+@@ -108,6 +111,9 @@
+ 	}
+ #endif
+ 
++#ifdef OPENRSYNC_IOS
++	ios_socket_transport(*sd);
++#endif
+ 	if (inet_bind(*sd, src->family, bsrc, bsrcsz) == -1) {
+ 		ERR("bind");
+ 		return -1;
+@@ -379,6 +385,9 @@
+ out:
+ 	free(src);
+ 	free(bsrc);
++#ifdef OPENRSYNC_IOS
++	ios_socket_transport(-1);
++#endif
+ 	if (*sd != -1)
+ 		close(*sd);
+ 	return rc;

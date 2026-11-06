@@ -9,9 +9,10 @@ sha=2df40dc573eb751154b49055d0949668ec4f72f928d9c7fe5d86f451bfb3d7d5
 export CARGO_TARGET_DIR=$cache/target
 export IPHONEOS_DEPLOYMENT_TARGET=14.0
 
+# rustc 1.99.0 (b940084d7 2026-09-28)
 prepare() {
-  [[ $(rustc --version) == 'rustc 1.99.0 (b940084d7 2026-09-28)' ]] || {
-    echo 'Rust 1.99.0 is required' >&2
+  [[ $(rustc --version) == 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' ]] || {
+    echo 'Rust 1.99.1 is required' >&2
     return 1
   }
   mkdir -p "$cache"
@@ -49,8 +50,14 @@ framework() {
       triple=arm64-apple-ios14.0-simulator
       mach_platform=IOSSIMULATOR
       ;;
+    simulator-x86_64)
+      target=x86_64-apple-ios
+      sdk_name=iphonesimulator
+      triple=x86_64-apple-ios14.0-simulator
+      mach_platform=IOSSIMULATOR
+      ;;
     *)
-      echo 'Expected device or simulator' >&2
+      echo 'Expected device, simulator or simulator-x86_64' >&2
       return 2
       ;;
   esac
@@ -66,7 +73,7 @@ framework() {
   archive=$cache/target/$target/minimal-size/libruff.a
   output=$cache/$platform/Ruff.framework
   mkdir -p "$output"
-  xcrun --sdk "$sdk_name" clang -target "$triple" -isysroot "$sdk" -Wall -Wextra -Werror \
+  xcrun --sdk "$sdk_name" clang -target "$triple" -isysroot "$sdk" -Oz -Wall -Wextra -Werror \
     -I "$frameworks/ios_system.framework/Headers" -dynamiclib "$here/command.m" "$archive" \
     -F "$frameworks" -framework ios_system -framework CoreFoundation -framework Security -liconv \
     -Wl,-install_name,@rpath/Ruff.framework/Ruff -Wl,-exported_symbol,_ruff_ios_main -Wl,-dead_strip \
