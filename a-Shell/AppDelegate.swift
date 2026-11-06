@@ -14,8 +14,8 @@ import Compression
 import Intents // for shortcuts
 import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
-import Kitura // for our local server for WebAssembly
-import NIOSSL // for TLS (https) authentification
+import Network // for our local HTTPS server for WebAssembly
+import UniformTypeIdentifiers
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
@@ -24,72 +24,92 @@ let localServerQueue = DispatchQueue(label: "localWebServer", qos: .userInteract
 // Need SDK install to be over before starting commands.
 var appDependentPath: String = "" // part of the path that depends on the App location (home, appdir)
 let __known_browsers = ["internalbrowser", "googlechrome", "firefox", "safari", "yandexbrowser", "brave", "opera"]
-var localServerApp = Router()
+private var localServer: LocalHTTPServer?
+private var localServerReady: [() -> Void] = []
 var zshmarksActivated = false
 var bashmarksActivated = false
 
-func startLocalWebServer() {
-    // Last file loaded: /node_modules/@wasmer/wasmfs/lib/index.cjs.js
-    localServerApp.get("/*") { request, response, next in
-        #if DEBUG
-        NSLog("Kitura request received: \(request.matchedPath)")
-        #endif
-        // Load ~/Library/node_modules first if it exists:
-        // This also loads ~/Library/wasm.html and ~/Library/require.js if the user really wants to.
-        let libraryURL = try! FileManager().url(for: .libraryDirectory,
-                                                in: .userDomainMask,
-                                                appropriateFor: nil,
-                                                create: true)
-        let requestedFileURL = URL(fileURLWithPath: request.matchedPath)
-        let pathExtension = requestedFileURL.pathExtension
-        let localFilePath = libraryURL.path + request.matchedPath
-        let rootFilePath = Bundle.main.resourcePath! + request.matchedPath
-        var fileName: String? = nil
-        // NSLog("Kitura file requested: \(request.matchedPath). Trying \(localFilePath)  and \(rootFilePath)")
-        if (FileManager().fileExists(atPath: localFilePath) && !URL(fileURLWithPath: localFilePath).isDirectory) {
-            fileName = localFilePath
-        } else if (FileManager().fileExists(atPath: rootFilePath) && !URL(fileURLWithPath: rootFilePath).isDirectory) {
-            fileName = rootFilePath
+func startLocalWebServer(ready: (() -> Void)? = nil) {
+    localServerQueue.async {
+        if let server = localServer, !server.isRunning { localServer = nil }
+        if let server = localServer {
+            if let ready {
+                if server.isReady { DispatchQueue.main.async(execute: ready) }
+                else { localServerReady.append(ready) }
+            }
+            return
         }
-        if let filePath = fileName {
-            if (pathExtension == "html") {
-                response.headers["Content-Type"] = "text/html"
-            } else if (pathExtension == "js") {
-                response.headers["Content-Type"] = "application/javascript"
-            } else if (pathExtension == "wasm") {
-                response.headers["Content-Type"] = "application/wasm"
+        if let ready { localServerReady.append(ready) }
+        do {
+            let data = try Data(contentsOf: Bundle.main.resourceURL!.appendingPathComponent("localCertificate.pfx"))
+            let tls = try RelayTLS(pkcs12: data, passphrase: "password")
+            let parameters = try tls.parameters()
+            parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: LocalServerPorts.wasm)!)
+            let server = LocalHTTPServer(queue: localServerQueue, requiresContentLength: false, connectionLimit: 64)
+            server.request = { connection, method, target, _, _ in
+                var headers = ["Cross-Origin-Embedder-Policy": "require-corp",
+                               "Cross-Origin-Opener-Policy": "same-origin",
+                               "Cross-Origin-Resource-Policy": "same-origin"]
+                guard method == "GET",
+                      let path = target.split(separator: "?", maxSplits: 1).first?.removingPercentEncoding,
+                      path.hasPrefix("/"), !path.utf8.contains(0) else {
+                    LocalHTTPServer.send(connection, status: 404, body: Data(), headers: [:])
+                    return
+                }
+                let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+                let roots = [library, Bundle.main.resourceURL!]
+                var file: URL?
+                for root in roots {
+                    let root = root.resolvingSymlinksInPath()
+                    let candidate = root.appendingPathComponent(String(path.dropFirst())).standardizedFileURL.resolvingSymlinksInPath()
+                    let base = root.path + "/"
+                    var isDirectory: ObjCBool = false
+                    guard FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDirectory), !isDirectory.boolValue else { continue }
+                    guard candidate.path.hasPrefix(base) else {
+                        LocalHTTPServer.send(connection, status: 403, body: Data(), headers: [:])
+                        return
+                    }
+                    file = candidate
+                    break
+                }
+                guard let file else {
+                    LocalHTTPServer.send(connection, status: 404, body: Data(), headers: [:])
+                    return
+                }
+                switch file.pathExtension {
+                case "html": headers["Content-Type"] = "text/html"
+                case "js": headers["Content-Type"] = "application/javascript"
+                case "wasm": headers["Content-Type"] = "application/wasm"
+                default: headers["Content-Type"] = UTType(filenameExtension: file.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
+                }
+                do {
+                    let body = try Data(contentsOf: file, options: .mappedIfSafe)
+                    LocalHTTPServer.send(connection, status: 200, body: body, headers: headers)
+                } catch {
+                    LocalHTTPServer.send(connection, status: 403, body: Data("Loading \(file.path) failed".utf8), headers: headers)
+                }
             }
-            // These headers get us a "crossOriginIsolated == true;" on OSX Safari
-            response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
-            response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-            response.headers["Cross-Origin-Resource-Policy"] =  "same-origin"
-            do {
-                // NSLog("Kitura file found: \(filePath)")
-                try response.send(fileName: filePath)
+            localServer = server
+            var becameReady = false
+            try server.start(parameters: parameters) { [weak server] result in
+                guard let server, localServer === server else { return }
+                switch result {
+                case .success:
+                    becameReady = true
+                    let callbacks = localServerReady
+                    localServerReady.removeAll()
+                    DispatchQueue.main.async { callbacks.forEach { $0() } }
+                case .failure(let error):
+                    NSLog("Local WASM server failed: \(error)")
+                    localServer = nil
+                    // A startup failure waits for the next foreground; a failed live listener retries once.
+                    if becameReady { startLocalWebServer() }
+                }
             }
-            catch {
-                // NSLog("Kitura failure: \(filePath)")
-                response.statusCode = .forbidden
-                response.send("Loading \(filePath) failed")
-            }
-        } else {
-            // NSLog("Kitura file not found: \(request.matchedPath)")
-            response.statusCode = .notFound
-            response.send("")
-            next()
+        } catch {
+            localServer = nil
+            NSLog("Local WASM server setup failed: \(error)")
         }
-    }
-    let sslConfig =  SSLConfig(withChainFilePath: Bundle.main.resourcePath! + "/localCertificate.pfx",
-                               withPassword: "password",
-                               usingSelfSignedCerts: true)
-    if (appVersion != "a-Shell-mini") {
-        Kitura.addHTTPServer(onPort: 8443, with: localServerApp, withSSL: sslConfig)
-    } else {
-        Kitura.addHTTPServer(onPort: 8334, with: localServerApp, withSSL: sslConfig)
-    }
-    localServerQueue.async{
-        NSLog("starting server timestamp")
-        Kitura.run(exitOnFailure: false)
     }
 }
 
@@ -187,6 +207,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NSLog("Application didFinishLaunchingWithOptions \(String(describing: launchOptions))")
         #endif
         _ = TerminalThemes.synchronizeSelection()
+        _ = TerminalPrompts.synchronizeSelection()
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
         UserDefaults.standard.register(defaults: ["bashmarks" : false])
@@ -210,8 +231,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             viewBehavior = .ignoreSafeArea
         }
         initializeEnvironment()
+        replaceCommand("progress", "ashell_progress", false)
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
+        replaceCommand("relay", "relay_main", true)
         replaceCommand("history", "history", true)
         replaceCommand("term", "ashell_term", true)
         replaceCommand("help", "help", true)
@@ -232,6 +255,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("repeatCommand", "repeatCommand", true)
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
+        replaceCommand("photos", "photos_main", true)
         replaceCommand("hideKeyboard", "hideKeyboard", true)
         replaceCommand("hideToolbar", "hideToolbar", true)
         replaceCommand("showToolbar", "showToolbar", true)
@@ -256,6 +280,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if #unavailable(iOS 18) {
             replaceCommand("wasmkit", "wasmkitUnavailable", true)
         }
+        if appVersion != "a-Shell-mini", #unavailable(iOS 26.2) {
+            replaceCommand("codex", "codexUnavailable", true)
+        }
         // for debugging TeX issues / installing a new distribution
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
@@ -263,151 +290,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 in: .userDomainMask,
                                                 appropriateFor: nil,
                                                 create: true)
-        numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
-        //  = a-Shell
-        setenv("APPNAME", Bundle.main.infoDictionary?["CFBundleName"] as! String, 1)  // a-Shell or a-Shell-mini
-        setenv("APPVERSION", Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String, 1) // 1.15.2
-        setenv("APPBUILDNUMBER", Bundle.main.infoDictionary?["CFBundleVersion"] as! String, 1) // 422
-        setenv("VIMRUNTIME", Bundle.main.resourcePath! + "/vim", 1); // main resource for vim files
-        setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
-        setenv("COLORTERM", "truecolor", 1) // tell programs that we can display 16-bit colors (required by Python package rich).
-        setenv("SSL_CERT_FILE", Bundle.main.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
-        setenv("MAGIC", Bundle.main.resourcePath! +  "/usr/share/magic.mgc", 1); // magic file for file command
-        setenv("SHORTCUTS", FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?.path, 1) // directory used by shortcuts
-        setenv("GROUP", FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?.path, 1) // directory used by shortcuts
-        setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
-        setenv("PAGER", "less", 1) // send control sequences directly to terminal
-        setenv("TERM", "xterm-256color", 1); // now that we use SwiftTerm
-        setenv("MAGICK_HOME", Bundle.main.resourcePath! +  "/ImageMagick-7", 1)
-        setenv("MAGICK_CONFIGURE_PATH", Bundle.main.resourcePath! +  "/ImageMagick-7/config", 1)
-        if (UIDevice.current.model.hasPrefix("iPad")) {
-            setenv("PS1", "[\\w]\\$ ", 1) // iPad default prompt: path name
-        } else {
-            setenv("PS1", "[\\W]\\$ ", 1) // iPhone default prompt: last path component
-        }
-        setenv("TERMINFO", Bundle.main.resourcePath! +  "/terminfo/", 1) // Provide terminfo so termcap has a database
-        setenv("TZ", TimeZone.current.identifier, 1) // TimeZone information, since "systemsetup -gettimezone" won't work.
         let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                   in: .userDomainMask,
                                                   appropriateFor: nil,
                                                   create: true)
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
-        // Make sure aws (Python package) can work:
-        setenv("AWS_SHARED_CREDENTIALS_FILE", documentsUrl.appendingPathComponent(".aws/credentials").path, 1)
-        setenv("AWS_CONFIG_FILE", documentsUrl.appendingPathComponent(".aws/config").path, 1)
-        // Pip options:
-        setenv("PIP_CONFIG_FILE", documentsUrl.appendingPathComponent(".config/pip/pip.conf").path, 1)
-        setenv("PIP_NO_BUILD_ISOLATION", "false", 1)
-        setenv("SPACEVIMDIR", documentsUrl.appendingPathComponent(".SpaceVim.d").path + "/", 1); // configuration directory for SpaceVim
-        // Help aiohttp install itself:
-        setenv("YARL_NO_EXTENSIONS", "1", 1)
-        setenv("MULTIDICT_NO_EXTENSIONS", "1", 1)
-        setenv("AIOHTTP_NO_EXTENSIONS", "1", 1)
-        // This one is not required, but it helps:
-        setenv("DISABLE_SQLALCHEMY_CEXT", "1", 1)
         versionUpToDate = !versionNumberIncreased()
-        appDependentPath = String(utf8String: getenv("PATH")) ?? ""
-        if (appVersion != "a-Shell-mini") {
-            // clang options:
-            setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
-            // set up C and C++ compile options: silently add "--target=wasm32-wasi" at the beginning of arguments
-            // and "-lunwind" at the end.
-            // use legacy exception handling for iOS 14 to 17, new exception handling for iOS 18 and above.
-            // - Apple wasm interpreter accepts the new EH on iOS 18 and above,
-            // - wasmkit only accepts the new EH and only runs on iOS 18 and above
-            // - wasm3 does not accept any kind of exception handling.
-            if #available(iOS 18.0, *) {
-                setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions ^-mllvm=-wasm-use-legacy-eh=false +-lunwind", 1)
-            } else {
-                setenv("CCC_OVERRIDE_OPTIONS", "#^--target=wasm32-wasip1 ^-fwasm-exceptions ^-mllvm=-wasm-use-legacy-eh=true  +-lunwind", 1)
-            }
-            // TeX variables (for tlmgr to work) = only when installing from scratch
-            // default texmf.cnf available:
-            // setenv("TEXMFCNF", Bundle.main.resourcePath!, 1)
-            // Make:
-            setenv("MAKESYSPATH", Bundle.main.resourcePath! +  "/usr/share/mk" , 1)
-            // Perl location of modules:
-            setenv("PERL5LIB", documentsUrl.appendingPathComponent("perl5/lib/perl5").path + ":" + Bundle.main.resourcePath! +  "/Perl" , 1)
-            // set-up for local::lib:
-            setenv("PERL_LOCAL_LIB_ROOT", documentsUrl.appendingPathComponent("perl5").path, 1)
-            setenv("PERL_CPANM_HOME", documentsUrl.appendingPathComponent(".cpanm").path, 1)
-            setenv("PERL_MM_OPT", "'INSTALL_BASE=" + documentsUrl.appendingPathComponent("perl5").path + "'", 1)
-            setenv("PERL_MB_OPT", "--install_base \"" + documentsUrl.appendingPathComponent("perl5").path + "\"", 1)
-            appDependentPath = documentsUrl.appendingPathComponent("perl5").appendingPathComponent("bin").path + ":" + appDependentPath
-            setenv("PATH", appDependentPath, 1)
-            setenv("MANPATH", Bundle.main.resourcePath! +  "/man:" + libraryURL.path + "/man:" + documentsUrl.appendingPathComponent("perl5").appendingPathComponent("man").path, 1)
-            // help Sunpy too: https://github.com/sunpy/sunpy/pull/6166
-            setenv("SUNPY_NO_BUILD_ANA_EXTENSION", "1", 1)
-            // SUNPY_CONFIGDIR is ~/Library/Application Support/sunpy, by default, so it is OK.
-            // default sunpy config file, forces working_dir to ~/Documents/sunpy:
-            // data_manager.db has an issue with $HOME but not with ~.
-            let sunpyDirectory = libraryURL.appendingPathComponent("Application Support/sunpy")
-            let sunpyrcFile = sunpyDirectory.appendingPathComponent("sunpyrc")
-            if (!FileManager().fileExists(atPath: sunpyrcFile.path)) {
-                if (!FileManager().fileExists(atPath: sunpyDirectory.path)) {
-                    do {
-                        try FileManager().createDirectory(at: sunpyDirectory, withIntermediateDirectories: true)
-                    }
-                    catch {}
-                }
-                if (FileManager().fileExists(atPath: sunpyDirectory.path)) {
-                    let sunpyrcContent = """
-    ;;;;;;;;;;;;;;;;;;;
-    ; General Options ;
-    ;;;;;;;;;;;;;;;;;;;
-    [general]
-    
-    ; The SunPy working directory is the parent directory where all generated
-    ; and download files will be stored.
-    ; Default Value: <user's home directory>/sunpy
-    ; data_manager.db has an issue with $HOME but not with ~
-    working_dir = ~/Documents/sunpy
-    """
-                    let sunpyrcData: Data = sunpyrcContent.data(using: String.Encoding.utf8)!
-                    FileManager().createFile(atPath: sunpyrcFile.path, contents: sunpyrcData, attributes: nil)
-                }
-            }
-            do {
-                let documentsUrl = try FileManager().url(for: .documentDirectory,
-                                                         in: .userDomainMask,
-                                                         appropriateFor: nil,
-                                                         create: true)
-                let nltkData = documentsUrl.appendingPathComponent("nltk_data")
-                setenv("NLTK_DATA", nltkData.path, 1)
-                setenv("PIP_CONFIG_FILE", documentsUrl.appendingPathComponent(".config/pip/pip.conf").path, 1)
-                // Place downloaded files for sunpy in ~/Documents/sunpy
-                setenv("SUNPY_DOWNLOADDIR", documentsUrl.appendingPathComponent("sunpy").path, 1)
-            } catch { }
-            // PyProj options:
-            setenv("PYPROJ_GLOBAL_CONTEXT", "ON", 1) // This helps pyproj in cleaning up.
-            let projDirPath = Bundle.main.resourcePath! + "/proj"
-            setenv("PROJ_LIB", projDirPath, 1)  // proj <= 9.1
-            setenv("PROJ_DATA", projDirPath, 1) // proj 9.1+
-            setenv("PROJ_NETWORK", "ON", 1)
-            setenv("QUTIP_NUM_PROCESSES", "1", 1) // number of processors in qutip
-            let seabornData = libraryURL.appendingPathComponent("seaborn-data")
-            setenv("SEABORN_DATA", seabornData.path, 1)
-            let sklearnData = libraryURL.appendingPathComponent("scikit_learn_data")
-            setenv("SCIKIT_LEARN_DATA", sklearnData.path, 1)
-            let statsmodelsData = libraryURL.appendingPathComponent("statsmodels_data")
-            setenv("STATSMODELS_DATA", statsmodelsData.path, 1)
-            let pysalData = libraryURL.appendingPathComponent("pysal_data")
-            setenv("PYSALDATA", pysalData.path, 1)
-        } // end !a-Shell mini
-        // All calls to setenv() before calls to executeCommandAndWait otherwise we can be redefining the environment
-        // while copying it
-        // Main Python install: $APPDIR/Library/lib/python3.x
-        setenv("PYTHONHOME", Bundle.main.resourcePath! + "/Library", 1)
-        // Compiled files: ~/Library/__pycache__
-        setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path, 1)
-        setenv("PYTHONUSERBASE", libraryURL.path, 1)
-        setenv("PYTHON_HISTORY", documentsUrl.appendingPathComponent(".python_history").path, 1)
-        setenv("PYZMQ_BACKEND", "cffi", 1)
-        // Node modules installed in ~/Library/node_modules resolve from any directory; npm itself is in $APPDIR/npm.
-        setenv("NODE_PATH", libraryURL.path + "/node_modules", 1)
-        // Frameworks are in $APPDIR/Frameworks:
-        setenv("DYLD_FRAMEWORK_PATH", Bundle.main.resourcePath! + "/Frameworks", 1)
-        setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
+        appDependentPath = initializeCommandEnvironment(hostBundle: .main, documentsUrl: documentsUrl, libraryURL: libraryURL, groupURL: FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID))
         // Switch installed Python packages from 3.9 to 3.13:
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
             cleanupQueue.async{
@@ -493,6 +382,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         catch {
             // print("Setting category to AVAudioSessionCategoryPlayback failed.")
         }
+        Relay.shared.restore()
         return true
     }
 
@@ -619,6 +509,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                         delegate.terminalFontSize = TerminalFonts.savedSize ?? factoryFontSize
                     }
                     delegate.writeConfigWindow()
+                }
+            }
+            if TerminalPrompts.synchronizeSelection() {
+                let promptName = TerminalPrompts.savedName
+                for scene in UIApplication.shared.connectedScenes {
+                    (scene.delegate as? SceneDelegate)?.applyPrompt(promptName)
                 }
             }
         }

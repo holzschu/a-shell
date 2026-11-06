@@ -1,0 +1,14 @@
+--- a/tui/src/tui/keyboard_modes.rs
++++ b/tui/src/tui/keyboard_modes.rs
+@@ -252,7 +252,10 @@
+     // tmux's xterm key format also loses Shift-Enter when event types are
+     // reported. An unavailable/unrecognized tmux probe must take the same safe
+     // fallback. Preserve repeat classification on confirmed csi-u transports.
+-    if matches!(terminal_name, TerminalName::Ghostty | TerminalName::Iterm2)
++    // a-Shell can deliver a consumed shortcut's release after the pane resumes.
++    // Preserve modified-key disambiguation without requesting release events.
++    if cfg!(target_os = "ios")
++        || matches!(terminal_name, TerminalName::Ghostty | TerminalName::Iterm2)
+         || (running_in_tmux_session && !matches!(tmux_extended_keys_format, Some("csi-u")))
+     {
+         flags

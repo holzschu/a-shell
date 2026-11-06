@@ -130,7 +130,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var terminalFontSize: Float?
     var terminalFontName: String?
     var terminalThemeName = ""
-    var terminalTheme: TerminalTheme?
+    var terminalTheme: TerminalTheme? {
+        didSet {
+            if (oldValue == nil) != (terminalTheme == nil) {
+                DispatchQueue.main.async {
+                    if self.terminalPromptName != "custom" { self.refreshPrompt() }
+                }
+            }
+        }
+    }
     var terminalBackgroundColor: UIColor?
     var terminalForegroundColor: UIColor?
     var terminalCursorColor: UIColor?
@@ -156,6 +164,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var noneTag = -1
     var fontPicker = UIFontPickerViewController()
     var navigationType: WKNavigationType = .other
+    var terminalPromptName = TerminalPrompts.savedName
     var lastUsedPrompt = "$"
     var extraBytes: Data? = nil
     // tap on multi-arrow buttons
@@ -612,10 +621,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     @objc private func systemAction(_ sender: UIBarButtonItem) {
         // NSLog("Received systemAction. Position x = \(tapPosition.x) y = \(tapPosition.y)")
         if let title = title(sender) {
+            if title == "paste" {
+                if let text = UIPasteboard.general.string { confirmPaste(text) }
+                return
+            }
             if (terminalView != nil) && terminalView!.isFirstResponder {
                 switch (title) {
-                case "paste":
-                    terminalView?.paste(sender)
                 case "up":
                     sendArrow(direction: title)
                 case "down":
@@ -717,11 +728,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                     }
                     // These are more specific to ACE-editor:
-                case "paste":
-                    if let pastedString = UIPasteboard.general.string {
-                        // NSLog("Sending text to paste: \(pastedString)")
-                        webView?.paste(pastedString)
-                    }
                 case "copy":
                     commandString = "editor.commands.exec('copy');"
                 case "cut":
@@ -891,6 +897,68 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     
     
+    @objc func receiveToolbarPaste(_ text: String) {
+        confirmPaste(text)
+    }
+
+    func confirmPaste(_ text: String, intoTerminal: Bool? = nil, confirmedPaste: (() -> Void)? = nil) {
+        guard !text.isEmpty else { return }
+        let pasteIntoTerminal = intoTerminal ?? (terminalView?.isFirstResponder == true)
+        let promptBracketed = terminalView?.getTerminal().bracketedPasteMode == true
+        let send = { [weak self] in
+            guard let self else { return }
+            if !pasteIntoTerminal { self.webView?.paste(text) }
+            else if let terminal = self.terminalView {
+                if let confirmedPaste { confirmedPaste(); return }
+                let bracketed = terminal.getTerminal().bracketedPasteMode
+                if bracketed { terminal.send(data: Array("\u{1b}[200~".utf8)[...]) }
+                terminal.send(data: Array(text.utf8)[...])
+                if bracketed { terminal.send(data: Array("\u{1b}[201~".utf8)[...]) }
+            }
+        }
+        guard pasteIntoTerminal && !promptBracketed && text.contains(where: { $0.isNewline }) else { send(); return }
+        guard let root = window?.rootViewController, root.presentedViewController == nil else { return }
+        let alert = UIAlertController(title: "Paste multiple lines?", message: "Multiple lines may run shell commands.", preferredStyle: .alert)
+        let finish: (Bool) -> Void = { [weak self] confirmed in
+            if confirmed { send() }
+            DispatchQueue.main.async {
+                self?.terminalView?.becomeFirstResponder()
+            }
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in finish(false) })
+        alert.addAction(UIAlertAction(title: "Paste", style: .default) { _ in finish(true) })
+        root.present(alert, animated: true)
+    }
+
+    func setRemoteService(_ kind: String, enabled: Bool) {
+        let services = ServiceIndicators.shared
+        services.controlError = nil
+        if !enabled, !self.currentCommand.isEmpty, let item = services.items.first(where: { $0.kind.rawValue == kind }) {
+            DispatchQueue.global(qos: .userInitiated).async { item.stop() }
+            return
+        }
+        guard self.currentCommand.isEmpty else {
+            services.controlError = "Finish the terminal command before starting a service."
+            return
+        }
+        let command = kind == "ssh" ? (enabled ? "sshd on" : "sshd off") : (enabled ? "relay on" : "relay off")
+        self.commandQueue.async {
+            DispatchQueue.main.sync {
+                self.terminalView?.moveToBeginningOfLine()
+                self.terminalView?.feed(text: "\r\u{1b}[J")
+            }
+        }
+        self.executeCommand(command: command)
+        self.commandQueue.async {
+            DispatchQueue.main.async {
+                self.terminalView?.feed(text: self.commandBeforeCursor)
+                self.terminalView?.saveCursorPosition()
+                self.terminalView?.feed(text: self.commandAfterCursor)
+                self.terminalView?.restoreCursorPosition()
+            }
+        }
+    }
+
     @objc func hideKeyboard() {
         DispatchQueue.main.async {
             guard self.terminalView != nil else { return }
@@ -982,6 +1050,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // check issue with screen size and pico.
         // Scan the configuration file to generate the button groups:
         // Before iOS 26, or iPads, or VoiceOver active: single-arrow button
+        // TODO: iPhone Duo, iPad style is OK when opened. How to adjust?
         var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
         if #available(iOS 26, *) {
             if !UIAccessibility.isVoiceOverRunning && !UIDevice.current.model.hasPrefix("iPad") {
@@ -1016,7 +1085,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 var activeTag = 0
                 noneTag = -1
                 // iPhones, iOS 26+ only: recompute button font size based on number of buttons
-                // This a "liquiglass-only" issue, all other devices work well with default size of 19.
+                // This a "liquidglass-only" issue, all other devices work well with default size of 19.
                 if #available(iOS 26, *) {
                     if !UIDevice.current.model.hasPrefix("iPad") {
                         // parse the config file to get the number of buttons
@@ -1025,6 +1094,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         // smaller than 15 won't change the button size (but it will change the label size!)
                         // larger than 22 feels much larger than the keyboard keys
                         buttonFontSize =  min(max(screenWidth/(multiplier * CGFloat(numButtons)), 15.0), 22)
+                        if (UIDevice.current.name == "iPhone Duo") && (screenWidth == 466) {
+                            // vertical, closed iPhone Duo. This is the maximum size for 6 buttons
+                            // nothing can convince the closed iPhone Duo to display 7 buttons.
+                            buttonFontSize = 19.1
+                        }
                         #if DEBUG
                         NSLog("button size: \(buttonFontSize): \(screenWidth)/\(multiplier) * \(numButtons)")
                         #endif
@@ -1410,6 +1484,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             if useLiquidGlass {
+                NSLog("screen width: \(screenWidth) buttoncount: \(leftButtonGroup.count + rightButtonGroup.count) device: \(UIDevice.current.name) ")
                 // liquid glass makes the buttons larger, we can't have a middle space on small screens
                 // NSLog("leftButtonGroup: \(leftButtonGroup)")
                 // NSLog("rightButtonGroup: \(rightButtonGroup)")
@@ -1470,7 +1545,31 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return result
     }
     
+    func applyPrompt(_ name: String) {
+        let update = {
+            guard self.terminalPromptName != name else { return }
+            self.terminalPromptName = name
+            self.refreshPrompt()
+        }
+        if Thread.isMainThread { update() } else { DispatchQueue.main.sync(execute: update) }
+    }
+
+    private func refreshPrompt() {
+        // Never feed stdin or disturb a running command or partially typed input.
+        if currentCommand.isEmpty, let view = terminalView,
+           view.promptline > 0 || view.promptcolumn > 0,
+           view.getLastLine().isEmpty, parsePrompt() != lastUsedPrompt {
+            view.feed(text: "\r\n")
+            printPrompt()
+        }
+    }
+
     func parsePrompt() -> String {
+        if terminalPromptName != "custom" {
+            let directory = currentDirectory.isEmpty ? FileManager.default.currentDirectoryPath : currentDirectory
+            let path = String(cString: ios_getBookmarkedVersion(directory.utf8CString))
+            if let prompt = TerminalPrompts.render(terminalPromptName, path: path, colored: terminalTheme != nil) { return prompt }
+        }
         // Documentation from: https://www.cyberciti.biz/tips/howto-linux-unix-bash-shell-setup-prompt.html
         // Not implemented: \nnn (octal char), \[ \] (non-printing characters)
         // - get PS1 from environment:
@@ -1837,7 +1936,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
 
     func executeWebAssemblyCommands() {
         // since we're multi-threaded, we could be executing this while executeWebAssembly() is still running. So we wait.
-        NSLog("executeWebAssemblyCommands: url: \(webView?.url)")
+        // NSLog("executeWebAssemblyCommands: url: \(webView?.url)")
         var wasmEndedWithError = false;
         NSLog("Starting executeWebAssemblyCommands, commands: \(commandsStack.count) results: \(resultStack.count) = \(resultStack) executeWebAssemblyCommandsRunning= \(executeWebAssemblyCommandsRunning)")
         if (commandsStack.isEmpty) {
@@ -2152,6 +2251,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     // display the current configuration of the window.
     func showConfigWindow() {
+        fputs("prompt: \(terminalPromptName)\n", thread_stdout)
         fputs("theme: \(terminalThemeName.isEmpty ? "system" : terminalThemeName)\n", thread_stdout)
         if let theme = terminalTheme {
             fputs("ANSI: " + theme.colors.dropFirst(3).map { $0.uppercased() }.joined(separator: " ") + "\n", thread_stdout)
@@ -2288,6 +2388,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
             }
             self.terminalView?.setCursorStyle(shape: cursorShape.lowercased())
+            NotificationCenter.default.post(name: .init("terminalThemeChanged"), object: self.terminalView)
         }
     }
     
@@ -2342,6 +2443,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (fontLigature != nil) {
                 self.terminalFontLigature = fontLigature
             }
+            NotificationCenter.default.post(name: .init("terminalThemeChanged"), object: self.terminalView)
         }
     }
     
@@ -3088,6 +3190,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     changeDirectory(path: self.resetDirectoryAfterCommandTerminates)
                 }
                 self.resetDirectoryAfterCommandTerminates = ""
+                self.currentDirectory = FileManager().currentDirectoryPath
             }
             // re-hide buttons after leaving command:
             DispatchQueue.main.async {
@@ -3229,7 +3332,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Reload the web page:
             webView?.reloadFromOrigin()
         } else if (cmd.hasPrefix("setHomeDir:")) {
-            NSLog("Kitura: setHomeDir received")
+            NSLog("WASM: setHomeDir received")
             let documentsUrl = try! FileManager().url(for: .documentDirectory,
                                                       in: .userDomainMask,
                                                       appropriateFor: nil,
@@ -3405,6 +3508,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
            let fontName = userInfo["fontName"] as? String {
             terminalFontName = fontName
         }
+        if TerminalPrompts.savedName == (userInfo["terminalPromptDefault"] as? String ?? "custom"),
+           let prompt = userInfo["terminalPrompt"] as? String, TerminalPrompts.names.contains(prompt) {
+            terminalPromptName = prompt
+        }
         let savedTheme = TerminalThemes.savedName
         let previousDefault = userInfo["terminalThemeDefault"] as? String ?? ""
         if (savedTheme ?? "") == previousDefault && (savedTheme.map { (try? TerminalThemes.load($0)) != nil } ?? true) {
@@ -3511,6 +3618,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     if name == "PERL_MB_OPT" { continue }
                     if name == "PERL_MM_OPT" { continue }
                     if name == "TZ" { continue }
+                    if name == "NODE_PATH" { continue }
+                    if name == "NPM_CONFIG_PREFIX" { continue }
                     if name == "TERMINFO" { continue }
                     // Don't override APPVERSION and others:
                     if name == "APPNAME" { continue }
@@ -3917,14 +4026,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Now load wasm.html:
             commandQueue.async { // Make sure this is loaded after the .profile + .bashrc + restoreEnvironment
                 // (because it causes a crash otherwise)
-                DispatchQueue.main.async {
-                    if (appVersion != "a-Shell-mini") {
-                        NSLog("Loding wasm.html from 8443 (sceneWillEnterForeground)")
-                        self.webView?.load(URLRequest(url: URL(string: "https://localhost:8443/wasm.html")!))
-                    } else {
-                        NSLog("Loding wasm.html from 8334 (sceneWillEnterForeground)")
-                        self.webView?.load(URLRequest(url: URL(string: "https://localhost:8334/wasm.html")!))
-                    }
+                startLocalWebServer {
+                    self.webView?.load(URLRequest(url: LocalServerPorts.wasmURL))
                 }
             }
             // Was this window created with a purpose?
@@ -4105,12 +4208,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     
     
     func scene(_ scene: UIScene, openURLContexts: Set<UIOpenURLContext>) {
-        NSLog("Calling openURLContexts with \(openURLContexts)")
+        NSLog("Calling openURLContexts with %@", String(describing: openURLContexts))
         for urlContext in openURLContexts {
             // Is it one of our URLs?
             let fileURL = urlContext.url
             if ((fileURL.scheme ?? "").hasPrefix("ashell")) {
-                NSLog("We received an URL in openURLContexts: \(fileURL.absoluteString.removingPercentEncoding)") // received "ashell://ls"
+                NSLog("We received an URL in openURLContexts: %@", String(describing: fileURL.absoluteString.removingPercentEncoding)) // received "ashell://ls"
                 if (UIDevice.current.model.hasPrefix("iPad")) {
                     // iPad, so always open a new window to execute the command
                     let activity = NSUserActivity(activityType: "AsheKube.app.a-Shell.ExecuteCommand")
@@ -4136,7 +4239,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // Otherwise, ensure the URL is a file URL
             if (!fileURL.isFileURL) { continue }
-            NSLog("openURLContexts: \(fileURL.path)")
+            NSLog("openURLContexts: %@", fileURL.path)
             let isReadableWithoutSecurity = FileManager().isReadableFile(atPath: fileURL.path)
             let isSecuredURL = fileURL.startAccessingSecurityScopedResource()
             let isReadable = FileManager().isReadableFile(atPath: fileURL.path)
@@ -4149,7 +4252,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if (isSecuredURL) {
                     fileURL.stopAccessingSecurityScopedResource()
                 }
-                NSLog("Couldn't download \(fileURL), stopAccessingSecurityScopedResource")
+                NSLog("Couldn't download %@, stopAccessingSecurityScopedResource", String(describing: fileURL))
                 return
             }
             if (!isReadableWithoutSecurity) {
@@ -4166,14 +4269,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 } else {
                     // sceneWillEnterForeground will be called soon, will call cwd.
                     if var userInfo = scene.session.stateRestorationActivity?.userInfo {
-                        NSLog("Passing the directory to sceneWillEnterForeground: \(fileURL.path)")
+                        NSLog("Passing the directory to sceneWillEnterForeground: %@", fileURL.path)
                         if (currentDirectory == "") {
                             currentDirectory = FileManager().currentDirectoryPath
                         }
                         userInfo["prev_wd"] = currentDirectory
                         userInfo["cwd"] = fileURL.path
                     } else {
-                        NSLog("Calling changeDirectory: \(fileURL.path)")
+                        NSLog("Calling changeDirectory: %@", fileURL.path)
                         commandQueue.async {
                             changeDirectory(path: fileURL.path) // call cd_main and checks secured bookmarked URLs
                             self.closeAfterCommandTerminates = false
@@ -4442,6 +4545,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             terminalView?.getTerminal().backgroundColor = backgroundColor.toSwiftTermColor()
             terminalView?.getTerminal().cursorColor = cursorColor.toSwiftTermColor()
             self.terminalView?.setCursorStyle(shape: cursorShape.lowercased())
+            NotificationCenter.default.post(name: .init("terminalThemeChanged"), object: self.terminalView)
         }
         // TODO: Ligatures are enabled by default on iOS, they're a property of NSAttributeString, not the font.
         NSLog("Enabling font: \(fontName)")
@@ -4452,7 +4556,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         terminalView?.installColors(terminalTheme?.colors.dropFirst(3).map { UIColor(hexString: $0).toSwiftTermColor() } ?? SwiftTerm.Color.defaultInstalledColors)
         setEnvironmentFGBG(foregroundColor: foregroundColor, backgroundColor: backgroundColor)
-        if (showKeyboardAtStartup) {
+        if showKeyboardAtStartup, window?.rootViewController?.presentedViewController == nil {
             if let termView = self.terminalView {
                 if !termView.isFirstResponder {
                     _ = termView.becomeFirstResponder()
@@ -4486,8 +4590,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Use this method to undo the changes made on entering the background.
         // Reload the webAssembly interpreter (this will also check if the local server is still running):
         sceneIsInForeground = true
-        if (showWebView) {
-            webView?.reloadFromOrigin()
+        startLocalWebServer {
+            if (showWebView) {
+                self.webView?.reloadFromOrigin()
+            }
         }
         // Was this window created with a purpose?
         let userActivity = scene.userActivity
@@ -4568,6 +4674,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             scene.session.stateRestorationActivity?.userInfo!["fontName"] = terminalFontName
         }
         scene.session.stateRestorationActivity?.userInfo!["terminalTheme"] = terminalThemeName
+        scene.session.stateRestorationActivity?.userInfo!["terminalPrompt"] = terminalPromptName
+        scene.session.stateRestorationActivity?.userInfo!["terminalPromptDefault"] = UserDefaults.standard.string(forKey: "appliedTerminalPrompt") ?? "custom"
         scene.session.stateRestorationActivity?.userInfo!["terminalThemeDefault"] = UserDefaults.standard.string(forKey: "appliedTerminalTheme") ?? ""
         scene.session.stateRestorationActivity?.userInfo!["terminalFontDefault"] = TerminalFonts.savedName
         scene.session.stateRestorationActivity?.userInfo!["terminalFontSizeDefault"] = TerminalFonts.savedSize

@@ -1,0 +1,226 @@
+--- a/login/src/auth/manager.rs
++++ b/login/src/auth/manager.rs
+@@ -2843,4 +2843,42 @@
+     }
+
++    // A stable sidecar survives atomic replacement of the credential file.
++    // Hold it across reload, network rotation and persistence; dropping it unlocks.
++    async fn lock_shared_refresh(&self) -> Result<Option<std::fs::File>, RefreshTokenError> {
++        if !matches!(
++            self.auth_credentials_store_mode,
++            AuthCredentialsStoreMode::File | AuthCredentialsStoreMode::Auto
++        ) || self.has_external_auth()
++            || !matches!(self.auth_cached(), Some(CodexAuth::Chatgpt(_)))
++        {
++            return Ok(None);
++        }
++        let file = std::fs::OpenOptions::new()
++            .read(true)
++            .write(true)
++            .create(true)
++            .truncate(false)
++            .open(self.codex_home.join(".auth-refresh.lock"))?;
++        tokio::time::timeout(std::time::Duration::from_secs(60), async {
++            loop {
++                match file.try_lock() {
++                    Ok(()) => return Ok(()),
++                    Err(std::fs::TryLockError::WouldBlock) => {
++                        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
++                    }
++                    Err(error) => return Err(std::io::Error::from(error)),
++                }
++            }
++        })
++        .await
++        .map_err(|_| {
++            std::io::Error::new(
++                std::io::ErrorKind::TimedOut,
++                "timed out waiting for shared OAuth credentials",
++            )
++        })??;
++        Ok(Some(file))
++    }
++
+     /// Attempt to refresh the token by first performing a guarded reload from
+     /// the active auth source. If the loaded token differs from the cached token,
+@@ -2854,4 +2892,5 @@
+             ))
+         })?;
++        let _shared_refresh_guard = self.lock_shared_refresh().await?;
+         let auth_before_reload = self.auth_cached();
+         if auth_before_reload
+@@ -2893,4 +2932,29 @@
+             ))
+         })?;
++        let before = self.auth_cached();
++        let _shared_refresh_guard = self.lock_shared_refresh().await?;
++        if _shared_refresh_guard.is_some() {
++            let reloaded = self.load_auth().await;
++            // Older file logins can identify the user only in their ID-token claims.
++            let same_identity = match (before.as_ref(), reloaded.as_ref()) {
++                (Some(before), Some(after)) => {
++                    before.auth_mode() == after.auth_mode()
++                        && before.get_account_id() == after.get_account_id()
++                        && before.get_chatgpt_user_id() == after.get_chatgpt_user_id()
++                }
++                _ => false,
++            };
++            if !same_identity {
++                return Err(RefreshTokenError::Permanent(RefreshTokenFailedError::new(
++                    RefreshTokenFailedReason::Other,
++                    REFRESH_TOKEN_ACCOUNT_MISMATCH_MESSAGE.to_string(),
++                )));
++            }
++            let changed = !Self::auths_equal_for_refresh(before.as_ref(), reloaded.as_ref());
++            self.set_cached_auth(reloaded);
++            if changed {
++                return Ok(());
++            }
++        }
+         self.refresh_token_from_authority_impl().await
+     }
+--- a/login/src/auth/auth_tests.rs
++++ b/login/src/auth/auth_tests.rs
+@@ -33,4 +33,142 @@
+ const WORKSPACE_ID_SECOND_ALLOWED: &str = "123e4567-e89b-42d3-a456-426614174001";
+ const WORKSPACE_ID_DISALLOWED: &str = "123e4567-e89b-42d3-a456-426614174002";
++
++#[tokio::test]
++async fn shared_home_refresh_worker() {
++    let Ok(home) = std::env::var("CODEX_REFRESH_FIXTURE_HOME") else {
++        return;
++    };
++    let manager = AuthManager::new(
++        PathBuf::from(&home),
++        false,
++        AuthCredentialsStoreMode::File,
++        None,
++        None,
++        AuthKeyringBackendKind::Direct,
++        crate::test_support::transport_default_auth_route_config(),
++    )
++    .await;
++    assert_eq!(
++        manager
++            .auth_cached()
++            .and_then(|auth| auth.get_account_id())
++            .as_deref(),
++        Some(WORKSPACE_ID_ALLOWED),
++        "synthetic account must load before refresh"
++    );
++    std::fs::write(
++        Path::new(&home).join(format!("ready-{}", std::process::id())),
++        b"ready",
++    )
++    .unwrap();
++    tokio::time::timeout(std::time::Duration::from_secs(10), async {
++        while !Path::new(&home).join("start").exists() {
++            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
++        }
++    })
++    .await
++    .expect("parent must release refresh barrier");
++    let result = if std::env::var_os("CODEX_REFRESH_FIXTURE_AUTHORITY").is_some() {
++        manager.refresh_token_from_authority().await
++    } else {
++        manager.refresh_token().await
++    };
++    match result {
++        Ok(()) => {}
++        Err(RefreshTokenError::Permanent(error)) => {
++            panic!("synthetic refresh permanent category: {:?}", error.reason)
++        }
++        Err(RefreshTokenError::Transient(error)) => {
++            panic!("synthetic refresh transient kind: {:?}", error.kind())
++        }
++        Err(RefreshTokenError::Policy(_)) => panic!("synthetic refresh denied by network policy"),
++    }
++}
++
++#[tokio::test]
++#[serial(codex_auth_env)]
++async fn shared_home_refresh_rotates_once_across_processes() {
++    shared_home_refresh_case(false).await;
++}
++
++#[tokio::test]
++#[serial(codex_auth_env)]
++async fn shared_home_authority_refresh_rotates_once_across_processes() {
++    shared_home_refresh_case(true).await;
++}
++
++async fn shared_home_refresh_case(authority: bool) {
++    let home = tempdir().unwrap();
++    write_auth_file(
++        AuthFileParams {
++            openai_api_key: None,
++            chatgpt_plan_type: Some("pro".to_string()),
++            chatgpt_account_id: Some(WORKSPACE_ID_ALLOWED.to_string()),
++        },
++        home.path(),
++    )
++    .unwrap();
++    let auth_file = get_auth_file(home.path());
++    let mut fixture: serde_json::Value =
++        serde_json::from_slice(&std::fs::read(&auth_file).unwrap()).unwrap();
++    fixture["tokens"]["account_id"] = json!(WORKSPACE_ID_ALLOWED);
++    std::fs::write(auth_file, serde_json::to_vec(&fixture).unwrap()).unwrap();
++    let server = MockServer::start().await;
++    Mock::given(method("POST"))
++        .respond_with(ResponseTemplate::new(200)
++            .set_delay(std::time::Duration::from_millis(100))
++            .set_body_json(json!({"access_token":"fixture-rotated-access", "refresh_token":"fixture-rotated-refresh"})))
++        .mount(&server).await;
++    let mut children = Vec::new();
++    for _ in 0..2 {
++        let mut command = tokio::process::Command::new(std::env::current_exe().unwrap());
++        if authority {
++            command.env("CODEX_REFRESH_FIXTURE_AUTHORITY", "1");
++        }
++        let child = command
++            .args([
++                "--exact",
++                "auth::manager::tests::shared_home_refresh_worker",
++            ])
++            .env("CODEX_REFRESH_FIXTURE_HOME", home.path())
++            .env(REFRESH_TOKEN_URL_OVERRIDE_ENV_VAR, server.uri())
++            .env_remove(CODEX_ACCESS_TOKEN_ENV_VAR)
++            .env_remove("OPENAI_API_KEY")
++            .stdout(std::process::Stdio::inherit())
++            .stderr(std::process::Stdio::inherit())
++            .kill_on_drop(true)
++            .spawn()
++            .unwrap();
++        children.push(child);
++    }
++    tokio::time::timeout(std::time::Duration::from_secs(10), async {
++        loop {
++            let ready = std::fs::read_dir(home.path())
++                .unwrap()
++                .filter_map(Result::ok)
++                .filter(|entry| entry.file_name().to_string_lossy().starts_with("ready-"))
++                .count();
++            if ready == 2 {
++                break;
++            }
++            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
++        }
++    })
++    .await
++    .expect("both processes must load the original credentials before refreshing");
++    std::fs::write(home.path().join("start"), b"start").unwrap();
++    for child in &mut children {
++        let status = tokio::time::timeout(std::time::Duration::from_secs(10), child.wait())
++            .await
++            .expect("refresh process must finish")
++            .unwrap();
++        assert!(status.success(), "refresh process must succeed");
++    }
++    assert_eq!(
++        server.received_requests().await.unwrap().len(),
++        1,
++        "shared credentials must rotate only once after a guarded reload"
++    );
++}
+
+ #[test]
