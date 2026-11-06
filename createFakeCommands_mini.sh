@@ -1,4 +1,5 @@
 touch Resources_mini/bin/awk
+touch Resources_mini/bin/background
 touch Resources_mini/bin/bc
 touch Resources_mini/bin/cat
 touch Resources_mini/bin/cd
@@ -28,6 +29,7 @@ touch Resources_mini/bin/ifconfig
 touch Resources_mini/bin/jsc
 touch Resources_mini/bin/link
 touch Resources_mini/bin/ln
+touch Resources_mini/bin/location
 touch Resources_mini/bin/ls
 touch Resources_mini/bin/lua
 touch Resources_mini/bin/luac

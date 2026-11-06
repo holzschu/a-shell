@@ -8,6 +8,8 @@
 //
 
 import UIKit
+import CoreLocation
+import SwiftUI
 import ios_system
 import UserNotifications
 import Compression
@@ -231,6 +233,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             viewBehavior = .ignoreSafeArea
         }
         initializeEnvironment()
+        replaceCommand("background", "ashell_background", true)
+        replaceCommand("location", "ashell_location", true)
+        _ = BackgroundMode.shared
         replaceCommand("progress", "ashell_progress", false)
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
@@ -686,5 +691,317 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         default:
             return nil
         }
+    }
+}
+
+private enum LocationRequestError: Error {
+    case unauthorized
+    case timeout
+    case unavailable(String)
+
+    var message: String {
+        switch self {
+        case .unauthorized: return "location access is not authorized; allow Location in iOS Settings"
+        case .timeout: return "timed out waiting for a location fix"
+        case .unavailable(let message): return message
+        }
+    }
+}
+
+struct LocationOptions {
+    let timeout: TimeInterval
+
+    init(arguments: [String]) throws {
+        if arguments.isEmpty {
+            timeout = 30
+        } else if arguments.count == 2, arguments[0] == "--timeout",
+                  let value = Double(arguments[1]), value.isFinite, value > 0 {
+            timeout = value
+        } else {
+            throw LocationRequestError.unavailable("Usage: location [--timeout seconds]")
+        }
+    }
+}
+
+// Coordinates live only until the waiting location commands receive their fix.
+private final class BackgroundMode: NSObject, ObservableObject, CLLocationManagerDelegate {
+    static let shared = BackgroundMode()
+    static let preferenceKey = "background_mode"
+    @Published private(set) var enabled = UserDefaults.standard.bool(forKey: preferenceKey)
+    @Published private(set) var status = "off"
+    private let manager = CLLocationManager()
+    private var fixManager: CLLocationManager?
+    private var updating = false
+    private var lastUpdate: Date?
+    private var locationError: String?
+    private var requests: [UUID: (Result<CLLocation, LocationRequestError>) -> Void] = [:]
+
+    private override init() {
+        super.init()
+        manager.delegate = self
+        manager.pausesLocationUpdatesAutomatically = false
+        manager.distanceFilter = kCLDistanceFilterNone
+        NotificationCenter.default.addObserver(self, selector: #selector(refresh), name: UserDefaults.didChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(refresh), name: UIScene.didActivateNotification, object: nil)
+        refresh()
+    }
+
+    func setEnabled(_ value: Bool) {
+        UserDefaults.standard.set(value, forKey: Self.preferenceKey)
+        refresh()
+    }
+
+    private func updateStatus(_ detail: String) {
+        let authorization: String
+        switch manager.authorizationStatus {
+        case .authorizedAlways: authorization = "Always"
+        case .authorizedWhenInUse: authorization = "When In Use"
+        case .denied, .restricted: authorization = "denied"
+        case .notDetermined: authorization = "not determined"
+        @unknown default: authorization = "unknown"
+        }
+        let precise = manager.accuracyAuthorization == .fullAccuracy
+        let hidden = manager.authorizationStatus == .authorizedAlways && precise
+        let pill: String
+        if !enabled {
+            pill = "background mode is off"
+        } else if hidden {
+            pill = "hidden requested (Always + precise)"
+        } else {
+            pill = "visible requested (reduced accuracy or When In Use)"
+        }
+        status = "mode: \(enabled ? "on" : "off")\nauthorization: \(authorization)\naccuracy: \(precise ? "precise (100 m requested)" : "reduced (iOS setting)")\nindicator policy: \(pill); iOS controls display\nAccuracy follows Precise Location in iOS Settings. Precise updates can use more battery.\n\(detail)"
+    }
+
+    @objc func refresh() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { self.refresh() }
+            return
+        }
+        enabled = UserDefaults.standard.bool(forKey: Self.preferenceKey)
+        manager.desiredAccuracy = manager.accuracyAuthorization == .fullAccuracy ? kCLLocationAccuracyHundredMeters : kCLLocationAccuracyReduced
+        manager.allowsBackgroundLocationUpdates = enabled
+        manager.showsBackgroundLocationIndicator = manager.accuracyAuthorization != .fullAccuracy || manager.authorizationStatus != .authorizedAlways
+        fixManager?.desiredAccuracy = manager.desiredAccuracy
+        fixManager?.allowsBackgroundLocationUpdates = enabled
+        fixManager?.showsBackgroundLocationIndicator = manager.showsBackgroundLocationIndicator
+        guard enabled || !requests.isEmpty else {
+            manager.stopUpdatingLocation()
+            updating = false
+            lastUpdate = nil
+            locationError = nil
+            updateStatus("location session stopped")
+            return
+        }
+        let foreground = UIApplication.shared.connectedScenes.contains { $0.activationState == .foregroundActive }
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            updateStatus("waiting for location permission; open a-Shell to authorize")
+            if foreground { manager.requestWhenInUseAuthorization() }
+        case .authorizedWhenInUse, .authorizedAlways:
+            if enabled && !updating {
+                guard foreground else {
+                    updateStatus("waiting for foreground to start the location session")
+                    return
+                }
+                manager.startUpdatingLocation()
+                updating = true
+            }
+            if !requests.isEmpty && fixManager == nil {
+                let fix = CLLocationManager()
+                fix.delegate = self
+                fix.desiredAccuracy = manager.desiredAccuracy
+                fix.allowsBackgroundLocationUpdates = enabled
+                fix.showsBackgroundLocationIndicator = manager.showsBackgroundLocationIndicator
+                fixManager = fix
+                // requestLocation cannot share a manager with continuous updates.
+                fix.requestLocation()
+            }
+            if let error = locationError {
+                updateStatus("location error: \(error)")
+            } else if let update = lastUpdate {
+                updateStatus("location session started; last fix \(ISO8601DateFormatter().string(from: update)) (\(max(0, Int(-update.timeIntervalSinceNow))) s old)")
+            } else {
+                updateStatus("location session started; awaiting first update")
+            }
+        case .denied, .restricted:
+            manager.stopUpdatingLocation()
+            updating = false
+            completeRequests(.failure(.unauthorized))
+            updateStatus("location access is not authorized; allow Location in iOS Settings")
+        @unknown default:
+            manager.stopUpdatingLocation()
+            updating = false
+            completeRequests(.failure(.unavailable("unsupported location authorization")))
+            updateStatus("unsupported location authorization")
+        }
+    }
+
+    // Reduced fixes may be up to 20 minutes old (CLLocationManager accuracyAuthorization contract).
+    // Keep the precise bound short so stationary cached fixes still trigger a fresh one-shot request.
+    func requestFix(timeout: TimeInterval, completion: @escaping (Result<CLLocation, LocationRequestError>) -> Void) {
+        if manager.authorizationStatus == .authorizedAlways || manager.authorizationStatus == .authorizedWhenInUse,
+           let location = manager.location, location.horizontalAccuracy >= 0,
+           (-(manager.accuracyAuthorization == .reducedAccuracy ? 20 * 60.0 : 10.0)...0).contains(location.timestamp.timeIntervalSinceNow) {
+            lastUpdate = location.timestamp
+            completion(.success(location))
+            return
+        }
+        let identifier = UUID()
+        requests[identifier] = completion
+        refresh()
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
+            guard let request = self.requests.removeValue(forKey: identifier) else { return }
+            request(.failure(.timeout))
+            if self.requests.isEmpty { self.stopFixRequest() }
+            self.refresh()
+        }
+    }
+
+    private func stopFixRequest() {
+        fixManager?.delegate = nil
+        fixManager?.stopUpdatingLocation()
+        fixManager = nil
+    }
+
+    private func completeRequests(_ result: Result<CLLocation, LocationRequestError>) {
+        stopFixRequest()
+        let pending = requests.values.map { $0 }
+        requests.removeAll()
+        for completion in pending { completion(result) }
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        refresh()
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last(where: { $0.horizontalAccuracy >= 0 }) else { return }
+        lastUpdate = location.timestamp
+        locationError = nil
+        if (-(manager.accuracyAuthorization == .reducedAccuracy ? 20 * 60.0 : 10.0)...0).contains(location.timestamp.timeIntervalSinceNow) {
+            completeRequests(.success(location))
+        }
+        refresh()
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        if manager === fixManager {
+            if (error as? CLError)?.code == .locationUnknown { return }
+            completeRequests(.failure(.unavailable(error.localizedDescription)))
+            refresh()
+            return
+        }
+        locationError = error.localizedDescription
+        // A transient missing fix can recover before the command's timeout.
+        if (error as? CLError)?.code != .locationUnknown {
+            completeRequests(.failure(manager.authorizationStatus == .denied || manager.authorizationStatus == .restricted ? .unauthorized : .unavailable(error.localizedDescription)))
+        }
+        refresh()
+    }
+
+    func showSettings() {
+        guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+              var presenter = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController else { return }
+        while let presented = presenter.presentedViewController { presenter = presented }
+        presenter.present(UIHostingController(rootView: BackgroundSettings()), animated: true)
+    }
+}
+
+private struct BackgroundSettings: View {
+    @ObservedObject private var mode = BackgroundMode.shared
+    @Environment(\.presentationMode) private var presentationMode
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(footer: Text("Keeps the location session active for long scripts that use location. Accuracy follows Precise Location in iOS Settings. Precise updates can use more battery. With Always permission and Precise Location on, a-Shell requests a hidden location indicator; otherwise it requests a visible one. iOS controls the actual display. iOS can still terminate the app.")) {
+                    Toggle("Background mode", isOn: Binding(get: { mode.enabled }, set: { mode.setEnabled($0) }))
+                        .accessibilityIdentifier("background-mode")
+                    Text(mode.status)
+                        .accessibilityIdentifier("background-status")
+                }
+            }
+            .navigationTitle("Settings")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { presentationMode.wrappedValue.dismiss() }
+                }
+            }
+        }
+    }
+}
+
+@_cdecl("ashell_background")
+public func ashellBackground(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let arguments = (1..<max(1, Int(argc))).map { String(cString: argv![$0]!) }
+    let argument = arguments.first
+    guard arguments.isEmpty || (arguments.count == 1 && ["on", "off", "status"].contains(argument!)) else {
+        fputs("Usage: background [on|off|status]\nWithout arguments, opens Settings in the app.\nAccuracy follows Precise Location in iOS Settings.\n", thread_stderr)
+        return 2
+    }
+    var result = ""
+    let action = {
+        let mode = BackgroundMode.shared
+        if argument == "on" { mode.setEnabled(true) }
+        else if argument == "off" { mode.setEnabled(false) }
+        else { mode.refresh() }
+        if arguments.isEmpty { mode.showSettings() }
+        result = mode.status
+    }
+    // ios_system normally calls commands on a worker thread, but never sync to ourselves.
+    if Thread.isMainThread { action() }
+    else { DispatchQueue.main.sync(execute: action) }
+    fputs("background: \(result)\n", thread_stdout)
+    return 0
+}
+
+@_cdecl("ashell_location")
+public func ashellLocation(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let arguments = (1..<max(1, Int(argc))).map { String(cString: argv![$0]!) }
+    let options: LocationOptions
+    do { options = try LocationOptions(arguments: arguments) }
+    catch {
+        fputs("Usage: location [--timeout seconds]\nPrint one fix as JSON; default timeout is 30 seconds.\n", thread_stderr)
+        return 2
+    }
+    guard !Thread.isMainThread else {
+        fputs("location: cannot wait for a fix on the UI thread\n", thread_stderr)
+        return 1
+    }
+    let completed = DispatchSemaphore(value: 0)
+    var result: Result<CLLocation, LocationRequestError>?
+    DispatchQueue.main.async {
+        BackgroundMode.shared.requestFix(timeout: options.timeout) {
+            result = $0
+            completed.signal()
+        }
+    }
+    completed.wait()
+    switch result! {
+    case .success(let location):
+        let fix: [String: Any] = [
+            "latitude": location.coordinate.latitude,
+            "longitude": location.coordinate.longitude,
+            "altitude": location.altitude,
+            "accuracy": location.horizontalAccuracy,
+            "vertical_accuracy": location.verticalAccuracy,
+            "bearing": location.course,
+            "speed": location.speed,
+            "elapsedMs": max(0, Int64(-location.timestamp.timeIntervalSinceNow * 1000)),
+            "provider": "corelocation"
+        ]
+        do {
+            let data = try JSONSerialization.data(withJSONObject: fix, options: [.sortedKeys])
+            fputs(String(decoding: data, as: UTF8.self) + "\n", thread_stdout)
+            return 0
+        } catch {
+            fputs("location: could not encode the fix: \(error.localizedDescription)\n", thread_stderr)
+            return 1
+        }
+    case .failure(let error):
+        fputs("location: \(error.message)\n", thread_stderr)
+        if case .timeout = error { return 124 }
+        return 1
     }
 }
