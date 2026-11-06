@@ -1,0 +1,17 @@
+[package]
+name = "codex-ios-embedded"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+codex-arg0.workspace = true
+codex-cli = { path = "../cli" }
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+crossterm.workspace = true
+codex-utils-cli.workspace = true

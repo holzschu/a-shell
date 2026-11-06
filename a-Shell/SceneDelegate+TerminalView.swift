@@ -99,14 +99,15 @@ extension SceneDelegate {
             if autocompleteCommands {
                 // Autocompleting a command:
                 // The aliases go first:
-                let aliasArray = aliasesAsArray() as! [String]?
-                for suggestion in aliasArray! { // alphabetical order
-                    if suggestion.hasPrefix(mainCommand) {
-                        var shortenedSugg = suggestion
-                        shortenedSugg.removeFirst(mainCommand.count)
-                        if (!autocompleteSuggestions.contains(shortenedSugg)) && (!autocompleteSuggestions.contains(shortenedSugg + " ")) {
-                            // add a space so we're ready with the arguments
-                            autocompleteSuggestions.append(shortenedSugg + " ")
+                if let aliasArray = aliasesAsArray() as? [String]? {
+                    for suggestion in aliasArray! { // alphabetical order
+                        if suggestion.hasPrefix(mainCommand) {
+                            var shortenedSugg = suggestion
+                            shortenedSugg.removeFirst(mainCommand.count)
+                            if (!autocompleteSuggestions.contains(shortenedSugg)) && (!autocompleteSuggestions.contains(shortenedSugg + " ")) {
+                                // add a space so we're ready with the arguments
+                                autocompleteSuggestions.append(shortenedSugg + " ")
+                            }
                         }
                     }
                 }
@@ -643,7 +644,6 @@ extension SceneDelegate {
             setenv("COLUMNS", "\(width)".toCString(), 1)
             ios_setenv("COLUMNS", "\(width)".toCString(), 1)
         }
-        NSLog("Resized window: \(newCols) x \(newRows) == \(getenv("COLUMNS")) x \(getenv("LINES"))")
     }
     
     // None of these are called.
@@ -655,6 +655,19 @@ extension SceneDelegate {
         NSLog("hostCurrentDirectoryUpdate: \(directory)")
     }
     
+    private func synchronizeRecalledInputContext(_ source: SwiftTerm.TerminalView) {
+        guard source.markedTextRange == nil,
+              let range = source.textRange(from: source.beginningOfDocument, to: source.endOfDocument) else { return }
+        // History already changed the host editor. Update UIKit without sending it again.
+        let receiver = source.terminalDelegate
+        source.terminalDelegate = nil
+        defer { source.terminalDelegate = receiver }
+        source.replace(range, withText: commandBeforeCursor + commandAfterCursor)
+        if let caret = source.position(from: source.beginningOfDocument, offset: commandBeforeCursor.utf16.count) {
+            source.selectedTextRange = source.textRange(from: caret, to: caret)
+        }
+    }
+
     func send(source: SwiftTerm.TerminalView, inputString: String) {
         var string = inputString
         // print("string: \(string)")
@@ -893,6 +906,7 @@ extension SceneDelegate {
                         terminalView?.feed(text: history[historyPosition])
                         commandBeforeCursor = history[historyPosition]
                         commandAfterCursor = ""
+                        synchronizeRecalledInputContext(source)
                         delayedVoiceOver(message: commandBeforeCursor)
                     }
                 } else {
@@ -905,6 +919,7 @@ extension SceneDelegate {
                         terminalView?.feed(text: commandHistory[commandHistoryPosition])
                         commandBeforeCursor = commandHistory[commandHistoryPosition]
                         commandAfterCursor = ""
+                        synchronizeRecalledInputContext(source)
                         delayedVoiceOver(message: commandBeforeCursor)
                     }
                 }
@@ -934,6 +949,7 @@ extension SceneDelegate {
                             terminalView?.feed(text: history[historyPosition])
                             commandBeforeCursor = history[historyPosition]
                             commandAfterCursor = ""
+                            synchronizeRecalledInputContext(source)
                             delayedVoiceOver(message: commandBeforeCursor)
                         }
                     } else {
@@ -944,6 +960,7 @@ extension SceneDelegate {
                         terminalView?.updateDisplay()
                         commandBeforeCursor = ""
                         commandAfterCursor = ""
+                        synchronizeRecalledInputContext(source)
                         delayedVoiceOver(message: "empty line")
                     }
                 } else {
@@ -957,6 +974,7 @@ extension SceneDelegate {
                             terminalView?.feed(text: commandHistory[commandHistoryPosition])
                             commandBeforeCursor = commandHistory[commandHistoryPosition]
                             commandAfterCursor = ""
+                            synchronizeRecalledInputContext(source)
                             delayedVoiceOver(message: commandBeforeCursor)
                         }
                     } else {
@@ -967,6 +985,7 @@ extension SceneDelegate {
                         terminalView?.updateDisplay()
                         commandBeforeCursor = ""
                         commandAfterCursor = ""
+                        synchronizeRecalledInputContext(source)
                         delayedVoiceOver(message: " empty line ")
                     }
                 }
@@ -1557,7 +1576,7 @@ extension SceneDelegate {
             if myData.count == 1, let key = myData.first, key == 3 || key == 4 {
                 ios_switchSession(self.persistentIdentifier?.toCString())
                 ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
-                if let program = ios_progname(), String(cString: program) == "node" {
+                if let program = ios_progname(), String(cString: program) == "node" || (key == 3 && ["npm", "npx"].contains(String(cString: program))) {
                     send(source: source, inputString: key == 3 ? interrupt : endOfTransmission)
                     return
                 }

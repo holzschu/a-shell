@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		A59000000000000000000001 /* heliocron.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A59000000000000000000002 /* heliocron.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A59000000000000000000003 /* heliocron.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A59000000000000000000002 /* heliocron.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A22600000000000000000001 /* codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2200010030F7400000000001 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
+		2200010030F7400000000002 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
+		2200010030F7400000000004 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2203367A28C4B8070027664C /* pico.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2232245E289695A9001BAE04 /* pico.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22068CC62F51C11A004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
 		22068CC72F51CE47004307F7 /* TerminalView+KeyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */; };
@@ -59,9 +63,9 @@
 		22207E0727BAAE7E00DB66C2 /* perlA.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20174264E81E1004FBA5C /* perlA.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22207E0827BAAE7E00DB66C2 /* perlB.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F20177265260B7004FBA5C /* perlB.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22207E0927BAAE8100DB66C2 /* make.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DE173D2653DC960031A029 /* make.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		2225C10E2F685BCB0013F533 /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C10D2F685BCB0013F533 /* Kitura */; };
-		2225C1102F685BD50013F533 /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C10F2F685BD50013F533 /* Kitura */; };
-		2225C1122F685BDD0013F533 /* Kitura in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C1112F685BDD0013F533 /* Kitura */; };
+		2225C10E2F685BCB0013F533 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C10D2F685BCB0013F533 /* NIOSSL */; };
+		2225C1102F685BD50013F533 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C10F2F685BD50013F533 /* NIOSSL */; };
+		2225C1122F685BDD0013F533 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 2225C1112F685BDD0013F533 /* NIOSSL */; };
 		222BE55B2BE2D512002E4272 /* wasm_withWorker.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248A2BE12FEE003A8031 /* wasm_withWorker.js */; };
 		222BE55C2BE2D519002E4272 /* wasm_worker_wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */; };
 		2230F40A257D47D100810B07 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2230F400257D479900810B07 /* Assets.xcassets */; };
@@ -109,8 +113,6 @@
 		2249E13A2E7546E5003F03EE /* PythonA_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1382E7546C6003F03EE /* PythonA_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2249E13B2E7546E5003F03EE /* Python-_cffi_backend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2249E1392E7546D2003F03EE /* Python-_cffi_backend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
-		610000000000000000000002 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
-		707000000000000000000002 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		224A903E2ADD0999006DB9CC /* Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223A1C1B2A5EDCA700B1B9AD /* Tips.swift */; };
 		224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
@@ -166,7 +168,6 @@
 		224A90782ADD0999006DB9CC /* openssl.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F83257012190068004E /* openssl.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907B2ADD0999006DB9CC /* freetype.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000001 /* freetype.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907C2ADD0999006DB9CC /* harfbuzz.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000002 /* harfbuzz.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		224A907D2ADD0999006DB9CC /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000003 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A907E2ADD0999006DB9CC /* magick.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2231A5072588D8D100B5EDFD /* magick.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90802ADD0999006DB9CC /* vim.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F5A0255846F300673D11 /* vim.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		224A90952ADD0999006DB9CC /* lua_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E9F583255846A500673D11 /* lua_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -232,6 +233,9 @@
 		227F058330867D0500FCC674 /* node.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227F058230867C0300FCC674 /* node.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227F0FB930868CE400FCC674 /* npm in Resources */ = {isa = PBXBuildFile; fileRef = 227F0FB830868CE300FCC674 /* npm */; };
 		228503772F47806F00E4DA17 /* listTeXscripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221DA54B26F7688100BEA92A /* listTeXscripts.swift */; };
+		228A55223098D1CF00F9F672 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
+		228A55233098D1CF00F9F672 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
+		228A55243098D1CF00F9F672 /* Relay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59100000000000000000004 /* Relay.swift */; };
 		228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		228E13F725C95F430065D825 /* ios_system.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
@@ -248,8 +252,6 @@
 		22984EF722C93DBF00069497 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF622C93DBF00069497 /* Preview Assets.xcassets */; };
 		22984EFA22C93DBF00069497 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22984EF822C93DBF00069497 /* LaunchScreen.storyboard */; };
 		229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
-		610000000000000000000003 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
-		707000000000000000000003 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		229D2478257931E4004A78AC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		229D2479257931E4004A78AC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
 		229D247B257931E4004A78AC /* UIColor+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291286622D9DAC40004A5EA /* UIColor+hexString.swift */; };
@@ -290,6 +292,8 @@
 		229D25C42579369B004A78AC /* bin in Resources */ = {isa = PBXBuildFile; fileRef = 229D25C12579369A004A78AC /* bin */; };
 		229F51152473BBCA0053AC03 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229F51142473BBC90053AC03 /* commandDictionary.plist */; };
 		22A536352C4521CA0031A9FF /* wasm_worker_wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */; };
+		22A6E07F3098D9840018310F /* wasm_withWorker.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248A2BE12FEE003A8031 /* wasm_withWorker.js */; };
+		22A6E0803098D9A20018310F /* wasm_worker_wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 227B248B2BE12FF0003A8031 /* wasm_worker_wasm.js */; };
 		22AAB16829E99C4900975EFD /* require_jscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44129E87D920054F01F /* require_jscore.js */; };
 		22AAB16929E99C4D00975EFD /* url-polyfill.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44329E88AE60054F01F /* url-polyfill.js */; };
 		22AAB16F29EEC5FD00975EFD /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229D25C025793699004A78AC /* commandDictionary.plist */; };
@@ -941,8 +945,7 @@
 		22D146662E62098800E76E2E /* PythonAxxlimited.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146672E62098800E76E2E /* PythonAxxlimited_35.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
-		610000000000000000000004 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
-		707000000000000000000004 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
+		22D52143308BE69B00D9949D /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9F4254C2AA7008C1490 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F942570139D0068004E /* awk.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F8E257012F50068004E /* awk.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F952570139D0068004E /* curl_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F91257012F50068004E /* curl_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F962570139D0068004E /* files.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F89257012F50068004E /* files.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -979,7 +982,16 @@
 		22F9641B30852E8100868C46 /* Ruff.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F9641A30852E7600868C46 /* Ruff.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22FFB44229E87D950054F01F /* require_jscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44129E87D920054F01F /* require_jscore.js */; };
 		22FFB44429E88AE80054F01F /* url-polyfill.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44329E88AE60054F01F /* url-polyfill.js */; };
+		610000000000000000000002 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
+		610000000000000000000003 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
+		610000000000000000000004 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
+		610000000000000000000011 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
+		610000000000000000000012 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
+		610000000000000000000013 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
 		619225000000000000000001 /* gitoxide/gitoxide.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 619225000000000000000002 /* gitoxide/gitoxide.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		620000000000000000000002 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
+		620000000000000000000003 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
+		620000000000000000000004 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
 		6BD953662BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
 		6BD953672BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
 		6BD953682BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
@@ -989,13 +1001,34 @@
 		6BD9536E2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		6BD9536F2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		6BD953702BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
+		707000000000000000000002 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
+		707000000000000000000003 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
+		707000000000000000000004 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		66727EE1DC59BDA02721BFDF /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		6DA4290CEFD8AE8731971F7C /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
+		6E0E9C24B43A7139D193FA09 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
+		7F117665FA3CA0A131164904 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8D581F458AB1D50B2B8214BC /* a-Shell-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9313D8BBB62B8827FA0F4BBE /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
+		9FA1E9A5C72AF598227B3351 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B2C2C9D94DB1A976E1C18301 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229D25C025793699004A78AC /* commandDictionary.plist */; };
+		CDB88291CE91BD1BB768CB32 /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
+		CFC692FD99A84C71382E2A01 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229F51142473BBC90053AC03 /* commandDictionary.plist */; };
+		FE87DA972C544F9F425195EE /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		D91691CFCADBED6F76AE4E4E /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		BE8AFE2BBEDBF93A4910062F /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		B85B646A76EB1C3038FBC891 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		241174C3FD9A4286E38FE7C0 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		87BFA35D4A842B3F7BD8E197 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22000000000000000000002 /* rg/rg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		535000000000000000000002 /* CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* CommandEnvironment.swift */; };
+		535000000000000000000003 /* CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* CommandEnvironment.swift */; };
+		535000000000000000000004 /* CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* CommandEnvironment.swift */; };
+		535000000000000000000005 /* CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* CommandEnvironment.swift */; };
+		535000000000000000000006 /* CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* CommandEnvironment.swift */; };
 		AE1100000000000000000001 /* helix/helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix/helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		610000000000000000000011 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
-		610000000000000000000012 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
-		610000000000000000000013 /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000010 /* Themes */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1041,6 +1074,27 @@
 			remoteGlobalIDString = 22AD8717246EBFFA00F415DE;
 			remoteInfo = "a-Shell-Intents";
 		};
+		75A702C38BAC6B039A56C397 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1D1C6DB1924CE909F07BB047;
+			remoteInfo = "a-Shell-LongCommands";
+		};
+		967E5C627ADCDCB09451FAC6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 05CD0AC3A045D4B4D1258F0B;
+			remoteInfo = "a-Shell-mini-LongCommands";
+		};
+		F33F299FD852DC4CD1764F55 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 05CD0AC3A045D4B4D1258F0B;
+			remoteInfo = "a-Shell-mini-LongCommands";
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1062,6 +1116,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				22D52143308BE69B00D9949D /* libpng.xcframework in Embed Frameworks */,
 				224A90692ADD0999006DB9CC /* ios_system.xcframework in Embed Frameworks */,
 				224A906B2ADD0999006DB9CC /* awk.xcframework in Embed Frameworks */,
 				224A906C2ADD0999006DB9CC /* curl_ios.xcframework in Embed Frameworks */,
@@ -1081,7 +1136,6 @@
 				224A90782ADD0999006DB9CC /* openssl.xcframework in Embed Frameworks */,
 				224A907B2ADD0999006DB9CC /* freetype.xcframework in Embed Frameworks */,
 				224A907C2ADD0999006DB9CC /* harfbuzz.xcframework in Embed Frameworks */,
-				224A907D2ADD0999006DB9CC /* libpng.xcframework in Embed Frameworks */,
 				224A907E2ADD0999006DB9CC /* magick.xcframework in Embed Frameworks */,
 				224A90802ADD0999006DB9CC /* vim.xcframework in Embed Frameworks */,
 				224A90952ADD0999006DB9CC /* lua_ios.xcframework in Embed Frameworks */,
@@ -1447,6 +1501,7 @@
 				225F45B0282A4B2D0010E698 /* texlua53A.xcframework in Embed Frameworks */,
 				2243B1B12840ADBF00588B51 /* vimproc.xcframework in Embed Frameworks */,
 				2243B1BA284278F500588B51 /* dash.xcframework in Embed Frameworks */,
+				A22600000000000000000001 /* codex.xcframework in Embed Frameworks */,
 				A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */,
 				A59000000000000000000001 /* heliocron.xcframework in Embed Frameworks */,
 				2243B1BB284278F500588B51 /* dashA.xcframework in Embed Frameworks */,
@@ -1919,10 +1974,45 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		06944D7F6743B6FC21625999 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				8D581F458AB1D50B2B8214BC /* a-Shell-LongCommands.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49A255B4BCFBF00F034858F4 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				9FA1E9A5C72AF598227B3351 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B427E6638A792BDC5802FE8 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				7F117665FA3CA0A131164904 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A59000000000000000000002 /* heliocron.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = heliocron/heliocron.xcframework; sourceTree = SOURCE_ROOT; };
+		A22600000000000000000002 /* codex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = codex/codex.xcframework; sourceTree = SOURCE_ROOT; };
+		2200010030F7400000000003 /* PhotosUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PhotosUI.framework; path = System/Library/Frameworks/PhotosUI.framework; sourceTree = SDKROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
 		2208ACC422D2026E003985D6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIDevice+Name.swift"; path = "Util/UIDevice+Name.swift"; sourceTree = SOURCE_ROOT; };
@@ -1971,7 +2061,6 @@
 		22372B712448E85C0033FE07 /* usr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = usr; path = Resources/usr; sourceTree = "<group>"; };
 		2237DC3028549CB8003E4738 /* jq.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = jq.xcframework; path = xcfs/.build/artifacts/xcfs/jq/jq.xcframework; sourceTree = "<group>"; };
 		223A1C1B2A5EDCA700B1B9AD /* Tips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tips.swift; sourceTree = "<group>"; };
-		223AF28E2D8B2E2300A4A62D /* a-Shell-mini copy2-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "a-Shell-mini copy2-Info.plist"; path = "/Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell-mini copy2-Info.plist"; sourceTree = "<absolute>"; };
 		223E91E52EC11C7500A81615 /* openrsyncA.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = openrsyncA.framework; path = xcfs/.build/artifacts/xcfs/openrsyncA.framework; sourceTree = "<group>"; };
 		223EF3432B97490600A8ED5A /* sshd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = sshd.xcframework; path = xcfs/.build/artifacts/xcfs/sshd/sshd.xcframework; sourceTree = "<group>"; };
 		223FC3C22611F57C00CDC89F /* wasm.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = wasm.html; sourceTree = "<group>"; };
@@ -2024,7 +2113,6 @@
 		226B0BF72E9FD5C300B14A3F /* openrsync.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = openrsync.framework; path = xcfs/.build/artifacts/xcfs/openrsync.framework; sourceTree = "<group>"; };
 		226B3B4A26F27E330007C281 /* forbidden */ = {isa = PBXFileReference; lastKnownFileType = folder; name = forbidden; path = ODR/forbidden; sourceTree = "<group>"; };
 		226FBED72C1257B000400751 /* jsc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = jsc.swift; sourceTree = "<group>"; };
-		2271BAFE2D8B064D00A809E5 /* a-Shell-noPython copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "a-Shell-noPython copy-Info.plist"; path = "/Users/holzschu/src/Xcode_iPad/a-Shell/a-Shell-noPython copy-Info.plist"; sourceTree = "<absolute>"; };
 		227318AC28F02E170027A736 /* multimarkdown.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = multimarkdown.framework; path = xcfs/.build/artifacts/xcfs/multimarkdown.framework; sourceTree = "<group>"; };
 		2275AFAA26CA9B6D00B5BE45 /* ffmpeg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffmpeg.xcframework; path = xcfs/.build/artifacts/xcfs/ffmpeg/ffmpeg.xcframework; sourceTree = "<group>"; };
 		2275AFAB26CA9B6D00B5BE45 /* ffprobe.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffprobe.xcframework; path = xcfs/.build/artifacts/xcfs/ffprobe/ffprobe.xcframework; sourceTree = "<group>"; };
@@ -2727,8 +2815,6 @@
 		22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited.framework; path = Resources/Frameworks/PythonAxxlimited.framework; sourceTree = SOURCE_ROOT; };
 		22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAxxlimited_35.framework; path = Resources/Frameworks/PythonAxxlimited_35.framework; sourceTree = SOURCE_ROOT; };
 		22D23117231940B2005B0C12 /* ExtraCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraCommands.swift; sourceTree = "<group>"; };
-		610000000000000000000001 /* TerminalTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTheme.swift; sourceTree = "<group>"; };
-		707000000000000000000001 /* TerminalFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalFont.swift; sourceTree = "<group>"; };
 		22DC1F6425700F7E0068004E /* bibtex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = bibtex.xcframework; path = xcfs/.build/artifacts/xcfs/bibtex/bibtex.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F6525700F7E0068004E /* kpathsea.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = kpathsea.xcframework; path = xcfs/.build/artifacts/xcfs/kpathsea/kpathsea.xcframework; sourceTree = SOURCE_ROOT; };
 		22DC1F6625700F7E0068004E /* luatex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = luatex.xcframework; path = xcfs/.build/artifacts/xcfs/luatex/luatex.xcframework; sourceTree = SOURCE_ROOT; };
@@ -2771,20 +2857,31 @@
 		22F9641A30852E7600868C46 /* Ruff.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Ruff.xcframework; path = ruff/Ruff.xcframework; sourceTree = "<group>"; };
 		22FFB44129E87D920054F01F /* require_jscore.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = require_jscore.js; sourceTree = "<group>"; };
 		22FFB44329E88AE60054F01F /* url-polyfill.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "url-polyfill.js"; sourceTree = "<group>"; };
+		610000000000000000000001 /* TerminalTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTheme.swift; sourceTree = "<group>"; };
+		610000000000000000000010 /* Themes */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Themes; path = Resources/Themes; sourceTree = SOURCE_ROOT; };
 		619225000000000000000002 /* gitoxide/gitoxide.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = gitoxide/gitoxide.xcframework; sourceTree = SOURCE_ROOT; };
+		620000000000000000000001 /* TerminalPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPrompt.swift; sourceTree = "<group>"; };
 		6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PutFileIntentHandler.swift; sourceTree = "<group>"; };
 		6BD953692BFFCC4000C2508F /* GetFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetFileIntentHandler.swift; sourceTree = "<group>"; };
 		6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecuteCommandIntentHandler.swift; sourceTree = "<group>"; };
+		707000000000000000000001 /* TerminalFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalFont.swift; sourceTree = "<group>"; };
 		8916088D2713056800CED1C9 /* a-Shell-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "a-Shell-Bridging-Header.h"; sourceTree = "<group>"; };
 		8916088E2713056900CED1C9 /* KBWebViewBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KBWebViewBase.m; sourceTree = "<group>"; };
 		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
 		898384A83061A39800A1E18D /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
+		0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExecuteLongCommandIntent.swift; sourceTree = "<group>"; };
+		4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LongCommandsExtension.swift; sourceTree = "<group>"; };
+		A83EA8C808E52262F507587D /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "a-Shell-mini-LongCommands.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "a-Shell-LongCommands.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EF41C539C9EC98353B77E1BB /* LongCommands.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = LongCommands.entitlements; sourceTree = "<group>"; };
+		196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCommand.swift; sourceTree = "<group>"; };
+		535000000000000000000001 /* CommandEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util/CommandEnvironment.swift; sourceTree = SOURCE_ROOT; };
 		A22000000000000000000002 /* rg/rg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = rg/rg.xcframework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000001 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = xcfs/.build/artifacts/xcfs/freetype/freetype.xcframework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework; sourceTree = SOURCE_ROOT; };
-		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework; sourceTree = SOURCE_ROOT; };
+		A59100000000000000000004 /* Relay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relay.swift; sourceTree = "<group>"; };
 		AE1100000000000000000002 /* helix/helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
-		610000000000000000000010 /* Themes */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Themes; path = Resources/Themes; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2808,8 +2905,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2200010030F7400000000004 /* PhotosUI.framework in Frameworks */,
 				224A904D2ADD0999006DB9CC /* ios_system.xcframework in Frameworks */,
-				2225C1122F685BDD0013F533 /* Kitura in Frameworks */,
+				2225C1122F685BDD0013F533 /* NIOSSL in Frameworks */,
 				227A13642F308E9C006FD5C1 /* SwiftTerm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2818,8 +2916,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2200010030F7400000000001 /* PhotosUI.framework in Frameworks */,
 				228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */,
-				2225C1102F685BD50013F533 /* Kitura in Frameworks */,
+				2225C1102F685BD50013F533 /* NIOSSL in Frameworks */,
 				227EE36E2F0913C000636757 /* SwiftTerm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2828,8 +2927,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2200010030F7400000000002 /* PhotosUI.framework in Frameworks */,
 				228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */,
-				2225C10E2F685BCB0013F533 /* Kitura in Frameworks */,
+				2225C10E2F685BCB0013F533 /* NIOSSL in Frameworks */,
 				2213EE132EE4A148001F0114 /* SwiftTerm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2850,12 +2950,29 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4EF95B478646F901898E00B3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE87DA972C544F9F425195EE /* ios_system.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5226E3090F3A128FBB93D81B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66727EE1DC59BDA02721BFDF /* ios_system.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		2208ACBB22CCE529003985D6 /* Util */ = {
 			isa = PBXGroup;
 			children = (
+				535000000000000000000001 /* CommandEnvironment.swift */,
 				226FBED72C1257B000400751 /* jsc.swift */,
 				22C4A02C22E09D9D00E0FAD2 /* URL+isDirectory.swift */,
 				2291286622D9DAC40004A5EA /* UIColor+hexString.swift */,
@@ -2928,9 +3045,8 @@
 				22178F03257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI */,
 				22984EEB22C93DBC00069497 /* Products */,
 				22B1B80D22CB9A5A00F7C452 /* Frameworks */,
-				2271BAFE2D8B064D00A809E5 /* a-Shell-noPython copy-Info.plist */,
-				223AF28E2D8B2E2300A4A62D /* a-Shell-mini copy2-Info.plist */,
 				898384A83061A39800A1E18D /* Build.xcconfig */,
+				9C5656AC927E171D1D99F3D1 /* a-Shell-LongCommands */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2944,6 +3060,8 @@
 				22178EF8257BBBA4008EB2B4 /* a-Shell-mini-Intents.appex */,
 				22178F01257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI.appex */,
 				224A91702ADD0999006DB9CC /* a-Shell-noPython.app */,
+				E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */,
+				CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2955,8 +3073,10 @@
 				22B1B83322CBC53700F7C452 /* a-Shell.entitlements */,
 				22984EED22C93DBC00069497 /* AppDelegate.swift */,
 				22D23117231940B2005B0C12 /* ExtraCommands.swift */,
+				A59100000000000000000004 /* Relay.swift */,
 				610000000000000000000010 /* Themes */,
 				610000000000000000000001 /* TerminalTheme.swift */,
+				620000000000000000000001 /* TerminalPrompt.swift */,
 				707000000000000000000001 /* TerminalFont.swift */,
 				22984EEF22C93DBC00069497 /* SceneDelegate.swift */,
 				224754D42EFBDF2C007C35FE /* SceneDelegate+TerminalView.swift */,
@@ -3041,6 +3161,8 @@
 		22B1B80D22CB9A5A00F7C452 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A22600000000000000000002 /* codex.xcframework */,
+				2200010030F7400000000003 /* PhotosUI.framework */,
 				227F058230867C0300FCC674 /* node.xcframework */,
 				A22000000000000000000002 /* rg/rg.xcframework */,
 				A59000000000000000000002 /* heliocron.xcframework */,
@@ -3079,7 +3201,6 @@
 				22F75D40265FA3500056AFD2 /* xxd.xcframework */,
 				A53600000000000000000001 /* freetype.xcframework */,
 				A53600000000000000000002 /* harfbuzz.xcframework */,
-				A53600000000000000000003 /* libpng.xcframework */,
 				2294A9BE254C19D0008C1490 /* freetype.xcframework */,
 				22AF02D229F669C20085290B /* openblas.xcframework */,
 				22AF02D329F669DE0085290B /* libgfortran.xcframework */,
@@ -3905,6 +4026,19 @@
 			name = Perl;
 			sourceTree = "<group>";
 		};
+		9C5656AC927E171D1D99F3D1 /* a-Shell-LongCommands */ = {
+			isa = PBXGroup;
+			children = (
+				0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */,
+				196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */,
+				4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */,
+				A83EA8C808E52262F507587D /* Info.plist */,
+				EF41C539C9EC98353B77E1BB /* LongCommands.entitlements */,
+			);
+			name = "a-Shell-LongCommands";
+			path = "a-Shell-LongCommands";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -3951,17 +4085,20 @@
 				224A904E2ADD0999006DB9CC /* Resources */,
 				224A90682ADD0999006DB9CC /* Embed Frameworks */,
 				224A916A2ADD0999006DB9CC /* Embed App Extensions */,
+				9B427E6638A792BDC5802FE8 /* Embed Foundation Extensions */,
+				7031073A0000000000000001 /* Match LongCommands version */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				224A90362ADD0999006DB9CC /* PBXTargetDependency */,
 				224A90382ADD0999006DB9CC /* PBXTargetDependency */,
+				265206496F54531C61AB6A9F /* PBXTargetDependency */,
 			);
 			name = "a-Shell-noPython";
 			packageProductDependencies = (
 				227A13632F308E9C006FD5C1 /* SwiftTerm */,
-				2225C1112F685BDD0013F533 /* Kitura */,
+				2225C1112F685BDD0013F533 /* NIOSSL */,
 			);
 			productName = "a-Shell";
 			productReference = 224A91702ADD0999006DB9CC /* a-Shell-noPython.app */;
@@ -3976,17 +4113,19 @@
 				22984EE822C93DBC00069497 /* Resources */,
 				22B1B81522CB9D6500F7C452 /* Embed Frameworks */,
 				22AD8731246EBFFD00F415DE /* Embed App Extensions */,
+				06944D7F6743B6FC21625999 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				22AD872C246EBFFD00F415DE /* PBXTargetDependency */,
 				22AD872F246EBFFD00F415DE /* PBXTargetDependency */,
+				73952D30D61DB3A43B5B2988 /* PBXTargetDependency */,
 			);
 			name = "a-Shell";
 			packageProductDependencies = (
 				227EE36D2F0913C000636757 /* SwiftTerm */,
-				2225C10F2F685BD50013F533 /* Kitura */,
+				2225C10F2F685BD50013F533 /* NIOSSL */,
 			);
 			productName = "a-Shell";
 			productReference = 22984EEA22C93DBC00069497 /* a-Shell.app */;
@@ -4001,17 +4140,19 @@
 				229D2488257931E4004A78AC /* Resources */,
 				229D24A1257931E4004A78AC /* Embed Frameworks */,
 				22178EEF257BBB6E008EB2B4 /* Embed App Extensions */,
+				49A255B4BCFBF00F034858F4 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				22178F0B257BBBA6008EB2B4 /* PBXTargetDependency */,
 				22178F0E257BBBA6008EB2B4 /* PBXTargetDependency */,
+				B04225AB066C9DA994272DBF /* PBXTargetDependency */,
 			);
 			name = "a-Shell-mini";
 			packageProductDependencies = (
 				2213EE122EE4A148001F0114 /* SwiftTerm */,
-				2225C10D2F685BCB0013F533 /* Kitura */,
+				2225C10D2F685BCB0013F533 /* NIOSSL */,
 			);
 			productName = "a-Shell";
 			productReference = 229D25A6257931E4004A78AC /* a-Shell-mini.app */;
@@ -4051,6 +4192,40 @@
 			productName = "a-Shell-IntentsUI";
 			productReference = 22AD8721246EBFFB00F415DE /* a-Shell-IntentsUI.appex */;
 			productType = "com.apple.product-type.app-extension";
+		};
+		05CD0AC3A045D4B4D1258F0B /* a-Shell-mini-LongCommands */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 392B2F6985B8AAC1FBC19481 /* Build configuration list for PBXNativeTarget "a-Shell-mini-LongCommands" */;
+			buildPhases = (
+				F904F3ABF06380EBAB8707BF /* Sources */,
+				5226E3090F3A128FBB93D81B /* Frameworks */,
+				EFC8EB71B291A25F3E5FC8F3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "a-Shell-mini-LongCommands";
+			productName = "a-Shell-mini-LongCommands";
+			productReference = CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
+		1D1C6DB1924CE909F07BB047 /* a-Shell-LongCommands */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BC929EF6C5CD652C2CBB48BC /* Build configuration list for PBXNativeTarget "a-Shell-LongCommands" */;
+			buildPhases = (
+				1E42370D6E364CC1134DF9B3 /* Sources */,
+				4EF95B478646F901898E00B3 /* Frameworks */,
+				6EFE2B28D3AAE60946CE98D9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "a-Shell-LongCommands";
+			productName = "a-Shell-LongCommands";
+			productReference = E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -4097,7 +4272,7 @@
 			mainGroup = 22984EE122C93DBC00069497;
 			packageReferences = (
 				2213EE112EE4A148001F0114 /* XCLocalSwiftPackageReference "SwiftTerm" */,
-				2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "Kitura" */,
+				2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */,
 			);
 			productRefGroup = 22984EEB22C93DBC00069497 /* Products */;
 			projectDirPath = "";
@@ -4110,6 +4285,8 @@
 				22178EF7257BBBA4008EB2B4 /* a-Shell-mini-Intents */,
 				22178F00257BBBA5008EB2B4 /* a-Shell-mini-IntentsUI */,
 				224A90352ADD0999006DB9CC /* a-Shell-noPython */,
+				1D1C6DB1924CE909F07BB047 /* a-Shell-LongCommands */,
+				05CD0AC3A045D4B4D1258F0B /* a-Shell-mini-LongCommands */,
 			);
 		};
 /* End PBXProject section */
@@ -4137,6 +4314,7 @@
 			files = (
 				224A904F2ADD0999006DB9CC /* terminfo in Resources */,
 				224A90502ADD0999006DB9CC /* Settings.bundle in Resources */,
+				22A6E07F3098D9840018310F /* wasm_withWorker.js in Resources */,
 				224A90512ADD0999006DB9CC /* ImageMagick-7 in Resources */,
 				224A90522ADD0999006DB9CC /* Library in Resources */,
 				224A90532ADD0999006DB9CC /* node_modules in Resources */,
@@ -4152,6 +4330,7 @@
 				224A905B2ADD0999006DB9CC /* hterm.html in Resources */,
 				224A905C2ADD0999006DB9CC /* wasm.html in Resources */,
 				224A905D2ADD0999006DB9CC /* hterm_all.js in Resources */,
+				22A6E0803098D9A20018310F /* wasm_worker_wasm.js in Resources */,
 				224A905E2ADD0999006DB9CC /* wasm.js in Resources */,
 				224A905F2ADD0999006DB9CC /* require.js in Resources */,
 				224A90602ADD0999006DB9CC /* require_jscore.js in Resources */,
@@ -4261,7 +4440,43 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6EFE2B28D3AAE60946CE98D9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CFC692FD99A84C71382E2A01 /* commandDictionary.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFC8EB71B291A25F3E5FC8F3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B2C2C9D94DB1A976E1C18301 /* commandDictionary.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7031073A0000000000000001 /* Match LongCommands version */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/a-Shell-mini-LongCommands.appex",
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "Match LongCommands version";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(EXTENSIONS_FOLDER_PATH)/a-Shell-mini-LongCommands.appex/Info.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\nextension=\"${TARGET_BUILD_DIR}/${EXTENSIONS_FOLDER_PATH}/a-Shell-mini-LongCommands.appex\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString ${MARKETING_VERSION}\" \"$extension/Info.plist\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion ${CURRENT_PROJECT_VERSION}\" \"$extension/Info.plist\"\nif [ \"${CODE_SIGNING_ALLOWED:-YES}\" != \"NO\" ]; then\n    /usr/bin/codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY:--}\" --preserve-metadata=identifier,entitlements,flags --generate-entitlement-der \"$extension\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		22178EF4257BBBA4008EB2B4 /* Sources */ = {
@@ -4287,7 +4502,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
+				D91691CFCADBED6F76AE4E4E /* ProgressCommand.swift in Sources */,
+				535000000000000000000002 /* CommandEnvironment.swift in Sources */,
+				A59100000000000000000001 /* Relay.swift in Sources */,
 				610000000000000000000002 /* TerminalTheme.swift in Sources */,
+				620000000000000000000002 /* TerminalPrompt.swift in Sources */,
 				707000000000000000000002 /* TerminalFont.swift in Sources */,
 				224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */,
 				224A903E2ADD0999006DB9CC /* Tips.swift in Sources */,
@@ -4304,6 +4523,7 @@
 				224A90452ADD0999006DB9CC /* UIDevice+Name.swift in Sources */,
 				224A90462ADD0999006DB9CC /* String+C.swift in Sources */,
 				224A90472ADD0999006DB9CC /* ContentView.swift in Sources */,
+				228A55243098D1CF00F9F672 /* Relay.swift in Sources */,
 				6BD953702BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */,
 				224A904A2ADD0999006DB9CC /* URL+isDirectory.swift in Sources */,
 				224A904B2ADD0999006DB9CC /* listTeXscripts.swift in Sources */,
@@ -4316,7 +4536,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
+				BE8AFE2BBEDBF93A4910062F /* ProgressCommand.swift in Sources */,
+				535000000000000000000003 /* CommandEnvironment.swift in Sources */,
+				A59100000000000000000003 /* Relay.swift in Sources */,
 				610000000000000000000004 /* TerminalTheme.swift in Sources */,
+				620000000000000000000004 /* TerminalPrompt.swift in Sources */,
 				707000000000000000000004 /* TerminalFont.swift in Sources */,
 				22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */,
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
@@ -4333,6 +4557,7 @@
 				226FBED82C1257B000400751 /* jsc.swift in Sources */,
 				2208ACC522D2026E003985D6 /* UIDevice+Name.swift in Sources */,
 				2208ACBF22CCE57E003985D6 /* String+C.swift in Sources */,
+				228A55223098D1CF00F9F672 /* Relay.swift in Sources */,
 				22984EF222C93DBC00069497 /* ContentView.swift in Sources */,
 				6BD9536E2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */,
 				22C4A02D22E09D9D00E0FAD2 /* URL+isDirectory.swift in Sources */,
@@ -4345,7 +4570,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
+				B85B646A76EB1C3038FBC891 /* ProgressCommand.swift in Sources */,
+				535000000000000000000004 /* CommandEnvironment.swift in Sources */,
+				A59100000000000000000002 /* Relay.swift in Sources */,
 				610000000000000000000003 /* TerminalTheme.swift in Sources */,
+				620000000000000000000003 /* TerminalPrompt.swift in Sources */,
 				707000000000000000000003 /* TerminalFont.swift in Sources */,
 				229D2478257931E4004A78AC /* AppDelegate.swift in Sources */,
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,
@@ -4362,6 +4591,7 @@
 				229D247F257931E4004A78AC /* UIDevice+Name.swift in Sources */,
 				229D2480257931E4004A78AC /* String+C.swift in Sources */,
 				229D2481257931E4004A78AC /* ContentView.swift in Sources */,
+				228A55233098D1CF00F9F672 /* Relay.swift in Sources */,
 				6BD9536F2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */,
 				229D2484257931E4004A78AC /* URL+isDirectory.swift in Sources */,
 				22675A15271C24B200459BEF /* listTeXscripts.swift in Sources */,
@@ -4384,6 +4614,28 @@
 			files = (
 				2220059A2871EF3300DC7A23 /* Intents.intentdefinition in Sources */,
 				22AD8726246EBFFD00F415DE /* IntentViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1E42370D6E364CC1134DF9B3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6DA4290CEFD8AE8731971F7C /* ExecuteLongCommandIntent.swift in Sources */,
+				241174C3FD9A4286E38FE7C0 /* ProgressCommand.swift in Sources */,
+				535000000000000000000005 /* CommandEnvironment.swift in Sources */,
+				CDB88291CE91BD1BB768CB32 /* LongCommandsExtension.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F904F3ABF06380EBAB8707BF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E0E9C24B43A7139D193FA09 /* ExecuteLongCommandIntent.swift in Sources */,
+				87BFA35D4A842B3F7BD8E197 /* ProgressCommand.swift in Sources */,
+				535000000000000000000006 /* CommandEnvironment.swift in Sources */,
+				9313D8BBB62B8827FA0F4BBE /* LongCommandsExtension.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4421,6 +4673,24 @@
 			isa = PBXTargetDependency;
 			target = 22AD8717246EBFFA00F415DE /* a-Shell-Intents */;
 			targetProxy = 22AD872E246EBFFD00F415DE /* PBXContainerItemProxy */;
+		};
+		265206496F54531C61AB6A9F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "a-Shell-mini-LongCommands";
+			target = 05CD0AC3A045D4B4D1258F0B /* a-Shell-mini-LongCommands */;
+			targetProxy = F33F299FD852DC4CD1764F55 /* PBXContainerItemProxy */;
+		};
+		73952D30D61DB3A43B5B2988 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "a-Shell-LongCommands";
+			target = 1D1C6DB1924CE909F07BB047 /* a-Shell-LongCommands */;
+			targetProxy = 75A702C38BAC6B039A56C397 /* PBXContainerItemProxy */;
+		};
+		B04225AB066C9DA994272DBF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "a-Shell-mini-LongCommands";
+			target = 05CD0AC3A045D4B4D1258F0B /* a-Shell-mini-LongCommands */;
+			targetProxy = 967E5C627ADCDCB09451FAC6 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -4478,7 +4748,7 @@
 				CURRENT_PROJECT_VERSION = 486;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4505,7 +4775,7 @@
 				CURRENT_PROJECT_VERSION = 486;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = "a-Shell-mini-IntentsUI/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4530,7 +4800,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4553,7 +4823,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
 				INFOPLIST_FILE = "a-Shell-mini-Intents/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4573,11 +4843,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
+				BLUETOOTH_USAGE_DESCRIPTION = "a-Shell mini uses Bluetooth to connect to nearby devices from scripts and commands.";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 533;
+				CURRENT_PROJECT_VERSION = 600;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_PREVIEWS = YES;
@@ -4586,8 +4857,8 @@
 					"$(PROJECT_DIR)/Frameworks",
 					"$(PROJECT_DIR)",
 				);
-				INFOPLIST_FILE = "a-Shell-mini copy-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4597,11 +4868,13 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.3.2;
+				MINIMUM_MACOS_VERSION = 11.0.0;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
 				);
+				PHOTO_LIBRARY_USAGE_DESCRIPTION = "a-Shell mini would like to access to your photo library to upload images";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -4622,11 +4895,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
+				BLUETOOTH_USAGE_DESCRIPTION = "a-Shell mini uses Bluetooth to connect to nearby devices from scripts and commands.";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 533;
+				CURRENT_PROJECT_VERSION = 600;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_PREVIEWS = YES;
@@ -4635,8 +4909,8 @@
 					"$(PROJECT_DIR)/Frameworks",
 					"$(PROJECT_DIR)",
 				);
-				INFOPLIST_FILE = "a-Shell-mini copy-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4646,11 +4920,13 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.3.2;
+				MINIMUM_MACOS_VERSION = 11.0.0;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
 				);
+				PHOTO_LIBRARY_USAGE_DESCRIPTION = "a-Shell mini would like to access to your photo library to upload images";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -4704,6 +4980,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -4721,7 +4998,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -4770,6 +5047,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -4781,7 +5059,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -4800,7 +5078,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 597;
+				CURRENT_PROJECT_VERSION = 600;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4814,7 +5092,7 @@
 				);
 				INFOPLIST_FILE = "a-Shell/Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4824,7 +5102,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.3;
+				MARKETING_VERSION = 2.3.2;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4849,7 +5127,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 597;
+				CURRENT_PROJECT_VERSION = 600;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4863,7 +5141,7 @@
 				);
 				INFOPLIST_FILE = "a-Shell/Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4873,7 +5151,7 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.3;
+				MARKETING_VERSION = 2.3.2;
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
@@ -4894,10 +5172,11 @@
 			buildSettings = {
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
+				BLUETOOTH_USAGE_DESCRIPTION = "a-Shell mini requests permission to access your Bluetooth devices.";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 597;
+				CURRENT_PROJECT_VERSION = 600;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4910,7 +5189,7 @@
 				);
 				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4920,12 +5199,14 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.3;
+				MARKETING_VERSION = 2.3.2;
+				MINIMUM_MACOS_VERSION = 12.0.0;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
 				);
+				PHOTO_LIBRARY_USAGE_DESCRIPTION = "a-Shell mini reads the photos and videos you allow to view them and export originals for shell commands.";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -4947,10 +5228,11 @@
 			buildSettings = {
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-mini";
+				BLUETOOTH_USAGE_DESCRIPTION = "a-Shell mini requests permission to access your Bluetooth devices.";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 597;
+				CURRENT_PROJECT_VERSION = 600;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4963,7 +5245,7 @@
 				);
 				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4973,12 +5255,14 @@
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.3;
+				MARKETING_VERSION = 2.3.2;
+				MINIMUM_MACOS_VERSION = 12.0.0;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
 					"-L",
 					Frameworks/,
 				);
+				PHOTO_LIBRARY_USAGE_DESCRIPTION = "a-Shell mini reads the photos and videos you allow to view them and export originals for shell commands.";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -5006,7 +5290,7 @@
 					"$(PROJECT_DIR)/Frameworks",
 				);
 				INFOPLIST_FILE = "a-Shell-Intents/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
@@ -5033,7 +5317,7 @@
 					"$(PROJECT_DIR)/Frameworks",
 				);
 				INFOPLIST_FILE = "a-Shell-Intents/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
@@ -5055,7 +5339,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
@@ -5076,7 +5360,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 486;
 				INFOPLIST_FILE = "a-Shell-IntentsUI/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../../Frameworks",
@@ -5089,6 +5373,126 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
+		};
+		0E460F1DD19719A63885775C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 597;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
+				INFOPLIST_FILE = "a-Shell-LongCommands/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
+				MARKETING_VERSION = 2.2.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell.LongCommands";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		3B469D9C278E63467CFA416D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 597;
+				INFOPLIST_FILE = "a-Shell-LongCommands/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
+				MARKETING_VERSION = 2.2.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.LongCommands";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		44FC22BCB171431F925662C3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 597;
+				INFOPLIST_FILE = "a-Shell-LongCommands/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
+				MARKETING_VERSION = 2.2.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.LongCommands";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E620AFB86AC61E49577768ED /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = "a-Shell-LongCommands/LongCommands.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 597;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
+				INFOPLIST_FILE = "a-Shell-LongCommands/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LONG_COMMAND_APP_GROUP = "group.$(APP_GROUP_PREFIX:default=AsheKube).a-Shell";
+				MARKETING_VERSION = 2.2.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell.LongCommands";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
@@ -5165,6 +5569,24 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		392B2F6985B8AAC1FBC19481 /* Build configuration list for PBXNativeTarget "a-Shell-mini-LongCommands" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				44FC22BCB171431F925662C3 /* Release */,
+				3B469D9C278E63467CFA416D /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BC929EF6C5CD652C2CBB48BC /* Build configuration list for PBXNativeTarget "a-Shell-LongCommands" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E460F1DD19719A63885775C /* Release */,
+				E620AFB86AC61E49577768ED /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -5175,12 +5597,12 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "Kitura" */ = {
+		2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Kitura/Kitura";
+			repositoryURL = "https://github.com/apple/swift-nio-ssl";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 3.0.1;
+				minimumVersion = 2.37.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -5190,20 +5612,20 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = SwiftTerm;
 		};
-		2225C10D2F685BCB0013F533 /* Kitura */ = {
+		2225C10D2F685BCB0013F533 /* NIOSSL */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "Kitura" */;
-			productName = Kitura;
+			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */;
+			productName = NIOSSL;
 		};
-		2225C10F2F685BD50013F533 /* Kitura */ = {
+		2225C10F2F685BD50013F533 /* NIOSSL */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "Kitura" */;
-			productName = Kitura;
+			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */;
+			productName = NIOSSL;
 		};
-		2225C1112F685BDD0013F533 /* Kitura */ = {
+		2225C1112F685BDD0013F533 /* NIOSSL */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "Kitura" */;
-			productName = Kitura;
+			package = 2225C10C2F685B7F0013F533 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */;
+			productName = NIOSSL;
 		};
 		227A13632F308E9C006FD5C1 /* SwiftTerm */ = {
 			isa = XCSwiftPackageProductDependency;
