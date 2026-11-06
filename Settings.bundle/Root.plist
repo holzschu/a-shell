@@ -148,7 +148,7 @@
 			<key>Type</key>
 			<string>PSGroupSpecifier</string>
 			<key>FooterText</key>
-			<string>Recommended: put name.json in Documents/Themes, run config --theme to list, then config --theme name -g to apply and save. Settings shows Custom file and its name automatically. You can also enter a name here with or without .json; case is ignored.</string>
+			<string>Recommended: put name.json in Documents/Themes, run config --theme to list, then config --theme name -g to apply and save. Settings shows Custom file and its name automatically. You can also enter a name here with or without .json; case is ignored. Prompt presets use the theme ANSI colors; Custom uses PS1.</string>
 		</dict>
 		<dict>
 			<key>Type</key>
@@ -209,6 +209,34 @@
 			<string>None</string>
 			<key>AutocorrectionType</key>
 			<string>No</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Prompt</string>
+			<key>Key</key>
+			<string>terminalPrompt</string>
+			<key>DefaultValue</key>
+			<string>custom</string>
+			<key>Titles</key>
+			<array>
+				<string>Custom (PS1)</string>
+				<string>Minimal</string>
+				<string>Compact</string>
+				<string>Path</string>
+				<string>Two-line</string>
+				<string>Clock</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>custom</string>
+				<string>minimal</string>
+				<string>compact</string>
+				<string>path</string>
+				<string>two-line</string>
+				<string>clock</string>
+			</array>
 		</dict>
 		<dict>
 			<key>Type</key>

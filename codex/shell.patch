@@ -1,0 +1,72 @@
+--- a/shell-command/src/shell_detect.rs
++++ b/shell-command/src/shell_detect.rs
+@@ -41,6 +41,7 @@
+     match shell_path.as_os_str().to_str() {
+         Some("zsh") => Some(ShellType::Zsh),
+         Some("sh") => Some(ShellType::Sh),
++        Some("dash") if cfg!(target_os = "ios") => Some(ShellType::Sh),
+         Some("cmd") => Some(ShellType::Cmd),
+         Some("bash") => Some(ShellType::Bash),
+         Some("pwsh") => Some(ShellType::PowerShell),
+@@ -240,6 +241,9 @@
+ const SH_FALLBACK_PATHS: &[&str] = &["/bin/sh"];
+ 
+ fn get_sh_shell() -> Option<DetectedShell> {
++    if cfg!(target_os = "ios") {
++        return Some(ultimate_fallback_shell());
++    }
+     let shell_path = get_shell_path(ShellType::Sh, "sh", SH_FALLBACK_PATHS);
+ 
+     shell_path.map(|shell_path| DetectedShell {
+@@ -313,7 +317,13 @@
+ }
+ 
+ pub fn ultimate_fallback_shell() -> DetectedShell {
+-    if cfg!(windows) {
++    if cfg!(target_os = "ios") {
++        // a-Shell resolves this embedded command through ios_system, not execve.
++        DetectedShell {
++            shell_type: ShellType::Sh,
++            shell_path: PathBuf::from("dash"),
++        }
++    } else if cfg!(windows) {
+         DetectedShell {
+             shell_type: ShellType::Cmd,
+             shell_path: PathBuf::from("cmd.exe"),
+@@ -344,6 +354,9 @@
+ }
+ 
+ pub fn default_user_shell() -> DetectedShell {
++    if cfg!(target_os = "ios") {
++        return ultimate_fallback_shell();
++    }
+     default_user_shell_from_path(get_user_shell_path())
+ }
+ 
+--- a/hooks/src/engine/command_runner.rs
++++ b/hooks/src/engine/command_runner.rs
+@@ -395,8 +395,10 @@
+     if shell.program.is_empty() {
+         #[cfg(windows)]
+         command.arg("/C");
+-        #[cfg(not(windows))]
++        #[cfg(all(not(windows), not(target_os = "ios")))]
+         command.arg("-lc");
++        #[cfg(target_os = "ios")]
++        command.arg("-c");
+     } else {
+         command.args(&shell.args);
+     }
+@@ -436,6 +438,12 @@
+     command
+ }
+ 
++#[cfg(target_os = "ios")]
++fn default_shell_program(_environment: &[(OsString, OsString)]) -> OsString {
++    "dash".into()
++}
++
++#[cfg(not(target_os = "ios"))]
+ fn default_shell_program(environment: &[(OsString, OsString)]) -> OsString {
+     #[cfg(windows)]
+     let (environment_variable, fallback_program) = ("COMSPEC", "cmd.exe");

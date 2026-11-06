@@ -1,0 +1,711 @@
+--- a/cli/src/main.rs
++++ b/cli/src/main.rs
+@@ -52,30 +52,30 @@
+ 
+ #[cfg(any(target_os = "macos", target_os = "windows"))]
+ mod app_cmd;
+-mod cloud_config;
+-mod daemon_install;
++pub(crate) mod cloud_config;
++pub(crate) mod daemon_install;
+ mod daemon_telemetry;
+ #[cfg(any(target_os = "macos", target_os = "windows"))]
+ mod desktop_app;
+-mod doctor;
++pub(crate) mod doctor;
+ #[cfg(test)]
+ #[path = "exec_server_args_tests.rs"]
+ mod exec_server_args_tests;
+-mod exec_server_auth;
+-mod exec_server_command;
+-mod exec_server_telemetry;
+-mod marketplace_cmd;
+-mod mcp_cmd;
+-mod mcp_login;
++pub(crate) mod exec_server_auth;
++pub(crate) mod exec_server_command;
++pub(crate) mod exec_server_telemetry;
++pub(crate) mod marketplace_cmd;
++pub(crate) mod mcp_cmd;
++pub(crate) mod mcp_login;
+ mod migrate_rollouts;
+-mod plugin_cmd;
+-mod queue_cmd;
+-mod remote_control_cmd;
++pub(crate) mod plugin_cmd;
++pub(crate) mod queue_cmd;
++pub(crate) mod remote_control_cmd;
+ #[cfg(target_os = "windows")]
+ mod sandbox_setup;
+ mod state_db_recovery;
+ #[cfg(not(windows))]
+-mod wsl_paths;
++pub(crate) mod wsl_paths;
+ 
+ use crate::exec_server_command::ExecServerCommand;
+ use crate::mcp_cmd::McpCli;
+@@ -386,7 +386,7 @@
+ }
+ 
+ #[derive(Debug, Args, Clone, Default)]
+-struct SessionArchiveConfigOverrides {
++pub(crate) struct SessionArchiveConfigOverrides {
+     #[clap(flatten)]
+     shared: SharedCliOptions,
+ 
+@@ -760,7 +760,7 @@
+     }
+     if is_fatal {
+         std::io::stdout().flush()?;
+-        std::process::exit(1);
++        codex_cli::embedded_exit(1);
+     }
+     if let Some(action) = update_action {
+         run_update_action(action, cli_executable)?;
+@@ -896,6 +896,10 @@
+         remote.remote.or(root_remote),
+         remote.remote_auth_token_env.or(root_remote_auth_token_env),
+     )?;
++    #[cfg(target_os = "ios")]
++    if explicit_remote_endpoint.is_none() {
++        interactive.no_daemon = true;
++    }
+     codex_tui::run_session_archive_command(
+         action,
+         target,
+@@ -942,7 +946,7 @@
+ }
+ 
+ #[derive(Debug, Default, Parser, Clone)]
+-struct InteractiveRemoteOptions {
++pub(crate) struct InteractiveRemoteOptions {
+     /// Connect the TUI to a remote app server endpoint.
+     ///
+     /// Accepted forms: `ws://host:port`, `wss://host:port`, `unix://`, or `unix://PATH`.
+@@ -1015,7 +1019,12 @@
+     let remote_control_disabled = codex_app_server::take_remote_control_disabled_env();
+     arg0_dispatch_or_else(move |arg0_paths: Arg0DispatchPaths| async move {
+         // Keep the CLI dispatcher off the runtime's stack while the TUI rebuilds a thread.
+-        Box::pin(cli_main(arg0_paths, remote_control_disabled)).await?;
++        Box::pin(cli_main(
++            arg0_paths,
++            remote_control_disabled,
++            MultitoolCli::parse(),
++        ))
++        .await?;
+         Ok(())
+     })
+ }
+@@ -1023,6 +1032,7 @@
+ async fn cli_main(
+     arg0_paths: Arg0DispatchPaths,
+     remote_control_disabled: bool,
++    cli: MultitoolCli,
+ ) -> anyhow::Result<()> {
+     let MultitoolCli {
+         config_overrides: mut root_config_overrides,
+@@ -1030,7 +1040,7 @@
+         remote,
+         mut interactive,
+         subcommand,
+-    } = MultitoolCli::parse();
++    } = cli;
+     // Retain the launch target through TUI exit, even if a launcher changes selection.
+     let daemon_cli_executable = arg0_paths
+         .codex_self_exe
+@@ -1274,7 +1284,7 @@
+                     .await?;
+                     if exit == codex_app_server::AppServerExit::Forced {
+                         // Runtime teardown can wait forever for blocked rollout I/O.
+-                        std::process::exit(0);
++                        codex_cli::embedded_exit(0);
+                     }
+                 }
+                 Some(AppServerSubcommand::Daemon(daemon_cli)) => match daemon_cli.subcommand {
+@@ -1569,7 +1579,7 @@
+                         eprintln!(
+                             "Choose one login credential source: --with-api-key or --with-access-token."
+                         );
+-                        std::process::exit(1);
++                        codex_cli::embedded_exit(1);
+                     } else if login_cli.use_device_code {
+                         run_login_with_device_code(
+                             login_cli.config_overrides,
+@@ -1581,7 +1591,7 @@
+                         eprintln!(
+                             "The --api-key flag is no longer supported. Pipe the key instead, e.g. `printenv OPENAI_API_KEY | codex login --with-api-key`."
+                         );
+-                        std::process::exit(1);
++                        codex_cli::embedded_exit(1);
+                     } else if login_cli.with_api_key {
+                         let api_key = read_api_key_from_stdin();
+                         run_login_with_api_key(login_cli.config_overrides, api_key).await;
+@@ -1776,6 +1786,12 @@
+             run_apply_command(apply_cli, /*cwd*/ None).await?;
+         }
+         Some(Subcommand::ResponsesApiProxy(args)) => {
++            #[cfg(target_os = "ios")]
++            if args.http_shutdown {
++                anyhow::bail!(
++                    "--http-shutdown requires an independently terminable proxy process; the embedded iOS command cannot terminate its host app"
++                );
++            }
+             reject_remote_mode_for_subcommand(
+                 root_remote.as_deref(),
+                 root_remote_auth_token_env.as_deref(),
+@@ -2504,7 +2520,7 @@
+     }
+ }
+ 
+-fn resolve_remote_endpoint(
++pub(crate) fn resolve_remote_endpoint(
+     remote: Option<String>,
+     remote_auth_token_env: Option<String>,
+ ) -> std::io::Result<Option<codex_tui::RemoteAppServerEndpoint>> {
+@@ -2544,7 +2560,7 @@
+         .starts_with("`--remote-auth-token-env` requires")
+ }
+ 
+-fn confirm(prompt: &str) -> std::io::Result<bool> {
++pub(crate) fn confirm(prompt: &str) -> std::io::Result<bool> {
+     eprintln!("{prompt}");
+ 
+     let mut input = String::new();
+@@ -2621,7 +2637,7 @@
+     interactive
+ }
+ 
+-fn finalize_session_archive_interactive(
++pub(crate) fn finalize_session_archive_interactive(
+     mut interactive: TuiCli,
+     root_config_overrides: CliConfigOverrides,
+     archive_cli: SessionArchiveConfigOverrides,
+@@ -4907,3 +4923,43 @@
+ #[cfg(all(test, unix))]
+ #[path = "daemon_update_tests.rs"]
+ mod daemon_update_tests;
++
++/// Run the unchanged CLI dispatcher with argv supplied by the iOS command host.
++#[cfg(target_os = "ios")]
++pub async fn run_embedded(args: Vec<String>, paths: Arg0DispatchPaths) -> anyhow::Result<i32> {
++    codex_build_info::initialize!();
++    let mut cli = match MultitoolCli::try_parse_from(args) {
++        Ok(cli) => cli,
++        Err(error) => {
++            let status = error.exit_code();
++            error.print()?;
++            return Ok(status);
++        }
++    };
++    // Local iOS runs belong to the app's lifetime, not a forked background daemon.
++    let local_interactive = cli.remote.remote.is_none()
++        && match &cli.subcommand {
++            None => true,
++            Some(Subcommand::Resume(command)) => command.remote.remote.is_none(),
++            Some(Subcommand::Fork(command)) => command.remote.remote.is_none(),
++            _ => false,
++        };
++    if local_interactive {
++        cli.interactive.no_daemon = true;
++    }
++    Box::pin(cli_main(paths, false, cli)).await?;
++    Ok(0)
++}
++
++/// Classify terminal ownership using the upstream argument parser.
++#[cfg(target_os = "ios")]
++pub fn embedded_uses_tui(args: Vec<String>) -> bool {
++    MultitoolCli::try_parse_from(args).is_ok_and(|cli| match cli.subcommand {
++        None
++        | Some(Subcommand::Agents(_))
++        | Some(Subcommand::Resume(_))
++        | Some(Subcommand::Fork(_)) => true,
++        Some(Subcommand::Cloud(command)) => command.command.is_none(),
++        _ => false,
++    })
++}
+--- a/cli/src/lib.rs
++++ b/cli/src/lib.rs
+@@ -1,3 +1,5 @@
++extern crate self as codex_cli;
++
+ pub(crate) mod debug_sandbox;
+ mod exit_status;
+ pub(crate) mod login;
+@@ -188,3 +190,24 @@
+     #[arg(trailing_var_arg = true)]
+     pub command: Vec<String>,
+ }
++
++/// Preserve CLI exit statuses without terminating an embedded iOS host.
++pub fn embedded_exit(status: i32) -> ! {
++    #[cfg(target_os = "ios")]
++    std::panic::resume_unwind(Box::new(status));
++    #[cfg(not(target_os = "ios"))]
++    std::process::exit(status);
++}
++
++#[cfg(target_os = "ios")]
++#[path = "main.rs"]
++mod embedded_cli;
++#[cfg(target_os = "ios")]
++pub(crate) use embedded_cli::{
++    InteractiveRemoteOptions, SessionArchiveConfigOverrides, cloud_config, confirm, daemon_install,
++    doctor, exec_server_auth, exec_server_command, exec_server_telemetry,
++    finalize_session_archive_interactive, marketplace_cmd, mcp_cmd, mcp_login, plugin_cmd,
++    queue_cmd, remote_control_cmd, resolve_remote_endpoint, wsl_paths,
++};
++#[cfg(target_os = "ios")]
++pub use embedded_cli::{embedded_uses_tui, run_embedded};
+--- a/cli/src/login.rs
++++ b/cli/src/login.rs
+@@ -177,7 +177,7 @@
+         .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
+     {
+         eprintln!("{CHATGPT_LOGIN_DISABLED_MESSAGE}");
+-        std::process::exit(1);
++        crate::embedded_exit(1);
+     }
+ 
+     let effective_chatgpt_workspaces = config.auth_config().effective_chatgpt_workspaces();
+@@ -192,11 +192,11 @@
+     {
+         Ok(_) => {
+             eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-            std::process::exit(0);
++            crate::embedded_exit(0);
+         }
+         Err(e) => {
+             eprintln!("Error logging in: {e}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     }
+ }
+@@ -214,7 +214,7 @@
+         .is_login_method_allowed(ForcedLoginMethod::Api)
+     {
+         eprintln!("{API_KEY_LOGIN_DISABLED_MESSAGE}");
+-        std::process::exit(1);
++        crate::embedded_exit(1);
+     }
+ 
+     match login_with_api_key(
+@@ -225,11 +225,11 @@
+     ) {
+         Ok(_) => {
+             eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-            std::process::exit(0);
++            crate::embedded_exit(0);
+         }
+         Err(e) => {
+             eprintln!("Error logging in: {e}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     }
+ }
+@@ -247,7 +247,7 @@
+         .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
+     {
+         eprintln!("{ACCESS_TOKEN_LOGIN_DISABLED_MESSAGE}");
+-        std::process::exit(1);
++        crate::embedded_exit(1);
+     }
+ 
+     let auth_route_config = config.auth_route_config();
+@@ -265,11 +265,11 @@
+     {
+         Ok(_) => {
+             eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-            std::process::exit(0);
++            crate::embedded_exit(0);
+         }
+         Err(e) => {
+             eprintln!("Error logging in with access token: {e}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     }
+ }
+@@ -295,7 +295,7 @@
+ 
+     if stdin.is_terminal() {
+         eprintln!("{terminal_message}");
+-        std::process::exit(1);
++        crate::embedded_exit(1);
+     }
+ 
+     eprintln!("{reading_message}");
+@@ -303,13 +303,13 @@
+     let mut buffer = String::new();
+     if let Err(err) = stdin.read_to_string(&mut buffer) {
+         eprintln!("Failed to read stdin: {err}");
+-        std::process::exit(1);
++        crate::embedded_exit(1);
+     }
+ 
+     let secret = buffer.trim().to_string();
+     if secret.is_empty() {
+         eprintln!("{empty_message}");
+-        std::process::exit(1);
++        crate::embedded_exit(1);
+     }
+ 
+     secret
+@@ -329,7 +329,7 @@
+         .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
+     {
+         eprintln!("{CHATGPT_LOGIN_DISABLED_MESSAGE}");
+-        std::process::exit(1);
++        crate::embedded_exit(1);
+     }
+     let auth_route_config = config.auth_route_config();
+     clear_existing_auth_before_login(
+@@ -354,11 +354,11 @@
+     match run_device_code_login(opts).await {
+         Ok(()) => {
+             eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-            std::process::exit(0);
++            crate::embedded_exit(0);
+         }
+         Err(e) => {
+             eprintln!("Error logging in with device code: {e}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     }
+ }
+@@ -380,7 +380,7 @@
+         .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
+     {
+         eprintln!("{CHATGPT_LOGIN_DISABLED_MESSAGE}");
+-        std::process::exit(1);
++        crate::embedded_exit(1);
+     }
+     let auth_route_config = config.auth_route_config();
+     clear_existing_auth_before_login(
+@@ -408,7 +408,7 @@
+     match run_device_code_login(opts.clone()).await {
+         Ok(()) => {
+             eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-            std::process::exit(0);
++            crate::embedded_exit(0);
+         }
+         Err(e) => {
+             if e.kind() == std::io::ErrorKind::NotFound {
+@@ -419,22 +419,22 @@
+                         match server.block_until_done().await {
+                             Ok(()) => {
+                                 eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-                                std::process::exit(0);
++                                crate::embedded_exit(0);
+                             }
+                             Err(e) => {
+                                 eprintln!("Error logging in: {e}");
+-                                std::process::exit(1);
++                                crate::embedded_exit(1);
+                             }
+                         }
+                     }
+                     Err(e) => {
+                         eprintln!("Error logging in: {e}");
+-                        std::process::exit(1);
++                        crate::embedded_exit(1);
+                     }
+                 }
+             } else {
+                 eprintln!("Error logging in with device code: {e}");
+-                std::process::exit(1);
++                crate::embedded_exit(1);
+             }
+         }
+     }
+@@ -447,11 +447,11 @@
+         match AuthManager::shared_from_config(&config, /*enable_codex_api_key_env*/ false).await {
+             Ok(_) => {
+                 eprintln!("Logged in using workload identity");
+-                std::process::exit(0);
++                crate::embedded_exit(0);
+             }
+             Err(err) => {
+                 eprintln!("Error checking login status: {err}");
+-                std::process::exit(1);
++                crate::embedded_exit(1);
+             }
+         }
+     }
+@@ -465,44 +465,44 @@
+             AuthMode::ApiKey => match auth.get_token() {
+                 Ok(api_key) => {
+                     eprintln!("Logged in using an API key - {}", safe_format_key(&api_key));
+-                    std::process::exit(0);
++                    crate::embedded_exit(0);
+                 }
+                 Err(e) => {
+                     eprintln!("Unexpected error retrieving API key: {e}");
+-                    std::process::exit(1);
++                    crate::embedded_exit(1);
+                 }
+             },
+             AuthMode::Chatgpt | AuthMode::ChatgptAuthTokens => {
+                 eprintln!("Logged in using ChatGPT");
+-                std::process::exit(0);
++                crate::embedded_exit(0);
+             }
+             AuthMode::Headers => {
+                 unreachable!("header auth cannot be loaded from auth storage")
+             }
+             AuthMode::AgentIdentity => {
+                 eprintln!("Logged in using access token");
+-                std::process::exit(0);
++                crate::embedded_exit(0);
+             }
+             AuthMode::PersonalAccessToken => {
+                 eprintln!("Logged in using personal access token");
+-                std::process::exit(0);
++                crate::embedded_exit(0);
+             }
+             AuthMode::BedrockApiKey => {
+                 eprintln!("Logged in using Amazon Bedrock API key");
+-                std::process::exit(0);
++                crate::embedded_exit(0);
+             }
+             AuthMode::BedrockAccessKeys => {
+                 eprintln!("Logged in using Amazon Bedrock AWS access keys");
+-                std::process::exit(0);
++                crate::embedded_exit(0);
+             }
+         },
+         Ok(None) => {
+             eprintln!("Not logged in");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+         Err(err) => {
+             eprintln!("Error checking login status: {err}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     }
+ }
+@@ -522,7 +522,7 @@
+         Ok(logged_out) => logged_out,
+         Err(err) => {
+             eprintln!("Error logging out: {err}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     };
+ 
+@@ -537,7 +537,7 @@
+                 .await
+             {
+                 eprintln!("Error clearing Amazon Bedrock configuration after logout: {err}");
+-                std::process::exit(1);
++                crate::embedded_exit(1);
+             }
+             true
+         } else {
+@@ -549,7 +549,7 @@
+     } else {
+         eprintln!("Not logged in");
+     }
+-    std::process::exit(0);
++    crate::embedded_exit(0);
+ }
+ 
+ async fn load_config_or_exit(cli_config_overrides: CliConfigOverrides) -> Config {
+@@ -557,7 +557,7 @@
+         Ok(v) => v,
+         Err(e) => {
+             eprintln!("Error parsing -c overrides: {e}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     };
+ 
+@@ -566,12 +566,12 @@
+             Ok(()) => config,
+             Err(e) => {
+                 eprintln!("Error loading configuration: {e}");
+-                std::process::exit(1);
++                crate::embedded_exit(1);
+             }
+         },
+         Err(e) => {
+             eprintln!("Error loading configuration: {e}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     }
+ }
+--- a/cli/src/exit_status.rs
++++ b/cli/src/exit_status.rs
+@@ -4,20 +4,20 @@
+ 
+     // Use ExitStatus to derive the exit code.
+     if let Some(code) = status.code() {
+-        std::process::exit(code);
++        crate::embedded_exit(code);
+     } else if let Some(signal) = status.signal() {
+-        std::process::exit(128 + signal);
++        crate::embedded_exit(128 + signal);
+     } else {
+-        std::process::exit(1);
++        crate::embedded_exit(1);
+     }
+ }
+ 
+ #[cfg(windows)]
+ pub(crate) fn handle_exit_status(status: std::process::ExitStatus) -> ! {
+     if let Some(code) = status.code() {
+-        std::process::exit(code);
++        crate::embedded_exit(code);
+     } else {
+         // Rare on Windows, but if it happens: use fallback code.
+-        std::process::exit(1);
++        crate::embedded_exit(1);
+     }
+ }
+--- a/cli/src/debug_sandbox.rs
++++ b/cli/src/debug_sandbox.rs
+@@ -569,7 +569,7 @@
+         Ok(paths) => paths,
+         Err(err) => {
+             eprintln!("windows sandbox failed: {err}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     };
+ 
+@@ -600,12 +600,12 @@
+         Ok(spawned) => spawned,
+         Err(err) => {
+             eprintln!("windows sandbox failed: {err}");
+-            std::process::exit(1);
++            crate::embedded_exit(1);
+         }
+     };
+ 
+     let exit_code = codex_windows_sandbox::forward_sandbox_session_stdio(spawned).await;
+-    std::process::exit(exit_code);
++    crate::embedded_exit(exit_code);
+ }
+ 
+ async fn spawn_debug_sandbox_child(
+--- a/cli/src/doctor.rs
++++ b/cli/src/doctor.rs
+@@ -327,7 +327,7 @@
+     arg0_paths: &Arg0DispatchPaths,
+ ) -> anyhow::Result<()> {
+     if let Some(path) = &command.probe_filesystem_path {
+-        std::process::exit(filesystem_paths::probe_exit_code(path));
++        codex_cli::embedded_exit(filesystem_paths::probe_exit_code(path));
+     }
+     let report = build_report(&command, root_config_overrides, interactive, arg0_paths).await;
+ 
+@@ -344,7 +344,7 @@
+     }
+ 
+     if report.overall_status == CheckStatus::Fail {
+-        std::process::exit(1);
++        codex_cli::embedded_exit(1);
+     }
+ 
+     Ok(())
+--- a/cloud-tasks/src/lib.rs
++++ b/cloud-tasks/src/lib.rs
+@@ -95,7 +95,7 @@
+             eprintln!(
+                 "Not signed in. Please run 'codex login' to sign in with ChatGPT, then re-run 'codex cloud'."
+             );
+-            std::process::exit(1);
++            embedded_exit(1);
+         }
+     };
+ 
+@@ -107,7 +107,7 @@
+         eprintln!(
+             "Not signed in. Please run 'codex login' to sign in with ChatGPT, then re-run 'codex cloud'."
+         );
+-        std::process::exit(1);
++        embedded_exit(1);
+     }
+ 
+     let auth_provider = codex_model_provider::auth_provider_from_auth(&auth);
+@@ -523,7 +523,7 @@
+         println!("{line}");
+     }
+     if !matches!(summary.status, TaskStatus::Ready) {
+-        std::process::exit(1);
++        embedded_exit(1);
+     }
+     Ok(())
+ }
+@@ -620,7 +620,7 @@
+         outcome.status,
+         codex_cloud_tasks_client::ApplyStatus::Success
+     ) {
+-        std::process::exit(1);
++        embedded_exit(1);
+     }
+     Ok(())
+ }
+@@ -2018,7 +2018,7 @@
+     let _ = crossterm::execute!(std::io::stdout(), LeaveAlternateScreen);
+ 
+     if exit_code != 0 {
+-        std::process::exit(exit_code);
++        embedded_exit(exit_code);
+     }
+     Ok(())
+ }
+@@ -2381,3 +2381,10 @@
+         assert!(parse_task_id("   ").is_err());
+     }
+ }
++
++fn embedded_exit(status: i32) -> ! {
++    #[cfg(target_os = "ios")]
++    std::panic::resume_unwind(Box::new(status));
++    #[cfg(not(target_os = "ios"))]
++    std::process::exit(status);
++}
+--- a/cli/src/doctor/desktop/platform.rs
++++ b/cli/src/doctor/desktop/platform.rs
+@@ -45,19 +45,19 @@
+ use super::super::CheckStatus;
+ use super::super::DoctorCheck;
+ 
+-pub(in crate::doctor) struct InstalledApp {
+-    pub(in crate::doctor) identity: &'static str,
+-    pub(in crate::doctor) version: String,
++pub(in super::super) struct InstalledApp {
++    pub(in super::super) identity: &'static str,
++    pub(in super::super) version: String,
+     #[cfg(target_os = "windows")]
+     package_family: &'static str,
+     #[cfg(target_os = "macos")]
+-    pub(in crate::doctor) bundle: PathBuf,
++    pub(in super::super) bundle: PathBuf,
+     #[cfg(target_os = "macos")]
+-    pub(in crate::doctor) build: u64,
++    pub(in super::super) build: u64,
+ }
+ 
+ #[derive(Clone, Copy, Debug)]
+-pub(in crate::doctor) struct DiscoveryError;
++pub(in super::super) struct DiscoveryError;
+ 
+ pub(super) async fn installed_app() -> Result<Option<InstalledApp>, DiscoveryError> {
+     #[cfg(target_os = "windows")]
+@@ -242,7 +242,7 @@
+ }
+ 
+ #[cfg(target_os = "macos")]
+-pub(in crate::doctor) async fn inspect_macos_bundle(
++pub(in super::super) async fn inspect_macos_bundle(
+     bundle: &Path,
+ ) -> Result<Option<InstalledApp>, DiscoveryError> {
+     let mut command = Command::new("/usr/bin/plutil");

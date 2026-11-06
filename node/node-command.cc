@@ -55,7 +55,9 @@ std::multimap<std::string, InterruptState*> command_interrupts;
 // frame. Never execute JS here, and hold the lifetime barrier through Stop().
 void InterruptCommand(int) {
   std::lock_guard<std::mutex> lock(interrupt_mutex);
-  if (std::strcmp(ios_progname(), "node") != 0) return;
+  const char* program = ios_progname();
+  if (std::strcmp(program, "node") != 0 && std::strcmp(program, "npm") != 0 &&
+      std::strcmp(program, "npx") != 0) return;
   const auto* session = static_cast<const char*>(ios_getContext());
   if (!session) return;
   const auto targets = command_interrupts.equal_range(session);
@@ -122,12 +124,6 @@ struct Runtime {
     platform = node::MultiIsolatePlatform::Create(2);
     v8::V8::InitializePlatform(platform.get());
     v8::V8::Initialize();
-    // ios_kill consults one process-wide handler. Install the dispatcher once;
-    // commands publish only their own state and never replace host sigactions.
-    struct sigaction action{};
-    action.sa_handler = InterruptCommand;
-    sigemptyset(&action.sa_mask);
-    sigaction(SIGINT, &action, nullptr);
   }
 };
 }
@@ -213,6 +209,12 @@ extern "C" int node_ios_main(int argc, char** argv) {
       std::multimap<std::string, InterruptState*>::iterator registration;
       {
         std::lock_guard<std::mutex> lock(interrupt_mutex);
+        // ios_system restores a command's signal handlers on completion. V8's
+        // process runtime survives, so each command must reinstall its dispatcher.
+        struct sigaction action{};
+        action.sa_handler = InterruptCommand;
+        sigemptyset(&action.sa_mask);
+        sigaction(SIGINT, &action, nullptr);
         registration = command_interrupts.emplace(context ? context : "", &interrupt);
       }
       auto loaded = node::LoadEnvironment(
