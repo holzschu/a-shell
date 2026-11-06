@@ -1,0 +1,21 @@
+--- a/tui/src/terminal_probe.rs
++++ b/tui/src/terminal_probe.rs
+@@ -96,7 +96,17 @@
+         /// backpressure. Falling back to `/dev/tty` keeps embedded or redirected environments
+         /// usable when they still expose a controlling terminal.
+         fn open() -> io::Result<Self> {
+-            let stdio_reader = dup_file(libc::STDIN_FILENO);
++            #[cfg(target_os = "ios")]
++            let input = {
++                unsafe extern "C" {
++                    fn codex_ios_terminal_input() -> libc::c_int;
++                }
++                // a-Shell sends terminal replies to its tty pipe, independently of stdin.
++                unsafe { codex_ios_terminal_input() }
++            };
++            #[cfg(not(target_os = "ios"))]
++            let input = libc::STDIN_FILENO;
++            let stdio_reader = dup_file(input);
+             let stdio_writer = dup_file(libc::STDOUT_FILENO);
+             match (stdio_reader, stdio_writer) {
+                 (Ok(reader), Ok(writer)) => Self::new(reader, writer),

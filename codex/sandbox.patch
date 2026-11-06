@@ -1,0 +1,141 @@
+--- a/config/src/config_toml.rs
++++ b/config/src/config_toml.rs
+@@ -825,6 +825,7 @@
+     ) -> PermissionProfile {
+         let configured_sandbox_mode = sandbox_mode_override.or(self.sandbox_mode);
+         let resolved_sandbox_mode = configured_sandbox_mode
++            .or_else(|| cfg!(target_os = "ios").then_some(SandboxMode::DangerFullAccess))
+             .or_else(|| {
+                 // If no sandbox_mode is set but this directory has a trust decision,
+                 // default to workspace-write before applying the platform fallback.
+--- a/config/src/constraint.rs
++++ b/config/src/constraint.rs
+@@ -6,6 +6,10 @@
+ 
+ #[derive(Debug, Error, PartialEq, Eq)]
+ pub enum ConstraintError {
++    #[cfg(target_os = "ios")]
++    #[error("{reason}")]
++    IosSandboxUnavailable { reason: String },
++
+     #[error(
+         "invalid value for `{field_name}`: `{candidate}` is not in the allowed set {allowed} (set by {requirement_source})"
+     )]
+--- a/core/src/config/permissions.rs
++++ b/core/src/config/permissions.rs
+@@ -52,7 +52,10 @@
+     active_project: &ProjectConfig,
+     windows_sandbox_level: WindowsSandboxLevel,
+ ) -> &'static str {
+-    if (active_project.is_trusted() || active_project.is_untrusted())
++    if cfg!(target_os = "ios") {
++        // Only the signed host app sandbox is available, not workspace isolation.
++        BUILT_IN_DANGER_FULL_ACCESS_PROFILE
++    } else if (active_project.is_trusted() || active_project.is_untrusted())
+         && !(cfg!(target_os = "windows") && windows_sandbox_level == WindowsSandboxLevel::Disabled)
+     {
+         BUILT_IN_WORKSPACE_PROFILE
+--- a/core/src/config/resolved_permission_profile.rs
++++ b/core/src/config/resolved_permission_profile.rs
+@@ -47,6 +47,13 @@
+         permission_profile: PermissionProfileSnapshot,
+     ) -> ConstraintResult<Self> {
+         let permission_profile = Constrained::new(permission_profile, move |candidate| {
++            #[cfg(target_os = "ios")]
++            codex_sandboxing::validate_ios_permission_profile(candidate.permission_profile())
++                .map_err(
++                    |error| codex_config::ConstraintError::IosSandboxUnavailable {
++                        reason: error.to_string(),
++                    },
++                )?;
+             constrained_permission_profile.can_set(candidate.permission_profile())
+         })?;
+         Ok(Self { permission_profile })
+--- a/sandboxing/src/lib.rs
++++ b/sandboxing/src/lib.rs
+@@ -35,6 +35,8 @@
+ pub use manager::SandboxablePreference;
+ pub use manager::compatibility_sandbox_policy_for_permission_profile;
+ pub use manager::get_platform_sandbox;
++#[cfg(target_os = "ios")]
++pub use manager::validate_ios_permission_profile;
+ pub use manager::with_managed_mitm_ca_readable_root;
+ pub use spawn::SpawnRequest;
+ pub use spawn::WindowsSandboxSpawnRequest;
+@@ -70,6 +72,10 @@
+             | error @ SandboxTransformError::InvalidSandboxPolicyCwd { .. } => {
+                 CodexErr::InvalidRequest(error.to_string())
+             }
++            #[cfg(target_os = "ios")]
++            SandboxTransformError::IosSandboxUnavailable => {
++                CodexErr::UnsupportedOperation(err.to_string())
++            }
+             SandboxTransformError::MissingLinuxSandboxExecutable => {
+                 CodexErr::LandlockSandboxExecutableNotProvided
+             }
+--- a/sandboxing/src/manager.rs
++++ b/sandboxing/src/manager.rs
+@@ -195,6 +195,8 @@
+         source: io::Error,
+     },
+     MissingLinuxSandboxExecutable,
++    #[cfg(target_os = "ios")]
++    IosSandboxUnavailable,
+     WindowsMxcPreparation(String),
+     EnvironmentNetworkProxy(String),
+     #[cfg(target_os = "macos")]
+@@ -220,6 +222,11 @@
+                 f,
+                 "sandbox policy cwd URI `{cwd}` is not valid on this host: {source}"
+             ),
++            #[cfg(target_os = "ios")]
++            Self::IosSandboxUnavailable => write!(
++                f,
++                "iOS cannot enforce Codex filesystem or network restrictions; use danger-full-access within the signed host app sandbox, or an executor that provides the requested sandbox. Approval policy remains independent."
++            ),
+             Self::MissingLinuxSandboxExecutable => {
+                 write!(f, "missing codex-linux-sandbox executable path")
+             }
+@@ -250,6 +257,8 @@
+         match self {
+             Self::InvalidCommandCwd { source, .. }
+             | Self::InvalidSandboxPolicyCwd { source, .. } => Some(source),
++            #[cfg(target_os = "ios")]
++            Self::IosSandboxUnavailable => None,
+             Self::MissingLinuxSandboxExecutable => None,
+             Self::WindowsMxcPreparation(_) => None,
+             Self::EnvironmentNetworkProxy(_) => None,
+@@ -372,6 +381,13 @@
+             network.and_then(NetworkProxy::managed_mitm_ca_trust_bundle_path);
+         let base_effective_permission_profile =
+             effective_permission_profile(permissions, additional_permissions.as_ref());
++        #[cfg(target_os = "ios")]
++        {
++            validate_ios_permission_profile(&base_effective_permission_profile)?;
++            if enforce_managed_network {
++                return Err(SandboxTransformError::IosSandboxUnavailable);
++            }
++        }
+         let pending_sandboxed_request = PendingSandboxedExecRequest::new(
+             &command.cwd,
+             sandbox_policy_cwd,
+@@ -814,3 +830,19 @@
+ #[cfg(test)]
+ #[path = "manager_tests.rs"]
+ mod tests;
++
++/// Validate restrictions before configuration or execution can claim enforcement.
++#[cfg(target_os = "ios")]
++pub fn validate_ios_permission_profile(
++    profile: &PermissionProfile,
++) -> Result<(), SandboxTransformError> {
++    let (file_system, network) = profile.to_runtime_permissions();
++    if file_system.has_full_disk_read_access()
++        && file_system.has_full_disk_write_access()
++        && network.is_enabled()
++    {
++        Ok(())
++    } else {
++        Err(SandboxTransformError::IosSandboxUnavailable)
++    }
++}

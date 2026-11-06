@@ -1,0 +1,367 @@
+--- a/rollout/src/lib.rs
++++ b/rollout/src/lib.rs
+@@ -8,7 +8,10 @@
+ 
+ pub(crate) mod compression;
+ pub(crate) mod config;
++mod ios_relocation;
+ pub(crate) mod list;
++pub use ios_relocation::relocate_selected_rollout;
++pub use ios_relocation::restored_workspace;
+ mod maintenance;
+ pub(crate) mod metadata;
+ mod model_context;
+@@ -65,6 +68,14 @@
+         .transpose()?
+         .flatten();
+     let item = serde_json::from_value(Value::Object(fields))?;
++    #[cfg(target_os = "ios")]
++    let item = {
++        let mut item = item;
++        if let Some(home) = codex_protocol::shell_environment::local_env_var_os("HOME") {
++            ios_relocation::restore_item_paths(&mut item, std::path::Path::new(&home));
++        }
++        item
++    };
+ 
+     Ok(RolloutLine {
+         timestamp,
+--- a/rollout/src/list.rs
++++ b/rollout/src/list.rs
+@@ -1441,6 +1441,10 @@
+             .await
+         {
+             Ok(Some(db_path)) => {
++                #[cfg(target_os = "ios")]
++                let db_path =
++                    crate::relocate_selected_rollout(state_db_ctx, codex_home, thread_id, &db_path)
++                        .await?;
+                 if let Some(existing_db_path) =
+                     compression::existing_rollout_path(db_path.as_path()).await
+                 {
+--- a/thread-store/src/local/mod.rs
++++ b/thread-store/src/local/mod.rs
+@@ -2145,3 +2145,6 @@
+         }));
+     }
+ }
++
++#[cfg(test)]
++mod ios_relocation_tests;
+--- a/thread-store/src/local/helpers.rs
++++ b/thread-store/src/local/helpers.rs
+@@ -128,10 +128,11 @@
+ }
+ 
+ pub(super) fn stored_thread_from_rollout_item(
+-    item: ThreadItem,
++    mut item: ThreadItem,
+     archived: bool,
+     default_provider: &str,
+ ) -> Option<StoredThread> {
++    item.cwd = item.cwd.map(|cwd| restored_cwd(&cwd));
+     let thread_id = item
+         .thread_id
+         .or_else(|| thread_id_from_rollout_path(item.path.as_path()))?;
+@@ -383,3 +384,68 @@
+         );
+     }
+ }
++
++/// Resolve a copied default home before any SQLite fast path reads old history.
++#[cfg(any(target_os = "ios", test))]
++pub(super) async fn relocate_metadata(
++    store: &super::LocalThreadStore,
++    metadata: &mut codex_state::ThreadMetadata,
++) -> crate::ThreadStoreResult<()> {
++    if let Some(state) = store.state_db().await {
++        metadata.rollout_path = codex_rollout::relocate_selected_rollout(
++            &state,
++            &store.config.codex_home,
++            metadata.id,
++            &metadata.rollout_path,
++        )
++        .await
++        .map_err(|err| crate::ThreadStoreError::Conflict {
++            message: format!("failed to relocate selected rollout: {err}"),
++        })?;
++    }
++    Ok(())
++}
++
++/// Preserve reachable saved workspaces; map only unavailable old application paths.
++pub(super) fn restored_cwd(saved: &std::path::Path) -> PathBuf {
++    #[cfg(any(target_os = "ios", test))]
++    if let Some(home) = codex_protocol::shell_environment::local_env_var_os("HOME") {
++        return codex_rollout::restored_workspace(saved, std::path::Path::new(&home));
++    }
++    saved.to_path_buf()
++}
++
++#[cfg(any(target_os = "ios", test))]
++pub(super) async fn expand_cwd_filters(
++    store: &super::LocalThreadStore,
++    params: &mut crate::ListThreadsParams,
++) -> crate::ThreadStoreResult<()> {
++    let Some(filters) = params
++        .cwd_filters
++        .as_mut()
++        .filter(|filters| !filters.is_empty())
++    else {
++        return Ok(());
++    };
++    let Some(state) = store.state_db().await else {
++        return Ok(());
++    };
++    let directories = state
++        .list_thread_working_directories(params.archived)
++        .await
++        .map_err(|err| crate::ThreadStoreError::Internal {
++            message: format!("failed to resolve saved workspace filters: {err}"),
++        })?;
++    for old in directories {
++        let current = restored_cwd(&old);
++        if current != old
++            && filters.iter().any(|filter| {
++                codex_rollout::state_db::normalize_cwd_for_state_db(filter) == current
++            })
++            && !filters.contains(&old)
++        {
++            filters.push(old);
++        }
++    }
++    Ok(())
++}
+--- a/thread-store/src/local/read_thread.rs
++++ b/thread-store/src/local/read_thread.rs
+@@ -319,6 +319,12 @@
+     store: &LocalThreadStore,
+     metadata: ThreadMetadata,
+ ) -> ThreadStoreResult<StoredThread> {
++    #[cfg(any(target_os = "ios", test))]
++    let metadata = {
++        let mut metadata = metadata;
++        super::helpers::relocate_metadata(store, &mut metadata).await?;
++        metadata
++    };
+     let session_meta = match read_required_session_meta_line(metadata.rollout_path.as_path()).await
+     {
+         Ok(meta_line) if meta_line.meta.id != metadata.id => {
+@@ -382,8 +388,9 @@
+         .clone()
+         .or_else(|| metadata.first_user_message.clone())
+         .unwrap_or_default();
++    let cwd = super::helpers::restored_cwd(&metadata.cwd);
+     let permission_profile =
+-        permission_profile_from_metadata_value(&metadata.sandbox_policy, metadata.cwd.as_path());
++        permission_profile_from_metadata_value(&metadata.sandbox_policy, cwd.as_path());
+     StoredThread {
+         thread_id: metadata.id,
+         extra_config: None,
+@@ -408,7 +415,7 @@
+         section_entered_at: metadata.section_entered_at,
+         project_id: metadata.project_id,
+         daybreak_enabled: metadata.daybreak_enabled,
+-        cwd: metadata.cwd,
++        cwd,
+         cli_version: metadata.cli_version,
+         originator: metadata.originator,
+         source: parse_session_source(&metadata.source),
+--- a/thread-store/src/local/thread_rollout_resolver.rs
++++ b/thread-store/src/local/thread_rollout_resolver.rs
+@@ -88,6 +88,12 @@
+     if let Some(state_db_ctx) = state_db_ctx.as_deref() {
+         match state_db_ctx.get_thread(thread_id).await {
+             Ok(Some(metadata)) => {
++                #[cfg(any(target_os = "ios", test))]
++                let metadata = {
++                    let mut metadata = metadata;
++                    super::helpers::relocate_metadata(store, &mut metadata).await?;
++                    metadata
++                };
+                 // Once SQLite identifies a thread as paginated, its rollout path is
+                 // authoritative: after `thread/revert`, a scan could find an older immutable
+                 // rollout for the same thread. Filesystem fallback remains available when SQLite
+--- a/thread-store/src/local/list_threads.rs
++++ b/thread-store/src/local/list_threads.rs
+@@ -25,6 +25,12 @@
+     store: &LocalThreadStore,
+     params: ListThreadsParams,
+ ) -> ThreadStoreResult<ThreadPage> {
++    #[cfg(any(target_os = "ios", test))]
++    let params = {
++        let mut params = params;
++        super::helpers::expand_cwd_filters(store, &mut params).await?;
++        params
++    };
+     if params.sort_key == ThreadSortKey::SectionPosition {
+         return list_section_threads(store, params).await;
+     }
+@@ -266,7 +272,7 @@
+             });
+         let page = codex_rollout::state_db::list_threads_db(
+             state_db.as_deref(),
+-            &config.sqlite,
++            config,
+             params.page_size,
+             cursor,
+             sort_key,
+--- a/state/src/runtime/threads.rs
++++ b/state/src/runtime/threads.rs
+@@ -6,6 +6,19 @@
+ use std::sync::atomic::Ordering;
+ 
+ impl StateRuntime {
++    /// Distinct saved directories use the existing archived/cwd index, not rollout traversal.
++    pub async fn list_thread_working_directories(
++        &self,
++        archived: bool,
++    ) -> anyhow::Result<Vec<PathBuf>> {
++        sqlx::query_scalar::<_, String>("SELECT DISTINCT cwd FROM threads WHERE archived = ?")
++            .bind(archived)
++            .fetch_all(self.pool.as_ref())
++            .await
++            .map(|paths| paths.into_iter().map(PathBuf::from).collect())
++            .map_err(Into::into)
++    }
++
+     pub async fn get_thread(&self, id: ThreadId) -> anyhow::Result<Option<crate::ThreadMetadata>> {
+         let row = sqlx::query(
+             r#"
+--- a/rollout/src/state_db.rs
++++ b/rollout/src/state_db.rs
+@@ -351,7 +351,7 @@
+ #[allow(clippy::too_many_arguments)]
+ pub async fn list_threads_db(
+     context: Option<&codex_state::StateRuntime>,
+-    sqlite: &codex_state::SqliteConfig,
++    config: &impl RolloutConfigView,
+     page_size: usize,
+     cursor: Option<&Cursor>,
+     sort_key: ThreadSortKey,
+@@ -366,6 +366,7 @@
+     search_term: Option<&str>,
+ ) -> Option<codex_state::ThreadsPage> {
+     let ctx = context?;
++    let sqlite = config.sqlite_config();
+     if ctx.sqlite() != sqlite {
+         warn!(
+             "state db SQLite home mismatch: expected {}, got {}",
+@@ -418,7 +419,19 @@
+             .list_threads_by_relation(page_size, relation_filter, filters)
+             .await
+         {
+-            Ok(page) => Some(page),
++            Ok(mut page) => {
++                for item in &mut page.items {
++                    item.rollout_path = crate::relocate_selected_rollout(
++                        ctx,
++                        config.codex_home(),
++                        item.id,
++                        &item.rollout_path,
++                    )
++                    .await
++                    .ok()?;
++                }
++                Some(page)
++            }
+             Err(err) => {
+                 warn!("state db list_threads failed: {err}");
+                 None
+@@ -452,7 +465,15 @@
+         num_scanned_rows = num_scanned_rows.saturating_add(page.num_scanned_rows);
+         next_anchor = page.next_anchor;
+ 
+-        for item in page.items {
++        for mut item in page.items {
++            item.rollout_path = crate::relocate_selected_rollout(
++                ctx,
++                config.codex_home(),
++                item.id,
++                &item.rollout_path,
++            )
++            .await
++            .ok()?;
+             if let Some(existing_path) =
+                 crate::compression::existing_rollout_path(item.rollout_path.as_path()).await
+             {
+--- a/rollout/src/state_db_tests.rs
++++ b/rollout/src/state_db_tests.rs
+@@ -73,7 +73,13 @@
+ 
+     let page = list_threads_db(
+         Some(runtime.as_ref()),
+-        &requested_sqlite,
++        &RolloutConfig {
++            codex_home: root.path().to_path_buf(),
++            sqlite: requested_sqlite,
++            cwd: root.path().to_path_buf(),
++            model_provider_id: "test-provider".to_string(),
++            generate_memories: false,
++        },
+         /*page_size*/ 10,
+         /*cursor*/ None,
+         ThreadSortKey::CreatedAt,
+--- a/rollout/src/recorder.rs
++++ b/rollout/src/recorder.rs
+@@ -527,7 +527,6 @@
+         search_term: Option<&str>,
+     ) -> std::io::Result<ThreadsPage> {
+         let codex_home = config.codex_home();
+-        let sqlite = config.sqlite_config();
+         let archived = match archive_filter {
+             ThreadListArchiveFilter::Active => false,
+             ThreadListArchiveFilter::Archived => true,
+@@ -539,7 +538,7 @@
+         if matches!(repair_mode, ThreadListRepairMode::StateDbOnly) {
+             return Ok(state_db::list_threads_db(
+                 state_db_ctx.as_deref(),
+-                sqlite,
++                config,
+                 page_size,
+                 cursor,
+                 sort_key,
+@@ -650,7 +649,7 @@
+ 
+         let db_page = state_db::list_threads_db(
+             state_db_ctx.as_deref(),
+-            sqlite,
++            config,
+             page_size,
+             cursor,
+             sort_key,
+@@ -681,7 +680,7 @@
+                 }
+                 if let Some(repaired_db_page) = state_db::list_threads_db(
+                     state_db_ctx.as_deref(),
+-                    sqlite,
++                    config,
+                     page_size,
+                     cursor,
+                     sort_key,
+@@ -723,7 +722,7 @@
+                 if sort_key == ThreadSortKey::RecencyAt {
+                     if let Some(repaired_db_page) = state_db::list_threads_db(
+                         state_db_ctx.as_deref(),
+-                        sqlite,
++                        config,
+                         page_size,
+                         cursor,
+                         sort_key,
+@@ -796,7 +795,6 @@
+         filter_cwd: Option<&Path>,
+     ) -> std::io::Result<Option<PathBuf>> {
+         let codex_home = config.codex_home();
+-        let sqlite = config.sqlite_config();
+         let cwd_filter = filter_cwd.map(Path::to_path_buf);
+         let mut fallback_reason = state_db_ctx.is_none().then_some("db_unavailable");
+         if state_db_ctx.is_some() {
+@@ -804,7 +802,7 @@
+             loop {
+                 let Some(db_page) = state_db::list_threads_db(
+                     state_db_ctx.as_deref(),
+-                    sqlite,
++                    config,
+                     page_size,
+                     db_cursor.as_ref(),
+                     sort_key,

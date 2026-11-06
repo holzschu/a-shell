@@ -1,0 +1,92 @@
+name: openrsync xcframeworks
+on:
+  pull_request:
+    paths:
+      - 'scripts/build-openrsync.sh'
+      - 'patches/openrsync-*.patch'
+      - 'tests/openrsync/**'
+      - 'ci/audit-artifact.py'
+      - '.github/workflows/openrsync.yml'
+  workflow_dispatch:
+  push:
+    tags:
+      - 'openrsync-v*'
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+      - name: Toolchain and resources
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk iphonesimulator --show-sdk-version
+          uv --version
+          df -h .
+          sysctl hw.memsize
+          sysctl vm.swapusage
+      - name: Install BSD make
+        run: brew list bmake >/dev/null 2>&1 || brew install bmake
+      - name: Build pinned products
+        run: nice -n 15 bash scripts/build-openrsync.sh
+      - name: Runtime acceptance on arm64 Simulator
+        run: |
+          runtime=$(xcrun simctl list runtimes -j | jq -r '[.runtimes[] | select(.isAvailable and (.identifier | contains("iOS")) and any(.supportedDeviceTypes[]?; .identifier == "com.apple.CoreSimulator.SimDeviceType.iPhone-17"))] | sort_by(.version | split(".") | map(tonumber)) | last.identifier // empty')
+          test -n "$runtime"
+          device=$(xcrun simctl create Openrsync-Acceptance com.apple.CoreSimulator.SimDeviceType.iPhone-17 "$runtime")
+          trap 'xcrun simctl shutdown "$device"; xcrun simctl delete "$device"' EXIT
+          xcrun simctl boot "$device"
+          xcrun simctl bootstatus "$device" -b
+          bash tests/openrsync/run.sh "$PWD/.build/openrsync" "$device"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: xcframeworks
+          include-hidden-files: true
+          if-no-files-found: error
+          path: |
+            .build/openrsync/dist/*.xcframework.zip
+            .build/openrsync/dist/*-audit.json
+            .build/openrsync/dist/checksums.txt
+            .build/openrsync/dist/release.md
+            .build/openrsync/dist/*-build.log
+            .build/openrsync/dist/openrsync-runtime.log
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: openrsync-failure-logs
+          if-no-files-found: ignore
+          include-hidden-files: true
+          path: .build/openrsync/dist/*.log
+  release:
+    needs: build
+    if: github.repository == 'holzschu/a-shell' && startsWith(github.ref, 'refs/tags/openrsync-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: xcframeworks
+          path: dist
+      - name: Publish immutable assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd dist
+          shasum -a 256 -c checksums.txt
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" ./*.xcframework.zip checksums.txt
+          else
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --latest=false \
+              --title "Release $GITHUB_REF_NAME" --notes-file release.md ./*.xcframework.zip checksums.txt
+          fi

@@ -5,6 +5,7 @@ touch Resources/bin/cd
 touch Resources/bin/chflags
 touch Resources/bin/cksum
 touch Resources/bin/chmod
+touch Resources/bin/codex
 touch Resources/bin/compress
 touch Resources/bin/cp
 touch Resources/bin/curl
@@ -53,6 +54,7 @@ touch Resources/bin/python3
 touch Resources/bin/python
 touch Resources/bin/pythonA
 touch Resources/bin/readlink
+touch Resources/bin/relay
 touch Resources/bin/rg
 touch Resources/bin/rlogin
 touch Resources/bin/rm

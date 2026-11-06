@@ -1,7 +1,10 @@
 #!/bin/sh
 # Host verifier: run after separate native photos and stat commands complete.
 # Usage: initial|changed expected.json receipts copied-cache native-stat.txt
-# Preserve the native photos stdout as receipts/<stage>-root.txt.
+# On the device, capture photos [--select] stdout in photos-root.txt, then write:
+# root=$(cat photos-root.txt)
+# root="$HOME/${root#\~/}"
+# printf '%s\n' "$root" > "receipts/$stage-root.txt"
 # Native stat format: %N|%i|%m|%z|%Lp, one record per original.
 # expected.json maps A, B and C to the SHA256 of their synthetic PNG originals.
 photos_membership() {
