@@ -79,7 +79,7 @@ __attribute__((used, visibility("default"))) char *ashell_bookmarked_directory(c
 - (void)dealloc { if (_token) [_broker releaseChild:_token]; }
 @end
 
-static int broker_spawn( const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
+static int broker_spawn(BOOL host, const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
     if (fd_out) *fd_out = -1;
     if (job_out) *job_out = NULL;
     if (!options || options->size < sizeof(*options)) return EINVAL;
@@ -112,13 +112,17 @@ static int broker_spawn( const char *command, const char *cwd, unsigned cols, un
             if (error) { close(*fd_out); *fd_out = -1; }
         }
     };
-    [child.broker spawnChild:@(command) cwd:@(cwd) env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:options->separate_stderr != 0 reply:reply];
+    if (host) [child.broker spawnHostChild:@(command) cwd:@(cwd) env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:options->separate_stderr != 0 reply:reply];
+    else [child.broker spawnChild:@(command) cwd:@(cwd) env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:options->separate_stderr != 0 reply:reply];
     if (error) return error;
     *job_out = (__bridge_retained void *)child;
     return 0;
 }
 __attribute__((used, visibility("default"))) int ashell_worker_spawn_ex(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
-    return broker_spawn( command, cwd, cols, rows, envp, options, fd_out, job_out);
+    return broker_spawn(NO, command, cwd, cols, rows, envp, options, fd_out, job_out);
+}
+__attribute__((used, visibility("default"))) int ashell_worker_host_spawn_ex(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
+    return broker_spawn(YES, command, cwd, cols, rows, envp, options, fd_out, job_out);
 }
 __attribute__((used, visibility("default"))) int ashell_worker_poll_usage(void *handle, int *status, struct rusage *usage_out, int *usage_available) {
     if (usage_available) *usage_available = 0;
@@ -161,20 +165,29 @@ __attribute__((used, visibility("default"))) void ashell_worker_release(void *ha
     (void)child;
 }
 
-__attribute__((used, visibility("default"))) int ashell_worker_resize(void *job, unsigned cols, unsigned rows) {
+// Host children use the same broker tokens and stream ownership as extension children.
+__attribute__((used, visibility("default"))) int ashell_worker_host_poll(void *job, int *status) { return ashell_worker_poll(job, status); }
+__attribute__((used, visibility("default"))) int ashell_worker_host_poll_usage(void *job, int *status, struct rusage *usage, int *available) { return ashell_worker_poll_usage(job, status, usage, available); }
+__attribute__((used, visibility("default"))) int ashell_worker_host_close_stdin(void *job) { return ashell_worker_close_stdin(job); }
+__attribute__((used, visibility("default"))) int ashell_worker_host_cancel(void *job) { return ashell_worker_cancel(job); }
+__attribute__((used, visibility("default"))) void ashell_worker_host_release(void *job) { ashell_worker_release(job); }
+__attribute__((used, visibility("default"))) int ashell_worker_host_resize(void *job, unsigned cols, unsigned rows) {
     if (!job) return EINVAL;
     BrokerRemoteChild *child = (__bridge BrokerRemoteChild *)job;
     __block int result = EPIPE;
     [child.broker resizeChild:child.token cols:cols rows:rows reply:^(int code) { result = code; }];
     return result;
 }
-__attribute__((used, visibility("default"))) int ashell_worker_interrupt(void *job) {
+__attribute__((used, visibility("default"))) int ashell_worker_host_interrupt(void *job) {
     if (!job) return EINVAL;
     BrokerRemoteChild *child = (__bridge BrokerRemoteChild *)job;
     __block int result = EPIPE;
     [child.broker interruptChild:child.token reply:^(int code) { result = code; }];
     return result;
 }
+
+__attribute__((used, visibility("default"))) int ashell_worker_resize(void *job, unsigned cols, unsigned rows) { return ashell_worker_host_resize(job, cols, rows); }
+__attribute__((used, visibility("default"))) int ashell_worker_interrupt(void *job) { return ashell_worker_host_interrupt(job); }
 
 @interface PaneService : NSObject <AShellPaneWire>
 @end

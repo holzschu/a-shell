@@ -11,6 +11,11 @@ extern "C" {
 // Keep the public C ABI discoverable in Release builds with hidden visibility.
 #pragma GCC visibility push(default)
 
+// Host only: how many panes can run at once, so ashell_pane_spawn returns ENOSPC for the next one.
+// The "worker_limit" setting (0 = automatic) or else the device's physical core count,
+// limited to the bundled worker extensions. Read on every spawn, so a change applies at once.
+int ashell_pane_capacity(void);
+
 // command/cwd must be nonempty UTF-8; cwd must be an absolute accessible directory.
 // envp is NULL or a NULL-terminated list of UTF-8 key=value overrides, copied before return.
 // Dimensions are 1..9999. Returns 0 or positive errno; failure sets outputs to -1/NULL.
@@ -43,9 +48,12 @@ int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, un
 // Returns 0 running, 1 exited (writes final command status), or -errno.
 // Repeated polling after exit preserves status. Drain the returned fd to EOF independently.
 // A cleanup/restore error returns -errno after completion instead of hiding the failure.
+// Lost XPC returns -EPIPE without inventing an exit status. Explicit cancellation
+// returns 137; that status does not identify the cause of an unexpected process loss.
 int ashell_pane_poll(void *job, int *status_out);
-// Reports worker-process lifetime usage, not per-command CPU accounting.
-// usage_available is zero when no process sample is available.
+// Reports the worker process's RUSAGE_SELF snapshot at exit (process lifetime,
+// not per-command CPU accounting); usage_available is zero for lost workers
+// or when no sample exists.
 int ashell_pane_poll_usage(void *job, int *status_out, struct rusage *usage_out, int *usage_available);
 
 // These operations return 0 or POSITIVE errno, unlike poll.

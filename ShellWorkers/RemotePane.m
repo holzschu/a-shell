@@ -1,5 +1,6 @@
 #import "PaneWire.h"
 #import <ios_system/ios_system.h>
+#import "HostPane.h"
 #include "NativePane.h"
 #include <errno.h>
 #include <dirent.h>
@@ -11,7 +12,7 @@
 extern void ashell_extension_connect(const char *, void (^)(NSXPCConnection *, NSError *));
 extern void ashell_extension_disconnect(NSXPCConnection *);
 extern void ashell_extension_observe(NSXPCConnection *, pid_t);
-
+extern int ashell_extension_capacity(void);
 
 static void log_host_library(const char *phase) {
     int saved = errno;
@@ -51,9 +52,10 @@ static void log_host_library(const char *phase) {
 // A connection owns its descendants; invalidation releases the whole subtree.
 @interface BrokerChild : NSObject
 @property(nonatomic) void *job;
+@property(nonatomic) BOOL host;
 @end
 @implementation BrokerChild
-- (void)dealloc { if (_job) ashell_pane_release(_job); }
+- (void)dealloc { if (_job) { if (_host) ashell_host_pane_release(_job); else ashell_pane_release(_job); } }
 @end
 
 @interface SpawnBroker : NSObject <AShellSpawnBrokerWire>
@@ -66,20 +68,27 @@ static void log_host_library(const char *phase) {
     return self;
 }
 - (void)spawnChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
-    [self spawn:command cwd:cwd env:env cols:cols rows:rows tty:tty separateStderr:separate reply:reply];
+    [self spawn:command cwd:cwd env:env cols:cols rows:rows tty:tty separateStderr:separate host:NO reply:reply];
 }
-- (void)spawn:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
+- (void)spawnHostChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
+    [self spawn:command cwd:cwd env:env cols:cols rows:rows tty:tty separateStderr:separate host:YES reply:reply];
+}
+- (void)spawn:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate host:(BOOL)host reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
     const char **values = calloc(env.count + 2, sizeof(*values));
     if (!values) { reply(ENOMEM, nil, nil, nil); return; }
     NSUInteger count = 0;
     for (NSString *value in env) {
+        if (host && ([value hasPrefix:@"ASHELL_WORKER_PID="] || [value hasPrefix:@"ASHELL_WORKER_ROOT_PID="] || [value hasPrefix:@"TMPDIR="])) continue;
         values[count++] = value.UTF8String;
     }
+    NSString *temporary = host ? [@"TMPDIR=" stringByAppendingString:NSTemporaryDirectory()] : nil;
+    if (temporary) values[count++] = temporary.UTF8String;
     int fd = -1;
     BrokerChild *child = [BrokerChild new];
+    child.host = host;
     ashell_pane_options options = { .size = sizeof(options), .tty = tty, .separate_stderr = separate };
     void *job = NULL;
-    int error = ashell_pane_spawn_ex(command.UTF8String, cwd.fileSystemRepresentation, cols, rows, values, &options, &fd, &job);
+    int error = (host ? ashell_host_pane_spawn_ex : ashell_pane_spawn_ex)(command.UTF8String, cwd.fileSystemRepresentation, cols, rows, values, &options, &fd, &job);
     free(values);
     if (error) { reply(error, nil, nil, nil); return; }
     child.job = job;
@@ -98,29 +107,31 @@ static void log_host_library(const char *phase) {
     int status = 0;
     int available = 0;
     struct rusage usage;
-    int result = child ? ashell_pane_poll_usage(child.job, &status, &usage, &available) : -ESRCH;
+    int result = child ? (child.host ? ashell_host_pane_poll_usage : ashell_pane_poll_usage)(child.job, &status, &usage, &available) : -ESRCH;
     reply(result, status, result == 1 && available ? [NSData dataWithBytes:&usage length:sizeof(usage)] : nil);
 }
 - (void)closeChildInput:(NSString *)token reply:(void (^)(int))reply {
     BrokerChild *child = [self child:token];
-    reply(child ? ashell_pane_close_stdin(child.job) : ESRCH);
+    reply(child ? (child.host ? ashell_host_pane_close_stdin : ashell_pane_close_stdin)(child.job) : ESRCH);
 }
 - (void)cancelChild:(NSString *)token reply:(void (^)(int))reply {
     BrokerChild *child = [self child:token];
-    reply(child ? ashell_pane_cancel(child.job) : ESRCH);
+    reply(child ? (child.host ? ashell_host_pane_cancel : ashell_pane_cancel)(child.job) : ESRCH);
 }
 - (void)resizeChild:(NSString *)token cols:(unsigned)cols rows:(unsigned)rows reply:(void (^)(int))reply {
     BrokerChild *child = [self child:token];
-    reply(child ? ashell_pane_resize(child.job, cols, rows) : ESRCH);
+    reply(child ? (child.host ? ashell_host_pane_resize : ashell_pane_resize)(child.job, cols, rows) : ESRCH);
 }
 - (void)interruptChild:(NSString *)token reply:(void (^)(int))reply {
     BrokerChild *child = [self child:token];
-    reply(child ? ashell_pane_interrupt(child.job) : ESRCH);
+    reply(child ? (child.host ? ashell_host_pane_interrupt : ashell_pane_interrupt)(child.job) : ESRCH);
 }
 - (void)releaseChild:(NSString *)token { @synchronized (self) { [self.children removeObjectForKey:token]; } }
 @end
 
 
+
+int ashell_pane_capacity(void) { return ashell_extension_capacity(); }
 
 int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, int *fd_out, void **job_out) {
     ashell_pane_options options = {.size = sizeof(options), .tty = 1};
@@ -307,6 +318,4 @@ void ashell_pane_release(void *job) {
     ashell_extension_disconnect(pane.connection);
 }
 
-NSObject<AShellSpawnBrokerWire> *ashell_spawn_broker(void) {
-    return [SpawnBroker new];
-}
+NSObject<AShellSpawnBrokerWire> *ashell_spawn_broker(void) { return [SpawnBroker new]; }

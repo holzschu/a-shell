@@ -1,0 +1,257 @@
+--- a/git-utils/src/info.rs
++++ b/git-utils/src/info.rs
+@@ -60,6 +60,30 @@
+ }
+ 
+ /// Return the sanitized URL for the `origin` remote, if available.
++#[cfg(target_os = "ios")]
++pub async fn get_git_origin_url(cwd: &Path) -> Option<SanitizedGitUrl> {
++    let cwd = cwd.to_path_buf();
++    tokio::task::spawn_blocking(move || {
++        if !cwd.is_dir() {
++            return None;
++        }
++        let repo = gix::discover(&cwd).ok()?;
++        // Preserve safe.bareRepository=explicit for implicit cwd discovery.
++        if repo.is_bare() {
++            return None;
++        }
++        let remote = repo.find_remote("origin").ok()?;
++        let url = remote.url(gix::remote::Direction::Fetch)?;
++        let url = String::from_utf8(url.to_bstring().into()).ok()?;
++        SanitizedGitUrl::try_from(url.as_str()).ok()
++    })
++    .await
++    .ok()
++    .flatten()
++}
++
++/// Return the sanitized URL for the `origin` remote, if available.
++#[cfg(not(target_os = "ios"))]
+ pub async fn get_git_origin_url(cwd: &Path) -> Option<SanitizedGitUrl> {
+     let output = run_git_command_with_timeout(&["remote", "get-url", "origin"], cwd).await?;
+     if !output.status.success() {
+@@ -68,12 +92,56 @@
+ 
+     let url = String::from_utf8(output.stdout).ok()?;
+     SanitizedGitUrl::try_from(url.trim()).ok()
++}
++
++/// Read iOS repository metadata through the existing gix library without a child process.
++#[cfg(target_os = "ios")]
++pub async fn collect_git_info(cwd: &Path) -> Option<GitInfo> {
++    let cwd = cwd.to_path_buf();
++    // Keep synchronous Git config/reference I/O off the async runtime workers.
++    tokio::task::spawn_blocking(move || {
++        if !cwd.is_dir() {
++            return None;
++        }
++        let repo = gix::discover(&cwd).ok()?;
++        // Match safe.bareRepository=explicit for implicit cwd discovery.
++        if repo.is_bare() {
++            return None;
++        }
++        let head = repo.head().ok();
++        let commit_hash = head
++            .as_ref()
++            .and_then(|head| head.id())
++            .map(|id| GitSha::new(&id.to_string()));
++        let branch = head
++            .as_ref()
++            .filter(|head| !head.is_unborn())
++            .and_then(|head| {
++                std::str::from_utf8(head.referent_name()?.shorten())
++                    .ok()
++                    .map(str::to_owned)
++            });
++        let repository_url = repo.find_remote("origin").ok().and_then(|remote| {
++            let url = remote.url(gix::remote::Direction::Fetch)?;
++            let url = String::from_utf8(url.to_bstring().into()).ok()?;
++            SanitizedGitUrl::try_from(url.as_str()).ok()
++        });
++        Some(GitInfo {
++            commit_hash,
++            branch,
++            repository_url,
++        })
++    })
++    .await
++    .ok()
++    .flatten()
+ }
+ 
+ /// Collect git repository information from the given working directory using command-line git.
+ /// Returns None if no git repository is found or if git operations fail.
+ /// Uses timeouts to prevent freezing on large repositories.
+ /// All git commands (except the initial repo check) run in parallel for better performance.
++#[cfg(not(target_os = "ios"))]
+ pub async fn collect_git_info(cwd: &Path) -> Option<GitInfo> {
+     // Check if we're in a git repository first
+     let is_git_repo = run_git_command_with_timeout(&["rev-parse", "--git-dir"], cwd)
+@@ -120,7 +188,14 @@
+     Some(git_info)
+ }
+ 
++/// Collect fetch remotes through the native iOS repository reader.
++#[cfg(target_os = "ios")]
++pub async fn get_git_remote_urls(cwd: &Path) -> Option<BTreeMap<String, SanitizedGitUrl>> {
++    get_git_remote_urls_assume_git_repo(cwd).await
++}
++
+ /// Collect fetch remotes in a multi-root-friendly format: {"origin": "https://..."}.
++#[cfg(not(target_os = "ios"))]
+ pub async fn get_git_remote_urls(cwd: &Path) -> Option<BTreeMap<String, SanitizedGitUrl>> {
+     let is_git_repo = run_git_command_with_timeout(&["rev-parse", "--git-dir"], cwd)
+         .await?
+@@ -133,7 +208,42 @@
+     get_git_remote_urls_assume_git_repo(cwd).await
+ }
+ 
++/// Collect fetch remotes without launching Git, preserving URL rewriting and sanitization.
++#[cfg(target_os = "ios")]
++pub async fn get_git_remote_urls_assume_git_repo(
++    cwd: &Path,
++) -> Option<BTreeMap<String, SanitizedGitUrl>> {
++    let cwd = cwd.to_path_buf();
++    tokio::task::spawn_blocking(move || {
++        if !cwd.is_dir() {
++            return None;
++        }
++        let repo = gix::discover(&cwd).ok()?;
++        if repo.is_bare() {
++            return None;
++        }
++        let mut remotes = BTreeMap::new();
++        for name in repo.remote_names() {
++            let Ok(remote) = repo.find_remote(name.as_ref()) else {
++                continue;
++            };
++            let Some(url) = remote.url(gix::remote::Direction::Fetch) else {
++                continue;
++            };
++            let url = String::from_utf8(url.to_bstring().into()).ok()?;
++            if let Ok(url) = SanitizedGitUrl::try_from(url.as_str()) {
++                remotes.insert(std::str::from_utf8(name.as_ref()).ok()?.to_owned(), url);
++            }
++        }
++        (!remotes.is_empty()).then_some(remotes)
++    })
++    .await
++    .ok()
++    .flatten()
++}
++
+ /// Collect fetch remotes without checking whether `cwd` is in a git repo.
++#[cfg(not(target_os = "ios"))]
+ pub async fn get_git_remote_urls_assume_git_repo(
+     cwd: &Path,
+ ) -> Option<BTreeMap<String, SanitizedGitUrl>> {
+@@ -146,7 +256,14 @@
+     parse_git_remote_urls(stdout.as_str())
+ }
+ 
++/// Return the current HEAD commit hash without launching a Git executable.
++#[cfg(target_os = "ios")]
++pub async fn get_head_commit_hash(cwd: &Path) -> Option<GitSha> {
++    collect_git_info(cwd).await?.commit_hash
++}
++
+ /// Return the current HEAD commit hash without checking whether `cwd` is in a git repo.
++#[cfg(not(target_os = "ios"))]
+ pub async fn get_head_commit_hash(cwd: &Path) -> Option<GitSha> {
+     let output = run_git_command_with_timeout(&["rev-parse", "HEAD"], cwd).await?;
+     if !output.status.success() {
+@@ -264,6 +381,7 @@
+     value.strip_suffix(".git").unwrap_or(value)
+ }
+ 
++#[cfg(any(not(target_os = "ios"), test))]
+ fn parse_git_remote_urls(stdout: &str) -> Option<BTreeMap<String, SanitizedGitUrl>> {
+     let mut remotes = BTreeMap::new();
+     for line in stdout.lines() {
+@@ -303,9 +421,52 @@
+     pub subject: String,
+ }
+ 
++/// Read iOS commit history through gix without an external Git executable.
++#[cfg(target_os = "ios")]
++pub async fn recent_commits(cwd: &Path, limit: usize) -> Vec<CommitLogEntry> {
++    let cwd = cwd.to_path_buf();
++    tokio::task::spawn_blocking(move || {
++        if !cwd.is_dir() {
++            return None;
++        }
++        let repo = gix::discover(&cwd).ok()?;
++        if repo.is_bare() {
++            return None;
++        }
++        let head = repo.head_commit().ok()?;
++        let commits = head
++            .ancestors()
++            .sorting(gix::revision::walk::Sorting::ByCommitTime(
++                gix::traverse::commit::simple::CommitTimeOrder::NewestFirst,
++            ))
++            .all()
++            .ok()?;
++        // Git log treats an omitted count (the public API's zero) as unlimited.
++        let count = if limit == 0 { usize::MAX } else { limit };
++        let mut entries = Vec::new();
++        for info in commits.take(count) {
++            let info = info.ok()?;
++            let commit = info.object().ok()?;
++            let message = commit.message().ok()?;
++            let summary = message.summary();
++            entries.push(CommitLogEntry {
++                sha: info.id.to_string(),
++                timestamp: commit.time().ok()?.seconds,
++                subject: String::from_utf8_lossy(summary.as_ref()).trim().to_owned(),
++            });
++        }
++        Some(entries)
++    })
++    .await
++    .ok()
++    .flatten()
++    .unwrap_or_default()
++}
++
+ /// Return the last `limit` commits reachable from HEAD for the current branch.
+ /// Each entry contains the SHA, commit timestamp (seconds), and subject line.
+ /// Returns an empty vector if not in a git repo or on error/timeout.
++#[cfg(not(target_os = "ios"))]
+ pub async fn recent_commits(cwd: &Path, limit: usize) -> Vec<CommitLogEntry> {
+     // Ensure we're in a git repo first to avoid noisy errors.
+     let Some(out) = run_git_command_with_timeout(&["rev-parse", "--git-dir"], cwd).await else {
+@@ -820,7 +981,32 @@
+     branches
+ }
+ 
++/// Return the current branch, including an unborn branch, without a Git executable.
++#[cfg(target_os = "ios")]
++pub async fn current_branch_name(cwd: &Path) -> Option<String> {
++    let cwd = cwd.to_path_buf();
++    tokio::task::spawn_blocking(move || {
++        if !cwd.is_dir() {
++            return None;
++        }
++        let repo = gix::discover(&cwd).ok()?;
++        if repo.is_bare() {
++            return None;
++        }
++        let head = repo.head().ok()?;
++        let name = head.referent_name()?;
++        if !matches!(name.category(), Some(gix::refs::Category::LocalBranch)) {
++            return None;
++        }
++        std::str::from_utf8(name.shorten()).ok().map(str::to_owned)
++    })
++    .await
++    .ok()
++    .flatten()
++}
++
+ /// Returns the current checked out branch name.
++#[cfg(not(target_os = "ios"))]
+ pub async fn current_branch_name(cwd: &Path) -> Option<String> {
+     let out = run_git_command_with_timeout(&["branch", "--show-current"], cwd).await?;
+     if !out.status.success() {
