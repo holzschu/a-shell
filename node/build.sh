@@ -9,7 +9,10 @@ cache=${NODE_IOS_CACHE:-$HOME/.cache/a-shell-node/$rev}
 source=$cache/source
 stage=${1:-node}
 ios_system=${IOS_SYSTEM_XCFRAMEWORK:-$app/xcfs/.build/artifacts/xcfs/ios_system/ios_system.xcframework}
+node_framework=${NODE_IOS_XCFRAMEWORK:-$app/xcfs/node.xcframework}
 jobs=${NODE_IOS_JOBS:-4}
+platforms=${NODE_IOS_PLATFORMS:-"simulator device"}
+simulator_slice=${IOS_SYSTEM_SIMULATOR_SLICE:-ios-arm64-simulator}
 libraries="ada brotli cares crdtp icui18n icuucx icudata icustubdata histogram llhttp nbytes ncrypto ncrypto_engine nghttp2 sfparse merve node node_base openssl simdjson simdutf sqlite uv uvwasi ffi highway v8_base_without_compiler v8_compiler v8_initializers v8_libbase v8_libplatform v8_snapshot v8_zlib v8_init abseil zlib zlib_data_chunk_simd zlib_adler32_simd zstd"
 die() {
   echo "$*" >&2
@@ -53,7 +56,7 @@ check() {
     package)
       command -v npm >/dev/null
       local platform name
-      for platform in simulator device; do
+      for platform in $platforms; do
         for name in $libraries; do
           [[ -f $cache/$platform-libs/lib$name.a ]] || {
             echo "Missing $platform archive lib$name.a; complete its native build first (build.sh $([[ $platform == simulator ]] && echo node || echo device); see $cache/make.log)." >&2
@@ -61,9 +64,11 @@ check() {
           }
         done
       done
-      [[ -f $ios_system/ios-arm64/ios_system.framework/Headers/ios_system.h && -f $ios_system/ios-arm64-simulator/ios_system.framework/Headers/ios_system.h ]] || die "IOS_SYSTEM_XCFRAMEWORK $ios_system has no ios_system slices; run build.sh sdk."
       local slice
-      for slice in ios-arm64 ios-arm64-simulator; do
+      for platform in $platforms; do
+        slice=$simulator_slice
+        [[ $platform != device ]] || slice=ios-arm64
+        [[ -f $ios_system/$slice/ios_system.framework/Headers/ios_system.h ]] || die "IOS_SYSTEM_XCFRAMEWORK $ios_system has no $slice headers; run build.sh sdk."
         if ! xcrun nm -gU "$ios_system/$slice/ios_system.framework/ios_system" | grep ' T _ashell_register_owned_streams$' >/dev/null; then
           echo 'Build the patched ios_system first: build.sh sdk' >&2
           exit 1
@@ -77,7 +82,7 @@ check() {
   esac
 }
 plan() {
-  echo "Stage $stage; pinned Node $rev; cache $cache; package $app/xcfs/node.xcframework"
+  echo "Stage $stage; pinned Node $rev; cache $cache; package $node_framework"
 }
 apply() (
   mkdir -p "$cache"
@@ -151,17 +156,23 @@ apply() (
       (
         cd "$source"
         # configure probes the bundled OpenSSL with $CC and the include variables; drop user overrides so the build matches a clean shell.
-        unset CC CXX CC_host CXX_host CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH
-        export GYP_DEFINES="target_arch=arm64 host_os=mac target_os=ios v8_enable_turbofan=0 v8_enable_sparkplug=0 v8_enable_maglev=0 v8_enable_drumbrake=0"
+        unset CC CXX CC_host CXX_host CC_target CXX_target CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH
+        local cpu=arm64
+        # GYP suppresses -arch during cross compilation; give its target compilers an explicit triple.
+        local target=arm64-apple-ios16.0-simulator
+        [[ $stage != device ]] || target=arm64-apple-ios16.0
+        export CC_target="$(xcrun -f clang) -target $target"
+        export CXX_target="$(xcrun -f clang++) -target $target"
+        export GYP_DEFINES="target_arch=$cpu host_os=mac target_os=ios v8_enable_turbofan=0 v8_enable_sparkplug=0 v8_enable_maglev=0 v8_enable_drumbrake=0"
         # GYP's lite flag does not itself disable compiler source sets in this branch.
         local iossim=true
-        local configure_args=(--dest-os=ios --dest-cpu=arm64 --with-intl=small-icu --cross-compiling --openssl-no-asm --v8-options=--jitless --v8-lite-mode --without-node-code-cache --without-node-snapshot --v8-disable-temporal-support --v8-disable-maglev)
+        local configure_args=(--dest-os=ios --dest-cpu="$cpu" --with-intl=small-icu --cross-compiling --openssl-no-asm --v8-options=--jitless --v8-lite-mode --without-node-code-cache --without-node-snapshot --v8-disable-temporal-support --v8-disable-maglev)
         if [[ $stage == device ]]; then
           iossim=false
         else
           configure_args+=(--ios-simulator)
         fi
-        if [[ ! -f config.gypi ]] || ! python3 -c 'import json,sys; v=json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]; sys.exit(not (v["iossim"] == sys.argv[1] and v["icu_small"] == "true" and v["v8_enable_lite_mode"] == 1 and v["v8_enable_webassembly"] == 0 and v["v8_enable_pointer_compression"] == 0 and v["v8_enable_maglev"] == 0 and v["node_v8_options"] == "--jitless" and v["openssl_version"] >= 0x3000000f))' "$iossim" || [[ tools/v8_gypfiles/v8.gyp -nt out/Makefile || tools/v8_gypfiles/features.gypi -nt out/Makefile || tools/gyp/pylib/gyp/generator/make.py -nt out/Makefile || common.gypi -nt out/Makefile ]]; then
+        if [[ ! -f config.gypi ]] || ! python3 -c 'import json,sys; v=json.loads(open("config.gypi").read().split("\n",1)[1])["variables"]; sys.exit(not (v["iossim"] == sys.argv[1] and v["target_arch"] == sys.argv[2] and v["icu_small"] == "true" and v["v8_enable_lite_mode"] == 1 and v["v8_enable_webassembly"] == 0 and v["v8_enable_pointer_compression"] == 0 and v["v8_enable_maglev"] == 0 and v["node_v8_options"] == "--jitless" and v["openssl_version"] >= 0x3000000f))' "$iossim" "$cpu" || [[ tools/v8_gypfiles/v8.gyp -nt out/Makefile || tools/v8_gypfiles/features.gypi -nt out/Makefile || tools/gyp/pylib/gyp/generator/make.py -nt out/Makefile || common.gypi -nt out/Makefile || $here/build.sh -nt config.gypi ]]; then
           logged "$cache/configure.log" ./configure "${configure_args[@]}"
         fi
         # A failed probe leaves openssl_version 0 (only a warning); engine.cc then builds without engine compat and make dies in ncrypto.
@@ -177,7 +188,7 @@ apply() (
         done
         # Build archive targets only; the default also compiles unused V8 tools.
         # GYP emits DWARF even in Release; stock trailing flags keep caches compact.
-        CFLAGS="${CFLAGS:-} -g0" CXXFLAGS="${CXXFLAGS:-} -g0" \
+        CFLAGS="${CFLAGS:-} -Oz -g0" CXXFLAGS="${CXXFLAGS:-} -Oz -g0" \
           CFLAGS_host="${CFLAGS_host:-} -g0" CXXFLAGS_host="${CXXFLAGS_host:-} -g0" \
           logged "$cache/make.log" /usr/bin/time -p make -C out BUILDTYPE=Release -j"$jobs" "${targets[@]}"
       )
@@ -213,11 +224,11 @@ PYABI
       local platform sdk target slice framework name input relink
       local framework_args=()
       local package_changed=0
-      for platform in simulator device; do
+      for platform in $platforms; do
         [[ -d $cache/$platform-libs ]] || continue
         sdk=iphonesimulator
         target=arm64-apple-ios16.0-simulator
-        slice=ios-arm64-simulator
+        slice=$simulator_slice
         if [[ $platform == device ]]; then
           sdk=iphoneos
           target=arm64-apple-ios16.0
@@ -226,14 +237,14 @@ PYABI
         framework=$cache/framework/$platform/node.framework
         mkdir -p "$framework"
         if [[ ! -f $cache/child-process-$platform.o || $here/child-process.cc -nt $cache/child-process-$platform.o ]]; then
-          xcrun --sdk "$sdk" clang++ -x objective-c++ -std=c++20 -fmodules -fmodules-cache-path="$cache/clang-modules" -target "$target" \
+          xcrun --sdk "$sdk" clang++ -Oz -x objective-c++ -std=c++20 -fmodules -fmodules-cache-path="$cache/clang-modules" -target "$target" \
             -isysroot "$(xcrun --sdk "$sdk" --show-sdk-path)" \
             -isystem "$source/deps/uv/include" \
             -isystem "$ios_system/$slice/ios_system.framework/Headers" -Wall -Wextra -Werror \
             -c "$here/child-process.cc" -o "$cache/child-process-$platform.o"
         fi
         if [[ ! -f $cache/node-command-$platform.o || $here/node-command.cc -nt $cache/node-command-$platform.o || $here/build.sh -nt $cache/node-command-$platform.o || $adapter_config -nt $cache/node-command-$platform.o ]]; then
-          xcrun --sdk "$sdk" clang++ -x objective-c++ -std=c++20 -fmodules -fmodules-cache-path="$cache/clang-modules" -target "$target" \
+          xcrun --sdk "$sdk" clang++ -Oz -x objective-c++ -std=c++20 -fmodules -fmodules-cache-path="$cache/clang-modules" -target "$target" \
             -isysroot "$(xcrun --sdk "$sdk" --show-sdk-path)" "${adapter_defines[@]}" \
             -isystem "$source/src" -isystem "$source/deps/v8/include" -isystem "$source/deps/uv/include" \
             -isystem "$ios_system/$slice/ios_system.framework/Headers" -Wall -Wextra -Werror -c "$here/node-command.cc" -o "$cache/node-command-$platform.o"
@@ -273,7 +284,7 @@ EOF
         fi
         cp "$source/LICENSE" "$framework/LICENSE"
         framework_args+=(-framework "$framework")
-        if [[ $relink == 1 ]] || ! cmp -s "$framework/Info.plist" "$app/xcfs/node.xcframework/$slice/node.framework/Info.plist" || ! cmp -s "$framework/node" "$app/xcfs/node.xcframework/$slice/node.framework/node" || [[ -e $app/xcfs/node.xcframework/$slice/node.framework/npm || -e $app/xcfs/node.xcframework/$slice/node.framework/fetch ]]; then
+        if [[ $relink == 1 ]] || ! cmp -s "$framework/Info.plist" "$node_framework/$slice/node.framework/Info.plist" || ! cmp -s "$framework/node" "$node_framework/$slice/node.framework/node" || [[ -e $node_framework/$slice/node.framework/npm || -e $node_framework/$slice/node.framework/fetch ]]; then
           package_changed=1
         fi
       done
@@ -285,14 +296,14 @@ EOF
       patch -s -F 0 -p1 -d "$app/Resources/npm" <"$here/npm-native.patch"
       cp "$here/fetch-preload.mjs" "$here/fetch-lock.json" "$app/Resources/node-fetch/"
       rsync -a --delete "$cache/fetch/node_modules" "$app/Resources/node-fetch/fetch/"
-      if [[ $package_changed == 1 || ! -d $app/xcfs/node.xcframework ]]; then
-        if [[ -d $app/xcfs/node.xcframework ]]; then
-          rm -rf "$app/xcfs/node.xcframework"
+      if [[ $package_changed == 1 || ! -d $node_framework ]]; then
+        if [[ -d $node_framework ]]; then
+          rm -rf "$node_framework"
         fi
-        logged "$cache/framework.log" xcodebuild -create-xcframework "${framework_args[@]}" -output "$app/xcfs/node.xcframework"
+        logged "$cache/framework.log" xcodebuild -create-xcframework "${framework_args[@]}" -output "$node_framework"
       fi
       # The App Store rejects the upload when a framework holds script files it cannot sign.
-      if scripts=$(find "$app/xcfs/node.xcframework" \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.py' \) -print -quit) && [[ -n $scripts ]]; then
+      if scripts=$(find "$node_framework" \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.py' \) -print -quit) && [[ -n $scripts ]]; then
         die "$scripts is a script inside node.xcframework; app-store frameworks must hold none."
       fi
       ;;
