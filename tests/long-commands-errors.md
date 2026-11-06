@@ -1,0 +1,3 @@
+Run `sh tests/long-commands-errors.sh` on a Mac with Swift 6.4 or later. An optional argument selects an earlier `ExecuteLongCommandIntent.swift` for the RED comparison.
+
+The harness calls the production intent's `perform()` and checks the thrown error descriptions for a failed host-bundle lookup and a failed shared-container lookup. A successful flat iOS host fixture checks the returned app environment. Bundle lookup and FileManager container failures are injected at OS boundaries; successful bundle lookups use Foundation. AppIntents scheduling, ios_system execution and UIKit's device model are substituted. This tests error reporting, not Shortcuts registration or execution on a device.
