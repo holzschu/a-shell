@@ -16,13 +16,13 @@
 # Groups are enclosed in brackets (see bottom of file for an example). 
 # The part after the closing bracket is the representative item (icon or text, can be nil). 
 # If space is constrained, iPadOS will display the group as a submenu using that item,
-# if it's not nil (iOS will always display all buttons). 
+# if it's not nil (iOS will always display all buttons).
 
 # On iOS 16+, groups can be made to appear depending on the command: after the opening bracket, you can
 # add a regular expression. If that expression matches the current command, the buttons will 
 # show. A special regexp ("none") is for buttons that should only appear if no commands are running.
 
-# This file corresponds to the default toolbar: first the 4 buttons on the left (tab, control, escape, paste), 
+# This file corresponds to the default toolbar: first the 4 buttons on the left (tab, control, escape, paste),
 # then a line with "separator" to indicate the separation between the two groups, 
 # then showBrowser and the arrows on the right (combined arrows on iPhones, 4 arrow buttons on iPads).
 # To customize the toolbar, simply edit this file. To go back to the default toolbar, remove it.
