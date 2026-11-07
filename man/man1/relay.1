@@ -1,0 +1,290 @@
+.Dd November 2, 2026
+.Dt RELAY 1
+.Os
+.Sh NAME
+.Nm relay
+.Nd run a-Shell commands over authenticated HTTPS
+.Sh SYNOPSIS
+.Nm
+.Op Cm on | off | status | tokens | help
+.Sh DESCRIPTION
+.Nm
+controls an optional HTTPS server for executing commands from another
+computer.
+It is off by default and initially binds only to loopback.
+Commands run serially.
+Each request gets a fresh, noninteractive a-Shell session, starting in
+Documents unless the
+.Li X-Cwd
+request header selects another directory, with standard input connected to
+.Pa /dev/null .
+The server returns command output and exit status as JSON; it does not share
+the terminal screen or keyboard.
+Keep a-Shell in the foreground: iOS can suspend it in the background.
+.Pp
+TLS and an
+.Li X-Token
+header are always required.
+Mutual TLS is enabled by default and also requires a client certificate signed
+by an enrolled CA.
+.Bl -tag -width status
+.It Cm on
+Start or restart the listener using the saved configuration and enable
+autostart at the next app launch.
+Invalid configuration or missing client CA enrollment prevents startup.
+If the configuration cannot be read, a running listener keeps its previous
+settings; a failure after it has stopped can leave it stopped.
+.It Cm off
+Stop the listener and disable autostart.
+Close connections and discard queued requests.
+A command already running continues, subject to the output limit.
+If the configuration is invalid, the listener still stops but the saved
+autostart setting is unchanged.
+.It Cm status
+Show the listener state, saved autostart setting, configuration path,
+effective settings, certificate fingerprints and a Mac curl command.
+Create the default configuration with a random token if it does not exist.
+When stopped, show the saved configuration.
+With mutual TLS disabled, this output includes the token: keep it private.
+If the saved configuration is invalid, report the error even while the
+listener is running.
+.It Cm tokens
+Print the token for use in the Mac's
+.Ev RELAY_TOKEN
+environment variable.
+Treat this output as a credential.
+This is the saved token; after editing it, run
+.Cm on
+before using it.
+.It Cm help
+Print usage.
+Invoking
+.Nm
+without an argument, or with
+.Fl h
+or
+.Fl Fl help ,
+also prints usage.
+.El
+.Sh CONFIGURATION
+Run
+.Dl relay status
+then edit
+.Pa ~/Documents/.relay.json .
+Keep all five required fields:
+.Bl -tag -width mutualTLS
+.It Li enabled
+Boolean, initially false.
+Controls autostart;
+.Cm on
+and
+.Cm off
+update it.
+.It Li bind
+Numeric IPv4 or IPv6 address, initially
+.Li 127.0.0.1 .
+Use
+.Li 0.0.0.0
+for IPv4 access from a Mac, or
+.Li ::
+for IPv6.
+.It Li port
+TCP port, initially 8765 in full a-Shell or 8766 in mini and noPython.
+Zero selects an available port; check
+.Cm status
+for the actual port.
+.It Li mutualTLS
+Boolean, initially true.
+Requires
+.Pa .relay-client-ca.der
+in Documents.
+Setting it to false removes the client certificate requirement; HTTPS and the
+token remain required.
+.It Li token
+Random token generated on first configuration load.
+Must contain 32 to 256 printable ASCII characters without spaces.
+.El
+.Pp
+Changes take effect on
+.Cm on
+or the next app launch.
+.Sh CONNECTING FROM A MAC
+The following steps use mutual TLS and port 8765.
+For other installations, replace both occurrences of 8765 in the curl
+example with the port shown by
+.Cm status .
+The Mac needs curl and OpenSSL 3 or later; check
+.Dl openssl version
+before running the certificate commands.
+The LibreSSL supplied by macOS is not OpenSSL 3.
+If that is what the command reports, put an OpenSSL 3 installation's
+.Pa bin
+directory first in
+.Ev PATH
+and check the version again before continuing.
+.Bl -enum
+.It
+In a-Shell, run
+.Dl relay status
+to create the configuration.
+Change only the
+.Li bind
+value to
+.Li 0.0.0.0
+in
+.Pa ~/Documents/.relay.json
+and keep
+.Li mutualTLS
+true.
+.It
+On the Mac, open a new terminal window and use a private working directory.
+Create a client CA and client certificate there;
+.Li umask 077
+remains in effect in that shell:
+.Bd -literal -offset indent
+umask 077
+openssl req -x509 -newkey rsa:2048 -nodes \e
+    -keyout client-ca.key -out client-ca.pem -days 365 \e
+    -subj '/CN=relay client CA' \e
+    -addext 'basicConstraints=critical,CA:TRUE' \e
+    -addext 'keyUsage=critical,keyCertSign,cRLSign'
+openssl req -newkey rsa:2048 -nodes \e
+    -keyout client.key -out client.csr \e
+    -subj '/CN=relay Mac client'
+printf '%s\en' 'basicConstraints=critical,CA:FALSE' \e
+    'extendedKeyUsage=clientAuth' \e
+    'keyUsage=critical,digitalSignature' > client.ext
+openssl x509 -req -in client.csr -CA client-ca.pem \e
+    -CAkey client-ca.key -CAcreateserial -out client.pem \e
+    -days 365 -extfile client.ext
+openssl x509 -in client-ca.pem -outform DER \e
+    -out .relay-client-ca.der
+.Ed
+Keep both private keys on the Mac.
+Anyone with the CA private key can issue another trusted client certificate.
+.It
+Copy only the public
+.Pa .relay-client-ca.der
+to a-Shell's Documents through a trusted channel such as USB file sharing.
+Command-Shift-period shows hidden files in Finder.
+In a-Shell, run:
+.Bd -literal -offset indent
+relay on
+relay status
+.Ed
+The first successful setup creates a server identity and exports its public
+certificate.
+Copy
+.Pa .relay-cert.pem
+from Documents to the Mac's working directory through the trusted channel.
+Keep the private
+.Pa .relay-identity.p12
+on the phone.
+Compare the server certificate fingerprint on the Mac with the
+.Li server certificate SHA-256
+line from
+.Cm status ,
+and the CA fingerprint with its
+.Li client CA SHA-256
+line:
+.Bd -literal -offset indent
+openssl x509 -in .relay-cert.pem -noout -fingerprint -sha256
+openssl x509 -in client-ca.pem -noout -fingerprint -sha256
+.Ed
+.It
+Run
+.Dl relay tokens
+in a-Shell.
+Set the Mac's
+.Ev RELAY_TOKEN
+to that value without saving it in shell history, a script or a URL.
+For example, in the Mac's default zsh:
+.Bd -literal -offset indent
+read -rs 'RELAY_TOKEN?Relay token: '; echo
+export RELAY_TOKEN
+.Ed
+.It
+Keep a-Shell open in the foreground.
+Replace the documentation address
+.Li 192.0.2.1
+below with the phone's reachable Wi-Fi address.
+The
+.Cm status
+output also supplies a curl command using that address when available:
+.Bd -literal -offset indent
+curl --cacert .relay-cert.pem --cert client.pem \e
+    --key client.key \e
+    --resolve 'relay.local:8765:192.0.2.1' \e
+    -H "X-Token: $RELAY_TOKEN" --data-binary 'pwd' \e
+    https://relay.local:8765/run
+.Ed
+The certificate names
+.Li relay.local ;
+.Fl -resolve
+connects to the phone while retaining certificate name verification.
+Trust the copied server certificate with
+.Fl -cacert ;
+do not use
+.Fl k .
+A successful request returns HTTP 200 and JSON fields
+.Li stdout ,
+.Li stderr
+and integer
+.Li status .
+A nonzero command exit status still returns HTTP 200.
+.It
+When finished, run
+.Dl relay off
+in a-Shell to stop accepting requests and disable autostart.
+.El
+.Sh SECURITY
+Use trusted networks.
+Relay commands have the app's file and network access, including access to
+credential files in its sandbox.
+Relay is not a restricted shell.
+.Pp
+With
+.Li mutualTLS
+false, omit curl's
+.Fl -cert
+and
+.Fl -key
+options.
+Anyone who can reach the port and obtain the token can then execute commands.
+In this mode, the curl command printed by
+.Cm status
+contains the literal token.
+Use the
+.Ev RELAY_TOKEN
+variable as in the example above to avoid saving the token in shell history.
+.Pp
+There is no execution timeout or client cancellation.
+Avoid interactive or unbounded commands: a long-running command occupies the
+serial queue.
+Disconnecting the client or stopping relay does not undo its side effects.
+If either output stream exceeds 8 MiB, relay discards both streams, requests
+cancellation and returns HTTP 413.
+If a command ignores cancellation and write errors, new requests can receive
+HTTP 503; restart the app to recover.
+.Pp
+If the server identity is replaced, copy and trust the new public certificate
+on the Mac before reconnecting.
+.Sh FILES
+All phone files below are in
+.Pa ~/Documents/ .
+.Bl -tag -width .relay-client-ca.der
+.It Pa .relay.json
+Configuration and token.
+Keep private.
+.It Pa .relay-client-ca.der
+Enrolled public client CA certificate, required for mutual TLS.
+.It Pa .relay-identity.p12
+Private server identity.
+Do not export.
+.It Pa .relay-cert.pem
+Public server certificate to copy to the Mac over a trusted channel.
+.El
+.Sh EXIT STATUS
+.Ex -std
+Invalid arguments return 2.
+Configuration or startup errors return 1.

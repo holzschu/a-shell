@@ -1,0 +1,176 @@
+--- a/src/terminal/sys/unix.rs
++++ b/src/terminal/sys/unix.rs
+@@ -1,11 +1,16 @@
+ //! UNIX related logic for terminal manipulation.
+ 
++#[cfg(target_os = "ios")]
++#[path = "ios.rs"]
++mod ios;
++#[cfg(target_os = "ios")]
++pub(crate) use ios::{disable_raw_mode, enable_raw_mode, is_raw_mode_enabled, size, window_size};
++
+ #[cfg(feature = "events")]
+ use crate::event::KeyboardEnhancementFlags;
+-use crate::terminal::{
+-    sys::file_descriptor::{tty_fd, FileDesc},
+-    WindowSize,
+-};
++use crate::terminal::WindowSize;
++#[cfg(not(target_os = "ios"))]
++use crate::terminal::sys::file_descriptor::{tty_fd, FileDesc};
+ #[cfg(feature = "libc")]
+ use libc::{
+     cfmakeraw, ioctl, tcgetattr, tcsetattr, termios as Termios, winsize, STDOUT_FILENO, TCSANOW,
+@@ -29,6 +34,7 @@
+ // None -> we're not in the raw mode
+ static TERMINAL_MODE_PRIOR_RAW_MODE: Mutex<Option<Termios>> = parking_lot::const_mutex(None);
+ 
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn is_raw_mode_enabled() -> bool {
+     TERMINAL_MODE_PRIOR_RAW_MODE.lock().is_some()
+ }
+@@ -58,6 +64,7 @@
+ 
+ #[allow(clippy::useless_conversion)]
+ #[cfg(feature = "libc")]
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn window_size() -> io::Result<WindowSize> {
+     // http://rosettacode.org/wiki/Terminal_control/Dimensions#Library:_BSD_libc
+     let mut size = winsize {
+@@ -83,6 +90,7 @@
+ }
+ 
+ #[cfg(not(feature = "libc"))]
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn window_size() -> io::Result<WindowSize> {
+     let file = File::open("/dev/tty").map(|file| (FileDesc::Owned(file.into())));
+     let fd = if let Ok(file) = &file {
+@@ -96,6 +104,7 @@
+ }
+ 
+ #[allow(clippy::useless_conversion)]
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn size() -> io::Result<(u16, u16)> {
+     if let Ok(window_size) = window_size() {
+         return Ok((window_size.columns, window_size.rows));
+@@ -105,6 +114,7 @@
+ }
+ 
+ #[cfg(feature = "libc")]
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn enable_raw_mode() -> io::Result<()> {
+     let mut original_mode = TERMINAL_MODE_PRIOR_RAW_MODE.lock();
+     if original_mode.is_some() {
+@@ -123,6 +133,7 @@
+ }
+ 
+ #[cfg(not(feature = "libc"))]
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn enable_raw_mode() -> io::Result<()> {
+     let mut original_mode = TERMINAL_MODE_PRIOR_RAW_MODE.lock();
+     if original_mode.is_some() {
+@@ -145,6 +156,7 @@
+ /// to [enable_raw_mode]. If you don't mess with termios outside of crossterm, it's
+ /// effectively disabling the raw mode and doing nothing else.
+ #[cfg(feature = "libc")]
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn disable_raw_mode() -> io::Result<()> {
+     let mut original_mode = TERMINAL_MODE_PRIOR_RAW_MODE.lock();
+     if let Some(original_mode_ios) = original_mode.as_ref() {
+@@ -157,6 +169,7 @@
+ }
+ 
+ #[cfg(not(feature = "libc"))]
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn disable_raw_mode() -> io::Result<()> {
+     let mut original_mode = TERMINAL_MODE_PRIOR_RAW_MODE.lock();
+     if let Some(original_mode_ios) = original_mode.as_ref() {
+--- a/src/terminal/sys/file_descriptor.rs
++++ b/src/terminal/sys/file_descriptor.rs
+@@ -121,6 +121,7 @@
+ 
+ #[cfg(feature = "libc")]
+ /// Creates a file descriptor pointing to the standard input or `/dev/tty`.
++#[cfg(not(target_os = "ios"))]
+ pub fn tty_fd() -> io::Result<FileDesc<'static>> {
+     let (fd, close_on_drop) = if unsafe { libc::isatty(libc::STDIN_FILENO) == 1 } {
+         (libc::STDIN_FILENO, false)
+@@ -140,6 +141,7 @@
+ 
+ #[cfg(not(feature = "libc"))]
+ /// Creates a file descriptor pointing to the standard input or `/dev/tty`.
++#[cfg(not(target_os = "ios"))]
+ pub fn tty_fd() -> io::Result<FileDesc<'static>> {
+     use std::fs::File;
+ 
+@@ -152,3 +154,22 @@
+     };
+     Ok(fd)
+ }
++
++// Borrow the command-captured tty; the host keeps it alive until reader reset.
++#[cfg(target_os = "ios")]
++pub fn tty_fd() -> io::Result<FileDesc<'static>> {
++    unsafe extern "C" {
++        fn codex_ios_terminal_input() -> i32;
++    }
++    let fd = unsafe { codex_ios_terminal_input() };
++    if fd < 0 {
++        return Err(io::Error::from_raw_os_error(25)); // ENOTTY
++    }
++    #[cfg(feature = "libc")]
++    { Ok(FileDesc::new(fd, false)) }
++    #[cfg(not(feature = "libc"))]
++    {
++        // The embedded entry point resets the reader before releasing host input.
++        Ok(FileDesc::Borrowed(unsafe { BorrowedFd::borrow_raw(fd) }))
++    }
++}
+--- a/src/tty.rs
++++ b/src/tty.rs
+@@ -26,7 +26,7 @@
+ 
+ /// On UNIX, the `isatty()` function returns true if a file
+ /// descriptor is a terminal.
+-#[cfg(all(unix, feature = "libc"))]
++#[cfg(all(unix, not(target_os = "ios"), feature = "libc"))]
+ impl<S: AsRawFd> IsTty for S {
+     fn is_tty(&self) -> bool {
+         let fd = self.as_raw_fd();
+@@ -34,7 +34,7 @@
+     }
+ }
+ 
+-#[cfg(all(unix, not(feature = "libc")))]
++#[cfg(all(unix, not(target_os = "ios"), not(feature = "libc")))]
+ impl<S: AsRawFd> IsTty for S {
+     fn is_tty(&self) -> bool {
+         let fd = self.as_raw_fd();
+@@ -52,3 +52,27 @@
+         ok == 1
+     }
+ }
++
++// The host captures stock ios_isatty on its session thread before Rust starts.
++#[cfg(target_os = "ios")]
++unsafe extern "C" {
++    fn codex_ios_terminal_isatty(fd: i32) -> i32;
++}
++
++#[cfg(target_os = "ios")]
++impl<S: AsRawFd> IsTty for S {
++    fn is_tty(&self) -> bool {
++        unsafe { codex_ios_terminal_isatty(self.as_raw_fd()) != 0 }
++    }
++}
++
++/// iOS equivalent of std::io::IsTerminal using the host's actual stream contract.
++#[cfg(target_os = "ios")]
++pub trait IsTerminal {
++    fn is_terminal(&self) -> bool;
++}
++
++#[cfg(target_os = "ios")]
++impl<S: AsRawFd> IsTerminal for S {
++    fn is_terminal(&self) -> bool { self.is_tty() }
++}

@@ -1557,11 +1557,15 @@ public func photosMain(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
             }
             let names = resources.enumerated().map { offset, resource -> String in
                 let filename: String
+                #if compiler(>=6.4)
                 if #available(iOS 27.0, *) {
                     filename = resource.filename ?? "original"
                 } else {
                     filename = resource.originalFilename
                 }
+                #else
+                filename = resource.originalFilename
+                #endif
                 return "\(resource.type.rawValue)-\(offset)-\((filename as NSString).lastPathComponent)"
             }
             let old = previous[name]
@@ -2469,6 +2473,12 @@ public func repeatCommand(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
         return -1
     }
     return 0
+}
+
+@_cdecl("codexUnavailable")
+public func codexUnavailable(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    fputs("codex requires iOS 26.2 or later.\n", thread_stderr)
+    return 1
 }
 
 @_cdecl("wasmkitUnavailable")

@@ -1,0 +1,66 @@
+--- a/core/src/shell_snapshot.rs
++++ b/core/src/shell_snapshot.rs
+@@ -1082,7 +1082,62 @@
+         handler.envs(env);
+     }
+     codex_protocol::shell_environment::scrub_non_inheritable_env_vars(handler.as_std_mut());
+-    #[cfg(unix)]
++    #[cfg(target_os = "ios")]
++    let output = {
++        use std::os::unix::process::ExitStatusExt;
++        let env = handler
++            .as_std()
++            .get_envs()
++            .filter_map(|(key, value)| value.map(|value| (key, value)))
++            .map(|(key, value)| {
++                let key = key.to_str().ok_or_else(|| {
++                    anyhow!("Non-UTF-8 snapshot environment key is unsupported on iOS")
++                })?;
++                let value = value.to_str().ok_or_else(|| {
++                    anyhow!("Non-UTF-8 snapshot environment value is unsupported on iOS")
++                })?;
++                Ok((key.to_owned(), value.to_owned()))
++            })
++            .collect::<Result<std::collections::HashMap<_, _>>>()?;
++        async move {
++            let spawned = codex_utils_pty::spawn_pipe_process_no_stdin(
++                &args[0],
++                &args[1..],
++                cwd.as_path(),
++                &env,
++                &None,
++                &[],
++            )
++            .await?;
++            // Retain the handle across collection; timeout drops it and cancels the native tree.
++            let _session = spawned.session;
++            let mut stdout_rx = spawned.stdout_rx;
++            let mut stderr_rx = spawned.stderr_rx;
++            let stdout = async move {
++                let mut bytes = Vec::new();
++                while let Some(chunk) = stdout_rx.recv().await {
++                    bytes.extend(chunk);
++                }
++                bytes
++            };
++            let stderr = async move {
++                let mut bytes = Vec::new();
++                while let Some(chunk) = stderr_rx.recv().await {
++                    bytes.extend(chunk);
++                }
++                bytes
++            };
++            let (stdout, stderr, code) = tokio::join!(stdout, stderr, spawned.exit_rx);
++            let code =
++                code.map_err(|_| anyhow!("Native snapshot command closed without an exit status"))?;
++            Ok::<_, anyhow::Error>(std::process::Output {
++                status: std::process::ExitStatus::from_raw((code & 0xff) << 8),
++                stdout,
++                stderr,
++            })
++        }
++    };
++    #[cfg(all(unix, not(target_os = "ios")))]
+     let output = {
+         let settings = handler.as_std();
+         // Preserve original inputs: std replaces strings containing NUL bytes.
