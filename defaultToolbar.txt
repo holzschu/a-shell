@@ -7,7 +7,7 @@
 # The effect of the parameter depends on the action:
 # - for insertString, it can be any string, and will be inserted when you type the button. 
 #					  Strings can contain \n, so you can execute commands, even multiple commands.
-# - for systemAction, it can be any of: control, selectAll, cut, copy, paste or showBrowser, plus
+# - for systemAction, it can be any of: control, selectAll, cut, copy, paste, hideKeyboard or showBrowser, plus
 #	the arrow commands: up, down, left, right, or the combined arrows: up.down, left.right and 
 #	up.down.left.right
 # - for insertCommand, it is a short command that will be executed when the button is pressed. 
@@ -16,13 +16,15 @@
 # Groups are enclosed in brackets (see bottom of file for an example). 
 # The part after the closing bracket is the representative item (icon or text, can be nil). 
 # If space is constrained, iPadOS will display the group as a submenu using that item,
-# if it's not nil (iOS will always display all buttons). 
+# if it's not nil. On iOS 26 iPhones with VoiceOver off, a group represented by "#+=" opens a symbol panel.
+# Tap for the panel or slide directly to a symbol. Swipe down for a period.
+# Other iPhones open the stock symbol menu on tap; VoiceOver also has named actions.
 
 # On iOS 16+, groups can be made to appear depending on the command: after the opening bracket, you can
 # add a regular expression. If that expression matches the current command, the buttons will 
 # show. A special regexp ("none") is for buttons that should only appear if no commands are running.
 
-# This file corresponds to the default toolbar: first the 4 buttons on the left (tab, control, escape, paste), 
+# This file corresponds to the default toolbar: first the tab, control and escape symbols on the left,
 # then a line with "separator" to indicate the separation between the two groups, 
 # then showBrowser and the arrows on the right (combined arrows on iPhones, 4 arrow buttons on iPads).
 # To customize the toolbar, simply edit this file. To go back to the default toolbar, remove it.
@@ -33,19 +35,50 @@
 arrow.right.to.line.alt		insertString		\u{0009}
 chevron.up.square			systemAction		control
 escape						insertString		\u{001B}
-doc.on.clipboard			systemAction		paste
+
+[
+character.cursor.ibeam	insertString	[
+square.brackets	insertString	]
+{	insertString	{
+}	insertString	}
+%	insertString	%
+"	insertString	"
+number	insertString	#
+*	insertString	*
+&	insertString	&
++	insertString	+
+_	insertString	_
+\	insertString	\
+;	insertString	;
+'	insertString	'
+<	insertString	<
+`	insertString	`
+|	insertString	|
+=	insertString	=
+-	insertString	-
+/	insertString	/
+.	insertString	.
+$	insertString	$
+>	insertString	>
+~	insertString	~
+] #+=
+doc.on.clipboard	systemAction	paste
 
 separator
+
 
 # This button only appears once the internalbrowser has started
 network						systemAction		showBrowser
 
 # Arrows:
-# This is the default on iPhones:
-arrow.left.and.right		systemAction		left.right
-arrow.up.and.down			systemAction		up.down
-# You can also use the four-arrows-button if you need more space for other buttons:
-# arrow.up.and.down.and.arrow.left.and.right		systemAction	up.down.left.right
+# On iOS 26 iPhones with VoiceOver off:
+# Swipe for one arrow. Keep holding after the swipe to repeat.
+# A tap sends nothing.
+arrow.up.and.down.and.arrow.left.and.right		systemAction	up.down.left.right
+keyboard.chevron.compact.down		systemAction	hideKeyboard
+# Separate arrow keys can be used in a custom toolbar:
+# arrow.left.and.right		systemAction		left.right
+# arrow.up.and.down			systemAction		up.down
 # This is the default on iPads (and you can use it if your iPhone has a large screen):
 # arrow.up						systemAction		up
 # arrow.down					systemAction		down
