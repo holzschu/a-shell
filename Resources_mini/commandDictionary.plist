@@ -954,5 +954,26 @@
 		<string>2346aAbBcCdDeEfgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwxXYyz#</string>
 		<string>file</string>
 	</array>
+	<key>tmux</key>
+	<array>
+		<string>TmuxHost.framework/TmuxHost</string>
+		<string>tmux_main</string>
+		<string></string>
+		<string>thread</string>
+	</array>
+	<key>tmux-native</key>
+	<array>
+		<string>TmuxNative.framework/TmuxNative</string>
+		<string>tmux_native_main</string>
+		<string></string>
+		<string>thread</string>
+	</array>
+	<key>tmux-acceptance</key>
+	<array>
+		<string>TmuxAcceptance.framework/TmuxAcceptance</string>
+		<string>tmux_acceptance</string>
+		<string></string>
+		<string>thread</string>
+	</array>
 </dict>
 </plist>

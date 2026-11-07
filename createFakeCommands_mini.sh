@@ -102,3 +102,6 @@ touch Resources_mini/bin/mogrify
 touch Resources_mini/bin/montage
 touch Resources_mini/bin/stream
 
+touch Resources_mini/bin/tmux
+touch Resources_mini/bin/tmux-native
+touch Resources_mini/bin/tmux-acceptance
