@@ -140,20 +140,38 @@
                      } else if login_cli.with_api_key {
                          let api_key = read_api_key_from_stdin();
                          run_login_with_api_key(login_cli.config_overrides, api_key).await;
-@@ -1776,6 +1786,12 @@
+@@ -1776,13 +1786,23 @@
              run_apply_command(apply_cli, /*cwd*/ None).await?;
          }
          Some(Subcommand::ResponsesApiProxy(args)) => {
+-            reject_remote_mode_for_subcommand(
+-                root_remote.as_deref(),
+-                root_remote_auth_token_env.as_deref(),
+-                "responses-api-proxy",
+-            )?;
+-            tokio::task::spawn_blocking(move || codex_responses_api_proxy::run_main(args))
+-                .await??;
 +            #[cfg(target_os = "ios")]
-+            if args.http_shutdown {
++            {
++                let _ = args;
 +                anyhow::bail!(
-+                    "--http-shutdown requires an independently terminable proxy process; the embedded iOS command cannot terminate its host app"
++                    "responses-api-proxy requires an independent process and is unavailable in embedded iOS"
 +                );
 +            }
++            #[cfg(not(target_os = "ios"))]
++            {
++                reject_remote_mode_for_subcommand(
++                    root_remote.as_deref(),
++                    root_remote_auth_token_env.as_deref(),
++                    "responses-api-proxy",
++                )?;
++                tokio::task::spawn_blocking(move || codex_responses_api_proxy::run_main(args))
++                    .await??;
++            }
+         }
+         Some(Subcommand::StdioToUds(cmd)) => {
              reject_remote_mode_for_subcommand(
-                 root_remote.as_deref(),
-                 root_remote_auth_token_env.as_deref(),
-@@ -2504,7 +2520,7 @@
+@@ -2504,7 +2524,7 @@
      }
  }
  
@@ -162,7 +180,7 @@
      remote: Option<String>,
      remote_auth_token_env: Option<String>,
  ) -> std::io::Result<Option<codex_tui::RemoteAppServerEndpoint>> {
-@@ -2544,7 +2560,7 @@
+@@ -2544,7 +2564,7 @@
          .starts_with("`--remote-auth-token-env` requires")
  }
  
@@ -171,7 +189,7 @@
      eprintln!("{prompt}");
  
      let mut input = String::new();
-@@ -2621,7 +2637,7 @@
+@@ -2621,7 +2641,7 @@
      interactive
  }
  
@@ -180,7 +198,7 @@
      mut interactive: TuiCli,
      root_config_overrides: CliConfigOverrides,
      archive_cli: SessionArchiveConfigOverrides,
-@@ -4907,3 +4923,43 @@
+@@ -4907,3 +4927,43 @@
  #[cfg(all(test, unix))]
  #[path = "daemon_update_tests.rs"]
  mod daemon_update_tests;
