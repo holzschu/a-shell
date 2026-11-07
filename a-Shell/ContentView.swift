@@ -467,70 +467,100 @@ private struct ServiceDetailsForm: View {
     @ObservedObject var networks = ServiceIndicators.shared.networks
     @ObservedObject var history = RemoteAccessHistory.shared
 
+    private var visibleKinds: [ServiceStatus.Kind] {
+        ServiceStatus.Kind.allCases.filter { $0 == .relay || (commandsAsArray() as? [String])?.contains("sshd") == true }
+    }
+
+    private var isStopping: Binding<Bool> {
+        Binding(get: { stoppingService != nil }, set: { if !$0 { stoppingService = nil } })
+    }
+
+    private func isEnabled(_ kind: ServiceStatus.Kind) -> Binding<Bool> {
+        Binding(
+            get: { services.items.contains { $0.kind == kind } },
+            set: { enabled in
+                if !enabled, let item = services.items.first(where: { $0.kind == kind }), item.clients.contains(where: \.open) {
+                    stoppingService = item
+                } else { setEnabled(kind, enabled) }
+            }
+        )
+    }
+
+    private func serviceSection(_ kind: ServiceStatus.Kind) -> some View {
+        Section { sectionRows(kind) } header: { sectionHeader(kind) } footer: { sectionFooter(kind) }
+    }
+
+    @ViewBuilder
+    private func sectionRows(_ kind: ServiceStatus.Kind) -> some View {
+        if let item = services.items.first(where: { $0.kind == kind }) {
+            ForEach(networks.addresses(for: item)) { address in
+                ServiceAddressRow(address: address, command: item.kind == .ssh ? item.sshCommand(host: address.address) : RemoteRelay.connectCommand(host: address.address), display: address.endpoint(port: item.port))
+                    .listRowInsets(EdgeInsets(top: 10, leading: 18, bottom: 10, trailing: 18))
+            }
+            NavigationLink {
+                ServicePage(kind: kind)
+            } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Connection details")
+                    Text(summary(item)).font(.footnote).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                }
+            }
+            .accessibilityIdentifier("service-details-" + kind.rawValue)
+            .listRowInsets(EdgeInsets(top: 10, leading: 18, bottom: 10, trailing: 18))
+        }
+    }
+
+    private func sectionHeader(_ kind: ServiceStatus.Kind) -> some View {
+        let title: String = kind == .ssh ? "SSH" : "Relay"
+        return HStack {
+            Text(title).accessibilityIdentifier("service-title-" + kind.rawValue)
+            Spacer()
+            Toggle("Enable " + title, isOn: isEnabled(kind)).labelsHidden().fixedSize()
+        }.textCase(nil)
+    }
+
+    @ViewBuilder
+    private func sectionFooter(_ kind: ServiceStatus.Kind) -> some View {
+        if kind == .ssh {
+            Text("Connect to this shell with ssh from the same network. Needs an authorized key.")
+        } else {
+            Text("Run shell commands over HTTPS. Needs a token and, by default, a client certificate (mTLS).")
+        }
+        if let item = services.items.first(where: { $0.kind == kind }) {
+            if networks.addresses(for: item).contains(where: { $0.name == "Wi-Fi LAN" }) {
+                Text("On the same Wi-Fi, use the Wi-Fi address.")
+            }
+            if networks.addresses(for: item).contains(where: { $0.name == "VPN" }) {
+                Text("The VPN address works when both devices use the same VPN and it allows connections between devices, such as Tailscale or WireGuard.")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var controlErrorRows: some View {
+        if let error = services.controlError {
+            Text(error).foregroundStyle(.red).textSelection(.enabled)
+            if let range = error.range(of: ". Run: ") {
+                let command = String(error[range.upperBound...])
+                Button { UIPasteboard.general.string = command } label: {
+                    Text(command).font(.footnote.monospaced())
+                }.accessibilityIdentifier("service-error-repair")
+            }
+        }
+    }
+
+    private var stopTitle: String { "Stop " + (stoppingService?.title ?? "service") + "?" }
+
     var body: some View {
         NavigationStack {
             List {
-                ForEach(ServiceStatus.Kind.allCases.filter { $0 == .relay || (commandsAsArray() as? [String])?.contains("sshd") == true }, id: \.rawValue) { kind in
-                    Section {
-                        if let item = services.items.first(where: { $0.kind == kind }) {
-                            ForEach(networks.addresses(for: item)) { address in
-                                ServiceAddressRow(address: address, command: item.kind == .ssh ? item.sshCommand(host: address.address) : RemoteRelay.connectCommand(host: address.address), display: address.endpoint(port: item.port))
-                                    .listRowInsets(EdgeInsets(top: 10, leading: 18, bottom: 10, trailing: 18))
-                            }
-                            NavigationLink {
-                                ServicePage(kind: kind)
-                            } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Connection details")
-                                    Text(summary(item)).font(.footnote).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
-                                }
-                            }
-                            .accessibilityIdentifier("service-details-" + kind.rawValue)
-                            .listRowInsets(EdgeInsets(top: 10, leading: 18, bottom: 10, trailing: 18))
-                        }
-                    } header: {
-                        HStack {
-                            Text(kind == .ssh ? "SSH" : "Relay").accessibilityIdentifier("service-title-" + kind.rawValue)
-                            Spacer()
-                            Toggle("Enable " + (kind == .ssh ? "SSH" : "Relay"), isOn: Binding(
-                                get: { services.items.contains { $0.kind == kind } },
-                                set: { enabled in
-                                    if !enabled, let item = services.items.first(where: { $0.kind == kind }), item.clients.contains(where: \.open) {
-                                        stoppingService = item
-                                    } else { setEnabled(kind, enabled) }
-                                }
-                            )).labelsHidden().fixedSize()
-                        }.textCase(nil)
-                    } footer: {
-                        if kind == .ssh {
-                            Text("Connect to this shell with ssh from the same network. Needs an authorized key.")
-                        } else {
-                            Text("Run shell commands over HTTPS. Needs a token and, by default, a client certificate (mTLS).")
-                        }
-                        if let item = services.items.first(where: { $0.kind == kind }) {
-                            if networks.addresses(for: item).contains(where: { $0.name == "Wi-Fi LAN" }) {
-                                Text("On the same Wi-Fi, use the Wi-Fi address.")
-                            }
-                            if networks.addresses(for: item).contains(where: { $0.name == "VPN" }) {
-                                Text("The VPN address works when both devices use the same VPN and it allows connections between devices, such as Tailscale or WireGuard.")
-                            }
-                        }
-                    }
-                }
-                if let error = services.controlError {
-                    Text(error).foregroundStyle(.red).textSelection(.enabled)
-                    if let range = error.range(of: ". Run: ") {
-                        let command = String(error[range.upperBound...])
-                        Button { UIPasteboard.general.string = command } label: {
-                            Text(command).font(.footnote.monospaced())
-                        }.accessibilityIdentifier("service-error-repair")
-                    }
-                }
+                ForEach(visibleKinds, id: \.rawValue) { kind in serviceSection(kind) }
+                controlErrorRows
             }
             .serviceCompactSections()
             .listStyle(.insetGrouped)
             .scrollContentBackground(.visible)
-            .confirmationDialog("Stop " + (stoppingService?.title ?? "service") + "?", isPresented: Binding(get: { stoppingService != nil }, set: { if !$0 { stoppingService = nil } }), titleVisibility: .visible) {
+            .confirmationDialog(stopTitle, isPresented: isStopping, titleVisibility: .visible) {
                 if let item = stoppingService {
                     Button("Stop " + item.title, role: .destructive) { setEnabled(item.kind, false); stoppingService = nil }
                 }
