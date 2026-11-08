@@ -297,8 +297,8 @@
 +}
 --- /dev/null
 +++ b/utils/cli/src/stdio.rs
-@@ -0,0 +1,8 @@
-+//! Diagnostic streams for CLI consumers and embedded iOS invocations.
+@@ -0,0 +1,42 @@
++//! Command streams for CLI consumers and embedded iOS invocations.
 +#[cfg(target_os = "ios")]
 +#[path = "stderr_ios.rs"]
 +mod ios;
@@ -306,3 +306,101 @@
 +pub use ios::{capture_stderr, stderr};
 +#[cfg(not(target_os = "ios"))]
 +pub use std::io::stderr;
++#[cfg(not(target_os = "ios"))]
++pub use std::io::stdin;
++
++#[cfg(target_os = "ios")]
++pub struct Stdin;
++
++#[cfg(target_os = "ios")]
++pub fn stdin() -> Stdin {
++    Stdin
++}
++
++#[cfg(target_os = "ios")]
++impl std::io::Read for Stdin {
++    fn read(&mut self, bytes: &mut [u8]) -> std::io::Result<usize> {
++        unsafe extern "C" {
++            fn codex_ios_read_stdin(bytes: *mut std::ffi::c_void, length: usize) -> isize;
++        }
++        let count = unsafe { codex_ios_read_stdin(bytes.as_mut_ptr().cast(), bytes.len()) };
++        if count < 0 {
++            Err(std::io::Error::last_os_error())
++        } else {
++            Ok(count as usize)
++        }
++    }
++}
++
++#[cfg(target_os = "ios")]
++impl Stdin {
++    pub fn read_line(&mut self, line: &mut String) -> std::io::Result<usize> {
++        use std::io::BufRead;
++        // Each prompt owns its reader; do not consume the next prompt's bytes.
++        std::io::BufReader::with_capacity(1, self).read_line(line)
++    }
++}
+--- a/exec/src/lib.rs
++++ b/exec/src/lib.rs
+@@ -2287,7 +2287,7 @@
+     }
+ 
+     let mut bytes = Vec::new();
+-    if let Err(e) = std::io::stdin().read_to_end(&mut bytes) {
++    if let Err(e) = codex_utils_cli::stdio::stdin().read_to_end(&mut bytes) {
+         eprintln!("Failed to read prompt from stdin: {e}");
+         embedded_exit(1);
+     }
+--- a/cli/src/login.rs
++++ b/cli/src/login.rs
+@@ -294,7 +294,7 @@
+ }
+ 
+ fn read_stdin_secret(terminal_message: &str, reading_message: &str, empty_message: &str) -> String {
+-    let mut stdin = std::io::stdin();
++    let stdin = std::io::stdin();
+ 
+     if stdin.is_terminal() {
+         eprintln!("{terminal_message}");
+@@ -304,7 +304,7 @@
+     eprintln!("{reading_message}");
+ 
+     let mut buffer = String::new();
+-    if let Err(err) = stdin.read_to_string(&mut buffer) {
++    if let Err(err) = codex_utils_cli::stdio::stdin().read_to_string(&mut buffer) {
+         eprintln!("Failed to read stdin: {err}");
+         crate::embedded_exit(1);
+     }
+--- a/cli/src/main.rs
++++ b/cli/src/main.rs
+@@ -2567,7 +2567,7 @@
+     eprintln!("{prompt}");
+ 
+     let mut input = String::new();
+-    std::io::stdin().read_line(&mut input)?;
++    codex_utils_cli::stdio::stdin().read_line(&mut input)?;
+     let answer = input.trim();
+     Ok(answer.eq_ignore_ascii_case("y") || answer.eq_ignore_ascii_case("yes"))
+ }
+--- a/cli/src/state_db_recovery.rs
++++ b/cli/src/state_db_recovery.rs
+@@ -66,7 +66,7 @@
+     if std::io::stdin().is_terminal() && codex_utils_cli::stdio::stderr().is_terminal() {
+         eprintln!("Press Enter to continue.");
+         let mut input = String::new();
+-        std::io::stdin().read_line(&mut input)?;
++        codex_utils_cli::stdio::stdin().read_line(&mut input)?;
+     } else {
+         eprintln!("Continuing startup with a fresh local database...");
+     }
+--- a/tui/src/session_archive_commands.rs
++++ b/tui/src/session_archive_commands.rs
+@@ -217,7 +217,7 @@
+     stderr.flush()?;
+ 
+     let mut input = String::new();
+-    std::io::stdin().read_line(&mut input)?;
++    codex_utils_cli::stdio::stdin().read_line(&mut input)?;
+     let answer = input.trim();
+     Ok(answer.eq_ignore_ascii_case("y") || answer.eq_ignore_ascii_case("yes"))
+ }

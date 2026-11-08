@@ -949,7 +949,7 @@
 		22D146662E62098800E76E2E /* PythonAxxlimited.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B42E62095C00E76E2E /* PythonAxxlimited.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146672E62098800E76E2E /* PythonAxxlimited_35.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144B52E62095C00E76E2E /* PythonAxxlimited_35.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D23117231940B2005B0C12 /* ExtraCommands.swift */; };
-		22D52143308BE69B00D9949D /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2294A9F4254C2AA7008C1490 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D52143308BE69B00D9949D /* libpng.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A53600000000000000000003 /* libpng.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F942570139D0068004E /* awk.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F8E257012F50068004E /* awk.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F952570139D0068004E /* curl_ios.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F91257012F50068004E /* curl_ios.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22DC1F962570139D0068004E /* files.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F89257012F50068004E /* files.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -2883,6 +2883,7 @@
 		A22000000000000000000002 /* rg/rg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = rg/rg.xcframework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000001 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = xcfs/.build/artifacts/xcfs/freetype/freetype.xcframework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework; sourceTree = SOURCE_ROOT; };
+		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework; sourceTree = SOURCE_ROOT; };
 		A59100000000000000000004 /* Relay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relay.swift; sourceTree = "<group>"; };
 		AE1100000000000000000002 /* helix/helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -3205,6 +3206,7 @@
 				22F75D40265FA3500056AFD2 /* xxd.xcframework */,
 				A53600000000000000000001 /* freetype.xcframework */,
 				A53600000000000000000002 /* harfbuzz.xcframework */,
+				A53600000000000000000003 /* libpng.xcframework */,
 				2294A9BE254C19D0008C1490 /* freetype.xcframework */,
 				22AF02D229F669C20085290B /* openblas.xcframework */,
 				22AF02D329F669DE0085290B /* libgfortran.xcframework */,

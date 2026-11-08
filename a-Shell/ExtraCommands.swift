@@ -1557,11 +1557,15 @@ public func photosMain(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
             }
             let names = resources.enumerated().map { offset, resource -> String in
                 let filename: String
+                #if compiler(>=6.4)
                 if #available(iOS 27.0, *) {
                     filename = resource.filename ?? "original"
                 } else {
                     filename = resource.originalFilename
                 }
+                #else
+                filename = resource.originalFilename
+                #endif
                 return "\(resource.type.rawValue)-\(offset)-\((filename as NSString).lastPathComponent)"
             }
             let old = previous[name]
