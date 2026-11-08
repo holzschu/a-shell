@@ -677,6 +677,7 @@ extension SceneDelegate {
     }
 
     func send(source: SwiftTerm.TerminalView, inputString: String) {
+        if inputString.contains("\r") || inputString.contains("\n") { editorToolbar.closeSymbols() }
         var string = inputString
         // print("string: \(string)")
         // TODO: move this above, don't do data -> String -> data!
@@ -890,6 +891,7 @@ extension SceneDelegate {
                     UIAccessibility.post(notification: .announcement, argument: currentCommandVoiceOver)
                 }
             }
+            synchronizeRecalledInputContext(source)
         case "\u{0010}": // control P
             fallthrough
         case escape + "OA": // up arrow (application mode)
@@ -1045,6 +1047,7 @@ extension SceneDelegate {
                 commandBeforeCursor += string
                 terminalView?.feed(text: string) // prints the string
                 updateAutocomplete(text: string)
+                synchronizeRecalledInputContext(source)
 #if DEACTIVATED
                 if (commandBeforeCursor.hasSuffix("/") && (!autocompleteRunning || (autocompleteSuggestions[autocompletePosition].count == 0))) {
                     // We completed a directory. Let's list the content:
@@ -1450,6 +1453,7 @@ extension SceneDelegate {
             terminalView?.feed(text: string) // prints the string
             if autocompleteRunning {
                 updateAutocomplete(text: string)
+                synchronizeRecalledInputContext(source)
 #if DEACTIVATED
                 if (commandBeforeCursor.hasSuffix("/") && (!autocompleteRunning || (autocompleteSuggestions[autocompletePosition].count == 0))) {
                     // We just completed a directory. Let's list the content:
@@ -1498,6 +1502,7 @@ extension SceneDelegate {
     }
     
     func send(source: SwiftTerm.TerminalView, data: ArraySlice<UInt8>) {
+        if data.contains(13) || data.contains(10) { editorToolbar.closeSymbols() }
         // This is where I treat the incoming keypress
         if (currentCommand != "") && (commandBeforeCursor == "") && (commandAfterCursor == "") {
             // Sets the position of the end of the prompt for commands inside commands:
