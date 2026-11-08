@@ -39,7 +39,7 @@ struct ExecuteLongCommandIntent: LongRunningIntent, CancellableIntent {
 
 // Preserve the legacy intent. Commands use ios_system threads, not OS child processes.
 enum CommandExecutionError: LocalizedError {
-    case emptyCommand, cancelled, outputTooLarge, unavailableDirectory, busy
+    case emptyCommand, cancelled, outputTooLarge, unavailableHostBundle, unavailableDirectory, busy
     case exitStatus(Int32)
 
     var errorDescription: String? {
@@ -48,6 +48,7 @@ enum CommandExecutionError: LocalizedError {
         case .busy: return "Another long command is already running. Try again when it finishes."
         case .cancelled: return "Command execution was cancelled."
         case .outputTooLarge: return "Command output exceeds 8 MiB. Write large results to a file instead."
+        case .unavailableHostBundle: return "Could not locate the a-Shell app bundle."
         case .unavailableDirectory: return "The Shortcuts shared directory is unavailable."
         case .exitStatus(let status): return "Command exited with status \(status)."
         }
@@ -63,8 +64,10 @@ private final class LongCommandExecutor {
         // Match AppDelegate: release file coordination before waiting for the command.
         joinMainThread = false
         let host = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
-        guard let hostBundle = Bundle(url: host),
-              let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
+        guard let hostBundle = Bundle(url: host) else {
+            throw CommandExecutionError.unavailableHostBundle
+        }
+        guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
             throw CommandExecutionError.unavailableDirectory
         }
         // The extension cannot use the app's private Library. Shared user packages live here.

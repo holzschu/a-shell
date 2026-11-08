@@ -9,7 +9,6 @@ sha=2df40dc573eb751154b49055d0949668ec4f72f928d9c7fe5d86f451bfb3d7d5
 export CARGO_TARGET_DIR=$cache/target
 export IPHONEOS_DEPLOYMENT_TARGET=14.0
 
-# rustc 1.99.0 (b940084d7 2026-09-28)
 prepare() {
   [[ $(rustc --version) == 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' ]] || {
     echo 'Rust 1.99.1 is required' >&2
