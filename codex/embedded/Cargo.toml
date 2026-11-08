@@ -10,7 +10,7 @@ crate-type = ["staticlib"]
 [dependencies]
 codex-arg0.workspace = true
 codex-cli = { path = "../cli" }
-tokio = { workspace = true, features = ["rt-multi-thread"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "net", "macros"] }
 
 [target.'cfg(target_os = "ios")'.dependencies]
 crossterm.workspace = true
