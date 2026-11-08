@@ -16,6 +16,7 @@ import MobileCoreServices
 import Combine
 import AVKit // for media playback
 import AVFoundation // for media playback
+import GameController
 import TipKit // for helpful tips
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
@@ -44,6 +45,611 @@ struct javascriptCommand {
 @available(iOS 17, *)
 let myToolbarTip = toolbarTip()
 var internalBrowserStarted = false
+
+extension UIBarButtonItem {
+    var toolbarView: UIView? { customView ?? value(forKey: "view") as? UIView }
+
+    var toolbarSelected: Bool {
+        get {
+            if #available(iOS 15, *) { return isSelected }
+            return (customView as? UIButton)?.isSelected ?? false
+        }
+        set {
+            if #available(iOS 15, *) { isSelected = newValue }
+            else { (customView as? UIButton)?.isSelected = newValue }
+        }
+    }
+}
+
+private final class PhonePasteTarget: UIResponder {
+    var receive: ((String) -> Void)?
+
+    override init() {
+        super.init()
+        pasteConfiguration = UIPasteConfiguration(forAccepting: NSString.self)
+    }
+
+    override func paste(itemProviders: [NSItemProvider]) {
+        guard let provider = itemProviders.first(where: { $0.canLoadObject(ofClass: NSString.self) }) else { return }
+        provider.loadObject(ofClass: NSString.self) { [weak self] value, _ in
+            guard let text = value as? String else { return }
+            DispatchQueue.main.async { self?.receive?(text) }
+        }
+    }
+}
+
+private final class PhoneSymbolItem: UIBarButtonItem {
+    var symbols: [String] = []
+}
+
+private final class PhoneSymbolButton: UIButton {
+    var activateSymbol: (() -> Void)?
+    override func accessibilityActivate() -> Bool {
+        activateSymbol?()
+        return true
+    }
+}
+
+// Both keys measure motion from touch-down, independently of the key's centre.
+private func toolbarMotion(_ delta: CGPoint) -> (direction: String, arrowReady: Bool) {
+    let horizontal = abs(delta.x) > abs(delta.y)
+    let major = horizontal ? abs(delta.x) : abs(delta.y)
+    let minor = horizontal ? abs(delta.y) : abs(delta.x)
+    let direction = horizontal ? (delta.x > 0 ? "right" : "left") : (delta.y > 0 ? "down" : "up")
+    return (direction, (major >= 12 && minor <= 0.58 * major) || hypot(delta.x, delta.y) >= 24)
+}
+
+// Keep the customizable item model and the iPad assistant, but avoid UIToolbar's
+// automatic overflow on a phone keyboard's narrower key pitch.
+final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
+    static let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold, scale: .medium)
+    private var nativeToolbar: UIToolbar?
+    private let glass = UIVisualEffectView()
+    private let more = UIButton(type: .system)
+    private let keyFeedback = UIImpactFeedbackGenerator(style: .light)
+    private var keys: [UIBarButtonItem] = []
+    var insertSymbol: ((String) -> Void)?
+    weak var outsideWindow: UIWindow?
+    var pasteTarget: UIPasteConfigurationSupporting?
+    var configureArrow: ((UIBarButtonItem, UIView) -> Void)?
+    private var symbolItem: PhoneSymbolItem?
+    private var symbolPanel: UIView?
+    private var symbolCells: [UIButton] = []
+    private var symbolFaces: [UIView] = []
+    private var symbolStart = CGPoint.zero
+    private var symbolWasPinned = false
+    private var symbolArmed = false
+    private var symbolSelection: Int?
+    var symbolFontName = factoryFontName {
+        didSet { if #available(iOS 15, *) { symbolCells.forEach { $0.setNeedsUpdateConfiguration() } } }
+    }
+    private var outsideTaps: [UITapGestureRecognizer] = []
+    private var keyboardObservers: [NSObjectProtocol] = []
+    private(set) var toolbarVisible = true
+    private var keyboardAnimationDuration: TimeInterval = 0.25
+    private var keyboardAnimationOptions: UIView.AnimationOptions = [.beginFromCurrentState, .allowUserInteraction, .curveEaseInOut]
+    private var voiceOverObserver: NSObjectProtocol?
+    private(set) var symbolsPinned = false
+    static let symbolNames = ["%": "Percent", "[": "Left bracket", "]": "Right bracket", "{": "Left brace", "}": "Right brace", "+": "Plus", "#": "Hash", "^": "Caret", "_": "Underscore", "$": "Dollar", "-": "Hyphen", "/": "Slash", "~": "Tilde", "|": "Pipe", ".": "Period", "*": "Asterisk", ";": "Semicolon", "<": "Less-than", "&": "Ampersand", "=": "Equals", "\"": "Double quote", "'": "Single quote", "`": "Backtick", "\\": "Backslash", ">": "Greater-than"]
+    var items: [UIBarButtonItem]? {
+        get { nativeToolbar?.items ?? keys }
+        set {
+            if let nativeToolbar { nativeToolbar.items = newValue; return }
+            keys.forEach { $0.customView?.removeFromSuperview() }
+            keys = newValue ?? []
+            for item in keys {
+                if item.customView == nil {
+                    let key = item is PhoneSymbolItem ? PhoneSymbolButton(type: .system) : UIButton(type: .system)
+                    if let primary = item.primaryAction { key.addAction(primary, for: .touchUpInside) }
+                    else {
+                        key.addAction(UIAction { [weak item] _ in
+                            guard let item, let action = item.action else { return }
+                            UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
+                        }, for: .touchUpInside)
+                    }
+                    if #available(iOS 15, *) {
+                        key.configurationUpdateHandler = { button in
+                            button.alpha = button.isHighlighted ? 0.5 : 1
+                        }
+                    }
+                    item.customView = key
+                }
+                if #available(iOS 16, *), item.possibleTitles?.contains("paste") == true, let pasteTarget {
+                    item.customView = makePasteControl(target: pasteTarget)
+                }
+                // Keep key colors outside the glass effect's legibility adaptation.
+                if let key = item.customView { addSubview(key) }
+                if item.possibleTitles?.contains("up.down.left.right") == true, let key = item.customView { configureArrow?(item, key) }
+                if let group = item as? PhoneSymbolItem, let key = item.customView as? UIButton {
+                    symbolItem = group
+                    group.toolbarSelected = symbolsPinned
+                    key.removeTarget(nil, action: nil, for: .allEvents)
+                    key.removeAction(identifiedBy: UIAction.Identifier("symbol-activation"), for: .primaryActionTriggered)
+                    // Remove the synthesized touchUpInside UIAction as well as old recognizers.
+                    key.enumerateEventHandlers { action, _, event, _ in
+                        if let action { key.removeAction(action, for: event) }
+                    }
+                    key.gestureRecognizers?.forEach { key.removeGestureRecognizer($0) }
+                    let touch = UILongPressGestureRecognizer(target: self, action: #selector(symbolTouch(_:)))
+                    touch.minimumPressDuration = 0
+                    key.addGestureRecognizer(touch)
+                    key.isExclusiveTouch = true
+                    key.accessibilityLabel = "Symbols"
+                    key.accessibilityHint = UIAccessibility.isVoiceOverRunning ? "Double-tap for symbols. Actions include Period." : "Tap for symbols. Swipe down for a period."
+                    (key as? PhoneSymbolButton)?.activateSymbol = { [weak self] in self?.toggleSymbols() }
+                    key.accessibilityCustomActions = (["."] + group.symbols.filter { $0 != "." }).map { value in
+                        UIAccessibilityCustomAction(name: Self.symbolNames[value] ?? value) { [weak self] _ in
+                            self?.chooseSymbol(value); return true
+                        }
+                    }
+                    key.addAction(UIAction(identifier: UIAction.Identifier("symbol-activation")) { [weak self] _ in self?.toggleSymbols() }, for: .primaryActionTriggered)
+
+                }
+                if item.possibleTitles?.contains("up.down.left.right") != true, let key = item.customView as? UIButton {
+                    key.removeTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+                    key.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+                }
+            }
+            setNeedsLayout()
+        }
+    }
+
+    init(frame: CGRect) {
+        super.init(frame: frame, inputViewStyle: .default)
+        if UIDevice.current.userInterfaceIdiom != .phone {
+            let toolbar = UIToolbar(frame: bounds)
+            nativeToolbar = toolbar
+            addSubview(toolbar)
+            return
+        }
+        backgroundColor = .clear
+        allowsSelfSizing = true
+        autoresizingMask = .flexibleHeight
+        semanticContentAttribute = .forceLeftToRight
+        if #available(iOS 26, *) {
+            let effect = UIGlassEffect(style: .regular)
+            effect.tintColor = .systemGray5
+            glass.effect = effect
+        }
+        else { glass.effect = UIBlurEffect(style: .systemMaterial) }
+        glass.layer.cornerRadius = 22
+        glass.clipsToBounds = false
+        glass.isUserInteractionEnabled = false
+        if #available(iOS 26, *) { glass.cornerConfiguration = .capsule() }
+        addSubview(glass)
+        more.setImage(UIImage(systemName: "ellipsis", withConfiguration: Self.symbolConfiguration), for: .normal)
+        more.accessibilityLabel = "More keys"
+        more.showsMenuAsPrimaryAction = true
+        more.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+        addSubview(more)
+        if #available(iOS 17, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (toolbar: PhoneKeyboardToolbar, _: UITraitCollection) in
+                toolbar.rebuildPasteControls()
+            }
+        }
+        for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
+            keyboardObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                guard let self else { return }
+                self.keyboardAnimationDuration = note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0.25
+                let curve = note.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt ?? 0
+                self.keyboardAnimationOptions = [.beginFromCurrentState, .allowUserInteraction, UIView.AnimationOptions(rawValue: curve << 16)]
+                guard note.name == UIResponder.keyboardWillHideNotification else { return }
+                // Rotation can hide the keyboard without ending the terminal's editing session.
+                if (self.outsideWindow?.windowScene?.delegate as? SceneDelegate)?.terminalView?.isFirstResponder == true { return }
+                self.closeSymbols(duration: self.keyboardAnimationDuration, options: self.keyboardAnimationOptions)
+            })
+        }
+        voiceOverObserver = NotificationCenter.default.addObserver(forName: UIAccessibility.voiceOverStatusDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            guard let self else { return }
+            self.closeSymbols()
+            if showToolbar { (self.outsideWindow?.windowScene?.delegate as? SceneDelegate)?.showEditorToolbar() }
+        }
+    }
+
+    deinit {
+        keyboardObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        if let voiceOverObserver { NotificationCenter.default.removeObserver(voiceOverObserver) }
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    @available(iOS 16, *)
+    private func makePasteControl(target: UIPasteConfigurationSupporting) -> UIPasteControl {
+        let configuration = UIPasteControl.Configuration()
+        configuration.displayMode = .iconOnly
+        configuration.cornerStyle = .capsule
+        configuration.baseBackgroundColor = UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 44.0 / 255.0, green: 44.0 / 255.0, blue: 46.0 / 255.0, alpha: 1)
+                : UIColor(red: 230.0 / 255.0, green: 230.0 / 255.0, blue: 235.0 / 255.0, alpha: 1)
+        }.resolvedColor(with: traitCollection)
+        configuration.baseForegroundColor = UIColor.label.resolvedColor(with: traitCollection)
+        let paste = UIPasteControl(configuration: configuration)
+        paste.target = target
+        paste.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+        return paste
+    }
+
+    @available(iOS 16, *)
+    private func rebuildPasteControls() {
+        guard let pasteTarget else { return }
+        for item in keys where item.possibleTitles?.contains("paste") == true {
+            let frame = item.customView?.frame ?? .zero
+            item.customView?.removeFromSuperview()
+            let paste = makePasteControl(target: pasteTarget)
+            paste.frame = frame
+            item.customView = paste
+            addSubview(paste)
+        }
+        setNeedsLayout()
+    }
+    // registerForTraitChanges covers iOS 17 and later.
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #available(iOS 17, *) { return }
+        if #available(iOS 16, *), traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) { rebuildPasteControls() }
+    }
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        guard window != nil else { return }
+        keyFeedback.prepare()
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.window != nil else { return }
+            if #available(iOS 16, *) { self.rebuildPasteControls() }
+        }
+    }
+
+    @objc private func keyTouchDown() { keyFeedback.impactOccurred() }
+
+    func animateKeyboardChange(_ changes: @escaping () -> Void) {
+        if let coordinator = outsideWindow?.rootViewController?.transitionCoordinator {
+            coordinator.animate(alongsideTransition: { _ in changes() })
+        } else {
+            UIView.animate(withDuration: keyboardAnimationDuration, delay: 0, options: keyboardAnimationOptions, animations: changes)
+        }
+    }
+
+    func setToolbarVisible(_ visible: Bool) {
+        guard toolbarVisible != visible else { return }
+        toolbarVisible = visible
+        animateKeyboardChange {
+            self.invalidateIntrinsicContentSize()
+            self.superview?.layoutIfNeeded()
+            self.updateTerminalLayout()
+        }
+    }
+
+    private var keyboardGap: CGFloat {
+        if #available(iOS 26, *), UIDevice.current.userInterfaceIdiom == .phone { return 8 }
+        return 0
+    }
+    var pinnedPanelHeight: CGFloat {
+        guard keyboardGap > 0, symbolsPinned, let panel = symbolPanel, !panel.isHidden else { return 0 }
+        return panel.bounds.height + 8
+    }
+    func pinnedPanelTop(in window: UIWindow) -> CGFloat? {
+        guard keyboardGap > 0, symbolsPinned, let panel = symbolPanel, !panel.isHidden, let panelWindow = panel.window else { return nil }
+        return window.convert(panel.convert(panel.bounds, to: panelWindow), from: panelWindow).minY
+    }
+    func containsKeyboardGap(_ point: CGPoint) -> Bool {
+        keyboardGap > 0 && bounds.contains(point) && point.y >= glass.frame.maxY
+    }
+    override var intrinsicContentSize: CGSize { CGSize(width: UIView.noIntrinsicMetric, height: toolbarVisible ? 45 + keyboardGap : 0) }
+
+    override func systemLayoutSizeFitting(_ targetSize: CGSize) -> CGSize {
+        CGSize(width: bounds.width, height: intrinsicContentSize.height)
+    }
+
+    func closeSymbols(duration: TimeInterval = 0.2, options: UIView.AnimationOptions = [.beginFromCurrentState, .allowUserInteraction, .curveEaseInOut]) {
+        guard let panel = symbolPanel else { return }
+        for tap in outsideTaps { tap.view?.removeGestureRecognizer(tap) }
+        outsideTaps = []
+        symbolPanel = nil; symbolCells = []; symbolFaces = []
+        symbolSelection = nil
+        symbolsPinned = false
+        symbolItem?.toolbarSelected = false
+        panel.isUserInteractionEnabled = false
+        let panelGlass = panel.subviews.first as? UIVisualEffectView
+        let content = panel.subviews.filter { !($0 is UIVisualEffectView) }
+        UIView.animate(withDuration: duration, delay: 0, options: options) {
+            panelGlass?.effect = nil
+            content.forEach { $0.alpha = 0 }
+            if !UIAccessibility.isReduceMotionEnabled { panel.transform = CGAffineTransform(translationX: 0, y: 6) }
+            self.setNeedsLayout()
+            self.layoutIfNeeded()
+            self.updateTerminalLayout()
+        } completion: { _ in
+            panel.removeFromSuperview()
+        }
+    }
+
+    private func chooseSymbol(_ value: String, keepingPanelOpen: Bool = false) {
+        if !keepingPanelOpen { closeSymbols() }
+        else {
+            symbolSelection = nil
+            symbolCells.forEach { $0.isSelected = false }
+        }
+        insertSymbol?(value)
+    }
+
+    private func toggleSymbols() {
+        if symbolsPinned { closeSymbols() } else { pinSymbols() }
+    }
+
+    private var rotationLandscape: Bool?
+
+    func prepareForRotation(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        rotationLandscape = size.width > size.height
+        coordinator.animate(alongsideTransition: { _ in
+            self.setNeedsLayout()
+            self.layoutIfNeeded()
+        })
+    }
+
+    private var landscapePanel: Bool {
+        rotationLandscape ?? (traitCollection.verticalSizeClass == .compact || (window.map { $0.bounds.width > $0.bounds.height } ?? false))
+    }
+    private var panelColumns: Int { landscapePanel ? 12 : 8 }
+    private var panelRows: Int { landscapePanel ? 2 : 3 }
+
+    private func panelFrame() -> CGRect {
+        guard let window else { return .zero }
+        let bar = glass.convert(glass.bounds, to: window)
+        let width = (landscapePanel ? bar.width * 12 / 8 : bar.width) + 6
+        let height = CGFloat(panelRows) * 44 + 6
+        return CGRect(x: bar.midX - width / 2, y: bar.minY - height - 8, width: width, height: height)
+    }
+
+    private func updateTerminalLayout() {
+        guard let scene = outsideWindow?.windowScene?.delegate as? SceneDelegate else { return }
+        var ancestor = scene.terminalView?.superview
+        while let view = ancestor, !(view is TerminalContainerView) { ancestor = view.superview }
+        guard let container = ancestor else { return }
+        container.setNeedsLayout()
+        container.layoutIfNeeded()
+    }
+
+    private func pinSymbols() {
+        guard #available(iOS 26, *), !symbolsPinned, let item = symbolItem, let window else { return }
+        symbolsPinned = true; item.toolbarSelected = true
+        let panel = UIView()
+        let panelGlass = UIVisualEffectView()
+        panelGlass.effect = UIGlassEffect(style: .regular)
+        panel.cornerConfiguration = .uniformCorners(radius: .fixed(22))
+        panelGlass.cornerConfiguration = .uniformCorners(radius: .fixed(22))
+        panel.frame = panelFrame()
+        panelGlass.frame = panel.bounds
+        panelGlass.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        panel.addSubview(panelGlass)
+        symbolCells = item.symbols.prefix(24).enumerated().map { index, value in
+            let cell = UIButton(type: .system)
+            let face = UIView()
+            face.cornerConfiguration = .corners(radius: .containerConcentric(minimum: 8))
+            face.isUserInteractionEnabled = false
+            cell.setTitle(value, for: .normal)
+            cell.configurationUpdateHandler = { [weak self] button in
+                guard let self else { return }
+                let base = TerminalFonts.font(named: self.symbolFontName, size: 20) ?? UIFont.monospacedSystemFont(ofSize: 20, weight: .medium)
+                let descriptor = base.fontDescriptor.addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.medium.rawValue]])
+                let font = UIFont(descriptor: descriptor, size: 20)
+                var configuration = UIButton.Configuration.plain()
+                configuration.title = value
+                configuration.contentInsets = .zero
+                let selected = button.isSelected || button.isHighlighted
+                let foreground: UIColor = selected ? .white : .label
+                configuration.baseForegroundColor = foreground
+                face.backgroundColor = selected ? .systemBlue : UIColor { traits in
+                    let fill = UIColor.quaternarySystemFill.resolvedColor(with: traits)
+                    return traits.userInterfaceStyle == .light ? fill.withAlphaComponent(fill.cgColor.alpha * 2) : fill
+                }
+                configuration.background.backgroundColor = .clear
+                configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+                    var attributes = attributes
+                    attributes.font = font
+                    attributes.foregroundColor = foreground
+                    return attributes
+                }
+                button.configuration = configuration
+            }
+            let name = Self.symbolNames[value] ?? value
+            cell.accessibilityLabel = name
+            cell.accessibilityIdentifier = "symbol-cell-" + name
+            cell.frame = CGRect(x: 3 + CGFloat(index % panelColumns) * (panel.bounds.width - 6) / CGFloat(panelColumns), y: 3 + CGFloat(index / panelColumns) * 44, width: (panel.bounds.width - 6) / CGFloat(panelColumns), height: 44)
+            cell.addAction(UIAction { [weak self] _ in self?.chooseSymbol(value, keepingPanelOpen: true) }, for: .touchUpInside)
+            cell.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+            face.frame = cell.frame.insetBy(dx: 3, dy: 3)
+            panel.addSubview(face)
+            symbolFaces.append(face)
+            panel.addSubview(cell)
+            return cell
+        }
+        window.addSubview(panel); symbolPanel = panel
+        var windows = [window]
+        if let outsideWindow, outsideWindow !== window { windows.append(outsideWindow) }
+        for host in windows {
+            let outside = UITapGestureRecognizer(target: self, action: #selector(dismissSymbolsOutside))
+            outside.delegate = self
+            outside.cancelsTouchesInView = true
+            host.addGestureRecognizer(outside); outsideTaps.append(outside)
+        }
+        let effect = panelGlass.effect
+        panelGlass.effect = nil
+        let content = panel.subviews.filter { !($0 is UIVisualEffectView) }
+        content.forEach { $0.alpha = 0 }
+        panel.transform = UIAccessibility.isReduceMotionEnabled ? .identity : CGAffineTransform(translationX: 0, y: 6)
+        UIView.animate(withDuration: 0.2, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction, .curveEaseInOut]) {
+            panelGlass.effect = effect; content.forEach { $0.alpha = 1 }; panel.transform = .identity
+            self.setNeedsLayout()
+            self.layoutIfNeeded()
+            self.updateTerminalLayout()
+        }
+        if UIAccessibility.isVoiceOverRunning { UIAccessibility.post(notification: .layoutChanged, argument: symbolCells.first) }
+    }
+
+    @objc private func dismissSymbolsOutside() { closeSymbols() }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+        outsideTaps.contains(where: { $0 === gestureRecognizer || $0 === other })
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        guard outsideTaps.contains(where: { $0 === gestureRecognizer }) else { return true }
+        if let panel = symbolPanel, panel.bounds.contains(touch.location(in: panel)) { return false }
+        if let key = symbolItem?.customView, key.bounds.contains(touch.location(in: key)) { return false }
+        return true
+    }
+
+    @objc private func symbolTouch(_ sender: UILongPressGestureRecognizer) {
+        guard let key = sender.view, let window else { return }
+        let point = sender.location(in: window)
+        let delta = CGPoint(x: point.x - symbolStart.x, y: point.y - symbolStart.y)
+        if sender.state == .began {
+            symbolStart = point
+            symbolSelection = nil; symbolWasPinned = symbolsPinned; symbolArmed = false
+            (key as? UIButton)?.isHighlighted = true
+        } else if sender.state == .changed {
+            if delta.y <= -12 && abs(delta.y) > abs(delta.x) { symbolArmed = true; pinSymbols() }
+            guard let panel = symbolPanel else { return }
+            let local = sender.location(in: panel)
+            let returned = key.bounds.contains(sender.location(in: key))
+            let selection: Int? = !symbolArmed || returned || delta.y >= 0 ? nil : min(panelRows - 1, max(0, Int(floor((local.y - 3) / 44)))) * panelColumns + min(panelColumns - 1, max(0, Int(floor((local.x - 3) / ((panel.bounds.width - 6) / CGFloat(panelColumns))))))
+            let validSelection = selection.flatMap { $0 < symbolCells.count ? $0 : nil }
+            if validSelection != symbolSelection {
+                symbolSelection = validSelection
+                if validSelection != nil { UISelectionFeedbackGenerator().selectionChanged() }
+                for (index, cell) in symbolCells.enumerated() {
+                    cell.isSelected = validSelection == index
+                }
+            }
+        } else if sender.state == .ended {
+            if delta.y >= 12 && delta.y > abs(delta.x) {
+                chooseSymbol(".")
+            } else if let selected = symbolSelection, let item = symbolItem, item.symbols.indices.contains(selected) {
+                chooseSymbol(item.symbols[selected])
+            } else if hypot(delta.x, delta.y) < 12 || (symbolsPinned && key.bounds.contains(sender.location(in: key))) {
+                if symbolWasPinned { closeSymbols() } else { pinSymbols() }
+            } else { closeSymbols() }
+            (key as? UIButton)?.isHighlighted = false
+        } else if sender.state == .cancelled || sender.state == .failed {
+            closeSymbols(); (key as? UIButton)?.isHighlighted = false
+        }
+    }
+
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        // Absorb the keyboard gap without forwarding touches to the keys.
+        if containsKeyboardGap(point) { return self }
+        return super.hitTest(point, with: event)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if let nativeToolbar { nativeToolbar.frame = bounds; nativeToolbar.tintColor = tintColor; return }
+        let visible = keys.filter { item in
+            if #available(iOS 16, *) { return !item.isHidden }
+            return true
+        }
+        let outerPadding: CGFloat = 18
+        let fullWidthGrid = keyboardGap > 0
+        let gridBounds = fullWidthGrid ? bounds.inset(by: safeAreaInsets) : bounds
+        let width = fullWidthGrid ? min(max(0, gridBounds.width - 16), landscapePanel ? min(8 * 48.25, max(0, (gridBounds.width - 6) * 8 / 12)) : .greatestFiniteMagnitude) : min(CGFloat(visible.count) * 44 + outerPadding * 2, max(0, bounds.width - 16))
+        var pasteSize = CGSize.zero
+        if #available(iOS 16, *), let paste = visible.compactMap(\.customView).first(where: { $0 is UIPasteControl }) {
+            pasteSize = paste.intrinsicContentSize
+            if pasteSize.width <= 0 || pasteSize.height <= 0 { pasteSize = paste.sizeThatFits(.zero) }
+            if pasteSize.width <= 0 || pasteSize.height <= 0 { pasteSize = CGSize(width: 41, height: 35) }
+        }
+        glass.frame = CGRect(x: gridBounds.midX - width / 2, y: 0, width: width, height: max(45, pasteSize.height + 10))
+        guard !visible.isEmpty else { return }
+        let slots = max(1, min(visible.count, Int((width - outerPadding * 2) / 28)))
+        let overflow = visible.count > slots
+        let shown = Array(visible.prefix(overflow ? slots - 1 : slots))
+        for item in keys { item.customView?.isHidden = !shown.contains(where: { $0 === item }) }
+        let padding = fullWidthGrid ? 0 : outerPadding
+        let pitch = (width - padding * 2) / CGFloat(slots)
+        let firstSlot = glass.frame.minX + padding
+        more.isHidden = !overflow
+        if overflow {
+            more.frame = CGRect(x: firstSlot + CGFloat(slots - 1) * pitch, y: 0, width: pitch, height: glass.bounds.height)
+            more.menu = UIMenu(children: visible.dropFirst(shown.count).map { item -> UIMenuElement in
+                if let menu = item.menu { return menu }
+                if let group = item as? PhoneSymbolItem {
+                    return UIMenu(title: "Symbols", children: group.symbols.map { value in
+                        UIAction(title: Self.symbolNames[value] ?? value) { [weak self] _ in self?.chooseSymbol(value) }
+                    })
+                }
+                if let action = item.primaryAction { return action }
+                return UIAction(title: item.accessibilityLabel ?? item.title ?? "Key", image: item.image) { [weak item] _ in
+                    guard let item, let action = item.action else { return }
+                    UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
+                }
+            })
+        }
+        for (index, item) in shown.enumerated() {
+            guard let key = item.customView else { continue }
+            let slot = CGRect(x: firstSlot + CGFloat(index) * pitch, y: 0, width: pitch, height: glass.bounds.height)
+            if #available(iOS 16, *), key is UIPasteControl {
+                key.frame = CGRect(x: slot.midX - pasteSize.width / 2, y: slot.midY - pasteSize.height / 2, width: pasteSize.width, height: pasteSize.height)
+            } else { key.frame = slot }
+            key.accessibilityLabel = item.accessibilityLabel ?? item.title
+            key.accessibilityIdentifier = item.accessibilityIdentifier
+            key.accessibilityValue = item.accessibilityValue
+            if let actions = item.accessibilityCustomActions { key.accessibilityCustomActions = actions }
+            if let button = key as? UIButton {
+                button.menu = item.menu
+                button.showsMenuAsPrimaryAction = item.menu != nil
+                let image = item.image?.withConfiguration(Self.symbolConfiguration)
+                let title = item.title
+                let control = item.possibleTitles?.contains("control") == true
+                let foreground: UIColor = item is PhoneSymbolItem ? .label : (item.toolbarSelected ? (control ? .systemBackground : tintColor) : .label)
+                let labelFontSize: CGFloat = 16
+                if #available(iOS 15, *) {
+                    var configuration = UIButton.Configuration.plain()
+                    configuration.title = image == nil ? title : nil
+                    configuration.image = image
+                    configuration.preferredSymbolConfigurationForImage = Self.symbolConfiguration
+                    configuration.baseForegroundColor = foreground
+                    configuration.contentInsets = NSDirectionalEdgeInsets.zero
+                    configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+                        var attributes = attributes
+                        attributes.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
+                        attributes.foregroundColor = foreground
+                        return attributes
+                    }
+                    configuration.background.backgroundColor = item.toolbarSelected ? (control ? .label : (item is PhoneSymbolItem ? .tertiarySystemFill : tintColor.withAlphaComponent(0.25))) : .clear
+                    configuration.background.backgroundInsets = NSDirectionalEdgeInsets(top: 5, leading: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2, bottom: 5, trailing: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2)
+                    configuration.background.cornerRadius = (glass.bounds.height - 10) / 2
+                    button.configuration = configuration
+                } else {
+                    button.setTitle(image == nil ? title : nil, for: .normal)
+                    button.setImage(image, for: .normal)
+                    button.titleLabel?.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
+                    button.setTitleColor(foreground, for: .normal)
+                    button.tintColor = foreground
+                    button.backgroundColor = item.toolbarSelected ? (control ? .label : .tertiarySystemFill) : .clear
+                    button.layer.cornerRadius = 15
+                }
+                button.isSelected = item.toolbarSelected
+                button.accessibilityTraits = item.toolbarSelected ? [.button, .selected] : .button
+            }
+        }
+        if symbolsPinned, let panel = symbolPanel {
+            let previousHeight = panel.bounds.height
+            if let window, panel.window !== window { window.addSubview(panel) }
+            let layoutPanel = {
+                panel.frame = self.panelFrame()
+                for (index, cell) in self.symbolCells.enumerated() {
+                    cell.frame = CGRect(x: 3 + CGFloat(index % self.panelColumns) * (panel.bounds.width - 6) / CGFloat(self.panelColumns), y: 3 + CGFloat(index / self.panelColumns) * 44, width: (panel.bounds.width - 6) / CGFloat(self.panelColumns), height: 44)
+                    self.symbolFaces[index].frame = cell.frame.insetBy(dx: 3, dy: 3)
+                }
+                if panel.bounds.height != previousHeight { self.updateTerminalLayout() }
+            }
+            if let coordinator = outsideWindow?.rootViewController?.transitionCoordinator {
+                coordinator.animate(alongsideTransition: { _ in layoutPanel() })
+            } else {
+                layoutPanel()
+            }
+        }
+    }
+}
 
 class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIAdaptivePresentationControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate, TerminalViewDelegate {
     var window: UIWindow?
@@ -159,6 +765,42 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var leftButtonGroups: [UIBarButtonItemGroup] = []
     var rightButtonGroup: [UIBarButtonItem] = []
     var rightButtonGroups: [UIBarButtonItemGroup] = []
+    private var remoteToolbarItem: UIBarButtonItem?
+    private lazy var phonePasteTarget: PhonePasteTarget = {
+        let target = PhonePasteTarget()
+        target.receive = { [weak self] text in
+            guard let self else { return }
+            self.releaseToolbarControl()
+            // Route paste through the scene's confirmation handler when available.
+            let receiver = NSSelectorFromString("receiveToolbarPaste:")
+            if self.responds(to: receiver) { self.perform(receiver, with: text); return }
+            if self.terminalView?.isFirstResponder == true, let terminal = self.terminalView {
+                let bracketed = terminal.getTerminal().bracketedPasteMode
+                if bracketed { terminal.send(data: Array("\u{1b}[200~".utf8)[...]) }
+                terminal.send(data: Array(text.utf8)[...])
+                if bracketed { terminal.send(data: Array("\u{1b}[201~".utf8)[...]) }
+            } else { self.webView?.paste(text) }
+        }
+        return target
+    }()
+    private var hardwareKeyboardConnected = false
+    private var hardwareToolbarOverride = false
+    private var arrowTouches: [ObjectIdentifier: (start: TimeInterval, touch: UITouch)] = [:]
+    private var arrowHeldViews: Set<ObjectIdentifier> = []
+    private var arrowTipTask: Task<Void, Never>?
+    private var arrowTipTaskID: UUID?
+    private var arrowHUD: UIView?
+    private var arrowHUDGlass: UIVisualEffectView?
+    private var arrowHUDLabel: UILabel?
+    private var arrowHUDDismissal: DispatchWorkItem?
+    private weak var heldArrow: UIBarButtonItem?
+    private var arrowRepeatCount = 0
+    private var arrowRepeatDirection: String?
+    private var arrowRepeatOrigin: CGFloat = 0
+    private var arrowRepeatInterval: TimeInterval = 0.25
+    private var arrowLastRepeat = Date()
+    private var arrowFirstRepeat = Date()
+    private var arrowRepeatLevel = 0
     let maxSubmenuLevels = 15
     var buttonRegex: [Int:String] = [:]
     var noneTag = -1
@@ -203,17 +845,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     var toolbarHeight: CGFloat {
-        let deviceModel = UIDevice.current.model
-        if (deviceModel.hasPrefix("iPad")) {
-            return 40
-        } else {
-            if #available(iOS 26, *) {
-                // iPhones with iOS 26: 45 OK, 40 makes the buttons too small.
-                return 45
-            } else {
-                return 40
-            }
+        if #available(iOS 26, *), UIDevice.current.userInterfaceIdiom == .phone {
+            // 45-point glass and an 8-point gap above the system keyboard.
+            return 53
         }
+        return 40
     }
     
     var isVimRunning: Bool {
@@ -268,7 +904,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // This works with CodeMirror and ACE:
                     // document.execCommand("insertText", false, "This is a test");
                     DispatchQueue.main.async {
-                        self.webView?.evaluateJavaScript("document.execCommand(\"insertText\", false, \"" + title.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\r", with: "\\r") + "\");") { (result, error) in
+                        self.webView?.evaluateJavaScript("document.execCommand(\"insertText\", false, \"" + title.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\r", with: "\\r") + "\");") { (result, error) in
                             // if let error = error { print(error) }
                             // if let result = result { print(result) }
                         }
@@ -618,10 +1254,34 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    @objc private func releaseToolbarControl() {
+        controlOn = false
+        terminalView?.controlModifier = false
+        webView?.evaluateJavaScript("window.controlOn = false;")
+        for item in editorToolbar.items ?? [] where title(item) == "control" { item.toolbarSelected = false }
+        editorToolbar.setNeedsLayout()
+    }
+
+    @objc private func registerPhoneToolbarService(_ notification: Notification) {
+        guard notification.object as AnyObject? === self,
+              let item = notification.userInfo?["item"] as? UIBarButtonItem else { return }
+        guard remoteToolbarItem !== item else { return }
+        remoteToolbarItem = item
+        if showToolbar { showEditorToolbar() }
+    }
+
     @objc private func systemAction(_ sender: UIBarButtonItem) {
-        // NSLog("Received systemAction. Position x = \(tapPosition.x) y = \(tapPosition.y)")
+        defer {
+            if title(sender) == "control" { (terminalView?.inputAccessoryView as? PhoneKeyboardToolbar)?.setNeedsLayout() }
+        }
         if let title = title(sender) {
+            if title == "hideKeyboard" {
+                releaseToolbarControl()
+                hideKeyboard()
+                return
+            }
             if title == "paste" {
+                releaseToolbarControl()
                 if let text = UIPasteboard.general.string { confirmPaste(text) }
                 return
             }
@@ -662,6 +1322,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             sendArrow(direction: "up")
                         }
                     }
+                case "paste":
+                    terminalView?.paste(sender)
                 case "copy":
                     terminalView?.copy(sender)
                 case "cut":
@@ -735,6 +1397,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     break
                 case "selectAll":
                     commandString = "editor.selectAll();"
+                case "paste":
+                    if let pastedString = UIPasteboard.general.string {
+                        webView?.paste(pastedString)
+                    }
                 case "control":
                     controlOn = !controlOn;
                     if #available(iOS 15.0, *) {
@@ -960,11 +1626,19 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
 
     @objc func hideKeyboard() {
+        editorToolbar.closeSymbols()
         DispatchQueue.main.async {
             guard self.terminalView != nil else { return }
             if self.terminalView!.isFirstResponder {
                 showKeyboardAtStartup = false
-                _ = self.terminalView!.resignFirstResponder()
+                if UIDevice.current.userInterfaceIdiom == .phone {
+                    self.editorToolbar.animateKeyboardChange {
+                        _ = self.terminalView!.resignFirstResponder()
+                        self.editorToolbar.superview?.layoutIfNeeded()
+                    }
+                } else {
+                    _ = self.terminalView!.resignFirstResponder()
+                }
             }
         }
     }
@@ -975,10 +1649,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             return !terminalView.inputAssistantItem.leadingBarButtonGroups.isEmpty ||
                 !terminalView.inputAssistantItem.trailingBarButtonGroups.isEmpty
         }
-        return terminalView.inputAccessoryView === editorToolbar
+        return terminalView.inputAccessoryView === editorToolbar && editorToolbar.toolbarVisible
     }
 
     @objc func hideToolbar() {
+        editorToolbar.closeSymbols()
+        if UIDevice.current.userInterfaceIdiom == .phone, terminalView?.inputAccessoryView === editorToolbar {
+            editorToolbar.setToolbarVisible(false)
+            return
+        }
         DispatchQueue.main.async {
             self.terminalView!.inputAccessoryView = self.emptyToolbar
             self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
@@ -988,9 +1667,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.webView!.inputAssistantItem.leadingBarButtonGroups = []
                 self.webView!.inputAssistantItem.trailingBarButtonGroups = []
             }
+            self.terminalView?.reloadInputViews()
+            self.webView?.reloadInputViews()
         }
     }
-    
+
     private func computeNumberOfButtons(toolbar: String) -> UInt {
         var numButtons: UInt = 0
         let buttonsDefinition = toolbar.split(separator: "\n")
@@ -1046,21 +1727,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return numButtons
     }
     
+
     @objc func generateToolbarButtons() {
         // check issue with screen size and pico.
         // Scan the configuration file to generate the button groups:
-        // Before iOS 26, or iPads, or VoiceOver active: single-arrow button
-        // TODO: iPhone Duo, iPad style is OK when opened. How to adjust?
-        var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
-        if #available(iOS 26, *) {
-            if !UIAccessibility.isVoiceOverRunning && !UIDevice.current.model.hasPrefix("iPad") {
-                // iPhones running iOS 26: activate multi-arrow buttons:
-                configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
-            }
-        }
-        // if ( || UIAccessibility.isVoiceOverRunning || ) {
-        //    configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
-        // }
+        let filename = UIDevice.current.userInterfaceIdiom == .phone ? "defaultToolbar.txt" : "defaultToolbar_iPad.txt"
+        var configFile = Bundle.main.resourceURL?.appendingPathComponent(filename)
         var showBrowserButtonFound = false // new feature, introduced with v2.0.0. Add it for older implamentations.
         if let documentsUrl = try? FileManager().url(for: .documentDirectory,
                                                      in: .userDomainMask,
@@ -1107,7 +1779,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 let buttonsDefinition = contentOfFile.split(separator: "\n")
                 var activeButtonGroup: [UIBarButtonItem] = []
-                let configuration = UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular)
+                let configuration = UIDevice.current.userInterfaceIdiom == .phone ? PhoneKeyboardToolbar.symbolConfiguration : UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular)
                 for buttonLine in buttonsDefinition {
                     let trimmedButtonLine = buttonLine.trimmingCharacters(in: .whitespacesAndNewlines)
                     if (trimmedButtonLine.hasPrefix("#")) { continue } // skip comments
@@ -1181,6 +1853,36 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             }
                         }
                         if (button != nil) {
+                            if #available(iOS 26, *), UIDevice.current.userInterfaceIdiom == .phone,
+                               !UIAccessibility.isVoiceOverRunning, iconName == "#+=" {
+                                let symbols = PhoneSymbolItem(title: "#+=", style: .plain, target: nil, action: nil)
+                                symbols.symbols = Array(activeButtonGroup.prefix(24)).compactMap { title($0) }
+                                symbols.possibleTitles = ["", "#+="]
+                                symbols.accessibilityLabel = "Symbols"
+                                button = symbols
+                                activeButtonGroup = [symbols]
+                            } else if iconName == "#+=", UIDevice.current.userInterfaceIdiom == .phone {
+                                let symbols = activeButtonGroup.filter { title($0) == "." } + activeButtonGroup.filter { title($0) != "." }
+                                let period = UIBarButtonItem(title: "#+=", style: .plain, target: nil, action: nil)
+                                period.possibleTitles = ["", "#+="]
+                                period.accessibilityLabel = "Symbols"
+                                period.accessibilityCustomActions = symbols.compactMap { item in
+                                    guard let value = title(item) else { return nil }
+                                    return UIAccessibilityCustomAction(name: PhoneKeyboardToolbar.symbolNames[value] ?? value) { _ in
+                                        guard let action = item.action else { return false }
+                                        return UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
+                                    }
+                                }
+                                period.menu = UIMenu(children: symbols.compactMap { item in
+                                    guard let value = title(item) else { return nil }
+                                    return UIAction(title: PhoneKeyboardToolbar.symbolNames[value] ?? value) { _ in
+                                        guard let action = item.action else { return }
+                                        UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
+                                    }
+                                })
+                                button = period
+                                activeButtonGroup = [period]
+                            }
                             button!.tag = activeTag
                             if #available(iOS 16.0, *) {
                                 if (activeTag != 0) && (activeTag != noneTag) {
@@ -1191,10 +1893,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         activeTag = 0
                         if (pastSeparator) {
                             rightButtonGroup.append(contentsOf: activeButtonGroup)
-                            rightButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: button))
+                            rightButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: activeButtonGroup.contains(where: { $0 === button }) ? nil : button))
                         } else {
                             leftButtonGroup.append(contentsOf: activeButtonGroup)
-                            leftButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: button))
+                            leftButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: activeButtonGroup.contains(where: { $0 === button }) ? nil : button))
                         }
                         activeButtonGroup = []
                         continue
@@ -1258,7 +1960,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         button = UIBarButtonItem(image: systemImage.withConfiguration(configuration), style: .plain, target: self, action: action)
                         // so the "control" button does not output "villa":
                         if (buttonParts[1] == "systemAction") {
-                            button?.accessibilityLabel = buttonParts[2]
+                            button?.accessibilityLabel = buttonParts[2] == "hideKeyboard" ? "Hide keyboard" : buttonParts[2]
                         }
                         button!.target = self
                     } else {
@@ -1272,6 +1974,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     } else {
                         button!.possibleTitles = ["", String(buttonParts[2])]
                     }
+                    if buttonParts[1] == "systemAction", buttonParts[2] == "paste" {
+                        button!.accessibilityLabel = "Paste"
+                    }
+                    if buttonParts[0] == "tab" || buttonParts[0] == "arrow.right.to.line.alt" { button!.accessibilityLabel = "Tab" }
+                    if buttonParts[0] == "ctrl" || buttonParts[0] == "chevron.up.square" { button!.accessibilityLabel = "Control" }
+                    if buttonParts[0] == "esc" || buttonParts[0] == "escape" { button!.accessibilityLabel = "Escape" }
+                    if buttonParts[0] == "." { button!.accessibilityLabel = "Period" }
+                    if buttonParts[0] == "/" { button!.accessibilityLabel = "Slash" }
                     button!.tag = activeTag
                     if #available(iOS 16.0, *) {
                         if (activeTag != 0) && (activeTag != noneTag) {
@@ -1304,9 +2014,34 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
     }
-    
+
     @objc func showEditorToolbar() {
+        guard !hardwareKeyboardConnected || hardwareToolbarOverride else { hideToolbar(); return }
         generateToolbarButtons()
+        editorToolbar.outsideWindow = self.window
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            var items = leftButtonGroup + rightButtonGroup
+            if let remoteToolbarItem {
+                let index = items.firstIndex { title($0) == "up.down.left.right" } ?? items.count
+                items.insert(remoteToolbarItem, at: index)
+            }
+            editorToolbar.items = items
+        }
+        let needsHold = UIDevice.current.userInterfaceIdiom != .phone || !(editorToolbar.items ?? []).contains(where: { title($0) == "hideKeyboard" })
+        let existing = editorToolbar.gestureRecognizers?.first { $0.name == "toolbar-hide" }
+        if needsHold && existing == nil {
+            let hold = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
+            hold.name = "toolbar-hide"
+            hold.minimumPressDuration = 1.0
+            hold.allowableMovement = 15
+            hold.delegate = self
+            editorToolbar.addGestureRecognizer(hold)
+        } else if !needsHold, let existing { editorToolbar.removeGestureRecognizer(existing) }
+
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            editorToolbar.setToolbarVisible(true)
+            if terminalView?.inputAccessoryView === editorToolbar { return }
+        }
         // NSLog("leftButtonGroup: \(leftButtonGroup)")
         // NSLog("rightButtonGroup: \(rightButtonGroup)")
         DispatchQueue.main.async {
@@ -1329,7 +2064,242 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    func setToolbarShown(_ shown: Bool) {
+        UserDefaults.standard.set(shown, forKey: "show_toolbar")
+        toolbarShouldBeShown = shown
+        hardwareToolbarOverride = shown && hardwareKeyboardConnected
+        updateKeyboardToolbar()
+    }
+
+    func toggleKeyToolbar() {
+        let shown = !showToolbar
+        for scene in UIApplication.shared.connectedScenes {
+            (scene.delegate as? SceneDelegate)?.setToolbarShown(shown)
+        }
+    }
+
+    private func observeHardwareKeyboard() {
+        guard UIDevice.current.userInterfaceIdiom == .phone else { return }
+        hardwareKeyboardConnected = GCKeyboard.coalesced != nil
+        let center = NotificationCenter.default
+        center.removeObserver(self, name: .GCKeyboardDidConnect, object: nil)
+        center.removeObserver(self, name: .GCKeyboardDidDisconnect, object: nil)
+        center.addObserver(self, selector: #selector(keyboardConnectionChanged(_:)), name: .GCKeyboardDidConnect, object: nil)
+        center.addObserver(self, selector: #selector(keyboardConnectionChanged(_:)), name: .GCKeyboardDidDisconnect, object: nil)
+    }
+
+    @objc private func keyboardConnectionChanged(_ notification: Notification) {
+        guard UIDevice.current.userInterfaceIdiom == .phone else { return }
+        DispatchQueue.main.async {
+            self.hardwareKeyboardConnected = notification.name == .GCKeyboardDidConnect
+            self.hardwareToolbarOverride = false
+            self.updateKeyboardToolbar()
+        }
+    }
+
+    private func updateKeyboardToolbar() {
+        let shown = toolbarShouldBeShown && (!hardwareKeyboardConnected || hardwareToolbarOverride)
+        let visibilityChanged = shown != showToolbar
+        showToolbar = shown
+        if shown { showEditorToolbar() } else { hideToolbar() }
+        DispatchQueue.main.async {
+            self.terminalView?.accessibilityCustomActions = [UIAccessibilityCustomAction(name: shown ? "Hide key toolbar" : "Show key toolbar") { [weak self] _ in
+                self?.toggleKeyToolbar()
+                return true
+            }]
+            if shown {
+                self.editorToolbar.accessibilityCustomActions = [UIAccessibilityCustomAction(name: "Hide key toolbar") { [weak self] _ in
+                    self?.toggleKeyToolbar()
+                    return true
+                }]
+            }
+            if visibilityChanged { UIAccessibility.post(notification: .layoutChanged, argument: nil) }
+        }
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if gestureRecognizer.name == "toolbar-hide", editorToolbar.containsKeyboardGap(touch.location(in: editorToolbar)) { return false }
+        if gestureRecognizer.name == "arrow-flick", let view = gestureRecognizer.view {
+            let identity = ObjectIdentifier(view)
+            arrowHeldViews.remove(identity)
+            arrowTouches[identity] = (touch.timestamp, touch)
+        }
+        return true
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+        gestureRecognizer.view === other.view && ((gestureRecognizer.name == "arrow-flick" && other is UILongPressGestureRecognizer) || (other.name == "arrow-flick" && gestureRecognizer is UILongPressGestureRecognizer))
+    }
+
+    private var precisionArrowOrigin = CGPoint.zero
+    private var precisionArrowDirection: String?
+    private var precisionArrowCount = 0
+    private var precisionArrowSince = Date()
+    private var precisionArrowLast = Date()
+    private var precisionArrowTimer: Timer?
+    private var precisionArrowLevel = 0
+
+    private func attachPrecisionArrow(_ item: UIBarButtonItem, view: UIView) {
+        guard view.gestureRecognizers?.contains(where: { $0.name == "precision-arrow" }) != true else { return }
+        if let key = view as? UIButton {
+            key.removeTarget(nil, action: nil, for: .allEvents)
+            key.enumerateEventHandlers { action, _, event, _ in
+                if let action { key.removeAction(action, for: event) }
+            }
+        }
+        view.gestureRecognizers?.forEach { view.removeGestureRecognizer($0) }
+        let touch = UILongPressGestureRecognizer(target: self, action: #selector(precisionArrowTouch(_:)))
+        touch.name = "precision-arrow"; touch.minimumPressDuration = 0
+        view.addGestureRecognizer(touch); view.isExclusiveTouch = true
+        item.accessibilityLabel = "Arrows"; view.accessibilityLabel = "Arrows"
+        view.accessibilityCustomActions = ["up", "down", "left", "right"].map { direction in
+            UIAccessibilityCustomAction(name: direction.capitalized) { [weak self] _ in
+                self?.sendArrow(direction: direction); return true
+            }
+        }
+        showArrowTip()
+    }
+
+    @objc private func precisionArrowTouch(_ sender: UILongPressGestureRecognizer) {
+        guard let view = sender.view else { return }
+        let point = sender.location(in: window)
+        if sender.state == .began {
+            precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
+            precisionArrowCount = 0; precisionArrowOrigin = point
+        } else if sender.state == .changed {
+            let delta = CGPoint(x: point.x - precisionArrowOrigin.x, y: point.y - precisionArrowOrigin.y)
+            if let direction = precisionArrowDirection {
+                let projection = direction == "right" ? delta.x : direction == "left" ? -delta.x : direction == "down" ? delta.y : -delta.y
+                if projection <= 4 {
+                    precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
+                    setArrowGlyph(nil, from: view)
+                }
+            }
+            let motion = toolbarMotion(delta)
+            if precisionArrowDirection == nil && motion.arrowReady {
+                let direction = motion.direction
+                precisionArrowDirection = direction; precisionArrowSince = Date(); precisionArrowLast = Date()
+                precisionArrowCount = 1; precisionArrowLevel = 0
+                sendArrow(direction: direction); setArrowGlyph(direction, from: view)
+                UISelectionFeedbackGenerator().selectionChanged()
+                showArrowHUD(direction: direction, count: 1, from: view)
+                let timer = Timer(timeInterval: 0.01, repeats: true) { [weak self, weak view] _ in
+                    guard let self, let view, let direction = self.precisionArrowDirection else { return }
+                    let elapsed = Date().timeIntervalSince(self.precisionArrowSince)
+                    let level = elapsed >= 2 ? 2 : elapsed >= 1 ? 1 : 0
+                    if level != self.precisionArrowLevel {
+                        self.precisionArrowLevel = level; UISelectionFeedbackGenerator().selectionChanged()
+                    }
+                    let horizontal = direction == "left" || direction == "right"
+                    let interval: TimeInterval = level == 2 ? 1 / 15 : level == 1 ? (horizontal ? 1 / 11.7 : 1 / 9.5) : (horizontal ? 0.12 : 0.25)
+                    guard elapsed >= 0.40, self.precisionArrowCount == 1 || Date().timeIntervalSince(self.precisionArrowLast) >= interval else { return }
+                    self.sendArrow(direction: direction); self.precisionArrowLast = Date(); self.precisionArrowCount += 1
+                    self.showArrowHUD(direction: direction, count: self.precisionArrowCount, from: view)
+                }
+                precisionArrowTimer = timer; RunLoop.main.add(timer, forMode: .common)
+            }
+        } else if sender.state == .ended || sender.state == .cancelled || sender.state == .failed {
+            precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
+            setArrowGlyph(nil, from: view)
+            if sender.state == .ended && precisionArrowCount == 0 {
+                showArrowHUD(direction: "up", count: nil, from: view); dismissArrowHUD(after: 1.4)
+            } else { dismissArrowHUD() }
+        }
+    }
+
+    @objc private func trackArrowHold(_ sender: UILongPressGestureRecognizer) {
+        if sender.state == .began, let view = sender.view { arrowHeldViews.insert(ObjectIdentifier(view)) }
+        if sender.state == .ended || sender.state == .cancelled || sender.state == .failed {
+            heldArrow = nil
+            setArrowGlyph(nil, from: sender.view)
+            dismissArrowHUD()
+        }
+    }
+
+    @objc private func flickArrow(_ sender: UIPanGestureRecognizer) {
+        guard let view = sender.view else { return }
+        let identity = ObjectIdentifier(view)
+        if sender.state == .cancelled || sender.state == .failed {
+            arrowTouches.removeValue(forKey: identity)
+            arrowHeldViews.remove(identity)
+            return
+        }
+        guard sender.state == .ended else { return }
+        defer { arrowTouches.removeValue(forKey: identity); arrowHeldViews.remove(identity) }
+        guard !arrowHeldViews.contains(identity), !continuousButtonTimer.isValid,
+              let touch = arrowTouches[identity], touch.touch.timestamp - touch.start < 0.15 else { return }
+        let delta = sender.translation(in: view)
+        let direction: String
+        if max(abs(delta.x), abs(delta.y)) < 12 { direction = "up" }
+        else if abs(delta.x) > abs(delta.y) { direction = delta.x > 0 ? "right" : "left" }
+        else { direction = delta.y > 0 ? "down" : "up" }
+        sendArrow(direction: direction)
+        flashArrowGlyph(direction, from: view)
+    }
+
+    private func attachArrowFlick(_ button: UIBarButtonItem, view: UIView, tap: UITapGestureRecognizer, hold: UILongPressGestureRecognizer) {
+        if title(button) == "up.down.left.right" {
+            let actions = ["up", "down", "left", "right"].map { direction in
+                UIAccessibilityCustomAction(name: direction.capitalized) { [weak self] _ in
+                    self?.sendArrow(direction: direction)
+                    return self != nil
+                }
+            }
+            button.accessibilityCustomActions = actions
+            view.accessibilityCustomActions = actions
+        }
+        tap.require(toFail: hold)
+        guard title(button) == "up.down.left.right" else { return }
+        hold.addTarget(self, action: #selector(trackArrowHold(_:)))
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(flickArrow(_:)))
+        pan.name = "arrow-flick"
+        pan.maximumNumberOfTouches = 1
+        pan.delegate = self
+        view.addGestureRecognizer(pan)
+        tap.require(toFail: pan)
+        showArrowTip()
+    }
+
+    private func showArrowTip() {
+        guard #available(iOS 17, *) else { return }
+        arrowTipTask?.cancel()
+        let taskID = UUID()
+        arrowTipTaskID = taskID
+        arrowTipTask = Task { @MainActor [weak self] in
+            defer {
+                if self?.arrowTipTaskID == taskID {
+                    self?.arrowTipTask = nil
+                    self?.arrowTipTaskID = nil
+                }
+            }
+            let tip = ArrowToolbarTip()
+            for await shouldDisplay in tip.shouldDisplayUpdates {
+                guard !Task.isCancelled, let self else { return }
+                if shouldDisplay, let root = self.window?.rootViewController,
+                   let view = (self.editorToolbar.items ?? []).first(where: { self.title($0) == "up.down.left.right" })?.toolbarView,
+                   view.window != nil, root.presentedViewController == nil {
+                    let controller = TipUIPopoverViewController(tip, sourceItem: view)
+                    root.present(controller, animated: true)
+                }
+            }
+        }
+    }
+
     func continuousButtonAction(_ button: UIBarButtonItem)  {
+        if title(button) == "up.down.left.right" {
+            heldArrow = button
+            arrowRepeatCount = 0
+            arrowRepeatDirection = heldArrowDirection
+            arrowRepeatOrigin = 0
+            arrowLastRepeat = Date()
+            let touchStart = (button.toolbarView).flatMap { arrowTouches[ObjectIdentifier($0)]?.start }
+            let elapsed = touchStart.map { ProcessInfo.processInfo.systemUptime - $0 } ?? 0.15
+            arrowFirstRepeat = Date().addingTimeInterval(max(0, 0.55 - elapsed))
+            arrowRepeatLevel = 0
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+            updateArrowRepeat()
+            return
+        }
         if (title(button) == "up") || (title(button) == "down") || (title(button) == "up.down")
             || (title(button) == "up.down.left.right" && abs(tapPosition.x) <= abs(tapPosition.y)){
             continuousButtonTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true, block: {_ in
@@ -1341,6 +2311,163 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.systemAction(button)
             })
         }
+    }
+
+    private var heldArrowDirection: String {
+        if abs(tapPosition.x) > abs(tapPosition.y) { return tapPosition.x > 0 ? "right" : "left" }
+        return tapPosition.y > 0 ? "down" : "up"
+    }
+
+    private func updateArrowRepeat() {
+        guard let button = heldArrow, let view = button.toolbarView else { return }
+        setArrowGlyph(heldArrowDirection, from: view)
+        let horizontal = abs(tapPosition.x) > abs(tapPosition.y)
+        let dimension = horizontal ? view.bounds.width : view.bounds.height
+        let distance = abs(horizontal ? tapPosition.x : tapPosition.y) * dimension
+        let radius = dimension / 2
+        if distance > 4, arrowRepeatDirection != heldArrowDirection {
+            arrowRepeatDirection = heldArrowDirection
+            arrowRepeatOrigin = max(0, distance - radius)
+            arrowRepeatCount = 1
+            arrowRepeatLevel = 0
+            arrowLastRepeat = Date()
+            continuousButtonTimer.invalidate()
+            systemAction(button)
+        }
+        let frame = view.convert(view.bounds, to: window)
+        let screen = window?.bounds ?? view.bounds
+        let room = max(0, (horizontal
+            ? (tapPosition.x < 0 ? frame.minX - screen.minX : screen.maxX - frame.maxX)
+            : (tapPosition.y < 0 ? frame.minY - screen.minY : screen.maxY - frame.maxY)) - arrowRepeatOrigin)
+        let dead = min(40, room / 3)
+        let ease = max(1, room - dead - 8)
+        let fraction = min(1, max(0, (distance - radius - arrowRepeatOrigin - dead) / ease))
+        let progress = fraction * fraction
+        let level = progress >= 0.81 ? 2 : (progress >= 0.25 ? 1 : 0)
+        if level != arrowRepeatLevel {
+            arrowRepeatLevel = level
+            UISelectionFeedbackGenerator().selectionChanged()
+        }
+        let base: TimeInterval = 1 / 3.5
+        let interval = level == 2 ? 1 / 15.0 : (level == 1 ? 1 / 7.0 : base)
+        showArrowHUD(direction: heldArrowDirection, count: arrowRepeatCount, from: view)
+        // A centred hold aims without emitting an accidental Up arrow.
+        guard distance > 4 else { continuousButtonTimer.invalidate(); return }
+        guard !continuousButtonTimer.isValid || abs(interval - arrowRepeatInterval) > 0.001 else { return }
+        arrowRepeatInterval = interval
+        continuousButtonTimer.invalidate()
+        let nextRepeat = arrowRepeatCount == 0 ? arrowFirstRepeat : arrowLastRepeat.addingTimeInterval(interval)
+        let fireDate = max(Date().addingTimeInterval(0.001), nextRepeat)
+        continuousButtonTimer = Timer(fire: fireDate, interval: interval, repeats: true) { [weak self] _ in
+            guard let self, let button = self.heldArrow else { return }
+            self.systemAction(button)
+            self.arrowLastRepeat = Date()
+            self.arrowRepeatCount += 1
+            if let view = button.toolbarView {
+                self.showArrowHUD(direction: self.heldArrowDirection, count: self.arrowRepeatCount, from: view)
+            }
+        }
+        RunLoop.main.add(continuousButtonTimer, forMode: .common)
+    }
+
+    private func showArrowHUD(direction: String, count: Int?, from anchor: UIView) {
+        guard let window else { return }
+        arrowHUDDismissal?.cancel()
+        let hud: UIView
+        let glass: UIVisualEffectView
+        let label: UILabel
+        if let existing = arrowHUD, let existingGlass = arrowHUDGlass, let existingLabel = arrowHUDLabel {
+            hud = existing
+            glass = existingGlass
+            label = existingLabel
+        } else {
+            hud = UIView()
+            glass = UIVisualEffectView()
+            if #available(iOS 26, *) { glass.cornerConfiguration = .capsule() }
+            else { glass.layer.cornerRadius = 18; glass.clipsToBounds = true }
+            hud.isUserInteractionEnabled = false
+            hud.accessibilityElementsHidden = true
+            label = UILabel()
+            label.font = .monospacedDigitSystemFont(ofSize: 15, weight: .medium)
+            label.textColor = .label
+            hud.addSubview(glass)
+            hud.addSubview(label)
+            arrowHUD = hud
+            arrowHUDGlass = glass
+            arrowHUDLabel = label
+        }
+        let glyph = ["up": "↑", "down": "↓", "left": "←", "right": "→"][direction] ?? "↑"
+        label.text = count.map { "\(glyph) ×\($0)" } ?? "Swipe to move · keep holding to repeat"
+        label.sizeToFit()
+        let size = CGSize(width: label.bounds.width + 24, height: 36)
+        let key = anchor.convert(anchor.bounds, to: window)
+        hud.transform = .identity
+        let anchorTop = editorToolbar.pinnedPanelTop(in: window) ?? key.minY
+        hud.frame = CGRect(x: min(window.bounds.width - size.width - 8, max(8, key.midX - size.width / 2)), y: max(window.safeAreaInsets.top, anchorTop - size.height - 8), width: size.width, height: size.height)
+        glass.frame = hud.bounds
+        label.frame = CGRect(x: 12, y: (size.height - label.bounds.height) / 2, width: label.bounds.width, height: label.bounds.height)
+        let effect: UIVisualEffect
+        if let current = glass.effect { effect = current }
+        else if #available(iOS 26, *) { effect = UIGlassEffect(style: .regular) }
+        else { effect = UIBlurEffect(style: .systemMaterial) }
+        if hud.superview == nil {
+            label.alpha = 0
+            if !UIAccessibility.isReduceMotionEnabled { hud.transform = CGAffineTransform(translationX: 0, y: 4) }
+            window.addSubview(hud)
+        }
+        UIView.animate(withDuration: 0.12, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction]) {
+            glass.effect = effect
+            label.alpha = 1
+            hud.transform = .identity
+        }
+    }
+
+    private func dismissArrowHUD(after delay: TimeInterval = 0.6) {
+        arrowHUDDismissal?.cancel()
+        let dismissal = DispatchWorkItem { [weak self] in
+            guard let self, let hud = self.arrowHUD, let glass = self.arrowHUDGlass, let label = self.arrowHUDLabel else { return }
+            UIView.animate(withDuration: 0.2, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction]) {
+                glass.effect = nil
+                label.alpha = 0
+                if !UIAccessibility.isReduceMotionEnabled { hud.transform = CGAffineTransform(translationX: 0, y: -4) }
+            } completion: { _ in
+                if glass.effect == nil { hud.removeFromSuperview() }
+            }
+        }
+        arrowHUDDismissal = dismissal
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: dismissal)
+    }
+
+    private var arrowGlyphReset: DispatchWorkItem?
+
+    private func setArrowGlyph(_ direction: String?, from view: UIView?) {
+        arrowGlyphReset?.cancel()
+        guard let button = (editorToolbar.items ?? []).first(where: { $0.toolbarView === view }) else { return }
+        let symbol = direction.map { "arrow." + $0 } ?? "arrow.up.and.down.and.arrow.left.and.right"
+        let configuration = UIDevice.current.userInterfaceIdiom == .phone ? PhoneKeyboardToolbar.symbolConfiguration : UIImage.SymbolConfiguration(pointSize: 22, weight: .regular)
+        guard let image = UIImage(systemName: symbol, withConfiguration: configuration) else { return }
+        button.image = image
+        if let key = view as? UIButton {
+            if #available(iOS 15, *), var configuration = key.configuration {
+                configuration.image = image
+                if #available(iOS 26, *) {
+                    configuration.symbolContentTransition = UIAccessibility.isReduceMotionEnabled ? nil : UISymbolContentTransition(.replace)
+                }
+                key.configuration = configuration
+            } else {
+                if #available(iOS 17, *), !UIAccessibility.isReduceMotionEnabled {
+                    key.imageView?.setSymbolImage(image, contentTransition: .replace)
+                }
+                key.setImage(image, for: .normal)
+            }
+        }
+    }
+
+    private func flashArrowGlyph(_ direction: String, from view: UIView?) {
+        setArrowGlyph(direction, from: view)
+        let reset = DispatchWorkItem { [weak self, weak view] in self?.setArrowGlyph(nil, from: view) }
+        arrowGlyphReset = reset
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28, execute: reset)
     }
     
     @objc func tapAction(_ sender: UITapGestureRecognizer) {
@@ -1355,7 +2482,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (sender.state == .ended) {
             if !useSystemToolbar {
                 for button in editorToolbar.items! {
-                    if let buttonView = button.value(forKey: "view") as? UIView {
+                    if let buttonView = button.toolbarView {
                         if (buttonView == sender.view) {
                             systemAction(button)
                             return
@@ -1366,7 +2493,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
                     for leftButtonGroup in leftButtonGroups {
                         for button in leftButtonGroup.barButtonItems {
-                            if let buttonView = button.value(forKey: "view") as? UIView {
+                            if let buttonView = button.toolbarView {
                                 if (buttonView == sender.view) {
                                     systemAction(button)
                                     return
@@ -1379,7 +2506,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let rightButtonGroups = self.terminalView?.inputAssistantItem.trailingBarButtonGroups {
                 for rightButtonGroup in rightButtonGroups {
                     for button in rightButtonGroup.barButtonItems {
-                        if let buttonView = button.value(forKey: "view") as? UIView {
+                        if let buttonView = button.toolbarView {
                             if (buttonView == sender.view) {
                                 systemAction(button)
                                 return
@@ -1394,7 +2521,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     @objc func longPressAction(_ sender: UILongPressGestureRecognizer) {
         // If up-down-left-right buttons are currently being pressed, activate multi-action arrows (instead of hide keyboard)
         
-        if (sender.state == .ended) {
+        if sender.state == .ended || sender.state == .cancelled || sender.state == .failed {
             continuousButtonTimer.invalidate()
             return
         }
@@ -1410,12 +2537,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 tapPosition.y -= 0.5
             }
         }
+        if sender.state == .changed, heldArrow != nil { updateArrowRepeat() }
         if (sender.state == .began) {
             // NSLog("sender of long press: \(sender)") // it's a button, now
             if !useSystemToolbar {
                 for button in editorToolbar.items! {
                     // long-press == repeat action only for arrows. For anything else, it's remove keyboard.
-                    if let buttonView = button.value(forKey: "view") as? UIView {
+                    if let buttonView = button.toolbarView {
                         if (buttonView == sender.view) {
                             continuousButtonAction(button)
                             return
@@ -1426,7 +2554,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
                     for leftButtonGroup in leftButtonGroups {
                         for button in leftButtonGroup.barButtonItems {
-                            if let buttonView = button.value(forKey: "view") as? UIView {
+                            if let buttonView = button.toolbarView {
                                 if (buttonView == sender.view) {
                                     continuousButtonAction(button)
                                     return
@@ -1438,7 +2566,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if let rightButtonGroups = self.terminalView?.inputAssistantItem.trailingBarButtonGroups {
                     for rightButtonGroup in rightButtonGroups {
                         for button in rightButtonGroup.barButtonItems {
-                            if let buttonView = button.value(forKey: "view") as? UIView {
+                            if let buttonView = button.toolbarView {
                                 if (buttonView == sender.view) {
                                     continuousButtonAction(button)
                                     return
@@ -1452,8 +2580,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (continuousButtonTimer.isValid) {
             return
         }
-        // Not on any arrow button, must be a hidekeyboard event:
-        hideKeyboard()
+        if sender.state == .began { hideKeyboard() }
     }
     
     public lazy var emptyToolbar: UIToolbar = {
@@ -1466,10 +2593,35 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     // cutButton and copyButton exist, but make less sense than paste.
     // the paste command is difficult to create with long press.
     // Possible additions: undo/redo buttons
-    public lazy var editorToolbar: UIToolbar = {
-        var toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: screenWidth - 20, height: toolbarHeight))
-        toolbar.tintColor = .label
-        toolbar.backgroundColor = terminalBackgroundColor
+    lazy var editorToolbar: PhoneKeyboardToolbar = {
+        let toolbar = PhoneKeyboardToolbar(frame: CGRect(x: 0, y: 0, width: screenWidth, height: toolbarHeight))
+        toolbar.tintColor = UIDevice.current.userInterfaceIdiom == .phone ? .systemBlue : .label
+        toolbar.backgroundColor = UIDevice.current.userInterfaceIdiom == .phone ? .clear : terminalBackgroundColor
+        toolbar.insertSymbol = { [weak self] value in
+            guard let self else { return }
+            let item = UIBarButtonItem(title: value, style: .plain, target: self, action: nil)
+            item.possibleTitles = ["", value]
+            self.insertString(item)
+            DispatchQueue.main.async {
+                self.releaseToolbarControl()
+            }
+        }
+        toolbar.outsideWindow = self.window
+        toolbar.symbolFontName = terminalFontName ?? factoryFontName
+        toolbar.pasteTarget = self.phonePasteTarget
+        toolbar.configureArrow = { [weak self] item, view in
+            let actions = ["up", "down", "left", "right"].map { direction in
+                UIAccessibilityCustomAction(name: direction.capitalized) { [weak self] _ in
+                    self?.sendArrow(direction: direction)
+                    return self != nil
+                }
+            }
+            item.accessibilityCustomActions = actions
+            view.accessibilityCustomActions = actions
+            if #available(iOS 26, *), UIDevice.current.userInterfaceIdiom == .phone, !UIAccessibility.isVoiceOverRunning {
+                self?.attachPrecisionArrow(item, view: view)
+            }
+        }
         if (leftButtonGroup.count == 0) {
             toolbar.items = rightButtonGroup
         } else {
@@ -1483,7 +2635,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     useLiquidGlass = !preference
                 }
             }
-            if useLiquidGlass {
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                // A single capsule has no middle spacer.
+            } else if useLiquidGlass {
                 NSLog("screen width: \(screenWidth) buttoncount: \(leftButtonGroup.count + rightButtonGroup.count) device: \(UIDevice.current.name) ")
                 // liquid glass makes the buttons larger, we can't have a middle space on small screens
                 // NSLog("leftButtonGroup: \(leftButtonGroup)")
@@ -1498,12 +2652,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 toolbar.items?.append(contentsOf: rightButtonGroup)
             }
         }
-        // Long press gesture recognizer for when the toolbar itself is pressed.
-        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
-        longPressGesture.minimumPressDuration = 1.0 // 1 second press
-        longPressGesture.allowableMovement = 15 // 30 points
-        longPressGesture.delegate = self
-        toolbar.addGestureRecognizer(longPressGesture)
         return toolbar
     }()
     
@@ -2372,7 +3520,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Force writing all config to term. Used when we changed many parameters.
             self.terminalView?.installColors(self.terminalTheme?.colors.dropFirst(3).map { UIColor(hexString: $0).toSwiftTermColor() } ?? SwiftTerm.Color.defaultInstalledColors)
             self.terminalView?.backgroundColor = backgroundColor
-            self.terminalView?.inputAccessoryView?.backgroundColor = self.terminalBackgroundColor
+            self.terminalView?.inputAccessoryView?.backgroundColor = UIDevice.current.userInterfaceIdiom == .phone ? .clear : self.terminalBackgroundColor
             self.window?.rootViewController?.view.backgroundColor = self.terminalBackgroundColor ?? .systemBackground
             self.terminalView?.nativeBackgroundColor = backgroundColor
             self.setEnvironmentFGBG(foregroundColor: foregroundColor, backgroundColor: backgroundColor)
@@ -2383,6 +3531,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             self.terminalView?.caretColor = cursorColor
             self.terminalView?.getTerminal().cursorColor = (cursorColor.toSwiftTermColor())
             self.terminalView?.selectedTextBackgroundColor = cursorColor.makeTransparent()
+            self.editorToolbar.symbolFontName = fontName
             if let terminalFont = TerminalFonts.font(named: fontName, size: CGFloat(fontSize)) ?? UIFont(name: factoryFontName, size: CGFloat(fontSize)) {
                 self.terminalView?.font = terminalFont
                 self.basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
@@ -2401,6 +3550,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 if (fontName != nil) && (fontName != self.terminalFontName) {
                     NSLog("configWindow, setting font: \(fontName)")
                     self.terminalFontName = fontName
+                    self.editorToolbar.symbolFontName = fontName!
                 }
                 if let terminalFont = UIFont(name: self.terminalFontName ?? factoryFontName, size: CGFloat(self.terminalFontSize ?? factoryFontSize)) {
                     NSLog("configWindow, setting terminalFont: \(terminalFont)")
@@ -2411,7 +3561,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let backgroundColor = backgroundColor {
                 self.terminalBackgroundColor = backgroundColor
                 self.terminalView?.backgroundColor = backgroundColor
-                self.terminalView?.inputAccessoryView?.backgroundColor = backgroundColor
+                self.terminalView?.inputAccessoryView?.backgroundColor = UIDevice.current.userInterfaceIdiom == .phone ? .clear : backgroundColor
                 self.window?.rootViewController?.view.backgroundColor = backgroundColor
                 self.terminalView?.nativeBackgroundColor = backgroundColor
                 // We need to act on the getTerminal() colors as well, otherwise the default color is not very visible.
@@ -2481,6 +3631,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             complete()
         }
     }
+
 
     func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
         if presentationController.presentedViewController === fontPicker {
@@ -3801,11 +4952,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // NSLog("Scene, willConnectTo session: \(connectionOptions)")
         NSLog("Scene, willConnectTo session.role: \(session.role)")
         if let windowScene = scene as? UIWindowScene {
+            NotificationCenter.default.addObserver(self, selector: #selector(registerPhoneToolbarService(_:)), name: .init("phoneToolbarRegisterRemoteAccess"), object: self)
             self.windowScene = windowScene
             let window = UIWindow(windowScene: windowScene)
             contentView = ContentView()
             // if session.role == .windowApplication {
-            window.rootViewController = UIHostingController(rootView: contentView)
+            window.rootViewController = TerminalHostingController(rootView: contentView!)
             window.autoresizesSubviews = true
             self.window = window
             window.makeKeyAndVisible()
@@ -3826,6 +4978,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
             }
             terminalView?.terminalDelegate = self
+            NotificationCenter.default.post(name: .init("phoneToolbarRequestsRemoteAccess"), object: self)
+            observeHardwareKeyboard()
             terminalView?.optionAsMetaKey = false
             /*  tell SwiftTerm to use Metal rendering:
              currently breaks the SwiftUI window dimensions on iPadOS, so deactivated
@@ -3845,7 +4999,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             // printPrompt here doesn't work yet.
-            if (!toolbarShouldBeShown) {
+            if (!toolbarShouldBeShown || (hardwareKeyboardConnected && !hardwareToolbarOverride)) {
+                showToolbar = false
                 self.terminalView!.inputAccessoryView = self.emptyToolbar
                 self.webView?.addInputAccessoryView(toolbar: self.emptyToolbar)
             } else {
@@ -3860,7 +5015,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     self.terminalView!.inputAccessoryView = self.editorToolbar
                     self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
                 }
-                if #available(iOS 17, *) {
+                if #available(iOS 17, *), !(leftButtonGroup + rightButtonGroup).contains(where: { title($0) == "up.down.left.right" }) {
                     // Do not show the toolbar tip if the app has been started from a Shortcut:
                     if (!startedFromShortcut) {
                         // Do *not* show the toolbar tip if the user has already edited the toolbar
@@ -3885,7 +5040,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                 } else {
                                                     if let centerButton = terminalView?.inputAssistantItem.leadingBarButtonGroups.first?.barButtonItems.last {
                                                         NSLog("centerButton: \(centerButton)")
-                                                        if let buttonView = centerButton.value(forKey: "view") as? UIView {
+                                                        if let buttonView = centerButton.toolbarView {
                                                             let controller = TipUIPopoverViewController(myToolbarTip, sourceItem: buttonView)
                                                             controller.popoverPresentationController?.canOverlapSourceViewRect = true
                                                             let rootVC = self.window?.rootViewController
@@ -4323,6 +5478,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     func sceneDidDisconnect(_ scene: UIScene) {
+        NotificationCenter.default.removeObserver(self, name: .init("phoneToolbarRegisterRemoteAccess"), object: self)
+        editorToolbar.closeSymbols()
+        arrowTipTask?.cancel()
+        arrowTipTask = nil
+        arrowTipTaskID = nil
+        NotificationCenter.default.removeObserver(self, name: .GCKeyboardDidConnect, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .GCKeyboardDidDisconnect, object: nil)
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
         // Release any resources associated with this scene that can be re-created the next time the scene connects.
@@ -4432,17 +5594,30 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // TODO: maybe not repeat, but redo after each keyboard change?
         if (!useSystemToolbar) {
             for button in editorToolbar.items! {
+                if #available(iOS 26, *), UIDevice.current.userInterfaceIdiom == .phone,
+                   !UIAccessibility.isVoiceOverRunning, title(button) == "up.down.left.right", let view = button.toolbarView {
+                    attachPrecisionArrow(button, view: view); returnValue = true; continue
+                }
                 if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right")
                     || title(button) == "up.down" || title(button) == "left.right" || title(button) == "up.down.left.right" {
-                    if let buttonView = button.value(forKey: "view") as? UIView {
+                    if let buttonView = button.toolbarView {
+                        if buttonView.gestureRecognizers?.contains(where: { $0.name == "arrow-hold" }) == true { returnValue = true; continue }
+                        if let key = buttonView as? UIButton {
+                            key.removeTarget(nil, action: nil, for: .touchUpInside)
+                            key.enumerateEventHandlers { action, _, event, _ in
+                                if let action { key.removeAction(action, for: event) }
+                            }
+                        }
                         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapAction(_:)))
                         tapGesture.delegate = self
                         buttonView.addGestureRecognizer(tapGesture)
                         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(self.longPressAction(_:)))
+                        longPressGesture.name = "arrow-hold"
                         longPressGesture.minimumPressDuration = 0.15 // 0.05 is too low, 0.1 also not enough to separate long press from tap, 0.2 might be too much
                         longPressGesture.allowableMovement = 30 // 30 points
                         longPressGesture.delegate = self
                         buttonView.addGestureRecognizer(longPressGesture)
+                        attachArrowFlick(button, view: buttonView, tap: tapGesture, hold: longPressGesture)
                         returnValue = true
                     }
                 }
@@ -4454,15 +5629,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     for button in leftButtonGroup.barButtonItems {
                         if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right")
                             || title(button) == "up.down" || title(button) == "left.right" || title(button) == "up.down.left.right" {
-                            if let buttonView = button.value(forKey: "view") as? UIView {
+                            if let buttonView = button.toolbarView {
+                                if buttonView.gestureRecognizers?.contains(where: { $0.name == "arrow-hold" }) == true { returnValue = true; continue }
+                                if let key = buttonView as? UIButton {
+                                    key.removeTarget(nil, action: nil, for: .touchUpInside)
+                                    key.enumerateEventHandlers { action, _, event, _ in
+                                        if let action { key.removeAction(action, for: event) }
+                                    }
+                                }
                                 let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapAction(_:)))
                                 tapGesture.delegate = self
                                 buttonView.addGestureRecognizer(tapGesture)
                                 let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(self.longPressAction(_:)))
+                                longPressGesture.name = "arrow-hold"
                                 longPressGesture.minimumPressDuration = 0.15 // 0.1 seconds press
                                 longPressGesture.allowableMovement = 30 // 30 points
                                 longPressGesture.delegate = self
                                 buttonView.addGestureRecognizer(longPressGesture)
+                                attachArrowFlick(button, view: buttonView, tap: tapGesture, hold: longPressGesture)
                                 returnValue = true
                             }
                         }
@@ -4474,7 +5658,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     for button in rightButtonGroup.barButtonItems {
                         if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right")
                             || title(button) == "up.down" || title(button) == "left.right" || title(button) == "up.down.left.right" {
-                            if let buttonView = button.value(forKey: "view") as? UIView {
+                            if let buttonView = button.toolbarView {
+                                if buttonView.gestureRecognizers?.contains(where: { $0.name == "arrow-hold" }) == true { returnValue = true; continue }
+                                if let key = buttonView as? UIButton {
+                                    key.removeTarget(nil, action: nil, for: .touchUpInside)
+                                    key.enumerateEventHandlers { action, _, event, _ in
+                                        if let action { key.removeAction(action, for: event) }
+                                    }
+                                }
                                 if (!returnValue) {
                                     NSLog("activating long press for \(title(button)). view= \(buttonView)")
                                 }
@@ -4482,10 +5673,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                 tapGesture.delegate = self
                                 buttonView.addGestureRecognizer(tapGesture)
                                 let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(self.longPressAction(_:)))
+                                longPressGesture.name = "arrow-hold"
                                 longPressGesture.minimumPressDuration = 0.15 // 0.15 seconds press
                                 longPressGesture.allowableMovement = 30 // 30 points
                                 longPressGesture.delegate = self
                                 buttonView.addGestureRecognizer(longPressGesture)
+                                attachArrowFlick(button, view: buttonView, tap: tapGesture, hold: longPressGesture)
                                 returnValue = true
                             }
                         }
@@ -4535,7 +5728,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             terminalView?.tintColor = foregroundColor
             terminalView?.caretColor = cursorColor
             terminalView?.backgroundColor = backgroundColor
-            terminalView?.inputAccessoryView?.backgroundColor = terminalBackgroundColor
+            terminalView?.inputAccessoryView?.backgroundColor = UIDevice.current.userInterfaceIdiom == .phone ? .clear : terminalBackgroundColor
             window?.rootViewController?.view.backgroundColor = terminalBackgroundColor ?? .systemBackground
             terminalView?.selectedTextBackgroundColor = cursorColor.makeTransparent()
             self.terminalView?.nativeForegroundColor = foregroundColor
@@ -4603,7 +5796,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (userActivity?.activityType == "AsheKube.app.a-Shell.OpenDirectory") { return }
         // Otherwise, go for it:
         NSLog("sceneWillEnterForeground: \(self.persistentIdentifier). userActivity: \(userActivity)")
-        if (!toolbarShouldBeShown) {
+        if (!toolbarShouldBeShown || (hardwareKeyboardConnected && !hardwareToolbarOverride)) {
+            showToolbar = false
             self.terminalView!.inputAccessoryView = self.emptyToolbar
             self.webView!.addInputAccessoryView(toolbar: self.emptyToolbar)
         } else {
@@ -4618,7 +5812,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.terminalView!.inputAccessoryView = self.editorToolbar
                 self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             }
-            if #available(iOS 17, *) {
+            if #available(iOS 17, *), !(leftButtonGroup + rightButtonGroup).contains(where: { title($0) == "up.down.left.right" }) {
                 NSLog("myToolbarTip status: \(myToolbarTip.status)")
                 if (myToolbarTip.shouldDisplay) {
                     if (self.terminalView != nil) {
@@ -4649,6 +5843,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
     
     func sceneDidEnterBackground(_ scene: UIScene) {
+        editorToolbar.closeSymbols()
+        precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
