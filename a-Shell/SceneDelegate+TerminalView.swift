@@ -1776,7 +1776,13 @@ extension SceneDelegate {
         if let fixedup = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
             if let url = NSURLComponents(string: fixedup) {
                 if let nested = url.url {
-                    UIApplication.shared.open (nested)
+                    if let browserEnvVar = ios_getenv("BROWSER") {
+                        let browser = (String(utf8String: browserEnvVar) ?? "safari").lowercased()
+                        NSLog("nested: \(nested) string: \(nested.absoluteString)")
+                        openurl_internal(browser: browser, url: nested)
+                    } else {
+                        UIApplication.shared.open (nested)
+                    }
                 }
             }
         }
