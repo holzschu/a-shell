@@ -28,8 +28,8 @@ struct UIDevice {
 
 @main struct ErrorTest {
     @MainActor static func main() async {
-        guard Foundation.Bundle.main.bundleURL.pathExtension == "appex" else {
-            fputs("FAIL fixture is not an extension bundle\n", stderr)
+        guard ["appex", "app"].contains(Foundation.Bundle.main.bundleURL.pathExtension) else {
+            fputs("FAIL fixture is not an extension or app bundle\n", stderr)
             exit(1)
         }
         let failure = ProcessInfo.processInfo.environment["LONG_COMMANDS_FAILURE"]!
@@ -44,14 +44,14 @@ struct UIDevice {
             }
             let root = ProcessInfo.processInfo.environment["LONG_COMMANDS_RESOURCES"]!
             guard result.value == "APPDIR=\(root)\nAPPNAME=a-Shell-mini\n" else {
-                fputs("FAIL iOS host environment: \(result.value)\n", stderr)
+                fputs("FAIL host environment: \(result.value)\n", stderr)
                 exit(1)
             }
-            print("PASS iOS host environment")
+            print("PASS host environment")
         } catch {
             let expected: String
             switch failure {
-            case "host": expected = "Could not locate the a-Shell app bundle."
+            case "host", "detached": expected = "Could not locate the a-Shell app bundle containing \(Foundation.Bundle.main.bundleURL.path)."
             case "group": expected = "The Shortcuts shared directory is unavailable."
             default:
                 fputs("FAIL iOS intent: \(error.localizedDescription)\n", stderr)
