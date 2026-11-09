@@ -37,3 +37,10 @@ struct toolbarTip: Tip {
 
     var options: [TipOption] = [MaxDisplayCount(1)]
 }
+
+@available(iOS 17.0, *)
+struct ArrowToolbarTip: Tip {
+    // The whole hint lives in the title.
+    var title: Text { Text("Arrows: flick to move once, keep holding to repeat") }
+    var options: [TipOption] = [MaxDisplayCount(1)]
+}
