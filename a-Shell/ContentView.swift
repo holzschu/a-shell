@@ -958,6 +958,8 @@ private final class TerminalKeyboardViewport: UIView {
 }
 
 final class TerminalContainerView: UIView {
+    private weak var terminal: TerminalView?
+    private var keyboardBottomConstraint: NSLayoutConstraint?
     private var notificationBottomConstraint: NSLayoutConstraint?
     private var keyboardViewport: TerminalKeyboardViewport?
     private var keyboardSnapshot: UIView?
@@ -966,6 +968,7 @@ final class TerminalContainerView: UIView {
     private var keyboardObservers: [NSObjectProtocol] = []
 
     init(terminal: TerminalView) {
+        self.terminal = terminal
         super.init(frame: .zero)
         if #available(iOS 26, *), UIDevice.current.userInterfaceIdiom == .phone {
             let viewport = TerminalKeyboardViewport()
@@ -1037,7 +1040,9 @@ final class TerminalContainerView: UIView {
             ])
             if #available(iOS 15.0, *) {
                 keyboardLayoutGuide.followsUndockedKeyboard = UIDevice.current.userInterfaceIdiom == .pad
-                terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor).isActive = true
+                let bottom = terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor)
+                bottom.isActive = true
+                keyboardBottomConstraint = bottom
             } else {
                 let bottom = terminal.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
                 bottom.isActive = true
@@ -1064,6 +1069,19 @@ final class TerminalContainerView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        if #available(iOS 15.0, *), let bottom = keyboardBottomConstraint {
+            var correction: CGFloat = 0
+            if PhoneKeyboardToolbar.isCustom, let terminal, terminal.isFirstResponder,
+               let accessory = terminal.inputAccessoryView as? PhoneKeyboardToolbar, accessory.window != nil {
+                // Keep the terminal above the accessory.
+                let visibleBottom = convert(accessory.bounds, from: accessory).minY
+                correction = visibleBottom - keyboardLayoutGuide.layoutFrame.minY
+            }
+            if abs(bottom.constant - correction) > 0.5 {
+                bottom.constant = correction
+                setNeedsLayout()
+            }
+        }
         updateKeyboardInset()
     }
 
@@ -1193,6 +1211,22 @@ public var showKeyboardAtStartup = true
 // automatic detection causes blank screen when switching back-forth
 // Make this a user-defined setup, with "ignoreSafeArea" the default.
 public var viewBehavior: ViewBehavior = .ignoreSafeArea
+final class TerminalHostingController: UIHostingController<ContentView> {
+    override var keyCommands: [UIKeyCommand]? {
+        guard PhoneKeyboardToolbar.isCustom else { return super.keyCommands }
+        let toolbar = UIKeyCommand(input: "t", modifierFlags: [.alternate, .command], action: #selector(toggleToolbar), discoverabilityTitle: (view.window?.windowScene?.delegate as? SceneDelegate)?.showToolbar ?? true ? "Hide Key Toolbar" : "Show Key Toolbar")
+        if #available(iOS 15, *) {
+            toolbar.wantsPriorityOverSystemBehavior = true
+        }
+        return [toolbar] + (super.keyCommands ?? [])
+    }
+
+    @objc private func toggleToolbar(_ sender: UIKeyCommand) {
+        (view.window?.windowScene?.delegate as? SceneDelegate)?.toggleKeyToolbar()
+    }
+
+}
+
 public var latestNotification: String = ""
 public var extendBy: CGFloat = 0
 public var showWebView = false
