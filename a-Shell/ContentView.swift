@@ -948,7 +948,6 @@ final class TerminalContainerView: UIView {
     private var keyboardObservers: [NSObjectProtocol] = []
 
     init(terminal: TerminalView) {
-        self.terminal = terminal
         super.init(frame: .zero)
         terminal.translatesAutoresizingMaskIntoConstraints = false
         addSubview(terminal)
@@ -1088,7 +1087,6 @@ struct Webview : UIViewRepresentable {
 }
 
 public var toolbarShouldBeShown = true
-public var showToolbar = true
 public var useSystemToolbar = UIDevice.current.model.hasPrefix("iPad")
 public var isiPad = UIDevice.current.model.hasPrefix("iPad")
 public var showKeyboardAtStartup = true
@@ -1096,27 +1094,6 @@ public var showKeyboardAtStartup = true
 // automatic detection causes blank screen when switching back-forth
 // Make this a user-defined setup, with "ignoreSafeArea" the default.
 public var viewBehavior: ViewBehavior = .ignoreSafeArea
-final class TerminalHostingController: UIHostingController<ContentView> {
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-        guard let scene = view.window?.windowScene?.delegate as? SceneDelegate else { return }
-        scene.editorToolbar.prepareForRotation(to: size, with: coordinator)
-    }
-
-    override var keyCommands: [UIKeyCommand]? {
-        let toolbar = UIKeyCommand(input: "t", modifierFlags: [.alternate, .command], action: #selector(toggleToolbar), discoverabilityTitle: showToolbar ? "Hide Key Toolbar" : "Show Key Toolbar")
-        if #available(iOS 15, *) {
-            toolbar.wantsPriorityOverSystemBehavior = true
-        }
-        return [toolbar] + (super.keyCommands ?? [])
-    }
-
-    @objc private func toggleToolbar(_ sender: UIKeyCommand) {
-        (view.window?.windowScene?.delegate as? SceneDelegate)?.toggleKeyToolbar()
-    }
-
-}
-
 public var latestNotification: String = ""
 public var extendBy: CGFloat = 0
 public var showWebView = false
