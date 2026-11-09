@@ -942,117 +942,34 @@ struct Termview : UIViewRepresentable {
 }
 
 
-private final class TerminalKeyboardViewport: UIView {
-    weak var terminal: TerminalView?
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        guard let terminal, bounds.width > 0, bounds.height > 0, terminal.bounds.size != bounds.size else { return }
-        terminal.layer.removeAllAnimations()
-        UIView.performWithoutAnimation {
-            terminal.transform = .identity
-            terminal.frame = bounds
-            terminal.layoutIfNeeded()
-        }
-    }
-}
-
 final class TerminalContainerView: UIView {
-    private weak var terminal: TerminalView?
-    private var keyboardBottomConstraint: NSLayoutConstraint?
-    private var notificationBottomConstraint: NSLayoutConstraint?
-    private var keyboardViewport: TerminalKeyboardViewport?
-    private var keyboardSnapshot: UIView?
+    private var legacyBottomConstraint: NSLayoutConstraint?
     private var keyboardFrame = CGRect.zero
-    private var keyboardNotificationWidth: CGFloat?
     private var keyboardObservers: [NSObjectProtocol] = []
 
     init(terminal: TerminalView) {
-        self.terminal = terminal
         super.init(frame: .zero)
-        if #available(iOS 26, *), UIDevice.current.userInterfaceIdiom == .phone {
-            let viewport = TerminalKeyboardViewport()
-            viewport.translatesAutoresizingMaskIntoConstraints = false
-            viewport.clipsToBounds = true
-            addSubview(viewport)
-            NSLayoutConstraint.activate([
-                viewport.topAnchor.constraint(equalTo: topAnchor),
-                viewport.leadingAnchor.constraint(equalTo: leadingAnchor),
-                viewport.trailingAnchor.constraint(equalTo: trailingAnchor)
-            ])
-            viewport.addSubview(terminal)
-            viewport.terminal = terminal
-            terminal.contentMode = .topLeft
-            keyboardViewport = viewport
-            let bottom = viewport.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
-            bottom.isActive = true
-            notificationBottomConstraint = bottom
-            keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] note in
-                guard let self, let viewport = self.keyboardViewport, let terminal = viewport.terminal else { return }
-                let initialWidth = viewport.bounds.width
-                defer { self.keyboardNotificationWidth = initialWidth }
-                let presentationOffset = terminal.layer.presentation()?.affineTransform().ty ?? 0
-                self.layoutIfNeeded()
-                let previousInset = self.notificationBottomConstraint?.constant
-                self.keyboardFrame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
-                self.updateKeyboardInset()
-                guard self.notificationBottomConstraint?.constant != previousInset else { return }
-                let initialTopRow = terminal.getTerminal().getTopVisibleRow()
-                let cellHeight = terminal.getOptimalFrameSize().height / CGFloat(max(1, terminal.getTerminal().rows))
-                // The snapshot fills rows the resized terminal no longer covers; glyphs stay unscaled.
-                let snapshot = self.snapshotView(afterScreenUpdates: false)
-                snapshot?.frame = self.bounds
-                snapshot?.isUserInteractionEnabled = false
-                self.keyboardSnapshot?.removeFromSuperview()
-                if let snapshot { viewport.insertSubview(snapshot, belowSubview: terminal) }
-                self.keyboardSnapshot = snapshot
-                let duration = note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0
-                let curve = note.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt ?? 0
-                UIView.animate(withDuration: duration, delay: 0, options: [UIView.AnimationOptions(rawValue: curve << 16), .beginFromCurrentState, .allowUserInteraction]) {
-                    self.layoutIfNeeded()
-                    guard viewport.bounds.width == initialWidth else {
-                        snapshot?.removeFromSuperview()
-                        if self.keyboardSnapshot === snapshot { self.keyboardSnapshot = nil }
-                        return
-                    }
-                    let rowOffset = -CGFloat(terminal.getTerminal().getTopVisibleRow() - initialTopRow) * cellHeight - presentationOffset
-                    UIView.performWithoutAnimation {
-                        terminal.transform = CGAffineTransform(translationX: 0, y: -rowOffset)
-                    }
-                    UIView.animate(withDuration: duration, delay: 0, options: [UIView.AnimationOptions(rawValue: curve << 16), .allowUserInteraction]) {
-                        terminal.transform = .identity
-                    }
-                    snapshot?.transform = CGAffineTransform(translationX: 0, y: rowOffset)
-                } completion: { [weak self, weak snapshot] _ in
-                    snapshot?.removeFromSuperview()
-                    if self?.keyboardSnapshot === snapshot { self?.keyboardSnapshot = nil }
-                }
-            })
+        terminal.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(terminal)
+        NSLayoutConstraint.activate([
+            terminal.topAnchor.constraint(equalTo: topAnchor),
+            terminal.leadingAnchor.constraint(equalTo: leadingAnchor),
+            terminal.trailingAnchor.constraint(equalTo: trailingAnchor)
+        ])
+        if #available(iOS 15.0, *) {
+            keyboardLayoutGuide.followsUndockedKeyboard = UIDevice.current.userInterfaceIdiom == .pad
+            terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor).isActive = true
         } else {
-            terminal.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(terminal)
-            NSLayoutConstraint.activate([
-                terminal.topAnchor.constraint(equalTo: topAnchor),
-                terminal.leadingAnchor.constraint(equalTo: leadingAnchor),
-                terminal.trailingAnchor.constraint(equalTo: trailingAnchor)
-            ])
-            if #available(iOS 15.0, *) {
-                keyboardLayoutGuide.followsUndockedKeyboard = UIDevice.current.userInterfaceIdiom == .pad
-                let bottom = terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor)
-                bottom.isActive = true
-                keyboardBottomConstraint = bottom
-            } else {
-                let bottom = terminal.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
-                bottom.isActive = true
-                notificationBottomConstraint = bottom
-                for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
-                    keyboardObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
-                        guard let self = self else { return }
-                        self.keyboardFrame = note.name == UIResponder.keyboardWillHideNotification ? .zero :
-                            (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero)
-                        self.updateKeyboardInset()
-                    })
-                }
+            let bottom = terminal.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
+            bottom.isActive = true
+            legacyBottomConstraint = bottom
+            for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
+                keyboardObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                    guard let self = self else { return }
+                    self.keyboardFrame = note.name == UIResponder.keyboardWillHideNotification ? .zero :
+                        (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero)
+                    self.updateLegacyKeyboardInset()
+                })
             }
         }
     }
@@ -1067,46 +984,16 @@ final class TerminalContainerView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        if #available(iOS 15.0, *), let bottom = keyboardBottomConstraint {
-            var correction: CGFloat = 0
-            if UIDevice.current.userInterfaceIdiom == .phone, let terminal, terminal.isFirstResponder,
-               let accessory = terminal.inputAccessoryView as? PhoneKeyboardToolbar, accessory.window != nil {
-                // Keep the terminal above the accessory.
-                let visibleBottom = convert(accessory.bounds, from: accessory).minY
-                correction = visibleBottom - keyboardLayoutGuide.layoutFrame.minY
-            }
-            if abs(bottom.constant - correction) > 0.5 {
-                bottom.constant = correction
-                setNeedsLayout()
-            }
-        }
-        updateKeyboardInset()
+        updateLegacyKeyboardInset()
     }
 
-    private func updateKeyboardInset() {
-        guard let bottom = notificationBottomConstraint, let window = window else { return }
+    private func updateLegacyKeyboardInset() {
+        guard let bottom = legacyBottomConstraint, let window = window else { return }
         let windowFrame = window.convert(keyboardFrame, from: nil as UIWindow?)
         let intersection = bounds.intersection(convert(windowFrame, from: window))
-        var visibleBottom = intersection.minY
-        if #available(iOS 26, *), let accessory = keyboardViewport?.terminal?.inputAccessoryView,
-           let previousWidth = keyboardNotificationWidth, keyboardViewport?.bounds.width != previousWidth,
-           keyboardFrame.height <= accessory.bounds.height {
-            // A concurrent keyboard show and rotation can report only the accessory; the guide tracks the software keyboard.
-            let guideIntersection = bounds.intersection(keyboardLayoutGuide.layoutFrame)
-            if !guideIntersection.isNull, !guideIntersection.isEmpty {
-                visibleBottom = min(visibleBottom, guideIntersection.minY)
-            }
-        }
-        if !intersection.isNull, !intersection.isEmpty, let terminal, terminal.isFirstResponder,
-           let accessory = terminal.inputAccessoryView as? PhoneKeyboardToolbar, accessory.window === window,
-           !accessory.isHidden, accessory.bounds.height > 0 {
-            // On iOS 26 iPhone, the app-window accessory is excluded from the notification's keyboard frame.
-            visibleBottom -= accessory.bounds.height
-        }
-        let inset = intersection.isNull || intersection.isEmpty ? 0 : max(0, bounds.maxY - visibleBottom - safeAreaInsets.bottom)
-        let panelInset = inset > 0 ? (terminal?.inputAccessoryView as? PhoneKeyboardToolbar)?.pinnedPanelHeight ?? 0 : 0
-        if bottom.constant != -(inset + panelInset) {
-            bottom.constant = -(inset + panelInset)
+        let inset = intersection.isNull || intersection.isEmpty ? 0 : max(0, bounds.maxY - intersection.minY - safeAreaInsets.bottom)
+        if bottom.constant != -inset {
+            bottom.constant = -inset
             setNeedsLayout()
         }
     }
@@ -1200,7 +1087,6 @@ struct Webview : UIViewRepresentable {
 }
 
 public var toolbarShouldBeShown = true
-public var showToolbar = true
 public var useSystemToolbar = UIDevice.current.model.hasPrefix("iPad")
 public var isiPad = UIDevice.current.model.hasPrefix("iPad")
 public var showKeyboardAtStartup = true
@@ -1208,27 +1094,6 @@ public var showKeyboardAtStartup = true
 // automatic detection causes blank screen when switching back-forth
 // Make this a user-defined setup, with "ignoreSafeArea" the default.
 public var viewBehavior: ViewBehavior = .ignoreSafeArea
-final class TerminalHostingController: UIHostingController<ContentView> {
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-        guard let scene = view.window?.windowScene?.delegate as? SceneDelegate else { return }
-        scene.editorToolbar.prepareForRotation(to: size, with: coordinator)
-    }
-
-    override var keyCommands: [UIKeyCommand]? {
-        let toolbar = UIKeyCommand(input: "t", modifierFlags: [.alternate, .command], action: #selector(toggleToolbar), discoverabilityTitle: showToolbar ? "Hide Key Toolbar" : "Show Key Toolbar")
-        if #available(iOS 15, *) {
-            toolbar.wantsPriorityOverSystemBehavior = true
-        }
-        return [toolbar] + (super.keyCommands ?? [])
-    }
-
-    @objc private func toggleToolbar(_ sender: UIKeyCommand) {
-        (view.window?.windowScene?.delegate as? SceneDelegate)?.toggleKeyToolbar()
-    }
-
-}
-
 public var latestNotification: String = ""
 public var extendBy: CGFloat = 0
 public var showWebView = false
