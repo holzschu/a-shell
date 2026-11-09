@@ -1023,6 +1023,8 @@ final class TerminalContainerView: UIView {
                 } completion: { [weak self, weak snapshot] _ in
                     snapshot?.removeFromSuperview()
                     if self?.keyboardSnapshot === snapshot { self?.keyboardSnapshot = nil }
+                    // The accessory reaches its final frame only once the keyboard has settled.
+                    self?.updateKeyboardInset()
                 }
             })
         } else {
@@ -1077,6 +1079,15 @@ final class TerminalContainerView: UIView {
             let guideIntersection = bounds.intersection(keyboardLayoutGuide.layoutFrame)
             if !guideIntersection.isNull, !guideIntersection.isEmpty {
                 visibleBottom = min(visibleBottom, guideIntersection.minY)
+            }
+        }
+        if !intersection.isNull, !intersection.isEmpty, let terminal = keyboardViewport?.terminal, terminal.isFirstResponder,
+           let accessory = terminal.inputAccessoryView, accessory.window != nil,
+           !accessory.isHidden, accessory.bounds.height > 0 {
+            // The keyboard frame excludes the accessory in some setups and includes it in others: subtract its height only when it sits above the frame.
+            let accessoryBottom = convert(accessory.convert(accessory.bounds, to: window), from: window).maxY
+            if accessoryBottom <= intersection.minY + 1 {
+                visibleBottom -= accessory.bounds.height
             }
         }
         let inset = intersection.isNull || intersection.isEmpty ? 0 : max(0, bounds.maxY - visibleBottom - safeAreaInsets.bottom)
