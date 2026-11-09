@@ -1109,8 +1109,9 @@ final class TerminalContainerView: UIView {
             }
         }
         let inset = intersection.isNull || intersection.isEmpty ? 0 : max(0, bounds.maxY - visibleBottom - safeAreaInsets.bottom)
-        if bottom.constant != -inset {
-            bottom.constant = -inset
+        let panelInset = inset > 0 ? (terminal?.inputAccessoryView as? PhoneKeyboardToolbar)?.pinnedPanelHeight ?? 0 : 0
+        if bottom.constant != -(inset + panelInset) {
+            bottom.constant = -(inset + panelInset)
             setNeedsLayout()
         }
     }
@@ -1212,6 +1213,12 @@ public var showKeyboardAtStartup = true
 // Make this a user-defined setup, with "ignoreSafeArea" the default.
 public var viewBehavior: ViewBehavior = .ignoreSafeArea
 final class TerminalHostingController: UIHostingController<ContentView> {
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        guard PhoneKeyboardToolbar.isCustom, let scene = view.window?.windowScene?.delegate as? SceneDelegate else { return }
+        scene.editorToolbar.prepareForRotation(to: size, with: coordinator)
+    }
+
     override var keyCommands: [UIKeyCommand]? {
         guard PhoneKeyboardToolbar.isCustom else { return super.keyCommands }
         let toolbar = UIKeyCommand(input: "t", modifierFlags: [.alternate, .command], action: #selector(toggleToolbar), discoverabilityTitle: (view.window?.windowScene?.delegate as? SceneDelegate)?.showToolbar ?? true ? "Hide Key Toolbar" : "Show Key Toolbar")
