@@ -669,7 +669,6 @@ extension SceneDelegate {
     }
 
     func send(source: SwiftTerm.TerminalView, inputString: String) {
-        if inputString.contains("\r") || inputString.contains("\n") { editorToolbar.closeSymbols() }
         var string = inputString
         // print("string: \(string)")
         // TODO: move this above, don't do data -> String -> data!
@@ -1494,7 +1493,6 @@ extension SceneDelegate {
     }
     
     func send(source: SwiftTerm.TerminalView, data: ArraySlice<UInt8>) {
-        if data.contains(13) || data.contains(10) { editorToolbar.closeSymbols() }
         // This is where I treat the incoming keypress
         if (currentCommand != "") && (commandBeforeCursor == "") && (commandAfterCursor == "") {
             // Sets the position of the end of the prompt for commands inside commands:
