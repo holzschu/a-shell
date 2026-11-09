@@ -1,0 +1,147 @@
+--- a/helix-event/src/redraw.rs
++++ b/helix-event/src/redraw.rs
+@@ -52,11 +52,26 @@
+     RENDER_LOCK.read()
+ }
+ 
+-/// A zero sized type that requests a redraw via [request_redraw] when the type [Drop]s.
+-pub struct RequestRedrawOnDrop;
++/// Capture the owning editor's notifier before crossing a non-Tokio thread boundary.
++/// Embedded iOS invocations have runtime-local state; looking it up on a picker
++/// worker panics and restores the terminal while the editor is still running.
++pub fn redraw_handle() -> impl Fn() + Send + Sync + 'static {
++    let notify = &*REDRAW_NOTIFY;
++    move || notify.notify_one()
++}
++
++/// Requests a redraw of the owning editor when dropped, including on worker threads.
++#[derive(Clone)]
++pub struct RequestRedrawOnDrop(&'static Notify);
++
++impl Default for RequestRedrawOnDrop {
++    fn default() -> Self {
++        Self(&REDRAW_NOTIFY)
++    }
++}
+ 
+ impl Drop for RequestRedrawOnDrop {
+     fn drop(&mut self) {
+-        request_redraw();
++        self.0.notify_one();
+     }
+ }
+--- a/helix-event/src/lib.rs
++++ b/helix-event/src/lib.rs
+@@ -35,7 +35,8 @@
+ pub use cancel::{cancelable_future, TaskController, TaskHandle};
+ pub use debounce::{send_blocking, AsyncHook};
+ pub use redraw::{
+-    lock_frame, redraw_requested, request_redraw, start_frame, RenderLockGuard, RequestRedrawOnDrop,
++    lock_frame, redraw_handle, redraw_requested, request_redraw, start_frame, RenderLockGuard,
++    RequestRedrawOnDrop,
+ };
+ pub use registry::Event;
+ 
+--- a/helix-term/src/ui/picker.rs
++++ b/helix-term/src/ui/picker.rs
+@@ -164,7 +164,7 @@
+             editor_data: self.editor_data.clone(),
+             version: self.version,
+             picker_version: self.picker_version.clone(),
+-            _redraw: helix_event::RequestRedrawOnDrop,
++            _redraw: self._redraw.clone(),
+         }
+     }
+ }
+@@ -280,7 +280,7 @@
+         assert!(matcher_columns > 0);
+         let matcher = Nucleo::new(
+             Config::DEFAULT,
+-            Arc::new(helix_event::request_redraw),
++            Arc::new(helix_event::redraw_handle()),
+             None,
+             matcher_columns,
+         );
+@@ -290,7 +290,7 @@
+             editor_data: Arc::new(editor_data),
+             version: 0,
+             picker_version: Arc::new(AtomicUsize::new(0)),
+-            _redraw: helix_event::RequestRedrawOnDrop,
++            _redraw: helix_event::RequestRedrawOnDrop::default(),
+         };
+         (matcher, streamer)
+     }
+@@ -312,7 +312,7 @@
+         assert!(matcher_columns > 0);
+         let matcher = Nucleo::new(
+             Config::DEFAULT,
+-            Arc::new(helix_event::request_redraw),
++            Arc::new(helix_event::redraw_handle()),
+             None,
+             matcher_columns,
+         );
+@@ -399,7 +399,7 @@
+             editor_data: self.editor_data.clone(),
+             version: self.version.load(atomic::Ordering::Relaxed),
+             picker_version: self.version.clone(),
+-            _redraw: helix_event::RequestRedrawOnDrop,
++            _redraw: helix_event::RequestRedrawOnDrop::default(),
+         }
+     }
+ 
+--- /dev/null
++++ b/helix-event/tests/redraw.rs
+@@ -0,0 +1,53 @@
++#![cfg(feature = "integration_test")]
++
++use std::{thread, time::Duration};
++
++use tokio::runtime::Runtime;
++
++fn notified(editor: &Runtime, wait: Duration) -> bool {
++    editor.block_on(async {
++        tokio::time::timeout(wait, helix_event::redraw_requested())
++            .await
++            .is_ok()
++    })
++}
++
++#[test]
++fn background_redraw_reaches_its_editor() {
++    let first = Runtime::new().unwrap();
++    let second = Runtime::new().unwrap();
++    let quiet = Duration::from_millis(20);
++    let patient = Duration::from_secs(1);
++
++    // Injector guard built in `first`, cloned and dropped on a worker thread.
++    let guard = first.block_on(async { helix_event::RequestRedrawOnDrop::default() });
++    thread::spawn(move || {
++        let cloned = guard.clone();
++        drop(guard);
++        drop(cloned);
++    })
++    .join()
++    .expect("background redraw panicked");
++    assert!(
++        !notified(&second, quiet),
++        "redraw leaked into another editor"
++    );
++    assert!(
++        notified(&first, patient),
++        "owning editor did not receive redraw"
++    );
++
++    // Matcher callback built in `second`, called on a worker thread.
++    let callback = second.block_on(async { helix_event::redraw_handle() });
++    thread::spawn(callback)
++        .join()
++        .expect("matcher redraw panicked");
++    assert!(
++        !notified(&first, quiet),
++        "redraw leaked into another editor"
++    );
++    assert!(
++        notified(&second, patient),
++        "matcher did not notify its owning editor"
++    );
++}

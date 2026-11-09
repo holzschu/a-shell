@@ -38,4 +38,27 @@ status=0
 for failure in host group none; do
     LONG_COMMANDS_FAILURE="$failure" LONG_COMMANDS_GROUP="$scratch/group" LONG_COMMANDS_RESOURCES="$app" "$appex/LongCommands" || status=1
 done
+run_layout() {
+    printf '%s\n' "$1"
+    LONG_COMMANDS_FAILURE=none LONG_COMMANDS_GROUP="$scratch/group" LONG_COMMANDS_RESOURCES="$app" "$2" || status=1
+}
+mv "$app/Extensions" "$app/PlugIns"
+run_layout 'Flat PlugIns' "$app/PlugIns/a-Shell-LongCommands.appex/LongCommands"
+mkdir -p "$scratch/Wrapper.app/Wrapper"
+mv "$app" "$scratch/Wrapper.app/Wrapper/"
+app="$scratch/Wrapper.app/Wrapper/a-Shell.app"
+run_layout 'Wrapped iOS app' "$app/PlugIns/a-Shell-LongCommands.appex/LongCommands"
+# Handle an app as the main bundle, too.
+cp "$scratch/intent" "$app/LongCommands"
+/usr/libexec/PlistBuddy -c 'Add :CFBundleExecutable string LongCommands' "$app/Info.plist"
+run_layout 'App as main bundle' "$app/LongCommands"
+# A Contents layout is a portability fixture, not the current iOS build product.
+mkdir -p "$app/Contents/Resources"
+mv "$app/Info.plist" "$app/Contents/"
+mv "$app/PlugIns" "$app/Contents/Extensions"
+run_layout 'Contents/Extensions' "$app/Contents/Extensions/a-Shell-LongCommands.appex/LongCommands"
+mv "$app/Contents/Extensions" "$app/Contents/PlugIns"
+run_layout 'Contents/PlugIns' "$app/Contents/PlugIns/a-Shell-LongCommands.appex/LongCommands"
+cp -R "$app/Contents/PlugIns/a-Shell-LongCommands.appex" "$scratch/Detached.appex"
+LONG_COMMANDS_FAILURE=detached LONG_COMMANDS_GROUP="$scratch/group" "$scratch/Detached.appex/LongCommands" || status=1
 exit "$status"
