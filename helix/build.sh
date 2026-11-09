@@ -100,6 +100,11 @@ PYCODE
     patch -s -f -F 0 --dry-run -p1 -d "$source" <"$here/ashell-terminal.patch"
     patch -s -f -F 0 -p1 -d "$source" <"$here/ashell-terminal.patch"
   fi
+  # Keep this fix independently applicable to caches with the terminal overlays already applied.
+  if ! patch -s -f -F 0 --dry-run -R -p1 -d "$source" <"$here/picker-redraw.patch" >/dev/null 2>&1; then
+    patch -s -f -F 0 --dry-run -p1 -d "$source" <"$here/picker-redraw.patch"
+    patch -s -f -F 0 -p1 -d "$source" <"$here/picker-redraw.patch"
+  fi
   cmp -s "$here/ios-terminal.rs" "$dependency/src/terminal/sys/ios.rs" || cp "$here/ios-terminal.rs" "$dependency/src/terminal/sys/ios.rs"
 
 }
