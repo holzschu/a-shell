@@ -1888,6 +1888,20 @@ func __browser_app_url(inputUrl: URL, browser: String) -> URL {
     return inputUrl
 }
 
+public func openurl_internal(browser: String, url: URL) {
+    if let delegate = currentDelegate {
+        DispatchQueue.main.async {
+            if (browser == "internalbrowser") {
+                delegate.openURLInWindow(url: url)
+            } else {
+                let browserAppUrl = __browser_app_url(inputUrl: url, browser: browser)
+                delegate.windowScene?.open(browserAppUrl, options: .none)
+            }
+        }
+    }
+}
+
+
 @_cdecl("openurl_main")
 public func openurl_main(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let usage = "Usage: openurl url\nYou can change the default browser with BROWSER env var:\n" + __known_browsers.joined(separator: ", ") + "\n"
@@ -1955,16 +1969,9 @@ public func openurl_main(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePo
         }
         return -1
     }
-    if let delegate = currentDelegate {
-        DispatchQueue.main.async {
-            if (browser == "internalbrowser") {
-                delegate.openURLInWindow(url: locationUrl!)
-            } else {
-                let browserAppUrl = __browser_app_url(inputUrl: locationUrl!, browser: browser)
-                delegate.windowScene?.open(browserAppUrl, options: .none)
-            }
-        }
-    }
+    
+    openurl_internal(browser: browser, url: locationUrl!)
+    
     return 0
 }
 
