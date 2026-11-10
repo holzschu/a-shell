@@ -2265,8 +2265,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             for await shouldDisplay in tip.shouldDisplayUpdates {
                 guard !Task.isCancelled, let self else { return }
                 guard shouldDisplay else { continue }
-                // The key reaches its place only once the keyboard is up; a popover anchored earlier lands at the screen corner.
-                for _ in 0..<30 where !self.arrowKeyIsPlaced { try? await Task.sleep(nanoseconds: 100_000_000) }
+                // The key reaches its place only once the keyboard is up and the toolbar has finished regenerating its keys; a popover anchored earlier lands at the screen corner or on another key.
+                var lastFrame: CGRect?
+                for _ in 0..<50 {
+                    let frame = self.arrowKeyIsPlaced ? self.arrowKeyView.map { $0.convert($0.bounds, to: nil) } : nil
+                    if frame != nil && frame == lastFrame { break }
+                    lastFrame = frame
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                }
                 guard !Task.isCancelled else { return }
                 guard self.arrowKeyIsPlaced, let root = self.window?.rootViewController,
                       let view = self.arrowKeyView, root.presentedViewController == nil,
@@ -2288,7 +2294,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     private var arrowKeyIsPlaced: Bool {
         guard let view = arrowKeyView, view.window != nil else { return false }
         let frame = view.convert(view.bounds, to: nil)
-        return !frame.isEmpty && frame.minY > 100
+        return !frame.isEmpty && frame.minY > 100 && frame.maxY <= (window?.bounds.height ?? .greatestFiniteMagnitude)
     }
 
 
