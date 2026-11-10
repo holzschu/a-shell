@@ -2876,7 +2876,7 @@
 		A22600000000000000000002 /* codex/codex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = codex/codex.xcframework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000001 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = xcfs/.build/artifacts/xcfs/freetype/freetype.xcframework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework; sourceTree = SOURCE_ROOT; };
-		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = "cpython/Python-aux/libpng.xcframework"; sourceTree = SOURCE_ROOT; };
+		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework; sourceTree = SOURCE_ROOT; };
 		A59100000000000000000004 /* Relay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relay.swift; sourceTree = "<group>"; };
 		A83EA8C808E52262F507587D /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AE1100000000000000000002 /* helix/helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
