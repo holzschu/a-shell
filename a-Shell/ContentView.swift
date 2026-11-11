@@ -942,34 +942,114 @@ struct Termview : UIViewRepresentable {
 }
 
 
+private final class TerminalKeyboardViewport: UIView {
+    weak var terminal: TerminalView?
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let terminal, bounds.width > 0, bounds.height > 0, terminal.bounds.size != bounds.size else { return }
+        terminal.layer.removeAllAnimations()
+        UIView.performWithoutAnimation {
+            terminal.transform = .identity
+            terminal.frame = bounds
+            terminal.layoutIfNeeded()
+        }
+    }
+}
+
 final class TerminalContainerView: UIView {
-    private var legacyBottomConstraint: NSLayoutConstraint?
+    private var notificationBottomConstraint: NSLayoutConstraint?
+    private var keyboardViewport: TerminalKeyboardViewport?
+    private var keyboardSnapshot: UIView?
     private var keyboardFrame = CGRect.zero
+    private var keyboardNotificationWidth: CGFloat?
     private var keyboardObservers: [NSObjectProtocol] = []
 
     init(terminal: TerminalView) {
         super.init(frame: .zero)
-        terminal.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(terminal)
-        NSLayoutConstraint.activate([
-            terminal.topAnchor.constraint(equalTo: topAnchor),
-            terminal.leadingAnchor.constraint(equalTo: leadingAnchor),
-            terminal.trailingAnchor.constraint(equalTo: trailingAnchor)
-        ])
-        if #available(iOS 15.0, *) {
-            keyboardLayoutGuide.followsUndockedKeyboard = UIDevice.current.userInterfaceIdiom == .pad
-            terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor).isActive = true
-        } else {
-            let bottom = terminal.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
+        if #available(iOS 26, *), UIDevice.current.userInterfaceIdiom == .phone {
+            let viewport = TerminalKeyboardViewport()
+            viewport.translatesAutoresizingMaskIntoConstraints = false
+            viewport.clipsToBounds = true
+            addSubview(viewport)
+            NSLayoutConstraint.activate([
+                viewport.topAnchor.constraint(equalTo: topAnchor),
+                viewport.leadingAnchor.constraint(equalTo: leadingAnchor),
+                viewport.trailingAnchor.constraint(equalTo: trailingAnchor)
+            ])
+            viewport.addSubview(terminal)
+            viewport.terminal = terminal
+            terminal.contentMode = .topLeft
+            keyboardViewport = viewport
+            let bottom = viewport.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
             bottom.isActive = true
-            legacyBottomConstraint = bottom
-            for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
-                keyboardObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
-                    guard let self = self else { return }
-                    self.keyboardFrame = note.name == UIResponder.keyboardWillHideNotification ? .zero :
-                        (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero)
-                    self.updateLegacyKeyboardInset()
-                })
+            notificationBottomConstraint = bottom
+            keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] note in
+                guard let self, let viewport = self.keyboardViewport, let terminal = viewport.terminal else { return }
+                let initialWidth = viewport.bounds.width
+                defer { self.keyboardNotificationWidth = initialWidth }
+                let presentationOffset = terminal.layer.presentation()?.affineTransform().ty ?? 0
+                self.layoutIfNeeded()
+                let previousInset = self.notificationBottomConstraint?.constant
+                self.keyboardFrame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
+                self.updateKeyboardInset()
+                guard self.notificationBottomConstraint?.constant != previousInset else { return }
+                let initialTopRow = terminal.getTerminal().getTopVisibleRow()
+                let cellHeight = terminal.getOptimalFrameSize().height / CGFloat(max(1, terminal.getTerminal().rows))
+                // The snapshot fills rows the resized terminal no longer covers; glyphs stay unscaled.
+                let snapshot = self.snapshotView(afterScreenUpdates: false)
+                snapshot?.frame = self.bounds
+                snapshot?.isUserInteractionEnabled = false
+                self.keyboardSnapshot?.removeFromSuperview()
+                if let snapshot { viewport.insertSubview(snapshot, belowSubview: terminal) }
+                self.keyboardSnapshot = snapshot
+                let duration = note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0
+                let curve = note.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt ?? 0
+                UIView.animate(withDuration: duration, delay: 0, options: [UIView.AnimationOptions(rawValue: curve << 16), .beginFromCurrentState, .allowUserInteraction]) {
+                    self.layoutIfNeeded()
+                    guard viewport.bounds.width == initialWidth else {
+                        snapshot?.removeFromSuperview()
+                        if self.keyboardSnapshot === snapshot { self.keyboardSnapshot = nil }
+                        return
+                    }
+                    let rowOffset = -CGFloat(terminal.getTerminal().getTopVisibleRow() - initialTopRow) * cellHeight - presentationOffset
+                    UIView.performWithoutAnimation {
+                        terminal.transform = CGAffineTransform(translationX: 0, y: -rowOffset)
+                    }
+                    UIView.animate(withDuration: duration, delay: 0, options: [UIView.AnimationOptions(rawValue: curve << 16), .allowUserInteraction]) {
+                        terminal.transform = .identity
+                    }
+                    snapshot?.transform = CGAffineTransform(translationX: 0, y: rowOffset)
+                } completion: { [weak self, weak snapshot] _ in
+                    snapshot?.removeFromSuperview()
+                    if self?.keyboardSnapshot === snapshot { self?.keyboardSnapshot = nil }
+                    // The accessory reaches its final frame only once the keyboard has settled.
+                    self?.updateKeyboardInset()
+                }
+            })
+        } else {
+            terminal.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(terminal)
+            NSLayoutConstraint.activate([
+                terminal.topAnchor.constraint(equalTo: topAnchor),
+                terminal.leadingAnchor.constraint(equalTo: leadingAnchor),
+                terminal.trailingAnchor.constraint(equalTo: trailingAnchor)
+            ])
+            if #available(iOS 15.0, *) {
+                keyboardLayoutGuide.followsUndockedKeyboard = UIDevice.current.userInterfaceIdiom == .pad
+                terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor).isActive = true
+            } else {
+                let bottom = terminal.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
+                bottom.isActive = true
+                notificationBottomConstraint = bottom
+                for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
+                    keyboardObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                        guard let self = self else { return }
+                        self.keyboardFrame = note.name == UIResponder.keyboardWillHideNotification ? .zero :
+                            (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero)
+                        self.updateKeyboardInset()
+                    })
+                }
             }
         }
     }
@@ -984,14 +1064,33 @@ final class TerminalContainerView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        updateLegacyKeyboardInset()
+        updateKeyboardInset()
     }
 
-    private func updateLegacyKeyboardInset() {
-        guard let bottom = legacyBottomConstraint, let window = window else { return }
+    private func updateKeyboardInset() {
+        guard let bottom = notificationBottomConstraint, let window = window else { return }
         let windowFrame = window.convert(keyboardFrame, from: nil as UIWindow?)
         let intersection = bounds.intersection(convert(windowFrame, from: window))
-        let inset = intersection.isNull || intersection.isEmpty ? 0 : max(0, bounds.maxY - intersection.minY - safeAreaInsets.bottom)
+        var visibleBottom = intersection.minY
+        if #available(iOS 26, *), let accessory = keyboardViewport?.terminal?.inputAccessoryView,
+           let previousWidth = keyboardNotificationWidth, keyboardViewport?.bounds.width != previousWidth,
+           keyboardFrame.height <= accessory.bounds.height {
+            // A concurrent keyboard show and rotation can report only the accessory; the guide tracks the software keyboard.
+            let guideIntersection = bounds.intersection(keyboardLayoutGuide.layoutFrame)
+            if !guideIntersection.isNull, !guideIntersection.isEmpty {
+                visibleBottom = min(visibleBottom, guideIntersection.minY)
+            }
+        }
+        if !intersection.isNull, !intersection.isEmpty, let terminal = keyboardViewport?.terminal, terminal.isFirstResponder,
+           let accessory = terminal.inputAccessoryView, accessory.window != nil,
+           !accessory.isHidden, accessory.bounds.height > 0 {
+            // The keyboard frame excludes the accessory in some setups and includes it in others: subtract its height only when it sits above the frame.
+            let accessoryBottom = convert(accessory.convert(accessory.bounds, to: window), from: window).maxY
+            if accessoryBottom <= intersection.minY + 1 {
+                visibleBottom -= accessory.bounds.height
+            }
+        }
+        let inset = intersection.isNull || intersection.isEmpty ? 0 : max(0, bounds.maxY - visibleBottom - safeAreaInsets.bottom)
         if bottom.constant != -inset {
             bottom.constant = -inset
             setNeedsLayout()
