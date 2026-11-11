@@ -38,8 +38,12 @@ enum TerminalThemes {
     }
 
     static func files(in directory: URL?) -> [URL] {
-        guard let directory = directory,
-              let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) else { return [] }
+        guard let directory = directory else { return [] }
+        guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
+        // FileManager().contentsOfDirectory(at: directory, ...) does not follow symbolic links
+        // but FileManager().contentsOfDirectory(atPath: path) does, so we use the latter
+        guard let filesAsPath = try? FileManager.default.contentsOfDirectory(atPath: directory.path) else { return [] }
+        let files = filesAsPath.map { directory.appendingPathComponent($0) }
         return files.filter { $0.pathExtension.lowercased() == "json" }.sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
 
