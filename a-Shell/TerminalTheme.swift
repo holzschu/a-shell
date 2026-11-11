@@ -64,7 +64,7 @@ enum TerminalThemes {
             throw TerminalThemeError.invalid("Use a theme file name with or without .json, without a directory path.")
         }
         guard let selectedFile = file(named: name) else {
-            let available = files(in: userDirectory).map { $0.lastPathComponent }.joined(separator: ", ")
+            let available = names().joined(separator: ", ")
             throw TerminalThemeError.invalid("Unknown theme \(name). Available Themes files: \(available.isEmpty ? "(none)" : available).")
         }
         let directory = selectedFile.deletingLastPathComponent()
