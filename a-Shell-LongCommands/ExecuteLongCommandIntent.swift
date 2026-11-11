@@ -70,8 +70,19 @@ private final class LongCommandExecutor {
         while host.pathExtension != "app" && host.path != "/" {
             host.deleteLastPathComponent()
         }
-        guard host.pathExtension == "app", let hostBundle = Bundle(url: host) else {
-            throw CommandExecutionError.unavailableHostBundle(origin.path)
+        guard host.pathExtension == "app" else { throw CommandExecutionError.unavailableHostBundle(origin.path) }
+        // Bundle(url:) returned nil for the app found here in the report on #1160. Foundation also returns nil for an app directory that can be
+        // traversed but not listed (mode 311). Then read Info.plist by path, and take the name from the directory if it cannot be read either.
+        // A flat iOS app keeps its resources in the app directory.
+        let hostInfo: [String: Any]
+        let resourcePath: String
+        if let bundle = Bundle(url: host), let info = bundle.infoDictionary, let resources = bundle.resourcePath {
+            hostInfo = info
+            resourcePath = resources
+        } else {
+            hostInfo = (NSDictionary(contentsOf: host.appendingPathComponent("Info.plist")) as? [String: Any])
+                ?? ["CFBundleName": host.deletingPathExtension().lastPathComponent]
+            resourcePath = host.path
         }
         guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
             throw CommandExecutionError.unavailableDirectory
@@ -79,7 +90,7 @@ private final class LongCommandExecutor {
         // The extension cannot use the app's private Library. Shared user packages live here.
         let libraryURL = groupURL.appendingPathComponent("Library")
         setenv("APPDIR", host.path, 1)
-        initializeCommandEnvironment(hostBundle: hostBundle, documentsUrl: groupURL, libraryURL: libraryURL, groupURL: groupURL)
+        initializeCommandEnvironment(hostInfo: hostInfo, resourcePath: resourcePath, documentsUrl: groupURL, libraryURL: libraryURL, groupURL: groupURL)
         // ios_system expands ~name using standard defaults; include the app's mirrored bookmarks.
         UserDefaults.standard.addSuite(named: appGroupID)
         ios_setBookmarkDictionaryName("bookmarkNames")

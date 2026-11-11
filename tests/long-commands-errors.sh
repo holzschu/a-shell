@@ -4,7 +4,7 @@
 set -eu
 source=${1:-a-Shell-LongCommands/ExecuteLongCommandIntent.swift}
 scratch=$(mktemp -d)
-trap 'rm -rf "$scratch"' EXIT
+trap 'chmod -R u+rwx "$scratch"; rm -rf "$scratch"' EXIT
 trap 'exit 130' HUP INT TERM
 build() { nice -n 15 xcrun swiftc -j 4 -swift-version 5 -module-cache-path "$scratch/modules" "$@"; }
 build -emit-library -emit-module -module-name AppIntents tests/long-commands-appintents.swift -o "$scratch/libAppIntents.dylib"
@@ -35,9 +35,14 @@ cat > "$appex/Info.plist" <<'PLIST'
 PLIST
 cp "$scratch/intent" "$appex/LongCommands"
 status=0
-for failure in host group none; do
+for failure in bundle group none; do
     LONG_COMMANDS_FAILURE="$failure" LONG_COMMANDS_GROUP="$scratch/group" LONG_COMMANDS_RESOURCES="$app" "$appex/LongCommands" || status=1
 done
+# Without Bundle and without Info.plist the app name comes from the directory and no version is known.
+mkdir -p "$scratch/NoPlist.app/Extensions"
+cp -R "$appex" "$scratch/NoPlist.app/Extensions/"
+test ! -e "$scratch/NoPlist.app/Info.plist"
+LONG_COMMANDS_FAILURE=host LONG_COMMANDS_GROUP="$scratch/group" LONG_COMMANDS_RESOURCES="$scratch/NoPlist.app" "$scratch/NoPlist.app/Extensions/a-Shell-LongCommands.appex/LongCommands" || status=1
 run_layout() {
     printf '%s\n' "$1"
     LONG_COMMANDS_FAILURE=none LONG_COMMANDS_GROUP="$scratch/group" LONG_COMMANDS_RESOURCES="$app" "$2" || status=1
@@ -61,4 +66,10 @@ mv "$app/Contents/Extensions" "$app/Contents/PlugIns"
 run_layout 'Contents/PlugIns' "$app/Contents/PlugIns/a-Shell-LongCommands.appex/LongCommands"
 cp -R "$app/Contents/PlugIns/a-Shell-LongCommands.appex" "$scratch/Detached.appex"
 LONG_COMMANDS_FAILURE=detached LONG_COMMANDS_GROUP="$scratch/group" "$scratch/Detached.appex/LongCommands" || status=1
+# An app directory that can be traversed but not listed: Foundation's Bundle(url:) fails, Info.plist stays readable.
+mkdir -p "$scratch/Unlistable/a-Shell.app/Extensions"
+cp "$scratch/Wrapper.app/Wrapper/a-Shell.app/Contents/Info.plist" "$scratch/Unlistable/a-Shell.app/Info.plist"
+cp -R "$scratch/Wrapper.app/Wrapper/a-Shell.app/Contents/PlugIns/a-Shell-LongCommands.appex" "$scratch/Unlistable/a-Shell.app/Extensions/"
+chmod 311 "$scratch/Unlistable/a-Shell.app"
+LONG_COMMANDS_FAILURE=unlistable LONG_COMMANDS_GROUP="$scratch/group" LONG_COMMANDS_RESOURCES="$scratch/Unlistable/a-Shell.app" "$scratch/Unlistable/a-Shell.app/Extensions/a-Shell-LongCommands.appex/LongCommands" || status=1
 exit "$status"
