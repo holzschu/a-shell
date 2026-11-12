@@ -1790,10 +1790,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 phoneDefaults = false
             }
         }
-        stockPhoneArrowKey = phoneDefaults
         if let configFileUrl = configFile {
             if let fileContent = try? String(contentsOf: configFileUrl, encoding: String.Encoding.utf8) {
                 let contentOfFile = phoneDefaults ? phoneToolbarDefaults(fileContent) : fileContent
+                stockPhoneArrowKey = phoneDefaults
                 leftButtonGroup = []
                 rightButtonGroup = []
                 leftButtonGroups = []
@@ -2262,6 +2262,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 let location = sender.location(in: view)
                 tapPosition = CGPoint(x: location.x / view.bounds.width - 0.5, y: location.y / view.bounds.height - 0.5)
                 if let item = (editorToolbar.items ?? []).first(where: { $0.toolbarView === view }) { systemAction(item) }
+                if #available(iOS 17, *) { closeArrowTip(reason: .actionPerformed) }
             } else if sender.state == .ended && precisionArrowCount == 0 {
                 showArrowHUD(direction: "up", count: nil, from: view); dismissArrowHUD(after: 1.4)
             } else { dismissArrowHUD() }
@@ -2402,7 +2403,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     private func setArrowGlyph(_ direction: String?, from view: UIView?) {
         guard let button = (editorToolbar.items ?? []).first(where: { $0.toolbarView === view }) else { return }
         let configuration = UIDevice.current.userInterfaceIdiom == .phone ? PhoneKeyboardToolbar.symbolConfiguration : UIImage.SymbolConfiguration(pointSize: 22, weight: .regular)
-        // At rest the key shows its icon from the toolbar definition again, or its text when it has no icon.
+        // At rest the key shows its own icon again, or its text when it has no icon.
         let resting = view?.gestureRecognizers?.compactMap { $0 as? PrecisionArrowGesture }.first?.restingImage
         let image: UIImage?
         if let direction {
