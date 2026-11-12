@@ -798,12 +798,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return target
     }()
     var showToolbar: Bool { toolbarShouldBeShown && (!hardwareKeyboardOnly || hardwareToolbarOverride) }
-    private lazy var hideKeyboardItem: UIBarButtonItem = {
-        let item = UIBarButtonItem(image: UIImage(systemName: "keyboard.chevron.compact.down")?.withConfiguration(PhoneKeyboardToolbar.symbolConfiguration), style: .plain, target: self, action: #selector(systemAction(_:)))
-        item.possibleTitles = ["", "hideKeyboard"]
-        item.accessibilityLabel = "Hide keyboard"
-        return item
-    }()
     private var hardwareKeyboardConnected = false
     private var softwareKeyboardShown = false
     // The Simulator always reports the Mac keyboard while showing the software keyboard, so a connected keyboard alone does not hide the bar.
@@ -2061,9 +2055,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         generateToolbarButtons()
         editorToolbar.outsideWindow = self.window
         if PhoneKeyboardToolbar.isCustom {
-            var items = leftButtonGroup + rightButtonGroup
-            if !items.contains(where: { title($0) == "hideKeyboard" }) { items.append(hideKeyboardItem) }
-            editorToolbar.items = items
+            // Long press hides the keyboard unless the definition includes its own hideKeyboard key.
+            editorToolbar.items = leftButtonGroup + rightButtonGroup
         }
         let needsHold = !PhoneKeyboardToolbar.isCustom || !(editorToolbar.items ?? []).contains(where: { title($0) == "hideKeyboard" })
         let existing = editorToolbar.gestureRecognizers?.first { $0.name == "toolbar-hide" }
