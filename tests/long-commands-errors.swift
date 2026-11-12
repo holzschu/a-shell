@@ -6,7 +6,13 @@ final class Bundle {
     static let main = Foundation.Bundle.main
     private let bundle: Foundation.Bundle
     init?(url: URL) {
-        guard ProcessInfo.processInfo.environment["LONG_COMMANDS_FAILURE"] != "host",
+        let failure = ProcessInfo.processInfo.environment["LONG_COMMANDS_FAILURE"]
+        // The mode 311 fixture is only meaningful if Foundation itself refuses the app.
+        if failure == "unlistable" && url.pathExtension == "app" && Foundation.Bundle(url: url) != nil {
+            fputs("FAIL unlistable: Bundle(url:) succeeded\n", stderr)
+            exit(1)
+        }
+        guard !["host", "bundle"].contains(failure),
               let bundle = Foundation.Bundle(url: url) else { return nil }
         self.bundle = bundle
     }
@@ -35,15 +41,19 @@ struct UIDevice {
         let failure = ProcessInfo.processInfo.environment["LONG_COMMANDS_FAILURE"]!
         do {
             var intent = ExecuteLongCommandIntent()
-            intent.command = "APPDIR APPNAME"
+            intent.command = ["unlistable": "APPDIR APPNAME APPVERSION VIMRUNTIME", "host": "APPDIR APPNAME APPVERSION"][failure] ?? "APPDIR APPNAME"
             intent.keepGoing = false
             let result = try await intent.perform()
-            guard failure == "none" else {
+            guard ["none", "bundle", "unlistable", "host"].contains(failure) else {
                 fputs("FAIL \(failure): intent succeeded\n", stderr)
                 exit(1)
             }
             let root = ProcessInfo.processInfo.environment["LONG_COMMANDS_RESOURCES"]!
-            guard result.value == "APPDIR=\(root)\nAPPNAME=a-Shell-mini\n" else {
+            // Without a Bundle the resources are read from the app directory itself. Info.plist gives the host values;
+            // without it only the name from the directory is known, and APPVERSION stays unset.
+            let host = failure == "host" ? "APPNAME=NoPlist\nAPPVERSION=<unset>\n" : "APPNAME=a-Shell-mini\n"
+            let extra = ["unlistable": "APPVERSION=1.0\nVIMRUNTIME=\(root)/vim\n"][failure] ?? ""
+            guard result.value == "APPDIR=\(root)\n\(host)\(extra)" else {
                 fputs("FAIL host environment: \(result.value)\n", stderr)
                 exit(1)
             }
@@ -51,7 +61,7 @@ struct UIDevice {
         } catch {
             let expected: String
             switch failure {
-            case "host", "detached": expected = "Could not locate the a-Shell app bundle containing \(Foundation.Bundle.main.bundleURL.path)."
+            case "detached": expected = "Could not locate the a-Shell app bundle containing \(Foundation.Bundle.main.bundleURL.path)."
             case "group": expected = "The Shortcuts shared directory is unavailable."
             default:
                 fputs("FAIL iOS intent: \(error.localizedDescription)\n", stderr)
