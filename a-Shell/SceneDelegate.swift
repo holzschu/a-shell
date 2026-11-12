@@ -101,9 +101,11 @@ private func toolbarMotion(_ delta: CGPoint) -> (direction: String, arrowReady: 
     return (direction, (major >= 12 && minor <= 0.58 * major) || hypot(delta.x, delta.y) >= 24)
 }
 
-// Holds the arrow key's own icon, so the key shows it again after a flick has shown a direction glyph.
+// Holds the arrow key's own icon, so the key shows it again after a flick has shown a direction glyph, and whether a
+// tap moves the cursor: it does for a key from .toolbarDefinition, the stock key shows a hint instead.
 private final class PrecisionArrowGesture: UILongPressGestureRecognizer {
     var restingImage: UIImage?
+    var tapMoves = false
 }
 
 // Keep the customizable item model and the iPad assistant, but avoid UIToolbar's
@@ -2201,7 +2203,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         view.gestureRecognizers?.forEach { view.removeGestureRecognizer($0) }
         let touch = PrecisionArrowGesture(target: self, action: #selector(precisionArrowTouch(_:)))
-        touch.name = "precision-arrow"; touch.minimumPressDuration = 0; touch.restingImage = item.image
+        touch.name = "precision-arrow"; touch.minimumPressDuration = 0; touch.restingImage = item.image; touch.tapMoves = !stockPhoneArrowKey
         view.addGestureRecognizer(touch); view.isExclusiveTouch = true
         showArrowTip()
     }
@@ -2256,7 +2258,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else if sender.state == .ended || sender.state == .cancelled || sender.state == .failed {
             precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
             setArrowGlyph(nil, from: view)
-            if sender.state == .ended && precisionArrowCount == 0 && !stockPhoneArrowKey {
+            if sender.state == .ended && precisionArrowCount == 0 && (sender as? PrecisionArrowGesture)?.tapMoves == true {
                 // A key from .toolbarDefinition keeps its tap: the tap position picks the direction, as with the other arrow keys.
                 dismissArrowHUD()
                 let location = sender.location(in: view)
