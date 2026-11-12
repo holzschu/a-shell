@@ -2561,12 +2561,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         toolbar.backgroundColor = PhoneKeyboardToolbar.isCustom ? .clear : terminalBackgroundColor
         toolbar.insertSymbol = { [weak self] value, entry in
             guard let self else { return }
-            // A group entry runs its own action; a swipe-down period without a "." entry has none.
+            // A group entry runs its own action. Without one (the swipe-down or VoiceOver period when the group
+            // has no "." entry), the text is inserted.
             if let entry, let action = entry.action {
                 UIApplication.shared.sendAction(action, to: entry.target, from: entry, for: nil)
-                // A systemAction entry handles Control as its own key does: control toggles it, paste and
-                // hideKeyboard release it in systemAction. Releasing it here would switch a control entry straight back off.
-                if NSStringFromSelector(action).hasPrefix("systemAction") { return }
+                // A control entry toggles Control as the Control key does; releasing it here would switch it straight back off.
+                if title(entry) == "control" { return }
             } else {
                 let item = UIBarButtonItem(title: value, style: .plain, target: self, action: nil)
                 item.possibleTitles = ["", value]
