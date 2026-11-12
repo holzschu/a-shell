@@ -2566,7 +2566,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let entry, let action = entry.action {
                 UIApplication.shared.sendAction(action, to: entry.target, from: entry, for: nil)
                 // A control entry toggles Control as the Control key does; releasing it here would switch it straight back off.
-                if title(entry) == "control" { return }
+                if NSStringFromSelector(action).hasPrefix("systemAction"), self.title(entry) == "control" { return }
             } else {
                 let item = UIBarButtonItem(title: value, style: .plain, target: self, action: nil)
                 item.possibleTitles = ["", value]
