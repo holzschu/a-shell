@@ -1216,6 +1216,7 @@ final class TerminalHostingController: UIHostingController<ContentView> {
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         guard PhoneKeyboardToolbar.isCustom, let scene = view.window?.windowScene?.delegate as? SceneDelegate else { return }
+        scene.beginKeyboardSizeTransition(with: coordinator)
         scene.editorToolbar.prepareForRotation(to: size, with: coordinator)
     }
 
