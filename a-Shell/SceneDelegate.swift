@@ -79,7 +79,9 @@ private final class PhonePasteTarget: UIResponder {
 }
 
 private final class PhoneSymbolItem: UIBarButtonItem {
-    var symbols: [String] = []
+    // The #+= group's entries in order: the text on each panel cell and the item whose action runs when it is chosen.
+    var entries: [(value: String, item: UIBarButtonItem)] = []
+    var symbols: [String] { entries.map(\.value) }
 }
 
 private final class PhoneSymbolButton: UIButton {
@@ -113,7 +115,7 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
     private let more = UIButton(type: .system)
     private let keyFeedback = UIImpactFeedbackGenerator(style: .light)
     private var keys: [UIBarButtonItem] = []
-    var insertSymbol: ((String) -> Void)?
+    var insertSymbol: ((String, UIBarButtonItem?) -> Void)?
     weak var outsideWindow: UIWindow?
     var pasteTarget: UIPasteConfigurationSupporting?
     var configureArrow: ((UIBarButtonItem, UIView) -> Void)?
@@ -189,9 +191,12 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                     key.accessibilityLabel = "Symbols"
                     key.accessibilityHint = "Tap for symbols. Swipe down for a period."
                     (key as? PhoneSymbolButton)?.activateSymbol = { [weak self] in self?.toggleSymbols() }
-                    key.accessibilityCustomActions = (["."] + group.symbols.filter { $0 != "." }).map { value in
-                        UIAccessibilityCustomAction(name: Self.symbolNames[value] ?? value) { [weak self] _ in
-                            self?.chooseSymbol(value); return true
+                    let period = UIAccessibilityCustomAction(name: Self.symbolNames["."] ?? ".") { [weak self] _ in
+                        self?.chooseSymbol("."); return true
+                    }
+                    key.accessibilityCustomActions = [period] + group.entries.filter { $0.value != "." }.map { entry in
+                        UIAccessibilityCustomAction(name: Self.symbolNames[entry.value] ?? entry.value) { [weak self] _ in
+                            self?.chooseSymbol(entry.value, entry: entry.item); return true
                         }
                     }
                     key.addAction(UIAction(identifier: UIAction.Identifier("symbol-activation")) { [weak self] _ in self?.toggleSymbols() }, for: .primaryActionTriggered)
@@ -380,13 +385,13 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
         }
     }
 
-    private func chooseSymbol(_ value: String, keepingPanelOpen: Bool = false) {
+    private func chooseSymbol(_ value: String, entry: UIBarButtonItem? = nil, keepingPanelOpen: Bool = false) {
         if !keepingPanelOpen { closeSymbols() }
         else {
             symbolSelection = nil
             symbolCells.forEach { $0.isSelected = false }
         }
-        insertSymbol?(value)
+        insertSymbol?(value, entry)
     }
 
     private func toggleSymbols() {
@@ -438,7 +443,8 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
         panelGlass.frame = panel.bounds
         panelGlass.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         panel.addSubview(panelGlass)
-        symbolCells = item.symbols.prefix(24).enumerated().map { index, value in
+        symbolCells = item.entries.prefix(24).enumerated().map { index, entry in
+            let value = entry.value
             let cell = UIButton(type: .system)
             let face = UIView()
             face.cornerConfiguration = .corners(radius: .containerConcentric(minimum: 8))
@@ -472,7 +478,7 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
             cell.accessibilityLabel = name
             cell.accessibilityIdentifier = "symbol-cell-" + name
             cell.frame = CGRect(x: 3 + CGFloat(index % panelColumns) * (panel.bounds.width - 6) / CGFloat(panelColumns), y: 3 + CGFloat(index / panelColumns) * 44, width: (panel.bounds.width - 6) / CGFloat(panelColumns), height: 44)
-            cell.addAction(UIAction { [weak self] _ in self?.chooseSymbol(value, keepingPanelOpen: true) }, for: .touchUpInside)
+            cell.addAction(UIAction { [weak self] _ in self?.chooseSymbol(value, entry: entry.item, keepingPanelOpen: true) }, for: .touchUpInside)
             cell.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
             face.frame = cell.frame.insetBy(dx: 3, dy: 3)
             panel.addSubview(face)
@@ -546,8 +552,8 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
         } else if sender.state == .ended {
             if delta.y >= 12 && delta.y > abs(delta.x) {
                 chooseSymbol(".")
-            } else if let selected = symbolSelection, let item = symbolItem, item.symbols.indices.contains(selected) {
-                chooseSymbol(item.symbols[selected])
+            } else if let selected = symbolSelection, let item = symbolItem, item.entries.indices.contains(selected) {
+                chooseSymbol(item.entries[selected].value, entry: item.entries[selected].item)
             } else if hypot(delta.x, delta.y) < 12 || (symbolsPinned && key.bounds.contains(sender.location(in: key))) {
                 if symbolWasPinned { closeSymbols() } else { pinSymbols() }
             } else { closeSymbols() }
@@ -595,8 +601,8 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
             more.menu = UIMenu(children: visible.dropFirst(shown.count).map { item -> UIMenuElement in
                 if let menu = item.menu { return menu }
                 if let group = item as? PhoneSymbolItem {
-                    return UIMenu(title: "Symbols", children: group.symbols.map { value in
-                        UIAction(title: Self.symbolNames[value] ?? value) { [weak self] _ in self?.chooseSymbol(value) }
+                    return UIMenu(title: "Symbols", children: group.entries.map { entry in
+                        UIAction(title: Self.symbolNames[entry.value] ?? entry.value) { [weak self] _ in self?.chooseSymbol(entry.value, entry: entry.item) }
                     })
                 }
                 if let action = item.primaryAction { return action }
@@ -1888,9 +1894,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             }
                         }
                         if (button != nil) {
-                            if PhoneKeyboardToolbar.isCustom, !UIAccessibility.isVoiceOverRunning, iconName == "#+=" {
+                            // The panel has 24 cells; a larger group becomes the Symbols menu below, which lists every entry.
+                            if PhoneKeyboardToolbar.isCustom, !UIAccessibility.isVoiceOverRunning, iconName == "#+=", activeButtonGroup.count <= 24 {
                                 let symbols = PhoneSymbolItem(title: "#+=", style: .plain, target: nil, action: nil)
-                                symbols.symbols = Array(activeButtonGroup.prefix(24)).compactMap { title($0) }
+                                symbols.entries = activeButtonGroup.compactMap { item in title(item).map { ($0, item) } }
                                 symbols.possibleTitles = ["", "#+="]
                                 symbols.accessibilityLabel = "Symbols"
                                 button = symbols
@@ -2526,11 +2533,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let toolbar = PhoneKeyboardToolbar(frame: CGRect(x: 0, y: 0, width: screenWidth, height: toolbarHeight))
         toolbar.tintColor = PhoneKeyboardToolbar.isCustom ? .systemBlue : .label
         toolbar.backgroundColor = PhoneKeyboardToolbar.isCustom ? .clear : terminalBackgroundColor
-        toolbar.insertSymbol = { [weak self] value in
+        toolbar.insertSymbol = { [weak self] value, entry in
             guard let self else { return }
-            let item = UIBarButtonItem(title: value, style: .plain, target: self, action: nil)
-            item.possibleTitles = ["", value]
-            self.insertString(item)
+            // A group entry runs its own action (insertString, insertCommand or systemAction); the swipe-down period has none.
+            if let entry, let action = entry.action {
+                UIApplication.shared.sendAction(action, to: entry.target, from: entry, for: nil)
+            } else {
+                let item = UIBarButtonItem(title: value, style: .plain, target: self, action: nil)
+                item.possibleTitles = ["", value]
+                self.insertString(item)
+            }
             DispatchQueue.main.async {
                 self.releaseToolbarControl()
             }
