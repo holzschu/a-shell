@@ -4,30 +4,30 @@ import ios_system
 
 // Use the host app's resources and the caller's writable directories in both processes.
 @discardableResult
-func initializeCommandEnvironment(hostBundle: Bundle, documentsUrl: URL, libraryURL: URL, groupURL: URL?) -> String {
+func initializeCommandEnvironment(hostInfo: [String: Any], resourcePath: String, documentsUrl: URL, libraryURL: URL, groupURL: URL?) -> String {
     numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
     //  = a-Shell
-    setenv("APPNAME", hostBundle.infoDictionary?["CFBundleName"] as! String, 1)  // a-Shell or a-Shell-mini
-    setenv("APPVERSION", hostBundle.infoDictionary?["CFBundleShortVersionString"] as! String, 1) // 1.15.2
-    setenv("APPBUILDNUMBER", hostBundle.infoDictionary?["CFBundleVersion"] as! String, 1) // 422
-    setenv("VIMRUNTIME", hostBundle.resourcePath! + "/vim", 1); // main resource for vim files
+    if let name = hostInfo["CFBundleName"] as? String { setenv("APPNAME", name, 1) }  // a-Shell or a-Shell-mini
+    if let version = hostInfo["CFBundleShortVersionString"] as? String { setenv("APPVERSION", version, 1) } // 1.15.2
+    if let build = hostInfo["CFBundleVersion"] as? String { setenv("APPBUILDNUMBER", build, 1) } // 422
+    setenv("VIMRUNTIME", resourcePath + "/vim", 1); // main resource for vim files
     setenv("TERM_PROGRAM", "a-Shell", 1) // let's inform users of who we are
     setenv("COLORTERM", "truecolor", 1) // tell programs that we can display 16-bit colors (required by Python package rich).
-    setenv("SSL_CERT_FILE", hostBundle.resourcePath! +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
-    setenv("MAGIC", hostBundle.resourcePath! +  "/usr/share/magic.mgc", 1); // magic file for file command
+    setenv("SSL_CERT_FILE", resourcePath +  "/cacert.pem", 1); // SLL cacert.pem in $APPDIR/cacert.pem
+    setenv("MAGIC", resourcePath +  "/usr/share/magic.mgc", 1); // magic file for file command
     setenv("SHORTCUTS", groupURL?.path, 1) // directory used by shortcuts
     setenv("GROUP", groupURL?.path, 1) // directory used by shortcuts
-    setenv("MANPATH", hostBundle.resourcePath! +  "/man:" + libraryURL.path + "/man", 1)
+    setenv("MANPATH", resourcePath +  "/man:" + libraryURL.path + "/man", 1)
     setenv("PAGER", "less", 1) // send control sequences directly to terminal
     setenv("TERM", "xterm-256color", 1); // now that we use SwiftTerm
-    setenv("MAGICK_HOME", hostBundle.resourcePath! +  "/ImageMagick-7", 1)
-    setenv("MAGICK_CONFIGURE_PATH", hostBundle.resourcePath! +  "/ImageMagick-7/config", 1)
+    setenv("MAGICK_HOME", resourcePath +  "/ImageMagick-7", 1)
+    setenv("MAGICK_CONFIGURE_PATH", resourcePath +  "/ImageMagick-7/config", 1)
     if (UIDevice.current.model.hasPrefix("iPad")) {
         setenv("PS1", "[\\w]\\$ ", 1) // iPad default prompt: path name
     } else {
         setenv("PS1", "[\\W]\\$ ", 1) // iPhone default prompt: last path component
     }
-    setenv("TERMINFO", hostBundle.resourcePath! +  "/terminfo/", 1) // Provide terminfo so termcap has a database
+    setenv("TERMINFO", resourcePath +  "/terminfo/", 1) // Provide terminfo so termcap has a database
     setenv("TZ", TimeZone.current.identifier, 1) // TimeZone information, since "systemsetup -gettimezone" won't work.
     // Make sure aws (Python package) can work:
     setenv("AWS_SHARED_CREDENTIALS_FILE", documentsUrl.appendingPathComponent(".aws/credentials").path, 1)
@@ -43,7 +43,7 @@ func initializeCommandEnvironment(hostBundle: Bundle, documentsUrl: URL, library
     // This one is not required, but it helps:
     setenv("DISABLE_SQLALCHEMY_CEXT", "1", 1)
     var appDependentPath = String(utf8String: getenv("PATH")) ?? ""
-    if (hostBundle.infoDictionary?["CFBundleName"] as? String != "a-Shell-mini") {
+    if (hostInfo["CFBundleName"] as? String != "a-Shell-mini") {
         // clang options:
         setenv("SYSROOT", libraryURL.path + "/usr", 1) // sysroot for clang compiler
         // set up C and C++ compile options: silently add "--target=wasm32-wasi" at the beginning of arguments
@@ -59,11 +59,11 @@ func initializeCommandEnvironment(hostBundle: Bundle, documentsUrl: URL, library
         }
         // TeX variables (for tlmgr to work) = only when installing from scratch
         // default texmf.cnf available:
-        // setenv("TEXMFCNF", hostBundle.resourcePath!, 1)
+        // setenv("TEXMFCNF", resourcePath, 1)
         // Make:
-        setenv("MAKESYSPATH", hostBundle.resourcePath! +  "/usr/share/mk" , 1)
+        setenv("MAKESYSPATH", resourcePath +  "/usr/share/mk" , 1)
         // Perl location of modules:
-        setenv("PERL5LIB", documentsUrl.appendingPathComponent("perl5/lib/perl5").path + ":" + hostBundle.resourcePath! +  "/Perl" , 1)
+        setenv("PERL5LIB", documentsUrl.appendingPathComponent("perl5/lib/perl5").path + ":" + resourcePath +  "/Perl" , 1)
         // set-up for local::lib:
         setenv("PERL_LOCAL_LIB_ROOT", documentsUrl.appendingPathComponent("perl5").path, 1)
         setenv("PERL_CPANM_HOME", documentsUrl.appendingPathComponent(".cpanm").path, 1)
@@ -71,7 +71,7 @@ func initializeCommandEnvironment(hostBundle: Bundle, documentsUrl: URL, library
         setenv("PERL_MB_OPT", "--install_base \"" + documentsUrl.appendingPathComponent("perl5").path + "\"", 1)
         appDependentPath = documentsUrl.appendingPathComponent("perl5").appendingPathComponent("bin").path + ":" + appDependentPath
         setenv("PATH", appDependentPath, 1)
-        setenv("MANPATH", hostBundle.resourcePath! +  "/man:" + libraryURL.path + "/man:" + documentsUrl.appendingPathComponent("perl5").appendingPathComponent("man").path, 1)
+        setenv("MANPATH", resourcePath +  "/man:" + libraryURL.path + "/man:" + documentsUrl.appendingPathComponent("perl5").appendingPathComponent("man").path, 1)
         // help Sunpy too: https://github.com/sunpy/sunpy/pull/6166
         setenv("SUNPY_NO_BUILD_ANA_EXTENSION", "1", 1)
         // SUNPY_CONFIGDIR is ~/Library/Application Support/sunpy, by default, so it is OK.
@@ -110,7 +110,7 @@ working_dir = ~/Documents/sunpy
         setenv("SUNPY_DOWNLOADDIR", documentsUrl.appendingPathComponent("sunpy").path, 1)
         // PyProj options:
         setenv("PYPROJ_GLOBAL_CONTEXT", "ON", 1) // This helps pyproj in cleaning up.
-        let projDirPath = hostBundle.resourcePath! + "/proj"
+        let projDirPath = resourcePath + "/proj"
         setenv("PROJ_LIB", projDirPath, 1)  // proj <= 9.1
         setenv("PROJ_DATA", projDirPath, 1) // proj 9.1+
         setenv("PROJ_NETWORK", "ON", 1)
@@ -127,7 +127,7 @@ working_dir = ~/Documents/sunpy
     // All calls to setenv() before calls to executeCommandAndWait otherwise we can be redefining the environment
     // while copying it
     // Main Python install: $APPDIR/Library/lib/python3.x
-    setenv("PYTHONHOME", hostBundle.resourcePath! + "/Library", 1)
+    setenv("PYTHONHOME", resourcePath + "/Library", 1)
     // Compiled files: ~/Library/__pycache__
     setenv("PYTHONPYCACHEPREFIX", (libraryURL.appendingPathComponent("__pycache__")).path, 1)
     setenv("PYTHONUSERBASE", libraryURL.path, 1)
@@ -137,7 +137,7 @@ working_dir = ~/Documents/sunpy
     setenv("NODE_PATH", libraryURL.path + "/node_modules", 1)
     setenv("NPM_CONFIG_PREFIX", libraryURL.path, 1)
     // Frameworks are in $APPDIR/Frameworks:
-    setenv("DYLD_FRAMEWORK_PATH", hostBundle.resourcePath! + "/Frameworks", 1)
+    setenv("DYLD_FRAMEWORK_PATH", resourcePath + "/Frameworks", 1)
     setenv("BLINK_OVERLAYS", (libraryURL.appendingPathComponent("blinkroot").path + ":"), 1)
     return appDependentPath
 }
