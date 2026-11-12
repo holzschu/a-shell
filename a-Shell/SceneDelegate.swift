@@ -1689,21 +1689,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         generateToolbarButtons()
         editorToolbar.outsideWindow = self.window
         if PhoneKeyboardToolbar.isCustom {
-            // Long press hides the keyboard unless the definition includes its own hideKeyboard key.
             editorToolbar.items = leftButtonGroup + rightButtonGroup
-        }
-        let needsHold = !PhoneKeyboardToolbar.isCustom || !(editorToolbar.items ?? []).contains(where: { title($0) == "hideKeyboard" })
-        let existing = editorToolbar.gestureRecognizers?.first { $0.name == "toolbar-hide" }
-        if needsHold && existing == nil {
-            let hold = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
-            hold.name = "toolbar-hide"
-            hold.minimumPressDuration = 1.0
-            hold.allowableMovement = 15
-            hold.delegate = self
-            editorToolbar.addGestureRecognizer(hold)
-        } else if !needsHold, let existing { editorToolbar.removeGestureRecognizer(existing) }
-
-        if PhoneKeyboardToolbar.isCustom {
             editorToolbar.setToolbarVisible(true)
             if terminalView?.inputAccessoryView === editorToolbar { return }
         }
