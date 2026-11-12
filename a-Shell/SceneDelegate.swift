@@ -101,6 +101,11 @@ private func toolbarMotion(_ delta: CGPoint) -> (direction: String, arrowReady: 
     return (direction, (major >= 12 && minor <= 0.58 * major) || hypot(delta.x, delta.y) >= 24)
 }
 
+// Holds the arrow key's own icon, so the key shows it again after a flick has shown a direction glyph.
+private final class PrecisionArrowGesture: UILongPressGestureRecognizer {
+    var restingImage: UIImage?
+}
+
 // Keep the customizable item model and the iPad assistant, but avoid UIToolbar's
 // automatic overflow on a phone keyboard's narrower key pitch.
 final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
@@ -817,6 +822,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     private var arrowHUDGlass: UIVisualEffectView?
     private var arrowHUDLabel: UILabel?
     private var arrowHUDDismissal: DispatchWorkItem?
+    // The arrow key came from the stock phone defaults, not from the user's .toolbarDefinition.
+    private var stockPhoneArrowKey = false
     let maxSubmenuLevels = 15
     var buttonRegex: [Int:String] = [:]
     var noneTag = -1
@@ -1783,6 +1790,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 phoneDefaults = false
             }
         }
+        stockPhoneArrowKey = phoneDefaults
         if let configFileUrl = configFile {
             if let fileContent = try? String(contentsOf: configFileUrl, encoding: String.Encoding.utf8) {
                 let contentOfFile = phoneDefaults ? phoneToolbarDefaults(fileContent) : fileContent
@@ -2192,8 +2200,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         view.gestureRecognizers?.forEach { view.removeGestureRecognizer($0) }
-        let touch = UILongPressGestureRecognizer(target: self, action: #selector(precisionArrowTouch(_:)))
-        touch.name = "precision-arrow"; touch.minimumPressDuration = 0
+        let touch = PrecisionArrowGesture(target: self, action: #selector(precisionArrowTouch(_:)))
+        touch.name = "precision-arrow"; touch.minimumPressDuration = 0; touch.restingImage = item.image
         view.addGestureRecognizer(touch); view.isExclusiveTouch = true
         showArrowTip()
     }
@@ -2248,7 +2256,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else if sender.state == .ended || sender.state == .cancelled || sender.state == .failed {
             precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
             setArrowGlyph(nil, from: view)
-            if sender.state == .ended && precisionArrowCount == 0 {
+            if sender.state == .ended && precisionArrowCount == 0 && !stockPhoneArrowKey {
+                // A key from .toolbarDefinition keeps its tap: the tap position picks the direction, as with the other arrow keys.
+                dismissArrowHUD()
+                let location = sender.location(in: view)
+                tapPosition = CGPoint(x: location.x / view.bounds.width - 0.5, y: location.y / view.bounds.height - 0.5)
+                if let item = (editorToolbar.items ?? []).first(where: { $0.toolbarView === view }) { systemAction(item) }
+            } else if sender.state == .ended && precisionArrowCount == 0 {
                 showArrowHUD(direction: "up", count: nil, from: view); dismissArrowHUD(after: 1.4)
             } else { dismissArrowHUD() }
         }
@@ -2387,22 +2401,29 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
 
     private func setArrowGlyph(_ direction: String?, from view: UIView?) {
         guard let button = (editorToolbar.items ?? []).first(where: { $0.toolbarView === view }) else { return }
-        let symbol = direction.map { "arrow." + $0 } ?? "arrow.up.and.down.and.arrow.left.and.right"
         let configuration = UIDevice.current.userInterfaceIdiom == .phone ? PhoneKeyboardToolbar.symbolConfiguration : UIImage.SymbolConfiguration(pointSize: 22, weight: .regular)
-        guard let image = UIImage(systemName: symbol, withConfiguration: configuration) else { return }
+        // At rest the key shows its icon from the toolbar definition again, or its text when it has no icon.
+        let resting = view?.gestureRecognizers?.compactMap { $0 as? PrecisionArrowGesture }.first?.restingImage
+        let image: UIImage?
+        if let direction {
+            guard let glyph = UIImage(systemName: "arrow." + direction, withConfiguration: configuration) else { return }
+            image = glyph
+        } else { image = resting?.withConfiguration(configuration) }
         button.image = image
         if let key = view as? UIButton {
             if #available(iOS 15, *), var configuration = key.configuration {
                 configuration.image = image
+                configuration.title = image == nil ? button.title : nil
                 if #available(iOS 26, *) {
                     configuration.symbolContentTransition = UIAccessibility.isReduceMotionEnabled ? nil : UISymbolContentTransition(.replace)
                 }
                 key.configuration = configuration
             } else {
-                if #available(iOS 17, *), !UIAccessibility.isReduceMotionEnabled {
+                if #available(iOS 17, *), let image, !UIAccessibility.isReduceMotionEnabled {
                     key.imageView?.setSymbolImage(image, contentTransition: .replace)
                 }
                 key.setImage(image, for: .normal)
+                key.setTitle(image == nil ? button.title : nil, for: .normal)
             }
         }
     }
