@@ -42,8 +42,8 @@ _ = Package(
         ),
         .binaryTarget(
             name: "shell",
-            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.5/shell.xcframework.zip",
-            checksum: "855ff9b12bfbbdbd5298324377d91e18e6ac97dbb19d3c9311ce5a023ee51b2e"
+            url: "https://github.com/holzschu/ios_system/releases/download/v3.0.6/shell.xcframework.zip",
+            checksum: "89da3b8bd7f83e42a2311aeac54c38acc7a2f9c2fc0d0d27f75897b393cdfec2"
         ),
         .binaryTarget(
             name: "ssh_cmd",
