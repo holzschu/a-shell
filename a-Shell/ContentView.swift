@@ -450,7 +450,20 @@ private struct LegacyServiceDetails: View {
             ForEach(services.items) { item in
                 Section(header: Text(item.title)) {
                     Text("Port: " + String(item.port))
-                    Text(item.fingerprint).font(.system(.footnote, design: .monospaced))
+                    if item.kind == .ssh {
+                        if let connectionDetails = item.connectionDetails { connectionDetails() }
+                        ForEach(item.clients) { client in
+                            VStack(alignment: .leading) {
+                                Text((client.user ?? item.account) + " · " + client.address).font(.system(.footnote, design: .monospaced))
+                                if let name = client.keyName ?? client.keyFingerprint { Text(name).font(.footnote).sshTextSelection() }
+                            }
+                        }
+                        ForEach(SSHConnectionAddresses.read(listen: item.listen), id: \.self) { host in
+                            Text(item.sshCommand(host: host)).font(.system(.footnote, design: .monospaced)).sshTextSelection()
+                        }
+                    } else {
+                        Text(item.fingerprint).font(.system(.footnote, design: .monospaced))
+                    }
                     Button("Stop " + item.title) { DispatchQueue.global(qos: .userInitiated).async { item.stop() } }
                 }
             }
@@ -885,6 +898,126 @@ private extension View {
         if #available(iOS 16.4, *) { presentationDetents([.medium, .large]).presentationDragIndicator(.visible).presentationCornerRadius(22) }
         else if #available(iOS 16, *) { presentationDetents([.medium, .large]).presentationDragIndicator(.visible) }
         else { self }
+    }
+
+    @ViewBuilder func sshTextSelection() -> some View {
+        if #available(iOS 15, *) { self.textSelection(.enabled) }
+        else { self }
+    }
+}
+
+@_cdecl("ashell_sshd_error")
+public func sshdError(_ message: UnsafePointer<CChar>?) {
+    let error = message.map { String(cString: $0) }
+    DispatchQueue.main.async { ServiceIndicators.shared.controlError = error }
+}
+
+@_cdecl("ashell_sshd_print_addresses")
+public func sshdPrintAddresses() {
+    let read = { ServiceIndicators.shared.items.first { $0.id == "ssh" } }
+    guard let item = Thread.isMainThread ? read() : DispatchQueue.main.sync(execute: read) else { return }
+    for host in SSHConnectionAddresses.read(listen: item.listen) {
+        let destination = item.account + "@" + host
+        let quoted = "'" + destination.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        fputs("ssh -p \(item.port) \(quoted)\n", thread_stdout)
+    }
+}
+
+@_cdecl("ashell_sshd_state_v2")
+public func sshdState(_ running: Int32, _ port: Int32, _ listen: UnsafePointer<CChar>?, _ fingerprint: UnsafePointer<CChar>?, _ account: UnsafePointer<CChar>?, _ count: Int32, _ peers: UnsafePointer<UnsafePointer<CChar>?>?, _ users: UnsafePointer<UnsafePointer<CChar>?>?, _ since: UnsafePointer<Int64>?, _ kinds: UnsafePointer<Int32>?, _ commands: UnsafePointer<UnsafePointer<CChar>?>?, _ keyNames: UnsafePointer<UnsafePointer<CChar>?>?, _ keyFingerprints: UnsafePointer<UnsafePointer<CChar>?>?, _ stop: (@convention(c) () -> Void)?) {
+    guard running != 0 else { ServiceIndicators.shared.remove(id: "ssh"); return }
+    // Copy the borrowed callback arrays before publishing to the main queue.
+    var clients: [ServiceClient] = []
+    for index in 0..<max(0, Int(count)) {
+        let peer = peers?[index].map { String(cString: $0) } ?? "unknown"
+        let accepted = since?[index] ?? 0
+        let command = commands?[index].map { String(cString: $0) } ?? ""
+        let kind = kinds?[index] ?? 0
+        clients.append(ServiceClient(id: "ssh-\(peer)-\(accepted)", address: peer, user: users?[index].map { String(cString: $0) },
+            activity: kind == 2 ? .command(command) : kind == 1 ? .shell : .signedIn,
+            certificateSubject: nil, since: Date(timeIntervalSince1970: Double(accepted)), open: true,
+            keyName: keyNames?[index].map { String(cString: $0) }, keyFingerprint: keyFingerprints?[index].map { String(cString: $0) }))
+    }
+    let key = fingerprint.map { String(cString: $0) } ?? "unavailable"
+    let item = ServiceStatus(kind: .ssh, port: Int(port), listen: listen.map { String(cString: $0) }, fingerprint: key, mutualTLS: nil, clients: clients, stop: { stop?() }, account: account.map { String(cString: $0) } ?? "mobile", reportedClientCount: clients.count, connectionDetails: { AnyView(SSHConnectionDetails(fingerprint: key)) })
+    DispatchQueue.main.async {
+        if ServiceIndicators.shared.controlError?.hasPrefix("sshd:") == true { ServiceIndicators.shared.controlError = nil }
+    }
+    ServiceIndicators.shared.set(item)
+}
+
+@_cdecl("ashell_sshd_event")
+public func sshdEvent(_ session: UnsafePointer<CChar>?, _ phase: UnsafePointer<CChar>?, _ name: UnsafePointer<CChar>?, _ fingerprint: UnsafePointer<CChar>?, _ user: UnsafePointer<CChar>?, _ peer: UnsafePointer<CChar>?, _ at: Int64, _ text: UnsafePointer<CChar>?, _ status: Int32) {
+    guard let session, let phase else { return }
+    // The Relay PR optionally consumes these events; SSH works without a listener.
+    var value: [String: Any] = ["session": String(cString: session), "phase": String(cString: phase), "at": at, "status": status]
+    for (key, pointer) in [("name", name), ("fingerprint", fingerprint), ("user", user), ("peer", peer), ("text", text)] {
+        if let pointer { value[key] = String(cString: pointer) }
+    }
+    DispatchQueue.main.async { NotificationCenter.default.post(name: .init("remoteSSHHistory"), object: nil, userInfo: value) }
+}
+
+private enum SSHConnectionAddresses {
+    static func read(listen: String?) -> [String] {
+        var head: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&head) == 0 else { return [] }
+        defer { freeifaddrs(head) }
+        var cursor = head
+        var result: [String] = []
+        while let current = cursor {
+            defer { cursor = current.pointee.ifa_next }
+            let item = current.pointee
+            guard item.ifa_flags & UInt32(IFF_UP) != 0, let address = item.ifa_addr else { continue }
+            let interface = String(cString: item.ifa_name)
+            let loopback = item.ifa_flags & UInt32(IFF_LOOPBACK) != 0
+            guard loopback || interface.hasPrefix("en") || interface.hasPrefix("bridge") || interface.hasPrefix("utun") || interface.hasPrefix("ipsec") else { continue }
+            let family = Int32(address.pointee.sa_family)
+            let ipv6 = listen?.contains(":") == true
+            guard family == (ipv6 ? AF_INET6 : AF_INET) else { continue }
+            if family == AF_INET6 {
+                let bytes = UnsafeRawPointer(address).assumingMemoryBound(to: sockaddr_in6.self).pointee.sin6_addr
+                if withUnsafeBytes(of: bytes, { $0[0] == 0xfe && $0[1] & 0xc0 == 0x80 }) { continue }
+            }
+            var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            guard getnameinfo(address, socklen_t(address.pointee.sa_len), &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 else { continue }
+            let value = String(cString: host)
+            if let listen, listen != "0.0.0.0", listen != "::", value != listen { continue }
+            if value.hasPrefix("169.254.") || value.hasPrefix("192.0.0.") || loopback && listen != value { continue }
+            if !result.contains(value) { result.append(value) }
+        }
+        return result
+    }
+}
+
+private struct SSHConnectionDetails: View {
+    let fingerprint: String
+    @State private var authorizedKeys: Int?
+    @State private var readError: String?
+
+    var body: some View {
+        Group {
+            HStack { Text("Authentication"); Spacer(); Text("Key only").foregroundColor(.secondary) }
+            HStack { Text("Authorized keys"); Spacer(); Text(authorizedKeys.map { $0 == 0 ? "None" : String($0) } ?? (readError == nil ? "Loading" : "Unavailable")).foregroundColor(.secondary) }
+            if let readError { Text("Cannot read authorized_keys: " + readError).font(.footnote).foregroundColor(.red).sshTextSelection() }
+            if authorizedKeys == 0 { Text("Add your client's public key to ~/Documents/.ssh/authorized_keys. Keep its private key on the client.").font(.footnote).foregroundColor(.secondary) }
+            Text("Host key: " + fingerprint).font(.system(.footnote, design: .monospaced)).sshTextSelection()
+        }
+        .onAppear {
+            let file = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(".ssh/authorized_keys")
+            do {
+                let handle = try FileHandle(forReadingFrom: file)
+                defer { try? handle.close() }
+                // Foundation returns nil at EOF, including an existing empty file.
+                let data = try handle.read(upToCount: 65537) ?? Data()
+                guard data.count <= 65536 else { throw NSError(domain: "SSH", code: 1, userInfo: [NSLocalizedDescriptionKey: "File exceeds 64 KiB."]) }
+                guard let text = String(data: data, encoding: .utf8) else { throw NSError(domain: "SSH", code: 2, userInfo: [NSLocalizedDescriptionKey: "File is not UTF-8."]) }
+                authorizedKeys = text.split(whereSeparator: \.isNewline).filter { line in
+                    let value = line.trimmingCharacters(in: .whitespaces)
+                    return !value.isEmpty && !value.hasPrefix("#")
+                }.count
+                readError = nil
+            } catch { authorizedKeys = nil; readError = error.localizedDescription }
+        }
     }
 }
 

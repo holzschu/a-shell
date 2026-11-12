@@ -520,6 +520,13 @@
 		<string>ABHLQXceghiklopquvxyC:D:E:F:G:I:J:K:M:N:O:P:R:S:T:V:W:Z:a:b:f:g:j:m:n:r:s:t:z:</string>
 		<string>file</string>
 	</array>
+	<key>sshd</key>
+	<array>
+		<string>@rpath/SSHServer.framework/SSHServer</string>
+		<string>ashell_sshd_main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>ssh-agent</key>
 	<array>
 		<string>ssh_agent.framework/ssh_agent</string>
