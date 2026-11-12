@@ -501,6 +501,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var showToolbar: Bool { toolbarShouldBeShown && (!hardwareKeyboardOnly || hardwareToolbarOverride) }
     private var hardwareKeyboardConnected = false
     private var softwareKeyboardShown = false
+    private var keyboardSizeTransition = false
     // The Simulator always reports the Mac keyboard while showing the software keyboard, so a connected keyboard alone does not hide the bar.
     private var hardwareKeyboardOnly: Bool { hardwareKeyboardConnected && !softwareKeyboardShown }
     private var hardwareToolbarOverride = false
@@ -1756,12 +1757,30 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
 
+    func beginKeyboardSizeTransition(with coordinator: UIViewControllerTransitionCoordinator) {
+        guard PhoneKeyboardToolbar.isCustom else { return }
+        // Mid-rotation frames can cover only the accessory while the software keyboard stays up; read the settled keyboard afterwards.
+        keyboardSizeTransition = true
+        coordinator.animate(alongsideTransition: nil) { [weak self] _ in
+            guard let self else { return }
+            self.keyboardSizeTransition = false
+            var ancestor = self.terminalView?.superview
+            while let view = ancestor, !(view is TerminalContainerView) { ancestor = view.superview }
+            guard #available(iOS 15, *), let container = ancestor else { return }
+            self.setSoftwareKeyboardShown(container.keyboardLayoutGuide.layoutFrame.height > 100)
+        }
+    }
+
     @objc private func softwareKeyboardChanged(_ notification: Notification) {
         guard notification.userInfo?[UIResponder.keyboardIsLocalUserInfoKey] as? Bool ?? true else { return }
+        guard !keyboardSizeTransition else { return }
         // With a hardware keyboard the frame covers at most the accessory bar, far below a software keyboard.
         let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
         let visible = frame.intersection(window?.screen.bounds ?? UIScreen.main.bounds)
-        let shown = notification.name != UIResponder.keyboardWillHideNotification && visible.height > 100
+        setSoftwareKeyboardShown(notification.name != UIResponder.keyboardWillHideNotification && visible.height > 100)
+    }
+
+    private func setSoftwareKeyboardShown(_ shown: Bool) {
         guard shown != softwareKeyboardShown else { return }
         softwareKeyboardShown = shown
         guard hardwareKeyboardConnected else { return }
