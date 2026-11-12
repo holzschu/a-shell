@@ -199,7 +199,7 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                     key.accessibilityHint = "Tap for symbols. Swipe down for a period."
                     (key as? PhoneSymbolButton)?.activateSymbol = { [weak self] in self?.toggleSymbols() }
                     let period = UIAccessibilityCustomAction(name: Self.symbolNames["."] ?? ".") { [weak self] _ in
-                        self?.chooseSymbol("."); return true
+                        self?.chooseSymbol(".", entry: group.entries.first { $0.value == "." }?.item); return true
                     }
                     key.accessibilityCustomActions = [period] + group.entries.filter { $0.value != "." }.map { entry in
                         UIAccessibilityCustomAction(name: Self.symbolNames[entry.value] ?? entry.value) { [weak self] _ in
@@ -558,7 +558,7 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
             }
         } else if sender.state == .ended {
             if delta.y >= 12 && delta.y > abs(delta.x) {
-                chooseSymbol(".")
+                chooseSymbol(".", entry: symbolItem?.entries.first { $0.value == "." }?.item)
             } else if let selected = symbolSelection, let item = symbolItem, item.entries.indices.contains(selected) {
                 chooseSymbol(item.entries[selected].value, entry: item.entries[selected].item)
             } else if hypot(delta.x, delta.y) < 12 || (symbolsPinned && key.bounds.contains(sender.location(in: key))) {
@@ -1904,10 +1904,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             }
                         }
                         if (button != nil) {
-                            // The panel has 24 cells; a larger group becomes the Symbols menu below, which lists every entry.
-                            if PhoneKeyboardToolbar.isCustom, !UIAccessibility.isVoiceOverRunning, iconName == "#+=", activeButtonGroup.count <= 24 {
+                            // The panel has 24 cells; a group with more entries becomes the Symbols menu below, which lists every entry.
+                            let groupEntries = activeButtonGroup.compactMap { item in title(item).map { (value: $0, item: item) } }
+                            if PhoneKeyboardToolbar.isCustom, !UIAccessibility.isVoiceOverRunning, iconName == "#+=", groupEntries.count <= 24 {
                                 let symbols = PhoneSymbolItem(title: "#+=", style: .plain, target: nil, action: nil)
-                                symbols.entries = activeButtonGroup.compactMap { item in title(item).map { ($0, item) } }
+                                symbols.entries = groupEntries
                                 symbols.possibleTitles = ["", "#+="]
                                 symbols.accessibilityLabel = "Symbols"
                                 button = symbols
@@ -2559,9 +2560,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         toolbar.backgroundColor = PhoneKeyboardToolbar.isCustom ? .clear : terminalBackgroundColor
         toolbar.insertSymbol = { [weak self] value, entry in
             guard let self else { return }
-            // A group entry runs its own action (insertString, insertCommand or systemAction); the swipe-down period has none.
+            // A group entry runs its own action; a swipe-down period without a "." entry has none.
             if let entry, let action = entry.action {
                 UIApplication.shared.sendAction(action, to: entry.target, from: entry, for: nil)
+                // A systemAction entry (control, paste...) leaves Control as its own key would: releasing it here
+                // would switch a control entry straight back off.
+                if NSStringFromSelector(action).hasPrefix("systemAction") { return }
             } else {
                 let item = UIBarButtonItem(title: value, style: .plain, target: self, action: nil)
                 item.possibleTitles = ["", value]
