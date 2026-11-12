@@ -1,0 +1,1129 @@
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1,5 +1,7 @@
+ # Obvious program stuff.
+ bin_PROGRAMS = tmux
++tmux_LDFLAGS = -dynamiclib -Wl,-install_name,@rpath/TmuxNative.framework/TmuxNative
++tmux_SOURCES = ios-engine.c
+ CLEANFILES = tmux.1.mdoc tmux.1.man cmd-parse.c
+ 
+ # Distribution tarball options.
+--- a/configure.ac
++++ b/configure.ac
+@@ -998,6 +998,12 @@
+ 	*aix*)
+ 		AC_MSG_RESULT(aix)
+ 		PLATFORM=aix
++		;;
++	*ios*)
++		AC_MSG_RESULT(ios)
++		PLATFORM=unknown
++		AC_DEFINE(BROKEN___DEAD)
++		AC_DEFINE(BROKEN_CMSG_FIRSTHDR)
+ 		;;
+ 	*darwin*)
+ 		AC_MSG_RESULT(darwin)
+--- a/tmux.h
++++ b/tmux.h
+@@ -1302,6 +1302,9 @@
+ 
+ /* Child window structure. */
+ struct window_pane {
++	void *ios_job;
++	int ios_previous_cr;
++	struct event ios_poll;
+ 	u_int		 id;
+ 	int		 references;
+ 	u_int		 active_point;
+@@ -2308,6 +2310,7 @@
+ #define CLIENT_WRITE_ACK 0x4000000000ULL
+ #define CLIENT_NO_DETACH_ON_DESTROY 0x8000000000ULL
+ #define CLIENT_CONTROL_DISCARD 0x10000000000ULL
++#define CLIENT_IOS_TERMINAL 0x20000000000ULL
+ #define CLIENT_ALLREDRAWFLAGS		\
+ 	(CLIENT_REDRAWWINDOW|		\
+ 	 CLIENT_REDRAWSTATUS|		\
+@@ -4310,4 +4313,6 @@
+ int			 json_find_array(struct json_node *, const char *,
+ 			     struct json_node **, char **);
+ 
++#include "ios-boundary.h"
++#include "ios-engine.h"
+ #endif /* TMUX_H */
+--- a/tmux.c
++++ b/tmux.c
+@@ -390,7 +390,7 @@
+ }
+ 
+ int
+-main(int argc, char **argv)
++__attribute__((visibility("default"))) tmux_native_main(int argc, char **argv)
+ {
+ 	char					*path = NULL, *label = NULL;
+ 	char					*cause, **var;
+@@ -400,6 +400,9 @@
+ 	const struct options_table_entry	*oe;
+ 	u_int					 i;
+ 
++	if (tmux_ios_check_shared_container())
++		return (1);
++
+ 	if (setlocale(LC_CTYPE, "en_US.UTF-8") == NULL &&
+ 	    setlocale(LC_CTYPE, "C.UTF-8") == NULL) {
+ 		if (setlocale(LC_CTYPE, "") == NULL)
+@@ -416,7 +419,7 @@
+ 		flags = CLIENT_LOGIN;
+ 
+ 	global_environ = environ_create();
+-	for (var = environ; *var != NULL; var++)
++	for (var = environmentVariables(ios_currentPid()); var != NULL && *var != NULL; var++)
+ 		environ_put(global_environ, *var, 0);
+ 	if ((cwd = find_cwd()) != NULL)
+ 		environ_set(global_environ, "PWD", 0, "%s", cwd);
+--- a/client.c
++++ b/client.c
+@@ -34,6 +34,15 @@
+ 
+ static struct tmuxproc	*client_proc;
+ static struct tmuxpeer	*client_peer;
++static struct event client_resize_timer;
++
++static void
++client_resize_poll(int fd, short events, void *data)
++{
++	tmux_ios_send_resize(client_peer);
++	struct timeval interval = {.tv_usec = 100000};
++	evtimer_add(&client_resize_timer, &interval);
++}
+ static uint64_t		 client_flags;
+ static int		 client_suspended;
+ static enum {
+@@ -104,18 +113,9 @@
+ static int
+ client_connect(struct event_base *base, const char *path, uint64_t flags)
+ {
+-	struct sockaddr_un	sa;
+-	size_t			size;
+ 	int			fd, lockfd = -1, locked = 0;
+ 	char		       *lockfile = NULL;
+ 
+-	memset(&sa, 0, sizeof sa);
+-	sa.sun_family = AF_UNIX;
+-	size = strlcpy(sa.sun_path, path, sizeof sa.sun_path);
+-	if (size >= sizeof sa.sun_path) {
+-		errno = ENAMETOOLONG;
+-		return (-1);
+-	}
+ 	log_debug("socket is %s", path);
+ 
+ retry:
+@@ -123,7 +123,7 @@
+ 		return (-1);
+ 
+ 	log_debug("trying connect");
+-	if (connect(fd, (struct sockaddr *)&sa, sizeof sa) == -1) {
++	if (tmux_ios_socket(fd, path, 0) == -1) {
+ 		log_debug("connect failed: %s", strerror(errno));
+ 		if (errno != ECONNREFUSED && errno != ENOENT)
+ 			goto failed;
+@@ -288,6 +288,10 @@
+ #endif
+ 	fd = client_connect(base, socket_path, client_flags);
+ 	if (fd == -1) {
++		if ((errno == ECONNREFUSED || errno == ENOENT) &&
++		    (client_flags & CLIENT_STARTSERVER) &&
++		    ios_getenv("ASHELL_TMUX_START") != NULL)
++			return (ASHELL_TMUX_NO_SERVER);
+ 		if (errno == ECONNREFUSED) {
+ 			fprintf(stderr, "no server running on %s\n",
+ 			    socket_path);
+@@ -303,7 +307,7 @@
+ 	if ((cwd = find_cwd()) == NULL && (cwd = find_home()) == NULL)
+ 		cwd = "/";
+ 	if ((ttynam = ttyname(STDIN_FILENO)) == NULL)
+-		ttynam = "";
++		ttynam = "ios-terminal";
+ 	if ((termname = getenv("TERM")) == NULL)
+ 		termname = "";
+ 
+@@ -321,6 +325,7 @@
+ 	    NULL) != 0)
+ 		fatal("pledge failed");
+ 
++	if (ios_isatty(STDIN_FILENO)) ios_startInteractive();
+ 	/* Load terminfo entry if any. */
+ 	if (isatty(STDIN_FILENO) &&
+ 	    *termname != '\0' &&
+@@ -341,23 +346,8 @@
+ 
+ 	/* Set up control mode. */
+ 	if (client_flags & CLIENT_CONTROLCONTROL) {
+-		if (tcgetattr(STDIN_FILENO, &saved_tio) != 0) {
+-			fprintf(stderr, "tcgetattr failed: %s\n",
+-			    strerror(errno));
+-			return (1);
+-		}
+-		cfmakeraw(&tio);
+-		tio.c_iflag = ICRNL|IXANY;
+-		tio.c_oflag = OPOST|ONLCR;
+-#ifdef NOKERNINFO
+-		tio.c_lflag = NOKERNINFO;
+-#endif
+-		tio.c_cflag = CREAD|CS8|HUPCL;
+-		tio.c_cc[VMIN] = 1;
+-		tio.c_cc[VTIME] = 0;
+-		cfsetispeed(&tio, cfgetispeed(&saved_tio));
+-		cfsetospeed(&tio, cfgetospeed(&saved_tio));
+-		tcsetattr(STDIN_FILENO, TCSANOW, &tio);
++		fprintf(stderr, "tmux: -CC requires a kernel terminal\n");
++		return (1);
+ 	}
+ 
+ 	/* Send identify messages. */
+@@ -396,8 +386,10 @@
+ 	} else if (msg == MSG_SHELL)
+ 		proc_send(client_peer, msg, -1, NULL, 0);
+ 
+-	/* Start main loop. */
++	/* ios_system terminal sizes are session data, not kernel TTY ioctls. */
++	evtimer_set(&client_resize_timer, client_resize_poll, NULL);
+ 	proc_loop(client_proc, NULL);
++	evtimer_del(&client_resize_timer);
+ 
+ 	/* Run command if user requested exec, instead of exiting. */
+ 	if (client_exittype == MSG_EXEC) {
+@@ -422,11 +414,6 @@
+ 		fflush(stdout);
+ 		if (client_flags & CLIENT_CONTROL_WAITEXIT)
+ 			control_wait_exit(STDIN_FILENO);
+-		if (client_flags & CLIENT_CONTROLCONTROL) {
+-			printf("\033\\");
+-			fflush(stdout);
+-			tcsetattr(STDOUT_FILENO, TCSAFLUSH, &saved_tio);
+-		}
+ 	} else if (client_exitreason != CLIENT_EXIT_NONE)
+ 		fprintf(stderr, "%s\n", client_exit_message());
+ 
+@@ -435,6 +422,8 @@
+ 	setblocking(STDOUT_FILENO, 1);
+ 	setblocking(STDERR_FILENO, 1);
+ 
++	tmux_ios_close_files(&client_files);
++	proc_remove_peer(client_peer);
+ 	return (client_exitval);
+ }
+ 
+@@ -447,6 +436,7 @@
+ 	size_t	  sslen;
+ 	int	  fd;
+ 	uint64_t  flags = client_flags;
++	if (ios_isatty(STDIN_FILENO)) flags |= CLIENT_IOS_TERMINAL;
+ 	pid_t	  pid;
+ 	u_int	  i;
+ 
+@@ -477,7 +467,7 @@
+ 	pid = getpid();
+ 	proc_send(client_peer, MSG_IDENTIFY_CLIENTPID, -1, &pid, sizeof pid);
+ 
+-	for (ss = environ; *ss != NULL; ss++) {
++	for (ss = environmentVariables(ios_currentPid()); ss != NULL && *ss != NULL; ss++) {
+ 		sslen = strlen(*ss) + 1;
+ 		if (sslen > MAX_IMSGSIZE - IMSG_HEADER_SIZE)
+ 			continue;
+@@ -491,21 +481,7 @@
+ static __dead void
+ client_exec(const char *shell, const char *shellcmd)
+ {
+-	char	*argv0;
+-
+-	log_debug("shell %s, command %s", shell, shellcmd);
+-	argv0 = shell_argv0(shell, !!(client_flags & CLIENT_LOGIN));
+-	setenv("SHELL", shell, 1);
+-
+-	proc_clear_signals(client_proc, 1);
+-
+-	setblocking(STDIN_FILENO, 1);
+-	setblocking(STDOUT_FILENO, 1);
+-	setblocking(STDERR_FILENO, 1);
+-	closefrom(STDERR_FILENO + 1);
+-
+-	execl(shell, argv0, "-c", shellcmd, (char *) NULL);
+-	fatal("execl failed");
++	fatalx("tmux -c/exec requires an unsupported process replacement");
+ }
+ 
+ /* Callback to handle signals in the client. */
+@@ -546,7 +522,7 @@
+ 			proc_send(client_peer, MSG_EXITING, -1, NULL, 0);
+ 			break;
+ 		case SIGWINCH:
+-			proc_send(client_peer, MSG_RESIZE, -1, NULL, 0);
++			tmux_ios_send_resize(client_peer);
+ 			break;
+ 		case SIGCONT:
+ 			memset(&sigact, 0, sizeof sigact);
+@@ -654,7 +630,7 @@
+ 			fatalx("bad MSG_READY size");
+ 
+ 		client_attached = 1;
+-		proc_send(client_peer, MSG_RESIZE, -1, NULL, 0);
++		client_resize_poll(-1, 0, NULL);
+ 		break;
+ 	case MSG_VERSION:
+ 		if (datalen != 0)
+--- a/file.c
++++ b/file.c
+@@ -220,7 +220,7 @@
+ 		evbuffer_add_vprintf(cf->buffer, fmt, ap);
+ 
+ 		msg.stream = 1;
+-		msg.fd = STDOUT_FILENO;
++		msg.fd = 1;
+ 		msg.flags = 0;
+ 		proc_send(c->peer, MSG_WRITE_OPEN, -1, &msg, sizeof msg);
+ 	} else {
+@@ -247,7 +247,7 @@
+ 		evbuffer_add(cf->buffer, data, size);
+ 
+ 		msg.stream = 1;
+-		msg.fd = STDOUT_FILENO;
++		msg.fd = 1;
+ 		msg.flags = 0;
+ 		proc_send(c->peer, MSG_WRITE_OPEN, -1, &msg, sizeof msg);
+ 	} else {
+@@ -277,7 +277,7 @@
+ 		evbuffer_add_vprintf(cf->buffer, fmt, ap);
+ 
+ 		msg.stream = 2;
+-		msg.fd = STDERR_FILENO;
++		msg.fd = 2;
+ 		msg.flags = 0;
+ 		proc_send(c->peer, MSG_WRITE_OPEN, -1, &msg, sizeof msg);
+ 	} else {
+@@ -305,7 +305,7 @@
+ 		cf = file_create_with_client(c, stream, cb, cbdata);
+ 		cf->path = xstrdup("-");
+ 
+-		fd = STDOUT_FILENO;
++		fd = 1;
+ 		if (c == NULL ||
+ 		    (c->flags & CLIENT_ATTACHED) ||
+ 		    (c->flags & CLIENT_CONTROL)) {
+@@ -379,7 +379,7 @@
+ 		cf = file_create_with_client(c, stream, cb, cbdata);
+ 		cf->path = xstrdup("-");
+ 
+-		fd = STDIN_FILENO;
++		fd = 0;
+ 		if (c == NULL ||
+ 		    (c->flags & CLIENT_ATTACHED) ||
+ 		    (c->flags & CLIENT_CONTROL)) {
+@@ -634,12 +634,11 @@
+ 	if (msg->fd == -1)
+ 		cf->fd = open(path, msg->flags|flags, 0644);
+ 	else if (allow_streams) {
+-		if (msg->fd != STDOUT_FILENO && msg->fd != STDERR_FILENO)
++		if (msg->fd != 1 && msg->fd != 2)
+ 			errno = EBADF;
+ 		else {
+-			cf->fd = dup(msg->fd);
+-			if (close_received)
+-				close(msg->fd); /* can only be used once */
++			cf->fd = dup(msg->fd == 0 ? STDIN_FILENO : msg->fd == 1 ? STDOUT_FILENO : STDERR_FILENO);
++			/* The session owns its FILE descriptors; only the duplicate is ours. */
+ 		}
+ 	} else
+ 	      errno = EBADF;
+@@ -791,12 +790,11 @@
+ 	if (msg->fd == -1)
+ 		cf->fd = open(path, flags);
+ 	else if (allow_streams) {
+-		if (msg->fd != STDIN_FILENO)
++		if (msg->fd != 0)
+ 			errno = EBADF;
+ 		else {
+-			cf->fd = dup(msg->fd);
+-			if (close_received)
+-				close(msg->fd); /* can only be used once */
++			cf->fd = dup(msg->fd == 0 ? STDIN_FILENO : msg->fd == 1 ? STDOUT_FILENO : STDERR_FILENO);
++			/* The session owns its FILE descriptors; only the duplicate is ours. */
+ 		}
+ 	} else
+ 		errno = EBADF;
+@@ -925,3 +923,14 @@
+ 	file_fire_done(cf);
+ 	return (0);
+ }
++
++void
++tmux_ios_close_files(struct client_files *files)
++{
++	struct client_file *cf, *next;
++	RB_FOREACH_SAFE(cf, client_files, files, next) {
++		if (cf->event) bufferevent_free(cf->event);
++		if (cf->fd >= 0) close(cf->fd);
++		file_free(cf);
++	}
++}
+--- a/tty.c
++++ b/tty.c
+@@ -104,7 +104,7 @@
+ int
+ tty_init(struct tty *tty, struct client *c)
+ {
+-	if (!isatty(c->fd))
++	if (!(c->flags & CLIENT_IOS_TERMINAL))
+ 		return (-1);
+ 
+ 	memset(tty, 0, sizeof *tty);
+@@ -115,8 +115,7 @@
+ 	tty->fg = tty->bg = -1;
+ 	tty->mouse_last_pane = -1;
+ 
+-	if (tcgetattr(c->fd, &tty->tio) != 0)
+-		return (-1);
++	/* ios_system owns terminal mode; no kernel termios is claimed. */
+ 	return (0);
+ }
+ 
+@@ -127,7 +126,12 @@
+ 	struct winsize	 ws;
+ 	u_int		 sx, sy, xpixel, ypixel;
+ 
+-	if (ioctl(c->fd, TIOCGWINSZ, &ws) != -1) {
++	struct environ_entry *cols = environ_find(c->environ, "COLUMNS");
++	struct environ_entry *rows = environ_find(c->environ, "LINES");
++	memset(&ws, 0, sizeof ws);
++	ws.ws_col = cols && cols->value ? strtonum(cols->value, 1, 9999, NULL) : 80;
++	ws.ws_row = rows && rows->value ? strtonum(rows->value, 1, 9999, NULL) : 24;
++	if (ws.ws_col && ws.ws_row) {
+ 		sx = ws.ws_col;
+ 		if (sx == 0) {
+ 			sx = 80;
+@@ -252,7 +256,7 @@
+ 	size_t		 size = EVBUFFER_LENGTH(tty->out);
+ 	int		 nwrite;
+ 
+-	nwrite = evbuffer_write(tty->out, c->fd);
++	nwrite = evbuffer_write(tty->out, c->out_fd);
+ 	if (nwrite == -1)
+ 		return;
+ 	log_debug("%s: wrote %d bytes (of %zu)", c->name, nwrite, size);
+@@ -292,7 +296,7 @@
+ 	if (tty->in == NULL)
+ 		fatal("out of memory");
+ 
+-	event_set(&tty->event_out, c->fd, EV_WRITE, tty_write_callback, tty);
++	event_set(&tty->event_out, c->out_fd, EV_WRITE, tty_write_callback, tty);
+ 	tty->out = evbuffer_new();
+ 	if (tty->out == NULL)
+ 		fatal("out of memory");
+@@ -341,6 +345,7 @@
+ 	u_int		 i;
+ 
+ 	setblocking(c->fd, 0);
++	setblocking(c->out_fd, 0);
+ 	event_add(&tty->event_in, NULL);
+ 
+ 	memcpy(&tio, &tty->tio, sizeof tio);
+@@ -351,8 +356,7 @@
+ 	    ECHOKE|ISIG);
+ 	tio.c_cc[VMIN] = 1;
+ 	tio.c_cc[VTIME] = 0;
+-	if (tcsetattr(c->fd, TCSANOW, &tio) == 0)
+-		tcflush(c->fd, TCOFLUSH);
++	/* The host forwards raw terminal bytes on this logical terminal. */
+ 
+ 	if (options_get_number(global_options, "clear-on-attach")) {
+ 		tty_putcode(tty, TTYC_SMCUP);
+@@ -474,10 +478,9 @@
+ 	 * because the fd is invalid. Things like ssh -t can easily leave us
+ 	 * with a dead tty.
+ 	 */
+-	if (ioctl(c->fd, TIOCGWINSZ, &ws) == -1)
+-		return;
+-	if (tcsetattr(c->fd, TCSANOW, &tty->tio) == -1)
+-		return;
++	memset(&ws, 0, sizeof ws);
++	ws.ws_col = tty->sx;
++	ws.ws_row = tty->sy;
+ 
+ 	tty_raw(tty, tty_term_string_ii(tty->term, TTYC_CSR, 0, ws.ws_row - 1));
+ 	if (tty_acs_needed(tty))
+@@ -518,6 +521,7 @@
+ 		tty_raw(tty, "\033[?2031l");
+ 
+ 	setblocking(c->fd, 1);
++	setblocking(c->out_fd, 1);
+ }
+ 
+ void
+@@ -582,7 +586,7 @@
+ 
+ 	slen = strlen(s);
+ 	for (i = 0; i < 5; i++) {
+-		n = write(c->fd, s, slen);
++		n = write(c->out_fd, s, slen);
+ 		if (n >= 0) {
+ 			s += n;
+ 			slen -= n;
+--- a/spawn.c
++++ b/spawn.c
+@@ -464,20 +464,7 @@
+ 	}
+ 	new_wp->flags &= ~PANE_EMPTY;
+ 
+-	/* Store current working directory and change to new one. */
+-	if (getcwd(path, sizeof path) != NULL) {
+-		if (chdir(new_wp->cwd) == 0)
+-			actual_cwd = new_wp->cwd;
+-		else if (home != NULL && chdir(home) == 0)
+-			actual_cwd = home;
+-		else if (chdir("/") == 0)
+-			actual_cwd = "/";
+-	}
+-
+-	/* Fork the new process. */
+-	new_wp->pid = fdforkpty(ptm_fd, &new_wp->fd, new_wp->tty, NULL, &ws);
+-	if (new_wp->pid == -1) {
+-		xasprintf(cause, "fork failed: %s", strerror(errno));
++	if (tmux_ios_spawn_pane(sc, new_wp, child, &ws, cause) != 0) {
+ 		new_wp->fd = -1;
+ 		if (~sc->flags & SPAWN_RESPAWN) {
+ 			server_client_remove_pane(new_wp);
+@@ -488,91 +475,6 @@
+ 		environ_free(child);
+ 		return (NULL);
+ 	}
+-
+-	/*
+-	 * In the parent process, everything is done now. Change the working
+-	 * directory back.
+-	 */
+-	if (new_wp->pid != 0) {
+-		if (actual_cwd != NULL &&
+-		    chdir(path) != 0 &&
+-		    (home == NULL || chdir(home) != 0))
+-			chdir("/");
+-		goto complete;
+-	}
+-
+-#if defined(HAVE_SYSTEMD) && defined(ENABLE_CGROUPS)
+-	/*
+-	 * Move the child process into a new cgroup for systemd-oomd isolation.
+-	 */
+-	if (systemd_move_to_new_cgroup(cause) < 0) {
+-		log_debug("%s: moving pane to new cgroup failed: %s",
+-		    __func__, *cause);
+-		free (*cause);
+-	}
+-#endif
+-	/*
+-	 * Child process. Set PWD to the working directory.
+-	 */
+-	if (actual_cwd != NULL)
+-		environ_set(child, "PWD", 0, "%s", actual_cwd);
+-
+-	/*
+-	 * Update terminal escape characters from the session if available and
+-	 * force VERASE to tmux's backspace.
+-	 */
+-	if (tcgetattr(STDIN_FILENO, &now) != 0)
+-		_exit(1);
+-	if (s->tio != NULL)
+-		memcpy(now.c_cc, s->tio->c_cc, sizeof now.c_cc);
+-	key = options_get_number(global_options, "backspace");
+-	if (key >= 0x7f)
+-		now.c_cc[VERASE] = '\177';
+-	else
+-		now.c_cc[VERASE] = key;
+-#ifdef IUTF8
+-	now.c_iflag |= IUTF8;
+-#endif
+-	if (tcsetattr(STDIN_FILENO, TCSANOW, &now) != 0)
+-		_exit(1);
+-
+-	/* Clean up file descriptors and signals and update the environment. */
+-	proc_clear_signals(server_proc, 1);
+-	closefrom(STDERR_FILENO + 1);
+-	sigprocmask(SIG_SETMASK, &oldset, NULL);
+-	log_close();
+-	environ_push(child);
+-
+-	/*
+-	 * If given multiple arguments, use execvp(). Copy the arguments to
+-	 * ensure they end in a NULL.
+-	 */
+-	if (new_wp->argc != 0 && new_wp->argc != 1) {
+-		argvp = cmd_copy_argv(new_wp->argc, new_wp->argv);
+-		execvp(argvp[0], argvp);
+-		_exit(1);
+-	}
+-
+-	/*
+-	 * If one argument, pass it to $SHELL -c. Otherwise create a login
+-	 * shell.
+-	 */
+-	cp = strrchr(new_wp->shell, '/');
+-	if (new_wp->argc == 1) {
+-		tmp = new_wp->argv[0];
+-		if (cp != NULL && cp[1] != '\0')
+-			xasprintf(&argv0, "%s", cp + 1);
+-		else
+-			xasprintf(&argv0, "%s", new_wp->shell);
+-		execl(new_wp->shell, argv0, "-c", tmp, (char *)NULL);
+-		_exit(1);
+-	}
+-	if (cp != NULL && cp[1] != '\0')
+-		xasprintf(&argv0, "-%s", cp + 1);
+-	else
+-		xasprintf(&argv0, "-%s", new_wp->shell);
+-	execl(new_wp->shell, argv0, (char *)NULL);
+-	_exit(1);
+ 
+ complete:
+ #ifdef HAVE_UTEMPTER
+--- a/window.c
++++ b/window.c
+@@ -596,30 +596,8 @@
+ void
+ window_pane_send_resize(struct window_pane *wp, u_int sx, u_int sy)
+ {
+-	struct window	*w = wp->window;
+-	struct winsize	 ws;
+-
+-	if (wp->fd == -1)
+-		return;
+-
+-	log_debug("%s: %%%u resize to %u,%u", __func__, wp->id, sx, sy);
+-
+-	memset(&ws, 0, sizeof ws);
+-	ws.ws_col = sx;
+-	ws.ws_row = sy;
+-	ws.ws_xpixel = w->xpixel * ws.ws_col;
+-	ws.ws_ypixel = w->ypixel * ws.ws_row;
+-	if (ioctl(wp->fd, TIOCSWINSZ, &ws) == -1)
+-#ifdef __sun
+-		/*
+-		 * Some versions of Solaris apparently can return an error when
+-		 * resizing; don't know why this happens, can't reproduce on
+-		 * other platforms and ignoring it doesn't seem to cause any
+-		 * issues.
+-		 */
+-		if (errno != EINVAL && errno != ENXIO)
+-#endif
+-		fatal("ioctl failed");
++	if (wp->fd != -1)
++		tmux_ios_resize_pane(wp, sx, sy);
+ }
+ 
+ int
+@@ -1567,6 +1545,7 @@
+ static void
+ window_pane_destroy(struct window_pane *wp)
+ {
++	tmux_ios_release_pane(wp);
+ 	window_pane_wait_finish(wp);
+ 	spawn_editor_finish(wp);
+ 
+--- a/server.c
++++ b/server.c
+@@ -106,19 +106,10 @@
+ int
+ server_create_socket(uint64_t flags, char **cause)
+ {
+-	struct sockaddr_un	sa;
+-	size_t			size;
+ 	mode_t			mask;
+ 	int			fd, saved_errno;
+ 
+-	memset(&sa, 0, sizeof sa);
+-	sa.sun_family = AF_UNIX;
+-	size = strlcpy(sa.sun_path, socket_path, sizeof sa.sun_path);
+-	if (size >= sizeof sa.sun_path) {
+-		errno = ENAMETOOLONG;
+-		goto fail;
+-	}
+-	unlink(sa.sun_path);
++	unlink(socket_path);
+ 
+ 	if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+ 		goto fail;
+@@ -127,7 +118,7 @@
+ 		mask = umask(S_IXUSR|S_IXGRP|S_IRWXO);
+ 	else
+ 		mask = umask(S_IXUSR|S_IRWXG|S_IRWXO);
+-	if (bind(fd, (struct sockaddr *)&sa, sizeof sa) == -1) {
++	if (tmux_ios_socket(fd, socket_path, 1) == -1) {
+ 		saved_errno = errno;
+ 		umask(mask);
+ 		close(fd);
+@@ -144,6 +135,8 @@
+ 	}
+ 	setblocking(fd, 0);
+ 
++	fputs("ASHELL_TMUX_READY\n", thread_stdout);
++	fflush(thread_stdout);
+ 	return (fd);
+ 
+ fail:
+@@ -229,8 +222,6 @@
+ 		server_update_socket();
+ 	if (~flags & CLIENT_NOFORK)
+ 		c = server_client_create(fd);
+-	else
+-		options_set_number(global_options, "exit-empty", 0);
+ 
+ 	if (lockfd >= 0) {
+ 		unlink(lockfile);
+@@ -514,6 +505,16 @@
+ 	job_check_died(pid, status);
+ }
+ 
++void
++tmux_ios_pane_exited(struct window_pane *wp, int status)
++{
++	wp->status = status;
++	wp->flags |= PANE_STATUSREADY|PANE_EXITED;
++	window_pane_wait_finish(wp);
++	spawn_editor_finish(wp);
++	if (window_pane_destroy_ready(wp)) server_destroy_pane(wp, 1);
++}
++
+ /* Handle stopped children. */
+ static void
+ server_child_stopped(pid_t pid, int status)
+--- a/server-client.c
++++ b/server-client.c
+@@ -2710,9 +2710,15 @@
+ 		if (server_client_dispatch_command(c, imsg) != 0)
+ 			goto bad;
+ 		break;
+-	case MSG_RESIZE:
+-		if (datalen != 0)
+-			goto bad;
++	case MSG_RESIZE: {
++		unsigned size[2];
++		if (!(c->flags & CLIENT_TERMINAL)) break;
++		if (datalen != sizeof size) goto bad;
++		memcpy(size, imsg->data, sizeof size);
++		if (!size[0] || size[0] > 9999 || !size[1] || size[1] > 9999) goto bad;
++		environ_set(c->environ, "COLUMNS", 0, "%u", size[0]);
++		environ_set(c->environ, "LINES", 0, "%u", size[1]);
++	}
+ 
+ 		if (c->flags & CLIENT_CONTROL)
+ 			break;
+@@ -3035,9 +3041,10 @@
+ 			tty_resize(&c->tty);
+ 			c->flags |= CLIENT_TERMINAL;
+ 		}
+-		if (c->out_fd != -1)
+-			close(c->out_fd);
+-		c->out_fd = -1;
++		if (!(c->flags & CLIENT_TERMINAL)) {
++			if (c->out_fd != -1) close(c->out_fd);
++			c->out_fd = -1;
++		}
+ 	}
+ 	if (c->flags & (CLIENT_CONTROL|CLIENT_TERMINAL))
+ 		events_fire_client("client-created", c);
+--- a/job.c
++++ b/job.c
+@@ -74,167 +74,8 @@
+     job_complete_cb completecb, job_free_cb freecb, void *data, int flags,
+     int sx, int sy)
+ {
+-	struct job	 *job;
+-	struct environ	 *env;
+-	pid_t		  pid;
+-	int		  nullfd, out[2], master, do_close = 1;
+-	const char	 *home, *shell;
+-	sigset_t	  set, oldset;
+-	struct winsize	  ws;
+-	char		**argvp, tty[TTY_NAME_MAX], *argv0;
+-	struct options	 *oo;
+-
+-	/*
+-	 * Do not set TERM during .tmux.conf (second argument here), it is nice
+-	 * to be able to use if-shell to decide on default-terminal based on
+-	 * outside TERM.
+-	 */
+-	env = environ_for_session(s, !cfg_finished);
+-	if (e != NULL)
+-		environ_copy(e, env);
+-
+-	if (~flags & JOB_DEFAULTSHELL)
+-		shell = _PATH_BSHELL;
+-	else {
+-		if (s != NULL)
+-			oo = s->options;
+-		else
+-			oo = global_s_options;
+-		shell = options_get_string(oo, "default-shell");
+-		if (!checkshell(shell))
+-			shell = _PATH_BSHELL;
+-	}
+-	argv0 = shell_argv0(shell, 0);
+-
+-	sigfillset(&set);
+-	sigprocmask(SIG_BLOCK, &set, &oldset);
+-
+-	if (flags & JOB_PTY) {
+-		memset(&ws, 0, sizeof ws);
+-		ws.ws_col = sx;
+-		ws.ws_row = sy;
+-		pid = fdforkpty(ptm_fd, &master, tty, NULL, &ws);
+-	} else {
+-		if (socketpair(AF_UNIX, SOCK_STREAM, PF_UNSPEC, out) != 0)
+-			goto fail;
+-		pid = fork();
+-	}
+-	if (cmd == NULL) {
+-		cmd_log_argv(argc, argv, "%s:", __func__);
+-		log_debug("%s: cwd=%s, shell=%s", __func__,
+-		    cwd == NULL ? "" : cwd, shell);
+-	} else {
+-		log_debug("%s: cmd=%s, cwd=%s, shell=%s", __func__, cmd,
+-		    cwd == NULL ? "" : cwd, shell);
+-	}
+-
+-	switch (pid) {
+-	case -1:
+-		if (~flags & JOB_PTY) {
+-			close(out[0]);
+-			close(out[1]);
+-		}
+-		goto fail;
+-	case 0:
+-		proc_clear_signals(server_proc, 1);
+-		sigprocmask(SIG_SETMASK, &oldset, NULL);
+-
+-		if (cwd != NULL) {
+-			if (chdir(cwd) == 0)
+-				environ_set(env, "PWD", 0, "%s", cwd);
+-			else if ((home = find_home()) != NULL && chdir(home) == 0)
+-				environ_set(env, "PWD", 0, "%s", home);
+-			else if (chdir("/") == 0)
+-				environ_set(env, "PWD", 0, "/");
+-			else
+-				_exit(1);
+-		}
+-
+-		environ_push(env);
+-		environ_free(env);
+-
+-		if (~flags & JOB_PTY) {
+-			if (dup2(out[1], STDIN_FILENO) == -1)
+-				_exit(1);
+-			do_close = do_close && out[1] != STDIN_FILENO;
+-			if (dup2(out[1], STDOUT_FILENO) == -1)
+-				_exit(1);
+-			do_close = do_close && out[1] != STDOUT_FILENO;
+-			if (flags & JOB_SHOWSTDERR) {
+-				if (dup2(out[1], STDERR_FILENO) == -1)
+-					_exit(1);
+-				do_close = do_close && out[1] != STDERR_FILENO;
+-			} else {
+-				nullfd = open(_PATH_DEVNULL, O_RDWR);
+-				if (nullfd == -1)
+-					_exit(1);
+-				if (dup2(nullfd, STDERR_FILENO) == -1)
+-					_exit(1);
+-				if (nullfd != STDERR_FILENO)
+-					close(nullfd);
+-			}
+-			if (do_close)
+-				close(out[1]);
+-			close(out[0]);
+-		}
+-		closefrom(STDERR_FILENO + 1);
+-
+-		if (cmd != NULL) {
+-			if (flags & JOB_DEFAULTSHELL)
+-				setenv("SHELL", shell, 1);
+-			execl(shell, argv0, "-c", cmd, (char *)NULL);
+-			_exit(1);
+-		} else {
+-			argvp = cmd_copy_argv(argc, argv);
+-			execvp(argvp[0], argvp);
+-			_exit(1);
+-		}
+-	}
+-
+-	sigprocmask(SIG_SETMASK, &oldset, NULL);
+-	environ_free(env);
+-	free(argv0);
+-
+-	job = xcalloc(1, sizeof *job);
+-	job->state = JOB_RUNNING;
+-	job->flags = flags;
+-
+-	if (cmd != NULL)
+-		job->cmd = xstrdup(cmd);
+-	else
+-		job->cmd = cmd_stringify_argv(argc, argv);
+-	job->pid = pid;
+-	if (flags & JOB_PTY)
+-		strlcpy(job->tty, tty, sizeof job->tty);
+-	job->status = 0;
+-
+-	LIST_INSERT_HEAD(&all_jobs, job, entry);
+-
+-	job->updatecb = updatecb;
+-	job->completecb = completecb;
+-	job->freecb = freecb;
+-	job->data = data;
+-
+-	if (~flags & JOB_PTY) {
+-		close(out[1]);
+-		job->fd = out[0];
+-	} else
+-		job->fd = master;
+-	setblocking(job->fd, 0);
+-
+-	job->event = bufferevent_new(job->fd, job_read_callback,
+-	    job_write_callback, job_error_callback, job);
+-	if (job->event == NULL)
+-		fatalx("out of memory");
+-	bufferevent_enable(job->event, EV_READ|EV_WRITE);
+-
+-	log_debug("run job %p: %s, pid %ld", job, job->cmd, (long)job->pid);
+-	return (job);
+-
+-fail:
+-	sigprocmask(SIG_SETMASK, &oldset, NULL);
+-	environ_free(env);
+-	free(argv0);
++	/* Background shell jobs need a separate worker adapter. */
++	errno = ENOTSUP;
+ 	return (NULL);
+ }
+ 
+--- a/proc.c
++++ b/proc.c
+@@ -374,25 +374,7 @@
+ pid_t
+ proc_fork_and_daemon(int *fd)
+ {
+-	pid_t	pid;
+-	int	pair[2];
+-
+-	if (socketpair(AF_UNIX, SOCK_STREAM, PF_UNSPEC, pair) != 0)
+-		fatal("socketpair failed");
+-	switch (pid = fork()) {
+-	case -1:
+-		fatal("fork failed");
+-	case 0:
+-		close(pair[0]);
+-		*fd = pair[1];
+-		if (daemon(1, 0) != 0)
+-			fatal("daemon failed");
+-		return (0);
+-	default:
+-		close(pair[1]);
+-		*fd = pair[0];
+-		return (pid);
+-	}
++	fatalx("tmux engine must be started by its worker host (-D or -N)");
+ }
+ 
+ uid_t
+--- a/cmd-new-session.c
++++ b/cmd-new-session.c
+@@ -197,9 +197,8 @@
+ 			    "unset $TMUX to force");
+ 			goto fail;
+ 		}
+-		if (tcgetattr(c->fd, &tio) != 0)
+-			fatal("tcgetattr failed");
+-		tiop = &tio;
++		/* Terminal settings belong to ios_system's logical terminal. */
++		tiop = NULL;
+ 	} else
+ 		tiop = NULL;
+ 
+--- a/cmd-pipe-pane.c
++++ b/cmd-pipe-pane.c
+@@ -55,139 +55,8 @@
+ static enum cmd_retval
+ cmd_pipe_pane_exec(struct cmd *self, struct cmdq_item *item)
+ {
+-	struct args			*args = cmd_get_args(self);
+-	struct cmd_find_state		*target = cmdq_get_target(item);
+-	struct client			*tc = cmdq_get_target_client(item);
+-	struct window_pane		*wp = target->wp;
+-	struct session			*s = target->s;
+-	struct winlink			*wl = target->wl;
+-	struct window_pane_offset	*wpo = &wp->pipe_offset;
+-	char				*cmd;
+-	int				 old_fd, pipe_fd[2], null_fd, in, out;
+-	struct format_tree		*ft;
+-	sigset_t			 set, oldset;
+-
+-	/* Do nothing if pane is dead. */
+-	if (window_pane_exited(wp)) {
+-		cmdq_error(item, "target pane has exited");
+-		return (CMD_RETURN_ERROR);
+-	}
+-
+-	/* Destroy the old pipe. */
+-	old_fd = wp->pipe_fd;
+-	if (wp->pipe_fd != -1) {
+-		bufferevent_free(wp->pipe_event);
+-		close(wp->pipe_fd);
+-		wp->pipe_fd = -1;
+-
+-		if (window_pane_destroy_ready(wp)) {
+-			server_destroy_pane(wp, 1);
+-			return (CMD_RETURN_NORMAL);
+-		}
+-	}
+-
+-	/* If no pipe command, that is enough. */
+-	if (args_count(args) == 0 || *args_string(args, 0) == '\0')
+-		return (CMD_RETURN_NORMAL);
+-
+-	/*
+-	 * With -o, only open the new pipe if there was no previous one. This
+-	 * allows a pipe to be toggled with a single key, for example:
+-	 *
+-	 *	bind ^p pipep -o 'cat >>~/output'
+-	 */
+-	if (args_has(args, 'o') && old_fd != -1)
+-		return (CMD_RETURN_NORMAL);
+-
+-	/* What do we want to do? Neither -I or -O is -O. */
+-	if (args_has(args, 'I')) {
+-		in = 1;
+-		out = args_has(args, 'O');
+-	} else {
+-		in = 0;
+-		out = 1;
+-	}
+-
+-	/* Open the new pipe. */
+-	if (socketpair(AF_UNIX, SOCK_STREAM, PF_UNSPEC, pipe_fd) != 0) {
+-		cmdq_error(item, "socketpair error: %s", strerror(errno));
+-		return (CMD_RETURN_ERROR);
+-	}
+-
+-	/* Expand the command. */
+-	ft = format_create(cmdq_get_client(item), item, FORMAT_NONE, 0);
+-	format_defaults(ft, tc, s, wl, wp);
+-	cmd = format_expand_time(ft, args_string(args, 0));
+-	format_free(ft);
+-
+-	/* Fork the child. */
+-	sigfillset(&set);
+-	sigprocmask(SIG_BLOCK, &set, &oldset);
+-	switch ((wp->pipe_pid = fork())) {
+-	case -1:
+-		sigprocmask(SIG_SETMASK, &oldset, NULL);
+-		cmdq_error(item, "fork error: %s", strerror(errno));
+-
+-		close(pipe_fd[0]);
+-		close(pipe_fd[1]);
+-		free(cmd);
+-		return (CMD_RETURN_ERROR);
+-	case 0:
+-		/* Child process. */
+-		proc_clear_signals(server_proc, 1);
+-		sigprocmask(SIG_SETMASK, &oldset, NULL);
+-		close(pipe_fd[0]);
+-
+-		if (setpgid(0, 0) == -1)
+-			_exit(1);
+-
+-		null_fd = open(_PATH_DEVNULL, O_WRONLY);
+-		if (out) {
+-			if (dup2(pipe_fd[1], STDIN_FILENO) == -1)
+-				_exit(1);
+-		} else {
+-			if (dup2(null_fd, STDIN_FILENO) == -1)
+-				_exit(1);
+-		}
+-		if (in) {
+-			if (dup2(pipe_fd[1], STDOUT_FILENO) == -1)
+-				_exit(1);
+-			if (pipe_fd[1] != STDOUT_FILENO)
+-				close(pipe_fd[1]);
+-		} else {
+-			if (dup2(null_fd, STDOUT_FILENO) == -1)
+-				_exit(1);
+-		}
+-		if (dup2(null_fd, STDERR_FILENO) == -1)
+-			_exit(1);
+-		closefrom(STDERR_FILENO + 1);
+-
+-		execl(_PATH_BSHELL, "sh", "-c", cmd, (char *) NULL);
+-		_exit(1);
+-	default:
+-		/* Parent process. */
+-		sigprocmask(SIG_SETMASK, &oldset, NULL);
+-		close(pipe_fd[1]);
+-
+-		wp->pipe_fd = pipe_fd[0];
+-		memcpy(wpo, &wp->offset, sizeof *wpo);
+-
+-		setblocking(wp->pipe_fd, 0);
+-		wp->pipe_event = bufferevent_new(wp->pipe_fd,
+-		    cmd_pipe_pane_read_callback,
+-		    cmd_pipe_pane_write_callback,
+-		    cmd_pipe_pane_error_callback,
+-		    wp);
+-		if (wp->pipe_event == NULL)
+-			fatalx("out of memory");
+-		if (out)
+-			bufferevent_enable(wp->pipe_event, EV_WRITE);
+-		if (in)
+-			bufferevent_enable(wp->pipe_event, EV_READ);
+-
+-		free(cmd);
+-		return (CMD_RETURN_NORMAL);
+-	}
++	cmdq_error(item, "pipe-pane requires an unsupported background worker adapter");
++	return (CMD_RETURN_ERROR);
+ }
+ 
+ static void
+--- a/compat/fdforkpty.c
++++ b/compat/fdforkpty.c
+@@ -17,6 +17,7 @@
+ #include <sys/types.h>
+ 
+ #include <limits.h>
++#include <errno.h>
+ 
+ #include "compat.h"
+ 
+@@ -30,5 +31,6 @@
+ fdforkpty(__unused int ptmfd, int *master, char *name, struct termios *tio,
+     struct winsize *ws)
+ {
+-	return (forkpty(master, name, tio, ws));
++	errno = ENOTSUP;
++	return (-1);
+ }
+--- a/input.c
++++ b/input.c
+@@ -1035,7 +1035,18 @@
+ 	new_data = window_pane_get_new_data(wp, &wp->offset, &new_size);
+ 	if (new_size != 0)
+ 		wp->last_output_time = time(NULL);
+-	input_parse_buffer(wp, new_data, new_size);
++	/* Reuse Herdr's socket ONLCR rule, including CRLF across read chunks. */
++	u_char *normalized = xreallocarray(NULL, new_size ? new_size : 1, 2);
++	size_t length = 0;
++	for (size_t i = 0; i < new_size; i++) {
++		u_char byte = ((u_char *)new_data)[i];
++		if (byte == '\n' && !wp->ios_previous_cr)
++			normalized[length++] = '\r';
++		normalized[length++] = byte;
++		wp->ios_previous_cr = byte == '\r';
++	}
++	input_parse_buffer(wp, normalized, length);
++	free(normalized);
+ 	window_pane_update_used_data(wp, &wp->offset, new_size);
+ }
+ 
