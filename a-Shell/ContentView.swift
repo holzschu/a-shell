@@ -1225,6 +1225,11 @@ final class TerminalHostingController: UIHostingController<ContentView> {
         (view.window?.windowScene?.delegate as? SceneDelegate)?.toggleKeyToolbar()
     }
 
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        (view.window?.windowScene?.delegate as? SceneDelegate)?.beginKeyboardSizeTransition(with: coordinator)
+    }
+
 }
 
 public var latestNotification: String = ""

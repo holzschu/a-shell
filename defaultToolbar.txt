@@ -10,6 +10,7 @@
 # - for systemAction, it can be any of: control, selectAll, cut, copy, paste or showBrowser, plus
 #	the arrow commands: up, down, left, right, or the combined arrows: up.down, left.right and 
 #	up.down.left.right
+#	On iPhones with iOS 26 or later, hideKeyboard hides the keyboard (a long press on the toolbar does the same).
 # - for insertCommand, it is a short command that will be executed when the button is pressed. 
 #					  The output of this command will be inserted at the cursor position
 
@@ -58,6 +59,7 @@ arrow.up.and.down			systemAction		up.down
 # return                    insertString        \u{000D}
 # switch.2					insertString		vim .toolbarDefinition\n
 # calendar.badge.clock		insertCommand		date "+%Y_%m_%d"
+# keyboard.chevron.compact.down	systemAction		hideKeyboard
 
 # Example groups (only with iPads and iOS-style toolbar). Max 15 commands in a submenu
 # [
