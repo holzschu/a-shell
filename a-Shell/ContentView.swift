@@ -962,7 +962,8 @@ final class TerminalContainerView: UIView {
     private var keyboardViewport: TerminalKeyboardViewport?
     private var keyboardSnapshot: UIView?
     private var keyboardFrame = CGRect.zero
-    private var keyboardNotificationWidth: CGFloat?
+    // With a hardware keyboard, iOS 27 posts no frame when the accessory appears and posts one taken mid-rotation on rotation: follow the guide until a software keyboard posts a frame.
+    private var insetFromGuide = true
     private var keyboardObservers: [NSObjectProtocol] = []
 
     init(terminal: TerminalView) {
@@ -984,14 +985,32 @@ final class TerminalContainerView: UIView {
             let bottom = viewport.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
             bottom.isActive = true
             notificationBottomConstraint = bottom
+            // UIKit can post no keyboard notification when a hardware keyboard's accessory appears; a view pinned to the guide lays this view out again when the guide moves.
+            let guideTracker = UIView()
+            guideTracker.translatesAutoresizingMaskIntoConstraints = false
+            guideTracker.isHidden = true
+            addSubview(guideTracker)
+            NSLayoutConstraint.activate([
+                guideTracker.topAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor),
+                guideTracker.leadingAnchor.constraint(equalTo: leadingAnchor),
+                guideTracker.widthAnchor.constraint(equalToConstant: 0),
+                guideTracker.heightAnchor.constraint(equalToConstant: 0)
+            ])
             keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] note in
                 guard let self, let viewport = self.keyboardViewport, let terminal = viewport.terminal else { return }
                 let initialWidth = viewport.bounds.width
-                defer { self.keyboardNotificationWidth = initialWidth }
                 let presentationOffset = terminal.layer.presentation()?.affineTransform().ty ?? 0
                 self.layoutIfNeeded()
                 let previousInset = self.notificationBottomConstraint?.constant
-                self.keyboardFrame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
+                let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
+                if let accessory = terminal.inputAccessoryView, frame.height <= accessory.bounds.height {
+                    // No keyboard frame beyond the accessory (a hardware keyboard, a frame taken during a rotation, or no frame): the guide has the settled position.
+                    self.insetFromGuide = true
+                    self.setNeedsLayout()
+                    return
+                }
+                self.keyboardFrame = frame
+                self.insetFromGuide = false
                 self.updateKeyboardInset()
                 guard self.notificationBottomConstraint?.constant != previousInset else { return }
                 let initialTopRow = terminal.getTerminal().getTopVisibleRow()
@@ -1070,17 +1089,11 @@ final class TerminalContainerView: UIView {
     private func updateKeyboardInset() {
         guard let bottom = notificationBottomConstraint, let window = window else { return }
         let windowFrame = window.convert(keyboardFrame, from: nil as UIWindow?)
-        let intersection = bounds.intersection(convert(windowFrame, from: window))
-        var visibleBottom = intersection.minY
-        if #available(iOS 26, *), let accessory = keyboardViewport?.terminal?.inputAccessoryView,
-           let previousWidth = keyboardNotificationWidth, keyboardViewport?.bounds.width != previousWidth,
-           keyboardFrame.height <= accessory.bounds.height {
-            // A concurrent keyboard show and rotation can report only the accessory; the guide tracks the software keyboard.
-            let guideIntersection = bounds.intersection(keyboardLayoutGuide.layoutFrame)
-            if !guideIntersection.isNull, !guideIntersection.isEmpty {
-                visibleBottom = min(visibleBottom, guideIntersection.minY)
-            }
+        var intersection = bounds.intersection(convert(windowFrame, from: window))
+        if keyboardViewport != nil, insetFromGuide {
+            intersection = bounds.intersection(keyboardLayoutGuide.layoutFrame)
         }
+        var visibleBottom = intersection.minY
         if !intersection.isNull, !intersection.isEmpty, let terminal = keyboardViewport?.terminal, terminal.isFirstResponder,
            let accessory = terminal.inputAccessoryView, accessory.window != nil,
            !accessory.isHidden, accessory.bounds.height > 0 {
