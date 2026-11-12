@@ -198,8 +198,9 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                     key.accessibilityLabel = "Symbols"
                     key.accessibilityHint = "Tap for symbols. Swipe down for a period."
                     (key as? PhoneSymbolButton)?.activateSymbol = { [weak self] in self?.toggleSymbols() }
+                    let periodEntry = group.entries.first { $0.value == "." }?.item
                     let period = UIAccessibilityCustomAction(name: Self.symbolNames["."] ?? ".") { [weak self] _ in
-                        self?.chooseSymbol(".", entry: group.entries.first { $0.value == "." }?.item); return true
+                        self?.chooseSymbol(".", entry: periodEntry); return true
                     }
                     key.accessibilityCustomActions = [period] + group.entries.filter { $0.value != "." }.map { entry in
                         UIAccessibilityCustomAction(name: Self.symbolNames[entry.value] ?? entry.value) { [weak self] _ in
@@ -1904,8 +1905,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             }
                         }
                         if (button != nil) {
-                            // The panel has 24 cells; a group with more entries becomes the Symbols menu below, which lists every entry.
-                            let groupEntries = activeButtonGroup.compactMap { item in title(item).map { (value: $0, item: item) } }
+                            // The panel has 24 cells; a group with more entries becomes the Symbols menu below. Both list the entries that have a parameter.
+                            let groupEntries = iconName == "#+=" ? activeButtonGroup.compactMap { item in title(item).map { (value: $0, item: item) } } : []
                             if PhoneKeyboardToolbar.isCustom, !UIAccessibility.isVoiceOverRunning, iconName == "#+=", groupEntries.count <= 24 {
                                 let symbols = PhoneSymbolItem(title: "#+=", style: .plain, target: nil, action: nil)
                                 symbols.entries = groupEntries
@@ -2563,8 +2564,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // A group entry runs its own action; a swipe-down period without a "." entry has none.
             if let entry, let action = entry.action {
                 UIApplication.shared.sendAction(action, to: entry.target, from: entry, for: nil)
-                // A systemAction entry (control, paste...) leaves Control as its own key would: releasing it here
-                // would switch a control entry straight back off.
+                // A systemAction entry handles Control as its own key does: control toggles it, paste and
+                // hideKeyboard release it in systemAction. Releasing it here would switch a control entry straight back off.
                 if NSStringFromSelector(action).hasPrefix("systemAction") { return }
             } else {
                 let item = UIBarButtonItem(title: value, style: .plain, target: self, action: nil)
