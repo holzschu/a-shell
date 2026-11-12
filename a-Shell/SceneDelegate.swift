@@ -996,8 +996,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if title(sender) == "control" { (terminalView?.inputAccessoryView as? PhoneKeyboardToolbar)?.setNeedsLayout() }
         }
         if let title = title(sender) {
-            if title == "hideKeyboard", PhoneKeyboardToolbar.isCustom {
-                releaseToolbarControl()
+            if title == "hideKeyboard" {
+                if PhoneKeyboardToolbar.isCustom { releaseToolbarControl() }
                 hideKeyboard()
                 return
             }
