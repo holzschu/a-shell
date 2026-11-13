@@ -1515,6 +1515,7 @@ extension SceneDelegate {
                             break
                         }
                     }
+                    editorToolbar.setNeedsLayout()
                 } else {
                     var foundControl = false
                     if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
