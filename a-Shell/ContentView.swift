@@ -1015,6 +1015,10 @@ final class TerminalContainerView: UIView {
                                                duration: note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0,
                                                curve: note.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt ?? 0)
                 })
+                // The guide can settle before the accessory: the frame above then finds the accessory mid-flight, the inset stays unchanged, and nothing lays this view out once the accessory lands (the terminal stayed 53 pt behind the bar after some launches on iOS 27.2). Measure again once the keyboard has settled.
+                keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidChangeFrameNotification, object: nil, queue: .main) { [weak self] _ in
+                    self?.updateKeyboardInset()
+                })
             } else {
                 // On iPad the notification can be missing when the keyboard is minimized to the shortcut bar, so follow the guide,
                 // undocked as before (the non-viewport layout below sets the same).
