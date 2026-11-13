@@ -139,7 +139,7 @@ final class PhoneKeyboardToolbar: UIInputView {
             setNeedsLayout()
         }
     }
-
+    
     init(frame: CGRect) {
         super.init(frame: frame, inputViewStyle: .default)
         guard #available(iOS 26, *), Self.isCustom else {
@@ -179,11 +179,11 @@ final class PhoneKeyboardToolbar: UIInputView {
             })
         }
     }
-
+    
     deinit {
         keyboardObservers.forEach { NotificationCenter.default.removeObserver($0) }
     }
-
+    
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     @available(iOS 16, *)
     private func makePasteControl(target: UIPasteConfigurationSupporting) -> UIPasteControl {
@@ -196,8 +196,8 @@ final class PhoneKeyboardToolbar: UIInputView {
         configuration.cornerStyle = .capsule
         configuration.baseBackgroundColor = UIColor { traits in
             traits.userInterfaceStyle == .dark
-                ? UIColor(red: 44.0 / 255.0, green: 44.0 / 255.0, blue: 46.0 / 255.0, alpha: 1)
-                : UIColor(red: 230.0 / 255.0, green: 230.0 / 255.0, blue: 235.0 / 255.0, alpha: 1)
+            ? UIColor(red: 44.0 / 255.0, green: 44.0 / 255.0, blue: 46.0 / 255.0, alpha: 1)
+            : UIColor(red: 230.0 / 255.0, green: 230.0 / 255.0, blue: 235.0 / 255.0, alpha: 1)
         }.resolvedColor(with: traitCollection)
         configuration.baseForegroundColor = UIColor.label.resolvedColor(with: traitCollection)
         pasteControlStyle = traitCollection.userInterfaceStyle
@@ -207,7 +207,7 @@ final class PhoneKeyboardToolbar: UIInputView {
         paste.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
         return paste
     }
-
+    
     @available(iOS 16, *)
     private func rebuildPasteControls() {
         guard let pasteTarget else { return }
@@ -238,9 +238,9 @@ final class PhoneKeyboardToolbar: UIInputView {
             if #available(iOS 16, *) { self.rebuildPasteControls() }
         }
     }
-
+    
     @objc private func keyTouchDown() { keyFeedback.impactOccurred() }
-
+    
     func animateKeyboardChange(_ changes: @escaping () -> Void) {
         if let coordinator = outsideWindow?.rootViewController?.transitionCoordinator {
             coordinator.animate(alongsideTransition: { _ in changes() })
@@ -248,7 +248,7 @@ final class PhoneKeyboardToolbar: UIInputView {
             UIView.animate(withDuration: keyboardAnimationDuration, delay: 0, options: keyboardAnimationOptions, animations: changes)
         }
     }
-
+    
     func setToolbarVisible(_ visible: Bool) {
         guard toolbarVisible != visible else { return }
         toolbarVisible = visible
@@ -258,7 +258,7 @@ final class PhoneKeyboardToolbar: UIInputView {
             self.updateTerminalLayout()
         }
     }
-
+    
     private var keyboardGap: CGFloat {
         if Self.isCustom { return 8 }
         return 0
@@ -267,11 +267,11 @@ final class PhoneKeyboardToolbar: UIInputView {
         keyboardGap > 0 && bounds.contains(point) && point.y >= glass.frame.maxY
     }
     override var intrinsicContentSize: CGSize { CGSize(width: UIView.noIntrinsicMetric, height: toolbarVisible ? (nativeToolbar == nil ? 45 + keyboardGap : 40) : 0) }
-
+    
     override func systemLayoutSizeFitting(_ targetSize: CGSize) -> CGSize {
         CGSize(width: bounds.width, height: intrinsicContentSize.height)
     }
-
+    
     private func updateTerminalLayout() {
         guard let scene = outsideWindow?.windowScene?.delegate as? SceneDelegate else { return }
         var ancestor = scene.terminalView?.superview
@@ -280,100 +280,109 @@ final class PhoneKeyboardToolbar: UIInputView {
         container.setNeedsLayout()
         container.layoutIfNeeded()
     }
-
+    
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         // Absorb the keyboard gap without forwarding touches to the keys.
         if containsKeyboardGap(point) { return self }
         return super.hitTest(point, with: event)
     }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        if let nativeToolbar { nativeToolbar.frame = bounds; nativeToolbar.tintColor = tintColor; return }
-        let visible = keys.filter { item in
-            if #available(iOS 16, *) { return !item.isHidden }
-            return true
-        }
-        let outerPadding: CGFloat = 18
-        let fullWidthGrid = keyboardGap > 0
-        let gridBounds = fullWidthGrid ? bounds.inset(by: safeAreaInsets) : bounds
-        let width = fullWidthGrid ? max(0, gridBounds.width - 16) : min(CGFloat(visible.count) * 44 + outerPadding * 2, max(0, bounds.width - 16))
-        var pasteSize = CGSize.zero
-        if #available(iOS 16, *), let paste = visible.compactMap(\.customView).first(where: { $0 is UIPasteControl }) {
-            pasteSize = paste.intrinsicContentSize
-            if pasteSize.width <= 0 || pasteSize.height <= 0 { pasteSize = paste.sizeThatFits(.zero) }
-            if pasteSize.width <= 0 || pasteSize.height <= 0 { pasteSize = CGSize(width: 41, height: 35) }
-        }
-        glass.frame = CGRect(x: gridBounds.midX - width / 2, y: 0, width: width, height: max(45, pasteSize.height + 10))
-        guard !visible.isEmpty else { return }
-        let slots = max(1, min(visible.count, Int((width - outerPadding * 2) / 28)))
-        let overflow = visible.count > slots
-        let shown = Array(visible.prefix(overflow ? slots - 1 : slots))
-        for item in keys { item.customView?.isHidden = !shown.contains(where: { $0 === item }) }
-        let padding = fullWidthGrid ? 0 : outerPadding
-        let pitch = (width - padding * 2) / CGFloat(slots)
-        let firstSlot = glass.frame.minX + padding
-        more.isHidden = !overflow
-        if overflow {
-            more.frame = CGRect(x: firstSlot + CGFloat(slots - 1) * pitch, y: 0, width: pitch, height: glass.bounds.height)
-            more.menu = UIMenu(children: visible.dropFirst(shown.count).map { item -> UIMenuElement in
-                if let menu = item.menu { return menu }
-                if let action = item.primaryAction { return action }
-                return UIAction(title: item.accessibilityLabel ?? item.title ?? "Key", image: item.image) { [weak item] _ in
-                    guard let item, let action = item.action else { return }
-                    UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
+            
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            if let nativeToolbar { nativeToolbar.frame = bounds; nativeToolbar.tintColor = tintColor; return }
+            var visible = keys.filter { item in
+                if #available(iOS 16, *) { return !item.isHidden }
+                return true
+            }
+            let outerPadding: CGFloat = 18
+            let fullWidthGrid = keyboardGap > 0
+            let gridBounds = fullWidthGrid ? bounds.inset(by: safeAreaInsets) : bounds
+            let width = fullWidthGrid ? max(0, gridBounds.width - 16) : min(CGFloat(visible.count) * 44 + outerPadding * 2, max(0, bounds.width - 16))
+            var pasteSize = CGSize.zero
+            if #available(iOS 16, *), let paste = visible.compactMap(\.customView).first(where: { $0 is UIPasteControl }) {
+                pasteSize = paste.intrinsicContentSize
+                if pasteSize.width <= 0 || pasteSize.height <= 0 { pasteSize = paste.sizeThatFits(.zero) }
+                if pasteSize.width <= 0 || pasteSize.height <= 0 { pasteSize = CGSize(width: 41, height: 35) }
+            }
+            glass.frame = CGRect(x: gridBounds.midX - width / 2, y: 0, width: width, height: max(45, pasteSize.height + 10))
+            guard !visible.isEmpty else { return }
+            let slots = max(1, min(visible.count, Int((width - outerPadding * 2) / 28)))
+            // if there are too many buttons, start by hiding the showBrowser button:
+            // (and possibly the "connect" button later on)
+            if (internalBrowserStarted && (visible.count > slots)) {
+                // recompute "visible":
+                visible = keys.filter { item in
+                    if #available(iOS 16, *) { return (item.possibleTitles?.first != "showBrowser") && !item.isHidden }
+                    return true
                 }
-            })
-        }
-        for (index, item) in shown.enumerated() {
-            guard let key = item.customView else { continue }
-            let slot = CGRect(x: firstSlot + CGFloat(index) * pitch, y: 0, width: pitch, height: glass.bounds.height)
-            if #available(iOS 16, *), key is UIPasteControl {
-                key.frame = CGRect(x: slot.midX - pasteSize.width / 2, y: slot.midY - pasteSize.height / 2, width: pasteSize.width, height: pasteSize.height)
-            } else { key.frame = slot }
-            key.accessibilityLabel = item.accessibilityLabel ?? item.title
-            key.accessibilityIdentifier = item.accessibilityIdentifier
-            key.accessibilityValue = item.accessibilityValue
-            if let button = key as? UIButton {
-                button.menu = item.menu
-                button.showsMenuAsPrimaryAction = item.menu != nil
-                let image = item.image?.withConfiguration(Self.symbolConfiguration)
-                let title = item.title
-                let control = item.possibleTitles?.contains("control") == true
-                let foreground: UIColor = item.toolbarSelected ? (control ? .systemBackground : tintColor) : .label
-                let labelFontSize: CGFloat = 16
-                if #available(iOS 15, *) {
-                    var configuration = UIButton.Configuration.plain()
-                    configuration.title = image == nil ? title : nil
-                    configuration.image = image
-                    configuration.preferredSymbolConfigurationForImage = Self.symbolConfiguration
-                    configuration.baseForegroundColor = foreground
-                    configuration.contentInsets = NSDirectionalEdgeInsets.zero
-                    configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
-                        var attributes = attributes
-                        attributes.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
-                        attributes.foregroundColor = foreground
-                        return attributes
+            }
+            let overflow = visible.count > slots
+            let shown = Array(visible.prefix(overflow ? slots - 1 : slots))
+            for item in keys { item.customView?.isHidden = !shown.contains(where: { $0 === item }) }
+            let padding = fullWidthGrid ? 0 : outerPadding
+            let pitch = (width - padding * 2) / CGFloat(slots)
+            let firstSlot = glass.frame.minX + padding
+            more.isHidden = !overflow
+            if overflow {
+                more.frame = CGRect(x: firstSlot + CGFloat(slots - 1) * pitch, y: 0, width: pitch, height: glass.bounds.height)
+                more.menu = UIMenu(children: visible.dropFirst(shown.count).map { item -> UIMenuElement in
+                    if let menu = item.menu { return menu }
+                    if let action = item.primaryAction { return action }
+                    return UIAction(title: item.accessibilityLabel ?? item.title ?? "Key", image: item.image) { [weak item] _ in
+                        guard let item, let action = item.action else { return }
+                        UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
                     }
-                    configuration.background.backgroundColor = item.toolbarSelected ? (control ? .label : tintColor.withAlphaComponent(0.25)) : .clear
-                    configuration.background.backgroundInsets = NSDirectionalEdgeInsets(top: 5, leading: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2, bottom: 5, trailing: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2)
-                    configuration.background.cornerRadius = (glass.bounds.height - 10) / 2
-                    button.configuration = configuration
-                } else {
-                    button.setTitle(image == nil ? title : nil, for: .normal)
-                    button.setImage(image, for: .normal)
-                    button.titleLabel?.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
-                    button.setTitleColor(foreground, for: .normal)
-                    button.tintColor = foreground
-                    button.backgroundColor = item.toolbarSelected ? (control ? .label : .tertiarySystemFill) : .clear
-                    button.layer.cornerRadius = 15
+                })
+            }
+            for (index, item) in shown.enumerated() {
+                guard let key = item.customView else { continue }
+                let slot = CGRect(x: firstSlot + CGFloat(index) * pitch, y: 0, width: pitch, height: glass.bounds.height)
+                if #available(iOS 16, *), key is UIPasteControl {
+                    key.frame = CGRect(x: slot.midX - pasteSize.width / 2, y: slot.midY - pasteSize.height / 2, width: pasteSize.width, height: pasteSize.height)
+                } else { key.frame = slot }
+                key.accessibilityLabel = item.accessibilityLabel ?? item.title
+                key.accessibilityIdentifier = item.accessibilityIdentifier
+                key.accessibilityValue = item.accessibilityValue
+                if let button = key as? UIButton {
+                    button.menu = item.menu
+                    button.showsMenuAsPrimaryAction = item.menu != nil
+                    let image = item.image?.withConfiguration(Self.symbolConfiguration)
+                    let title = item.title
+                    let control = item.possibleTitles?.contains("control") == true
+                    let foreground: UIColor = item.toolbarSelected ? (control ? .systemBackground : tintColor) : .label
+                    let labelFontSize: CGFloat = 16
+                    if #available(iOS 15, *) {
+                        var configuration = UIButton.Configuration.plain()
+                        configuration.title = image == nil ? title : nil
+                        configuration.image = image
+                        configuration.preferredSymbolConfigurationForImage = Self.symbolConfiguration
+                        configuration.baseForegroundColor = foreground
+                        configuration.contentInsets = NSDirectionalEdgeInsets.zero
+                        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+                            var attributes = attributes
+                            attributes.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
+                            attributes.foregroundColor = foreground
+                            return attributes
+                        }
+                        configuration.background.backgroundColor = item.toolbarSelected ? (control ? .label : tintColor.withAlphaComponent(0.25)) : .clear
+                        configuration.background.backgroundInsets = NSDirectionalEdgeInsets(top: 5, leading: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2, bottom: 5, trailing: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2)
+                        configuration.background.cornerRadius = (glass.bounds.height - 10) / 2
+                        button.configuration = configuration
+                    } else {
+                        button.setTitle(image == nil ? title : nil, for: .normal)
+                        button.setImage(image, for: .normal)
+                        button.titleLabel?.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
+                        button.setTitleColor(foreground, for: .normal)
+                        button.tintColor = foreground
+                        button.backgroundColor = item.toolbarSelected ? (control ? .label : .tertiarySystemFill) : .clear
+                        button.layer.cornerRadius = 15
+                    }
+                    button.isSelected = item.toolbarSelected
+                    button.accessibilityTraits = item.toolbarSelected ? [.button, .selected] : .button
                 }
-                button.isSelected = item.toolbarSelected
-                button.accessibilityTraits = item.toolbarSelected ? [.button, .selected] : .button
             }
         }
     }
-}
 
 class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIAdaptivePresentationControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate, TerminalViewDelegate {
     var window: UIWindow?
