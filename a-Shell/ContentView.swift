@@ -964,6 +964,7 @@ final class TerminalContainerView: UIView {
     private var keyboardViewport: TerminalKeyboardViewport?
     private var keyboardSnapshot: UIView?
     private var keyboardFrame = CGRect.zero
+    private var keyboardGuideTop = CGFloat.nan
     // With a hardware keyboard, iOS 27 posts no frame when the accessory appears and posts one taken mid-rotation on rotation: follow the guide until a software keyboard posts a frame.
     private var insetFromGuide = true
     private var keyboardObservers: [NSObjectProtocol] = []
@@ -971,7 +972,7 @@ final class TerminalContainerView: UIView {
     init(terminal: TerminalView) {
         self.terminal = terminal
         super.init(frame: .zero)
-        if #available(iOS 26, *), UIDevice.current.userInterfaceIdiom == .phone {
+        if #available(iOS 26, *), [.phone, .pad].contains(UIDevice.current.userInterfaceIdiom) {
             let viewport = TerminalKeyboardViewport()
             viewport.translatesAutoresizingMaskIntoConstraints = false
             viewport.clipsToBounds = true
@@ -999,56 +1000,26 @@ final class TerminalContainerView: UIView {
                 guideTracker.widthAnchor.constraint(equalToConstant: 0),
                 guideTracker.heightAnchor.constraint(equalToConstant: 0)
             ])
-            keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] note in
-                guard let self, let viewport = self.keyboardViewport, let terminal = viewport.terminal else { return }
-                let initialWidth = viewport.bounds.width
-                let presentationOffset = terminal.layer.presentation()?.affineTransform().ty ?? 0
-                self.layoutIfNeeded()
-                let previousInset = self.notificationBottomConstraint?.constant
-                let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
-                if let accessory = terminal.inputAccessoryView, frame.height <= accessory.bounds.height {
-                    // No keyboard frame beyond the accessory (a hardware keyboard, a frame taken during a rotation, or no frame): the guide has the settled position.
-                    self.insetFromGuide = true
-                    self.setNeedsLayout()
-                    return
-                }
-                self.keyboardFrame = frame
-                self.insetFromGuide = false
-                self.updateKeyboardInset()
-                guard self.notificationBottomConstraint?.constant != previousInset else { return }
-                let initialTopRow = terminal.getTerminal().getTopVisibleRow()
-                let cellHeight = terminal.getOptimalFrameSize().height / CGFloat(max(1, terminal.getTerminal().rows))
-                // The snapshot fills rows the resized terminal no longer covers; glyphs stay unscaled.
-                let snapshot = self.snapshotView(afterScreenUpdates: false)
-                snapshot?.frame = self.bounds
-                snapshot?.isUserInteractionEnabled = false
-                self.keyboardSnapshot?.removeFromSuperview()
-                if let snapshot { viewport.insertSubview(snapshot, belowSubview: terminal) }
-                self.keyboardSnapshot = snapshot
-                let duration = note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0
-                let curve = note.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt ?? 0
-                UIView.animate(withDuration: duration, delay: 0, options: [UIView.AnimationOptions(rawValue: curve << 16), .beginFromCurrentState, .allowUserInteraction]) {
-                    self.layoutIfNeeded()
-                    guard viewport.bounds.width == initialWidth else {
-                        snapshot?.removeFromSuperview()
-                        if self.keyboardSnapshot === snapshot { self.keyboardSnapshot = nil }
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] note in
+                    guard let self, let terminal = self.keyboardViewport?.terminal else { return }
+                    let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
+                    if let accessory = terminal.inputAccessoryView, frame.height <= accessory.bounds.height {
+                        // No keyboard frame beyond the accessory (a hardware keyboard, a frame taken during a rotation, or no frame): the guide has the settled position.
+                        self.layoutIfNeeded()
+                        self.insetFromGuide = true
+                        self.setNeedsLayout()
                         return
                     }
-                    let rowOffset = -CGFloat(terminal.getTerminal().getTopVisibleRow() - initialTopRow) * cellHeight - presentationOffset
-                    UIView.performWithoutAnimation {
-                        terminal.transform = CGAffineTransform(translationX: 0, y: -rowOffset)
-                    }
-                    UIView.animate(withDuration: duration, delay: 0, options: [UIView.AnimationOptions(rawValue: curve << 16), .allowUserInteraction]) {
-                        terminal.transform = .identity
-                    }
-                    snapshot?.transform = CGAffineTransform(translationX: 0, y: rowOffset)
-                } completion: { [weak self, weak snapshot] _ in
-                    snapshot?.removeFromSuperview()
-                    if self?.keyboardSnapshot === snapshot { self?.keyboardSnapshot = nil }
-                    // The accessory reaches its final frame only once the keyboard has settled.
-                    self?.updateKeyboardInset()
-                }
-            })
+                    self.animateKeyboardChange(frame: frame,
+                                               duration: note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0,
+                                               curve: note.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt ?? 0)
+                })
+            } else {
+                // On iPad the notification can be missing when the keyboard is minimized to the shortcut bar, so follow the guide,
+                // undocked as before (the non-viewport layout below sets the same).
+                keyboardLayoutGuide.followsUndockedKeyboard = true
+            }
         } else {
             terminal.translatesAutoresizingMaskIntoConstraints = false
             addSubview(terminal)
@@ -1102,6 +1073,63 @@ final class TerminalContainerView: UIView {
             }
         }
         updateKeyboardInset()
+        followKeyboardGuide()
+    }
+
+    private func followKeyboardGuide() {
+        guard keyboardViewport != nil, UIDevice.current.userInterfaceIdiom == .pad, window != nil else { return }
+        let top = keyboardLayoutGuide.layoutFrame.minY
+        guard top != keyboardGuideTop else { return }
+        let duration = UIView.inheritedAnimationDuration
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let window = self.window else { return }
+            self.keyboardGuideTop = top
+            let guideFrame = CGRect(x: 0, y: top, width: self.bounds.width, height: max(0, self.bounds.height - top))
+            self.animateKeyboardChange(frame: window.convert(self.convert(guideFrame, to: window), to: nil as UIWindow?),
+                                       duration: duration, curve: UInt(UIView.AnimationCurve.easeInOut.rawValue))
+        }
+    }
+
+    private func animateKeyboardChange(frame: CGRect, duration: Double, curve: UInt) {
+        guard let viewport = keyboardViewport, let terminal = viewport.terminal else { return }
+        let initialWidth = viewport.bounds.width
+        let presentationOffset = terminal.layer.presentation()?.affineTransform().ty ?? 0
+        self.layoutIfNeeded()
+        let previousInset = self.notificationBottomConstraint?.constant
+        self.keyboardFrame = frame
+        self.insetFromGuide = false
+        self.updateKeyboardInset()
+        guard self.notificationBottomConstraint?.constant != previousInset else { return }
+        let initialTopRow = terminal.getTerminal().getTopVisibleRow()
+        let cellHeight = terminal.getOptimalFrameSize().height / CGFloat(max(1, terminal.getTerminal().rows))
+        // The snapshot fills rows the resized terminal no longer covers; glyphs stay unscaled.
+        let snapshot = self.snapshotView(afterScreenUpdates: false)
+        snapshot?.frame = self.bounds
+        snapshot?.isUserInteractionEnabled = false
+        self.keyboardSnapshot?.removeFromSuperview()
+        if let snapshot { viewport.insertSubview(snapshot, belowSubview: terminal) }
+        self.keyboardSnapshot = snapshot
+        UIView.animate(withDuration: duration, delay: 0, options: [UIView.AnimationOptions(rawValue: curve << 16), .beginFromCurrentState, .allowUserInteraction]) {
+            self.layoutIfNeeded()
+            guard viewport.bounds.width == initialWidth else {
+                snapshot?.removeFromSuperview()
+                if self.keyboardSnapshot === snapshot { self.keyboardSnapshot = nil }
+                return
+            }
+            let rowOffset = -CGFloat(terminal.getTerminal().getTopVisibleRow() - initialTopRow) * cellHeight - presentationOffset
+            UIView.performWithoutAnimation {
+                terminal.transform = CGAffineTransform(translationX: 0, y: -rowOffset)
+            }
+            UIView.animate(withDuration: duration, delay: 0, options: [UIView.AnimationOptions(rawValue: curve << 16), .allowUserInteraction]) {
+                terminal.transform = .identity
+            }
+            snapshot?.transform = CGAffineTransform(translationX: 0, y: rowOffset)
+        } completion: { [weak self, weak snapshot] _ in
+            snapshot?.removeFromSuperview()
+            if self?.keyboardSnapshot === snapshot { self?.keyboardSnapshot = nil }
+            // The accessory reaches its final frame only once the keyboard has settled.
+            self?.updateKeyboardInset()
+        }
     }
 
     private func updateKeyboardInset() {
