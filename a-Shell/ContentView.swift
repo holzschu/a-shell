@@ -1037,6 +1037,10 @@ final class TerminalContainerView: UIView {
                 let bottom = terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor)
                 bottom.isActive = true
                 keyboardBottomConstraint = bottom
+                // The accessory lands after the guide's last layout pass: check it again once the keyboard has settled.
+                keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidChangeFrameNotification, object: nil, queue: .main) { [weak self] _ in
+                    self?.setNeedsLayout()
+                })
             } else {
                 let bottom = terminal.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
                 bottom.isActive = true
@@ -1065,11 +1069,15 @@ final class TerminalContainerView: UIView {
         super.layoutSubviews()
         if #available(iOS 15.0, *), let bottom = keyboardBottomConstraint {
             var correction: CGFloat = 0
-            if PhoneKeyboardToolbar.isCustom, let terminal, terminal.isFirstResponder,
-               let accessory = terminal.inputAccessoryView as? PhoneKeyboardToolbar, accessory.window != nil {
-                // Keep the terminal above the accessory.
-                let visibleBottom = convert(accessory.bounds, from: accessory).minY
-                correction = visibleBottom - keyboardLayoutGuide.layoutFrame.minY
+            if UIDevice.current.userInterfaceIdiom == .phone, let terminal, terminal.isFirstResponder,
+               let accessory = terminal.inputAccessoryView as? PhoneKeyboardToolbar, accessory.window != nil,
+               let screen = window?.windowScene?.screen {
+                // The guide can leave the accessory out: after a rotation until the next input change, and with a hardware keyboard, where the accessory straddles the bottom safe area (iOS 17.5: 40 pt behind the bar after a rotation, 6 pt in portrait and 19 pt in landscape with a hardware keyboard). The accessory lives in the keyboard's window, so compare in screen space, and only while it reaches the guide's top from above: during a rotation its frame still belongs to the old orientation.
+                let accessoryFrame = accessory.convert(accessory.bounds, to: screen.coordinateSpace)
+                let guideTop = convert(keyboardLayoutGuide.layoutFrame, to: screen.coordinateSpace).minY
+                if accessoryFrame.minY < guideTop, accessoryFrame.maxY >= guideTop - 1 {
+                    correction = accessoryFrame.minY - guideTop
+                }
             }
             if abs(bottom.constant - correction) > 0.5 {
                 bottom.constant = correction
