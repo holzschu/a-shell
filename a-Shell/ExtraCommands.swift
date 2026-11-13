@@ -16,11 +16,44 @@ import CryptoKit
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
-var runningInExtension = false
+// Shortcut intents run commands in the app process, next to the terminal windows.
+// Only the commands of their ios_system sessions run "in extension".
+// Counted, since a context can be registered twice: Execute Command registers in handle() and again for each command.
+private let extensionContextsLock = NSLock()
+private var extensionContexts = [UnsafeRawPointer: Int]()
+private var extensionGeneration = 0
+var runningInExtension: Bool {
+    guard let context = ios_getContext() else { return false }
+    extensionContextsLock.lock()
+    defer { extensionContextsLock.unlock() }
+    return extensionContexts[context] != nil
+}
+
+func setRunningInExtension(_ running: Bool, context: UnsafeRawPointer) {
+    extensionContextsLock.lock()
+    defer { extensionContextsLock.unlock() }
+    if running {
+        extensionContexts[context, default: 0] += 1
+    } else if let count = extensionContexts[context] {
+        extensionContexts[context] = count > 1 ? count - 1 : nil
+    }
+    extensionGeneration += 1
+}
+
+// These sessions also move the process directory, which the terminal windows share.
+// An unchanged generation with no active session means that no intent ran in between.
+func intentSessionsState() -> (generation: Int, active: Bool) {
+    extensionContextsLock.lock()
+    defer { extensionContextsLock.unlock() }
+    return (extensionGeneration, !extensionContexts.isEmpty)
+}
 // Multiple calls to currentDelegate (through waitpid(..., W_NOHANG) cost us memory and time.
 var cachedDelegate: SceneDelegate? = nil
 
 var currentDelegate: SceneDelegate? {
+    // Intent sessions have no window. Without this, the fallback below would give them the first terminal window,
+    // so that pickFolder from Execute Long Command waited for a document picker in that window.
+    if runningInExtension { return nil }
     let opaquePointer = OpaquePointer(ios_getContext())
     if let stringPointer = UnsafeMutablePointer<CChar>(opaquePointer) {
         let currentSessionIdentifier = String(cString: stringPointer)
