@@ -87,11 +87,16 @@ private func toolbarMotion(_ delta: CGPoint) -> (direction: String, arrowReady: 
     return (direction, (major >= 12 && minor <= 0.58 * major) || hypot(delta.x, delta.y) >= 24)
 }
 
-// Holds the arrow key's own icon, so the key shows it again after a flick has shown a direction glyph, and whether a
-// tap moves the cursor: it does for a key from .toolbarDefinition, the stock key shows a hint instead.
+// The combined arrow keys and the directions each one moves in; a flick on the key moves only along these.
+private let combinedArrowDirections = ["up.down.left.right": ["up", "down", "left", "right"], "up.down": ["up", "down"], "left.right": ["left", "right"]]
+
+// Holds the arrow key's own icon, so the key shows it again after a flick has shown a direction glyph, whether a
+// tap moves the cursor (it does for a key from .toolbarDefinition, the stock key shows a hint instead), and the
+// directions the key moves in.
 private final class PrecisionArrowGesture: UILongPressGestureRecognizer {
     var restingImage: UIImage?
     var tapMoves = false
+    var directions: [String] = []
 }
 
 // Keep the customizable item model and the iPad assistant, but avoid UIToolbar's
@@ -149,8 +154,11 @@ final class PhoneKeyboardToolbar: UIInputView {
                 }
                 // Keep key colors outside the glass effect's legibility adaptation.
                 if let key = item.customView { addSubview(key) }
-                if item.possibleTitles?.contains("up.down.left.right") == true, let key = item.customView { configureArrow?(item, key) }
-                if item.possibleTitles?.contains("up.down.left.right") != true, let key = item.customView as? UIButton {
+                let combinedArrow = item.possibleTitles?.contains(where: { combinedArrowDirections[$0] != nil }) == true
+                if combinedArrow, let key = item.customView { configureArrow?(item, key) }
+                // While VoiceOver runs, the two-direction keys get no flick and keep their touch-down haptic.
+                let flickKey = item.possibleTitles?.contains("up.down.left.right") == true || (combinedArrow && !UIAccessibility.isVoiceOverRunning)
+                if !flickKey, let key = item.customView as? UIButton {
                     key.removeTarget(self, action: #selector(keyTouchDown), for: .touchDown)
                     key.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
                 }
@@ -1868,6 +1876,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     private var precisionArrowOrigin = CGPoint.zero
     private var precisionArrowDirection: String?
     private var precisionArrowCount = 0
+    private var precisionArrowOffAxis = false
     private var precisionArrowSince = Date()
     private var precisionArrowLast = Date()
     private var precisionArrowTimer: Timer?
@@ -1884,6 +1893,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         view.gestureRecognizers?.forEach { view.removeGestureRecognizer($0) }
         let touch = PrecisionArrowGesture(target: self, action: #selector(precisionArrowTouch(_:)))
         touch.name = "precision-arrow"; touch.minimumPressDuration = 0; touch.restingImage = item.image; touch.tapMoves = !stockPhoneArrowKey
+        touch.directions = combinedArrowDirections[title(item) ?? ""] ?? []
         view.addGestureRecognizer(touch); view.isExclusiveTouch = true
         showArrowTip()
     }
@@ -1893,7 +1903,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let point = sender.location(in: window)
         if sender.state == .began {
             precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
-            precisionArrowCount = 0; precisionArrowOrigin = point
+            precisionArrowCount = 0; precisionArrowOrigin = point; precisionArrowOffAxis = false
         } else if sender.state == .changed {
             let delta = CGPoint(x: point.x - precisionArrowOrigin.x, y: point.y - precisionArrowOrigin.y)
             if let direction = precisionArrowDirection {
@@ -1904,7 +1914,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             let motion = toolbarMotion(delta)
-            if precisionArrowDirection == nil && motion.arrowReady {
+            let onAxis = (sender as? PrecisionArrowGesture)?.directions.contains(motion.direction) == true
+            if precisionArrowCount == 0 && motion.arrowReady && !onAxis { precisionArrowOffAxis = true }
+            if precisionArrowDirection == nil && motion.arrowReady && onAxis {
                 let direction = motion.direction
                 precisionArrowDirection = direction; precisionArrowSince = Date(); precisionArrowLast = Date()
                 precisionArrowCount = 1; precisionArrowLevel = 0
@@ -1938,7 +1950,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else if sender.state == .ended || sender.state == .cancelled || sender.state == .failed {
             precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
             setArrowGlyph(nil, from: view)
-            if sender.state == .ended && precisionArrowCount == 0 && (sender as? PrecisionArrowGesture)?.tapMoves == true {
+            // A flick across a two-direction key's axis is ignored, not taken for a tap, even if it comes back near where it started or first crosses the threshold on release.
+            let end = toolbarMotion(CGPoint(x: point.x - precisionArrowOrigin.x, y: point.y - precisionArrowOrigin.y))
+            if end.arrowReady && (sender as? PrecisionArrowGesture)?.directions.contains(end.direction) != true { precisionArrowOffAxis = true }
+            if sender.state == .ended && precisionArrowCount == 0 && precisionArrowOffAxis {
+                dismissArrowHUD()
+            } else if sender.state == .ended && precisionArrowCount == 0 && (sender as? PrecisionArrowGesture)?.tapMoves == true {
                 // A key from .toolbarDefinition keeps its tap: the tap position picks the direction, as with the other arrow keys.
                 dismissArrowHUD()
                 let location = sender.location(in: view)
@@ -1990,7 +2007,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     }
 
     private var arrowKeyView: UIView? {
-        (editorToolbar.items ?? []).first(where: { title($0) == "up.down.left.right" })?.toolbarView
+        (editorToolbar.items ?? []).first(where: { combinedArrowDirections[title($0) ?? ""] != nil })?.toolbarView
     }
 
     private var arrowKeyIsPlaced: Bool {
@@ -2240,18 +2257,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         toolbar.outsideWindow = self.window
         toolbar.pasteTarget = self.phonePasteTarget
         toolbar.configureArrow = { [weak self] item, view in
-            let actions = ["up", "down", "left", "right"].map { direction in
+            guard let self else { return }
+            let actions = (combinedArrowDirections[self.title(item) ?? ""] ?? []).map { direction in
                 UIAccessibilityCustomAction(name: direction.capitalized) { [weak self] _ in
                     self?.sendArrow(direction: direction)
                     if #available(iOS 17, *) { self?.closeArrowTip(reason: .actionPerformed) }
                     return self != nil
                 }
             }
-            item.accessibilityLabel = "Arrows"; view.accessibilityLabel = "Arrows"
+            // The two-direction keys keep their labels: "Up and down arrows", "Left and right arrows".
+            if self.title(item) == "up.down.left.right" { item.accessibilityLabel = "Arrows"; view.accessibilityLabel = "Arrows" }
             item.accessibilityCustomActions = actions
             view.accessibilityCustomActions = actions
             if PhoneKeyboardToolbar.isCustom, !UIAccessibility.isVoiceOverRunning {
-                self?.attachPrecisionArrow(item, view: view)
+                self.attachPrecisionArrow(item, view: view)
             }
         }
         if (leftButtonGroup.count == 0) {
@@ -5240,7 +5259,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (!useSystemToolbar) {
             for button in editorToolbar.items! {
                 if PhoneKeyboardToolbar.isCustom,
-                   !UIAccessibility.isVoiceOverRunning, title(button) == "up.down.left.right", let view = button.toolbarView {
+                   !UIAccessibility.isVoiceOverRunning, combinedArrowDirections[title(button) ?? ""] != nil, let view = button.toolbarView {
                     attachPrecisionArrow(button, view: view); returnValue = true; continue
                 }
                 if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right")
