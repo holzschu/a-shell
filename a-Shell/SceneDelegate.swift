@@ -1444,61 +1444,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
-    private func computeNumberOfButtons(toolbar: String) -> UInt {
-        var numButtons: UInt = 0
-        let buttonsDefinition = toolbar.split(separator: "\n")
-        // We have to count all buttons, even if they're hidden, because we cannot change the toolbar font size
-        // once it has been created.
-        for buttonLine in buttonsDefinition {
-            let trimmedButtonLine = buttonLine.trimmingCharacters(in: .whitespacesAndNewlines)
-            if (trimmedButtonLine.hasPrefix("#")) { continue } // skip comments
-            if (trimmedButtonLine.count == 0) { continue } // skip blank lines
-            if (trimmedButtonLine == "separator") { continue } // we're in a situation where the separator will be ignored
-            let regularLine = trimmedButtonLine.contains("insertString") || trimmedButtonLine.contains("systemAction") || trimmedButtonLine.contains("insertCommand")
-            if ((trimmedButtonLine == "[")
-                || (trimmedButtonLine.hasPrefix("[=\"")) && !regularLine
-                || ((trimmedButtonLine.hasPrefix("[='")) && !regularLine)) { continue }
-            if trimmedButtonLine.hasPrefix("]") { continue }
-            let buttonPartsLine = trimmedButtonLine.components(separatedBy: .whitespaces)
-            var buttonParts: [String] = []
-            var buttonCount = 0
-            for str in buttonPartsLine {
-                // command is a single string, the others can have spaces
-                if (str.count > 0) {
-                    if ((str == "insertString") || (str == "systemAction") || (str == "insertCommand")) {
-                        if (buttonParts.count == 0) {
-                            buttonParts.append("questionmark.app.dashed")
-                        }
-                        buttonParts.append(str)
-                        buttonCount = 2
-                    } else if (buttonCount == 0) {
-                        if (buttonParts.count > 0) {
-                            buttonParts[0].append(" ")
-                            buttonParts[0].append(str)
-                        } else {
-                            buttonParts.append(str)
-                        }
-                    } else {
-                        if (buttonParts.count <= 2) {
-                            buttonParts.append(str)
-                        } else {
-                            buttonParts[2].append(" ")
-                            buttonParts[2].append(str)
-                        }
-                    }
-                }
-            }
-            if (buttonParts.count < 2) {
-                continue
-            }
-            if (String(buttonParts[2]) == "showBrowser") {
-                continue
-            }
-            numButtons += 1
-        }
-        return numButtons
-    }
-    
     @objc func generateToolbarButtons() {
         // check issue with screen size and pico.
         // Scan the configuration file to generate the button groups:
@@ -1514,7 +1459,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // if ( || UIAccessibility.isVoiceOverRunning || ) {
         //    configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
         // }
-        var showBrowserButtonFound = false // new feature, introduced with v2.0.0. Add it for older implamentations.
         if let documentsUrl = try? FileManager().url(for: .documentDirectory,
                                                      in: .userDomainMask,
                                                      appropriateFor: nil,
@@ -1537,27 +1481,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 var pastSeparator = false
                 var activeTag = 0
                 noneTag = -1
-                // iPhones, iOS 26+ only: recompute button font size based on number of buttons
-                // This a "liquidglass-only" issue, all other devices work well with default size of 19.
-                if #available(iOS 26, *) {
-                    if !UIDevice.current.model.hasPrefix("iPad") {
-                        // parse the config file to get the number of buttons
-                        let numButtons = computeNumberOfButtons(toolbar: contentOfFile)
-                        let multiplier = 3.17 // Ensures roughly 15 to 21 for fontsize for 6 to 8 buttons
-                        // smaller than 15 won't change the button size (but it will change the label size!)
-                        // larger than 22 feels much larger than the keyboard keys
-                        buttonFontSize =  min(max(screenWidth/(multiplier * CGFloat(numButtons)), 15.0), 22)
-                        if (UIDevice.current.name == "iPhone Duo") && (screenWidth == 466) {
-                            // vertical, closed iPhone Duo. This is the maximum size for 6 buttons
-                            // nothing can convince the closed iPhone Duo to display 7 buttons.
-                            buttonFontSize = 19.1
-                        }
-                        #if DEBUG
-                        NSLog("button size: \(buttonFontSize): \(screenWidth)/\(multiplier) * \(numButtons)")
-                        #endif
-                        // With liquiglass, 8 buttons is the maximum for an iPhone screen
-                    }
-                }
                 let buttonsDefinition = contentOfFile.split(separator: "\n")
                 var activeButtonGroup: [UIBarButtonItem] = []
                 let configuration = PhoneKeyboardToolbar.isCustom ? PhoneKeyboardToolbar.symbolConfiguration : UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular)
@@ -1740,7 +1663,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                         // button to switch back to the internal web browser. Hidden until the browser is activated.
                         if (title(button!) == "showBrowser") {
-                            showBrowserButtonFound = true
                             button!.isHidden = !internalBrowserStarted
                         }
                     }
@@ -1748,20 +1670,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 rightButtonGroup.append(contentsOf: activeButtonGroup)
                 rightButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: nil))
-                #if DISABLED
-                if (!showBrowserButtonFound) {
-                    // old configuration file (before v2.0). Add the showBrowser button manually:
-                    if let systemImage = UIImage(systemName: "network") {
-                        let showBrowserButton = UIBarButtonItem(image: systemImage.withConfiguration(configuration), style: .plain, target: self, action: #selector(self.systemAction(_:)))
-                        showBrowserButton.target = self
-                        showBrowserButton.possibleTitles = ["", "showBrowser"]
-                        if #available(iOS 16.0, *) {
-                            showBrowserButton.isHidden = !internalBrowserStarted
-                        }
-                        leftButtonGroup.append(showBrowserButton)
-                    }
-                }
-                #endif
             }
         }
     }
