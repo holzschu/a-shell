@@ -76,12 +76,6 @@
 		2236B29E30640BD2002B6F9E /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2236B29D30640BC4002B6F9E /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2236B29F30640BDC002B6F9E /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2236B29D30640BC4002B6F9E /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22372B722448E85D0033FE07 /* usr in Resources */ = {isa = PBXBuildFile; fileRef = 22372B712448E85C0033FE07 /* usr */; };
-		2237924530A773AF000CA265 /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
-		2237924630A773AF000CA265 /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
-		2237924730A773BD000CA265 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
-		2237924830A773BD000CA265 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
-		2237924930A773C8000CA265 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
-		2237924A30A773C8000CA265 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
 		2237DC3128549CC6003E4738 /* jq.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2237DC3028549CB8003E4738 /* jq.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2237DC3228549CCF003E4738 /* jq.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2237DC3028549CB8003E4738 /* jq.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223A1C1B2A5EDCA700B1B9AD /* Tips.swift */; };
@@ -223,6 +217,11 @@
 		2275AFAE26CA9B8B00B5BE45 /* ffmpeg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2275AFAA26CA9B6D00B5BE45 /* ffmpeg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2275AFAF26CA9B8B00B5BE45 /* ffprobe.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2275AFAB26CA9B6D00B5BE45 /* ffprobe.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227722EB239D1FA00020037E /* task in Resources */ = {isa = PBXBuildFile; fileRef = 227722EA239D1F9F0020037E /* task */; };
+		227814F130A8595D003A4910 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
+		227814F230A8595D003A4910 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
+		227814F330A85966003A4910 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		227814F430A85966003A4910 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		227814F530A85966003A4910 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F6625700F7E0068004E /* luatex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227A13642F308E9C006FD5C1 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 227A13632F308E9C006FD5C1 /* SwiftTerm */; };
 		227A540830850D0E007EA879 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227A540730850D06007EA879 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1015,10 +1014,7 @@
 		A22600000000000000000001 /* codex/codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex/codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AE1100000000000000000001 /* helix/helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix/helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		B85B646A76EB1C3038FBC891 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
-		BE8AFE2BBEDBF93A4910062F /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		D8F1C3A27B5E4E0C9A61B2F4 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
-		D91691CFCADBED6F76AE4E4E /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -4340,6 +4336,7 @@
 				224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */,
 				6BD9536C2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
 				224A90402ADD0999006DB9CC /* Intents.intentdefinition in Sources */,
+				227814F530A85966003A4910 /* ProgressCommand.swift in Sources */,
 				224A90412ADD0999006DB9CC /* UIColor+hexString.swift in Sources */,
 				224754D62EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,
 				22068CC82F51CE47004307F7 /* TerminalView+KeyCommands.swift in Sources */,
@@ -4362,7 +4359,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6DA4290CEFD8AE8731971F7C /* ExecuteLongCommandIntent.swift in Sources */,
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
 				535000000000000000000003 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000004 /* TerminalTheme.swift in Sources */,
@@ -4372,7 +4368,9 @@
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
 				223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				222005982871EF3300DC7A23 /* Intents.intentdefinition in Sources */,
+				227814F130A8595D003A4910 /* ExecuteLongCommandIntent.swift in Sources */,
 				6BD9536A2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
+				227814F330A85966003A4910 /* ProgressCommand.swift in Sources */,
 				228503772F47806F00E4DA17 /* listTeXscripts.swift in Sources */,
 				22068CC62F51C11A004307F7 /* TerminalView+KeyCommands.swift in Sources */,
 				2291286722D9DAC40004A5EA /* UIColor+hexString.swift in Sources */,
@@ -4395,7 +4393,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6E0E9C24B43A7139D193FA09 /* ExecuteLongCommandIntent.swift in Sources */,
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
 				535000000000000000000004 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000003 /* TerminalTheme.swift in Sources */,
@@ -4405,7 +4402,9 @@
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				224754D72EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,
 				229D2479257931E4004A78AC /* SceneDelegate.swift in Sources */,
+				227814F230A8595D003A4910 /* ExecuteLongCommandIntent.swift in Sources */,
 				6BD9536B2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
+				227814F430A85966003A4910 /* ProgressCommand.swift in Sources */,
 				2220059B2871EF3300DC7A23 /* Intents.intentdefinition in Sources */,
 				229D247B257931E4004A78AC /* UIColor+hexString.swift in Sources */,
 				22068CC72F51CE47004307F7 /* TerminalView+KeyCommands.swift in Sources */,
