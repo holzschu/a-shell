@@ -922,42 +922,13 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
     // if (groupNamesDictionary != nil) {
     //    storedNamesDictionary.merge(groupNamesDictionary!, uniquingKeysWith: { (current, _) in current })
     // }
-    // let groupBookmarksDictionary = UserDefaults(suiteName: appGroupID)?.dictionary(forKey: "fileBookmarks")
-    let storedBookmarksDictionary =  UserDefaults.standard.dictionary(forKey: "fileBookmarks") ?? [:]
-    // if (groupBookmarksDictionary != nil) {
-    //    storedBookmarksDictionary.merge(groupBookmarksDictionary!, uniquingKeysWith: { (current, _) in current })
-    // }
-    var mutableBookmarkDictionary : [String:Any] = storedBookmarksDictionary
-    var mutableNamesDictionary : [String:Any] = storedNamesDictionary
-    var mustUpdateDictionaries = false
+    // Update the bookmarks whose directory moved, remove those that are no longer valid:
+    checkBookmarks()
+    let namesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
     if (argc == 1) {
         // show all bookmarks
-        let sortedKeys = storedNamesDictionary.keys.sorted()
-        for key in sortedKeys {
-            let urlPath = storedNamesDictionary[key]
-            let path = (urlPath as! String)
-            let bookmark = storedBookmarksDictionary[path]
-            if (bookmark == nil) {
-                // not a secured URL, fine:
-                fputs("~" + key + ": " + path + "\n", thread_stdout);
-            } else {
-                var stale = false
-                do {
-                    _ = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
-                }
-                catch {
-                    NSLog("Could not resolve \(key)")
-                    stale = true
-                }
-                if (!stale) {
-                    fputs("~" + key + ": " + path + "\n", thread_stdout);
-                } else {
-                    // remove the bookmark from both dictionaries:
-                    mustUpdateDictionaries = true
-                    mutableBookmarkDictionary.removeValue(forKey: path)
-                    mutableNamesDictionary.removeValue(forKey: key)
-                }
-            }
+        for key in namesDictionary.keys.sorted() {
+            fputs("~" + key + ": " + (namesDictionary[key] as! String) + "\n", thread_stdout);
         }
     } else {
         // show bookmarks corresponding to arguments
@@ -966,44 +937,70 @@ public func listBookmarks(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
                 return 0
             }
             let key = String(cString: argC)
-            if let urlPath = storedNamesDictionary[key] {
-                let path = (urlPath as! String)
-                let bookmark = storedBookmarksDictionary[path]
-                if (bookmark == nil) {
-                    // not a secured URL, fine:
-                    fputs("~" + key + ": " + path + "\n", thread_stdout);
-                } else {
-                    var stale = false
-                    do {
-                        _ = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
-                    }
-                    catch {
-                        NSLog("Could not resolve \(key)")
-                        stale = true
-                    }
-                    if (!stale) {
-                        fputs("~" + key + ": " + path + "\n", thread_stdout);
-                    } else {
-                        fputs("\(key): not found (directory removed)", thread_stderr)
-                        // remove the bookmark from both dictionaries:
-                        mustUpdateDictionaries = true
-                        mutableBookmarkDictionary.removeValue(forKey: path)
-                        mutableNamesDictionary.removeValue(forKey: key)
-                    }
-                }
+            if let urlPath = namesDictionary[key] {
+                fputs("~" + key + ": " + (urlPath as! String) + "\n", thread_stdout);
+            } else if (storedNamesDictionary[key] != nil) {
+                fputs("\(key): not found (directory removed)", thread_stderr)
             } else {
                 fputs("\(key): not found", thread_stderr)
                 if (i == 1) { fputs(usage, thread_stderr) }
             }
         }
     }
-    if (mustUpdateDictionaries) {
-        UserDefaults.standard.set(mutableBookmarkDictionary, forKey: "fileBookmarks")
-        UserDefaults(suiteName: appGroupID)?.set(mutableBookmarkDictionary, forKey: "fileBookmarks")
-        UserDefaults.standard.set(mutableNamesDictionary, forKey: "bookmarkNames")
-        UserDefaults(suiteName: appGroupID)?.set(mutableNamesDictionary, forKey: "bookmarkNames")
-    }
     return 0
+}
+
+// Returns true if the directory a bookmark resolves to can be read, starting access to it if needed.
+func canAccessBookmarkedURL(_ bookmarkedUrl: URL) -> Bool {
+    if (!FileManager().isReadableFile(atPath:bookmarkedUrl.path)) {
+        let isSecuredURL = bookmarkedUrl.startAccessingSecurityScopedResource()
+        let isReadable = FileManager().isReadableFile(atPath: bookmarkedUrl.path)
+        if (!(isSecuredURL && isReadable)) {
+            NSLog("Access to \(bookmarkedUrl): isSecuredURL: \(isSecuredURL) isReadable: \(isReadable)")
+            return false
+        }
+    }
+    return true
+}
+
+// The bookmark stored for path resolves to bookmarkedUrl, which is reachable. If it is at another path
+// (e.g. the app that owns it got a new container), or the bookmark data is stale, then, as Apple recommends,
+// store a new bookmark, and point the names (and names of subdirectories) to the new path.
+// storedNames and storedBookmarks are the dictionaries before any change, names and bookmarks the updated ones.
+// Returns the path the bookmark is now stored under.
+@discardableResult
+func refreshBookmark(path: String, bookmark: Data, bookmarkedUrl: URL, stale: Bool,
+                     storedNames: [String:Any], storedBookmarks: [String:Any],
+                     names: inout [String:Any], bookmarks: inout [String:Any], healedPaths: inout Set<String>) -> String {
+    let moved = !bookmarkedUrl.sameFileLocation(path: path)
+    if (!stale && !moved) {
+        return path
+    }
+    let newPath = moved ? bookmarkedUrl.path : path
+    NSLog("Bookmark for \(path) resolves to \(bookmarkedUrl.path), stale: \(stale)")
+    let newBookmark = try? bookmarkedUrl.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil)
+    if (!healedPaths.contains(path)) {
+        bookmarks.removeValue(forKey: path)
+    }
+    bookmarks[newPath] = newBookmark ?? bookmark
+    healedPaths.insert(newPath)
+    if (moved) {
+        // iOS sometimes adds "/private" in front of paths, compare without it:
+        let withoutPrivate = { (p: String) -> String in p.hasPrefix("/private/") ? String(p.dropFirst("/private".count)) : p }
+        let oldPath = withoutPrivate(path)
+        // compare with the stored names, not the ones already healed in this pass:
+        for (name, value) in storedNames where names[name] != nil {
+            if let namePath = value as? String {
+                let shortPath = withoutPrivate(namePath)
+                if (shortPath == oldPath) {
+                    names[name] = newPath
+                } else if (shortPath.hasPrefix(oldPath + "/") && storedBookmarks[namePath] == nil) {
+                    names[name] = newPath + String(shortPath.dropFirst(oldPath.count))
+                }
+            }
+        }
+    }
+    return newPath
 }
 
 public func checkBookmarks() {
@@ -1030,43 +1027,13 @@ public func checkBookmarks() {
             var invalid = false
             do {
                 let bookmarkedUrl = try URL(resolvingBookmarkData: bookmark as! Data, bookmarkDataIsStale: &stale)
-                if (!FileManager().isReadableFile(atPath:bookmarkedUrl.path)) {
-                    let isSecuredURL = bookmarkedUrl.startAccessingSecurityScopedResource()
-                    let isReadable = FileManager().isReadableFile(atPath: bookmarkedUrl.path)
-                    if (!(isSecuredURL && isReadable)) {
-                        NSLog("Access to \(bookmarkedUrl): isSecuredURL: \(isSecuredURL) isReadable: \(isReadable)")
-                        invalid = true
-                    }
+                if (!canAccessBookmarkedURL(bookmarkedUrl)) {
+                    invalid = true
                 }
-                let moved = !bookmarkedUrl.sameFileLocation(path: path)
-                if (!invalid && (stale || moved)) {
-                    // The directory is still reachable, but at another path (e.g. the app that owns it
-                    // got a new container), or the bookmark data is stale. As Apple recommends, store
-                    // a new bookmark, and point the names (and names of subdirectories) to the new path.
-                    let newPath = moved ? bookmarkedUrl.path : path
-                    NSLog("Bookmark \(key): \(path) resolves to \(bookmarkedUrl.path), stale: \(stale)")
-                    let newBookmark = try? bookmarkedUrl.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil)
-                    if (!healedPaths.contains(path)) {
-                        mutableBookmarkDictionary.removeValue(forKey: path)
-                    }
-                    mutableBookmarkDictionary[newPath] = newBookmark ?? (bookmark as! Data)
-                    healedPaths.insert(newPath)
-                    if (moved) {
-                        // iOS sometimes adds "/private" in front of paths, compare without it:
-                        let withoutPrivate = { (p: String) -> String in p.hasPrefix("/private/") ? String(p.dropFirst("/private".count)) : p }
-                        let oldPath = withoutPrivate(path)
-                        // compare with the stored names, not the ones already healed in this pass:
-                        for (name, value) in storedNamesDictionary where mutableNamesDictionary[name] != nil {
-                            if let namePath = value as? String {
-                                let shortPath = withoutPrivate(namePath)
-                                if (shortPath == oldPath) {
-                                    mutableNamesDictionary[name] = newPath
-                                } else if (shortPath.hasPrefix(oldPath + "/") && storedBookmarksDictionary[namePath] == nil) {
-                                    mutableNamesDictionary[name] = newPath + String(shortPath.dropFirst(oldPath.count))
-                                }
-                            }
-                        }
-                    }
+                if (!invalid) {
+                    refreshBookmark(path: path, bookmark: bookmark as! Data, bookmarkedUrl: bookmarkedUrl, stale: stale,
+                                    storedNames: storedNamesDictionary, storedBookmarks: storedBookmarksDictionary,
+                                    names: &mutableNamesDictionary, bookmarks: &mutableBookmarkDictionary, healedPaths: &healedPaths)
                 }
             }
             catch {
@@ -1770,6 +1737,7 @@ public func changeDirectory(path: String) -> Bool {
             }
             bookmark = storedBookmarksDictionary[newPath]
         }
+        let bookmarkDepth = fileURL.pathComponents.count
         // If it fails, we loop, so we remove one component now:
         fileURL = fileURL.deletingLastPathComponent()
         if (bookmark != nil) {
@@ -1785,6 +1753,34 @@ public func changeDirectory(path: String) -> Bool {
                     listOfStaleBookmarks.append(newPath)
                 }
                 continue // maybe there is another bookmark that will work?
+            }
+            if ((stale || !bookmarkedURL.sameFileLocation(path: newPath)) && canAccessBookmarkedURL(bookmarkedURL)) {
+                // As in checkBookmarks(), update a bookmark whose directory is still reachable, but at another path
+                // (e.g. the app that owns it got a new container) or with stale data, then go to the new path:
+                let storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+                var mutableNamesDictionary = storedNamesDictionary
+                let previousBookmarksDictionary = storedBookmarksDictionary
+                var healedPaths = Set<String>()
+                let healedPath = refreshBookmark(path: newPath, bookmark: bookmark as! Data, bookmarkedUrl: bookmarkedURL, stale: stale,
+                                                 storedNames: storedNamesDictionary, storedBookmarks: previousBookmarksDictionary,
+                                                 names: &mutableNamesDictionary, bookmarks: &storedBookmarksDictionary, healedPaths: &healedPaths)
+                var targetURL = URL(fileURLWithPath: healedPath)
+                for component in originalFileURL.pathComponents.dropFirst(bookmarkDepth) {
+                    targetURL.appendPathComponent(component)
+                }
+                for staleBookmark in listOfStaleBookmarks {
+                    storedBookmarksDictionary.removeValue(forKey: staleBookmark)
+                }
+                UserDefaults.standard.set(storedBookmarksDictionary, forKey: "fileBookmarks")
+                UserDefaults(suiteName: appGroupID)?.set(storedBookmarksDictionary, forKey: "fileBookmarks")
+                UserDefaults.standard.set(mutableNamesDictionary, forKey: "bookmarkNames")
+                UserDefaults(suiteName: appGroupID)?.set(mutableNamesDictionary, forKey: "bookmarkNames")
+                if (!targetURL.sameFileLocation(path: path)) {
+                    fclose(thread_stderr)
+                    thread_stderr = old_thread_stderr
+                    return changeDirectory(path: targetURL.path)
+                }
+                stale = false
             }
             if (!stale) {
                 let isSecuredURL = bookmarkedURL.startAccessingSecurityScopedResource()
@@ -1878,13 +1874,16 @@ public func jump(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
         // changeDirectory also goes through all the list of bookmarks.
         return 0 // it worked
     } else {
+        // changeDirectory may have moved the bookmark to a new path, read the names again:
+        storedNamesDictionary = UserDefaults.standard.dictionary(forKey: "bookmarkNames") ?? [:]
+        let currentPath = (storedNamesDictionary[name] as? String) ?? pathString
         var isDirectory: ObjCBool = false
-        let fileExists = FileManager().fileExists(atPath: pathString, isDirectory: &isDirectory)
+        let fileExists = FileManager().fileExists(atPath: currentPath, isDirectory: &isDirectory)
         if (fileExists && !isDirectory.boolValue) {
             // it's a file: edit it with default editor:
             // TODO: customize editor
             if let delegate = currentDelegate {
-                delegate.executeCommand(command: "vim " + pathString.replacingOccurrences(of: " ", with: "\\ "))
+                delegate.executeCommand(command: "vim " + currentPath.replacingOccurrences(of: " ", with: "\\ "))
             }
         } else {
             // probably a stale bookmark:
