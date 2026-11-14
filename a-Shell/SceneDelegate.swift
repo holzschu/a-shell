@@ -119,6 +119,10 @@ final class PhoneKeyboardToolbar: UIInputView {
     override var backgroundColor: UIColor? {
         didSet { nativeToolbar?.backgroundColor = backgroundColor }
     }
+    // Forward the assigned color: reading tintColor back from this UIInputView returns white, even after .label was set (iOS 17.5), which drew the native toolbar's keys white on the terminal background.
+    override var tintColor: UIColor! {
+        willSet { nativeToolbar?.tintColor = newValue }
+    }
     private var pasteControlStyle = UIUserInterfaceStyle.unspecified
     private var pasteControl: UIView?
     private var keyboardObservers: [NSObjectProtocol] = []
@@ -350,7 +354,7 @@ final class PhoneKeyboardToolbar: UIInputView {
 
         override func layoutSubviews() {
             super.layoutSubviews()
-            if let nativeToolbar { nativeToolbar.frame = bounds; nativeToolbar.tintColor = tintColor; return }
+            if let nativeToolbar { nativeToolbar.frame = bounds; return }
             var visible = keys.filter { item in
                 if #available(iOS 16, *) { return !item.isHidden }
                 return true
@@ -1836,7 +1840,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         center.removeObserver(self, name: .GCKeyboardDidDisconnect, object: nil)
         center.addObserver(self, selector: #selector(keyboardConnectionChanged(_:)), name: .GCKeyboardDidConnect, object: nil)
         center.addObserver(self, selector: #selector(keyboardConnectionChanged(_:)), name: .GCKeyboardDidDisconnect, object: nil)
-        for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
+        for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardDidChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
             center.removeObserver(self, name: name, object: nil)
             center.addObserver(self, selector: #selector(softwareKeyboardChanged(_:)), name: name, object: nil)
         }
@@ -1857,11 +1861,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         coordinator.animate(alongsideTransition: nil) { [weak self] _ in
             guard let self else { return }
             self.keyboardSizeTransition = false
-            var ancestor = self.terminalView?.superview
-            while let view = ancestor, !(view is TerminalContainerView) { ancestor = view.superview }
-            guard #available(iOS 15, *), let container = ancestor else { return }
-            self.setSoftwareKeyboardShown(container.keyboardLayoutGuide.layoutFrame.height > 100)
+            self.readSettledKeyboard()
         }
+    }
+
+    private func readSettledKeyboard() {
+        var ancestor = terminalView?.superview
+        while let view = ancestor, !(view is TerminalContainerView) { ancestor = view.superview }
+        guard #available(iOS 15, *), let container = ancestor else { return }
+        setSoftwareKeyboardShown(container.keyboardLayoutGuide.layoutFrame.height > 100)
     }
 
     @objc private func softwareKeyboardChanged(_ notification: Notification) {
@@ -1869,10 +1877,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if #available(iOS 17, *), notification.name == UIResponder.keyboardWillHideNotification { closeArrowTip(reason: .tipClosed) }
         guard notification.userInfo?[UIResponder.keyboardIsLocalUserInfoKey] as? Bool ?? true else { return }
         guard !keyboardSizeTransition else { return }
-        // With a hardware keyboard the frame covers at most the accessory bar, far below a software keyboard.
-        let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
-        let visible = frame.intersection(window?.screen.bounds ?? UIScreen.main.bounds)
-        setSoftwareKeyboardShown(notification.name != UIResponder.keyboardWillHideNotification && visible.height > 100)
+        switch notification.name {
+        case UIResponder.keyboardWillHideNotification:
+            setSoftwareKeyboardShown(false)
+        case UIResponder.keyboardDidChangeFrameNotification:
+            // A frame no taller than the accessory does not prove a hardware keyboard: after unfolding an iPhone Duo the last frames cover only the accessory while the software keyboard stays up, which hid the bar. Decide from the settled guide.
+            readSettledKeyboard()
+        default:
+            // With a hardware keyboard the frame covers at most the accessory bar, far below a software keyboard.
+            let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
+            if frame.intersection(window?.screen.bounds ?? UIScreen.main.bounds).height > 100 { setSoftwareKeyboardShown(true) }
+        }
     }
 
     private func setSoftwareKeyboardShown(_ shown: Bool) {
