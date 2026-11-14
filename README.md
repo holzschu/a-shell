@@ -87,6 +87,14 @@ A user-configurable option in Settings lets you use the commands `s`, `g`, `l`, 
 
 If you are lost, `cd` will always bring you back to `~/Documents/`. `cd -` will change to the previous directory. 
 
+## Background mode
+
+Background mode is off by default; run `background on` in the foreground to keep the location session active for long scripts that use `location` off screen. Accuracy follows the existing Precise Location switch in a-Shell's iOS Location settings. With Precise Location on, the session requests 100 m accuracy; with it off, iOS supplies reduced accuracy. The app requests a hidden background location indicator with Always authorization and Precise Location on, and a visible indicator with reduced accuracy or When In Use authorization. iOS controls the actual display. Precise updates can use more battery.
+
+Run `background off` to stop the background session, `background status` to see the mode, authorization, accuracy and indicator policy, or `background` to open the in-app settings. The background-mode toggle is also available in iOS Settings. Requested accuracy is not guaranteed accuracy. Background mode does not guarantee continuous execution; iOS can suspend or terminate the app.
+
+Run `location --timeout 30` to print one fix as JSON, for example `location > fix.json`. The command requests When In Use authorization on first use and returns Termux-compatible field names: `latitude`, `longitude`, `altitude`, `accuracy`, `vertical_accuracy`, `bearing`, `speed`, `elapsedMs` (age of the fix in milliseconds), and `provider` (`corelocation`, since iOS chooses the underlying provider). Distances and accuracies are in meters, bearing in degrees, and speed in meters per second; negative accuracy, bearing or speed values mean unavailable. A valid precise fix up to 10 seconds old is reused. Reduced fixes may arrive only a few times per hour and are accepted up to 20 minutes old; `elapsedMs` reports the sample age. The default timeout is 30 seconds; timeout exits with 124, denied access with 1, and invalid arguments with 2. Coordinates are returned to the invoking script and are not retained by the location session.
+
 ## Shortcuts
 
 a-Shell is compatible with Apple Shortcuts, giving users full control of the Shell. You can write complex Shortcuts to download, process and release files using a-Shell commands. There are three shortcuts: 
