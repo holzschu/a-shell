@@ -5694,7 +5694,10 @@ extension SceneDelegate: WKUIDelegate {
                                 // let returnValue = write(fd, data, numValues)
                                 let file = FileHandle(fileDescriptor: fd)
                                 do {
-                                    try file.seek(toOffset: offset)
+                                    // stdout and stderr write at the descriptor's current position, so they stay in order with 2>&1.
+                                    if arguments[2] != "1" && arguments[2] != "2" {
+                                        try file.seek(toOffset: offset)
+                                    }
                                 }
                                 catch {
                                     let error = error as NSError
