@@ -549,6 +549,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     private var hardwareKeyboardOnly: Bool { hardwareKeyboardConnected && !softwareKeyboardShown }
     private var hardwareToolbarOverride = false
     private var arrowTipController: UIViewController?
+    private var toolbarTipController: UIViewController?
     private var arrowTipTask: Task<Void, Never>?
     private var arrowTipTaskID: UUID?
     private var arrowHUD: UIView?
@@ -2003,27 +2004,38 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let tip = ArrowToolbarTip()
             for await shouldDisplay in tip.shouldDisplayUpdates {
                 guard !Task.isCancelled, let self else { return }
-                guard shouldDisplay else { continue }
-                // The key reaches its place only once the keyboard is up and the toolbar has finished regenerating its keys; a popover anchored earlier lands at the screen corner or on another key.
-                // Right after toolbarTip closes, its popover may still be on screen.
-                var lastFrame: CGRect?
-                for _ in 0..<50 {
-                    let ready = self.arrowKeyIsPlaced && self.window?.rootViewController?.presentedViewController == nil
-                    let frame = ready ? self.arrowKeyView.map { $0.convert($0.bounds, to: nil) } : nil
-                    if frame != nil && frame == lastFrame { break }
-                    lastFrame = frame
-                    try? await Task.sleep(nanoseconds: 100_000_000)
+                // Close only invalidates the tip; its popover has to be dismissed here, but not on a false that only means it was already shown.
+                guard shouldDisplay else {
+                    if case .invalidated = tip.status { self.arrowTipController?.dismiss(animated: true); self.arrowTipController = nil }
+                    continue
                 }
-                guard !Task.isCancelled else { return }
-                guard self.arrowKeyIsPlaced, let root = self.window?.rootViewController,
-                      let view = self.arrowKeyView, root.presentedViewController == nil,
-                      self.arrowTipController?.presentingViewController == nil else { continue }
-                let controller = TipUIPopoverViewController(tip, sourceItem: view)
-                controller.popoverPresentationController?.permittedArrowDirections = .down
-                // A touch outside the popover only dismisses it; let the first arrow flick through.
-                controller.popoverPresentationController?.passthroughViews = [self.editorToolbar]
-                root.present(controller, animated: true)
-                self.arrowTipController = controller
+                // The key reaches its place only once the keyboard is up and the toolbar has finished regenerating its keys; a popover anchored earlier lands at the screen corner or on another key.
+                // Right after toolbarTip closes, its popover can still be on screen and refuse this one: try again shortly.
+                for _ in 0..<3 {
+                    var lastFrame: CGRect?
+                    for _ in 0..<50 {
+                        let ready = self.arrowKeyIsPlaced && self.toolbarTipController?.viewIfLoaded?.window == nil
+                        let frame = ready ? self.arrowKeyView.map { $0.convert($0.bounds, to: nil) } : nil
+                        if frame != nil && frame == lastFrame { break }
+                        lastFrame = frame
+                        try? await Task.sleep(nanoseconds: 100_000_000)
+                    }
+                    guard !Task.isCancelled else { return }
+                    guard self.arrowKeyIsPlaced, let root = self.window?.rootViewController,
+                          let view = self.arrowKeyView, root.presentedViewController == nil,
+                          self.toolbarTipController?.viewIfLoaded?.window == nil,
+                          self.arrowTipController?.presentingViewController == nil else { break }
+                    let controller = TipUIPopoverViewController(tip, sourceItem: view)
+                    controller.popoverPresentationController?.permittedArrowDirections = .down
+                    // A touch outside the popover only dismisses it; let the first arrow flick through.
+                    controller.popoverPresentationController?.passthroughViews = [self.editorToolbar]
+                    root.present(controller, animated: true)
+                    if controller.presentingViewController != nil {
+                        self.arrowTipController = controller
+                        break
+                    }
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                }
             }
         }
     }
@@ -4730,6 +4742,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                     controller.popoverPresentationController?.canOverlapSourceViewRect = true
                                                     let rootVC = self.window?.rootViewController
                                                     rootVC?.present(controller, animated: false)
+                                                    if controller.presentingViewController != nil { self.toolbarTipController = controller }
                                                 } else {
                                                     if let centerButton = terminalView?.inputAssistantItem.leadingBarButtonGroups.first?.barButtonItems.last {
                                                         NSLog("centerButton: \(centerButton)")
@@ -4738,18 +4751,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                             controller.popoverPresentationController?.canOverlapSourceViewRect = true
                                                             let rootVC = self.window?.rootViewController
                                                             rootVC?.present(controller, animated: false)
+                                                            if controller.presentingViewController != nil { self.toolbarTipController = controller }
                                                             
                                                         }
                                                     }
                                                 }
                                             }
                                         }  else {
-                                            let rootVC = self.window?.rootViewController
-                                            if let controller = rootVC?.presentedViewController {
-                                                if controller is TipUIPopoverViewController {
-                                                    controller.dismiss(animated: false)
-                                                }
-                                            }
+                                            // On an iOS 26 iPhone the keyboard's window presents the popover, so the root view controller has no presentedViewController: dismiss the tip's own controller.
+                                            self.toolbarTipController?.dismiss(animated: false)
+                                            self.toolbarTipController = nil
                                         }
                                     }
                                 }
@@ -5491,6 +5502,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         controller.popoverPresentationController?.canOverlapSourceViewRect = true
                         let rootVC = self.window?.rootViewController
                         rootVC?.present(controller, animated: false)
+                        if controller.presentingViewController != nil { self.toolbarTipController = controller }
                     }
                 }
             }
