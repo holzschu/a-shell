@@ -76,6 +76,12 @@
 		2236B29E30640BD2002B6F9E /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2236B29D30640BC4002B6F9E /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2236B29F30640BDC002B6F9E /* WasmKitCommand.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2236B29D30640BC4002B6F9E /* WasmKitCommand.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22372B722448E85D0033FE07 /* usr in Resources */ = {isa = PBXBuildFile; fileRef = 22372B712448E85C0033FE07 /* usr */; };
+		2237924530A773AF000CA265 /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
+		2237924630A773AF000CA265 /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
+		2237924730A773BD000CA265 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		2237924830A773BD000CA265 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		2237924930A773C8000CA265 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
+		2237924A30A773C8000CA265 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
 		2237DC3128549CC6003E4738 /* jq.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2237DC3028549CB8003E4738 /* jq.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2237DC3228549CCF003E4738 /* jq.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2237DC3028549CB8003E4738 /* jq.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223A1C1B2A5EDCA700B1B9AD /* Tips.swift */; };
@@ -979,7 +985,6 @@
 		22F9641B30852E8100868C46 /* Ruff.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F9641A30852E7600868C46 /* Ruff.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22FFB44229E87D950054F01F /* require_jscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44129E87D920054F01F /* require_jscore.js */; };
 		22FFB44429E88AE80054F01F /* url-polyfill.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44329E88AE60054F01F /* url-polyfill.js */; };
-		241174C3FD9A4286E38FE7C0 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		535000000000000000000002 /* Util/CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* Util/CommandEnvironment.swift */; };
 		535000000000000000000003 /* Util/CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* Util/CommandEnvironment.swift */; };
 		535000000000000000000004 /* Util/CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* Util/CommandEnvironment.swift */; };
@@ -1005,27 +1010,19 @@
 		6BD9536E2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		6BD9536F2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		6BD953702BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
-		6DA4290CEFD8AE8731971F7C /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
-		6E0E9C24B43A7139D193FA09 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
 		707000000000000000000002 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		707000000000000000000003 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		707000000000000000000004 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		7F117665FA3CA0A131164904 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		87BFA35D4A842B3F7BD8E197 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		8D581F458AB1D50B2B8214BC /* a-Shell-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E165D4A88383A9A89C5E090B /* a-Shell-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		9313D8BBB62B8827FA0F4BBE /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
 		9FA1E9A5C72AF598227B3351 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22000000000000000000002 /* rg/rg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A22600000000000000000001 /* codex/codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex/codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AE1100000000000000000001 /* helix/helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix/helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B2C2C9D94DB1A976E1C18301 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229D25C025793699004A78AC /* commandDictionary.plist */; };
-		B85B646A76EB1C3038FBC891 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
-		BE8AFE2BBEDBF93A4910062F /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
-		CDB88291CE91BD1BB768CB32 /* LongCommandsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC0CD1342A1F44CD2EDAF23 /* LongCommandsExtension.swift */; };
 		CFC692FD99A84C71382E2A01 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 229F51142473BBC90053AC03 /* commandDictionary.plist */; };
-		D91691CFCADBED6F76AE4E4E /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		FE87DA972C544F9F425195EE /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 /* End PBXBuildFile section */
 
@@ -4478,10 +4475,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6DA4290CEFD8AE8731971F7C /* ExecuteLongCommandIntent.swift in Sources */,
-				241174C3FD9A4286E38FE7C0 /* ProgressCommand.swift in Sources */,
 				535000000000000000000005 /* Util/CommandEnvironment.swift in Sources */,
-				CDB88291CE91BD1BB768CB32 /* LongCommandsExtension.swift in Sources */,
+				2237924930A773C8000CA265 /* ExecuteLongCommandIntent.swift in Sources */,
+				2237924530A773AF000CA265 /* LongCommandsExtension.swift in Sources */,
+				2237924730A773BD000CA265 /* ProgressCommand.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4508,7 +4505,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
-				D91691CFCADBED6F76AE4E4E /* ProgressCommand.swift in Sources */,
 				535000000000000000000002 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000002 /* TerminalTheme.swift in Sources */,
 				620000000000000000000002 /* TerminalPrompt.swift in Sources */,
@@ -4541,7 +4537,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
-				BE8AFE2BBEDBF93A4910062F /* ProgressCommand.swift in Sources */,
 				535000000000000000000003 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000004 /* TerminalTheme.swift in Sources */,
 				620000000000000000000004 /* TerminalPrompt.swift in Sources */,
@@ -4574,7 +4569,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
-				B85B646A76EB1C3038FBC891 /* ProgressCommand.swift in Sources */,
 				535000000000000000000004 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000003 /* TerminalTheme.swift in Sources */,
 				620000000000000000000003 /* TerminalPrompt.swift in Sources */,
@@ -4624,10 +4618,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6E0E9C24B43A7139D193FA09 /* ExecuteLongCommandIntent.swift in Sources */,
-				87BFA35D4A842B3F7BD8E197 /* ProgressCommand.swift in Sources */,
 				535000000000000000000006 /* Util/CommandEnvironment.swift in Sources */,
-				9313D8BBB62B8827FA0F4BBE /* LongCommandsExtension.swift in Sources */,
+				2237924A30A773C8000CA265 /* ExecuteLongCommandIntent.swift in Sources */,
+				2237924630A773AF000CA265 /* LongCommandsExtension.swift in Sources */,
+				2237924830A773BD000CA265 /* ProgressCommand.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4873,7 +4867,7 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 605;
+				CURRENT_PROJECT_VERSION = 606;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_PREVIEWS = YES;
@@ -4925,7 +4919,7 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 605;
+				CURRENT_PROJECT_VERSION = 606;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_PREVIEWS = YES;
@@ -5103,7 +5097,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 605;
+				CURRENT_PROJECT_VERSION = 606;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -5152,7 +5146,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 605;
+				CURRENT_PROJECT_VERSION = 606;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -5201,7 +5195,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 605;
+				CURRENT_PROJECT_VERSION = 606;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -5257,7 +5251,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 605;
+				CURRENT_PROJECT_VERSION = 606;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
