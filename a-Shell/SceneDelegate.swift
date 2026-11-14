@@ -1980,14 +1980,36 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     self?.arrowTipTaskID = nil
                 }
             }
+            // toolbarTip comes first: this tip waits until toolbarTip is closed. toolbarTip never shows to a user who already has a .toolbarDefinition.
+            if !ArrowToolbarTip.toolbarTipDone {
+                let edited = self?.hasToolbarDefinition ?? true
+                // statusUpdates may report only changes, so a status reached before this task started counts here.
+                var closed = false
+                switch myToolbarTip.status {
+                case .invalidated: closed = true
+                case .pending: break
+                default: closed = edited
+                }
+                if !closed {
+                    for await status in myToolbarTip.statusUpdates {
+                        if case .invalidated = status { break }
+                        // For a .toolbarDefinition user, wait only until TipKit has loaded toolbarTip: a parameter set while it loads can be lost, and this tip then never shows.
+                        if edited, status != .pending { break }
+                    }
+                }
+                guard !Task.isCancelled else { return }
+                ArrowToolbarTip.toolbarTipDone = true
+            }
             let tip = ArrowToolbarTip()
             for await shouldDisplay in tip.shouldDisplayUpdates {
                 guard !Task.isCancelled, let self else { return }
                 guard shouldDisplay else { continue }
                 // The key reaches its place only once the keyboard is up and the toolbar has finished regenerating its keys; a popover anchored earlier lands at the screen corner or on another key.
+                // Right after toolbarTip closes, its popover may still be on screen.
                 var lastFrame: CGRect?
                 for _ in 0..<50 {
-                    let frame = self.arrowKeyIsPlaced ? self.arrowKeyView.map { $0.convert($0.bounds, to: nil) } : nil
+                    let ready = self.arrowKeyIsPlaced && self.window?.rootViewController?.presentedViewController == nil
+                    let frame = ready ? self.arrowKeyView.map { $0.convert($0.bounds, to: nil) } : nil
                     if frame != nil && frame == lastFrame { break }
                     lastFrame = frame
                     try? await Task.sleep(nanoseconds: 100_000_000)
@@ -2004,6 +2026,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.arrowTipController = controller
             }
         }
+    }
+
+    private var hasToolbarDefinition: Bool {
+        let definition = FileManager().urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent(".toolbarDefinition")
+        return definition.map { FileManager().fileExists(atPath: $0.path) } ?? false
     }
 
     private var arrowKeyView: UIView? {
@@ -4681,7 +4708,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     self.terminalView!.inputAccessoryView = self.editorToolbar
                     self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
                 }
-                if #available(iOS 17, *), !(PhoneKeyboardToolbar.isCustom && (leftButtonGroup + rightButtonGroup).contains(where: { title($0) == "up.down.left.right" })) {
+                if #available(iOS 17, *) {
                     // Do not show the toolbar tip if the app has been started from a Shortcut:
                     if (!startedFromShortcut) {
                         // Do *not* show the toolbar tip if the user has already edited the toolbar
@@ -5454,9 +5481,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.terminalView!.inputAccessoryView = self.editorToolbar
                 self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             }
-            if #available(iOS 17, *), !(PhoneKeyboardToolbar.isCustom && (leftButtonGroup + rightButtonGroup).contains(where: { title($0) == "up.down.left.right" })) {
+            if #available(iOS 17, *) {
                 NSLog("myToolbarTip status: \(myToolbarTip.status)")
-                if (myToolbarTip.shouldDisplay) {
+                // As at launch: no toolbar tip for a user who has edited the toolbar.
+                if (myToolbarTip.shouldDisplay && !hasToolbarDefinition) {
                     if (self.terminalView != nil) {
                         // TODO: re-check placement of tips
                         let controller = TipUIPopoverViewController(myToolbarTip, sourceItem: self.terminalView!)
