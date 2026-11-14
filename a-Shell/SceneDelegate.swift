@@ -319,6 +319,35 @@ final class PhoneKeyboardToolbar: UIInputView {
         return super.hitTest(point, with: event)
     }
             
+    private func title(_ button: UIBarButtonItem) -> String? {
+        if let possibleTitles = button.possibleTitles {
+            for attemptedTitle in possibleTitles {
+                if (attemptedTitle.count > 0) {
+                    return attemptedTitle
+                }
+            }
+        }
+        return button.title
+    }
+    
+    private func singleArrow(title: String?) -> Bool {
+        return ((title == "up") || (title == "down") || (title == "left") || (title == "right"))
+    }
+    private func doubleArrow(title: String?) -> Bool {
+        return ((title == "up.down") || (title == "left.right"))
+    }
+
+    private func isArrow(title: String?) -> Bool {
+        return singleArrow(title: title) || doubleArrow(title: title) || (title == "up.down.left.right")
+    }
+    
+    private func verticalArrow(title: String?) -> Bool {
+        return (title == "up" || title == "down" || title == "up.down" || title == "up.down.left.right")
+    }
+    private func horizontalArrow(title: String?) -> Bool {
+        return (title == "left" || title == "right" || title == "left.right" || title == "up.down.left.right")
+    }
+
         override func layoutSubviews() {
             super.layoutSubviews()
             if let nativeToolbar { nativeToolbar.frame = bounds; nativeToolbar.tintColor = tintColor; return }
@@ -344,12 +373,98 @@ final class PhoneKeyboardToolbar: UIInputView {
             if (internalBrowserStarted && (visible.count > slots)) {
                 // recompute "visible":
                 visible = keys.filter { item in
-                    if #available(iOS 16, *) { return (item.possibleTitles?.first != "showBrowser") && !item.isHidden }
+                    if #available(iOS 16, *) { return (title(item) != "showBrowser") && !item.isHidden }
                     return true
                 }
             }
+            // Next step: count the arrows, make them merge
+            if (visible.count > slots) {
+                // There are still too many buttons
+                let arrows = visible.filter { isArrow(title: title($0)) }
+                let fourArrows = visible.filter { (title($0) == "up.down.left.right") }
+                NSLog("I counted: \(arrows.count) arrow buttons")
+                if (fourArrows.count > 0) && (arrows.count > 1) {
+                    // There is already a four-arrows button and there are *other* arrow buttons
+                    // Just remove all of them:
+                    visible.removeAll(where: { (singleArrow(title: title($0)) || doubleArrow(title: title($0))) })
+                    // If there are multiple four-arrow buttons, this will leave them in place (but why would you do that?)
+                } else {
+                    var firstVerticalButton = -1
+                    var firstHorizontalButton = -1
+                    var firstArrowButton = -1
+                    if (arrows.count >= 1) {
+                        for k in 0..<visible.count {
+                            let button = visible[k]
+                            if (firstVerticalButton < 0) && verticalArrow(title: title(button)) {
+                                firstVerticalButton = k
+                            }
+                            if (firstHorizontalButton < 0) && horizontalArrow(title: title(button))  {
+                                firstHorizontalButton = k
+                            }
+                            if (firstHorizontalButton >= 0) && (firstVerticalButton >= 0) {
+                                break
+                            }
+                        }
+                        firstArrowButton = min(firstVerticalButton, firstHorizontalButton)
+                        if (firstArrowButton < 0) {
+                            if (firstVerticalButton >= 0) {
+                                firstArrowButton = firstVerticalButton
+                            } else if (firstHorizontalButton >= 0) {
+                                firstArrowButton = firstHorizontalButton
+                            }
+                        }
+                        if (arrows.count >= 4) && (visible.count - slots <= (arrows.count - 2)) && (firstVerticalButton > 0) && (firstHorizontalButton > 0) {
+                            // There are at least 4 arrow buttons and we can fit everything by reducing them to two:
+                            // Switch to two double-arrow buttons:
+                            visible[firstVerticalButton].image = UIImage(systemName: "arrow.up.and.down")
+                            visible[firstVerticalButton].title = "up.down"
+                            visible[firstVerticalButton].possibleTitles?.removeAll()
+                            visible[firstHorizontalButton].image = UIImage(systemName: "arrow.left.and.right")
+                            visible[firstHorizontalButton].title = "left.right"
+                            visible[firstHorizontalButton].possibleTitles?.removeAll()
+                            visible.removeAll(where: { singleArrow(title: title($0)) })
+                        } else {
+                            // Either we only have two arrow buttons or we need to gain more than two slots:
+                            // -> insert a four-arrow button, remove everything else:
+                            // create a single 4-arrows button
+                            // start from visible, insert an up.down.left.right button, then remove the others
+                            if (firstArrowButton > 0) { // This test should not be necessary
+                                visible[firstArrowButton].image = UIImage(systemName: "arrow.up.and.down.and.arrow.left.and.right")
+                                visible[firstArrowButton].title = "up.down.left.right"
+                                visible[firstArrowButton].possibleTitles?.removeAll()
+                                // remove all the other arrow buttons:
+                                visible.removeAll(where: { (singleArrow(title: title($0)) || doubleArrow(title: title($0))) })
+                            }
+                        }
+                    }
+                }
+            }
+            // After that: if the four-direction arrow is inside the "more" menu,
+            // move it to just before the "more" menu (and remove it)
             let overflow = visible.count > slots
-            let shown = Array(visible.prefix(overflow ? slots - 1 : slots))
+            var shown = Array(visible.prefix(overflow ? slots - 1 : slots))
+            var extraButtons = visible.dropFirst(shown.count)
+            // Are the arrows in "shown"?
+            if overflow {
+                // if we're still overflowing, arrows must be four-arrow buttons
+                if shown.filter({ isArrow(title: title($0)) }).isEmpty && !extraButtons.filter({ isArrow(title: title($0)) }).isEmpty {
+                    // There are no arrow buttons being shown, and there are arrow buttons in extraButtons
+                    // take the last button from shown, place it in extraButtons, replace it with the arrowbutton from extraButtons
+                    shown = Array(visible.prefix(slots - 2))
+                    extraButtons = visible.dropFirst(shown.count)
+                    var arrowButtonPosition = -1
+                    for k in 0..<extraButtons.count {
+                        if title(extraButtons[shown.count+k]) == "up.down.left.right" {
+                            arrowButtonPosition = shown.count+k
+                            break
+                        }
+                    }
+                    if (arrowButtonPosition > 0) {
+                        shown.append(extraButtons[arrowButtonPosition])
+                        extraButtons.removeAll(where: { isArrow(title: title($0)) })
+                    }
+                }
+            }
             for item in keys { item.customView?.isHidden = !shown.contains(where: { $0 === item }) }
             let padding = fullWidthGrid ? 0 : outerPadding
             let pitch = (width - padding * 2) / CGFloat(slots)
@@ -357,7 +472,7 @@ final class PhoneKeyboardToolbar: UIInputView {
             more.isHidden = !overflow
             if overflow {
                 more.frame = CGRect(x: firstSlot + CGFloat(slots - 1) * pitch, y: 0, width: pitch, height: glass.bounds.height)
-                more.menu = UIMenu(children: visible.dropFirst(shown.count).map { item -> UIMenuElement in
+                more.menu = UIMenu(children: extraButtons.map { item -> UIMenuElement in
                     if let menu = item.menu { return menu }
                     if let action = item.primaryAction { return action }
                     return UIAction(title: item.accessibilityLabel ?? item.title ?? "Key", image: item.image) { [weak item] _ in
@@ -367,6 +482,7 @@ final class PhoneKeyboardToolbar: UIInputView {
                 })
             }
             for (index, item) in shown.enumerated() {
+                NSLog("adding: \(index) -- \(item)")
                 guard let key = item.customView else { continue }
                 let slot = CGRect(x: firstSlot + CGFloat(index) * pitch, y: 0, width: pitch, height: glass.bounds.height)
                 if #available(iOS 16, *), key is UIPasteControl {
@@ -377,6 +493,7 @@ final class PhoneKeyboardToolbar: UIInputView {
                 key.accessibilityValue = item.accessibilityValue
                 if let actions = item.accessibilityCustomActions { key.accessibilityCustomActions = actions }
                 if let button = key as? UIButton {
+                    NSLog("adding button: \(button)")
                     button.menu = item.menu
                     button.showsMenuAsPrimaryAction = item.menu != nil
                     let image = item.image?.withConfiguration(Self.symbolConfiguration)
@@ -1415,61 +1532,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
-    private func computeNumberOfButtons(toolbar: String) -> UInt {
-        var numButtons: UInt = 0
-        let buttonsDefinition = toolbar.split(separator: "\n")
-        // We have to count all buttons, even if they're hidden, because we cannot change the toolbar font size
-        // once it has been created.
-        for buttonLine in buttonsDefinition {
-            let trimmedButtonLine = buttonLine.trimmingCharacters(in: .whitespacesAndNewlines)
-            if (trimmedButtonLine.hasPrefix("#")) { continue } // skip comments
-            if (trimmedButtonLine.count == 0) { continue } // skip blank lines
-            if (trimmedButtonLine == "separator") { continue } // we're in a situation where the separator will be ignored
-            let regularLine = trimmedButtonLine.contains("insertString") || trimmedButtonLine.contains("systemAction") || trimmedButtonLine.contains("insertCommand")
-            if ((trimmedButtonLine == "[")
-                || (trimmedButtonLine.hasPrefix("[=\"")) && !regularLine
-                || ((trimmedButtonLine.hasPrefix("[='")) && !regularLine)) { continue }
-            if trimmedButtonLine.hasPrefix("]") { continue }
-            let buttonPartsLine = trimmedButtonLine.components(separatedBy: .whitespaces)
-            var buttonParts: [String] = []
-            var buttonCount = 0
-            for str in buttonPartsLine {
-                // command is a single string, the others can have spaces
-                if (str.count > 0) {
-                    if ((str == "insertString") || (str == "systemAction") || (str == "insertCommand")) {
-                        if (buttonParts.count == 0) {
-                            buttonParts.append("questionmark.app.dashed")
-                        }
-                        buttonParts.append(str)
-                        buttonCount = 2
-                    } else if (buttonCount == 0) {
-                        if (buttonParts.count > 0) {
-                            buttonParts[0].append(" ")
-                            buttonParts[0].append(str)
-                        } else {
-                            buttonParts.append(str)
-                        }
-                    } else {
-                        if (buttonParts.count <= 2) {
-                            buttonParts.append(str)
-                        } else {
-                            buttonParts[2].append(" ")
-                            buttonParts[2].append(str)
-                        }
-                    }
-                }
-            }
-            if (buttonParts.count < 2) {
-                continue
-            }
-            if (String(buttonParts[2]) == "showBrowser") {
-                continue
-            }
-            numButtons += 1
-        }
-        return numButtons
-    }
-    
+ 
     // defaultToolbar.txt stays the stock file; the iOS 26 phone bar swaps its two arrow keys for the four-arrow key.
     private func phoneToolbarDefaults(_ content: String) -> String {
         var lines: [String] = []
@@ -1502,7 +1565,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // The iOS 26 phone bar starts from the phone defaults, VoiceOver included: its arrow key has named actions.
         var phoneDefaults = PhoneKeyboardToolbar.isCustom
         if phoneDefaults { configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt") }
-        var showBrowserButtonFound = false // new feature, introduced with v2.0.0. Add it for older implamentations.
         if let documentsUrl = try? FileManager().url(for: .documentDirectory,
                                                      in: .userDomainMask,
                                                      appropriateFor: nil,
@@ -1528,27 +1590,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 var pastSeparator = false
                 var activeTag = 0
                 noneTag = -1
-                // iPhones, iOS 26+ only: recompute button font size based on number of buttons
-                // This a "liquidglass-only" issue, all other devices work well with default size of 19.
-                if #available(iOS 26, *) {
-                    if !UIDevice.current.model.hasPrefix("iPad") {
-                        // parse the config file to get the number of buttons
-                        let numButtons = computeNumberOfButtons(toolbar: contentOfFile)
-                        let multiplier = 3.17 // Ensures roughly 15 to 21 for fontsize for 6 to 8 buttons
-                        // smaller than 15 won't change the button size (but it will change the label size!)
-                        // larger than 22 feels much larger than the keyboard keys
-                        buttonFontSize =  min(max(screenWidth/(multiplier * CGFloat(numButtons)), 15.0), 22)
-                        if (UIDevice.current.name == "iPhone Duo") && (screenWidth == 466) {
-                            // vertical, closed iPhone Duo. This is the maximum size for 6 buttons
-                            // nothing can convince the closed iPhone Duo to display 7 buttons.
-                            buttonFontSize = 19.1
-                        }
-                        #if DEBUG
-                        NSLog("button size: \(buttonFontSize): \(screenWidth)/\(multiplier) * \(numButtons)")
-                        #endif
-                        // With liquiglass, 8 buttons is the maximum for an iPhone screen
-                    }
-                }
                 let buttonsDefinition = contentOfFile.split(separator: "\n")
                 var activeButtonGroup: [UIBarButtonItem] = []
                 let configuration = PhoneKeyboardToolbar.isCustom ? PhoneKeyboardToolbar.symbolConfiguration : UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular)
@@ -1731,7 +1772,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                         // button to switch back to the internal web browser. Hidden until the browser is activated.
                         if (title(button!) == "showBrowser") {
-                            showBrowserButtonFound = true
                             button!.isHidden = !internalBrowserStarted
                         }
                     }
@@ -1739,20 +1779,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 rightButtonGroup.append(contentsOf: activeButtonGroup)
                 rightButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: nil))
-                #if DISABLED
-                if (!showBrowserButtonFound) {
-                    // old configuration file (before v2.0). Add the showBrowser button manually:
-                    if let systemImage = UIImage(systemName: "network") {
-                        let showBrowserButton = UIBarButtonItem(image: systemImage.withConfiguration(configuration), style: .plain, target: self, action: #selector(self.systemAction(_:)))
-                        showBrowserButton.target = self
-                        showBrowserButton.possibleTitles = ["", "showBrowser"]
-                        if #available(iOS 16.0, *) {
-                            showBrowserButton.isHidden = !internalBrowserStarted
-                        }
-                        leftButtonGroup.append(showBrowserButton)
-                    }
-                }
-                #endif
             }
         }
     }
