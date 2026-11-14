@@ -524,6 +524,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     // Are we editing a file?
     var closeAfterCommandTerminates = false
     var resetDirectoryAfterCommandTerminates = ""
+    private var intentSessionsSeen = (generation: 0, active: false) // only used on commandQueue
     var currentCommand = ""
     var interactiveCommandRunning = true
     //
@@ -3585,6 +3586,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Make sure we're on the right session:
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            // Intents running in the app (Execute Long Command) move the process directory, and ios_switchSession
+            // restores this session's directory only when this thread switches sessions:
+            let intentsBefore = intentSessionsState()
+            if (intentsBefore.active || intentsBefore != self.intentSessionsSeen) && (self.resetDirectoryAfterCommandTerminates == ""),
+               let sessionDirectory = ios_getenv("PWD") {
+                FileManager().changeCurrentDirectoryPath(String(cString: sessionDirectory))
+            }
             // Set COLUMNS to term width:
             setenv("COLUMNS", "\(self.width)".toCString(), 1);
             setenv("LINES", "\(self.height)".toCString(), 1);
@@ -3723,7 +3731,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             // Did the command change the current directory?
-            let newDirectory = FileManager().currentDirectoryPath
+            var newDirectory = FileManager().currentDirectoryPath
+            // If an intent ran meanwhile, the process directory may be its own: use this session's.
+            let intentsAfter = intentSessionsState()
+            if (intentsBefore.active || intentsAfter != intentsBefore), let sessionDirectory = ios_getenv("PWD") {
+                newDirectory = String(cString: sessionDirectory)
+            }
+            self.intentSessionsSeen = intentsAfter
             if (newDirectory != self.currentDirectory) {
                 self.previousDirectory = self.currentDirectory
                 self.currentDirectory = newDirectory
@@ -5766,7 +5780,10 @@ extension SceneDelegate: WKUIDelegate {
                                 // let returnValue = write(fd, data, numValues)
                                 let file = FileHandle(fileDescriptor: fd)
                                 do {
-                                    try file.seek(toOffset: offset)
+                                    // stdout and stderr write at the descriptor's current position, so they stay in order with 2>&1.
+                                    if arguments[2] != "1" && arguments[2] != "2" {
+                                        try file.seek(toOffset: offset)
+                                    }
                                 }
                                 catch {
                                     let error = error as NSError

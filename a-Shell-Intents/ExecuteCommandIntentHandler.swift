@@ -10,6 +10,9 @@ import Intents
 import ios_system
 // import a_Shell
 
+// ios_system keys sessions, and runningInExtension keys contexts, by pointer: one for the process lifetime.
+private let sessionContext = UnsafeMutableRawPointer(strdup("inExtension")!)
+
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
 // As an example, this class is set up to handle Message intents.
@@ -43,7 +46,6 @@ class ExecuteCommandIntentHandler: INExtension, ExecuteCommandIntentHandling
     }
     
     let commandQueue = DispatchQueue(label: "executeCommand", qos: .utility)
-    let sessionIdentifier = "inExtension"
     let endOfTransmission = "\u{0004}"  // control-D, used to signal end of transmission
     var response = ""
     var outputReceived = false
@@ -104,14 +106,19 @@ class ExecuteCommandIntentHandler: INExtension, ExecuteCommandIntentHandling
             if (open == .close) {
                 // lightweight commands (no dependency on UI, nothing fancy, done in less than 5s)
                 // == run in extension
-                runningInExtension = true
-                FileManager().changeCurrentDirectoryPath(groupUrl.path)
+                // Register the session before its first chdir, so that the terminal windows restore their own directory,
+                // and start it in the group directory even if an earlier run on this thread changed it:
+                ios_switchSession(sessionContext)
+                ios_setContext(sessionContext)
+                setRunningInExtension(true, context: sessionContext)
+                ios_setDirectoryURL(groupUrl)
                 response = ""
                 var result:Int32 = 0
                 for command in commands {
                     result = executeCommandInExtension(command: command)
                     if (result != 0) && (keepGoing != nil) && (!keepGoing!) { break } // Stop executing after an error
                 }
+                setRunningInExtension(false, context: sessionContext)
                 var intentResponse: ExecuteCommandIntentResponse
                 // If keepGoing is set, don't stop the Shortcut even if the commands have failed.
                 if (result == 0 || ((keepGoing != nil) && keepGoing!)) {
@@ -120,7 +127,6 @@ class ExecuteCommandIntentHandler: INExtension, ExecuteCommandIntentHandling
                 } else {
                     intentResponse = ExecuteCommandIntentResponse(code: .failure, userActivity: nil)
                 }
-                runningInExtension = false
                 intentResponse.property = response
                 intentResponse.property1 = NSNumber(value: result)
                 completion(intentResponse)
@@ -160,8 +166,11 @@ class ExecuteCommandIntentHandler: INExtension, ExecuteCommandIntentHandling
         stdout_pipe.fileHandleForReading.readabilityHandler = self.onStdout
         // "normal" commands can go through ios_system
         // Make sure we're on the right session:
-        ios_switchSession(sessionIdentifier)
-        ios_setContext(UnsafeMutableRawPointer(mutating: sessionIdentifier.toCString()));
+        ios_switchSession(sessionContext)
+        ios_setContext(sessionContext);
+        // Only this session's commands run "in extension", not those of the terminal windows:
+        setRunningInExtension(true, context: sessionContext)
+        defer { setRunningInExtension(false, context: sessionContext) }
         thread_stdin  = nil
         thread_stdout = nil
         thread_stderr = nil
@@ -176,6 +185,10 @@ class ExecuteCommandIntentHandler: INExtension, ExecuteCommandIntentHandling
         var returnVal: Int32 = 0
         let commands = command.components(separatedBy: "\n")
         for command in commands {
+            // The terminal windows share the process directory: restore this session's own before each command.
+            if let sessionDirectory = ios_getenv("PWD") {
+                FileManager.default.changeCurrentDirectoryPath(String(cString: sessionDirectory))
+            }
             let pid = ios_fork()
             returnVal = ios_system(command)
             fflush(thread_stdout)
