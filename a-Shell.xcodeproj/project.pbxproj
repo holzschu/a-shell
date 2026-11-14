@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AF5930000000000000000120 /* TermTerminal.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5920000000000000000001 /* TermTerminal.swift */; };
+		AF5930000000000000000110 /* TermTerminal.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5920000000000000000001 /* TermTerminal.swift */; };
+		AF5930000000000000000100 /* TermTerminal.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5920000000000000000001 /* TermTerminal.swift */; };
+		AF5930000000000000000020 /* Term.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5920000000000000000000 /* Term.swift */; };
+		AF5930000000000000000010 /* Term.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5920000000000000000000 /* Term.swift */; };
+		AF5930000000000000000000 /* Term.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5920000000000000000000 /* Term.swift */; };
 		2200010030F7400000000001 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2200010030F7400000000002 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2200010030F7400000000004 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
@@ -1940,6 +1946,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AF5920000000000000000001 /* TermTerminal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermTerminal.swift; sourceTree = "<group>"; };
+		AF5920000000000000000000 /* Term.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Term.swift; sourceTree = "<group>"; };
 		0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExecuteLongCommandIntent.swift; sourceTree = "<group>"; };
 		196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCommand.swift; sourceTree = "<group>"; };
 		2200010030F7400000000003 /* PhotosUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PhotosUI.framework; path = System/Library/Frameworks/PhotosUI.framework; sourceTree = SDKROOT; };
@@ -2986,6 +2994,8 @@
 				620000000000000000000001 /* TerminalPrompt.swift */,
 				707000000000000000000001 /* TerminalFont.swift */,
 				22984EEF22C93DBC00069497 /* SceneDelegate.swift */,
+				AF5920000000000000000000 /* Term.swift */,
+				AF5920000000000000000001 /* TermTerminal.swift */,
 				224754D42EFBDF2C007C35FE /* SceneDelegate+TerminalView.swift */,
 				22984EF122C93DBC00069497 /* ContentView.swift */,
 				2208ACC822D24703003985D6 /* WkWebViewExtension.swift */,
@@ -4338,6 +4348,8 @@
 				224A90402ADD0999006DB9CC /* Intents.intentdefinition in Sources */,
 				227814F530A85966003A4910 /* ProgressCommand.swift in Sources */,
 				224A90412ADD0999006DB9CC /* UIColor+hexString.swift in Sources */,
+				AF5930000000000000000010 /* Term.swift in Sources */,
+				AF5930000000000000000110 /* TermTerminal.swift in Sources */,
 				224754D62EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,
 				22068CC82F51CE47004307F7 /* TerminalView+KeyCommands.swift in Sources */,
 				224A90422ADD0999006DB9CC /* UIViewController+showAlert.swift in Sources */,
@@ -4375,6 +4387,8 @@
 				22068CC62F51C11A004307F7 /* TerminalView+KeyCommands.swift in Sources */,
 				2291286722D9DAC40004A5EA /* UIColor+hexString.swift in Sources */,
 				226AD81E23436B7A00E5D672 /* UIViewController+showAlert.swift in Sources */,
+				AF5930000000000000000000 /* Term.swift in Sources */,
+				AF5930000000000000000100 /* TermTerminal.swift in Sources */,
 				224754D52EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,
 				6BD953662BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */,
 				22BF62292314223D00FEA585 /* WKWebView+KeyCommands.swift in Sources */,
@@ -4400,6 +4414,8 @@
 				707000000000000000000003 /* TerminalFont.swift in Sources */,
 				229D2478257931E4004A78AC /* AppDelegate.swift in Sources */,
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,
+				AF5930000000000000000020 /* Term.swift in Sources */,
+				AF5930000000000000000120 /* TermTerminal.swift in Sources */,
 				224754D72EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,
 				229D2479257931E4004A78AC /* SceneDelegate.swift in Sources */,
 				227814F230A8595D003A4910 /* ExecuteLongCommandIntent.swift in Sources */,

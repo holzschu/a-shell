@@ -236,6 +236,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         ios_setBookmarkDictionaryName("bookmarkNames")
         replaceCommand("relay", "relay_main", true)
         replaceCommand("history", "history", true)
+        replaceCommand("term", "ashell_term", true)
         replaceCommand("help", "help", true)
         replaceCommand("clear", "clear", true)
         replaceCommand("isForeground", "isForeground", true)
