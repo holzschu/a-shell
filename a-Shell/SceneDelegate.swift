@@ -297,8 +297,25 @@ final class PhoneKeyboardToolbar: UIInputView {
         }
         return button.title
     }
-
     
+    private func singleArrow(title: String?) -> Bool {
+        return ((title == "up") || (title == "down") || (title == "left") || (title == "right"))
+    }
+    private func doubleArrow(title: String?) -> Bool {
+        return ((title == "up.down") || (title == "left.right"))
+    }
+
+    private func isArrow(title: String?) -> Bool {
+        return singleArrow(title: title) || doubleArrow(title: title) || (title == "up.down.left.right")
+    }
+    
+    private func verticalArrow(title: String?) -> Bool {
+        return (title == "up" || title == "down" || title == "up.down" || title == "up.down.left.right")
+    }
+    private func horizontalArrow(title: String?) -> Bool {
+        return (title == "left" || title == "right" || title == "left.right" || title == "up.down.left.right")
+    }
+
         override func layoutSubviews() {
             super.layoutSubviews()
             if let nativeToolbar { nativeToolbar.frame = bounds; nativeToolbar.tintColor = tintColor; return }
@@ -331,65 +348,91 @@ final class PhoneKeyboardToolbar: UIInputView {
             // Next step: count the arrows, make them merge
             if (visible.count > slots) {
                 // There are still too many buttons
-                let arrows = visible.filter { item in
-                    if #available(iOS 16, *) { return
-                        ((title(item) == "up") ||
-                         (title(item) == "down") ||
-                         (title(item) == "left") ||
-                         (title(item) == "right") ||
-                         (title(item) == "up.down") ||
-                         (title(item) == "left.right") ||
-                         (title(item) == "up.down.left.right"))
-                    }
-                    return true
-                }
+                let arrows = visible.filter { isArrow(title: title($0)) }
+                let fourArrows = visible.filter { (title($0) == "up.down.left.right") }
                 NSLog("I counted: \(arrows.count) arrow buttons")
-                var firstVerticalButton = -1
-                var firstHorizontalButton = -1
-                var firstArrowButton = -1
-                if (arrows.count >= 1) {
-                    for k in 0..<visible.count {
-                        let button = visible[k]
-                        if (firstVerticalButton < 0) && (title(button) == "up" || title(button) == "down" || title(button) == "up.down" || title(button) == "up.down.left.right") {
-                            firstVerticalButton = k
+                if (fourArrows.count > 0) && (arrows.count > 1) {
+                    // There is already a four-arrows button and there are *other* arrow buttons
+                    // Just remove all of them:
+                    visible.removeAll(where: { (singleArrow(title: title($0)) || doubleArrow(title: title($0))) })
+                    // If there are multiple four-arrow buttons, this will leave them in place (but why would you do that?)
+                } else {
+                    var firstVerticalButton = -1
+                    var firstHorizontalButton = -1
+                    var firstArrowButton = -1
+                    if (arrows.count >= 1) {
+                        for k in 0..<visible.count {
+                            let button = visible[k]
+                            if (firstVerticalButton < 0) && verticalArrow(title: title(button)) {
+                                firstVerticalButton = k
+                            }
+                            if (firstHorizontalButton < 0) && horizontalArrow(title: title(button))  {
+                                firstHorizontalButton = k
+                            }
+                            if (firstHorizontalButton >= 0) && (firstVerticalButton >= 0) {
+                                break
+                            }
                         }
-                        if (firstHorizontalButton < 0) && (title(button) == "left" || title(button) == "right" || title(button) == "left.right" || title(button) == "up.down.left.right")  {
-                            firstHorizontalButton = k
+                        firstArrowButton = min(firstVerticalButton, firstHorizontalButton)
+                        if (firstArrowButton < 0) {
+                            if (firstVerticalButton >= 0) {
+                                firstArrowButton = firstVerticalButton
+                            } else if (firstHorizontalButton >= 0) {
+                                firstArrowButton = firstHorizontalButton
+                            }
                         }
-                        if (firstHorizontalButton >= 0) && (firstVerticalButton >= 0) {
-                            break
+                        if (arrows.count >= 4) && (visible.count - slots <= (arrows.count - 2)) && (firstVerticalButton > 0) && (firstHorizontalButton > 0) {
+                            // There are at least 4 arrow buttons and we can fit everything by reducing them to two:
+                            // Switch to two double-arrow buttons:
+                            visible[firstVerticalButton].image = UIImage(systemName: "arrow.up.and.down")
+                            visible[firstVerticalButton].title = "up.down"
+                            visible[firstVerticalButton].possibleTitles?.removeAll()
+                            visible[firstHorizontalButton].image = UIImage(systemName: "arrow.left.and.right")
+                            visible[firstHorizontalButton].title = "left.right"
+                            visible[firstHorizontalButton].possibleTitles?.removeAll()
+                            visible.removeAll(where: { singleArrow(title: title($0)) })
+                        } else {
+                            // Either we only have two arrow buttons or we need to gain more than two slots:
+                            // -> insert a four-arrow button, remove everything else:
+                            // create a single 4-arrows button
+                            // start from visible, insert an up.down.left.right button, then remove the others
+                            if (firstArrowButton > 0) { // This test should not be necessary
+                                visible[firstArrowButton].image = UIImage(systemName: "arrow.up.and.down.and.arrow.left.and.right")
+                                visible[firstArrowButton].title = "up.down.left.right"
+                                visible[firstArrowButton].possibleTitles?.removeAll()
+                                // remove all the other arrow buttons:
+                                visible.removeAll(where: { (singleArrow(title: title($0)) || doubleArrow(title: title($0))) })
+                            }
                         }
                     }
-                    firstArrowButton = min(firstVerticalButton, firstHorizontalButton)
-                    if (firstArrowButton < 0) {
-                        if (firstVerticalButton >= 0) {
-                            firstArrowButton = firstVerticalButton
-                        } else if (firstHorizontalButton >= 0) {
-                            firstArrowButton = firstHorizontalButton
-                        }
-                    }
-                }
-                if (arrows.count >= 4) {
-                    // 4 arrows. Either I replace them with 2 combined arrows, or a single one.
-                    if (visible.count - slots > 2) {
-                        // create a single 4-arrows button
-                        // start from visible, insert an up.down.left.right button, then remove the others
-                        let systemImage = UIImage(systemName: "up.down.left.right")
-                        let configuration = PhoneKeyboardToolbar.isCustom ? PhoneKeyboardToolbar.symbolConfiguration : UIImage.SymbolConfiguration(pointSize: 19.0, weight: .regular)
-                        let newButton = UIBarButtonItem(image: systemImage!.withConfiguration(configuration), style: .plain, target: nil, action: nil)
-                        visible.insert(newButton, at: firstArrowButton)
-                        
-                    } else {
-                        // 2 combined-arrows
-                    }
-                } else if (arrows.count >= 2) {
-                    // 2 (probably combined) arrows. Replace them with a 4-arrow button.
                 }
             }
             // After that: if the four-direction arrow is inside the "more" menu,
             // move it to just before the "more" menu (and remove it)
             let overflow = visible.count > slots
-            let shown = Array(visible.prefix(overflow ? slots - 1 : slots))
+            var shown = Array(visible.prefix(overflow ? slots - 1 : slots))
+            var extraButtons = visible.dropFirst(shown.count)
+            // Are the arrows in "shown"?
+            if overflow {
+                // if we're still overflowing, arrows must be four-arrow buttons
+                if shown.filter({ isArrow(title: title($0)) }).isEmpty && !extraButtons.filter({ isArrow(title: title($0)) }).isEmpty {
+                    // There are no arrow buttons being shown, and there are arrow buttons in extraButtons
+                    // take the last button from shown, place it in extraButtons, replace it with the arrowbutton from extraButtons
+                    shown = Array(visible.prefix(slots - 2))
+                    extraButtons = visible.dropFirst(shown.count)
+                    var arrowButtonPosition = -1
+                    for k in 0..<extraButtons.count {
+                        if title(extraButtons[shown.count+k]) == "up.down.left.right" {
+                            arrowButtonPosition = shown.count+k
+                            break
+                        }
+                    }
+                    if (arrowButtonPosition > 0) {
+                        shown.append(extraButtons[arrowButtonPosition])
+                        extraButtons.removeAll(where: { isArrow(title: title($0)) })
+                    }
+                }
+            }
             for item in keys { item.customView?.isHidden = !shown.contains(where: { $0 === item }) }
             let padding = fullWidthGrid ? 0 : outerPadding
             let pitch = (width - padding * 2) / CGFloat(slots)
@@ -397,7 +440,7 @@ final class PhoneKeyboardToolbar: UIInputView {
             more.isHidden = !overflow
             if overflow {
                 more.frame = CGRect(x: firstSlot + CGFloat(slots - 1) * pitch, y: 0, width: pitch, height: glass.bounds.height)
-                more.menu = UIMenu(children: visible.dropFirst(shown.count).map { item -> UIMenuElement in
+                more.menu = UIMenu(children: extraButtons.map { item -> UIMenuElement in
                     if let menu = item.menu { return menu }
                     if let action = item.primaryAction { return action }
                     return UIAction(title: item.accessibilityLabel ?? item.title ?? "Key", image: item.image) { [weak item] _ in
@@ -407,6 +450,7 @@ final class PhoneKeyboardToolbar: UIInputView {
                 })
             }
             for (index, item) in shown.enumerated() {
+                NSLog("adding: \(index) -- \(item)")
                 guard let key = item.customView else { continue }
                 let slot = CGRect(x: firstSlot + CGFloat(index) * pitch, y: 0, width: pitch, height: glass.bounds.height)
                 if #available(iOS 16, *), key is UIPasteControl {
@@ -416,6 +460,7 @@ final class PhoneKeyboardToolbar: UIInputView {
                 key.accessibilityIdentifier = item.accessibilityIdentifier
                 key.accessibilityValue = item.accessibilityValue
                 if let button = key as? UIButton {
+                    NSLog("adding button: \(button)")
                     button.menu = item.menu
                     button.showsMenuAsPrimaryAction = item.menu != nil
                     let image = item.image?.withConfiguration(Self.symbolConfiguration)
