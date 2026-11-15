@@ -424,7 +424,6 @@ final class PhoneKeyboardToolbar: UIInputView {
                 // There are still too many buttons
                 let arrows = visible.filter { isArrow(title: title($0)) }
                 let fourArrows = visible.filter { (title($0) == "up.down.left.right") }
-                NSLog("I counted: \(arrows.count) arrow buttons")
                 if (fourArrows.count > 0) && (arrows.count > 1) {
                     // There is already a four-arrows button and there are *other* arrow buttons
                     // Just remove all of them:
@@ -2019,6 +2018,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let directions = (sender as? PrecisionArrowGesture)?.directions {
                 if directions.count == 1 {
                     // single arrow button
+                    self.sendArrow(direction: directions[0])
                     if (directions[0] == "up") || (directions[0] == "down") {
                         continuousButtonTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true, block: {_ in
                             self.sendArrow(direction: directions[0])
