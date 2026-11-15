@@ -1,0 +1,55 @@
+--- a/rollout/src/writer_lock.rs
++++ b/rollout/src/writer_lock.rs
+@@ -34,7 +34,7 @@
+     /// Uses the same lock namespace as existing local thread-store writers.
+     pub fn new(codex_home: &Path) -> Self {
+         Self {
+-            directory: codex_home.join(WRITER_LOCK_DIR),
++            directory: writer_lock_directory(codex_home),
+             cleanup_attempted: AtomicBool::new(false),
+         }
+     }
+@@ -171,6 +171,43 @@
+     }
+ }
+ 
++// iOS kills a suspended app that holds a file lock inside a shared App Group container
++// (0xDEAD10CC). On an iPhone 16 Pro with iOS 27.0.1, a thread lock in a-Shell's group Codex
++// home got the app killed a few seconds after each switch away (a-Shell #1158). Codex runs in
++// one process there, one invocation at a time, so the locks live in the app's private
++// temporary directory. confstr names it even when the shell has exported another TMPDIR into
++// the process environment.
++#[cfg(target_os = "ios")]
++fn writer_lock_directory(_codex_home: &Path) -> PathBuf {
++    use std::ffi::c_char;
++    use std::ffi::c_int;
++    use std::os::unix::ffi::OsStringExt;
++    const _CS_DARWIN_USER_TEMP_DIR: c_int = 65537;
++    unsafe extern "C" {
++        fn confstr(name: c_int, buf: *mut c_char, len: usize) -> usize;
++    }
++    let mut buffer = vec![0u8; 1024];
++    let length = unsafe {
++        confstr(
++            _CS_DARWIN_USER_TEMP_DIR,
++            buffer.as_mut_ptr().cast(),
++            buffer.len(),
++        )
++    };
++    let directory = if length == 0 || length > buffer.len() {
++        std::env::temp_dir()
++    } else {
++        buffer.truncate(length - 1);
++        PathBuf::from(std::ffi::OsString::from_vec(buffer))
++    };
++    directory.join(WRITER_LOCK_DIR)
++}
++
++#[cfg(not(target_os = "ios"))]
++fn writer_lock_directory(codex_home: &Path) -> PathBuf {
++    codex_home.join(WRITER_LOCK_DIR)
++}
++
+ impl Drop for WriterLockGuard {
+     fn drop(&mut self) {
+         let coordination_lock = match self.coordinator.lock_coordination() {
