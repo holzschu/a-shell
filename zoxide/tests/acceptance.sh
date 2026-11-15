@@ -14,7 +14,8 @@ status=$?
 printf '%s\n' "$status" >"$work/version.status"
 [ "$status" -eq 0 ] || exit 1
 printf 'zoxide 0.10.0\n' >"$work/version.expected"
-cmp "$work/version.expected" "$work/version.out" || exit 1
+# Use a-Shell's registered diff for exact text comparisons.
+diff "$work/version.expected" "$work/version.out" || exit 1
 [ ! -s "$work/version.err" ] || exit 1
 export _ZO_DATA_DIR="$work/data"
 export _ZO_EXCLUDE_DIRS=
@@ -51,7 +52,7 @@ status=$?
 printf '%s\n' "$status" >"$work/unicode.status"
 [ "$status" -eq 0 ] && [ ! -s "$work/unicode.err" ] || exit 1
 printf '%s\n' "$work/fixture/space café 東京" >"$work/unicode.expected"
-cmp "$work/unicode.expected" "$work/unicode.out" || exit 1
+diff "$work/unicode.expected" "$work/unicode.out" || exit 1
 
 zoxide add --score 100 "$work/fixture/directory 0007" >"$work/rank-add.out" 2>"$work/rank-add.err"
 status=$?
@@ -62,7 +63,7 @@ status=$?
 printf '%s\n' "$status" >"$work/ranked.status"
 [ "$status" -eq 0 ] || exit 1
 printf '%s\n' "$work/fixture/directory 0007" >"$work/ranked.expected"
-cmp "$work/ranked.expected" "$work/ranked.out" || exit 1
+diff "$work/ranked.expected" "$work/ranked.out" || exit 1
 zoxide remove "$work/fixture/directory 0007" >"$work/remove.out" 2>"$work/remove.err"
 status=$?
 printf '%s\n' "$status" >"$work/remove.status"
@@ -80,7 +81,7 @@ zoxide query absent >"$work/corrupt.out" 2>"$work/corrupt.err"
 status=$?
 printf '%s\n' "$status" >"$work/corrupt.status"
 [ "$status" -eq 1 ] && [ ! -s "$work/corrupt.out" ] && [ -s "$work/corrupt.err" ] || exit 1
-cmp "$work/corrupt.expected" "$work/corrupt/db.zo" || exit 1
+diff "$work/corrupt.expected" "$work/corrupt/db.zo" || exit 1
 export _ZO_DATA_DIR="$work/data"
 
 zoxide --invalid-option >"$work/invalid.out" 2>"$work/invalid.err"
@@ -105,7 +106,7 @@ status=$?
 printf '%s\n' "$status" >"$work/posix-z.status"
 [ "$status" -eq 0 ] || exit 1
 pwd >"$work/posix-cwd.out"
-cmp "$work/unicode.expected" "$work/posix-cwd.out" || exit 1
+diff "$work/unicode.expected" "$work/posix-cwd.out" || exit 1
 echo ZOXIDE_STREAMS_OK >"$work/ordinary.out"
 zoxide query --list >"$work/after.out" 2>"$work/after.err"
 status=$?
