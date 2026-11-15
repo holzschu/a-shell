@@ -2033,7 +2033,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if let directions = (sender as? PrecisionArrowGesture)?.directions {
                 if directions.count == 1 {
                     // single arrow button
-                    self.sendArrow(direction: directions[0])
+                    self.sendArrow(direction: directions[0]) // make sure single tap works, too.
                     if (directions[0] == "up") || (directions[0] == "down") {
                         continuousButtonTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true, block: {_ in
                             self.sendArrow(direction: directions[0])
@@ -2046,7 +2046,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
         } else if sender.state == .changed {
-            // Single arrow buttons:
+            // Single arrow buttons: do nothing
             if let directions = (sender as? PrecisionArrowGesture)?.directions {
                 if directions.count == 1 {
                     return
