@@ -907,6 +907,33 @@ extension View {
 }
 
 final class ConfirmingTerminalView: TerminalView {
+    private var focusTap: UITapGestureRecognizer?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        // SwiftTerm's single tap waits for its double and triple taps to fail (about 450 ms) before it calls becomeFirstResponder:
+        // while the terminal is not first responder, focus it on the first tap instead.
+        let focusTap = UITapGestureRecognizer(target: self, action: #selector(focusTapped))
+        for case let tap as UITapGestureRecognizer in gestureRecognizers ?? [] where tap.numberOfTapsRequired == 1 {
+            tap.require(toFail: focusTap)
+        }
+        addGestureRecognizer(focusTap)
+        self.focusTap = focusTap
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer === focusTap { return !isFirstResponder }
+        return super.gestureRecognizerShouldBegin(gestureRecognizer)
+    }
+
+    @objc private func focusTapped() {
+        _ = becomeFirstResponder()
+    }
+
     override func paste(_ sender: Any?) {
         guard let scene = terminalDelegate as? SceneDelegate, let text = UIPasteboard.general.string else { super.paste(sender); return }
         if getTerminal().bracketedPasteMode || !text.contains(where: { $0.isNewline }) { super.paste(sender); return }
@@ -922,7 +949,7 @@ struct Termview : UIViewRepresentable {
     let view: TerminalView
     
     init() {
-        view = ConfirmingTerminalView()
+        view = ConfirmingTerminalView(frame: .zero)
     }
     
     func makeUIView(context: Context) -> UIView {
