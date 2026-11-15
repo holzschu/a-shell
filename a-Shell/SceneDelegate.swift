@@ -2206,10 +2206,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // An unused native toolbar takes the assistant's UIBarButtonItems on first launch on iPadOS 16/17. Populate only the toolbar that will display them, after generating the current buttons.
         if !useSystemToolbar {
             let toolbar = editorToolbar
+            var items = leftButtonGroup
             if (leftButtonGroup.count == 0) {
-                toolbar.items = rightButtonGroup
+                items = rightButtonGroup
             } else {
-                toolbar.items = leftButtonGroup
                 var useLiquidGlass = false
                 if #available(iOS 26, *) {
                     if let preference = Bundle.main.infoDictionary?["UIDesignRequiresCompatibility"] as? Bool {
@@ -2227,15 +2227,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     // NSLog("leftButtonGroup: \(leftButtonGroup)")
                     // NSLog("rightButtonGroup: \(rightButtonGroup)")
                     if (screenWidth > 550) || (leftButtonGroup.count + rightButtonGroup.count < 7) {
-                        toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
+                        items.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
                     }
                 } else {
-                    toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
+                    items.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
                 }
                 if (rightButtonGroup.count > 0) {
-                    toolbar.items?.append(contentsOf: rightButtonGroup)
+                    items.append(contentsOf: rightButtonGroup)
                 }
             }
+            // Assign once: a partial list without Symbols closes its pinned panel.
+            toolbar.items = items
         }
     }
     
