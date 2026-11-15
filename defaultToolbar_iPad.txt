@@ -35,8 +35,37 @@ chevron.up.square			systemAction		control
 escape						insertString		\u{001B}
 doc.on.clipboard			systemAction		paste
 
-separator
+# Sub-menu with extra symbols (iPhones with iOS 26+ only, not on iPads)
+# (at most 24 symbols)
+[="extraKeys"
+opening.bracket insertString	[
+closing.bracket	insertString	]
+{				insertString	{
+}				insertString	}
+%				insertString	%
+"				insertString	"
+number			insertString	#
+*				insertString	*
+&				insertString	&
++				insertString	+
+_				insertString	_
+\				insertString	\
+;				insertString	;
+'				insertString	'
+<				insertString	<
+`				insertString	`
+|				insertString	|
+=				insertString	=
+-				insertString	-
+/				insertString	/
+.				insertString	.
+$				insertString	$
+>				insertString	>
+~				insertString	~
+] #+=
 
+separator
+ 
 # This button only appears once the internalbrowser has started
 network						systemAction		showBrowser
 
