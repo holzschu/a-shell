@@ -101,11 +101,16 @@ private func toolbarMotion(_ delta: CGPoint) -> (direction: String, arrowReady: 
     return (direction, (major >= 12 && minor <= 0.58 * major) || hypot(delta.x, delta.y) >= 24)
 }
 
-// Holds the arrow key's own icon, so the key shows it again after a flick has shown a direction glyph, and whether a
-// tap moves the cursor: it does for a key from .toolbarDefinition, the stock key shows a hint instead.
+// The combined arrow keys and the directions each one moves in; a flick on the key moves only along these.
+private let combinedArrowDirections = ["up.down.left.right": ["up", "down", "left", "right"], "up.down": ["up", "down"], "left.right": ["left", "right"]]
+
+// Holds the arrow key's own icon, so the key shows it again after a flick has shown a direction glyph, whether a
+// tap moves the cursor (it does for a key from .toolbarDefinition, the stock key shows a hint instead), and the
+// directions the key moves in.
 private final class PrecisionArrowGesture: UILongPressGestureRecognizer {
     var restingImage: UIImage?
     var tapMoves = false
+    var directions: [String] = []
 }
 
 // Keep the customizable item model and the iPad assistant, but avoid UIToolbar's
@@ -128,6 +133,10 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
     var configureArrow: ((UIBarButtonItem, UIView) -> Void)?
     override var backgroundColor: UIColor? {
         didSet { nativeToolbar?.backgroundColor = backgroundColor }
+    }
+    // Forward the assigned color: reading tintColor back from this UIInputView returns white, even after .label was set (iOS 17.5), which drew the native toolbar's keys white on the terminal background.
+    override var tintColor: UIColor! {
+        willSet { nativeToolbar?.tintColor = newValue }
     }
     private var pasteControlStyle = UIUserInterfaceStyle.unspecified
     private var pasteControl: UIView?
@@ -180,7 +189,8 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                 }
                 // Keep key colors outside the glass effect's legibility adaptation.
                 if let key = item.customView { addSubview(key) }
-                if item.possibleTitles?.contains("up.down.left.right") == true, let key = item.customView { configureArrow?(item, key) }
+                let combinedArrow = item.possibleTitles?.contains(where: { combinedArrowDirections[$0] != nil }) == true
+                if combinedArrow, let key = item.customView { configureArrow?(item, key) }
                 if let group = item as? PhoneSymbolItem, let key = item.customView as? UIButton {
                     symbolItem = group
                     group.toolbarSelected = symbolsPinned
@@ -209,7 +219,9 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                     }
                     key.addAction(UIAction(identifier: UIAction.Identifier("symbol-activation")) { [weak self] _ in self?.toggleSymbols() }, for: .primaryActionTriggered)
                 }
-                if item.possibleTitles?.contains("up.down.left.right") != true, let key = item.customView as? UIButton {
+                // While VoiceOver runs, the two-direction keys get no flick and keep their touch-down haptic.
+                let flickKey = item.possibleTitles?.contains("up.down.left.right") == true || (combinedArrow && !UIAccessibility.isVoiceOverRunning)
+                if !flickKey, let key = item.customView as? UIButton {
                     key.removeTarget(self, action: #selector(keyTouchDown), for: .touchDown)
                     key.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
                 }
@@ -286,8 +298,8 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
         configuration.cornerStyle = .capsule
         configuration.baseBackgroundColor = UIColor { traits in
             traits.userInterfaceStyle == .dark
-                ? UIColor(red: 44.0 / 255.0, green: 44.0 / 255.0, blue: 46.0 / 255.0, alpha: 1)
-                : UIColor(red: 230.0 / 255.0, green: 230.0 / 255.0, blue: 235.0 / 255.0, alpha: 1)
+            ? UIColor(red: 44.0 / 255.0, green: 44.0 / 255.0, blue: 46.0 / 255.0, alpha: 1)
+            : UIColor(red: 230.0 / 255.0, green: 230.0 / 255.0, blue: 235.0 / 255.0, alpha: 1)
         }.resolvedColor(with: traitCollection)
         configuration.baseForegroundColor = UIColor.label.resolvedColor(with: traitCollection)
         pasteControlStyle = traitCollection.userInterfaceStyle
@@ -577,97 +589,223 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
         return super.hitTest(point, with: event)
     }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        if let nativeToolbar { nativeToolbar.frame = bounds; nativeToolbar.tintColor = tintColor; return }
-        let visible = keys.filter { item in
-            if #available(iOS 16, *) { return !item.isHidden }
-            return true
-        }
-        let outerPadding: CGFloat = 18
-        let fullWidthGrid = keyboardGap > 0
-        let gridBounds = fullWidthGrid ? bounds.inset(by: safeAreaInsets) : bounds
-        let width = fullWidthGrid ? min(max(0, gridBounds.width - 16), landscapePanel && keys.contains(where: { $0 is PhoneSymbolItem }) ? min(8 * 48.25, max(0, (gridBounds.width - 6) * 8 / 12)) : .greatestFiniteMagnitude) : min(CGFloat(visible.count) * 44 + outerPadding * 2, max(0, bounds.width - 16))
-        var pasteSize = CGSize.zero
-        if #available(iOS 16, *), let paste = visible.compactMap(\.customView).first(where: { $0 is UIPasteControl }) {
-            pasteSize = paste.intrinsicContentSize
-            if pasteSize.width <= 0 || pasteSize.height <= 0 { pasteSize = paste.sizeThatFits(.zero) }
-            if pasteSize.width <= 0 || pasteSize.height <= 0 { pasteSize = CGSize(width: 41, height: 35) }
-        }
-        glass.frame = CGRect(x: gridBounds.midX - width / 2, y: 0, width: width, height: max(45, pasteSize.height + 10))
-        guard !visible.isEmpty else { return }
-        let slots = max(1, min(visible.count, Int((width - outerPadding * 2) / 28)))
-        let overflow = visible.count > slots
-        let shown = Array(visible.prefix(overflow ? slots - 1 : slots))
-        for item in keys { item.customView?.isHidden = !shown.contains(where: { $0 === item }) }
-        let padding = fullWidthGrid ? 0 : outerPadding
-        let pitch = (width - padding * 2) / CGFloat(slots)
-        let firstSlot = glass.frame.minX + padding
-        more.isHidden = !overflow
-        if overflow {
-            more.frame = CGRect(x: firstSlot + CGFloat(slots - 1) * pitch, y: 0, width: pitch, height: glass.bounds.height)
-            more.menu = UIMenu(children: visible.dropFirst(shown.count).map { item -> UIMenuElement in
-                if let menu = item.menu { return menu }
-                if let group = item as? PhoneSymbolItem {
-                    return UIMenu(title: "Symbols", children: group.entries.map { entry in
-                        UIAction(title: Self.symbolNames[entry.value] ?? entry.value) { [weak self] _ in self?.chooseSymbol(entry.value, entry: entry.item) }
-                    })
+    private func title(_ button: UIBarButtonItem) -> String? {
+        if let possibleTitles = button.possibleTitles {
+            for attemptedTitle in possibleTitles {
+                if (attemptedTitle.count > 0) {
+                    return attemptedTitle
                 }
-                if let action = item.primaryAction { return action }
-                return UIAction(title: item.accessibilityLabel ?? item.title ?? "Key", image: item.image) { [weak item] _ in
-                    guard let item, let action = item.action else { return }
-                    UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
-                }
-            })
-        }
-        for (index, item) in shown.enumerated() {
-            guard let key = item.customView else { continue }
-            let slot = CGRect(x: firstSlot + CGFloat(index) * pitch, y: 0, width: pitch, height: glass.bounds.height)
-            if #available(iOS 16, *), key is UIPasteControl {
-                key.frame = CGRect(x: slot.midX - pasteSize.width / 2, y: slot.midY - pasteSize.height / 2, width: pasteSize.width, height: pasteSize.height)
-            } else { key.frame = slot }
-            key.accessibilityLabel = item.accessibilityLabel ?? item.title
-            key.accessibilityIdentifier = item.accessibilityIdentifier
-            key.accessibilityValue = item.accessibilityValue
-            if let actions = item.accessibilityCustomActions { key.accessibilityCustomActions = actions }
-            if let button = key as? UIButton {
-                button.menu = item.menu
-                button.showsMenuAsPrimaryAction = item.menu != nil
-                let image = item.image?.withConfiguration(Self.symbolConfiguration)
-                let title = item.title
-                let control = item.possibleTitles?.contains("control") == true
-                let foreground: UIColor = item is PhoneSymbolItem ? .label : (item.toolbarSelected ? (control ? .systemBackground : tintColor) : .label)
-                let labelFontSize: CGFloat = 16
-                if #available(iOS 15, *) {
-                    var configuration = UIButton.Configuration.plain()
-                    configuration.title = image == nil ? title : nil
-                    configuration.image = image
-                    configuration.preferredSymbolConfigurationForImage = Self.symbolConfiguration
-                    configuration.baseForegroundColor = foreground
-                    configuration.contentInsets = NSDirectionalEdgeInsets.zero
-                    configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
-                        var attributes = attributes
-                        attributes.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
-                        attributes.foregroundColor = foreground
-                        return attributes
-                    }
-                    configuration.background.backgroundColor = item.toolbarSelected ? (control ? .label : (item is PhoneSymbolItem ? .tertiarySystemFill : tintColor.withAlphaComponent(0.25))) : .clear
-                    configuration.background.backgroundInsets = NSDirectionalEdgeInsets(top: 5, leading: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2, bottom: 5, trailing: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2)
-                    configuration.background.cornerRadius = (glass.bounds.height - 10) / 2
-                    button.configuration = configuration
-                } else {
-                    button.setTitle(image == nil ? title : nil, for: .normal)
-                    button.setImage(image, for: .normal)
-                    button.titleLabel?.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
-                    button.setTitleColor(foreground, for: .normal)
-                    button.tintColor = foreground
-                    button.backgroundColor = item.toolbarSelected ? (control ? .label : .tertiarySystemFill) : .clear
-                    button.layer.cornerRadius = 15
-                }
-                button.isSelected = item.toolbarSelected
-                button.accessibilityTraits = item.toolbarSelected ? [.button, .selected] : .button
             }
         }
+        return button.title
+    }
+
+    private func singleArrow(title: String?) -> Bool {
+        return ((title == "up") || (title == "down") || (title == "left") || (title == "right"))
+    }
+    private func doubleArrow(title: String?) -> Bool {
+        return ((title == "up.down") || (title == "left.right"))
+    }
+
+    private func isArrow(title: String?) -> Bool {
+        return singleArrow(title: title) || doubleArrow(title: title) || (title == "up.down.left.right")
+    }
+
+    private func verticalArrow(title: String?) -> Bool {
+        return (title == "up" || title == "down" || title == "up.down" || title == "up.down.left.right")
+    }
+    private func horizontalArrow(title: String?) -> Bool {
+        return (title == "left" || title == "right" || title == "left.right" || title == "up.down.left.right")
+    }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            if let nativeToolbar { nativeToolbar.frame = bounds; return }
+            var visible = keys.filter { item in
+                if #available(iOS 16, *) { return !item.isHidden }
+                return true
+            }
+            let outerPadding: CGFloat = 18
+            let fullWidthGrid = keyboardGap > 0
+            let gridBounds = fullWidthGrid ? bounds.inset(by: safeAreaInsets) : bounds
+            let width = fullWidthGrid ? min(max(0, gridBounds.width - 16), landscapePanel && keys.contains(where: { $0 is PhoneSymbolItem }) ? min(8 * 48.25, max(0, (gridBounds.width - 6) * 8 / 12)) : .greatestFiniteMagnitude) : min(CGFloat(visible.count) * 44 + outerPadding * 2, max(0, bounds.width - 16))
+            var pasteSize = CGSize.zero
+            if #available(iOS 16, *), let paste = visible.compactMap(\.customView).first(where: { $0 is UIPasteControl }) {
+                pasteSize = paste.intrinsicContentSize
+                if pasteSize.width <= 0 || pasteSize.height <= 0 { pasteSize = paste.sizeThatFits(.zero) }
+                if pasteSize.width <= 0 || pasteSize.height <= 0 { pasteSize = CGSize(width: 41, height: 35) }
+            }
+            glass.frame = CGRect(x: gridBounds.midX - width / 2, y: 0, width: width, height: max(45, pasteSize.height + 10))
+            guard !visible.isEmpty else { return }
+            let slots = max(1, min(visible.count, Int((width - outerPadding * 2) / 28)))
+            // if there are too many buttons, start by hiding the showBrowser button:
+            // (and possibly the "connect" button later on)
+            if (internalBrowserStarted && (visible.count > slots)) {
+                // recompute "visible":
+                visible = keys.filter { item in
+                    if #available(iOS 16, *) { return (title(item) != "showBrowser") && !item.isHidden }
+                    return true
+                }
+            }
+            // Next step: count the arrows, make them merge
+            if (visible.count > slots) {
+                // There are still too many buttons
+                let arrows = visible.filter { isArrow(title: title($0)) }
+                let fourArrows = visible.filter { (title($0) == "up.down.left.right") }
+                NSLog("I counted: \(arrows.count) arrow buttons")
+                if (fourArrows.count > 0) && (arrows.count > 1) {
+                    // There is already a four-arrows button and there are *other* arrow buttons
+                    // Just remove all of them:
+                    visible.removeAll(where: { (singleArrow(title: title($0)) || doubleArrow(title: title($0))) })
+                    // If there are multiple four-arrow buttons, this will leave them in place (but why would you do that?)
+                } else {
+                    var firstVerticalButton = -1
+                    var firstHorizontalButton = -1
+                    var firstArrowButton = -1
+                    if (arrows.count >= 1) {
+                        for k in 0..<visible.count {
+                            let button = visible[k]
+                            if (firstVerticalButton < 0) && verticalArrow(title: title(button)) {
+                                firstVerticalButton = k
+                            }
+                            if (firstHorizontalButton < 0) && horizontalArrow(title: title(button))  {
+                                firstHorizontalButton = k
+                            }
+                            if (firstHorizontalButton >= 0) && (firstVerticalButton >= 0) {
+                                break
+                            }
+                        }
+                        firstArrowButton = min(firstVerticalButton, firstHorizontalButton)
+                        if (firstArrowButton < 0) {
+                            if (firstVerticalButton >= 0) {
+                                firstArrowButton = firstVerticalButton
+                            } else if (firstHorizontalButton >= 0) {
+                                firstArrowButton = firstHorizontalButton
+                            }
+                        }
+                        if (arrows.count >= 4) && (visible.count - slots <= (arrows.count - 2)) && (firstVerticalButton > 0) && (firstHorizontalButton > 0) {
+                            // There are at least 4 arrow buttons and we can fit everything by reducing them to two:
+                            // Switch to two double-arrow buttons:
+                            visible[firstVerticalButton].image = UIImage(systemName: "arrow.up.and.down")
+                            visible[firstVerticalButton].title = "up.down"
+                            visible[firstVerticalButton].possibleTitles?.removeAll()
+                            visible[firstHorizontalButton].image = UIImage(systemName: "arrow.left.and.right")
+                            visible[firstHorizontalButton].title = "left.right"
+                            visible[firstHorizontalButton].possibleTitles?.removeAll()
+                            visible.removeAll(where: { singleArrow(title: title($0)) })
+                        } else {
+                            // Either we only have two arrow buttons or we need to gain more than two slots:
+                            // -> insert a four-arrow button, remove everything else:
+                            // create a single 4-arrows button
+                            // start from visible, insert an up.down.left.right button, then remove the others
+                            if (firstArrowButton > 0) { // This test should not be necessary
+                                visible[firstArrowButton].image = UIImage(systemName: "arrow.up.and.down.and.arrow.left.and.right")
+                                visible[firstArrowButton].title = "up.down.left.right"
+                                visible[firstArrowButton].possibleTitles?.removeAll()
+                                // remove all the other arrow buttons:
+                                visible.removeAll(where: { (singleArrow(title: title($0)) || doubleArrow(title: title($0))) })
+                            }
+                        }
+                    }
+                }
+            }
+            // After that: if the four-direction arrow is inside the "more" menu,
+            // move it to just before the "more" menu (and remove it)
+            let overflow = visible.count > slots
+            var shown = Array(visible.prefix(overflow ? slots - 1 : slots))
+            var extraButtons = visible.dropFirst(shown.count)
+            // Are the arrows in "shown"?
+            if overflow {
+                // if we're still overflowing, arrows must be four-arrow buttons
+                if shown.filter({ isArrow(title: title($0)) }).isEmpty && !extraButtons.filter({ isArrow(title: title($0)) }).isEmpty {
+                    // There are no arrow buttons being shown, and there are arrow buttons in extraButtons
+                    // take the last button from shown, place it in extraButtons, replace it with the arrowbutton from extraButtons
+                    shown = Array(visible.prefix(slots - 2))
+                    extraButtons = visible.dropFirst(shown.count)
+                    var arrowButtonPosition = -1
+                    for k in 0..<extraButtons.count {
+                        if title(extraButtons[shown.count+k]) == "up.down.left.right" {
+                            arrowButtonPosition = shown.count+k
+                            break
+                        }
+                    }
+                    if (arrowButtonPosition > 0) {
+                        shown.append(extraButtons[arrowButtonPosition])
+                        extraButtons.removeAll(where: { isArrow(title: title($0)) })
+                    }
+                }
+            }
+            for item in keys { item.customView?.isHidden = !shown.contains(where: { $0 === item }) }
+            let padding = fullWidthGrid ? 0 : outerPadding
+            let pitch = (width - padding * 2) / CGFloat(slots)
+            let firstSlot = glass.frame.minX + padding
+            more.isHidden = !overflow
+            if overflow {
+                more.frame = CGRect(x: firstSlot + CGFloat(slots - 1) * pitch, y: 0, width: pitch, height: glass.bounds.height)
+                more.menu = UIMenu(children: extraButtons.map { item -> UIMenuElement in
+                    if let menu = item.menu { return menu }
+                    if let group = item as? PhoneSymbolItem {
+                        return UIMenu(title: "Symbols", children: group.entries.map { entry in
+                            UIAction(title: Self.symbolNames[entry.value] ?? entry.value) { [weak self] _ in self?.chooseSymbol(entry.value, entry: entry.item) }
+                        })
+                    }
+                    if let action = item.primaryAction { return action }
+                    return UIAction(title: item.accessibilityLabel ?? item.title ?? "Key", image: item.image) { [weak item] _ in
+                        guard let item, let action = item.action else { return }
+                        UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
+                    }
+                })
+            }
+            for (index, item) in shown.enumerated() {
+                NSLog("adding: \(index) -- \(item)")
+                guard let key = item.customView else { continue }
+                let slot = CGRect(x: firstSlot + CGFloat(index) * pitch, y: 0, width: pitch, height: glass.bounds.height)
+                if #available(iOS 16, *), key is UIPasteControl {
+                    key.frame = CGRect(x: slot.midX - pasteSize.width / 2, y: slot.midY - pasteSize.height / 2, width: pasteSize.width, height: pasteSize.height)
+                } else { key.frame = slot }
+                key.accessibilityLabel = item.accessibilityLabel ?? item.title
+                key.accessibilityIdentifier = item.accessibilityIdentifier
+                key.accessibilityValue = item.accessibilityValue
+                if let actions = item.accessibilityCustomActions { key.accessibilityCustomActions = actions }
+                if let button = key as? UIButton {
+                    NSLog("adding button: \(button)")
+                    button.menu = item.menu
+                    button.showsMenuAsPrimaryAction = item.menu != nil
+                    let image = item.image?.withConfiguration(Self.symbolConfiguration)
+                    let title = item.title
+                    let control = item.possibleTitles?.contains("control") == true
+                    let foreground: UIColor = item is PhoneSymbolItem ? .label : (item.toolbarSelected ? (control ? .systemBackground : tintColor) : .label)
+                    let labelFontSize: CGFloat = 16
+                    if #available(iOS 15, *) {
+                        var configuration = UIButton.Configuration.plain()
+                        configuration.title = image == nil ? title : nil
+                        configuration.image = image
+                        configuration.preferredSymbolConfigurationForImage = Self.symbolConfiguration
+                        configuration.baseForegroundColor = foreground
+                        configuration.contentInsets = NSDirectionalEdgeInsets.zero
+                        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+                            var attributes = attributes
+                            attributes.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
+                            attributes.foregroundColor = foreground
+                            return attributes
+                        }
+                        configuration.background.backgroundColor = item.toolbarSelected ? (control ? .label : (item is PhoneSymbolItem ? .tertiarySystemFill : tintColor.withAlphaComponent(0.25))) : .clear
+                        configuration.background.backgroundInsets = NSDirectionalEdgeInsets(top: 5, leading: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2, bottom: 5, trailing: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2)
+                        configuration.background.cornerRadius = (glass.bounds.height - 10) / 2
+                        button.configuration = configuration
+                    } else {
+                        button.setTitle(image == nil ? title : nil, for: .normal)
+                        button.setImage(image, for: .normal)
+                        button.titleLabel?.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
+                        button.setTitleColor(foreground, for: .normal)
+                        button.tintColor = foreground
+                        button.backgroundColor = item.toolbarSelected ? (control ? .label : .tertiarySystemFill) : .clear
+                        button.layer.cornerRadius = 15
+                    }
+                    button.isSelected = item.toolbarSelected
+                    button.accessibilityTraits = item.toolbarSelected ? [.button, .selected] : .button
+                }
+            }
         if symbolsPinned, let panel = symbolPanel {
             let previousHeight = panel.bounds.height
             if let window, panel.window !== window { window.addSubview(panel) }
@@ -756,6 +894,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     // Are we editing a file?
     var closeAfterCommandTerminates = false
     var resetDirectoryAfterCommandTerminates = ""
+    private var intentSessionsSeen = (generation: 0, active: false) // only used on commandQueue
     var currentCommand = ""
     var interactiveCommandRunning = true
     //
@@ -819,6 +958,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     private var hardwareKeyboardOnly: Bool { hardwareKeyboardConnected && !softwareKeyboardShown }
     private var hardwareToolbarOverride = false
     private var arrowTipController: UIViewController?
+    private var toolbarTipController: UIViewController?
     private var arrowTipTask: Task<Void, Never>?
     private var arrowTipTaskID: UUID?
     private var arrowHUD: UIView?
@@ -1686,61 +1826,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
-    private func computeNumberOfButtons(toolbar: String) -> UInt {
-        var numButtons: UInt = 0
-        let buttonsDefinition = toolbar.split(separator: "\n")
-        // We have to count all buttons, even if they're hidden, because we cannot change the toolbar font size
-        // once it has been created.
-        for buttonLine in buttonsDefinition {
-            let trimmedButtonLine = buttonLine.trimmingCharacters(in: .whitespacesAndNewlines)
-            if (trimmedButtonLine.hasPrefix("#")) { continue } // skip comments
-            if (trimmedButtonLine.count == 0) { continue } // skip blank lines
-            if (trimmedButtonLine == "separator") { continue } // we're in a situation where the separator will be ignored
-            let regularLine = trimmedButtonLine.contains("insertString") || trimmedButtonLine.contains("systemAction") || trimmedButtonLine.contains("insertCommand")
-            if ((trimmedButtonLine == "[")
-                || (trimmedButtonLine.hasPrefix("[=\"")) && !regularLine
-                || ((trimmedButtonLine.hasPrefix("[='")) && !regularLine)) { continue }
-            if trimmedButtonLine.hasPrefix("]") { continue }
-            let buttonPartsLine = trimmedButtonLine.components(separatedBy: .whitespaces)
-            var buttonParts: [String] = []
-            var buttonCount = 0
-            for str in buttonPartsLine {
-                // command is a single string, the others can have spaces
-                if (str.count > 0) {
-                    if ((str == "insertString") || (str == "systemAction") || (str == "insertCommand")) {
-                        if (buttonParts.count == 0) {
-                            buttonParts.append("questionmark.app.dashed")
-                        }
-                        buttonParts.append(str)
-                        buttonCount = 2
-                    } else if (buttonCount == 0) {
-                        if (buttonParts.count > 0) {
-                            buttonParts[0].append(" ")
-                            buttonParts[0].append(str)
-                        } else {
-                            buttonParts.append(str)
-                        }
-                    } else {
-                        if (buttonParts.count <= 2) {
-                            buttonParts.append(str)
-                        } else {
-                            buttonParts[2].append(" ")
-                            buttonParts[2].append(str)
-                        }
-                    }
-                }
-            }
-            if (buttonParts.count < 2) {
-                continue
-            }
-            if (String(buttonParts[2]) == "showBrowser") {
-                continue
-            }
-            numButtons += 1
-        }
-        return numButtons
-    }
-    
+
     // The symbol panel's keys, in panel order: icon, then the string it inserts. The toolbar syntax reads a leading "[", "]" or "#" as
     // a group bracket or a comment, so those three carry a symbol name instead of the character.
     private let phoneSymbolLines: [String] = {
@@ -1782,7 +1868,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // The iOS 26 phone bar starts from the phone defaults, VoiceOver included: its arrow key has named actions.
         var phoneDefaults = PhoneKeyboardToolbar.isCustom
         if phoneDefaults { configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt") }
-        var showBrowserButtonFound = false // new feature, introduced with v2.0.0. Add it for older implamentations.
         if let documentsUrl = try? FileManager().url(for: .documentDirectory,
                                                      in: .userDomainMask,
                                                      appropriateFor: nil,
@@ -1808,27 +1893,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 var pastSeparator = false
                 var activeTag = 0
                 noneTag = -1
-                // iPhones, iOS 26+ only: recompute button font size based on number of buttons
-                // This a "liquidglass-only" issue, all other devices work well with default size of 19.
-                if #available(iOS 26, *) {
-                    if !UIDevice.current.model.hasPrefix("iPad") {
-                        // parse the config file to get the number of buttons
-                        let numButtons = computeNumberOfButtons(toolbar: contentOfFile)
-                        let multiplier = 3.17 // Ensures roughly 15 to 21 for fontsize for 6 to 8 buttons
-                        // smaller than 15 won't change the button size (but it will change the label size!)
-                        // larger than 22 feels much larger than the keyboard keys
-                        buttonFontSize =  min(max(screenWidth/(multiplier * CGFloat(numButtons)), 15.0), 22)
-                        if (UIDevice.current.name == "iPhone Duo") && (screenWidth == 466) {
-                            // vertical, closed iPhone Duo. This is the maximum size for 6 buttons
-                            // nothing can convince the closed iPhone Duo to display 7 buttons.
-                            buttonFontSize = 19.1
-                        }
-                        #if DEBUG
-                        NSLog("button size: \(buttonFontSize): \(screenWidth)/\(multiplier) * \(numButtons)")
-                        #endif
-                        // With liquiglass, 8 buttons is the maximum for an iPhone screen
-                    }
-                }
                 let buttonsDefinition = contentOfFile.split(separator: "\n")
                 var activeButtonGroup: [UIBarButtonItem] = []
                 let configuration = PhoneKeyboardToolbar.isCustom ? PhoneKeyboardToolbar.symbolConfiguration : UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular)
@@ -2044,7 +2108,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                         // button to switch back to the internal web browser. Hidden until the browser is activated.
                         if (title(button!) == "showBrowser") {
-                            showBrowserButtonFound = true
                             button!.isHidden = !internalBrowserStarted
                         }
                     }
@@ -2052,20 +2115,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
                 rightButtonGroup.append(contentsOf: activeButtonGroup)
                 rightButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: nil))
-                #if DISABLED
-                if (!showBrowserButtonFound) {
-                    // old configuration file (before v2.0). Add the showBrowser button manually:
-                    if let systemImage = UIImage(systemName: "network") {
-                        let showBrowserButton = UIBarButtonItem(image: systemImage.withConfiguration(configuration), style: .plain, target: self, action: #selector(self.systemAction(_:)))
-                        showBrowserButton.target = self
-                        showBrowserButton.possibleTitles = ["", "showBrowser"]
-                        if #available(iOS 16.0, *) {
-                            showBrowserButton.isHidden = !internalBrowserStarted
-                        }
-                        leftButtonGroup.append(showBrowserButton)
-                    }
-                }
-                #endif
             }
         }
     }
@@ -2123,7 +2172,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         center.removeObserver(self, name: .GCKeyboardDidDisconnect, object: nil)
         center.addObserver(self, selector: #selector(keyboardConnectionChanged(_:)), name: .GCKeyboardDidConnect, object: nil)
         center.addObserver(self, selector: #selector(keyboardConnectionChanged(_:)), name: .GCKeyboardDidDisconnect, object: nil)
-        for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
+        for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardDidChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
             center.removeObserver(self, name: name, object: nil)
             center.addObserver(self, selector: #selector(softwareKeyboardChanged(_:)), name: name, object: nil)
         }
@@ -2144,11 +2193,15 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         coordinator.animate(alongsideTransition: nil) { [weak self] _ in
             guard let self else { return }
             self.keyboardSizeTransition = false
-            var ancestor = self.terminalView?.superview
-            while let view = ancestor, !(view is TerminalContainerView) { ancestor = view.superview }
-            guard #available(iOS 15, *), let container = ancestor else { return }
-            self.setSoftwareKeyboardShown(container.keyboardLayoutGuide.layoutFrame.height > 100)
+            self.readSettledKeyboard()
         }
+    }
+
+    private func readSettledKeyboard() {
+        var ancestor = terminalView?.superview
+        while let view = ancestor, !(view is TerminalContainerView) { ancestor = view.superview }
+        guard #available(iOS 15, *), let container = ancestor else { return }
+        setSoftwareKeyboardShown(container.keyboardLayoutGuide.layoutFrame.height > 100)
     }
 
     @objc private func softwareKeyboardChanged(_ notification: Notification) {
@@ -2156,10 +2209,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if #available(iOS 17, *), notification.name == UIResponder.keyboardWillHideNotification { closeArrowTip(reason: .tipClosed) }
         guard notification.userInfo?[UIResponder.keyboardIsLocalUserInfoKey] as? Bool ?? true else { return }
         guard !keyboardSizeTransition else { return }
-        // With a hardware keyboard the frame covers at most the accessory bar, far below a software keyboard.
-        let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
-        let visible = frame.intersection(window?.screen.bounds ?? UIScreen.main.bounds)
-        setSoftwareKeyboardShown(notification.name != UIResponder.keyboardWillHideNotification && visible.height > 100)
+        switch notification.name {
+        case UIResponder.keyboardWillHideNotification:
+            setSoftwareKeyboardShown(false)
+        case UIResponder.keyboardDidChangeFrameNotification:
+            // A frame no taller than the accessory does not prove a hardware keyboard: after unfolding an iPhone Duo the last frames cover only the accessory while the software keyboard stays up, which hid the bar. Decide from the settled guide.
+            readSettledKeyboard()
+        default:
+            // With a hardware keyboard the frame covers at most the accessory bar, far below a software keyboard.
+            let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
+            if frame.intersection(window?.screen.bounds ?? UIScreen.main.bounds).height > 100 { setSoftwareKeyboardShown(true) }
+        }
     }
 
     private func setSoftwareKeyboardShown(_ shown: Bool) {
@@ -2190,6 +2250,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     private var precisionArrowOrigin = CGPoint.zero
     private var precisionArrowDirection: String?
     private var precisionArrowCount = 0
+    private var precisionArrowOffAxis = false
     private var precisionArrowSince = Date()
     private var precisionArrowLast = Date()
     private var precisionArrowTimer: Timer?
@@ -2206,6 +2267,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         view.gestureRecognizers?.forEach { view.removeGestureRecognizer($0) }
         let touch = PrecisionArrowGesture(target: self, action: #selector(precisionArrowTouch(_:)))
         touch.name = "precision-arrow"; touch.minimumPressDuration = 0; touch.restingImage = item.image; touch.tapMoves = !stockPhoneArrowKey
+        touch.directions = combinedArrowDirections[title(item) ?? ""] ?? []
         view.addGestureRecognizer(touch); view.isExclusiveTouch = true
         showArrowTip()
     }
@@ -2215,7 +2277,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         let point = sender.location(in: window)
         if sender.state == .began {
             precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
-            precisionArrowCount = 0; precisionArrowOrigin = point
+            precisionArrowCount = 0; precisionArrowOrigin = point; precisionArrowOffAxis = false
         } else if sender.state == .changed {
             let delta = CGPoint(x: point.x - precisionArrowOrigin.x, y: point.y - precisionArrowOrigin.y)
             if let direction = precisionArrowDirection {
@@ -2226,7 +2288,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             let motion = toolbarMotion(delta)
-            if precisionArrowDirection == nil && motion.arrowReady {
+            let onAxis = (sender as? PrecisionArrowGesture)?.directions.contains(motion.direction) == true
+            if precisionArrowCount == 0 && motion.arrowReady && !onAxis { precisionArrowOffAxis = true }
+            if precisionArrowDirection == nil && motion.arrowReady && onAxis {
                 let direction = motion.direction
                 precisionArrowDirection = direction; precisionArrowSince = Date(); precisionArrowLast = Date()
                 precisionArrowCount = 1; precisionArrowLevel = 0
@@ -2260,7 +2324,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else if sender.state == .ended || sender.state == .cancelled || sender.state == .failed {
             precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
             setArrowGlyph(nil, from: view)
-            if sender.state == .ended && precisionArrowCount == 0 && (sender as? PrecisionArrowGesture)?.tapMoves == true {
+            // A flick across a two-direction key's axis is ignored, not taken for a tap, even if it comes back near where it started or first crosses the threshold on release.
+            let end = toolbarMotion(CGPoint(x: point.x - precisionArrowOrigin.x, y: point.y - precisionArrowOrigin.y))
+            if end.arrowReady && (sender as? PrecisionArrowGesture)?.directions.contains(end.direction) != true { precisionArrowOffAxis = true }
+            if sender.state == .ended && precisionArrowCount == 0 && precisionArrowOffAxis {
+                dismissArrowHUD()
+            } else if sender.state == .ended && precisionArrowCount == 0 && (sender as? PrecisionArrowGesture)?.tapMoves == true {
                 // A key from .toolbarDefinition keeps its tap: the tap position picks the direction, as with the other arrow keys.
                 dismissArrowHUD()
                 let location = sender.location(in: view)
@@ -2285,34 +2354,72 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     self?.arrowTipTaskID = nil
                 }
             }
+            // toolbarTip comes first: this tip waits until toolbarTip is closed. toolbarTip never shows to a user who already has a .toolbarDefinition.
+            if !ArrowToolbarTip.toolbarTipDone {
+                let edited = self?.hasToolbarDefinition ?? true
+                // statusUpdates may report only changes, so a status reached before this task started counts here.
+                var closed = false
+                switch myToolbarTip.status {
+                case .invalidated: closed = true
+                case .pending: break
+                default: closed = edited
+                }
+                if !closed {
+                    for await status in myToolbarTip.statusUpdates {
+                        if case .invalidated = status { break }
+                        // For a .toolbarDefinition user, wait only until TipKit has loaded toolbarTip: a parameter set while it loads can be lost, and this tip then never shows.
+                        if edited, status != .pending { break }
+                    }
+                }
+                guard !Task.isCancelled else { return }
+                ArrowToolbarTip.toolbarTipDone = true
+            }
             let tip = ArrowToolbarTip()
             for await shouldDisplay in tip.shouldDisplayUpdates {
                 guard !Task.isCancelled, let self else { return }
-                guard shouldDisplay else { continue }
-                // The key reaches its place only once the keyboard is up and the toolbar has finished regenerating its keys; a popover anchored earlier lands at the screen corner or on another key.
-                var lastFrame: CGRect?
-                for _ in 0..<50 {
-                    let frame = self.arrowKeyIsPlaced ? self.arrowKeyView.map { $0.convert($0.bounds, to: nil) } : nil
-                    if frame != nil && frame == lastFrame { break }
-                    lastFrame = frame
-                    try? await Task.sleep(nanoseconds: 100_000_000)
+                // Close only invalidates the tip; its popover has to be dismissed here, but not on a false that only means it was already shown.
+                guard shouldDisplay else {
+                    if case .invalidated = tip.status { self.arrowTipController?.dismiss(animated: true); self.arrowTipController = nil }
+                    continue
                 }
-                guard !Task.isCancelled else { return }
-                guard self.arrowKeyIsPlaced, let root = self.window?.rootViewController,
-                      let view = self.arrowKeyView, root.presentedViewController == nil,
-                      self.arrowTipController?.presentingViewController == nil else { continue }
-                let controller = TipUIPopoverViewController(tip, sourceItem: view)
-                controller.popoverPresentationController?.permittedArrowDirections = .down
-                // A touch outside the popover only dismisses it; let the first arrow flick through.
-                controller.popoverPresentationController?.passthroughViews = [self.editorToolbar]
-                root.present(controller, animated: true)
-                self.arrowTipController = controller
+                // The key reaches its place only once the keyboard is up and the toolbar has finished regenerating its keys; a popover anchored earlier lands at the screen corner or on another key.
+                // Right after toolbarTip closes, its popover can still be on screen and refuse this one: try again shortly.
+                for _ in 0..<3 {
+                    var lastFrame: CGRect?
+                    for _ in 0..<50 {
+                        let ready = self.arrowKeyIsPlaced && self.toolbarTipController?.viewIfLoaded?.window == nil
+                        let frame = ready ? self.arrowKeyView.map { $0.convert($0.bounds, to: nil) } : nil
+                        if frame != nil && frame == lastFrame { break }
+                        lastFrame = frame
+                        try? await Task.sleep(nanoseconds: 100_000_000)
+                    }
+                    guard !Task.isCancelled else { return }
+                    guard self.arrowKeyIsPlaced, let root = self.window?.rootViewController,
+                          let view = self.arrowKeyView, root.presentedViewController == nil,
+                          self.toolbarTipController?.viewIfLoaded?.window == nil,
+                          self.arrowTipController?.presentingViewController == nil else { break }
+                    let controller = TipUIPopoverViewController(tip, sourceItem: view)
+                    controller.popoverPresentationController?.permittedArrowDirections = .down
+                    // A touch outside the popover only dismisses it; let the first arrow flick through.
+                    controller.popoverPresentationController?.passthroughViews = [self.editorToolbar]
+                    root.present(controller, animated: true)
+                    if controller.presentingViewController != nil {
+                        self.arrowTipController = controller
+                        break
+                    }
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                }
             }
         }
     }
 
+    private var hasToolbarDefinition: Bool {
+        let definition = FileManager().urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent(".toolbarDefinition")
+        return definition.map { FileManager().fileExists(atPath: $0.path) } ?? false
+    }
+
     private var arrowKeyView: UIView? {
-        (editorToolbar.items ?? []).first(where: { title($0) == "up.down.left.right" })?.toolbarView
+        (editorToolbar.items ?? []).first(where: { combinedArrowDirections[title($0) ?? ""] != nil })?.toolbarView
     }
 
     private var arrowKeyIsPlaced: Bool {
@@ -2580,18 +2687,20 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         toolbar.symbolFontName = terminalFontName ?? factoryFontName
         toolbar.pasteTarget = self.phonePasteTarget
         toolbar.configureArrow = { [weak self] item, view in
-            let actions = ["up", "down", "left", "right"].map { direction in
+            guard let self else { return }
+            let actions = (combinedArrowDirections[self.title(item) ?? ""] ?? []).map { direction in
                 UIAccessibilityCustomAction(name: direction.capitalized) { [weak self] _ in
                     self?.sendArrow(direction: direction)
                     if #available(iOS 17, *) { self?.closeArrowTip(reason: .actionPerformed) }
                     return self != nil
                 }
             }
-            item.accessibilityLabel = "Arrows"; view.accessibilityLabel = "Arrows"
+            // The two-direction keys keep their labels: "Up and down arrows", "Left and right arrows".
+            if self.title(item) == "up.down.left.right" { item.accessibilityLabel = "Arrows"; view.accessibilityLabel = "Arrows" }
             item.accessibilityCustomActions = actions
             view.accessibilityCustomActions = actions
             if PhoneKeyboardToolbar.isCustom, !UIAccessibility.isVoiceOverRunning {
-                self?.attachPrecisionArrow(item, view: view)
+                self.attachPrecisionArrow(item, view: view)
             }
         }
         if (leftButtonGroup.count == 0) {
@@ -4167,6 +4276,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Make sure we're on the right session:
             ios_switchSession(self.persistentIdentifier?.toCString())
             ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            // Intents running in the app (Execute Long Command) move the process directory, and ios_switchSession
+            // restores this session's directory only when this thread switches sessions:
+            let intentsBefore = intentSessionsState()
+            if (intentsBefore.active || intentsBefore != self.intentSessionsSeen) && (self.resetDirectoryAfterCommandTerminates == ""),
+               let sessionDirectory = ios_getenv("PWD") {
+                FileManager().changeCurrentDirectoryPath(String(cString: sessionDirectory))
+            }
             // Set COLUMNS to term width:
             setenv("COLUMNS", "\(self.width)".toCString(), 1);
             setenv("LINES", "\(self.height)".toCString(), 1);
@@ -4305,7 +4421,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             // Did the command change the current directory?
-            let newDirectory = FileManager().currentDirectoryPath
+            var newDirectory = FileManager().currentDirectoryPath
+            // If an intent ran meanwhile, the process directory may be its own: use this session's.
+            let intentsAfter = intentSessionsState()
+            if (intentsBefore.active || intentsAfter != intentsBefore), let sessionDirectory = ios_getenv("PWD") {
+                newDirectory = String(cString: sessionDirectory)
+            }
+            self.intentSessionsSeen = intentsAfter
             if (newDirectory != self.currentDirectory) {
                 self.previousDirectory = self.currentDirectory
                 self.currentDirectory = newDirectory
@@ -4991,7 +5113,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     self.terminalView!.inputAccessoryView = self.editorToolbar
                     self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
                 }
-                if #available(iOS 17, *), !(PhoneKeyboardToolbar.isCustom && (leftButtonGroup + rightButtonGroup).contains(where: { title($0) == "up.down.left.right" })) {
+                if #available(iOS 17, *) {
                     // Do not show the toolbar tip if the app has been started from a Shortcut:
                     if (!startedFromShortcut) {
                         // Do *not* show the toolbar tip if the user has already edited the toolbar
@@ -5013,6 +5135,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                     controller.popoverPresentationController?.canOverlapSourceViewRect = true
                                                     let rootVC = self.window?.rootViewController
                                                     rootVC?.present(controller, animated: false)
+                                                    if controller.presentingViewController != nil { self.toolbarTipController = controller }
                                                 } else {
                                                     if let centerButton = terminalView?.inputAssistantItem.leadingBarButtonGroups.first?.barButtonItems.last {
                                                         NSLog("centerButton: \(centerButton)")
@@ -5021,18 +5144,16 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                                             controller.popoverPresentationController?.canOverlapSourceViewRect = true
                                                             let rootVC = self.window?.rootViewController
                                                             rootVC?.present(controller, animated: false)
+                                                            if controller.presentingViewController != nil { self.toolbarTipController = controller }
                                                             
                                                         }
                                                     }
                                                 }
                                             }
                                         }  else {
-                                            let rootVC = self.window?.rootViewController
-                                            if let controller = rootVC?.presentedViewController {
-                                                if controller is TipUIPopoverViewController {
-                                                    controller.dismiss(animated: false)
-                                                }
-                                            }
+                                            // On an iOS 26 iPhone the keyboard's window presents the popover, so the root view controller has no presentedViewController: dismiss the tip's own controller.
+                                            self.toolbarTipController?.dismiss(animated: false)
+                                            self.toolbarTipController = nil
                                         }
                                     }
                                 }
@@ -5570,7 +5691,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         if (!useSystemToolbar) {
             for button in editorToolbar.items! {
                 if PhoneKeyboardToolbar.isCustom,
-                   !UIAccessibility.isVoiceOverRunning, title(button) == "up.down.left.right", let view = button.toolbarView {
+                   !UIAccessibility.isVoiceOverRunning, combinedArrowDirections[title(button) ?? ""] != nil, let view = button.toolbarView {
                     attachPrecisionArrow(button, view: view); returnValue = true; continue
                 }
                 if (title(button) == "up") || (title(button) == "down") || (title(button) == "left") || (title(button) == "right")
@@ -5765,15 +5886,17 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 self.terminalView!.inputAccessoryView = self.editorToolbar
                 self.webView?.addInputAccessoryView(toolbar: self.editorToolbar)
             }
-            if #available(iOS 17, *), !(PhoneKeyboardToolbar.isCustom && (leftButtonGroup + rightButtonGroup).contains(where: { title($0) == "up.down.left.right" })) {
+            if #available(iOS 17, *) {
                 NSLog("myToolbarTip status: \(myToolbarTip.status)")
-                if (myToolbarTip.shouldDisplay) {
+                // As at launch: no toolbar tip for a user who has edited the toolbar.
+                if (myToolbarTip.shouldDisplay && !hasToolbarDefinition) {
                     if (self.terminalView != nil) {
                         // TODO: re-check placement of tips
                         let controller = TipUIPopoverViewController(myToolbarTip, sourceItem: self.terminalView!)
                         controller.popoverPresentationController?.canOverlapSourceViewRect = true
                         let rootVC = self.window?.rootViewController
                         rootVC?.present(controller, animated: false)
+                        if controller.presentingViewController != nil { self.toolbarTipController = controller }
                     }
                 }
             }
@@ -6358,7 +6481,10 @@ extension SceneDelegate: WKUIDelegate {
                                 // let returnValue = write(fd, data, numValues)
                                 let file = FileHandle(fileDescriptor: fd)
                                 do {
-                                    try file.seek(toOffset: offset)
+                                    // stdout and stderr write at the descriptor's current position, so they stay in order with 2>&1.
+                                    if arguments[2] != "1" && arguments[2] != "2" {
+                                        try file.seek(toOffset: offset)
+                                    }
                                 }
                                 catch {
                                     let error = error as NSError

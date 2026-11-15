@@ -7,7 +7,7 @@ struct ExecuteLongCommandIntent: LongRunningIntent, CancellableIntent {
     static var title: LocalizedStringResource = "Execute Long Command"
     static var description = IntentDescription("Run a noninteractive command with extended background runtime. Output is returned when it finishes. iOS may cancel work that does not report progress. Scripts can report real progress with the progress command, without adding progress text to the returned output. Cancellation takes effect between commands; the current command may continue until it finishes.")
     static var openAppWhenRun = false
-    static var allowedExecutionTargets: IntentExecutionTargets { [.appIntentsExtension] }
+    static var allowedExecutionTargets: IntentExecutionTargets { [.main] }
 
     @Parameter(title: "Command")
     var command: String
@@ -40,7 +40,6 @@ struct ExecuteLongCommandIntent: LongRunningIntent, CancellableIntent {
 // Preserve the legacy intent. Commands use ios_system threads, not OS child processes.
 enum CommandExecutionError: LocalizedError {
     case emptyCommand, cancelled, outputTooLarge, unavailableDirectory, busy
-    case unavailableHostBundle(String)
     case exitStatus(Int32)
 
     var errorDescription: String? {
@@ -49,7 +48,6 @@ enum CommandExecutionError: LocalizedError {
         case .busy: return "Another long command is already running. Try again when it finishes."
         case .cancelled: return "Command execution was cancelled."
         case .outputTooLarge: return "Command output exceeds 8 MiB. Write large results to a file instead."
-        case .unavailableHostBundle(let path): return "Could not locate the a-Shell app bundle containing \(path)."
         case .unavailableDirectory: return "The Shortcuts shared directory is unavailable."
         case .exitStatus(let status): return "Command exited with status \(status)."
         }
@@ -59,46 +57,6 @@ enum CommandExecutionError: LocalizedError {
 @available(iOS 27.0, *)
 private final class LongCommandExecutor {
     private static let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
-    private static let initialized: Result<Void, Error> = Result {
-        initializeEnvironment()
-        replaceCommand("progress", "ashell_progress", false)
-        // Match AppDelegate: release file coordination before waiting for the command.
-        joinMainThread = false
-        let origin = Bundle.main.bundleURL
-        var host = origin
-        // Defensively accept an app main bundle; extension containers can have different depths.
-        while host.pathExtension != "app" && host.path != "/" {
-            host.deleteLastPathComponent()
-        }
-        guard host.pathExtension == "app" else { throw CommandExecutionError.unavailableHostBundle(origin.path) }
-        // Bundle(url:) returned nil for the app found here in the report on #1160. Foundation also returns nil for an app directory that can be
-        // traversed but not listed (mode 311). Then read Info.plist by path, and take the name from the directory if it cannot be read either.
-        // A flat iOS app keeps its resources in the app directory.
-        let hostInfo: [String: Any]
-        let resourcePath: String
-        if let bundle = Bundle(url: host), let info = bundle.infoDictionary, let resources = bundle.resourcePath {
-            hostInfo = info
-            resourcePath = resources
-        } else {
-            hostInfo = (NSDictionary(contentsOf: host.appendingPathComponent("Info.plist")) as? [String: Any])
-                ?? ["CFBundleName": host.deletingPathExtension().lastPathComponent]
-            resourcePath = host.path
-        }
-        guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
-            throw CommandExecutionError.unavailableDirectory
-        }
-        // The extension cannot use the app's private Library. Shared user packages live here.
-        let libraryURL = groupURL.appendingPathComponent("Library")
-        setenv("APPDIR", host.path, 1)
-        initializeCommandEnvironment(hostInfo: hostInfo, resourcePath: resourcePath, documentsUrl: groupURL, libraryURL: libraryURL, groupURL: groupURL)
-        // ios_system expands ~name using standard defaults; include the app's mirrored bookmarks.
-        UserDefaults.standard.addSuite(named: appGroupID)
-        ios_setBookmarkDictionaryName("bookmarkNames")
-        let path = [host.appendingPathComponent("bin").path,
-                    host.appendingPathComponent("Library/bin").path,
-                    String(cString: getenv("PATH"))].joined(separator: ":")
-        setenv("PATH", path, 1)
-    }
     private static let executionLock = NSLock()
     private static var executionActive = false
 
@@ -145,12 +103,6 @@ private final class LongCommandExecutor {
         defer { Self.releaseExecution() }
         return try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .utility).async {
-                do {
-                    try Self.initialized.get()
-                } catch {
-                    continuation.resume(throwing: error)
-                    return
-                }
                 guard !self.isCancelled else {
                     continuation.resume(throwing: CommandExecutionError.cancelled)
                     return
@@ -176,6 +128,10 @@ private final class LongCommandExecutor {
                 Self.sessionCount += 1
                 ios_switchSession(sessionIdentifier)
                 ios_setContext(UnsafeMutableRawPointer(sessionIdentifier))
+                // As in ExecuteCommandIntentHandler: this session's jsc, wasm and photos stay off the terminal window.
+                // Registered before the first chdir, so that the terminal windows restore their own directory.
+                setRunningInExtension(true, context: sessionIdentifier)
+                defer { setRunningInExtension(false, context: sessionIdentifier) }
                 let directoryAvailable = FileManager.default.changeCurrentDirectoryPath(directory.path)
                 ios_setDirectoryURL(directory)
                 defer {
@@ -191,6 +147,10 @@ private final class LongCommandExecutor {
                 var status: Int32 = 0
                 for (commandIndex, command) in commands.enumerated() {
                     if self.isCancelled { break }
+                    // The terminal windows share the process directory: restore this session's own before each command.
+                    if let sessionDirectory = ios_getenv("PWD") {
+                        FileManager.default.changeCurrentDirectoryPath(String(cString: sessionDirectory))
+                    }
                     let completedBeforeCommand = progress.completedUnitCount
                     var reportedCompleted: Int64 = 0
                     var reportedTotal: Int64 = 1

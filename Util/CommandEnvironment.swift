@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import ios_system
 
-// Use the host app's resources and the caller's writable directories in both processes.
+// Use the host app's resources and the caller's writable directories.
 @discardableResult
 func initializeCommandEnvironment(hostInfo: [String: Any], resourcePath: String, documentsUrl: URL, libraryURL: URL, groupURL: URL?) -> String {
     numPythonInterpreters = 2; // so pip can work (it runs python setup.py). Some packages, eg nexusforge need 3 interpreters.
