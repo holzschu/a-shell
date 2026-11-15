@@ -37,7 +37,7 @@ prepare() {
     patch -s -f -V never -F 0 -p1 -d "$stage/ios-crossterm" <"$here/$name.patch"
   done
   cp "$here/ashell-terminal.rs" "$stage/ios-crossterm/src/terminal/sys/ios.rs"
-  for name in codex home auth-refresh cli tui code-mode sandbox shell tool-driver tool-policy tool-search notify mcp-helper stdio snapshot snapshot-capability environment git-info tui-terminal keyboard metrics-reinit terminal-probe colors relocation; do
+  for name in codex home auth-refresh cli tui code-mode sandbox shell tool-driver tool-policy tool-search notify mcp-helper stdio snapshot snapshot-capability environment git-info tui-terminal keyboard metrics-reinit terminal-probe colors relocation writer-lock; do
     patch -s -f -V never -F 0 -p1 -d "$stage/codex-rs" <"$here/$name.patch"
   done
   cp "$here/ios-relocation.rs" "$stage/codex-rs/rollout/src/ios_relocation.rs"

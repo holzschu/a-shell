@@ -295,7 +295,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                   create: true)
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
         versionUpToDate = !versionNumberIncreased()
-        appDependentPath = initializeCommandEnvironment(hostBundle: .main, documentsUrl: documentsUrl, libraryURL: libraryURL, groupURL: FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID))
+        appDependentPath = initializeCommandEnvironment(hostInfo: Bundle.main.infoDictionary!, resourcePath: Bundle.main.resourcePath!, documentsUrl: documentsUrl, libraryURL: libraryURL, groupURL: FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID))
         // Switch installed Python packages from 3.9 to 3.13:
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
             cleanupQueue.async{
