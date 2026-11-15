@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        product: [helix, fd, fzf, navi, gitoxide, Ruff, rg]
+        product: [helix, fd, fzf, navi, gitoxide, Ruff, rg, zoxide]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -150,7 +150,7 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
-          for product in helix fd fzf navi gitoxide Ruff rg node; do
+          for product in helix fd fzf navi gitoxide Ruff rg zoxide node; do
             test -s "$product.xcframework.zip"
             test -s "$product.audit.json"
             test -s "$product.checksums.txt"
