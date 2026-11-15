@@ -29,7 +29,9 @@ printf '%s\n' "$status" >"$work/missing.status"
 set -- "$work/fixture/space café 東京"
 i=1
 while [ "$i" -lt 1000 ]; do
-    path=$(printf '%s/fixture/directory %04d' "$work" "$i")
+    # Repeated command substitution can lose output in a-Shell's Dash.
+    padded=$((10000 + i))
+    path="$work/fixture/directory ${padded#1}"
     mkdir -p "$path" || exit 1
     set -- "$@" "$path"
     if [ "$#" -eq 50 ]; then
@@ -46,7 +48,9 @@ zoxide query --list >"$work/list.out" 2>"$work/list.err"
 status=$?
 printf '%s\n' "$status" >"$work/list.status"
 [ "$status" -eq 0 ] && [ ! -s "$work/list.err" ] || exit 1
-[ "$(wc -l <"$work/list.out")" -eq 1000 ] || exit 1
+wc -l <"$work/list.out" >"$work/list.count" || exit 1
+read -r count <"$work/list.count" || exit 1
+[ "$count" -eq 1000 ] || exit 1
 zoxide query café >"$work/unicode.out" 2>"$work/unicode.err"
 status=$?
 printf '%s\n' "$status" >"$work/unicode.status"
