@@ -1052,6 +1052,7 @@ final class TerminalContainerView: UIView {
                 keyboardLayoutGuide.followsUndockedKeyboard = true
             }
         } else {
+            // before iOS 26
             terminal.translatesAutoresizingMaskIntoConstraints = false
             addSubview(terminal)
             NSLayoutConstraint.activate([
