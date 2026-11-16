@@ -51,12 +51,10 @@ extension UIBarButtonItem {
 
     var toolbarSelected: Bool {
         get {
-            if #available(iOS 15, *) { return isSelected }
-            return (customView as? UIButton)?.isSelected ?? false
+            return isSelected
         }
         set {
-            if #available(iOS 15, *) { isSelected = newValue }
-            else { (customView as? UIButton)?.isSelected = newValue }
+            isSelected = newValue
         }
     }
 }
@@ -149,7 +147,7 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
     private var symbolArmed = false
     private var symbolSelection: Int?
     var symbolFontName = factoryFontName {
-        didSet { if #available(iOS 15, *) { symbolCells.forEach { $0.setNeedsUpdateConfiguration() } } }
+        didSet { symbolCells.forEach { $0.setNeedsUpdateConfiguration() } }
     }
     private var outsideTaps: [UITapGestureRecognizer] = []
     private var keyboardObservers: [NSObjectProtocol] = []
@@ -177,10 +175,8 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                             UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
                         }, for: .touchUpInside)
                     }
-                    if #available(iOS 15, *) {
-                        key.configurationUpdateHandler = { button in
-                            button.alpha = button.isHighlighted ? 0.5 : 1
-                        }
+                    key.configurationUpdateHandler = { button in
+                        button.alpha = button.isHighlighted ? 0.5 : 1
                     }
                     item.customView = key
                 }
@@ -838,32 +834,22 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                     let control = item.possibleTitles?.contains("control") == true
                     let foreground: UIColor = item is PhoneSymbolItem ? .label : (item.toolbarSelected ? (control ? .systemBackground : tintColor) : .label)
                     let labelFontSize: CGFloat = 16
-                    if #available(iOS 15, *) {
-                        var configuration = UIButton.Configuration.plain()
-                        configuration.title = image == nil ? title : nil
-                        configuration.image = image
-                        configuration.preferredSymbolConfigurationForImage = Self.symbolConfiguration
-                        configuration.baseForegroundColor = foreground
-                        configuration.contentInsets = NSDirectionalEdgeInsets.zero
-                        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
-                            var attributes = attributes
-                            attributes.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
-                            attributes.foregroundColor = foreground
-                            return attributes
-                        }
-                        configuration.background.backgroundColor = item.toolbarSelected ? (control ? .label : (item is PhoneSymbolItem ? .tertiarySystemFill : tintColor.withAlphaComponent(0.25))) : .clear
-                        configuration.background.backgroundInsets = NSDirectionalEdgeInsets(top: 5, leading: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2, bottom: 5, trailing: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2)
-                        configuration.background.cornerRadius = (glass.bounds.height - 10) / 2
-                        button.configuration = configuration
-                    } else {
-                        button.setTitle(image == nil ? title : nil, for: .normal)
-                        button.setImage(image, for: .normal)
-                        button.titleLabel?.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
-                        button.setTitleColor(foreground, for: .normal)
-                        button.tintColor = foreground
-                        button.backgroundColor = item.toolbarSelected ? (control ? .label : .tertiarySystemFill) : .clear
-                        button.layer.cornerRadius = 15
+                    var configuration = UIButton.Configuration.plain()
+                    configuration.title = image == nil ? title : nil
+                    configuration.image = image
+                    configuration.preferredSymbolConfigurationForImage = Self.symbolConfiguration
+                    configuration.baseForegroundColor = foreground
+                    configuration.contentInsets = NSDirectionalEdgeInsets.zero
+                    configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+                        var attributes = attributes
+                        attributes.font = .systemFont(ofSize: labelFontSize, weight: .semibold)
+                        attributes.foregroundColor = foreground
+                        return attributes
                     }
+                    configuration.background.backgroundColor = item.toolbarSelected ? (control ? .label : (item is PhoneSymbolItem ? .tertiarySystemFill : tintColor.withAlphaComponent(0.25))) : .clear
+                    configuration.background.backgroundInsets = NSDirectionalEdgeInsets(top: 5, leading: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2, bottom: 5, trailing: (pitch - min(pitch, pasteSize.width > 0 ? pasteSize.width : 40)) / 2)
+                    configuration.background.cornerRadius = (glass.bounds.height - 10) / 2
+                    button.configuration = configuration
                     button.isSelected = item.toolbarSelected
                     button.accessibilityTraits = item.toolbarSelected ? [.button, .selected] : .button
                 }
@@ -1561,15 +1547,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     terminalView?.cut(sender)
                 case "control":
                     controlOn = !controlOn;
-                    if #available(iOS 15.0, *) {
-                        // This has no impact on the button appearance with systemToolbar and no keyboard visible.
-                        sender.isSelected = controlOn
-                    } else {
-                        // buttonName.fill? if it exists?
-                        let configuration = UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular, scale: .large)
-                        sender.image = controlOn ? UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration) :
-                        UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
-                    }
+                    // This has no impact on the button appearance with systemToolbar and no keyboard visible.
+                    sender.isSelected = controlOn
                 case "selectAll":
                     terminalView?.selectAll(sender)
                 case "showBrowser":
@@ -1630,15 +1609,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     commandString = "editor.selectAll();"
                 case "control":
                     controlOn = !controlOn;
-                    if #available(iOS 15.0, *) {
-                        // This has no impact on the button appearance with systemToolbar and no keyboard visible.
-                        sender.isSelected = controlOn
-                    } else {
-                        // buttonName.fill? if it exists?
-                        let configuration = UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular, scale: .large)
-                        sender.image = controlOn ? UIImage(systemName: "chevron.up.square.fill")!.withConfiguration(configuration) :
-                        UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
-                    }
+                    // This has no impact on the button appearance with systemToolbar and no keyboard visible.
+                    sender.isSelected = controlOn
                     commandString = controlOn ? "window.controlOn = true;" : "window.controlOn = false;"
                 default:
                     break
@@ -1901,50 +1873,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
-    #if SINGLE_TOOLBAR_FILE
-    // The symbol panel's keys, in panel order: icon, then the string it inserts. The toolbar syntax reads a leading "[", "]" or "#" as
-    // a group bracket or a comment, so those three carry a symbol name instead of the character.
-    private let phoneSymbolLines: [String] = {
-        let symbols: [(String, String)] = [("character.cursor.ibeam", "["), ("square.brackets", "]"), ("{", "{"), ("}", "}"), ("%", "%"), ("\"", "\""), ("number", "#"), ("*", "*"), ("&", "&"), ("+", "+"), ("_", "_"), ("\\", "\\"), (";", ";"), ("'", "'"), ("<", "<"), ("`", "`"), ("|", "|"), ("=", "="), ("-", "-"), ("/", "/"), (".", "."), ("$", "$"), (">", ">"), ("~", "~")]
-        return ["["] + symbols.map { "\($0.0)\tinsertString\t\($0.1)" } + ["] #+="]
-    }()
-
-    // defaultToolbar.txt stays the stock file; the iOS 26 phone bar swaps its two arrow keys for the four-arrow key and
-    // puts the symbol panel's key in front of Paste.
-    private func phoneToolbarDefaults(_ content: String) -> String {
-        var lines: [String] = []
-        for line in content.split(separator: "\n", omittingEmptySubsequences: false) {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if !trimmed.hasPrefix("#"), let action = trimmed.split(whereSeparator: { $0 == "\t" || $0 == " " }).last {
-                if action == "left.right" { lines.append("arrow.up.and.down.and.arrow.left.and.right\t\tsystemAction\tup.down.left.right"); continue }
-                if action == "up.down" { continue }
-                if action == "paste" { lines.append(contentsOf: phoneSymbolLines) }
-            }
-            lines.append(String(line))
-        }
-        return lines.joined(separator: "\n")
-    }
-    #endif
-
     @objc func generateToolbarButtons() {
         // check issue with screen size and pico.
         // Scan the configuration file to generate the button groups:
         // Before iOS 26, or iPads, or VoiceOver active: single-arrow button
         // TODO: iPhone Duo, iPad style is OK when opened. How to adjust?
-        var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
-        #if SINGLE_TOOLBAR_FILE
-        if #available(iOS 26, *) {
-            if !UIAccessibility.isVoiceOverRunning && !UIDevice.current.model.hasPrefix("iPad") {
-                // iPhones running iOS 26: activate multi-arrow buttons:
-                configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
-            }
-        }
-        #endif
+        var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
         // The iOS 26 phone bar starts from the phone defaults, VoiceOver included: its arrow key has named actions.
         var phoneDefaults = PhoneKeyboardToolbar.isCustom
-        #if SINGLE_TOOLBAR_FILE
-        if phoneDefaults { configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt") }
-        #endif
         if let documentsUrl = try? FileManager().url(for: .documentDirectory,
                                                      in: .userDomainMask,
                                                      appropriateFor: nil,
@@ -1956,11 +1892,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
         }
         if let configFileUrl = configFile {
-            if let fileContent = try? String(contentsOf: configFileUrl, encoding: String.Encoding.utf8) {
-                #if SINGLE_TOOLBAR_FILE
-                let contentOfFile = phoneDefaults ? phoneToolbarDefaults(fileContent) : fileContent
-                #endif
-                let contentOfFile = fileContent // TODO: clean up
+            if let contentOfFile = try? String(contentsOf: configFileUrl, encoding: String.Encoding.utf8) {
                 stockPhoneArrowKey = phoneDefaults
                 leftButtonGroup = []
                 rightButtonGroup = []
@@ -2140,11 +2072,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                     // How to use hierarchical UIImages. Contrast not good enough in Dec. 2022, so disabled.
                     /* var configuration: UIImage.SymbolConfiguration
-                     if #available(iOS 15.0, *) {
                      configuration = UIImage.SymbolConfiguration(hierarchicalColor: .placeholderText)
-                     } else {
-                     configuration = UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular)
-                     } */
+                     */
                     // If there's no string to insert, string to insert == title
                     if (buttonParts.count == 2) {
                         buttonParts.append(buttonParts[0])
@@ -2321,7 +2250,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     private func readSettledKeyboard() {
         var ancestor = terminalView?.superview
         while let view = ancestor, !(view is TerminalContainerView) { ancestor = view.superview }
-        guard #available(iOS 15, *), let container = ancestor else { return }
+        guard let container = ancestor else { return }
         setSoftwareKeyboardShown(container.keyboardLayoutGuide.layoutFrame.height > 100)
     }
 
@@ -2677,7 +2606,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         } else { image = resting?.withConfiguration(configuration) }
         button.image = image
         if let key = view as? UIButton {
-            if #available(iOS 15, *), var configuration = key.configuration {
+            if var configuration = key.configuration {
                 configuration.image = image
                 configuration.title = image == nil ? button.title : nil
                 if #available(iOS 26, *) {
@@ -3972,11 +3901,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             guard (avplayer != nil) else {
                 return -1
             }
-            if #available(iOS 14.2, *) {
-                // Doesn't do anything, should start PiP when going to background:
-                // Works differently on iPhones and iPads?
-                avcontroller!.canStartPictureInPictureAutomaticallyFromInline = true
-            }
+            // Doesn't do anything, should start PiP when going to background:
+            // Works differently on iPhones and iPads?
+            avcontroller!.canStartPictureInPictureAutomaticallyFromInline = true
             avcontroller!.allowsPictureInPicturePlayback = true
             avcontroller!.delegate = self
             avControllerPiPEnabled = false
@@ -4064,20 +3991,18 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         fputs("Scheduled command: \(scheduledCommand)\nRepeat every: \(scheduleInterval) seconds\n", thread_stdout)
         let dateFormatter = DateFormatter()
         dateFormatter.timeStyle = .medium
-        if #available(iOS 15, *) {
-            if (lastExecution != .distantPast) {
-                fputs("Last executed at: \(dateFormatter.string(from: lastExecution)).\n", thread_stdout)
-            } else {
-                fputs("Not executed yet.\n", thread_stdout)
+        if (lastExecution != .distantPast) {
+            fputs("Last executed at: \(dateFormatter.string(from: lastExecution)).\n", thread_stdout)
+        } else {
+            fputs("Not executed yet.\n", thread_stdout)
+        }
+        if (nextExecution != .distantFuture) {
+            while (self.nextExecution <= .now) {
+                self.nextExecution += TimeInterval(scheduleInterval)
             }
-            if (nextExecution != .distantFuture) {
-                while (self.nextExecution <= .now) {
-                    self.nextExecution += TimeInterval(scheduleInterval)
-                }
-                let delay = nextExecution.timeIntervalSinceNow
-                let formattedDelay = String(format: "%.2f", delay)
-                fputs("Next execution at: \(dateFormatter.string(from: nextExecution)), in \(formattedDelay) seconds\n", thread_stdout)
-            }
+            let delay = nextExecution.timeIntervalSinceNow
+            let formattedDelay = String(format: "%.2f", delay)
+            fputs("Next execution at: \(dateFormatter.string(from: nextExecution)), in \(formattedDelay) seconds\n", thread_stdout)
         }
     }
     
@@ -4091,9 +4016,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             self.scheduledCommand = command
             self.scheduleInterval = interval
             self.lastExecution = .distantPast
-            if #available(iOS 15, *) {
-                self.nextExecution = .now + TimeInterval(interval)
-            }
+            self.nextExecution = .now + TimeInterval(interval)
             self.timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(interval), repeats: true) { _ in
                 if (!self.stdout_active) {
                     let stdout_pipe = Pipe()
@@ -4111,10 +4034,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         // This is to avoid messy screens, and to avoid system overload if the
                         // scheduled command takes longer to complete than the interval.
                         self.stdout_active = true
-                        if #available(iOS 15, *) {
-                            self.lastExecution = .now
-                            self.nextExecution += TimeInterval(interval)
-                        }
+                        self.lastExecution = .now
+                        self.nextExecution += TimeInterval(interval)
                         let pid = ios_fork()
                         _ = ios_system(command.decomposedStringWithCanonicalMapping)
                         ios_waitpid(pid)
@@ -4641,47 +4562,37 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // TODO: check if these commands are used by the editors.
         if (cmd.hasPrefix("controlOff")) {
             controlOn = false
-            if #available(iOS 15.0, *) {
-                if (!useSystemToolbar) {
-                    for button in editorToolbar.items! {
-                        if title(button) == "control" {
-                            button.isSelected = controlOn
-                            break
+            if (!useSystemToolbar) {
+                for button in editorToolbar.items! {
+                    if title(button) == "control" {
+                        button.isSelected = controlOn
+                        break
+                    }
+                }
+                editorToolbar.setNeedsLayout()
+            } else {
+                var foundControl = false
+                if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
+                    for leftButtonGroup in leftButtonGroups {
+                        for button in leftButtonGroup.barButtonItems {
+                            if title(button) == "control" {
+                                foundControl = true
+                                button.isSelected = controlOn
+                                break
+                            }
                         }
                     }
-                    editorToolbar.setNeedsLayout()
-                } else {
-                    var foundControl = false
-                    if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
-                        for leftButtonGroup in leftButtonGroups {
-                            for button in leftButtonGroup.barButtonItems {
+                }
+                if (!foundControl) {
+                    if let rightButtonGroups = terminalView?.inputAssistantItem.trailingBarButtonGroups {
+                        for rightButtonGroup in rightButtonGroups {
+                            for button in rightButtonGroup.barButtonItems {
                                 if title(button) == "control" {
-                                    foundControl = true
                                     button.isSelected = controlOn
                                     break
                                 }
                             }
                         }
-                    }
-                    if (!foundControl) {
-                        if let rightButtonGroups = terminalView?.inputAssistantItem.trailingBarButtonGroups {
-                            for rightButtonGroup in rightButtonGroups {
-                                for button in rightButtonGroup.barButtonItems {
-                                    if title(button) == "control" {
-                                        button.isSelected = controlOn
-                                        break
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                let configuration = UIImage.SymbolConfiguration(pointSize: buttonFontSize, weight: .regular, scale: .large)
-                for button in editorToolbar.items! {
-                    if title(button) == "control" {
-                        button.image = UIImage(systemName: "chevron.up.square")!.withConfiguration(configuration)
-                        break
                     }
                 }
             }
@@ -7359,9 +7270,7 @@ extension SceneDelegate: WKUIDelegate {
               decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void) {
         // NSLog("decidePolicyFor WKNavigationAction, navigationType= \(navigationAction.navigationType)")
         navigationType = navigationAction.navigationType
-        if #available(iOS 14.0, *) {
-            preferences.allowsContentJavaScript = true // The default value is true, but let's make sure.
-        }
+        preferences.allowsContentJavaScript = true // The default value is true, but let's make sure.
         // NSLog("decidePolicyFor webView.url?.path: \(webView.url?.path)")
         decisionHandler(.allow, preferences)
     }

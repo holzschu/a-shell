@@ -621,14 +621,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             }
             continue
         case "-t", "--toolbar":
-            #if SINGLE_TOOLBAR_FILE
-            var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
-            if (UIDevice.current.model.hasPrefix("iPad") || UIAccessibility.isVoiceOverRunning) {
-                configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
-            }
-            #else
-            let configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
-            #endif
+            let configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
             do {
                 let documentsUrl = try FileManager().url(for: .documentDirectory,
                                                          in: .userDomainMask,
