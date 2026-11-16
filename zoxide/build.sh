@@ -4,6 +4,7 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd -P)
 cache=${ZOXIDE_BUILD_CACHE:-$HOME/Library/Caches/a-shell/zoxide}
 version=0.10.0
+toolchain=1.96.1
 checksum=4fcd4272b013a10b637dbcc299c58a9924b94470a9042677ca1a204cc2e9150e
 export CARGO_BUILD_JOBS=4
 export CARGO_PROFILE_RELEASE_OPT_LEVEL=z CARGO_PROFILE_RELEASE_LTO=fat
@@ -11,6 +12,10 @@ export CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1 CARGO_PROFILE_RELEASE_DEBUG=0
 export CARGO_PROFILE_RELEASE_STRIP=none
 
 prepare() {
+    cargo_command=$(rustup which --toolchain "$toolchain" cargo)
+    # Cargo's child compiler can otherwise resolve a different rustc from PATH.
+    RUSTC=$(rustup which --toolchain "$toolchain" rustc)
+    export RUSTC
     mkdir -p "$cache"
     if [[ ! -f $cache/zoxide.tar.gz ]]; then
         curl -fLsS --connect-timeout 15 --max-time 120 \
@@ -35,8 +40,8 @@ prepare() {
     fi
     patch -s -f -F 0 --dry-run -R -p1 -d "$source" <"$here/native.patch" >/dev/null
     cmp "$here/embedded.rs" "$source/src/embedded.rs"
-    rustup run 1.96.1 cargo --version
-    rustup run 1.96.1 rustc --version
+    "$cargo_command" --version
+    "$RUSTC" --version
 }
 
 framework() {
@@ -63,10 +68,10 @@ framework() {
     [[ -f $frameworks/ios_system.framework/ios_system ]]
     xcrun vtool -show-build "$frameworks/ios_system.framework/ios_system" | grep -E "platform +$mach_platform$" >/dev/null
     prepare
-    rustup target add --toolchain 1.96.1 "$target"
+    rustup target add --toolchain "$toolchain" "$target"
     sdk=$(xcrun --sdk "$sdk_name" --show-sdk-path)
     CARGO_TARGET_DIR="$cache/target-$key-$platform-ios14" SDKROOT="$sdk" IPHONEOS_DEPLOYMENT_TARGET=14.0 \
-        rustup run 1.96.1 cargo build --locked --release --lib --target "$target" --manifest-path "$source/Cargo.toml"
+        "$cargo_command" build --locked --release --lib --target "$target" --manifest-path "$source/Cargo.toml"
     output=$cache/$platform/zoxide.framework
     mkdir -p "$output"
     xcrun --sdk "$sdk_name" clang -target "$triple" -isysroot "$sdk" \
@@ -109,7 +114,7 @@ case ${1:-} in
     framework) framework "${2:?Frameworks directory required}" "${3:?Platform required}" ;;
     host)
         prepare
-        CARGO_TARGET_DIR="$cache/target-$key-host" rustup run 1.96.1 cargo build --locked --release --lib --manifest-path "$source/Cargo.toml"
+        CARGO_TARGET_DIR="$cache/target-$key-host" "$cargo_command" build --locked --release --lib --manifest-path "$source/Cargo.toml"
         clang -Oz -Wall -Wextra -Werror -I "$here/tests" "$here/command.m" "$here/tests/host.c" \
             "$cache/target-$key-host/release/libzoxide_embedded.a" -framework Foundation -o "$cache/host-command"
         ;;
