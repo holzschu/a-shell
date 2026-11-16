@@ -1901,6 +1901,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
+    #if SINGLE_TOOLBAR_FILE
     // The symbol panel's keys, in panel order: icon, then the string it inserts. The toolbar syntax reads a leading "[", "]" or "#" as
     // a group bracket or a comment, so those three carry a symbol name instead of the character.
     private let phoneSymbolLines: [String] = {
@@ -1910,7 +1911,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
 
     // defaultToolbar.txt stays the stock file; the iOS 26 phone bar swaps its two arrow keys for the four-arrow key and
     // puts the symbol panel's key in front of Paste.
-    #if SINGLE_TOOLBAR_FILE
     private func phoneToolbarDefaults(_ content: String) -> String {
         var lines: [String] = []
         for line in content.split(separator: "\n", omittingEmptySubsequences: false) {
