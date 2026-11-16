@@ -19,7 +19,7 @@ cmp "$work/query.out" "$work/jump.out"
 printf 'status=0\n' | cmp - "$work/jump.err"
 
 # The native root jump must use the selected database, even beside a matching directory.
-"$command" cd "$work/fixture" :: setenv _ZO_DATA_DIR "$work/native-missing" :: \
+_ZO_DATA_DIR="$work/native-root-before" "$command" cd "$work/fixture" :: setenv _ZO_DATA_DIR "$work/native-missing" :: \
     z café :: pwd >"$work/root-missing.out" 2>"$work/root-missing.err"
 printf '%s\n' "$work/fixture" | cmp - "$work/root-missing.out"
 grep -Fx 'zoxide: no match found' "$work/root-missing.err" >/dev/null
@@ -30,6 +30,24 @@ _ZO_DATA_DIR="$work/previous-data" "$command" cd "$work/fixture" :: cd "$work/fi
     z - :: pwd >"$work/previous.out" 2>"$work/previous.err"
 printf '%s\n' "$work/fixture" | cmp - "$work/previous.out"
 printf 'status=0\nstatus=0\nstatus=0\n' | cmp - "$work/previous.err"
+
+# Ordinary native cd learns a successful visit, but never a failed destination.
+_ZO_DATA_DIR="$work/cd-data" "$command" cd "$work/fixture/space café 東京" :: \
+    zoxide query café >"$work/cd.out" 2>"$work/cd.err"
+cmp "$work/query.out" "$work/cd.out"
+printf 'status=0\n' | cmp - "$work/cd.err"
+_ZO_DATA_DIR="$work/cd-data" "$command" cd "$work/fixture/not-created" :: \
+    zoxide query --list >"$work/cd-failed.out" 2>"$work/cd-failed.err"
+cmp "$work/query.out" "$work/cd-failed.out"
+grep -Fx 'cd: could not change directory' "$work/cd-failed.err" >/dev/null
+mkdir -p "$work/cd-corrupt"
+printf 'broken database\n' >"$work/cd-corrupt/db.zo"
+cp "$work/cd-corrupt/db.zo" "$work/cd-corrupt.before"
+_ZO_DATA_DIR="$work/cd-corrupt" "$command" cd "$work/fixture" :: pwd \
+    >"$work/cd-corrupt.out" 2>"$work/cd-corrupt.err"
+printf '%s\n' "$work/fixture" | cmp - "$work/cd-corrupt.out"
+printf 'status=0\n' | cmp - "$work/cd-corrupt.err"
+cmp "$work/cd-corrupt.before" "$work/cd-corrupt/db.zo"
 
 # A 1,000-directory database uses upstream ordering, filtering and persistence.
 paths=("$work/fixture/space café 東京")

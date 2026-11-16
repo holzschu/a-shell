@@ -8,6 +8,7 @@
 
 int zoxide_ios_main(int, char **);
 int zoxide_z_main(int, char **);
+int zoxide_cd_main(int, char **);
 
 static FILE *input, *output, *errors;
 static char *logical_directory, *previous_directory;
@@ -87,7 +88,7 @@ int main(int argc, char **argv) {
         } else if (strcmp(argv[start], "rmdir") == 0 && end - start == 2) {
             status = rmdir(argv[start + 1]) != 0;
         } else if (strcmp(argv[start], "cd") == 0 && end - start == 2) {
-            status = cd_main(2, argv + start);
+            status = zoxide_cd_main(2, argv + start);
         } else if (strcmp(argv[start], "z") == 0) {
             status = zoxide_z_main(end - start, argv + start);
         } else {

@@ -2,8 +2,10 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "ios_system.h"
 
 extern int zoxide_embedded_run(int, const char *const *, int);
@@ -89,3 +91,36 @@ static int run(int argc, char **argv, int jump) {
 
 int zoxide_ios_main(int argc, char **argv) { return run(argc, argv, 0); }
 int zoxide_z_main(int argc, char **argv) { return run(argc, argv, 1); }
+
+static int change_directory(int argc, char **argv) {
+    int succeeded;
+    int status = stock_cd(argc, argv, &succeeded);
+    if (!succeeded) return status;
+
+    // A shell pwd hook is best effort. A database error must not fail cd or
+    // change its output, including when a picker has no command streams.
+    FILE *input = ios_stdin(), *output = ios_stdout(), *errors = ios_stderr();
+    FILE *sink = tmpfile();
+    if (!sink) return status;
+    const char *pwd = ios_getenv("PWD");
+    char *physical = NULL;
+    if (!pwd || pwd[0] != '/') pwd = physical = getcwd(NULL, 0);
+    if (pwd) {
+        char *arguments[] = {"zoxide", "add", (char *)pwd, NULL};
+        ios_setStreams(input ? input : sink, sink, sink);
+        run(3, arguments, 0);
+        ios_setStreams(input, output, errors);
+    }
+    free(physical);
+    fclose(sink);
+    return status;
+}
+
+int zoxide_cd_main(int argc, char **argv) {
+    // Keep owned temporary streams alive until their caller streams are restored.
+    int cancellation;
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cancellation);
+    int status = change_directory(argc, argv);
+    pthread_setcancelstate(cancellation, NULL);
+    return status;
+}

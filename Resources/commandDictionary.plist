@@ -123,15 +123,15 @@
 	</array>
 	<key>cd</key>
 	<array>
-		<string>SELF</string>
-		<string>cd_main</string>
+		<string>zoxide.framework/zoxide</string>
+		<string>zoxide_cd_main</string>
 		<string></string>
 		<string>directory</string>
 	</array>
 	<key>chdir</key>
 	<array>
-		<string>SELF</string>
-		<string>cd_main</string>
+		<string>zoxide.framework/zoxide</string>
+		<string>zoxide_cd_main</string>
 		<string></string>
 		<string>directory</string>
 	</array>

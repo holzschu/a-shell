@@ -1702,6 +1702,20 @@ public func deactivate(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
     return 0
 }
 
+// Use the same successful-visit hook as native cd when zoxide is bundled.
+private func changeDirectoryCommand(_ argc: Int32, _ argv: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32 {
+    guard let framework = Bundle.main.privateFrameworksURL?.appendingPathComponent("zoxide.framework/zoxide"),
+          let handle = dlopen(framework.path, RTLD_LAZY) else {
+        return cd_main(argc, argv)
+    }
+    defer { dlclose(handle) }
+    guard let symbol = dlsym(handle, "zoxide_cd_main") else {
+        return cd_main(argc, argv)
+    }
+    typealias Command = @convention(c) (Int32, UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32
+    return unsafeBitCast(symbol, to: Command.self)(argc, argv)
+}
+
 // tries to change the directory, returns false if path is a file:
 public func changeDirectory(path: String) -> Bool {
     NSLog("calling changeDirectory with \(path)")
@@ -1712,7 +1726,7 @@ public func changeDirectory(path: String) -> Bool {
     let old_thread_stderr = thread_stderr
     thread_stderr = fopen("/dev/null", "w")
     let p_argv: UnsafeMutablePointer = UnsafeMutablePointer(mutating: argv)
-    cd_main(2, p_argv);
+    changeDirectoryCommand(2, p_argv);
     if (originalFileURL.sameFileLocation(path: FileManager().currentDirectoryPath)) {
         fclose(thread_stderr)
         thread_stderr = old_thread_stderr
@@ -1807,7 +1821,7 @@ public func changeDirectory(path: String) -> Bool {
                     continue // maybe there is another bookmark that will work?
                     // return fileURL.isDirectory
                 }
-                cd_main(2, p_argv);
+                changeDirectoryCommand(2, p_argv);
                 fclose(thread_stderr)
                 thread_stderr = old_thread_stderr
                 if (originalFileURL.sameFileLocation(path: FileManager().currentDirectoryPath)) {

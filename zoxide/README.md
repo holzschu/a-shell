@@ -12,7 +12,7 @@ z notes
 pwd
 ```
 
-`z DIRECTORY` also visits an existing directory and records it. `z` without arguments uses `HOME`. Use the existing `cd -` command to return to the previous directory; native `z -` reports that instruction. Ordinary `cd` visits are not automatically recorded at the native prompt. In a persistent POSIX shell such as Dash, initialize upstream's prompt hook to record those visits:
+`z DIRECTORY` also visits an existing directory and records it. `z` without arguments uses `HOME`; `z -` uses the native shell's previous directory. Successful native `cd` and `chdir` visits, including directory picker and bookmark navigation, are recorded through upstream `add`. Failed changes are not recorded, and a database error leaves the original `cd` result and output intact. In a persistent POSIX shell such as Dash, upstream's prompt hook remains available:
 
 ```sh
 eval "$(zoxide init posix --hook prompt)"
@@ -20,7 +20,7 @@ eval "$(zoxide init posix --hook prompt)"
 
 The POSIX initializer omits `zi`. Interactive queries, database editing and imports return an explicit error; fzf integration is deferred. Other shell initializers retain their upstream templates and require their corresponding shell.
 
-Configuration is read through `ios_getenv` on every invocation. `_ZO_DATA_DIR` selects an absolute database directory. The default is `HOME/Library/Application Support/zoxide`, inside the app's writable home. `_ZO_EXCLUDE_DIRS`, `_ZO_MAXAGE`, `_ZO_RESOLVE_SYMLINKS` and `_ZO_ECHO` retain upstream semantics. Command output and handled errors use the invoking ios_system thread's borrowed streams. An unexpected Rust panic is caught, but the host's panic hook may also write to process stderr. The adapter neither replaces nor closes process descriptors or host streams and retains no invocation cache. ios_system owns the command's cwd; only `z` intentionally changes it. Relative native jumps and current-directory exclusion use the session's logical `PWD`, with upstream symlink resolution when requested.
+Configuration is read through `ios_getenv` on every invocation. `_ZO_DATA_DIR` selects an absolute database directory. The default is `HOME/Library/Application Support/zoxide`, inside the app's writable home. `_ZO_EXCLUDE_DIRS`, `_ZO_MAXAGE`, `_ZO_RESOLVE_SYMLINKS` and `_ZO_ECHO` retain upstream semantics. Command output and handled errors use the invoking ios_system thread's borrowed streams. An unexpected Rust panic is caught, but the host's panic hook may also write to process stderr. The adapter neither replaces nor closes process descriptors or host streams and retains no invocation cache. ios_system owns directory changes. Relative native jumps and current-directory exclusion use the session's logical `PWD`, with upstream symlink resolution when requested.
 
 Concurrent zoxide invocations in one app are rejected while another invocation runs, preventing overlapping database updates. Pthread cancellation is deferred until Rust returns and releases its database state and the command lock. This port does not provide general process isolation or interruptible database operations.
 
@@ -32,7 +32,7 @@ Install the rustup-managed Rust 1.96.1 toolchain. From the repository root, use 
 nice -n 15 bash ci/native-frameworks.sh zoxide
 ```
 
-It builds the pinned ios_system dependency, device arm64 and Simulator arm64/x86_64 frameworks, joins the Simulator architectures, and audits `./.build/dist/zoxide.xcframework.zip`. Both platforms target iOS 14. The producer checks both command exports, artifact platform/dependencies, stripped and gzip sizes, and the host command contract. It uses the existing Actions matrix and release manifest.
+It builds the pinned ios_system dependency, device arm64 and Simulator arm64/x86_64 frameworks, joins the Simulator architectures, and audits `./.build/dist/zoxide.xcframework.zip`. Both platforms target iOS 14. The producer checks command exports, artifact platform/dependencies, stripped and gzip sizes, and the host command contract. It uses the existing Actions matrix and release manifest.
 
 To build a single slice against a matching ios_system framework with headers:
 
