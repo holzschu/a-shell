@@ -74,14 +74,15 @@ int zoxide_host_flush(int errors) {
 }
 
 // cd_main reports failures on stderr but can still return zero.
+// ios_setStreams configures the session, not these borrowed command streams.
 static int stock_cd(int argc, char **argv, int *succeeded) {
-    FILE *input = ios_stdin(), *output = ios_stdout(), *errors = ios_stderr();
+    FILE *errors = thread_stderr;
     FILE *capture = tmpfile();
     *succeeded = 0;
     if (!capture) return cd_main(argc, argv);
-    ios_setStreams(input, output, capture);
+    thread_stderr = capture;
     int status = cd_main(argc, argv);
-    ios_setStreams(input, output, errors);
+    thread_stderr = errors;
     if (fflush(capture) == 0 && fseek(capture, 0, SEEK_END) == 0) {
         long length = ftell(capture);
         *succeeded = status == 0 && length == 0;
@@ -161,7 +162,7 @@ static int change_directory(int argc, char **argv) {
 
     // A shell pwd hook is best effort. A database error must not fail cd or
     // change its output, including when a picker has no command streams.
-    FILE *input = ios_stdin(), *output = ios_stdout(), *errors = ios_stderr();
+    FILE *input = thread_stdin, *output = thread_stdout, *errors = thread_stderr;
     FILE *sink = tmpfile();
     if (!sink) return status;
     const char *pwd = ios_getenv("PWD");
@@ -169,9 +170,12 @@ static int change_directory(int argc, char **argv) {
     if (!pwd || pwd[0] != '/') pwd = physical = getcwd(NULL, 0);
     if (pwd) {
         char *arguments[] = {"zoxide", "add", (char *)pwd, NULL};
-        ios_setStreams(input ? input : sink, sink, sink);
+        thread_stdin = input ? input : sink;
+        thread_stdout = thread_stderr = sink;
         run(3, arguments, 0);
-        ios_setStreams(input, output, errors);
+        thread_stdin = input;
+        thread_stdout = output;
+        thread_stderr = errors;
     }
     free(physical);
     fclose(sink);
