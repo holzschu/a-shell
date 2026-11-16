@@ -137,14 +137,14 @@
 	</array>
 	<key>cd</key>
 	<array>
-		<string>SELF</string>
+		<string>MAIN</string>
 		<string>zoxide_cd_command</string>
 		<string></string>
 		<string>directory</string>
 	</array>
 	<key>chdir</key>
 	<array>
-		<string>SELF</string>
+		<string>MAIN</string>
 		<string>zoxide_cd_command</string>
 		<string></string>
 		<string>directory</string>

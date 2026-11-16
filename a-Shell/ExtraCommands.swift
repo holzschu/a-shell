@@ -1706,6 +1706,7 @@ public func deactivate(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
 }
 
 // Use the same successful-visit hook as native cd when zoxide is bundled.
+// The dictionary uses MAIN: ios_system's SELF handle cannot see this app symbol.
 @_cdecl("zoxide_cd_command")
 public func zoxide_cd_command(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32 {
     guard let framework = Bundle.main.privateFrameworksURL?.appendingPathComponent("zoxide.framework/zoxide"),
