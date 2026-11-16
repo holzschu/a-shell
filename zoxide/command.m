@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include "ios_system.h"
 
@@ -16,7 +17,38 @@ int zoxide_host_flush(int errors) {
     return fflush(errors ? ios_stderr() : ios_stdout());
 }
 
+// cd_main reports failures on stderr but can still return zero.
+static int stock_cd(int argc, char **argv, int *succeeded) {
+    FILE *input = ios_stdin(), *output = ios_stdout(), *errors = ios_stderr();
+    FILE *capture = tmpfile();
+    *succeeded = 0;
+    if (!capture) return cd_main(argc, argv);
+    ios_setStreams(input, output, capture);
+    int status = cd_main(argc, argv);
+    ios_setStreams(input, output, errors);
+    if (fflush(capture) == 0 && fseek(capture, 0, SEEK_END) == 0) {
+        long length = ftell(capture);
+        *succeeded = status == 0 && length == 0;
+        rewind(capture);
+        char buffer[1024];
+        size_t count;
+        while ((count = fread(buffer, 1, sizeof(buffer), capture)) > 0) {
+            if (errors) fwrite(buffer, 1, count, errors);
+        }
+    }
+    fclose(capture);
+    return status;
+}
+
 int zoxide_host_cd(const char *path) {
+    if (strcmp(path, "-") == 0) {
+        char *arguments[] = {"cd", "-", NULL};
+        int succeeded;
+        int status = stock_cd(2, arguments, &succeeded);
+        if (status == 0 && succeeded) return 0;
+        errno = EIO;
+        return -1;
+    }
     struct stat target, current;
     if (stat(path, &target) < 0) return -1;
     if (!S_ISDIR(target.st_mode)) {

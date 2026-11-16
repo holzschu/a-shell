@@ -25,6 +25,12 @@ printf '%s\n' "$work/fixture" | cmp - "$work/root-missing.out"
 grep -Fx 'zoxide: no match found' "$work/root-missing.err" >/dev/null
 grep -Fx 'status=1' "$work/root-missing.err" >/dev/null
 
+# z - uses the same previous-directory state as the native cd command.
+"$command" cd "$work/fixture" :: cd "$work/fixture/space café 東京" :: \
+    z - :: pwd >"$work/previous.out" 2>"$work/previous.err"
+printf '%s\n' "$work/fixture" | cmp - "$work/previous.out"
+printf 'status=0\nstatus=0\nstatus=0\n' | cmp - "$work/previous.err"
+
 # A 1,000-directory database uses upstream ordering, filtering and persistence.
 paths=("$work/fixture/space café 東京")
 for ((i = 1; i < 1000; i++)); do
@@ -132,9 +138,9 @@ status=0
 HOST_ERRORS_ERROR=EIO "$command" zoxide --invalid-option >"$work/flush.out" 2>"$work/flush.err" || status=$?
 [[ $status == 2 ]]
 status=0
-"$command" z - >"$work/previous.out" 2>"$work/previous.err" || status=$?
-[[ $status == 1 && ! -s $work/previous.out ]]
-grep -F 'use cd -' "$work/previous.err" >/dev/null
+"$command" z - >"$work/previous-unset.out" 2>"$work/previous-unset.err" || status=$?
+[[ $status == 1 && ! -s $work/previous-unset.out ]]
+grep -F 'could not change directory' "$work/previous-unset.err" >/dev/null
 status=0
 RUST_BACKTRACE=1 RUST_LIB_BACKTRACE=1 "$command" zoxide query unfindable-backtrace >"$work/backtrace.out" 2>"$work/backtrace.err" || status=$?
 [[ $status == 1 && ! -s $work/backtrace.out ]]

@@ -108,7 +108,7 @@ fn jump(words: Vec<OsString>) -> Result<()> {
     let args = &words[1..];
     let directory = match args {
         [] => Some(home_dir().context("HOME is not set")?),
-        [arg] if arg == "-" => bail!("use cd - to return to the previous directory"),
+        [arg] if arg == "-" => Some(PathBuf::from("-")),
         [arg] => {
             let path = PathBuf::from(arg);
             let path = if path.is_absolute() {
@@ -160,6 +160,11 @@ fn jump(words: Vec<OsString>) -> Result<()> {
     if unsafe { zoxide_host_cd(target.as_ptr()) } != 0 {
         return Err(io::Error::last_os_error()).context("could not change directory");
     }
+    let path = if path == std::path::Path::new("-") {
+        crate::util::current_dir()?
+    } else {
+        path
+    };
     if crate::config::echo() {
         let shown = if crate::config::resolve_symlinks() {
             crate::util::canonicalize(&path)?
