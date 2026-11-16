@@ -797,8 +797,9 @@ extension SceneDelegate {
             // Submit through Return so fzf owns the normal foreground tty.
             if !autocompleteRunning && currentCommand.isEmpty && commandAfterCursor.isEmpty &&
                 commandBeforeCursor.hasPrefix("z ") && commandBeforeCursor.hasSuffix(" ") &&
+                !commandBeforeCursor.dropFirst(2).trimmingCharacters(in: .whitespaces).isEmpty &&
                 (commandsAsArray() as? [String] ?? []).contains("zi") {
-                commandBeforeCursor.insert("i", at: commandBeforeCursor.index(after: commandBeforeCursor.startIndex))
+                commandBeforeCursor = "zi --exclude-current " + commandBeforeCursor.dropFirst(2)
                 terminalView?.moveToBeginningOfLine()
                 terminalView?.clearToEndOfLine()
                 terminalView?.feed(text: commandBeforeCursor)

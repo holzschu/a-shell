@@ -1706,7 +1706,8 @@ public func deactivate(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
 }
 
 // Use the same successful-visit hook as native cd when zoxide is bundled.
-private func changeDirectoryCommand(_ argc: Int32, _ argv: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32 {
+@_cdecl("zoxide_cd_command")
+public func zoxide_cd_command(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32 {
     guard let framework = Bundle.main.privateFrameworksURL?.appendingPathComponent("zoxide.framework/zoxide"),
           let handle = dlopen(framework.path, RTLD_LAZY) else {
         return cd_main(argc, argv)
@@ -1729,7 +1730,7 @@ public func changeDirectory(path: String) -> Bool {
     let old_thread_stderr = thread_stderr
     thread_stderr = fopen("/dev/null", "w")
     let p_argv: UnsafeMutablePointer = UnsafeMutablePointer(mutating: argv)
-    changeDirectoryCommand(2, p_argv);
+    zoxide_cd_command(argc: 2, argv: p_argv);
     if (originalFileURL.sameFileLocation(path: FileManager().currentDirectoryPath)) {
         fclose(thread_stderr)
         thread_stderr = old_thread_stderr
@@ -1824,7 +1825,7 @@ public func changeDirectory(path: String) -> Bool {
                     continue // maybe there is another bookmark that will work?
                     // return fileURL.isDirectory
                 }
-                changeDirectoryCommand(2, p_argv);
+                zoxide_cd_command(argc: 2, argv: p_argv);
                 fclose(thread_stderr)
                 thread_stderr = old_thread_stderr
                 if (originalFileURL.sameFileLocation(path: FileManager().currentDirectoryPath)) {

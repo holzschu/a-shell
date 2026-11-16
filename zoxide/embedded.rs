@@ -161,7 +161,9 @@ fn logical_cwd() -> Result<PathBuf> {
 }
 
 fn jump(words: Vec<OsString>, interactive: bool) -> Result<()> {
-    let args = &words[1..];
+    let exclude_current =
+        !interactive || words.get(1).is_some_and(|word| word == "--exclude-current");
+    let args = &words[if interactive && exclude_current { 2 } else { 1 }..];
     let directory = if interactive {
         None
     } else {
@@ -194,7 +196,7 @@ fn jump(words: Vec<OsString>, interactive: bool) -> Result<()> {
                 })
                 .collect::<Result<Vec<_>>>()?;
             // Upstream's shell hook tolerates a failing pwd when excluding cwd.
-            let exclude = if interactive {
+            let exclude = if !exclude_current {
                 None
             } else {
                 logical_cwd()
@@ -225,7 +227,7 @@ fn jump(words: Vec<OsString>, interactive: bool) -> Result<()> {
         return Err(io::Error::last_os_error()).context("could not change directory");
     }
     let path = if path == std::path::Path::new("-") {
-        crate::util::current_dir()?
+        logical_cwd()?
     } else {
         path
     };

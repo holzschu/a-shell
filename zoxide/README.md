@@ -20,7 +20,7 @@ eval "$(zoxide init posix --hook prompt)"
 
 Set `_ZO_CD=1` to let native `cd KEYWORDS` query zoxide when its first argument is a missing relative path. Existing directories, files and symlinks retain stock `cd` behavior. Absolute paths, `cd -` and home expansion also keep their original meaning. The default leaves keyword fallback disabled.
 
-Use `zi KEYWORDS` for interactive selection with the bundled fzf, or type `z KEYWORDS` followed by Space and Tab at the native prompt. `zoxide query --interactive` prints a selection without changing directory. `_ZO_FZF_OPTS` supplies fzf options in the nested command's environment. The bundled fzf does not support subprocess previews or execute bindings, so the default selector omits upstream's directory preview. Database editing and imports return an explicit error. Shell initializers retain their upstream templates and require their corresponding shell.
+Use `zi KEYWORDS` for interactive selection with the bundled fzf, or type `z KEYWORDS` followed by Space and Tab at the native prompt. Space-Tab excludes the current directory, while ordinary `zi` includes it. Tab after bare `z ` keeps directory completion. `zoxide query --interactive` prints a selection without changing directory. `_ZO_FZF_OPTS` supplies fzf options in the nested command's environment. The bundled fzf does not support subprocess previews or execute bindings, so the default selector omits upstream's directory preview. Database editing and imports return an explicit error. Shell initializers retain their upstream templates and require their corresponding shell.
 
 Configuration is read through `ios_getenv` on every invocation. `_ZO_DATA_DIR` selects an absolute database directory. The default is `HOME/Library/Application Support/zoxide`, inside the app's writable home. `_ZO_EXCLUDE_DIRS`, `_ZO_MAXAGE`, `_ZO_RESOLVE_SYMLINKS` and `_ZO_ECHO` retain upstream semantics. Command output and handled errors use the invoking ios_system thread's borrowed streams. An unexpected Rust panic is caught, but the host's panic hook may also write to process stderr. The adapter neither replaces nor closes process descriptors or host streams and retains no invocation cache. ios_system owns directory changes. Relative native jumps and current-directory exclusion use the session's logical `PWD`, with upstream symlink resolution when requested.
 
@@ -56,6 +56,8 @@ bash zoxide/tests/host.sh /absolute/owned/cache/host-command /absolute/empty/res
 ```
 
 The host checks cover a 1,000-directory fixture with spaces and Unicode, ranking, add/query/remove, missing/corrupt databases, no match, invalid options, unsupported operations, POSIX initialization, same-process environment changes and recovery, scoped output, failed directory changes, and descriptor stability over 20 calls.
+
+Host selection checks run the fzf CLI in filter mode through the external command boundary. CI pins the CLI to fzf 0.74.5, the version used by the bundled port. These checks do not qualify the bundled iOS selector's terminal interaction or restrictions; those require the app probes.
 
 For Simulator and phone acceptance, copy `tests/acceptance.sh` into the app's Documents directory and run it through Dash with a new absolute result directory and nonce. Capture the same script on a baseline without this port first: its version gate must fail before creating the database fixture. On the candidate:
 

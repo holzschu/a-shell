@@ -30,8 +30,18 @@ jobs:
       - name: fzf for zoxide host command checks
         if: matrix.product == 'zoxide'
         run: |
-          brew install fzf
-          fzf --version
+          set -euo pipefail
+          case $(uname -m) in
+            arm64) arch=arm64; sha=ada808c7401b9949ce8842274ac16a6b6193fd32dcada396884a6a9a89e5985a ;;
+            x86_64) arch=amd64; sha=aca6cab692e6c069e724a43070a448e18586c7c0fdd1139f6d487ec1680599ed ;;
+            *) echo 'Unsupported host architecture' >&2; exit 1 ;;
+          esac
+          mkdir -p "$RUNNER_TEMP/fzf-host"
+          curl -fLsS --connect-timeout 15 --max-time 120 "https://github.com/junegunn/fzf/releases/download/v0.74.5/fzf-0.74.5-darwin_$arch.tar.gz" -o "$RUNNER_TEMP/fzf-host.tar.gz"
+          echo "$sha  $RUNNER_TEMP/fzf-host.tar.gz" | shasum -a 256 -c -
+          tar -xzf "$RUNNER_TEMP/fzf-host.tar.gz" -C "$RUNNER_TEMP/fzf-host" fzf
+          "$RUNNER_TEMP/fzf-host/fzf" --version | grep '^0.74.5 '
+          echo "$RUNNER_TEMP/fzf-host" >> "$GITHUB_PATH"
       - uses: actions/setup-go@v6
         if: matrix.product == 'fzf'
         with:

@@ -130,15 +130,15 @@
 	</array>
 	<key>cd</key>
 	<array>
-		<string>zoxide.framework/zoxide</string>
-		<string>zoxide_cd_main</string>
+		<string>SELF</string>
+		<string>zoxide_cd_command</string>
 		<string></string>
 		<string>directory</string>
 	</array>
 	<key>chdir</key>
 	<array>
-		<string>zoxide.framework/zoxide</string>
-		<string>zoxide_cd_main</string>
+		<string>SELF</string>
+		<string>zoxide_cd_command</string>
 		<string></string>
 		<string>directory</string>
 	</array>

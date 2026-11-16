@@ -74,6 +74,18 @@ _ZO_FZF_OPTS='--filter=café' "$command" zi café :: pwd \
     >"$work/zi.out" 2>"$work/zi.err"
 cmp "$work/query.out" "$work/zi.out"
 printf 'status=0\n' | cmp - "$work/zi.err"
+# Ordinary zi includes cwd; Space-Tab's command excludes it before selection.
+mkdir -p "$work/completion-current" "$work/completion-alternate"
+_ZO_DATA_DIR="$work/completion-data" _ZO_FZF_OPTS='--filter=completion' \
+    "$command" cd "$work/completion-current" :: zi completion :: pwd \
+    >"$work/zi-current.out" 2>"$work/zi-current.err"
+printf '%s\n' "$work/completion-current" | cmp - "$work/zi-current.out"
+printf 'status=0\nstatus=0\n' | cmp - "$work/zi-current.err"
+_ZO_DATA_DIR="$work/completion-data" _ZO_FZF_OPTS='--filter=completion' \
+    "$command" zoxide add "$work/completion-alternate" :: cd "$work/completion-current" :: \
+    zi --exclude-current completion :: pwd >"$work/zi-exclude.out" 2>"$work/zi-exclude.err"
+printf '%s\n' "$work/completion-alternate" | cmp - "$work/zi-exclude.out"
+printf 'status=0\nstatus=0\nstatus=0\n' | cmp - "$work/zi-exclude.err"
 FZF_DEFAULT_OPTS='--filter=parent-only' _ZO_FZF_OPTS='--filter=café' \
     "$command" zoxide query --interactive :: printenv FZF_DEFAULT_OPTS \
     >"$work/fzf-env.out" 2>"$work/fzf-env.err"
@@ -167,6 +179,14 @@ calls+=(fds)
 [[ $(head -1 "$work/lifetime.out") == "$(tail -1 "$work/lifetime.out")" ]]
 
 ln -s "$work/fixture/space café 東京" "$work/logical-link"
+# Previous-directory navigation retains the logical link in its database visit.
+status=0
+_ZO_DATA_DIR="$work/previous-link-data" "$command" cd "$work/logical-link" :: \
+    cd "$work/fixture" :: z - :: zoxide query logical-link :: zoxide query café \
+    >"$work/previous-link.out" 2>"$work/previous-link.err" || status=$?
+[[ $status == 1 ]]
+printf '%s\n' "$work/logical-link" | cmp - "$work/previous-link.out"
+grep -Fx 'zoxide: no match found' "$work/previous-link.err" >/dev/null
 "$command" z "$work/logical-link" :: zoxide query logical-link >"$work/symlink.out" 2>"$work/symlink.err"
 printf '%s\n' "$work/logical-link" | cmp - "$work/symlink.out"
 status=0
