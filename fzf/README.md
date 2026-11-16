@@ -10,6 +10,8 @@ The recipe targets iOS 14.0. Only arm64 device and arm64 Simulator slices are cu
 
 ## Build
 
+Install Go 1.27.2 on `PATH` or in `~/sdk/go1.27.2`. The recipe uses that SDK when the Go version on `PATH` differs. It disables automatic toolchain downloads with `GOTOOLCHAIN=local`: the required runtime source overlay cannot replace files under the module cache.
+
 Provide matching device and Simulator ios_system frameworks with the required terminal API. Run from the repository root:
 
 ```sh
