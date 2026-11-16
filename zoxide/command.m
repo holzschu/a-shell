@@ -14,10 +14,13 @@ static pthread_mutex_t command_lock = PTHREAD_MUTEX_INITIALIZER;
 
 // a-Shell decomposes native input (#995); upstream query matching is literal.
 // Keep engine text in NFC, including paths learned from Darwin's NFD cwd.
-const char *zoxide_host_canonical(const char *bytes) {
-    NSString *text = [NSString stringWithUTF8String:bytes];
-    const char *composed = text.precomposedStringWithCanonicalMapping.UTF8String;
-    return composed ? composed : bytes;
+char *zoxide_host_canonical(const char *bytes) {
+    @autoreleasepool {
+        NSString *text = [NSString stringWithUTF8String:bytes];
+        const char *composed = text.precomposedStringWithCanonicalMapping.UTF8String;
+        // UTF8String can borrow storage released on return under ARC.
+        return strdup(composed ? composed : bytes);
+    }
 }
 
 int zoxide_host_fzf(const unsigned char *bytes, size_t length, const char *options, char **selection) {
@@ -146,10 +149,7 @@ static int run(int argc, char **argv, int jump) {
         pthread_setcancelstate(cancellation, NULL);
         return 1;
     }
-    int status;
-    @autoreleasepool {
-        status = zoxide_embedded_run(argc, (const char *const *)argv, jump);
-    }
+    int status = zoxide_embedded_run(argc, (const char *const *)argv, jump);
     pthread_mutex_unlock(&command_lock);
     pthread_setcancelstate(cancellation, NULL);
     return status;

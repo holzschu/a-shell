@@ -12,7 +12,7 @@ use crate::error::SilentExit;
 
 unsafe extern "C" {
     fn ios_getenv(name: *const c_char) -> *const c_char;
-    fn zoxide_host_canonical(bytes: *const c_char) -> *const c_char;
+    fn zoxide_host_canonical(bytes: *const c_char) -> *mut c_char;
     fn zoxide_host_write(errors: i32, bytes: *const u8, length: usize) -> usize;
     fn zoxide_host_flush(errors: i32) -> i32;
     fn zoxide_host_cd(path: *const c_char) -> i32;
@@ -81,9 +81,14 @@ pub fn canonical(value: OsString) -> OsString {
     let Ok(bytes) = CString::new(value.as_bytes()) else {
         return value;
     };
-    // The host's invocation pool owns the normalized string until we copy it.
-    let text = unsafe { CStr::from_ptr(zoxide_host_canonical(bytes.as_ptr())) };
-    OsString::from_vec(text.to_bytes().to_vec())
+    // The host transfers a copy; Foundation's temporary storage may expire on return.
+    let text = unsafe { zoxide_host_canonical(bytes.as_ptr()) };
+    if text.is_null() {
+        return value;
+    }
+    let composed = unsafe { CStr::from_ptr(text) }.to_bytes().to_vec();
+    unsafe { zoxide_host_free(text) };
+    OsString::from_vec(composed)
 }
 
 pub fn var_os(name: impl AsRef<OsStr>) -> Option<OsString> {

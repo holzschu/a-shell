@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Exercise the exported command entry, not a replacement zoxide executable.
+# Darwin/APFS only; the absolute result path must have no symlinked components.
 set -euo pipefail
 command=${1:?Host command fixture required}
 work=${2:?Empty absolute result directory required}
