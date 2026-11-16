@@ -21,20 +21,69 @@ cmp "$work/query.out" "$work/nfd-query.out"
 "$command" z "$nfd_keyword" :: pwd >"$work/nfd-jump.out" 2>"$work/nfd-jump.err"
 cmp "$work/query.out" "$work/nfd-jump.out"
 printf 'status=0\n' | cmp - "$work/nfd-jump.err"
-"$command" cd "$nfd_path" :: zoxide query café >"$work/nfd-learn.out" 2>"$work/nfd-learn.err"
+"$command" cd "$nfd_path" :: zoxide query --list >"$work/nfd-learn.out" 2>"$work/nfd-learn.err"
 cmp "$work/query.out" "$work/nfd-learn.out"
 printf 'status=0\n' | cmp - "$work/nfd-learn.err"
 status=0
 "$command" cd "$nfd_path" :: z café >"$work/nfd-current.out" 2>"$work/nfd-current.err" || status=$?
 [[ $status == 1 && ! -s $work/nfd-current.out ]]
 grep -F 'you are already in the only match' "$work/nfd-current.err" >/dev/null
-status=0
-_ZO_EXCLUDE_DIRS="$nfd_path" "$command" zoxide query café >"$work/nfd-exclude.out" 2>"$work/nfd-exclude.err" || status=$?
-[[ $status == 1 && ! -s $work/nfd-exclude.out ]]
-grep -F 'no match found' "$work/nfd-exclude.err" >/dev/null
-_ZO_RESOLVE_SYMLINKS=1 "$command" zoxide add "$nfd_path" :: zoxide query café >"$work/nfd-resolved.out" 2>"$work/nfd-resolved.err"
-cmp "$work/query.out" "$work/nfd-resolved.out"
+mkdir -p "$work/nfd-exclude-data"
+cp "$work/data/db.zo" "$work/nfd-exclude-data/db.zo"
+_ZO_DATA_DIR="$work/nfd-exclude-data" _ZO_EXCLUDE_DIRS="$nfd_path" "$command" zoxide query café :: \
+    printenv _ZO_EXCLUDE_DIRS >"$work/nfd-exclude.out" 2>"$work/nfd-exclude.err"
+printf '%s\n' "$nfd_path" | cmp - "$work/nfd-exclude.out"
+printf 'zoxide: no match found\nstatus=1\n' | cmp - "$work/nfd-exclude.err"
+nfd_resolved="$work/fixture/"$'resolved-cafe\314\201'
+mkdir -p "$nfd_resolved"
+ln -s "$nfd_resolved" "$work/resolved-link"
+_ZO_DATA_DIR="$work/nfd-resolved-data" _ZO_RESOLVE_SYMLINKS=1 "$command" zoxide add "$work/resolved-link" :: \
+    zoxide query --list >"$work/nfd-resolved.out" 2>"$work/nfd-resolved.err"
+printf '%s\n' "$work/fixture/resolved-café" | cmp - "$work/nfd-resolved.out"
 printf 'status=0\n' | cmp - "$work/nfd-resolved.err"
+status=0
+HOST_NO_PWD=1 _ZO_DATA_DIR="$work/nfd-resolved-data" "$command" cd "$nfd_resolved" :: \
+    z resolved-café >"$work/nfd-no-pwd.out" 2>"$work/nfd-no-pwd.err" || status=$?
+[[ $status == 1 && ! -s $work/nfd-no-pwd.out ]]
+grep -F 'you are already in the only match' "$work/nfd-no-pwd.err" >/dev/null
+status=0
+"$command" zoxide query $'\377' >"$work/invalid-utf8.out" 2>"$work/invalid-utf8.err" || status=$?
+[[ $status == 2 && ! -s $work/invalid-utf8.out ]]
+grep -F 'UTF-8' "$work/invalid-utf8.err" >/dev/null
+
+# Load an existing v3 database with both spellings; preserve their combined rank.
+write_u64() {
+    local value=$1 octal byte
+    for ((byte = 0; byte < 8; byte++)); do
+        printf -v octal '%03o' "$((value & 255))"
+        printf '%b' "\\$octal"
+        value=$((value >> 8))
+    done
+}
+mkdir -p "$work/nfd-legacy-data"
+legacy_now=$(date +%s)
+canonical_path="$work/fixture/space café 東京"
+{
+    # bincode v3: u32 version, u64 count, then (UTF-8 string, f64 rank, u64 epoch).
+    printf '\003\000\000\000'
+    write_u64 2
+    write_u64 "$(LC_ALL=C printf '%s' "$nfd_path" | wc -c)"
+    printf '%s' "$nfd_path"
+    printf '\000\000\000\000\000\000\360\077' # rank 1.0
+    write_u64 "$((legacy_now - 7200))"
+    write_u64 "$(LC_ALL=C printf '%s' "$canonical_path" | wc -c)"
+    printf '%s' "$canonical_path"
+    printf '\000\000\000\000\000\000\000\100' # rank 2.0
+    write_u64 "$legacy_now"
+} >"$work/nfd-legacy-data/db.zo"
+_ZO_DATA_DIR="$work/nfd-legacy-data" "$command" zoxide query --list --score "$nfd_keyword" \
+    >"$work/nfd-legacy.out" 2>"$work/nfd-legacy.err"
+printf '%6.1f %s\n' 12 "$canonical_path" | cmp - "$work/nfd-legacy.out"
+[[ ! -s $work/nfd-legacy.err ]]
+_ZO_DATA_DIR="$work/nfd-legacy-data" "$command" cd "$nfd_path" :: zoxide query --list --score \
+    >"$work/nfd-legacy-learn.out" 2>"$work/nfd-legacy-learn.err"
+printf '%6.1f %s\n' 16 "$canonical_path" | cmp - "$work/nfd-legacy-learn.out"
+printf 'status=0\n' | cmp - "$work/nfd-legacy-learn.err"
 
 # Native z must change the caller's cwd, including the very next ordinary command.
 "$command" z café :: pwd >"$work/jump.out" 2>"$work/jump.err"

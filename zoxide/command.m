@@ -16,7 +16,8 @@ static pthread_mutex_t command_lock = PTHREAD_MUTEX_INITIALIZER;
 // Keep engine text in NFC, including paths learned from Darwin's NFD cwd.
 const char *zoxide_host_canonical(const char *bytes) {
     NSString *text = [NSString stringWithUTF8String:bytes];
-    return text ? text.precomposedStringWithCanonicalMapping.UTF8String : bytes;
+    const char *composed = text.precomposedStringWithCanonicalMapping.UTF8String;
+    return composed ? composed : bytes;
 }
 
 int zoxide_host_fzf(const unsigned char *bytes, size_t length, const char *options, char **selection) {

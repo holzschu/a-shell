@@ -78,7 +78,7 @@ void ios_setStreams(FILE *in, FILE *out, FILE *err) { session_input = in; sessio
 char *ios_getenv(const char *name) {
     // A session variable deliberately differs from the process environment.
     if (strcmp(name, "_ZO_DATA_DIR") == 0 && getenv("HOST_DATA_DIR")) return getenv("HOST_DATA_DIR");
-    if (strcmp(name, "PWD") == 0) return logical_directory;
+    if (strcmp(name, "PWD") == 0) return getenv("HOST_NO_PWD") ? NULL : logical_directory;
     return getenv(name);
 }
 int cd_main(int argc, char **argv) {

@@ -340,3 +340,31 @@
  }
 
  pub fn current_time() -> Result<Epoch> {
+--- a/src/db/mod.rs
++++ b/src/db/mod.rs
+@@ -27,7 +27,24 @@
+
+     pub fn open() -> Result<Self> {
+         let data_dir = config::data_dir()?;
+-        Self::open_dir(data_dir)
++        let mut db = Self::open_dir(data_dir)?;
++        let mut changed = false;
++        db.with_dirs_mut(|dirs| {
++            for dir in dirs {
++                let path = crate::embedded::canonical(std::ffi::OsString::from(dir.path.as_ref()))
++                    .into_string()
++                    .expect("NFC preserves UTF-8");
++                if path != dir.path.as_ref() {
++                    dir.path = path.into();
++                    changed = true;
++                }
++            }
++        });
++        // Preserve old NFD entries and merge their scores with existing NFC aliases.
++        if changed {
++            db.dedup();
++        }
++        Ok(db)
+     }
+
+     pub fn open_dir(data_dir: impl AsRef<Path>) -> Result<Self> {
