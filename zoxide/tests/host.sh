@@ -26,7 +26,7 @@ grep -Fx 'zoxide: no match found' "$work/root-missing.err" >/dev/null
 grep -Fx 'status=1' "$work/root-missing.err" >/dev/null
 
 # z - uses the same previous-directory state as the native cd command.
-"$command" cd "$work/fixture" :: cd "$work/fixture/space café 東京" :: \
+_ZO_DATA_DIR="$work/previous-data" "$command" cd "$work/fixture" :: cd "$work/fixture/space café 東京" :: \
     z - :: pwd >"$work/previous.out" 2>"$work/previous.err"
 printf '%s\n' "$work/fixture" | cmp - "$work/previous.out"
 printf 'status=0\nstatus=0\nstatus=0\n' | cmp - "$work/previous.err"
