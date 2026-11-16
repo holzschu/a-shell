@@ -14,7 +14,8 @@ int zoxide_z_main(int, char **);
 int zoxide_cd_main(int, char **);
 int zoxide_zi_main(int, char **);
 
-static FILE *input, *output, *errors;
+__thread FILE *thread_stdin, *thread_stdout, *thread_stderr;
+static FILE *session_input, *session_output, *session_errors;
 static char *logical_directory, *previous_directory;
 static int output_error, errors_error;
 static char *child_options;
@@ -69,10 +70,10 @@ static int failed_write(void *cookie, const char *bytes, int length) {
     errno = *(int *)cookie;
     return -1;
 }
-FILE *ios_stdin(void) { return input ? input : stdin; }
-FILE *ios_stdout(void) { return output ? output : stdout; }
-FILE *ios_stderr(void) { return errors ? errors : stderr; }
-void ios_setStreams(FILE *in, FILE *out, FILE *err) { input = in; output = out; errors = err; }
+FILE *ios_stdin(void) { return thread_stdin; }
+FILE *ios_stdout(void) { return thread_stdout; }
+FILE *ios_stderr(void) { return thread_stderr; }
+void ios_setStreams(FILE *in, FILE *out, FILE *err) { session_input = in; session_output = out; session_errors = err; }
 char *ios_getenv(const char *name) {
     // A session variable deliberately differs from the process environment.
     if (strcmp(name, "_ZO_DATA_DIR") == 0 && getenv("HOST_DATA_DIR")) return getenv("HOST_DATA_DIR");
@@ -96,6 +97,10 @@ int cd_main(int argc, char **argv) {
 
 int main(int argc, char **argv) {
     int status = 0;
+    FILE *output = NULL, *errors = NULL;
+    thread_stdin = stdin;
+    thread_stdout = stdout;
+    thread_stderr = stderr;
     logical_directory = getcwd(NULL, 0);
     if (!logical_directory) return 2;
     if (getenv("HOST_OUTPUT") && !(output = fopen(getenv("HOST_OUTPUT"), "w"))) return 2;
@@ -110,6 +115,9 @@ int main(int argc, char **argv) {
         errors = funopen(&errors_error, NULL, failed_write, NULL, NULL);
         if (!errors) return 2;
     }
+    if (output) thread_stdout = output;
+    if (errors) thread_stderr = errors;
+    ios_setStreams(stdin, stdout, stderr);
     // :: separates successive commands in the same process.
     for (int start = 1; start < argc;) {
         int end = start + 1;
@@ -158,5 +166,7 @@ int main(int argc, char **argv) {
     if (errors) fclose(errors);
     free(logical_directory);
     free(previous_directory);
+    // Command redirection must never become session configuration.
+    if (session_input != stdin || session_output != stdout || session_errors != stderr) return 3;
     return status;
 }

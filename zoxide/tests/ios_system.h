@@ -1,6 +1,7 @@
 // The host fixture substitutes only the external ios_system ABI.
 #include <stdio.h>
 #include <sys/types.h>
+extern __thread FILE *thread_stdin, *thread_stdout, *thread_stderr;
 FILE *ios_stdin(void);
 FILE *ios_stdout(void);
 FILE *ios_stderr(void);
