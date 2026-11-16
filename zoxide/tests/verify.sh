@@ -27,6 +27,10 @@ cmp "$work/corrupt.expected" "$work/corrupt/db.zo"
 cmp "$work/unicode.expected" "$work/posix-cwd.out"
 printf 'ZOXIDE_STREAMS_OK\n' | cmp - "$work/ordinary.out"
 cmp "$work/unicode.expected" "$work/root-cwd.out"
+[[ ! -s $work/root-missing.out ]]
+grep -Fx 'zoxide: no match found' "$work/root-missing.err" >/dev/null
+destination=$(cat "$work/unicode.expected")
+printf '%s\n' "${destination%/*}" | cmp - "$work/root-missing-cwd.out"
 printf 'ZOXIDE_ROOT_STREAMS_OK\n' | cmp - "$work/root-next.out"
 [[ ! -s $work/root-z.out && ! -s $work/root-z.err ]]
 echo 'zoxide app readback: PASS'

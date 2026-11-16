@@ -18,6 +18,13 @@ printf '%s\n' "$work/fixture/space café 東京" | cmp - "$work/query.out"
 cmp "$work/query.out" "$work/jump.out"
 printf 'status=0\n' | cmp - "$work/jump.err"
 
+# The native root jump must use the selected database, even beside a matching directory.
+"$command" cd "$work/fixture" :: setenv _ZO_DATA_DIR "$work/native-missing" :: \
+    z café :: pwd >"$work/root-missing.out" 2>"$work/root-missing.err"
+printf '%s\n' "$work/fixture" | cmp - "$work/root-missing.out"
+grep -Fx 'zoxide: no match found' "$work/root-missing.err" >/dev/null
+grep -Fx 'status=1' "$work/root-missing.err" >/dev/null
+
 # A 1,000-directory database uses upstream ordering, filtering and persistence.
 paths=("$work/fixture/space café 東京")
 for ((i = 1; i < 1000; i++)); do

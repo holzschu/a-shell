@@ -68,6 +68,11 @@ setenv _ZO_DATA_DIR "RESULTS/data"
 setenv _ZO_ECHO 0
 z café >"RESULTS/root-z.out" 2>"RESULTS/root-z.err"
 pwd -P >"RESULTS/root-cwd.out"
+cd "RESULTS/fixture"
+setenv _ZO_DATA_DIR "RESULTS/native-missing"
+z caf >"RESULTS/root-missing.out" 2>"RESULTS/root-missing.err"
+pwd -P >"RESULTS/root-missing-cwd.out"
+setenv _ZO_DATA_DIR "RESULTS/data"
 echo ZOXIDE_ROOT_STREAMS_OK >"RESULTS/root-next.out"
 ```
 
