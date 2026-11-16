@@ -24,6 +24,8 @@ Use `zi KEYWORDS` for interactive selection with the bundled fzf, or type `z KEY
 
 Configuration is read through `ios_getenv` on every invocation. `_ZO_DATA_DIR` selects an absolute database directory. The default is `HOME/Library/Application Support/zoxide`, inside the app's writable home. `_ZO_EXCLUDE_DIRS`, `_ZO_MAXAGE`, `_ZO_RESOLVE_SYMLINKS` and `_ZO_ECHO` retain upstream semantics. Command output and handled errors use the invoking ios_system thread's borrowed streams. An unexpected Rust panic is caught, but the host's panic hook may also write to process stderr. The adapter neither replaces nor closes process descriptors or host streams and retains no invocation cache. ios_system owns directory changes. Relative native jumps and current-directory exclusion use the session's logical `PWD`, with upstream symlink resolution when requested.
 
+a-Shell decomposes native command input into NFD. The Foundation bridge composes UTF-8 arguments, configuration values and filesystem-derived paths into NFC before upstream matching and storage, so native Unicode keywords agree with paths added from scripts. The caller's environment stays unchanged.
+
 Concurrent zoxide invocations in one app are rejected while another invocation runs, preventing overlapping database updates. Pthread cancellation is deferred until Rust returns and releases its database state and the command lock. This port does not provide general process isolation or interruptible database operations.
 
 ## Build

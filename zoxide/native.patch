@@ -324,3 +324,19 @@
      pub fn wait(&mut self) -> Result<String> {
          // Drop stdin to prevent deadlock.
          mem::drop(self.0.stdin.take());
+@@ -243,11 +225,14 @@
+
+ pub fn canonicalize(path: impl AsRef<Path>) -> Result<PathBuf> {
+     dunce::canonicalize(&path)
++        .map(|path| PathBuf::from(crate::embedded::canonical(path.into_os_string())))
+         .with_context(|| format!("could not resolve path: {}", path.as_ref().display()))
+ }
+
+ pub fn current_dir() -> Result<PathBuf> {
+-    env::current_dir().context("could not get current directory")
++    env::current_dir()
++        .map(|path| PathBuf::from(crate::embedded::canonical(path.into_os_string())))
++        .context("could not get current directory")
+ }
+
+ pub fn current_time() -> Result<Epoch> {

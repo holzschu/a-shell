@@ -13,6 +13,29 @@ printf 'zoxide 0.10.0\n' | cmp - "$work/version.out"
 "$command" zoxide query café >"$work/query.out"
 printf '%s\n' "$work/fixture/space café 東京" | cmp - "$work/query.out"
 
+# Native a-Shell input is NFD; queries, learning and exclusion must still agree with NFC paths.
+nfd_keyword=$'cafe\314\201'
+nfd_path="$work/fixture/space "$'cafe\314\201 東京'
+"$command" zoxide query "$nfd_keyword" >"$work/nfd-query.out"
+cmp "$work/query.out" "$work/nfd-query.out"
+"$command" z "$nfd_keyword" :: pwd >"$work/nfd-jump.out" 2>"$work/nfd-jump.err"
+cmp "$work/query.out" "$work/nfd-jump.out"
+printf 'status=0\n' | cmp - "$work/nfd-jump.err"
+"$command" cd "$nfd_path" :: zoxide query café >"$work/nfd-learn.out" 2>"$work/nfd-learn.err"
+cmp "$work/query.out" "$work/nfd-learn.out"
+printf 'status=0\n' | cmp - "$work/nfd-learn.err"
+status=0
+"$command" cd "$nfd_path" :: z café >"$work/nfd-current.out" 2>"$work/nfd-current.err" || status=$?
+[[ $status == 1 && ! -s $work/nfd-current.out ]]
+grep -F 'you are already in the only match' "$work/nfd-current.err" >/dev/null
+status=0
+_ZO_EXCLUDE_DIRS="$nfd_path" "$command" zoxide query café >"$work/nfd-exclude.out" 2>"$work/nfd-exclude.err" || status=$?
+[[ $status == 1 && ! -s $work/nfd-exclude.out ]]
+grep -F 'no match found' "$work/nfd-exclude.err" >/dev/null
+_ZO_RESOLVE_SYMLINKS=1 "$command" zoxide add "$nfd_path" :: zoxide query café >"$work/nfd-resolved.out" 2>"$work/nfd-resolved.err"
+cmp "$work/query.out" "$work/nfd-resolved.out"
+printf 'status=0\n' | cmp - "$work/nfd-resolved.err"
+
 # Native z must change the caller's cwd, including the very next ordinary command.
 "$command" z café :: pwd >"$work/jump.out" 2>"$work/jump.err"
 cmp "$work/query.out" "$work/jump.out"

@@ -12,6 +12,7 @@ use crate::error::SilentExit;
 
 unsafe extern "C" {
     fn ios_getenv(name: *const c_char) -> *const c_char;
+    fn zoxide_host_canonical(bytes: *const c_char) -> *const c_char;
     fn zoxide_host_write(errors: i32, bytes: *const u8, length: usize) -> usize;
     fn zoxide_host_flush(errors: i32) -> i32;
     fn zoxide_host_cd(path: *const c_char) -> i32;
@@ -76,15 +77,24 @@ impl FzfChild {
     }
 }
 
+pub fn canonical(value: OsString) -> OsString {
+    let Ok(bytes) = CString::new(value.as_bytes()) else {
+        return value;
+    };
+    // The host's invocation pool owns the normalized string until we copy it.
+    let text = unsafe { CStr::from_ptr(zoxide_host_canonical(bytes.as_ptr())) };
+    OsString::from_vec(text.to_bytes().to_vec())
+}
+
 pub fn var_os(name: impl AsRef<OsStr>) -> Option<OsString> {
     let name = CString::new(name.as_ref().as_bytes()).ok()?;
     let value = unsafe { ios_getenv(name.as_ptr()) };
     if value.is_null() {
         None
     } else {
-        Some(OsString::from_vec(
+        Some(canonical(OsString::from_vec(
             unsafe { CStr::from_ptr(value) }.to_bytes().to_vec(),
-        ))
+        )))
     }
 }
 
@@ -266,9 +276,9 @@ pub unsafe extern "C" fn zoxide_embedded_run(
                 if word.is_null() {
                     bail!("invalid command argument");
                 }
-                Ok(OsString::from_vec(
+                Ok(canonical(OsString::from_vec(
                     unsafe { CStr::from_ptr(*word) }.to_bytes().to_vec(),
-                ))
+                )))
             })
             .collect::<Result<Vec<_>>>()?;
         if is_jump != 0 {

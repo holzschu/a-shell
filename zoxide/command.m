@@ -12,6 +12,13 @@
 extern int zoxide_embedded_run(int, const char *const *, int);
 static pthread_mutex_t command_lock = PTHREAD_MUTEX_INITIALIZER;
 
+// a-Shell decomposes native input (#995); upstream query matching is literal.
+// Keep engine text in NFC, including paths learned from Darwin's NFD cwd.
+const char *zoxide_host_canonical(const char *bytes) {
+    NSString *text = [NSString stringWithUTF8String:bytes];
+    return text ? text.precomposedStringWithCanonicalMapping.UTF8String : bytes;
+}
+
 int zoxide_host_fzf(const unsigned char *bytes, size_t length, const char *options, char **selection) {
     @autoreleasepool {
         *selection = NULL;
@@ -138,7 +145,10 @@ static int run(int argc, char **argv, int jump) {
         pthread_setcancelstate(cancellation, NULL);
         return 1;
     }
-    int status = zoxide_embedded_run(argc, (const char *const *)argv, jump);
+    int status;
+    @autoreleasepool {
+        status = zoxide_embedded_run(argc, (const char *const *)argv, jump);
+    }
     pthread_mutex_unlock(&command_lock);
     pthread_setcancelstate(cancellation, NULL);
     return status;
