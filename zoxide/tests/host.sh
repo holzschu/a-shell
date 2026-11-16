@@ -83,9 +83,16 @@ printf '%s\n' "$work/completion-current" | cmp - "$work/zi-current.out"
 printf 'status=0\nstatus=0\n' | cmp - "$work/zi-current.err"
 _ZO_DATA_DIR="$work/completion-data" _ZO_FZF_OPTS='--filter=completion' \
     "$command" zoxide add "$work/completion-alternate" :: cd "$work/completion-current" :: \
-    zi --exclude-current completion :: pwd >"$work/zi-exclude.out" 2>"$work/zi-exclude.err"
+    __zoxide_zi_complete completion :: pwd >"$work/zi-exclude.out" 2>"$work/zi-exclude.err"
 printf '%s\n' "$work/completion-alternate" | cmp - "$work/zi-exclude.out"
 printf 'status=0\nstatus=0\nstatus=0\n' | cmp - "$work/zi-exclude.err"
+# Every ordinary zi argument remains a keyword, including completion-like names.
+mkdir -p "$work/literal--exclude-current"
+_ZO_DATA_DIR="$work/zi-literal-data" _ZO_FZF_OPTS='--filter=literal' \
+    "$command" cd "$work/literal--exclude-current" :: zi --exclude-current :: pwd \
+    >"$work/zi-literal.out" 2>"$work/zi-literal.err"
+printf '%s\n' "$work/literal--exclude-current" | cmp - "$work/zi-literal.out"
+printf 'status=0\nstatus=0\n' | cmp - "$work/zi-literal.err"
 FZF_DEFAULT_OPTS='--filter=parent-only' _ZO_FZF_OPTS='--filter=café' \
     "$command" zoxide query --interactive :: printenv FZF_DEFAULT_OPTS \
     >"$work/fzf-env.out" 2>"$work/fzf-env.err"

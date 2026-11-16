@@ -189,7 +189,7 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
         if (argc == 1) {
             delegate.printText(string: helpText)
             if delegate.commandsArray().contains("zoxide") {
-                delegate.printText(string: "\n- zoxide learns successful cd, directory picker and bookmark visits. Use z KEYWORDS to revisit a directory, z - to go back, or zi KEYWORDS to choose with fzf. Space then Tab after z KEYWORDS also opens the selector.\n- To enable cd keyword lookup, add export _ZO_CD=1 to ~/Documents/.profile and open a new window. Existing paths keep stock cd behavior.\n")
+                delegate.printText(string: "\n- zoxide learns successful cd, directory picker and bookmark visits. Use z KEYWORDS to revisit a directory, z - to go back, or zi KEYWORDS to choose with fzf. Space then Tab after z KEYWORDS submits the query and opens the selector; canceling returns to an empty prompt, and no match reports an error.\n- To enable cd keyword lookup, add export _ZO_CD=1 to ~/Documents/.profile and open a new window. Existing paths keep stock cd behavior.\n")
             }
             let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
             let bashmarks = UserDefaults.standard.bool(forKey: "bashmarks")

@@ -160,10 +160,10 @@ fn logical_cwd() -> Result<PathBuf> {
     }
 }
 
-fn jump(words: Vec<OsString>, interactive: bool) -> Result<()> {
-    let exclude_current =
-        !interactive || words.get(1).is_some_and(|word| word == "--exclude-current");
-    let args = &words[if interactive && exclude_current { 2 } else { 1 }..];
+fn jump(words: Vec<OsString>, mode: i32) -> Result<()> {
+    let interactive = mode >= 2;
+    let exclude_current = mode != 2;
+    let args = &words[1..];
     let directory = if interactive {
         None
     } else {
@@ -272,7 +272,7 @@ pub unsafe extern "C" fn zoxide_embedded_run(
             })
             .collect::<Result<Vec<_>>>()?;
         if is_jump != 0 {
-            jump(words, is_jump == 2)
+            jump(words, is_jump)
         } else {
             command(words)
         }

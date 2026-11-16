@@ -30,6 +30,13 @@
 		<string></string>
 		<string>file</string>
 	</array>
+	<key>__zoxide_zi_complete</key>
+	<array>
+		<string>zoxide.framework/zoxide</string>
+		<string>zoxide_zi_complete_main</string>
+		<string></string>
+		<string>directory</string>
+	</array>
 	<key>gix</key>
 	<array>
 		<string>gitoxide.framework/gitoxide</string>

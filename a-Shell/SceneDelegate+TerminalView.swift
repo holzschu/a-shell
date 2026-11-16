@@ -798,8 +798,8 @@ extension SceneDelegate {
             if !autocompleteRunning && currentCommand.isEmpty && commandAfterCursor.isEmpty &&
                 commandBeforeCursor.hasPrefix("z ") && commandBeforeCursor.hasSuffix(" ") &&
                 !commandBeforeCursor.dropFirst(2).trimmingCharacters(in: .whitespaces).isEmpty &&
-                (commandsAsArray() as? [String] ?? []).contains("zi") {
-                commandBeforeCursor = "zi --exclude-current " + commandBeforeCursor.dropFirst(2)
+                (commandsAsArray() as? [String] ?? []).contains("__zoxide_zi_complete") {
+                commandBeforeCursor = "__zoxide_zi_complete " + commandBeforeCursor.dropFirst(2)
                 terminalView?.moveToBeginningOfLine()
                 terminalView?.clearToEndOfLine()
                 terminalView?.feed(text: commandBeforeCursor)

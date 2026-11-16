@@ -13,6 +13,7 @@ int zoxide_ios_main(int, char **);
 int zoxide_z_main(int, char **);
 int zoxide_cd_main(int, char **);
 int zoxide_zi_main(int, char **);
+int zoxide_zi_complete_main(int, char **);
 
 __thread FILE *thread_stdin, *thread_stdout, *thread_stderr;
 static FILE *session_input, *session_output, *session_errors;
@@ -155,6 +156,8 @@ int main(int argc, char **argv) {
             status = zoxide_z_main(end - start, argv + start);
         } else if (strcmp(argv[start], "zi") == 0) {
             status = zoxide_zi_main(end - start, argv + start);
+        } else if (strcmp(argv[start], "__zoxide_zi_complete") == 0) {
+            status = zoxide_zi_complete_main(end - start, argv + start);
         } else {
             status = zoxide_ios_main(end - start, argv + start);
         }

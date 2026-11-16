@@ -28,6 +28,7 @@ touch Resources/bin/navi
 touch Resources/bin/zoxide
 touch Resources/bin/z
 touch Resources/bin/zi
+touch Resources/bin/__zoxide_zi_complete
 touch Resources/bin/grep
 touch Resources/bin/gunzip
 touch Resources/bin/gzip

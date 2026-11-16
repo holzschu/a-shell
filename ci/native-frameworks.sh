@@ -123,7 +123,7 @@ case $product in
   gitoxide) symbols=gix_ios_main ;;
   Ruff) symbols=ruff_ios_main ;;
   node) symbols='node_ios_main npm_ios_main npx_ios_main' ;;
-  zoxide) symbols='zoxide_ios_main zoxide_z_main zoxide_cd_main zoxide_zi_main' ;;
+  zoxide) symbols='zoxide_ios_main zoxide_z_main zoxide_cd_main zoxide_zi_main zoxide_zi_complete_main' ;;
   *) symbols=${product}_ios_main ;;
 esac
 printf 'slice\tstripped_bytes\tgzip_bytes\n' >"$dist/$product.sizes.tsv"

@@ -147,6 +147,7 @@ static int run(int argc, char **argv, int jump) {
 int zoxide_ios_main(int argc, char **argv) { return run(argc, argv, 0); }
 int zoxide_z_main(int argc, char **argv) { return run(argc, argv, 1); }
 int zoxide_zi_main(int argc, char **argv) { return run(argc, argv, 2); }
+int zoxide_zi_complete_main(int argc, char **argv) { return run(argc, argv, 3); }
 
 static int change_directory(int argc, char **argv) {
     const char *fallback = ios_getenv("_ZO_CD");
