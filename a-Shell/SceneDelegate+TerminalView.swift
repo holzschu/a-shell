@@ -793,6 +793,18 @@ extension SceneDelegate {
                 }
             }
         case tabulation: // autocomplete
+            // Upstream zsh's Space-Tab gesture opens interactive selection.
+            // Submit through Return so fzf owns the normal foreground tty.
+            if !autocompleteRunning && currentCommand.isEmpty && commandAfterCursor.isEmpty &&
+                commandBeforeCursor.hasPrefix("z ") && commandBeforeCursor.hasSuffix(" ") &&
+                (commandsAsArray() as? [String] ?? []).contains("zi") {
+                commandBeforeCursor.insert("i", at: commandBeforeCursor.index(after: commandBeforeCursor.startIndex))
+                terminalView?.moveToBeginningOfLine()
+                terminalView?.clearToEndOfLine()
+                terminalView?.feed(text: commandBeforeCursor)
+                send(source: source, inputString: carriageReturn)
+                return
+            }
             // NSLog("received tab. Autocomplete running: \(autocompleteRunning)")
             if (autocompleteRunning) {
                 if (autocompleteOptions) {

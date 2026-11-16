@@ -65,6 +65,25 @@ pwd -P >"$work/cd-disabled.expected"
 cmp "$work/cd-disabled.expected" "$work/cd-disabled.out"
 grep -Fx 'cd: could not change directory' "$work/cd-disabled.err" >/dev/null
 
+# Run the real fzf CLI at the external ios_system boundary, without a test UI.
+_ZO_FZF_OPTS='--filter=café' "$command" zoxide query --interactive \
+    >"$work/interactive.out" 2>"$work/interactive.err"
+cmp "$work/query.out" "$work/interactive.out"
+[[ ! -s $work/interactive.err ]]
+_ZO_FZF_OPTS='--filter=café' "$command" zi café :: pwd \
+    >"$work/zi.out" 2>"$work/zi.err"
+cmp "$work/query.out" "$work/zi.out"
+printf 'status=0\n' | cmp - "$work/zi.err"
+FZF_DEFAULT_OPTS='--filter=parent-only' _ZO_FZF_OPTS='--filter=café' \
+    "$command" zoxide query --interactive :: printenv FZF_DEFAULT_OPTS \
+    >"$work/fzf-env.out" 2>"$work/fzf-env.err"
+printf '%s\n--filter=parent-only\n' "$work/fixture/space café 東京" | cmp - "$work/fzf-env.out"
+printf 'status=0\n' | cmp - "$work/fzf-env.err"
+_ZO_FZF_OPTS='--filter=no-such-zoxide-result' "$command" zoxide query --interactive :: \
+    zoxide --version >"$work/fzf-reentry.out" 2>"$work/fzf-reentry.err"
+cmp "$work/version.out" "$work/fzf-reentry.out"
+printf 'zoxide: no match found\nstatus=1\n' | cmp - "$work/fzf-reentry.err"
+
 # A 1,000-directory database uses upstream ordering, filtering and persistence.
 paths=("$work/fixture/space café 東京")
 for ((i = 1; i < 1000; i++)); do
@@ -110,9 +129,9 @@ printf '%s\n' "$work/fixture/space café 東京" "$work/fixture/directory 0042" 
 printf 'status=0\nstatus=0\nstatus=0\n' | cmp - "$work/reentry.err"
 "$command" zoxide init posix --hook prompt >"$work/init.sh"
 dash -n "$work/init.sh"
-if grep -F '__zoxide_zi' "$work/init.sh"; then exit 1; fi
+grep -F '__zoxide_zi' "$work/init.sh" >/dev/null
 
-for args in 'query --interactive' 'edit' 'import atuin'; do
+for args in 'edit' 'import atuin'; do
     status=0
     # Intentional word splitting: these are fixed CLI arguments above.
     # shellcheck disable=SC2086
@@ -121,7 +140,7 @@ for args in 'query --interactive' 'edit' 'import atuin'; do
 done
 
 # Re-enter after parser/database/unsupported failures without terminating the host.
-"$command" zoxide query --interactive :: zoxide --version :: \
+"$command" zoxide edit :: zoxide --version :: \
     setenv _ZO_DATA_DIR "$work/corrupt" :: zoxide query nowhere :: \
     setenv _ZO_DATA_DIR "$work/data" :: zoxide query café >"$work/recovery.out" 2>"$work/recovery.err"
 printf 'zoxide 0.10.0\n%s\n' "$work/fixture/space café 東京" | cmp - "$work/recovery.out"

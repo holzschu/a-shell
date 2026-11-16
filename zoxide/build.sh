@@ -77,6 +77,7 @@ framework() {
         -Wl,-install_name,@rpath/zoxide.framework/zoxide \
         -Wl,-exported_symbol,_zoxide_ios_main -Wl,-exported_symbol,_zoxide_z_main \
         -Wl,-exported_symbol,_zoxide_cd_main \
+        -Wl,-exported_symbol,_zoxide_zi_main \
         -o "$output/zoxide"
     xcrun strip -S -x "$output/zoxide"
     cp "$source/LICENSE" "$output/LICENSE"
@@ -96,6 +97,7 @@ PLIST
     nm -gU "$output/zoxide" | grep ' T _zoxide_ios_main$' >/dev/null
     nm -gU "$output/zoxide" | grep ' T _zoxide_z_main$' >/dev/null
     nm -gU "$output/zoxide" | grep ' T _zoxide_cd_main$' >/dev/null
+    nm -gU "$output/zoxide" | grep ' T _zoxide_zi_main$' >/dev/null
     xcrun vtool -show-build "$output/zoxide"
     shasum -a 256 "$output/zoxide"
 }

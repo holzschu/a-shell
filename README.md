@@ -16,6 +16,8 @@ You can change the appearance of a-Shell using `config`. It lets you change the 
 
 When opening a new window, a-Shell executes the file `.profile` if it exists. You can use this mechanism to customize further, e.g. have custom environment variables or cleanup temporary files.
 
+Full a-Shell includes zoxide for directory navigation. Successful `cd` visits, including directory picker and bookmark navigation, are learned automatically. Use `z KEYWORDS` to revisit a directory, `z -` to return to the previous directory, or `zi KEYWORDS` to choose with fzf. Space followed by Tab after `z KEYWORDS` also opens the selector. To enable keyword lookup through `cd`, add `export _ZO_CD=1` to `~/Documents/.profile` and open a new window. Existing paths retain stock `cd` behavior. See [zoxide/README.md](zoxide/README.md) for configuration and database storage.
+
 For more tips on how to use a-Shell, see <a href="https://bianshen00009.gitbook.io/a-guide-to-a-shell/">the document</a>.
 
 ## AppStore

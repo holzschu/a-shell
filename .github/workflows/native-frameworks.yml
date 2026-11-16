@@ -27,6 +27,11 @@ jobs:
         with:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v7
+      - name: fzf for zoxide host command checks
+        if: matrix.product == 'zoxide'
+        run: |
+          brew install fzf
+          fzf --version
       - uses: actions/setup-go@v6
         if: matrix.product == 'fzf'
         with:

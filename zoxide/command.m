@@ -1,4 +1,5 @@
 // Borrow only the invoking command's streams and environment.
+#import <Foundation/Foundation.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -10,6 +11,59 @@
 
 extern int zoxide_embedded_run(int, const char *const *, int);
 static pthread_mutex_t command_lock = PTHREAD_MUTEX_INITIALIZER;
+
+int zoxide_host_fzf(const unsigned char *bytes, size_t length, const char *options, char **selection) {
+    @autoreleasepool {
+        *selection = NULL;
+        NSString *template = [NSTemporaryDirectory() stringByAppendingPathComponent:@"zoxide.XXXXXX"];
+        char *directory = strdup(template.fileSystemRepresentation);
+        if (!directory) return -1;
+        if (!mkdtemp(directory)) { free(directory); return -1; }
+        NSString *root = [NSString stringWithUTF8String:directory];
+        free(directory);
+        NSString *input = [root stringByAppendingPathComponent:@"input"];
+        NSString *output = [root stringByAppendingPathComponent:@"output"];
+        int status = -1;
+        FILE *file = fopen(input.fileSystemRepresentation, "wb");
+        if (file) {
+            int written = fwrite(bytes, 1, length, file) == length;
+            if (fclose(file) == 0 && written) {
+                NSMutableString *line = [NSMutableString stringWithString:@"fzf '--delimiter=\t' --nth=2 --read0"];
+                if (!options) {
+                    [line appendString:@" --exact --no-sort --bind=ctrl-z:ignore,btab:up,tab:down --cycle --keep-right --border=sharp --height=45% --info=inline --layout=reverse --tabstop=1 --exit-0"];
+                }
+                // Only owned file paths enter the command string. User options
+                // stay in the child's environment, as in upstream zoxide.
+                NSString *quotedInput = [input stringByReplacingOccurrencesOfString:@"'" withString:@"'\\''"];
+                NSString *quotedOutput = [output stringByReplacingOccurrencesOfString:@"'" withString:@"'\\''"];
+                [line appendFormat:@" < '%@' > '%@'", quotedInput, quotedOutput];
+                pid_t child = ios_fork();
+                if (child >= 0) {
+                    // ios_fork clones the calling command's scoped environment.
+                    if (options) ios_setenv("FZF_DEFAULT_OPTS", options, 1);
+                    ios_system(line.UTF8String);
+                    ios_waitpid(child);
+                    status = ios_getCommandStatus();
+                    ios_releaseThreadId(child);
+                    if (status == 0) {
+                        NSData *data = [NSData dataWithContentsOfFile:output];
+                        if (data && data.length < SIZE_MAX) {
+                            *selection = malloc(data.length + 1);
+                            if (*selection) {
+                                memcpy(*selection, data.bytes, data.length);
+                                (*selection)[data.length] = '\0';
+                            } else status = -1;
+                        } else status = -1;
+                    }
+                }
+            }
+        }
+        if (![[NSFileManager defaultManager] removeItemAtPath:root error:NULL]) status = -1;
+        return status;
+    }
+}
+
+void zoxide_host_free(char *selection) { free(selection); }
 
 size_t zoxide_host_write(int errors, const unsigned char *bytes, size_t length) {
     return fwrite(bytes, 1, length, errors ? ios_stderr() : ios_stdout());
@@ -91,6 +145,7 @@ static int run(int argc, char **argv, int jump) {
 
 int zoxide_ios_main(int argc, char **argv) { return run(argc, argv, 0); }
 int zoxide_z_main(int argc, char **argv) { return run(argc, argv, 1); }
+int zoxide_zi_main(int argc, char **argv) { return run(argc, argv, 2); }
 
 static int change_directory(int argc, char **argv) {
     const char *fallback = ios_getenv("_ZO_CD");

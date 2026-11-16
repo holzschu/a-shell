@@ -92,10 +92,10 @@ zoxide --invalid-option >"$work/invalid.out" 2>"$work/invalid.err"
 status=$?
 printf '%s\n' "$status" >"$work/invalid.status"
 [ "$status" -eq 2 ] && [ ! -s "$work/invalid.out" ] || exit 1
-zoxide query --interactive >"$work/interactive.out" 2>"$work/interactive.err"
+zoxide edit >"$work/unsupported.out" 2>"$work/unsupported.err"
 status=$?
-printf '%s\n' "$status" >"$work/interactive.status"
-[ "$status" -eq 1 ] && [ ! -s "$work/interactive.out" ] || exit 1
+printf '%s\n' "$status" >"$work/unsupported.status"
+[ "$status" -eq 1 ] && [ ! -s "$work/unsupported.out" ] || exit 1
 
 zoxide init posix --hook prompt >"$work/init.sh" 2>"$work/init.err"
 status=$?

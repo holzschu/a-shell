@@ -14,7 +14,7 @@
 +name = "zoxide_embedded"
 +path = "src/main.rs"
 +crate-type = ["staticlib"]
- 
+
  [badges]
  maintenance = { status = "actively-developed" }
 --- a/src/main.rs
@@ -22,7 +22,7 @@
 @@ -8,28 +8,4 @@
  mod shell;
  mod util;
- 
+
 -use std::env;
 -use std::io::{self, Write};
 -use std::process::ExitCode;
@@ -53,7 +53,7 @@
 +++ b/src/config.rs
 @@ -8,9 +8,9 @@
  use crate::db::Rank;
- 
+
  pub fn data_dir() -> Result<PathBuf> {
 -    let dir = match env::var_os("_ZO_DATA_DIR") {
 +    let dir = match crate::embedded::var_os("_ZO_DATA_DIR") {
@@ -65,12 +65,12 @@
      };
 @@ -20,11 +20,11 @@
  }
- 
+
  pub fn echo() -> bool {
 -    env::var_os("_ZO_ECHO").is_some_and(|var| var == "1")
 +    crate::embedded::var_os("_ZO_ECHO").is_some_and(|var| var == "1")
  }
- 
+
  pub fn exclude_dirs() -> Result<Vec<Pattern>> {
 -    match env::var_os("_ZO_EXCLUDE_DIRS") {
 +    match crate::embedded::var_os("_ZO_EXCLUDE_DIRS") {
@@ -88,12 +88,12 @@
              })();
 @@ -44,11 +44,11 @@
  }
- 
+
  pub fn fzf_opts() -> Option<OsString> {
 -    env::var_os("_ZO_FZF_OPTS")
 +    crate::embedded::var_os("_ZO_FZF_OPTS")
  }
- 
+
  pub fn maxage() -> Result<Rank> {
 -    env::var_os("_ZO_MAXAGE").map_or(Ok(10_000.0), |maxage| {
 +    crate::embedded::var_os("_ZO_MAXAGE").map_or(Ok(10_000.0), |maxage| {
@@ -102,7 +102,7 @@
              .parse::<u32>()
 @@ -58,5 +58,5 @@
  }
- 
+
  pub fn resolve_symlinks() -> bool {
 -    env::var_os("_ZO_RESOLVE_SYMLINKS").is_some_and(|var| var == "1")
 +    crate::embedded::var_os("_ZO_RESOLVE_SYMLINKS").is_some_and(|var| var == "1")
@@ -112,7 +112,7 @@
 @@ -1,4 +1,4 @@
 -use std::io::{self, Write};
 +use std::io::Write;
- 
+
  use anyhow::{Context, Result};
  use askama::Template;
 @@ -27,6 +27,6 @@
@@ -128,42 +128,72 @@
 @@ -1,4 +1,4 @@
 -use std::io::{self, Write};
 +use std::io::Write;
- 
+
  use anyhow::{Context, Result};
- 
-@@ -44,16 +44,16 @@
+
+@@ -6,7 +6,8 @@
+ use crate::config;
+ use crate::db::{Database, Epoch, Stream, StreamOptions};
+ use crate::error::BrokenPipeHandler;
+-use crate::util::{self, Fzf, FzfChild};
++use crate::util;
++use crate::embedded::FzfChild;
+
+ impl Run for Query {
+     fn run(&self) -> Result<()> {
+@@ -30,7 +31,12 @@
+     }
+
+     fn query_interactive(&self, stream: &mut Stream, now: Epoch) -> Result<()> {
+-        let mut fzf = Self::get_fzf()?;
++        write!(crate::embedded::stdout(), "{}", self.select_interactive(stream, now)?)?;
++        Ok(())
++    }
++
++    fn select_interactive(&self, stream: &mut Stream, now: Epoch) -> Result<String> {
++        let mut fzf = FzfChild::default();
+         let selection = loop {
+             match stream.next() {
+                 Some(dir) if Some(dir.path.as_ref()) == self.exclude.as_deref() => continue,
+@@ -44,16 +50,14 @@
          };
- 
+
          if self.score {
 -            print!("{selection}");
-+            write!(crate::embedded::stdout(), "{selection}")?;
++            Ok(selection)
          } else {
-             let path = selection.get(7..).context("could not read selection from fzf")?;
+-            let path = selection.get(7..).context("could not read selection from fzf")?;
 -            print!("{path}");
-+            write!(crate::embedded::stdout(), "{path}")?;
++            selection.get(7..).map(str::to_owned).context("could not read selection from fzf")
          }
-         Ok(())
+-        Ok(())
      }
- 
+
      fn query_list(&self, stream: &mut Stream, now: Epoch) -> Result<()> {
 -        let handle = &mut io::stdout().lock();
 +        let handle = &mut crate::embedded::stdout().lock();
          while let Some(dir) = stream.next() {
              if Some(dir.path.as_ref()) == self.exclude.as_deref() {
                  continue;
-@@ -65,15 +65,26 @@
+@@ -65,15 +69,32 @@
      }
- 
+
      fn query_first(&self, stream: &mut Stream, now: Epoch) -> Result<()> {
 -        let handle = &mut io::stdout();
 +        writeln!(crate::embedded::stdout(), "{}", self.first(stream, now)?).pipe_exit("stdout")
 +    }
- 
+
 +    // Share upstream selection with the native shell's z adaptation.
 +    pub(crate) fn first_path(&self) -> Result<String> {
 +        let mut db = Database::open()?;
 +        let now = util::current_time()?;
-+        let result = self.get_stream(&mut db, now).and_then(|mut stream| self.first(&mut stream, now));
++        let result = self.get_stream(&mut db, now).and_then(|mut stream| {
++            if self.interactive {
++                self.select_interactive(&mut stream, now).map(|path| path.trim_end_matches('\n').to_owned())
++            } else {
++                self.first(&mut stream, now)
++            }
++        });
 +        let saved = db.save();
 +        result.and_then(|path| saved.map(|()| path))
 +    }
@@ -173,25 +203,59 @@
          while Some(dir.path.as_ref()) == self.exclude.as_deref() {
              dir = stream.next().context("you are already in the only match")?;
          }
- 
+
          let dir = if self.score { dir.display().with_score(now) } else { dir.display() };
 -        writeln!(handle, "{dir}").pipe_exit("stdout")
 +        Ok(dir.to_string())
      }
- 
+
      fn get_stream<'a>(&self, db: &'a mut Database, now: Epoch) -> Result<Stream<'a>> {
+@@ -89,33 +110,4 @@
+         let stream = Stream::new(db, options);
+         Ok(stream)
+     }
+-
+-    fn get_fzf() -> Result<FzfChild> {
+-        let mut fzf = Fzf::new()?;
+-        if let Some(fzf_opts) = config::fzf_opts() {
+-            fzf.env("FZF_DEFAULT_OPTS", fzf_opts)
+-        } else {
+-            fzf.args([
+-                // Search mode
+-                "--exact",
+-                // Search result
+-                "--no-sort",
+-                // Interface
+-                "--bind=ctrl-z:ignore,btab:up,tab:down",
+-                "--cycle",
+-                "--keep-right",
+-                // Layout
+-                "--border=sharp", // rounded edges don't display correctly on some terminals
+-                "--height=45%",
+-                "--info=inline",
+-                "--layout=reverse",
+-                // Display
+-                "--tabstop=1",
+-                // Scripting
+-                "--exit-0",
+-            ])
+-            .enable_preview()
+-        }
+-        .spawn()
+-    }
+ }
 --- a/src/cmd/edit.rs
 +++ b/src/cmd/edit.rs
 @@ -1,4 +1,4 @@
 -use std::io::{self, Write};
 +use std::io::Write;
- 
+
  use anyhow::Result;
- 
+
 @@ -24,7 +24,7 @@
                  }
                  db.save()?;
- 
+
 -                let stdout = &mut io::stdout().lock();
 +                let stdout = &mut crate::embedded::stdout().lock();
                  for dir in db.dirs().iter().rev() {
@@ -202,45 +266,18 @@
 @@ -12,7 +12,7 @@
  mod z_lua;
  mod zsh_z;
- 
+
 -use std::io::{self, Write};
 +use std::io::Write;
  use std::path::PathBuf;
- 
+
  use anyhow::Result;
 @@ -51,7 +51,7 @@
  pub(crate) fn run(importer: &impl Importer, db: &mut Database) -> Result<()> {
      let exclude_dirs = config::exclude_dirs()?;
- 
+
 -    let stderr = io::stderr();
 +    let stderr = crate::embedded::stderr();
      let mut stderr = stderr.lock();
- 
+
      for entry in importer.dirs()? {
---- a/templates/posix.txt
-+++ b/templates/posix.txt
-@@ -113,12 +113,6 @@
-     fi
- }
- 
--# Jump to a directory using interactive search.
--__zoxide_zi() {
--    __zoxide_doctor
--    __zoxide_result="$(\command zoxide query --interactive -- "$@")" && __zoxide_cd "${__zoxide_result}"
--}
--
- {{ section }}
- # Commands for zoxide. Disable these using --no-cmd.
- #
-@@ -131,11 +125,6 @@
-     __zoxide_z "$@"
- }
- 
--\command unalias {{cmd}}i >/dev/null 2>&1 || \true
--{{cmd}}i() {
--    __zoxide_zi "$@"
--}
--
- {%- when None %}
- 
- {{ not_configured }}

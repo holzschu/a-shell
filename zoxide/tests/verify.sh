@@ -10,14 +10,14 @@ done
 for ((i = 49; i < 1000; i += 50)); do
     [[ $(cat "$work/add-$i.status") == 0 && ! -s $work/add-$i.err && ! -s $work/add-$i.out ]]
 done
-for label in missing removed corrupt interactive; do
+for label in missing removed corrupt unsupported; do
     [[ $(cat "$work/$label.status") == 1 && ! -s $work/$label.out && -s $work/$label.err ]]
 done
 [[ $(cat "$work/invalid.status") == 2 && ! -s $work/invalid.out ]]
 grep -F 'no match found' "$work/missing.err" >/dev/null
 grep -F 'no match found' "$work/removed.err" >/dev/null
 grep -F 'unexpected argument' "$work/invalid.err" >/dev/null
-grep -F 'interactive selection is not supported' "$work/interactive.err" >/dev/null
+grep -F 'this port supports add, query, remove and init' "$work/unsupported.err" >/dev/null
 printf 'zoxide 0.10.0\n' | cmp - "$work/version.out"
 [[ $(wc -l <"$work/list.out" | tr -d ' ') == 1000 ]]
 [[ $(wc -l <"$work/after.out" | tr -d ' ') == 999 ]]

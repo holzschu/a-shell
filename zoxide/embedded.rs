@@ -15,6 +15,65 @@ unsafe extern "C" {
     fn zoxide_host_write(errors: i32, bytes: *const u8, length: usize) -> usize;
     fn zoxide_host_flush(errors: i32) -> i32;
     fn zoxide_host_cd(path: *const c_char) -> i32;
+    fn zoxide_host_fzf(
+        bytes: *const u8,
+        length: usize,
+        options: *const c_char,
+        selection: *mut *mut c_char,
+    ) -> i32;
+    fn zoxide_host_free(selection: *mut c_char);
+}
+
+#[derive(Default)]
+pub struct FzfChild {
+    input: Vec<u8>,
+}
+
+impl FzfChild {
+    pub fn write(&mut self, dir: &crate::db::Dir, now: crate::db::Epoch) -> Result<Option<String>> {
+        write!(
+            self.input,
+            "{}\0",
+            dir.display().with_score(now).with_separator('\t')
+        )?;
+        Ok(None)
+    }
+
+    pub fn wait(&mut self) -> Result<String> {
+        let options = crate::config::fzf_opts()
+            .map(|value| CString::new(value.as_bytes()))
+            .transpose()?;
+        let mut selected = std::ptr::null_mut();
+        let status = unsafe {
+            zoxide_host_fzf(
+                self.input.as_ptr(),
+                self.input.len(),
+                options
+                    .as_ref()
+                    .map_or(std::ptr::null(), |value| value.as_ptr()),
+                &mut selected,
+            )
+        };
+        let selection = if selected.is_null() {
+            None
+        } else {
+            let value = unsafe { CStr::from_ptr(selected) }
+                .to_str()
+                .map(str::to_owned);
+            unsafe { zoxide_host_free(selected) };
+            Some(value)
+        };
+        match status {
+            0 => selection
+                .context("could not read selection from fzf")?
+                .context("invalid unicode in fzf selection"),
+            1 => bail!("no match found"),
+            2 => bail!("fzf returned an error"),
+            130 => bail!(SilentExit { code: 130 }),
+            128..=254 => bail!("fzf was terminated"),
+            _ => bail!("could not run fzf"),
+        }
+    }
 }
 
 pub fn var_os(name: impl AsRef<OsStr>) -> Option<OsString> {
@@ -86,9 +145,6 @@ fn command(words: Vec<OsString>) -> Result<()> {
     let cmd = Cmd::from_arg_matches(&matches)?;
     match &cmd {
         Cmd::Edit(_) | Cmd::Import(_) => bail!("this port supports add, query, remove and init"),
-        Cmd::Query(query) if query.interactive => {
-            bail!("interactive selection is not supported by this port")
-        }
         _ => cmd.run(),
     }
 }
@@ -104,23 +160,27 @@ fn logical_cwd() -> Result<PathBuf> {
     }
 }
 
-fn jump(words: Vec<OsString>) -> Result<()> {
+fn jump(words: Vec<OsString>, interactive: bool) -> Result<()> {
     let args = &words[1..];
-    let directory = match args {
-        [] => Some(home_dir().context("HOME is not set")?),
-        [arg] if arg == "-" => Some(PathBuf::from("-")),
-        [arg] => {
-            let path = PathBuf::from(arg);
-            let path = if path.is_absolute() {
-                Some(path)
-            } else {
-                logical_cwd().ok().map(|cwd| cwd.join(path))
-            };
-            path.filter(|path| path.is_dir())
-                .map(crate::util::resolve_path)
-                .transpose()?
+    let directory = if interactive {
+        None
+    } else {
+        match args {
+            [] => Some(home_dir().context("HOME is not set")?),
+            [arg] if arg == "-" => Some(PathBuf::from("-")),
+            [arg] => {
+                let path = PathBuf::from(arg);
+                let path = if path.is_absolute() {
+                    Some(path)
+                } else {
+                    logical_cwd().ok().map(|cwd| cwd.join(path))
+                };
+                path.filter(|path| path.is_dir())
+                    .map(crate::util::resolve_path)
+                    .transpose()?
+            }
+            _ => None,
         }
-        _ => None,
     };
     let path = match directory {
         Some(path) => path,
@@ -134,20 +194,24 @@ fn jump(words: Vec<OsString>) -> Result<()> {
                 })
                 .collect::<Result<Vec<_>>>()?;
             // Upstream's shell hook tolerates a failing pwd when excluding cwd.
-            let exclude = logical_cwd()
-                .ok()
-                .and_then(|cwd| {
-                    if crate::config::resolve_symlinks() {
-                        crate::util::canonicalize(cwd).ok()
-                    } else {
-                        Some(cwd)
-                    }
-                })
-                .and_then(|cwd| cwd.into_os_string().into_string().ok());
+            let exclude = if interactive {
+                None
+            } else {
+                logical_cwd()
+                    .ok()
+                    .and_then(|cwd| {
+                        if crate::config::resolve_symlinks() {
+                            crate::util::canonicalize(cwd).ok()
+                        } else {
+                            Some(cwd)
+                        }
+                    })
+                    .and_then(|cwd| cwd.into_os_string().into_string().ok())
+            };
             let query = Query {
                 keywords,
                 all: false,
-                interactive: false,
+                interactive,
                 list: false,
                 score: false,
                 exclude,
@@ -206,7 +270,7 @@ pub unsafe extern "C" fn zoxide_embedded_run(
             })
             .collect::<Result<Vec<_>>>()?;
         if is_jump != 0 {
-            jump(words)
+            jump(words, is_jump == 2)
         } else {
             command(words)
         }

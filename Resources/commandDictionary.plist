@@ -16,6 +16,13 @@
 		<string></string>
 		<string>directory</string>
 	</array>
+	<key>zi</key>
+	<array>
+		<string>zoxide.framework/zoxide</string>
+		<string>zoxide_zi_main</string>
+		<string></string>
+		<string>directory</string>
+	</array>
 	<key>ruff</key>
 	<array>
 		<string>Ruff.framework/Ruff</string>
