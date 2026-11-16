@@ -2083,7 +2083,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                                         button = symbolsMenu
                                         activeButtonGroup = [symbolsMenu]
                                     }
-                                    activeTag = noneTag // make it always visible, despite the label
+                                    activeTag = 0 // make it always visible, despite the label
                                 }
                             } // end extraKeys case
                             button!.tag = activeTag
@@ -2390,7 +2390,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         touch.name = "precision-arrow"; touch.minimumPressDuration = 0; touch.restingImage = item.image; touch.tapMoves = !stockPhoneArrowKey
         touch.directions = combinedArrowDirections[title(item) ?? ""] ?? []
         view.addGestureRecognizer(touch); view.isExclusiveTouch = true
-        showArrowTip()
+        if (touch.directions.count > 1) { // don't show the tip for single arrows
+            showArrowTip()
+        }
     }
 
     // Because a button can go from single arrow to combined arrow when the screen space is sparse,
