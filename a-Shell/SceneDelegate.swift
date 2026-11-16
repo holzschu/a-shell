@@ -102,7 +102,7 @@ private func toolbarMotion(_ delta: CGPoint) -> (direction: String, arrowReady: 
 }
 
 // The combined arrow keys and the directions each one moves in; a flick on the key moves only along these.
-private let combinedArrowDirections = ["up.down.left.right": ["up", "down", "left", "right"], "up.down": ["up", "down"], "left.right": ["left", "right"]]
+private let combinedArrowDirections = ["up.down.left.right": ["up", "down", "left", "right"], "up.down": ["up", "down"], "left.right": ["left", "right"], "up": ["up"], "down": ["down"], "left": ["left"], "right": ["right"]]
 
 // Holds the arrow key's own icon, so the key shows it again after a flick has shown a direction glyph, whether a
 // tap moves the cursor (it does for a key from .toolbarDefinition, the stock key shows a hint instead), and the
@@ -617,6 +617,32 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
     private func horizontalArrow(title: String?) -> Bool {
         return (title == "left" || title == "right" || title == "left.right" || title == "up.down.left.right")
     }
+    
+    private func accessibilityLabel(arrow: String) -> String {
+        switch arrow {
+        case "up.down":
+            return "Up and down arrows"
+        case "left.right":
+            return "Left and right arrows"
+        case "up.down.left.right":
+            return "Arrows"
+        default:
+            return arrow
+        }
+    }
+    
+    private func imageSystemName(arrow: String) -> String {
+        switch arrow {
+        case "up.down":
+            return "arrow.up.and.down"
+        case "left.right":
+            return "arrow.left.and.right"
+        case "up.down.left.right":
+            return "arrow.up.and.down.and.arrow.left.and.right"
+        default:
+            return "arrow." + arrow
+        }
+    }
 
         override func layoutSubviews() {
             super.layoutSubviews()
@@ -648,11 +674,26 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                 }
             }
             // Next step: count the arrows, make them merge
+            // Original position and values for the changed buttons (at most two)
+            var changedButtons: [UIBarButtonItem?] = [nil, nil]
+            var originalButtonsLabels: [String?] = [nil, nil]
+            var originalButtonsImages: [UIImage?] = [nil, nil]
+            // restore the arrows callback directions to the original values:
+            // (because we potentially changed them if overflow)
+            for button in visible {
+                if let gesture = button.toolbarView?.gestureRecognizers?.compactMap({ $0 as? PrecisionArrowGesture }).first,
+                   let label = title(button) {
+                    button.accessibilityLabel = accessibilityLabel(arrow: label)
+                    let image = UIImage(systemName: imageSystemName(arrow: label))
+                    button.image = image
+                    gesture.restingImage = image
+                    gesture.directions = combinedArrowDirections[title(button) ?? ""] ?? []
+                }
+            }
             if (visible.count > slots) {
                 // There are still too many buttons
                 let arrows = visible.filter { isArrow(title: title($0)) }
                 let fourArrows = visible.filter { (title($0) == "up.down.left.right") }
-                NSLog("I counted: \(arrows.count) arrow buttons")
                 if (fourArrows.count > 0) && (arrows.count > 1) {
                     // There is already a four-arrows button and there are *other* arrow buttons
                     // Just remove all of them:
@@ -686,12 +727,28 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                         if (arrows.count >= 4) && (visible.count - slots <= (arrows.count - 2)) && (firstVerticalButton > 0) && (firstHorizontalButton > 0) {
                             // There are at least 4 arrow buttons and we can fit everything by reducing them to two:
                             // Switch to two double-arrow buttons:
+                            changedButtons[0] = visible[firstVerticalButton]
+                            originalButtonsLabels[0] = title(changedButtons[0]!)
+                            originalButtonsImages[0] = changedButtons[0]?.image
                             visible[firstVerticalButton].image = UIImage(systemName: "arrow.up.and.down")
-                            visible[firstVerticalButton].title = "up.down"
-                            visible[firstVerticalButton].possibleTitles?.removeAll()
+                            visible[firstVerticalButton].possibleTitles = ["", "up.down"]
+                            visible[firstVerticalButton].title = nil
+                            visible[firstVerticalButton].accessibilityLabel = "Up and down arrows"
+                            if let gesture = changedButtons[0]?.toolbarView?.gestureRecognizers?.compactMap({ $0 as? PrecisionArrowGesture }).first {
+                                gesture.restingImage = visible[firstVerticalButton].image
+                                gesture.directions = combinedArrowDirections["up.down"] ?? []
+                            }
+                            changedButtons[1] = visible[firstHorizontalButton]
+                            originalButtonsLabels[1] = title(changedButtons[1]!)
+                            originalButtonsImages[1] = changedButtons[1]?.image
                             visible[firstHorizontalButton].image = UIImage(systemName: "arrow.left.and.right")
-                            visible[firstHorizontalButton].title = "left.right"
-                            visible[firstHorizontalButton].possibleTitles?.removeAll()
+                            visible[firstHorizontalButton].possibleTitles = ["", "left.right"]
+                            visible[firstHorizontalButton].title = nil
+                            visible[firstVerticalButton].accessibilityLabel = "Left and right arrows"
+                            if let gesture = changedButtons[1]?.toolbarView?.gestureRecognizers?.compactMap({ $0 as? PrecisionArrowGesture }).first {
+                                gesture.restingImage = visible[firstHorizontalButton].image
+                                gesture.directions = combinedArrowDirections["left.right"] ?? []
+                            }
                             visible.removeAll(where: { singleArrow(title: title($0)) })
                         } else {
                             // Either we only have two arrow buttons or we need to gain more than two slots:
@@ -699,9 +756,16 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                             // create a single 4-arrows button
                             // start from visible, insert an up.down.left.right button, then remove the others
                             if (firstArrowButton > 0) { // This test should not be necessary
+                                changedButtons[0] = visible[firstArrowButton]
+                                originalButtonsLabels[0] = title(changedButtons[0]!)
+                                originalButtonsImages[0] = changedButtons[0]?.image
                                 visible[firstArrowButton].image = UIImage(systemName: "arrow.up.and.down.and.arrow.left.and.right")
-                                visible[firstArrowButton].title = "up.down.left.right"
-                                visible[firstArrowButton].possibleTitles?.removeAll()
+                                visible[firstArrowButton].possibleTitles = ["", "up.down.left.right"]
+                                visible[firstArrowButton].title = nil
+                                if let gesture = changedButtons[0]?.toolbarView?.gestureRecognizers?.compactMap({ $0 as? PrecisionArrowGesture }).first {
+                                    gesture.restingImage = visible[firstArrowButton].image
+                                    gesture.directions = combinedArrowDirections["up.down.left.right"] ?? []
+                                }
                                 // remove all the other arrow buttons:
                                 visible.removeAll(where: { (singleArrow(title: title($0)) || doubleArrow(title: title($0))) })
                             }
@@ -757,7 +821,6 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                 })
             }
             for (index, item) in shown.enumerated() {
-                NSLog("adding: \(index) -- \(item)")
                 guard let key = item.customView else { continue }
                 let slot = CGRect(x: firstSlot + CGFloat(index) * pitch, y: 0, width: pitch, height: glass.bounds.height)
                 if #available(iOS 16, *), key is UIPasteControl {
@@ -768,7 +831,6 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                 key.accessibilityValue = item.accessibilityValue
                 if let actions = item.accessibilityCustomActions { key.accessibilityCustomActions = actions }
                 if let button = key as? UIButton {
-                    NSLog("adding button: \(button)")
                     button.menu = item.menu
                     button.showsMenuAsPrimaryAction = item.menu != nil
                     let image = item.image?.withConfiguration(Self.symbolConfiguration)
@@ -806,24 +868,37 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
                     button.accessibilityTraits = item.toolbarSelected ? [.button, .selected] : .button
                 }
             }
-        if symbolsPinned, let panel = symbolPanel {
-            let previousHeight = panel.bounds.height
-            if let window, panel.window !== window { window.addSubview(panel) }
-            let layoutPanel = {
-                panel.frame = self.panelFrame()
-                for (index, cell) in self.symbolCells.enumerated() {
-                    cell.frame = CGRect(x: 3 + CGFloat(index % self.panelColumns) * (panel.bounds.width - 6) / CGFloat(self.panelColumns), y: 3 + CGFloat(index / self.panelColumns) * 44, width: (panel.bounds.width - 6) / CGFloat(self.panelColumns), height: 44)
-                    self.symbolFaces[index].frame = cell.frame.insetBy(dx: 3, dy: 3)
-                }
-                if panel.bounds.height != previousHeight { self.updateTerminalLayout() }
+            // Here, restore the original values for the edited buttons (if any)
+            if let button = changedButtons[0] {
+                let label = originalButtonsLabels[0] ?? "up"
+                button.possibleTitles = ["", label]
+                button.accessibilityLabel = accessibilityLabel(arrow: label)
+                button.image = originalButtonsImages[0]
             }
-            if let coordinator = outsideWindow?.rootViewController?.transitionCoordinator {
-                coordinator.animate(alongsideTransition: { _ in layoutPanel() })
-            } else {
-                layoutPanel()
+            if let button = changedButtons[1] {
+                let label = originalButtonsLabels[1] ?? "left"
+                button.possibleTitles = ["", label]
+                button.accessibilityLabel = accessibilityLabel(arrow: label)
+                button.image = originalButtonsImages[1]
+            }
+            if symbolsPinned, let panel = symbolPanel {
+                let previousHeight = panel.bounds.height
+                if let window, panel.window !== window { window.addSubview(panel) }
+                let layoutPanel = {
+                    panel.frame = self.panelFrame()
+                    for (index, cell) in self.symbolCells.enumerated() {
+                        cell.frame = CGRect(x: 3 + CGFloat(index % self.panelColumns) * (panel.bounds.width - 6) / CGFloat(self.panelColumns), y: 3 + CGFloat(index / self.panelColumns) * 44, width: (panel.bounds.width - 6) / CGFloat(self.panelColumns), height: 44)
+                        self.symbolFaces[index].frame = cell.frame.insetBy(dx: 3, dy: 3)
+                    }
+                    if panel.bounds.height != previousHeight { self.updateTerminalLayout() }
+                }
+                if let coordinator = outsideWindow?.rootViewController?.transitionCoordinator {
+                    coordinator.animate(alongsideTransition: { _ in layoutPanel() })
+                } else {
+                    layoutPanel()
+                }
             }
         }
-    }
 }
 
 class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate, UIPopoverPresentationControllerDelegate, UIFontPickerViewControllerDelegate, UIAdaptivePresentationControllerDelegate, UIDocumentInteractionControllerDelegate, UIGestureRecognizerDelegate, TerminalViewDelegate {
@@ -1826,7 +1901,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
     }
     
-
     // The symbol panel's keys, in panel order: icon, then the string it inserts. The toolbar syntax reads a leading "[", "]" or "#" as
     // a group bracket or a comment, so those three carry a symbol name instead of the character.
     private let phoneSymbolLines: [String] = {
@@ -1836,6 +1910,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
 
     // defaultToolbar.txt stays the stock file; the iOS 26 phone bar swaps its two arrow keys for the four-arrow key and
     // puts the symbol panel's key in front of Paste.
+    #if SINGLE_TOOLBAR_FILE
     private func phoneToolbarDefaults(_ content: String) -> String {
         var lines: [String] = []
         for line in content.split(separator: "\n", omittingEmptySubsequences: false) {
@@ -1849,6 +1924,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         return lines.joined(separator: "\n")
     }
+    #endif
 
     @objc func generateToolbarButtons() {
         // check issue with screen size and pico.
@@ -1856,18 +1932,19 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Before iOS 26, or iPads, or VoiceOver active: single-arrow button
         // TODO: iPhone Duo, iPad style is OK when opened. How to adjust?
         var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
+        #if SINGLE_TOOLBAR_FILE
         if #available(iOS 26, *) {
             if !UIAccessibility.isVoiceOverRunning && !UIDevice.current.model.hasPrefix("iPad") {
                 // iPhones running iOS 26: activate multi-arrow buttons:
                 configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
             }
         }
-        // if ( || UIAccessibility.isVoiceOverRunning || ) {
-        //    configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
-        // }
+        #endif
         // The iOS 26 phone bar starts from the phone defaults, VoiceOver included: its arrow key has named actions.
         var phoneDefaults = PhoneKeyboardToolbar.isCustom
+        #if SINGLE_TOOLBAR_FILE
         if phoneDefaults { configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt") }
+        #endif
         if let documentsUrl = try? FileManager().url(for: .documentDirectory,
                                                      in: .userDomainMask,
                                                      appropriateFor: nil,
@@ -1880,7 +1957,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         if let configFileUrl = configFile {
             if let fileContent = try? String(contentsOf: configFileUrl, encoding: String.Encoding.utf8) {
+                #if SINGLE_TOOLBAR_FILE
                 let contentOfFile = phoneDefaults ? phoneToolbarDefaults(fileContent) : fileContent
+                #endif
+                let contentOfFile = fileContent // TODO: clean up
                 stockPhoneArrowKey = phoneDefaults
                 leftButtonGroup = []
                 rightButtonGroup = []
@@ -1969,37 +2049,43 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             }
                         }
                         if (button != nil) {
-                            // The panel has 24 cells; a group with more entries becomes the Symbols menu below. Both list the entries that have a parameter.
-                            let groupEntries = iconName == "#+=" ? activeButtonGroup.compactMap { item in title(item).map { (value: $0, item: item) } } : []
-                            if PhoneKeyboardToolbar.isCustom, !UIAccessibility.isVoiceOverRunning, iconName == "#+=", groupEntries.count <= 24 {
-                                let symbols = PhoneSymbolItem(title: "#+=", style: .plain, target: nil, action: nil)
-                                symbols.entries = groupEntries
-                                symbols.possibleTitles = ["", "#+="]
-                                symbols.accessibilityLabel = "Symbols"
-                                button = symbols
-                                activeButtonGroup = [symbols]
-                            } else if iconName == "#+=", PhoneKeyboardToolbar.isCustom {
-                                let symbols = activeButtonGroup.filter { title($0) == "." } + activeButtonGroup.filter { title($0) != "." }
-                                let symbolsMenu = UIBarButtonItem(title: "#+=", style: .plain, target: nil, action: nil)
-                                symbolsMenu.possibleTitles = ["", "#+="]
-                                symbolsMenu.accessibilityLabel = "Symbols"
-                                symbolsMenu.accessibilityCustomActions = symbols.compactMap { item in
-                                    guard let value = title(item) else { return nil }
-                                    return UIAccessibilityCustomAction(name: PhoneKeyboardToolbar.symbolNames[value] ?? value) { _ in
-                                        guard let action = item.action else { return false }
-                                        return UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
+                            // activate the sub-menus. First the special extra-keys sub-menu on iPhones (iOS 26+)
+                            if (buttonRegex[activeTag] == "extraKeys") && UIDevice.current.model.hasPrefix("iPhone") {
+                                if #available(iOS 26, *) {
+                                    // The panel has 24 cells; a group with more entries becomes the Symbols menu below. Both list the entries that have a parameter.
+                                    let groupEntries = activeButtonGroup.compactMap { item in title(item).map { (value: $0, item: item) } }
+                                    if PhoneKeyboardToolbar.isCustom, !UIAccessibility.isVoiceOverRunning, true, groupEntries.count <= 24 {
+                                        let symbols = PhoneSymbolItem(title: iconName, style: .plain, target: nil, action: nil)
+                                        symbols.entries = groupEntries
+                                        symbols.possibleTitles = ["", iconName]
+                                        symbols.accessibilityLabel = "Symbols"
+                                        button = symbols
+                                        activeButtonGroup = [symbols]
+                                    } else if PhoneKeyboardToolbar.isCustom {
+                                        let symbols = activeButtonGroup.filter { title($0) == "." } + activeButtonGroup.filter { title($0) != "." }
+                                        let symbolsMenu = UIBarButtonItem(title: iconName, style: .plain, target: nil, action: nil)
+                                        symbolsMenu.possibleTitles = ["", iconName]
+                                        symbolsMenu.accessibilityLabel = "Symbols"
+                                        symbolsMenu.accessibilityCustomActions = symbols.compactMap { item in
+                                            guard let value = title(item) else { return nil }
+                                            return UIAccessibilityCustomAction(name: PhoneKeyboardToolbar.symbolNames[value] ?? value) { _ in
+                                                guard let action = item.action else { return false }
+                                                return UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
+                                            }
+                                        }
+                                        symbolsMenu.menu = UIMenu(children: symbols.compactMap { item in
+                                            guard let value = title(item) else { return nil }
+                                            return UIAction(title: PhoneKeyboardToolbar.symbolNames[value] ?? value) { _ in
+                                                guard let action = item.action else { return }
+                                                UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
+                                            }
+                                        })
+                                        button = symbolsMenu
+                                        activeButtonGroup = [symbolsMenu]
                                     }
+                                    activeTag = noneTag // make it always visible, despite the label
                                 }
-                                symbolsMenu.menu = UIMenu(children: symbols.compactMap { item in
-                                    guard let value = title(item) else { return nil }
-                                    return UIAction(title: PhoneKeyboardToolbar.symbolNames[value] ?? value) { _ in
-                                        guard let action = item.action else { return }
-                                        UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil)
-                                    }
-                                })
-                                button = symbolsMenu
-                                activeButtonGroup = [symbolsMenu]
-                            }
+                            } // end extraKeys case
                             button!.tag = activeTag
                             if #available(iOS 16.0, *) {
                                 if (activeTag != 0) && (activeTag != noneTag) {
@@ -2272,13 +2358,37 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         showArrowTip()
     }
 
+    // Because a button can go from single arrow to combined arrow when the screen space is sparse,
+    // we merged precisionArrowTouch (for combined arrows) and longPressAction (for single arrows)
+    // for single arrows, continuous press = more arrows being sent, even if no movement.
     @objc private func precisionArrowTouch(_ sender: UILongPressGestureRecognizer) {
         guard let view = sender.view else { return }
         let point = sender.location(in: window)
         if sender.state == .began {
             precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
             precisionArrowCount = 0; precisionArrowOrigin = point; precisionArrowOffAxis = false
+            if let directions = (sender as? PrecisionArrowGesture)?.directions {
+                if directions.count == 1 {
+                    // single arrow button
+                    self.sendArrow(direction: directions[0]) // make sure single tap works, too.
+                    if (directions[0] == "up") || (directions[0] == "down") {
+                        continuousButtonTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true, block: {_ in
+                            self.sendArrow(direction: directions[0])
+                        })
+                    } else if (directions[0] == "left") || (directions[0] == "right") {
+                        continuousButtonTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true, block: {_ in
+                            self.sendArrow(direction: directions[0])
+                        })
+                    }
+                }
+            }
         } else if sender.state == .changed {
+            // Single arrow buttons: do nothing
+            if let directions = (sender as? PrecisionArrowGesture)?.directions {
+                if directions.count == 1 {
+                    return
+                }
+            }
             let delta = CGPoint(x: point.x - precisionArrowOrigin.x, y: point.y - precisionArrowOrigin.y)
             if let direction = precisionArrowDirection {
                 let projection = direction == "right" ? delta.x : direction == "left" ? -delta.x : direction == "down" ? delta.y : -delta.y
@@ -2322,6 +2432,13 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 precisionArrowTimer = timer; RunLoop.main.add(timer, forMode: .common)
             }
         } else if sender.state == .ended || sender.state == .cancelled || sender.state == .failed {
+            // single arrow buttons:
+            if let directions = (sender as? PrecisionArrowGesture)?.directions {
+                if directions.count == 1 {
+                    continuousButtonTimer.invalidate()
+                    return
+                }
+            }
             precisionArrowTimer?.invalidate(); precisionArrowDirection = nil
             setArrowGlyph(nil, from: view)
             // A flick across a two-direction key's axis is ignored, not taken for a tap, even if it comes back near where it started or first crosses the threshold on release.
