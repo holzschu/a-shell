@@ -2203,6 +2203,42 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 rightButtonGroups.append(UIBarButtonItemGroup(barButtonItems: activeButtonGroup, representativeItem: nil))
             }
         }
+        // An unused native toolbar takes the assistant's UIBarButtonItems on first launch on iPadOS 16/17. Populate only the toolbar that will display them, after generating the current buttons.
+        if !useSystemToolbar {
+            let toolbar = editorToolbar
+            var items = leftButtonGroup
+            if (leftButtonGroup.count == 0) {
+                items = rightButtonGroup
+            } else {
+                var useLiquidGlass = false
+                if #available(iOS 26, *) {
+                    if let preference = Bundle.main.infoDictionary?["UIDesignRequiresCompatibility"] as? Bool {
+                        #if DEBUG
+                        NSLog("stored UIDesignRequiresCompatibility: \(preference)")
+                        #endif
+                        useLiquidGlass = !preference
+                    }
+                }
+                if PhoneKeyboardToolbar.isCustom {
+                    // A single capsule has no middle spacer.
+                } else if useLiquidGlass {
+                    NSLog("screen width: \(screenWidth) buttoncount: \(leftButtonGroup.count + rightButtonGroup.count) device: \(UIDevice.current.name) ")
+                    // liquid glass makes the buttons larger, we can't have a middle space on small screens
+                    // NSLog("leftButtonGroup: \(leftButtonGroup)")
+                    // NSLog("rightButtonGroup: \(rightButtonGroup)")
+                    if (screenWidth > 550) || (leftButtonGroup.count + rightButtonGroup.count < 7) {
+                        items.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
+                    }
+                } else {
+                    items.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
+                }
+                if (rightButtonGroup.count > 0) {
+                    items.append(contentsOf: rightButtonGroup)
+                }
+            }
+            // Assign once: a partial list without Symbols closes its pinned panel.
+            toolbar.items = items
+        }
     }
     
     @objc func showEditorToolbar() {
@@ -2210,7 +2246,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         generateToolbarButtons()
         editorToolbar.outsideWindow = self.window
         if PhoneKeyboardToolbar.isCustom {
-            editorToolbar.items = leftButtonGroup + rightButtonGroup
             editorToolbar.setToolbarVisible(true)
             if terminalView?.inputAccessoryView === editorToolbar { return }
         }
@@ -2818,36 +2853,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             view.accessibilityCustomActions = actions
             if PhoneKeyboardToolbar.isCustom, !UIAccessibility.isVoiceOverRunning {
                 self.attachPrecisionArrow(item, view: view)
-            }
-        }
-        if (leftButtonGroup.count == 0) {
-            toolbar.items = rightButtonGroup
-        } else {
-            toolbar.items = leftButtonGroup
-            var useLiquidGlass = false
-            if #available(iOS 26, *) {
-                if let preference = Bundle.main.infoDictionary?["UIDesignRequiresCompatibility"] as? Bool {
-                    #if DEBUG
-                    NSLog("stored UIDesignRequiresCompatibility: \(preference)")
-                    #endif
-                    useLiquidGlass = !preference
-                }
-            }
-            if PhoneKeyboardToolbar.isCustom {
-                // A single capsule has no middle spacer.
-            } else if useLiquidGlass {
-                NSLog("screen width: \(screenWidth) buttoncount: \(leftButtonGroup.count + rightButtonGroup.count) device: \(UIDevice.current.name) ")
-                // liquid glass makes the buttons larger, we can't have a middle space on small screens
-                // NSLog("leftButtonGroup: \(leftButtonGroup)")
-                // NSLog("rightButtonGroup: \(rightButtonGroup)")
-                if (screenWidth > 550) || (leftButtonGroup.count + rightButtonGroup.count < 7) {
-                    toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
-                }
-            } else {
-                toolbar.items?.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil))
-            }
-            if (rightButtonGroup.count > 0) {
-                toolbar.items?.append(contentsOf: rightButtonGroup)
             }
         }
         // Long press gesture recognizer for when the toolbar itself is pressed.
