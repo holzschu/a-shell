@@ -253,6 +253,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if !(commandsAsArray() as? [String] ?? []).contains("z") {
             replaceCommand("z", "z_command", true) // change directory based on frequencys
         }
+        // Keep the shared Intents dictionary on stock cd; only the app owns this wrapper.
+        if (commandsAsArray() as? [String] ?? []).contains("zoxide") {
+            replaceCommand("cd", "zoxide_cd_command", true) // Also replaces chdir's cd_main entry.
+        }
         // replaceCommand("rehash", "rehash", true) // update list of commands for auto-complete
         replaceCommand("repeatCommand", "repeatCommand", true)
         replaceCommand("downloadFile", "downloadFile", true)

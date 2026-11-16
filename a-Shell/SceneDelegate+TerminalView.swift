@@ -215,7 +215,8 @@ extension SceneDelegate {
             } else {
                 // We have already entered a command:
                 let futureCommand = aliasedCommand(mainCommand)
-                let commandOperatesOn = operatesOn(futureCommand)
+                // replaceCommand marks app wrappers as file commands; cd still completes directories.
+                let commandOperatesOn = (futureCommand == "cd" || futureCommand == "chdir") ? "directory" : operatesOn(futureCommand)
                 let optionList = getoptString(futureCommand)
                 let lastElement = commandParts.last
                 var directoryForListing = lastElement
