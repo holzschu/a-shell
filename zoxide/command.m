@@ -93,6 +93,13 @@ int zoxide_ios_main(int argc, char **argv) { return run(argc, argv, 0); }
 int zoxide_z_main(int argc, char **argv) { return run(argc, argv, 1); }
 
 static int change_directory(int argc, char **argv) {
+    const char *fallback = ios_getenv("_ZO_CD");
+    if (argc > 1 && argv && argv[1] && fallback && strcmp(fallback, "1") == 0 &&
+        argv[1][0] != '/' && argv[1][0] != '~' && strcmp(argv[1], "-") != 0) {
+        struct stat target;
+        // lstat preserves dangling symlinks, existing files and access errors.
+        if (lstat(argv[1], &target) < 0 && errno == ENOENT) return run(argc, argv, 1);
+    }
     int succeeded;
     int status = stock_cd(argc, argv, &succeeded);
     if (!succeeded) return status;

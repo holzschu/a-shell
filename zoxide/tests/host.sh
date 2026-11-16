@@ -49,6 +49,22 @@ printf '%s\n' "$work/fixture" | cmp - "$work/cd-corrupt.out"
 printf 'status=0\n' | cmp - "$work/cd-corrupt.err"
 cmp "$work/cd-corrupt.before" "$work/cd-corrupt/db.zo"
 
+# Keyword fallback is opt-in, and an existing relative path always wins.
+_ZO_CD=1 _ZO_DATA_DIR="$work/cd-data" "$command" cd café :: pwd \
+    >"$work/cd-keyword.out" 2>"$work/cd-keyword.err"
+cmp "$work/query.out" "$work/cd-keyword.out"
+printf 'status=0\n' | cmp - "$work/cd-keyword.err"
+mkdir -p "$work/fixture/café"
+_ZO_CD=1 _ZO_DATA_DIR="$work/cd-data" "$command" cd "$work/fixture" :: cd café :: pwd \
+    >"$work/cd-existing.out" 2>"$work/cd-existing.err"
+printf '%s\n' "$work/fixture/café" | cmp - "$work/cd-existing.out"
+printf 'status=0\nstatus=0\n' | cmp - "$work/cd-existing.err"
+_ZO_CD=0 _ZO_DATA_DIR="$work/cd-data" "$command" cd café :: pwd \
+    >"$work/cd-disabled.out" 2>"$work/cd-disabled.err"
+pwd -P >"$work/cd-disabled.expected"
+cmp "$work/cd-disabled.expected" "$work/cd-disabled.out"
+grep -Fx 'cd: could not change directory' "$work/cd-disabled.err" >/dev/null
+
 # A 1,000-directory database uses upstream ordering, filtering and persistence.
 paths=("$work/fixture/space café 東京")
 for ((i = 1; i < 1000; i++)); do

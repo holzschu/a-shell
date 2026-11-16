@@ -18,6 +18,8 @@ pwd
 eval "$(zoxide init posix --hook prompt)"
 ```
 
+Set `_ZO_CD=1` to let native `cd KEYWORDS` query zoxide when its first argument is a missing relative path. Existing directories, files and symlinks retain stock `cd` behavior. Absolute paths, `cd -` and home expansion also keep their original meaning. The default leaves keyword fallback disabled.
+
 The POSIX initializer omits `zi`. Interactive queries, database editing and imports return an explicit error; fzf integration is deferred. Other shell initializers retain their upstream templates and require their corresponding shell.
 
 Configuration is read through `ios_getenv` on every invocation. `_ZO_DATA_DIR` selects an absolute database directory. The default is `HOME/Library/Application Support/zoxide`, inside the app's writable home. `_ZO_EXCLUDE_DIRS`, `_ZO_MAXAGE`, `_ZO_RESOLVE_SYMLINKS` and `_ZO_ECHO` retain upstream semantics. Command output and handled errors use the invoking ios_system thread's borrowed streams. An unexpected Rust panic is caught, but the host's panic hook may also write to process stderr. The adapter neither replaces nor closes process descriptors or host streams and retains no invocation cache. ios_system owns directory changes. Relative native jumps and current-directory exclusion use the session's logical `PWD`, with upstream symlink resolution when requested.
