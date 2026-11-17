@@ -165,8 +165,15 @@ does not supply their login password. Use SSH key authentication when the server
 and
 .BR ssh-copy-id (1).
 .SH EXIT STATUS
-Zero indicates success. Invalid arguments, missing items, denied access, cancellation and OS failures return nonzero. A missing item is successful only for
-.BR rm .
+Zero indicates success. Invalid arguments, denied access, cancellation and OS failures return nonzero. A missing item makes
+.B get
+and
+.B policy
+fail;
+.B set
+creates it, and
+.B rm
+succeeds.
 .SH SEE ALSO
 .BR ssh (1),
 .BR ssh-copy-id (1),
