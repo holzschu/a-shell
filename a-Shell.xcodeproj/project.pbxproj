@@ -222,6 +222,9 @@
 		227814F330A85966003A4910 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		227814F430A85966003A4910 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		227814F530A85966003A4910 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
+		227814F630AA2B3E003A4910 /* localCertificate.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */; };
+		227814F730AA2B42003A4910 /* localCertificate.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24822BE01ED2003A8031 /* localCertificate.pem */; };
+		227814F830AA2B45003A4910 /* localCertificateKey.pem in Resources */ = {isa = PBXBuildFile; fileRef = 227B24832BE01ED3003A8031 /* localCertificateKey.pem */; };
 		22781C4D270196AE00E90579 /* luatex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22DC1F6625700F7E0068004E /* luatex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		227A13642F308E9C006FD5C1 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 227A13632F308E9C006FD5C1 /* SwiftTerm */; };
 		227A540830850D0E007EA879 /* fzf.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227A540730850D06007EA879 /* fzf.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -313,9 +316,6 @@
 		22B0CA662E75DDDD00FDF6FE /* Python-zmq.backend.cffi._cffi.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B0CA642E75DCC100FDF6FE /* Python-zmq.backend.cffi._cffi.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B0CA672E75DDDD00FDF6FE /* PythonAzmq.backend.cffi._cffi.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B0CA652E75DCD300FDF6FE /* PythonAzmq.backend.cffi._cffi.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B114772817CEA400A5BF16 /* terminfo in Resources */ = {isa = PBXBuildFile; fileRef = 22B114762817CEA200A5BF16 /* terminfo */; };
-		22B3D35B2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */ = {isa = PBXBuildFile; fileRef = 22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */; };
-		22B3D35C2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */ = {isa = PBXBuildFile; fileRef = 22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */; };
-		22B3D35D2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */ = {isa = PBXBuildFile; fileRef = 22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */; };
 		22B9545E2F5E05C700EB6F25 /* wasm.js in Resources */ = {isa = PBXBuildFile; fileRef = 22EA905A266696A700CC9B88 /* wasm.js */; };
 		22BA51D1258E478900923893 /* mandoc.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22BA51D0258E476A00923893 /* mandoc.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22BA51D5258E479300923893 /* mandoc.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22BA51D0258E476A00923893 /* mandoc.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -2111,7 +2111,6 @@
 		22B1B83322CBC53700F7C452 /* a-Shell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell.entitlements"; sourceTree = "<group>"; };
 		22B257B9267691E2006C2B31 /* gestures.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = gestures.js; sourceTree = "<group>"; };
 		22B30BD6287389EF001E3ACF /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Intents.strings; sourceTree = "<group>"; };
-		22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = defaultToolbar_iPad.txt; sourceTree = "<group>"; };
 		22BA51D0258E476A00923893 /* mandoc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = mandoc.xcframework; path = xcfs/.build/artifacts/xcfs/mandoc/mandoc.xcframework; sourceTree = SOURCE_ROOT; };
 		22BD476823044D17007248EC /* vim */ = {isa = PBXFileReference; lastKnownFileType = folder; name = vim; path = Resources/vim; sourceTree = "<group>"; };
 		22BD97AF2A077D21005FA036 /* xdvipdfmxA.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = xdvipdfmxA.xcframework; path = xcfs/.build/artifacts/xcfs/xdvipdfmxA/xdvipdfmxA.xcframework; sourceTree = "<group>"; };
@@ -3145,7 +3144,6 @@
 				227B24832BE01ED3003A8031 /* localCertificateKey.pem */,
 				2213DCB72BDE7314008BD5F2 /* localCertificate.pfx */,
 				22E337EB2949F4CD00A8F76C /* defaultToolbar.txt */,
-				22B3D35A2F421A6500AC45E5 /* defaultToolbar_iPad.txt */,
 				22B114762817CEA200A5BF16 /* terminfo */,
 				227A433F29FD1FEF00548D77 /* Texlive 2023 */,
 				229EDE1328280C270084FE99 /* Texlive 2022 */,
@@ -4187,7 +4185,6 @@
 				224A90562ADD0999006DB9CC /* commandDictionary.plist in Resources */,
 				610000000000000000000012 /* Themes in Resources */,
 				224A90572ADD0999006DB9CC /* defaultToolbar.txt in Resources */,
-				22B3D35B2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */,
 				224A90582ADD0999006DB9CC /* gestures.js in Resources */,
 				224A90592ADD0999006DB9CC /* bin in Resources */,
 				224A905A2ADD0999006DB9CC /* task in Resources */,
@@ -4205,6 +4202,9 @@
 				224A90652ADD0999006DB9CC /* Preview Assets.xcassets in Resources */,
 				224A90662ADD0999006DB9CC /* Assets.xcassets in Resources */,
 				224A90672ADD0999006DB9CC /* vim in Resources */,
+				227814F630AA2B3E003A4910 /* localCertificate.pfx in Resources */,
+				227814F730AA2B42003A4910 /* localCertificate.pem in Resources */,
+				227814F830AA2B45003A4910 /* localCertificateKey.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4230,7 +4230,6 @@
 				229F51152473BBCA0053AC03 /* commandDictionary.plist in Resources */,
 				610000000000000000000013 /* Themes in Resources */,
 				22E337EC2949F4CF00A8F76C /* defaultToolbar.txt in Resources */,
-				22B3D35C2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */,
 				22372B722448E85D0033FE07 /* usr in Resources */,
 				22E1B53A243DF64000EA8FBD /* require.js in Resources */,
 				22484B062434F11F00D6BDDA /* node_modules in Resources */,
@@ -4269,7 +4268,6 @@
 				229D25C32579369B004A78AC /* commandDictionary.plist in Resources */,
 				610000000000000000000011 /* Themes in Resources */,
 				2253E950295B0D0A00EBE1F3 /* defaultToolbar.txt in Resources */,
-				22B3D35D2F421A6500AC45E5 /* defaultToolbar_iPad.txt in Resources */,
 				229D25C42579369B004A78AC /* bin in Resources */,
 				229D248E257931E4004A78AC /* task in Resources */,
 				223FC3C32611F57D00CDC89F /* wasm.html in Resources */,
@@ -4636,7 +4634,7 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 606;
+				CURRENT_PROJECT_VERSION = 608;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_PREVIEWS = YES;
@@ -4688,7 +4686,7 @@
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 606;
+				CURRENT_PROJECT_VERSION = 608;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_PREVIEWS = YES;
@@ -4866,7 +4864,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 606;
+				CURRENT_PROJECT_VERSION = 608;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4915,7 +4913,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 606;
+				CURRENT_PROJECT_VERSION = 608;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -4964,7 +4962,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 606;
+				CURRENT_PROJECT_VERSION = 608;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -5020,7 +5018,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 606;
+				CURRENT_PROJECT_VERSION = 608;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;

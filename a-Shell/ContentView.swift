@@ -436,8 +436,7 @@ struct ServiceDetails: View {
         }
         .background(Group {
             if #available(iOS 26, *) { Color.clear.glassEffect(.regular, in: Rectangle()) }
-            else if #available(iOS 15, *) { Rectangle().fill(.regularMaterial) }
-            else { Color(UIColor.systemGroupedBackground) }
+            else { Rectangle().fill(.regularMaterial) }
         }.ignoresSafeArea())
     }
 }
@@ -1060,28 +1059,14 @@ final class TerminalContainerView: UIView {
                 terminal.leadingAnchor.constraint(equalTo: leadingAnchor),
                 terminal.trailingAnchor.constraint(equalTo: trailingAnchor)
             ])
-            if #available(iOS 15.0, *) {
-                keyboardLayoutGuide.followsUndockedKeyboard = UIDevice.current.userInterfaceIdiom == .pad
-                let bottom = terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor)
-                bottom.isActive = true
-                keyboardBottomConstraint = bottom
-                // The accessory lands after the guide's last layout pass: check it again once the keyboard has settled.
-                keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidChangeFrameNotification, object: nil, queue: .main) { [weak self] _ in
-                    self?.setNeedsLayout()
-                })
-            } else {
-                let bottom = terminal.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
-                bottom.isActive = true
-                notificationBottomConstraint = bottom
-                for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
-                    keyboardObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
-                        guard let self = self else { return }
-                        self.keyboardFrame = note.name == UIResponder.keyboardWillHideNotification ? .zero :
-                            (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero)
-                        self.updateKeyboardInset()
-                    })
-                }
-            }
+            keyboardLayoutGuide.followsUndockedKeyboard = UIDevice.current.userInterfaceIdiom == .pad
+            let bottom = terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor)
+            bottom.isActive = true
+            keyboardBottomConstraint = bottom
+            // The accessory lands after the guide's last layout pass: check it again once the keyboard has settled.
+            keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidChangeFrameNotification, object: nil, queue: .main) { [weak self] _ in
+                self?.setNeedsLayout()
+            })
         }
     }
 
@@ -1095,7 +1080,7 @@ final class TerminalContainerView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        if #available(iOS 15.0, *), let bottom = keyboardBottomConstraint {
+        if let bottom = keyboardBottomConstraint {
             var correction: CGFloat = 0
             if UIDevice.current.userInterfaceIdiom == .phone, let terminal, terminal.isFirstResponder,
                let accessory = terminal.inputAccessoryView as? PhoneKeyboardToolbar, accessory.window != nil,
@@ -1239,9 +1224,7 @@ struct Webview : UIViewRepresentable {
         if #available(iOS 15.4, *) {
             config.preferences.isElementFullscreenEnabled = true
         }
-        if #available(iOS 14.5, *) {
-            config.preferences.isTextInteractionEnabled = true
-        }
+        config.preferences.isTextInteractionEnabled = true
         config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
         config.setValue(true as Bool, forKey: "allowUniversalAccessFromFileURLs")
         // Does not change anything either way (??? !!!)
@@ -1253,11 +1236,9 @@ struct Webview : UIViewRepresentable {
             webView.isInspectable = true
         }
         webView.allowsBackForwardNavigationGestures = true
-        if #available(iOS 15.0, *) {
-            webView.keyboardLayoutGuide.topAnchor.constraint(equalTo: webView.bottomAnchor).isActive = true
-            // This is necessary to allow the various edge constraints to engage.
-            webView.keyboardLayoutGuide.followsUndockedKeyboard = true
-        }
+        webView.keyboardLayoutGuide.topAnchor.constraint(equalTo: webView.bottomAnchor).isActive = true
+        // This is necessary to allow the various edge constraints to engage.
+        webView.keyboardLayoutGuide.followsUndockedKeyboard = true
         if #available(iOS 17, *) {
             terminalIconName = "apple.terminal"
         }
@@ -1304,9 +1285,7 @@ final class TerminalHostingController: UIHostingController<ContentView> {
     override var keyCommands: [UIKeyCommand]? {
         guard PhoneKeyboardToolbar.isCustom else { return super.keyCommands }
         let toolbar = UIKeyCommand(input: "t", modifierFlags: [.alternate, .command], action: #selector(toggleToolbar), discoverabilityTitle: (view.window?.windowScene?.delegate as? SceneDelegate)?.showToolbar ?? true ? "Hide Key Toolbar" : "Show Key Toolbar")
-        if #available(iOS 15, *) {
-            toolbar.wantsPriorityOverSystemBehavior = true
-        }
+        toolbar.wantsPriorityOverSystemBehavior = true
         return [toolbar] + (super.keyCommands ?? [])
     }
 
@@ -1377,7 +1356,7 @@ struct ContentView: View {
             Group {
                 if (showWebView && localShowWebView) {
                     // NavigationView is deprecated, but the replacement only works for iOS 16 and above.
-                    // I'm trying to keep a-Shell active for iOS 14 and above.
+                    // I'm trying to keep a-Shell active for iOS 15 and above.
                     NavigationView {
                         webview
                             .toolbar {
@@ -1579,10 +1558,8 @@ struct ContentView: View {
         let active = items.contains { $0.clients.contains { $0.open } }
         let symbol = items.isEmpty ? "antenna.radiowaves.left.and.right.slash" : "antenna.radiowaves.left.and.right"
         var image = UIImage(systemName: symbol)
-        if #available(iOS 15, *) {
-            let configuration = UIImage.SymbolConfiguration(paletteColors: [.label, active ? .systemBlue : .label])
-            image = image?.withConfiguration(configuration)
-        }
+        let configuration = UIImage.SymbolConfiguration(paletteColors: [.label, active ? .systemBlue : .label])
+        image = image?.withConfiguration(configuration)
         let action = UIAction(title: "Remote access", image: image) { [weak scene] _ in
             guard let scene else { return }
             let release = NSSelectorFromString("releaseToolbarControl")

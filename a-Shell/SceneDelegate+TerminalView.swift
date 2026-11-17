@@ -1523,36 +1523,34 @@ extension SceneDelegate {
         if (controlOn) {
             // a) switch control off
             controlOn = false
-            if #available(iOS 15.0, *) {
-                if (!useSystemToolbar) {
-                    for button in editorToolbar.items! {
-                        if title(button) == "control" {
-                            button.isSelected = controlOn
-                            break
-                        }
+            if (!useSystemToolbar) {
+                for button in editorToolbar.items! {
+                    if title(button) == "control" {
+                        button.isSelected = controlOn
+                        break
                     }
-                    editorToolbar.setNeedsLayout()
-                } else {
-                    var foundControl = false
-                    if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
-                        for leftButtonGroup in leftButtonGroups {
-                            for button in leftButtonGroup.barButtonItems {
-                                if title(button) == "control" {
-                                    foundControl = true
-                                    button.isSelected = controlOn
-                                    break
-                                }
+                }
+                editorToolbar.setNeedsLayout()
+            } else {
+                var foundControl = false
+                if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
+                    for leftButtonGroup in leftButtonGroups {
+                        for button in leftButtonGroup.barButtonItems {
+                            if title(button) == "control" {
+                                foundControl = true
+                                button.isSelected = controlOn
+                                break
                             }
                         }
                     }
-                    if (!foundControl) {
-                        if let rightButtonGroups = terminalView?.inputAssistantItem.trailingBarButtonGroups {
-                            for rightButtonGroup in rightButtonGroups {
-                                for button in rightButtonGroup.barButtonItems {
-                                    if title(button) == "control" {
-                                        button.isSelected = controlOn
-                                        break
-                                    }
+                }
+                if (!foundControl) {
+                    if let rightButtonGroups = terminalView?.inputAssistantItem.trailingBarButtonGroups {
+                        for rightButtonGroup in rightButtonGroups {
+                            for button in rightButtonGroup.barButtonItems {
+                                if title(button) == "control" {
+                                    button.isSelected = controlOn
+                                    break
                                 }
                             }
                         }
