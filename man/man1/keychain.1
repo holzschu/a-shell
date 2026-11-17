@@ -78,6 +78,8 @@ Any name beginning with
 .B git:
 must use this exact canonical HTTPS repository form, ending in
 .BR .git .
+.PP
+Use a lowercase host, an optional port from 1 to 65535, and at least two path segments, as in team/project.git. User information, query strings, fragments, percent-encoding, empty path segments, dot segments and a trailing slash are rejected. The command does not normalize URLs.
 .SH EXAMPLES
 These examples use a disposable item named
 .BR demo-password ;
@@ -105,12 +107,12 @@ keychain get demo-password | wc -c
 .PP
 Capture text in a non-exported shell variable using
 .BR dash .
-The assignment fails if export is denied. Shell variables cannot preserve NUL bytes, and command substitution removes trailing newlines; use a pipe when exact binary bytes matter. Do not print or export the variable:
+The assignment fails if export is denied. Shell variables cannot preserve NUL bytes, and command substitution removes trailing newlines; use a pipe when exact binary bytes matter. Do not display or export the variable, or pass its value as an argument to an external command. Use dash's printf builtin to feed a pipe; this example prints only the byte count:
 .PP
 .nf
 dash
 password=$(keychain get demo-password) || exit
-# Use the variable only within this shell, then discard it.
+printf '%s' "$password" | wc -c
 unset password
 exit
 .fi
