@@ -4,7 +4,7 @@
 
 `keychain get <name>` explicitly exports the exact stored bytes, without a newline, after native disclosure and authorization. Use only disposable secrets when testing: terminal output, pipelines and transcripts can capture exported bytes.
 
-`keychain ls` prints names and types only. Security may still require authentication to enumerate protected metadata. `keychain rm <name>` confirms deletion and requires fresh biometrics; deleting a missing name succeeds.
+`keychain ls` prints names and types only. Security may still require authentication to enumerate protected metadata. `keychain rm <name>` confirms deletion and requires fresh biometrics; deleting a missing name succeeds after the same confirmation and fresh biometric authorization. Deletion does not decrypt the old value, so an unreadable item can still be removed.
 
 `keychain policy <name>` prints versioned JSON and the OS/app enforcement boundary. `keychain policy <name> --edit` opens a native JSON editor, rejects unsupported fields and shows changed settings before confirmation. Cancel or dismiss the review to leave the item unchanged. Continue requests fresh biometric authorization before updating the protected envelope and ACL together.
 

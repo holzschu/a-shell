@@ -131,6 +131,15 @@ struct KeychainContract {
         os.failure = nil
         check(run(["rm", "fixture"]).status == 0 && run(["get", "fixture"]).status != 0, "authorized deletion")
         print("PASS strict policy parser, CLI edits, export cancellation and removal")
+        check(run(["set", "unreadable"], bytes).status == 0, "unreadable fixture stored")
+        os.failure = .read
+        let unreadable = run(["get", "unreadable"])
+        check(unreadable.status == 1 && unreadable.output.isEmpty, "unreadable item cannot export")
+        check(run(["rm", "unreadable"]).status == 0, "freshly authorized deletion does not decrypt old item")
+        os.failure = nil
+        check(!String(decoding: run(["ls"]).output, as: UTF8.self).contains("unreadable\t"), "unreadable item removed")
+        check(run(["get", "unreadable"]).status == 1, "removed unreadable item is missing")
+        print("PASS unreadable item removal without secret decryption")
         let reviewOS = FixtureOS()
         check(
             KeychainCommand.run(["set", "review"], input: { bytes }, platform: reviewOS).status == 0,
@@ -156,7 +165,7 @@ struct KeychainContract {
 // Only the external database and native authentication/UI are substituted.
 final class FixtureOS: CredentialPlatform {
     let biometryState: Data? = Data([1])
-    enum Failure { case update, duplicate, authorization, disclosure }
+    enum Failure { case update, duplicate, authorization, disclosure, read }
     var failure: Failure?
     var edited: Data?
     var policyReview: CredentialPolicyReview?
@@ -164,7 +173,10 @@ final class FixtureOS: CredentialPlatform {
     var mutationAuthorized = false
     var interactionGate: (() throws -> Void)?
     var items: [String: Data] = [:]
-    func read(_ name: String) throws -> Data? { items[name] }
+    func read(_ name: String) throws -> Data? {
+        if failure == .read { throw CredentialError.system(-25293) }
+        return items[name]
+    }
     func names() throws -> [String] { Array(items.keys) }
     func add(_ name: String, data: Data, policy: CredentialPolicy) throws {
         guard items[name] == nil, failure != .duplicate else { throw CredentialError.system(-25299) }

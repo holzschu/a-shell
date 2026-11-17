@@ -188,7 +188,7 @@ struct CredentialPolicy: Codable, Equatable {
         let effectiveCLI = cli?.authentication ?? authentication
         let operations = cli?.operations.joined(separator: ",") ?? ""
         return
-            "OS-enforced: private signed-app group; passcode-set ThisDeviceOnly; nonsynchronizable; \(authentication.mode.rawValue).\n"
+            "OS-enforced: private signed-app group; passcode-set ThisDeviceOnly; nonsynchronizable. Configured ACL mode: \(authentication.mode.rawValue) (not independently re-inspected).\n"
             + "App-enforced: consumer operations, exact destination, overrides and item context reuse limit \(authentication.reuseSeconds)s; bypassable by native code with this app's identity.\n"
             + "CLI: \(operations.isEmpty ? "denied" : operations); authentication=\(effectiveCLI.mode.rawValue); maximum context reuse=\(effectiveCLI.reuseSeconds)s.\n"
             + "user-presence permits biometrics OR device passcode; device-passcode permits passcode; unlocked permits entitled native callers while unlocked. No automatic fallback.\n"
@@ -333,6 +333,16 @@ enum KeychainCommand {
                         "\(name)\nExport to command output. The terminal, pipeline and transcripts can capture the exact secret bytes."
                 )
             }
+            if operation == "rm" {
+                // Deletion must remain possible when an old enrollment makes the value unreadable.
+                // Do not probe by decrypting; even missing names require deliberate fresh authorization.
+                try platform.confirm(
+                    "Delete protected password?", message: name + "\nKeep an independent recovery copy.")
+                try platform.authorizeMutation("Delete password: \(name)")
+                try platform.remove(name)
+                success = true
+                return Result()
+            }
             var encoded = try platform.read(name)
             defer { if encoded != nil { encoded!.resetBytes(in: 0..<encoded!.count) } }
             var record = try encoded.map { try CredentialRecord.decode($0, name: name) }
@@ -351,13 +361,6 @@ enum KeychainCommand {
                     try platform.add(name, data: value, policy: policy)
                 } else {
                     try platform.update(name, data: value, policy: policy)
-                }
-            case "rm":
-                if record != nil {
-                    try platform.confirm(
-                        "Delete protected password?", message: name + "\nKeep an independent recovery copy.")
-                    try platform.authorizeMutation("Delete password: \(name)")
-                    try platform.remove(name)
                 }
             case "get":
                 guard let stored = record else { throw CredentialError.missing }
