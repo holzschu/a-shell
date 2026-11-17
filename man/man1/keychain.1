@@ -65,12 +65,12 @@ Reads require the current enrolled Face ID or Touch ID set. Changing that enroll
 The command does not retain an authentication context for the next command. Mutations always require fresh biometric authorization, even when reads have an explicit reuse policy.
 .PP
 The policy editor can explicitly select user-presence (biometrics or device passcode), device-passcode, or unlocked read protection. Unlocked mode still requires the device passcode to remain set but adds no biometric or passcode prompt to the item's OS access rule. Nonzero context reuse is limited to current-set biometrics and at most 300 seconds. Consumer overrides can only strengthen authentication or shorten reuse. Consumer permissions, destination scopes and reuse limits are app-enforced; native code sharing the app identity is not isolated by them.
-.SH NAMES AND GIT DESTINATIONS
+.SH NAMES AND GIT CREDENTIALS
 Names contain 1 to 255 ASCII letters, digits or the characters
 .BR "._-:/" ,
 with no leading hyphen or pair of consecutive dots.
 .PP
-A reserved name such as
+A Git credential name such as
 .B git:https://example.invalid/team/project.git
 binds its Git policy to that exact canonical HTTPS repository URL and disables CLI export by default, to avoid treating a repository credential as a general exportable password. This reserves a destination-bound policy for a Git consumer; the command does not install a Git credential helper or automatically authenticate Git.
 .PP
@@ -138,6 +138,18 @@ Delete only the example item, with named confirmation and fresh biometrics:
 .nf
 keychain rm demo-password
 .fi
+.PP
+A Git credential uses a repository URL as its name. Choose an unused disposable destination; these commands store it through secure entry, inspect its policy and delete it:
+.PP
+.nf
+keychain set git:https://example.invalid/team/project.git
+keychain policy git:https://example.invalid/team/project.git
+keychain rm git:https://example.invalid/team/project.git
+.fi
+.PP
+Its default policy denies
+.B keychain get
+export. This command does not supply the credential to Git for authentication.
 .SH SSH PASSWORDS
 This command does not provide an SSH password-input adapter. On iOS, a-Shell's SSH password prompt reads from its terminal and does not run an
 .B SSH_ASKPASS

@@ -294,7 +294,7 @@ enum KeychainCommand {
         var diagnostic = ""
     }
     static let usage =
-        "usage: keychain set|get|rm|policy <name> | keychain policy <name> --edit | keychain ls\nset reads up to 65536 bytes from stdin to EOF, or native secure entry for a terminal. get is explicit export to command output after native disclosure. No secret argv, environment, clipboard or policy files.\n"
+        "usage: keychain set|get|rm|policy <name> | keychain policy <name> --edit | keychain ls\nset reads up to 65536 bytes from stdin to EOF, or native secure entry for a terminal. get is explicit export to command output after native disclosure. No secret argv, environment, clipboard or policy files.\nGit credential names use git:https://host/team/project.git and deny CLI export by default. See man keychain for naming rules, protections and examples.\n"
 
     // Both the native C command and host contracts enter here.
     static func run(_ arguments: [String], input: () throws -> Data, platform: CredentialPlatform) -> Result {
