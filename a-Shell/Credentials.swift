@@ -627,7 +627,8 @@ enum CredentialSceneGate {
             return query
         }
         private func status(_ status: OSStatus) throws {
-            try available()
+            // Security may commit a mutation just before background/lock arrives. Do not turn that success
+            // into a failure suggesting a retry; read callers separately recheck before consuming data.
             switch status {
             case errSecSuccess: return
             case errSecUserCanceled: throw CredentialError.denied("authentication cancelled")
@@ -667,8 +668,8 @@ enum CredentialSceneGate {
             request[kSecMatchLimit as String] = kSecMatchLimitOne
             var value: CFTypeRef?
             let result = SecItemCopyMatching(request as CFDictionary, &value)
+            try available()
             if result == errSecItemNotFound {
-                try available()
                 return nil
             }
             try status(result)
@@ -703,8 +704,8 @@ enum CredentialSceneGate {
             request[kSecMatchLimit as String] = kSecMatchLimitAll
             var value: CFTypeRef?
             let result = SecItemCopyMatching(request as CFDictionary, &value)
+            try available()
             if result == errSecItemNotFound {
-                try available()
                 return []
             }
             try status(result)
@@ -717,19 +718,19 @@ enum CredentialSceneGate {
             }
         }
         func add(_ name: String, data: Data, policy: CredentialPolicy) throws {
-            try available()
             var request = query(name)
             request[kSecAttrAccessControl as String] = try accessControl(policy)
             request[kSecValueData as String] = data
+            try available()
             try status(SecItemAdd(request as CFDictionary, nil))
         }
         func update(_ name: String, data: Data, policy: CredentialPolicy) throws {
-            try available()
             CredentialSessions.shared.invalidate(name)
             // One update changes both the protected envelope and ACL, never delete/add.
             let attributes: [String: Any] = [
                 kSecValueData as String: data, kSecAttrAccessControl as String: try accessControl(policy),
             ]
+            try available()
             try status(SecItemUpdate(query(name) as CFDictionary, attributes as CFDictionary))
         }
         func remove(_ name: String) throws {
@@ -852,9 +853,10 @@ enum CredentialSceneGate {
                     done.signal()
                     return
                 }
+                // A hidden window can strand invisible UI while the command holds its serialization lock.
                 guard
                     let root = self.scene.windows.first(where: { $0.isKeyWindow })?.rootViewController,
-                    root.presentedViewController == nil, root.viewIfLoaded?.window != nil
+                    root.presentedViewController == nil, root.viewIfLoaded?.window?.isHidden == false
                 else {
                     result = .failure(
                         CredentialError.denied("interaction required: originating scene has no available presenter"))
