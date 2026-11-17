@@ -12,7 +12,7 @@ z notes
 pwd
 ```
 
-`z DIRECTORY` also visits an existing directory and records it. `z` without arguments uses `HOME`; `z -` uses the native shell's previous directory. Successful native `cd` and `chdir` visits, including directory picker and bookmark navigation, are recorded through upstream `add`. Failed changes are not recorded, and a database error leaves the original `cd` result and output intact. In a persistent POSIX shell such as Dash, upstream's prompt hook remains available:
+`z DIRECTORY` also visits an existing directory and records it. `z` without arguments uses `HOME`; `z -` uses the native shell's previous directory. Successful native `cd` and `chdir` visits, including directory picker and bookmark navigation, are recorded through upstream `add`. Programmatic directory changes for window restore, shortcuts and WASI retain stock behavior and do not record visits. Failed changes are not recorded, and a database error leaves the original `cd` result and output intact. In a persistent POSIX shell such as Dash, upstream's prompt hook remains available:
 
 ```sh
 eval "$(zoxide init posix --hook prompt)"
@@ -60,6 +60,8 @@ bash zoxide/tests/host.sh /absolute/owned/cache/host-command /absolute/empty/res
 The host checks cover a 1,000-directory fixture with spaces and Unicode, ranking, add/query/remove, missing/corrupt databases, no match, invalid options, unsupported operations, POSIX initialization, same-process environment changes and recovery, scoped output, failed directory changes, and descriptor stability over 20 calls.
 
 Host selection checks run the fzf CLI in filter mode through the external command boundary. CI pins the CLI to fzf 0.74.5, the version used by the bundled port. These checks do not qualify the bundled iOS selector's terminal interaction or restrictions; those require the app probes.
+
+`tests/programmatic-chdir.js` checks the WebView dispatch used by WASI `chdir` through the native `jsc` command. Enable `_ZO_CD=1`, seed a zoxide match for a missing relative keyword, and pass that keyword plus an existing absolute directory to `jsc programmatic-chdir.js KEYWORD DIRECTORY`. Require its JSON `result` to be `PASS`: a missing path returns false without changing cwd, a valid path succeeds, and the original cwd is restored. Compare `zoxide query -l -s` before and after the probe; programmatic changes must not add visits or ranks. This checks the shared dispatch, not Wasmer's pointer/errno conversion. Check the JSON output even if `jsc` exits zero.
 
 For Simulator and phone acceptance, copy `tests/acceptance.sh` into the app's Documents directory and run it through Dash with a new absolute result directory and nonce. Capture the same script on a baseline without this port first: its version gate must fail before creating the database fixture. On the candidate:
 

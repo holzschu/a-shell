@@ -3858,7 +3858,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         storeName(fileURL: newDirectory)
         // Call cd_main instead of ios_system("cd dir") to avoid closing streams.
         if (newDirectory.isDirectory) {
-            changeDirectory(path: newDirectory.path) // call cd_main and checks secured bookmarked URLs
+            changeDirectory(path: newDirectory.path, recordVisit: true) // call cd_main and checks secured bookmarked URLs
             if (newDirectory.path != currentDirectory) {
                 previousDirectory = currentDirectory
                 currentDirectory = newDirectory.path
