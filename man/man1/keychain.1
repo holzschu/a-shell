@@ -73,6 +73,11 @@ with no leading hyphen or pair of consecutive dots.
 A reserved name such as
 .B git:https://example.invalid/team/project.git
 binds its Git policy to that exact canonical HTTPS repository URL and disables CLI export by default, to avoid treating a repository credential as a general exportable password. This reserves a destination-bound policy for a Git consumer; the command does not install a Git credential helper or automatically authenticate Git.
+.PP
+Any name beginning with
+.B git:
+must use this exact canonical HTTPS repository form, ending in
+.BR .git .
 .SH EXAMPLES
 These examples use a disposable item named
 .BR demo-password ;
@@ -84,10 +89,10 @@ Store a value using the native secure text field:
 keychain set demo-password
 .fi
 .PP
-Store a throwaway example from a pipe, without a trailing newline:
+Store a throwaway example from a pipe using dash's printf builtin, without a trailing newline:
 .PP
 .nf
-printf '%s' 'example-only' | keychain set demo-password
+dash -c 'printf "%s" "example-only" | keychain set demo-password'
 .fi
 .PP
 For a real value, pipe an existing producer's standard output instead of placing the value in a command line. Piped input preserves binary bytes; native text entry stores UTF-8 text.
