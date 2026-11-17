@@ -4,7 +4,7 @@ This port embeds upstream zoxide 0.10.0 with its ranking, filtering, database fo
 
 ## Use
 
-The native `z` command uses upstream queries because the existing a-Shell prompt cannot retain POSIX functions. It changes directory through ios_system's `cd_main`, verifies the destination, and records the visit through upstream `add`. For example:
+The native `z` command uses upstream queries because the existing a-Shell prompt cannot retain POSIX functions. It changes directory through ios_system's `cd_main`, verifies the destination, and records the visit through upstream `add`. Legacy frequency history is retained for completion but is not imported into zoxide. For example:
 
 ```sh
 zoxide add "/path/to/project notes"
@@ -22,7 +22,7 @@ Set `_ZO_CD=1` to let native `cd KEYWORDS` query zoxide when its first argument 
 
 Use `zi KEYWORDS` for interactive selection with the bundled fzf, or type `z KEYWORDS` followed by Space and Tab at the native prompt. Space-Tab excludes the current directory, while ordinary `zi` includes it. Tab after bare `z ` keeps directory completion. The native Space-Tab gesture submits the query as a command, unlike upstream zsh's editable completion: canceling returns to an empty prompt, and no match reports an error. `zoxide query --interactive` prints a selection without changing directory. `_ZO_FZF_OPTS` supplies fzf options in the nested command's environment. The bundled fzf does not support subprocess previews or execute bindings, so the default selector omits upstream's directory preview. Database editing and imports return an explicit error. Shell initializers retain their upstream templates and require their corresponding shell.
 
-Configuration is read through `ios_getenv` on every invocation. `_ZO_DATA_DIR` selects an absolute database directory. The default is `HOME/Library/Application Support/zoxide`, inside the app's writable home. `_ZO_EXCLUDE_DIRS`, `_ZO_MAXAGE`, `_ZO_RESOLVE_SYMLINKS` and `_ZO_ECHO` retain upstream semantics. Command output and handled errors use the invoking ios_system thread's borrowed streams. An unexpected Rust panic is caught, but the host's panic hook may also write to process stderr. The adapter neither replaces nor closes process descriptors or host streams and retains no invocation cache. ios_system owns directory changes. Relative native jumps and current-directory exclusion use the session's logical `PWD`, with upstream symlink resolution when requested.
+Configuration is read through `ios_getenv` on every invocation. `_ZO_DATA_DIR` selects an absolute database directory. The default is `HOME/Library/Application Support/zoxide`, inside the app's writable home. `_ZO_EXCLUDE_DIRS`, `_ZO_MAXAGE`, `_ZO_RESOLVE_SYMLINKS` and `_ZO_ECHO` retain upstream semantics. Command output and handled errors use the invoking ios_system thread's borrowed streams. An unexpected Rust panic is caught, but the host's panic hook may also write to process stderr. The adapter leaves process descriptors intact and restores the thread's borrowed streams after temporary redirection in the `cd` wrapper; it retains no invocation cache. ios_system owns directory changes. Relative native jumps and current-directory exclusion use the session's logical `PWD`, with upstream symlink resolution when requested.
 
 a-Shell decomposes native command input into NFD. The Foundation bridge composes UTF-8 arguments, configuration values and filesystem-derived paths into NFC before upstream matching and storage, so native Unicode keywords agree with paths added from scripts. Loaded NFD database paths are composed too; upstream's duplicate merge preserves their combined rank and latest visit time. The database format and caller's environment stay unchanged.
 
@@ -30,7 +30,7 @@ Concurrent zoxide invocations in one app are rejected while another invocation r
 
 ## Build
 
-Install the rustup-managed Rust 1.96.1 toolchain. From the repository root, use the existing native-framework producer:
+Install the rustup-managed Rust 1.96.1 toolchain and the fzf 0.74.5 CLI on `PATH`. The host checks also use `dash`, which macOS ships. From the repository root, use the existing native-framework producer:
 
 ```sh
 nice -n 15 bash ci/native-frameworks.sh zoxide

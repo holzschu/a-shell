@@ -14,6 +14,14 @@ case $product in
   helix|fd|fzf|navi|gitoxide|Ruff|rg|zoxide|node) ;;
   *) echo "Unknown native product: $product" >&2; exit 2 ;;
 esac
+if [[ $product == zoxide ]]; then
+  # Host selector checks otherwise fail only after the SDK/framework builds.
+  if ! host_fzf_version=$(fzf --version 2>/dev/null) || [[ ${host_fzf_version%% *} != 0.74.5 ]]; then
+    echo 'Install the fzf 0.74.5 CLI on PATH for the zoxide host checks.' >&2
+    exit 1
+  fi
+  command -v dash >/dev/null || { echo 'The zoxide host checks require dash on PATH.' >&2; exit 1; }
+fi
 work=$app/.build/native/$product
 dist=$app/.build/dist
 mkdir -p "$work" "$dist"
