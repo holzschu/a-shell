@@ -1,0 +1,154 @@
+.TH KEYCHAIN 1 "November 17, 2026" "a-Shell"
+.SH NAME
+keychain \- store protected passwords in a-Shell's private Keychain group
+.SH SYNOPSIS
+.B keychain set
+.I name
+.br
+.B keychain get
+.I name
+.br
+.B keychain rm
+.I name
+.br
+.B keychain ls
+.br
+.B keychain policy
+.I name
+.RB [ --edit ]
+.br
+.B keychain --help
+.SH DESCRIPTION
+.B keychain
+stores passwords and other values of up to 65536 bytes in the signed app's private Keychain group. It looks up only items created for this command; it cannot browse Apple's Passwords app or other apps' Keychain items. Full a-Shell and a-Shell mini have separate app identities and do not share these items.
+.PP
+Keep a-Shell in the foreground for native confirmation, secure entry and authentication. Backgrounding or locking cancels pending authentication and entry. Keep an independent recovery copy: this command is not a backup service.
+.SH COMMANDS
+.TP
+.BI "set " name
+Read bytes from standard input to EOF. If standard input is a terminal, open native secure text entry instead. Creating or replacing an item requires fresh biometric authorization; replacement preserves the existing policy. Do not put real secret values in command arguments, environment variables or files.
+.TP
+.BI "get " name
+Ask for native export confirmation, read the item under its OS access control and apply its configured CLI policy. Write the exact stored bytes to standard output with no added newline. Exported bytes can be captured by the receiving command, terminal or transcript. Cancel before continuing if that destination is unsuitable.
+.TP
+.B ls
+Print item names and types, never values. The OS may still request authentication to enumerate protected metadata.
+.TP
+.BI "rm " name
+Confirm the named deletion, then require fresh biometrics. A missing name succeeds after the same confirmation and authentication. Removal does not decrypt the old value, so an unreadable item can still be deleted.
+.TP
+.BI "policy " name
+Show the versioned JSON policy and which protections the OS or app enforces. Reading the policy first reads the protected item and may require authentication.
+.TP
+.BI "policy " "name " --edit
+Open a native JSON editor. Invalid or unsupported settings leave the item unchanged. Review the changed settings, then Continue to authorize the update with fresh biometrics; Cancel or dismiss to keep the old policy.
+.TP
+.B --help
+Print brief usage. The argument
+.B help
+also prints usage.
+.SH DEFAULT PROTECTION
+.TP
+.B Private app group
+The item belongs to this signed app's Keychain access group. Other app identities cannot access it. This does not isolate native code running inside the same app.
+.TP
+.B Passcode-set ThisDeviceOnly
+A device passcode must be set. The item is tied to this device and does not migrate to another device through a backup restore. Removing the passcode makes the item unusable.
+.TP
+.B No synchronization
+The item is not synchronized through iCloud Keychain.
+.TP
+.B Current biometric enrollment
+Reads require the current enrolled Face ID or Touch ID set. Changing that enrollment can invalidate access. There is no automatic fallback to a weaker protection mode.
+.TP
+.B Zero context reuse
+The command does not retain an authentication context for the next command. Mutations always require fresh biometric authorization, even when reads have an explicit reuse policy.
+.PP
+The policy editor can explicitly select user-presence (biometrics or device passcode), device-passcode, or unlocked read protection. Unlocked mode still requires the device passcode to remain set but adds no biometric or passcode prompt to the item's OS access rule. Nonzero context reuse is limited to current-set biometrics and at most 300 seconds. Consumer overrides can only strengthen authentication or shorten reuse. Consumer permissions, destination scopes and reuse limits are app-enforced; native code sharing the app identity is not isolated by them.
+.SH NAMES AND GIT DESTINATIONS
+Names contain 1 to 255 ASCII letters, digits or the characters
+.BR "._-:/" ,
+with no leading hyphen or pair of consecutive dots.
+.PP
+A reserved name such as
+.B git:https://example.invalid/team/project.git
+binds its Git policy to that exact canonical HTTPS repository URL and disables CLI export by default, to avoid treating a repository credential as a general exportable password. This reserves a destination-bound policy for a Git consumer; the command does not install a Git credential helper or automatically authenticate Git.
+.SH EXAMPLES
+These examples use a disposable item named
+.BR demo-password ;
+choose an unused name.
+.PP
+Store a value using the native secure text field:
+.PP
+.nf
+keychain set demo-password
+.fi
+.PP
+Store a throwaway example from a pipe, without a trailing newline:
+.PP
+.nf
+printf '%s' 'example-only' | keychain set demo-password
+.fi
+.PP
+For a real value, pipe an existing producer's standard output instead of placing the value in a command line. Piped input preserves binary bytes; native text entry stores UTF-8 text.
+.PP
+Export into a pipe without displaying the value; this example prints only its byte count:
+.PP
+.nf
+keychain get demo-password | wc -c
+.fi
+.PP
+Capture text in a non-exported shell variable using
+.BR dash .
+The assignment fails if export is denied. Shell variables cannot preserve NUL bytes, and command substitution removes trailing newlines; use a pipe when exact binary bytes matter. Do not print or export the variable:
+.PP
+.nf
+dash
+password=$(keychain get demo-password) || exit
+# Use the variable only within this shell, then discard it.
+unset password
+exit
+.fi
+.PP
+List names, inspect the policy and edit it:
+.PP
+.nf
+keychain ls
+keychain policy demo-password
+keychain policy demo-password --edit
+.fi
+.PP
+For example, leave
+.B authentication.mode
+as
+.B biometry-current-set
+and change
+.B authentication.reuseSeconds
+from 0 to 30 for bounded read-context reuse. Review the old and new values before Continue. Set it back to 0 to restore the default; this does not relax the fresh-biometric requirement for mutations.
+.PP
+Delete only the example item, with named confirmation and fresh biometrics:
+.PP
+.nf
+keychain rm demo-password
+.fi
+.SH SSH PASSWORDS
+This command does not provide an SSH password-input adapter. On iOS, a-Shell's SSH password prompt reads from its terminal and does not run an
+.B SSH_ASKPASS
+program. Piping
+.B keychain get
+into
+.BR ssh ,
+.B scp
+or
+.B sftp
+does not supply their login password. Use SSH key authentication when the server permits it; see
+.BR ssh-keygen (1)
+and
+.BR ssh-copy-id (1).
+.SH EXIT STATUS
+Zero indicates success. Invalid arguments, missing items, denied access, cancellation and OS failures return nonzero. A missing item is successful only for
+.BR rm .
+.SH SEE ALSO
+.BR ssh (1),
+.BR ssh-copy-id (1),
+.BR ssh-keygen (1)
