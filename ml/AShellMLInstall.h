@@ -8,7 +8,6 @@
 NSDictionary *ASMLAcquireVersion(NSString *modelID, NSError *(^check)(void), NSError **error);
 void ASMLReleaseVersion(NSString *leaseID);
 NSDictionary *ASMLInstalledVersion(NSString *modelID, NSError **error);
-NSDictionary *ASMLInstall(NSString *location, NSString *digest, NSError **error);
 NSDictionary *ASMLInstallPackage(NSString *location, NSString *digest, NSError **error);
 NSDictionary *ASMLRollback(NSString *modelID, NSError **error);
 NSDictionary *ASMLRemove(NSString *modelID, NSError **error);

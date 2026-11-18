@@ -579,9 +579,6 @@ int asml_command(int argc, char **argv, FILE *out, FILE *err) {
         } else if ((argc == 3 || (argc == 5 && !strcmp(argv[3], "--sha256"))) && !strcmp(argv[1], "install") && strcmp(argv[2], "--manifest")) {
             NSError *error = nil; NSDictionary *value = ASMLInstallPackage([NSString stringWithUTF8String:argv[2]], argc == 5 ? [NSString stringWithUTF8String:argv[4]] : nil, &error);
             response = respond(value, error, &status);
-        } else if (argc == 6 && !strcmp(argv[1], "install") && !strcmp(argv[2], "--manifest") && !strcmp(argv[4], "--sha256")) {
-            NSError *error = nil; NSDictionary *value = ASMLInstall([NSString stringWithUTF8String:argv[3]], [NSString stringWithUTF8String:argv[5]], &error);
-            response = respond(value, error, &status);
         } else if (argc == 3 && !strcmp(argv[1], "info")) {
             response = asml_begin(argv[2], "cpu", &status);
             if (!status) {

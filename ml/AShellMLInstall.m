@@ -166,36 +166,18 @@ static NSDictionary *treeReceipt(NSURL *url, BOOL sync, NSError **error) {
 }
 static BOOL planOK(NSDictionary *plan, NSError **error);
 static BOOL packageFiles(NSURL *directory, NSDictionary *plan, NSError **error);
-static NSURL *contentURL(NSURL *directory, NSDictionary *plan) {
-    return plan[@"package_format"] ? [directory URLByAppendingPathComponent:@"package" isDirectory:YES] : directory;
-}
-static NSString *const legacyDigest = @"6d513d2f4308a30f53f4e3daf19ac91c001950d5466f57db9638d5aaebf835c9";
-static NSDictionary *legacyReceipt(NSDictionary *record, NSError **error) {
-    if (![record[@"manifest_sha256"] isEqual:legacyDigest] || ![record[@"model_id"] isEqual:@"mnist"] || ![record[@"runtime_abi"] isEqual:@1] || ![record[@"schema"] isEqual:@1] || ![record[@"runtime"] isEqual:@"CoreML"] || ![record[@"source_sha256"] isEqual:@"816d1a222d5272109166ffc819d7ce44aff923a673884e34d982aa74985ba587"] || ![record[@"license_sha256"] isEqual:@"5e3106bd9eecc90b65e9ddeceae82ae815f5f2294ab64ddf4a6be696b2b4eccb"]) { reject(error, 2, @"Invalid S1 model record; reinstall with coreml install"); return nil; }
-    NSURL *dir = version(legacyDigest);
-    if (!verifiedFile([dir URLByAppendingPathComponent:@"MNISTClassifier.mlmodel"], @395695, record[@"source_sha256"]) || !verifiedFile([dir URLByAppendingPathComponent:@"LICENSE.txt"], @1049, record[@"license_sha256"])) { reject(error, 2, @"S1 model files are missing; download again with coreml install"); return nil; }
-    NSDictionary *compiled = treeReceipt([dir URLByAppendingPathComponent:@"model.mlmodelc"], NO, error);
-    if (!compiled) return nil;
-    NSMutableDictionary *receipt = [record mutableCopy];
-    receipt[@"compiled_files"] = compiled; receipt[@"legacy_s1"] = @YES; receipt[@"license_bytes"] = @1049; receipt[@"path"] = dir.path;
-    NSNumber *flag; [dir getResourceValue:&flag forKey:NSURLIsExcludedFromBackupKey error:error]; receipt[@"excluded_from_backup"] = flag ?: @NO;
-    return receipt;
-}
 static NSDictionary *checkedReceipt(NSString *digest, NSError **error) {
     if (!digestOK(digest)) { reject(error, 2, @"Invalid installed manifest digest"); return nil; }
     NSURL *dir = version(digest);
     NSDictionary *receipt = readJSON([dir URLByAppendingPathComponent:@"receipt.json"]);
-    BOOL legacy = [digest isEqual:legacyDigest] && [receipt[@"legacy_s1"] isEqual:@YES];
     NSData *manifest = [NSData dataWithContentsOfURL:[dir URLByAppendingPathComponent:@"manifest.json"]];
     id plan = manifest ? [NSJSONSerialization JSONObjectWithData:manifest options:0 error:nil] : nil;
-    if (!legacy && (![plan isKindOfClass:NSDictionary.class] || !planOK(plan, nil))) { reject(error, 2, @"Installed manifest is invalid; download again with coreml install"); return nil; }
+    if (![plan isKindOfClass:NSDictionary.class] || !planOK(plan, nil)) { reject(error, 2, @"Installed manifest is invalid; download again with coreml install"); return nil; }
     for (NSString *key in plan) {
         if (![receipt[key] isEqual:plan[key]]) { reject(error, 2, @"Installed receipt differs from its pinned manifest; download again with coreml install"); return nil; }
     }
-    if ((legacy && !legacyReceipt(receipt, error)) || ![receipt[@"manifest_sha256"] isEqual:digest] || (!legacy && ![hashData(manifest ?: NSData.data) isEqual:digest]) ||
-        (plan[@"package_format"] ? !packageFiles(contentURL(dir, plan), plan, nil) :
-        (!verifiedFile([dir URLByAppendingPathComponent:@"MNISTClassifier.mlmodel"], receipt[@"source_bytes"], receipt[@"source_sha256"]) ||
-        !verifiedFile([dir URLByAppendingPathComponent:@"LICENSE.txt"], receipt[@"license_bytes"], receipt[@"license_sha256"]))) ||
+    if (![receipt[@"manifest_sha256"] isEqual:digest] || ![hashData(manifest ?: NSData.data) isEqual:digest] ||
+        !packageFiles([dir URLByAppendingPathComponent:@"package" isDirectory:YES], plan, nil) ||
         ![treeReceipt([dir URLByAppendingPathComponent:@"model.mlmodelc"], NO, nil) isEqual:receipt[@"compiled_files"]]) {
         reject(error, 2, @"Installed model files are missing or changed; download again with coreml install"); return nil;
     }
@@ -208,9 +190,7 @@ static NSDictionary *scopedASMLInstalledVersion(NSString *modelID, NSError **err
     if (!supported(modelID, error)) return nil;
     NSDictionary *active = readJSON([rootURL() URLByAppendingPathComponent:@"active.json"]);
     if (!active) { reject(error, 2, @"Model is not installed; reinstall with coreml install"); return nil; }
-    // Read old S1 records as well; a new install upgrades these without deleting them first.
-    NSString *digest = active[@"active"] ?: active[@"manifest_sha256"];
-    if (!active[@"active"] && [digest isEqual:legacyDigest]) return legacyReceipt(active, error);
+    NSString *digest = active[@"active"];
     return checkedReceipt(digest, error);
 }
 static void collect(NSDictionary *record);
@@ -518,6 +498,7 @@ static BOOL packageFiles(NSURL *directoryURL, NSDictionary *plan, NSError **erro
     return seen.count == members.count || reject(error, 2, @"Package members are missing");
 }
 static BOOL planOK(NSDictionary *plan, NSError **error) {
+    if (![plan[@"package_format"] isEqual:@"ashell-model-ustar-v1"]) return reject(error, 2, @"Only portable model packages are supported; reinstall with coreml install");
     if (![plan[@"memory_profile"] isKindOfClass:NSDictionary.class] || ![plan[@"validation"] isKindOfClass:NSDictionary.class]) return reject(error, 2, @"Manifest memory profile and validation must be objects");
     if (![plan[@"source_url"] isKindOfClass:NSString.class] || ![plan[@"license_url"] isKindOfClass:NSString.class]) return reject(error, 2, @"Manifest URLs must be strings");
     if (ASMLEmbeddingID(selectedModel())) {
@@ -540,9 +521,7 @@ static BOOL planOK(NSDictionary *plan, NSError **error) {
         ![plan[@"minimum_ios"] isKindOfClass:NSString.class] || ![plan[@"preprocessing"] isKindOfClass:NSString.class] || ![plan[@"decoder"] isKindOfClass:NSString.class] ||
         plan[@"archive"] || plan[@"files"] || plan[@"source_path"] || plan[@"archive_url"]) return reject(error, 2, @"Unsupported or unsafe manifest for the drawing-classification adapter");
     if (![plan[@"task"] isEqual:@"drawing-classification"] || ![plan[@"adapter_version"] isEqual:@1]) return reject(error, 2, @"Unsupported task/adapter; only drawing-classification/1 is registered");
-    if (plan[@"package_format"]) {
-        if (!packagePlan(plan, error) || ![plan[@"outputs"] isEqual:@{@"classLabel":@{@"type":@"int64"}, @"labelProbabilities":@{@"type":@"dictionary", @"key_type":@"int64", @"count":@10}}]) return reject(error, 2, @"Invalid package members or output feature declarations");
-    } else if (!webURL([NSURL URLWithString:plan[@"source_url"]]) || !webURL([NSURL URLWithString:plan[@"license_url"]])) return reject(error, 2, @"Manifest file URLs require HTTPS or literal loopback HTTP");
+    if (!packagePlan(plan, error) || ![plan[@"outputs"] isEqual:@{@"classLabel":@{@"type":@"int64"}, @"labelProbabilities":@{@"type":@"dictionary", @"key_type":@"int64", @"count":@10}}]) return reject(error, 2, @"Invalid package members or output feature declarations");
     NSString *minimum = plan[@"minimum_ios"];
     NSScanner *scanner = [NSScanner scannerWithString:minimum]; NSInteger major, minor = 0;
     if (![scanner scanInteger:&major] || major < 14 || major > 100 || (![scanner isAtEnd] && (![scanner scanString:@"." intoString:nil] || ![scanner scanInteger:&minor] || !scanner.isAtEnd))) return reject(error, 2, @"Invalid minimum OS version");
@@ -732,11 +711,11 @@ static BOOL copyPackage(NSURL *source, NSURL *target, NSURL *stage, NSString *ge
     if (!ok) { if (!error || !*error) reject(error, 2, @"Package changed or could not be copied"); return NO; }
     return exclude(target, error);
 }
-static NSDictionary *install(NSString *location, NSString *digest, BOOL archive, NSError **error) {
+static NSDictionary *install(NSString *location, NSString *digest, NSError **error) {
 #if TARGET_OS_IPHONE
     if ([NSThread isMainThread] || [NSBundle.mainBundle.bundlePath containsString:@".appex"]) { reject(error, 75, @"Installation requires an off-main caller in the main application"); return nil; }
 #endif
-    if ((!archive || digest) && !digestOK(digest)) { reject(error, 2, @"Invalid SHA256 pin"); return nil; }
+    if (digest && !digestOK(digest)) { reject(error, 2, @"Invalid SHA256 pin"); return nil; }
     int guard = lockFile(@".install-lock", LOCK_EX, YES, error); if (guard < 0) return nil;
     NSURL *archiveFile;
     NSMutableDictionary *context = NSThread.currentThread.threadDictionary; id previousCheck = context[@"ASMLInstallCheck"];
@@ -760,40 +739,24 @@ static NSDictionary *install(NSString *location, NSString *digest, BOOL archive,
                 if (!plainPath(stale, error) || ![fm removeItemAtURL:stale error:error]) return nil;
             }
         }
-        NSURL *manifestFile = [stage URLByAppendingPathComponent:[@"manifest-" stringByAppendingString:generation]];
         NSURL *url = [NSURL URLWithString:location];
         NSData *data; NSDictionary *plan; NSString *archiveSHA;
-        if (archive) {
-            if (!spaceForPlan(@{@"disk_estimate_bytes":@(8 * 1024 * 1024)}, error)) return nil;
-            NSURL *package = [stage URLByAppendingPathComponent:[NSString stringWithFormat:@"archive-%@.download", generation]];
-            archiveFile = package;
-            if (!phase(stage, transferID, generation, @"downloading", error)) return nil;
-            if (!url.scheme || url.isFileURL) {
-                if (!copyPackage(url.isFileURL ? url : [NSURL fileURLWithPath:location], package, stage, generation, error)) return nil;
-            } else if (!fetchFile(location, package, packageCeiling, stage, generation, error)) return nil;
-            archiveSHA = hashFile(package, error);
-            if (!archiveSHA || (digest && ![archiveSHA isEqual:digest])) { reject(error, 2, @"Archive SHA256 mismatch"); return nil; }
-            plan = extractPackage(package, stage, generation, &data, error);
-            if (!plan) return nil;
-            digest = hashData(data);
-            if (![fm removeItemAtURL:package error:error]) return nil;
-        } else {
+        if (!spaceForPlan(@{@"disk_estimate_bytes":@(8 * 1024 * 1024)}, error)) return nil;
+        NSURL *package = [stage URLByAppendingPathComponent:[NSString stringWithFormat:@"archive-%@.download", generation]];
+        archiveFile = package;
+        if (!phase(stage, transferID, generation, @"downloading", error)) return nil;
         if (!url.scheme || url.isFileURL) {
-            NSURL *local = url.isFileURL ? url : [NSURL fileURLWithPath:location];
-            struct stat info;
-            if (!plainPath(local, error) || lstat(local.fileSystemRepresentation, &info) || !S_ISREG(info.st_mode) || info.st_size > 65536) { reject(error, 2, @"Invalid local manifest"); return nil; }
-            NSData *data = [NSData dataWithContentsOfURL:local options:0 error:error];
-            if (!data || !atomicData(data, manifestFile, error)) return nil;
-        } else if (!fetchFile(location, manifestFile, 65536, stage, generation, error)) return nil;
-        data = [NSData dataWithContentsOfURL:manifestFile options:0 error:error];
-        if (![hashData(data ?: NSData.data) isEqual:digest]) { reject(error, 2, @"Manifest SHA256 mismatch"); return nil; }
-        id parsed = [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
-        if (![parsed isKindOfClass:NSDictionary.class] || parsed[@"package_format"] || !planOK(parsed, error)) { if (!error || !*error) reject(error, 2, @"Invalid manifest; package manifests require the archive install command"); return nil; }
-        plan = parsed;
-        }
+            if (!copyPackage(url.isFileURL ? url : [NSURL fileURLWithPath:location], package, stage, generation, error)) return nil;
+        } else if (!fetchFile(location, package, packageCeiling, stage, generation, error)) return nil;
+        archiveSHA = hashFile(package, error);
+        if (!archiveSHA || (digest && ![archiveSHA isEqual:digest])) { reject(error, 2, @"Archive SHA256 mismatch"); return nil; }
+        plan = extractPackage(package, stage, generation, &data, error);
+        if (!plan) return nil;
+        digest = hashData(data);
+        if (![fm removeItemAtURL:package error:error]) return nil;
         NSDictionary *active = readJSON([rootURL() URLByAppendingPathComponent:@"active.json"]);
-        NSString *old = active[@"active"] ?: active[@"manifest_sha256"];
-        NSDictionary *legacy = !active[@"active"] ? legacyReceipt(active, nil) : nil;
+        NSString *old = active[@"active"];
+        if (old && !checkedReceipt(old, nil)) old = nil;
         NSDictionary *existing = checkedReceipt(digest, nil);
         if (existing) {
             int commitGuard = lockFile(@".commit-lock", LOCK_EX, YES, error); if (commitGuard < 0) return nil;
@@ -810,38 +773,13 @@ static NSDictionary *install(NSString *location, NSString *digest, BOOL archive,
         }
         if (!spaceForPlan(plan, error)) return nil;
         if (!phase(stage, digest, generation, @"downloading", error) || !writeJSON(plan, [stage URLByAppendingPathComponent:@"plan.json"], error)) return nil;
-        NSArray *files = archive ? @[] : @[@{@"name":@"MNISTClassifier.mlmodel", @"url":plan[@"source_url"], @"sha":plan[@"source_sha256"], @"bytes":plan[@"source_bytes"]}, @{@"name":@"LICENSE.txt", @"url":plan[@"license_url"], @"sha":plan[@"license_sha256"], @"bytes":plan[@"license_bytes"]}];
-        for (NSDictionary *file in files) {
-            NSURL *target = [stage URLByAppendingPathComponent:file[@"name"]];
-            // Size and SHA are rechecked even for a previously completed download.
-            BOOL exact = ![file[@"name"] isEqual:@"LICENSE.txt"] || plan[@"license_bytes"] != nil;
-            if (plainPath(target, error) && [hashFile(target, nil) isEqual:file[@"sha"]] && (!exact || verifiedFile(target, file[@"bytes"], file[@"sha"]))) continue;
-            if (error && *error) return nil;
-            // A background completion can outlive its waiting command. Adopt only
-            // regular bytes that match this newly authenticated plan exactly.
-            BOOL recovered = NO;
-            for (NSURL *candidate in [fm contentsOfDirectoryAtURL:stage includingPropertiesForKeys:nil options:0 error:nil]) {
-                if (![candidate.lastPathComponent hasPrefix:[file[@"name"] stringByAppendingString:@"-"]] || ![candidate.pathExtension isEqual:@"download"]) continue;
-                if (![hashFile(candidate, nil) isEqual:file[@"sha"]] || !plainPath(candidate, nil) || (exact && !verifiedFile(candidate, file[@"bytes"], file[@"sha"]))) continue;
-                if ([fm fileExistsAtPath:target.path] && ![fm removeItemAtURL:target error:error]) return nil;
-                if (![fm moveItemAtURL:candidate toURL:target error:error]) return nil;
-                recovered = YES; break;
-            }
-            if (recovered) continue;
-            NSURL *partial = [stage URLByAppendingPathComponent:[NSString stringWithFormat:@"%@-%@.download", file[@"name"], generation]];
-            if (!fetchFile(file[@"url"], partial, [file[@"bytes"] unsignedLongLongValue], stage, generation, error)) return nil;
-            struct stat info; stat(partial.fileSystemRepresentation, &info);
-            if (![hashFile(partial, error) isEqual:file[@"sha"]] || (exact && (unsigned long long)info.st_size != [file[@"bytes"] unsignedLongLongValue])) { reject(error, 2, @"Downloaded file size or SHA256 mismatch"); return nil; }
-            if ([fm fileExistsAtPath:target.path] && ![fm removeItemAtURL:target error:error]) return nil;
-            if (![fm moveItemAtURL:partial toURL:target error:error]) return nil;
-        }
         if (cancelled(stage, generation)) { reject(error, 130, @"Installation cancelled before compilation"); return nil; }
         if (!phase(stage, digest, generation, @"downloaded", error)) return nil;
         // Download completion never authorizes compilation in a callback/background event.
         if (!compilationAllowed(error) || !phase(stage, digest, generation, @"compiling", error)) return nil;
-        NSURL *contents = contentURL(stage, plan);
+        NSURL *contents = [stage URLByAppendingPathComponent:@"package" isDirectory:YES];
         NSURL *compiled = [stage URLByAppendingPathComponent:@"model.mlmodelc"];
-        NSURL *temporary = [MLModel compileModelAtURL:[contents URLByAppendingPathComponent:plan[@"model"] ?: @"MNISTClassifier.mlmodel"] error:error];
+        NSURL *temporary = [MLModel compileModelAtURL:[contents URLByAppendingPathComponent:plan[@"model"]] error:error];
         if (!temporary) { NSString *detail = (error && *error) ? (*error).localizedDescription : @"Unknown compiler error"; reject(error, 2, [@"Portable model compilation rejected: " stringByAppendingString:detail]); return nil; }
         if ([fm fileExistsAtPath:compiled.path] && (!plainPath(compiled, error) || ![fm removeItemAtURL:compiled error:error])) { [fm removeItemAtURL:temporary error:nil]; return nil; }
         if (![fm moveItemAtURL:temporary toURL:compiled error:error]) { [fm removeItemAtURL:temporary error:nil]; return nil; }
@@ -852,22 +790,19 @@ static NSDictionary *install(NSString *location, NSString *digest, BOOL archive,
         NSError *validationError = nil;
         @try {
             @autoreleasepool { validated = ASMLEmbeddingID(plan[@"model_id"]) ? ASMLEmbeddingValidate(compiled, contents, plan, ^NSError *{ return operationError(); }, &validationError) : validate(compiled, plan, &validationError); }
-            if (validated && legacy) { @autoreleasepool { validated = validate([version(old) URLByAppendingPathComponent:@"model.mlmodelc"], plan, &validationError); } }
         }
         @finally { asml_maintenance_end(); }
         if (!validated) { if (error) *error = validationError; return nil; }
-        if (legacy && !writeJSON(legacy, [version(old) URLByAppendingPathComponent:@"receipt.json"], error)) return nil;
         if (cancelled(stage, generation)) { reject(error, 130, @"Installation cancelled after compilation"); return nil; }
         NSDictionary *compiledFiles = treeReceipt(compiled, YES, error); if (!compiledFiles) return nil;
         NSMutableDictionary *receipt = [plan mutableCopy];
         receipt[@"manifest_sha256"] = digest; receipt[@"compiled_files"] = compiledFiles;
         if (archiveSHA) receipt[@"archive_sha256"] = archiveSHA;
-        struct stat licenseInfo; stat([[contents URLByAppendingPathComponent:plan[@"license_file"] ?: @"LICENSE.txt"] fileSystemRepresentation], &licenseInfo);
+        struct stat licenseInfo; stat([[contents URLByAppendingPathComponent:plan[@"license_file"]] fileSystemRepresentation], &licenseInfo);
         receipt[@"license_bytes"] = @((unsigned long long)licenseInfo.st_size);
         unsigned long long compiledBytes = 0; for (NSDictionary *file in compiledFiles.allValues) compiledBytes += [file[@"bytes"] unsignedLongLongValue];
         receipt[@"compiled_bytes"] = @(compiledBytes);
-        unsigned long long portableBytes = [plan[@"source_bytes"] unsignedLongLongValue] + licenseInfo.st_size;
-        if (archive) { portableBytes = 0; for (NSDictionary *member in [plan[@"members"] allValues]) portableBytes += [member[@"bytes"] unsignedLongLongValue]; }
+        unsigned long long portableBytes = 0; for (NSDictionary *member in [plan[@"members"] allValues]) portableBytes += [member[@"bytes"] unsignedLongLongValue];
         receipt[@"installed_bytes"] = @(compiledBytes + portableBytes);
         receipt[@"validation_label"] = ASMLEmbeddingID(plan[@"model_id"]) ? @"embedding-cosine>=0.99" : @"7"; receipt[@"compiled_os"] = NSProcessInfo.processInfo.operatingSystemVersionString;
         if (!atomicData(data, [stage URLByAppendingPathComponent:@"manifest.json"], error) || !writeJSON(receipt, [stage URLByAppendingPathComponent:@"receipt.json"], error)) return nil;
@@ -881,7 +816,7 @@ static NSDictionary *install(NSString *location, NSString *digest, BOOL archive,
             if (cancelled(stage, generation)) { reject(error, 130, @"Installation cancelled before activation"); return nil; }
             // The commit fence excludes new cancel markers while transfer scratch
             // is removed. Only package content belongs in an immutable version.
-            NSSet *published = [NSSet setWithArray:archive ? @[@"package", @"model.mlmodelc", @"manifest.json", @"receipt.json", @"plan.json"] : @[@"MNISTClassifier.mlmodel", @"LICENSE.txt", @"model.mlmodelc", @"manifest.json", @"receipt.json", @"plan.json"]];
+            NSSet *published = [NSSet setWithArray:@[@"package", @"model.mlmodelc", @"manifest.json", @"receipt.json", @"plan.json"]];
             NSArray *entries = [fm contentsOfDirectoryAtURL:stage includingPropertiesForKeys:nil options:0 error:error];
             if (!entries) return nil;
             for (NSURL *scratch in entries) {
@@ -895,15 +830,14 @@ static NSDictionary *install(NSString *location, NSString *digest, BOOL archive,
             if (![fm moveItemAtURL:stage toURL:destination error:error]) return nil;
             NSMutableDictionary *record = [@{@"active":digest} mutableCopy];
             if (old && ![old isEqual:digest]) record[@"rollback"] = old;
-            else if (active[@"rollback"]) record[@"rollback"] = active[@"rollback"];
+            else if (checkedReceipt(active[@"rollback"], nil)) record[@"rollback"] = active[@"rollback"];
             if (!writeJSON(record, [rootURL() URLByAppendingPathComponent:@"active.json"], error)) return nil;
             phase(destination, digest, generation, @"active", nil); collect(record);
             return checkedReceipt(digest, error);
         } @finally { close(commitGuard); }
     } @finally { if (previousCheck) context[@"ASMLInstallCheck"] = previousCheck; else [context removeObjectForKey:@"ASMLInstallCheck"]; if (archiveFile) [NSFileManager.defaultManager removeItemAtURL:archiveFile error:nil]; close(guard); }
 }
-NSDictionary *ASMLInstall(NSString *location, NSString *digest, NSError **error) { return install(location, digest, NO, error); }
-NSDictionary *ASMLInstallPackage(NSString *location, NSString *digest, NSError **error) { return install(location, digest, YES, error); }
+NSDictionary *ASMLInstallPackage(NSString *location, NSString *digest, NSError **error) { return install(location, digest, error); }
 static NSDictionary *scopedASMLRollback(NSString *modelID, NSError **error) {
     if (!supported(modelID, error)) return nil;
     int guard = lockFile(@".install-lock", LOCK_EX, YES, error); if (guard < 0) return nil;
@@ -1011,5 +945,5 @@ NSDictionary *ASMLCancelInstall(NSString *modelID, NSString *generation, NSError
 NSDictionary *ASMLInstallModelPackage(NSString *modelID, NSString *location, NSString *digest, NSError **error) {
     if (!supported(modelID, error)) return nil;
     NSMutableDictionary *context = NSThread.currentThread.threadDictionary; id previous = context[@"ASMLInstallModel"]; context[@"ASMLInstallModel"] = modelID;
-    @try { return install(location, digest, YES, error); } @finally { if (previous) context[@"ASMLInstallModel"] = previous; else [context removeObjectForKey:@"ASMLInstallModel"]; }
+    @try { return install(location, digest, error); } @finally { if (previous) context[@"ASMLInstallModel"] = previous; else [context removeObjectForKey:@"ASMLInstallModel"]; }
 }

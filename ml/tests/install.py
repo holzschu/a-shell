@@ -10,12 +10,14 @@ import fcntl
 import functools
 import hashlib
 import http.server
+import io
 import json
 import os
 import platform
 import shutil
 import signal
 import subprocess
+import tarfile
 import tempfile
 import threading
 import time
@@ -36,8 +38,8 @@ class Fixture(http.server.SimpleHTTPRequestHandler):
         pass
 
     def do_GET(self):
-        if self.path == "/slow.mlmodel":
-            data = (Path(self.directory) / "MNISTClassifier.mlmodel").read_bytes()
+        if self.path == "/slow.asmodel":
+            data = (Path(self.directory) / "slow.asmodel").read_bytes()
             self.send_response(200)
             self.send_header("Content-Length", str(len(data)))
             self.end_headers()
@@ -54,7 +56,9 @@ class Fixture(http.server.SimpleHTTPRequestHandler):
 
 
 @app.command()
-def check(command: Path, source: Path, license_file: Path, receipt: Path):
+def check(command: Path, source: Path, image: Path, receipt: Path):
+    image = image.resolve()
+    assert image.is_file() and len(image.read_bytes()) == 784, "Pass the package-side known-answer image"
     command = command.resolve()
     source = source.resolve()
     evidence = []
@@ -68,11 +72,11 @@ def check(command: Path, source: Path, license_file: Path, receipt: Path):
         try:
             base = f"http://127.0.0.1:{server.server_port}"
             ml = Path(__file__).resolve().parents[1]
-            template = json.loads((ml / "catalog/mnist.json").read_text())
-            (root / "MNISTClassifier.mlmodel").write_bytes(source.read_bytes())
-            (root / "LICENSE.txt").write_bytes(license_file.read_bytes())
-            template["source_url"] = base + "/MNISTClassifier.mlmodel"
-            template["license_url"] = base + "/LICENSE.txt"
+            with tarfile.open(source) as archive:
+                members = [(entry, archive.extractfile(entry).read() if entry.isfile() else None) for entry in archive]
+            template = json.loads(members[0][1])
+            assert template["package_format"] == "ashell-model-ustar-v1"
+            identities = {}
             env = dict(os.environ, CFFIXED_USER_HOME=str(root / "home"))
 
             def run(*args, expected=0, extra=None):
@@ -103,22 +107,26 @@ def check(command: Path, source: Path, license_file: Path, receipt: Path):
                 plan.update(changes)
                 plan["version"] = name
                 data = json.dumps(plan).encode()
-                (root / f"{name}.json").write_bytes(data)
-                digest = hashlib.sha256(data).hexdigest()
-                return [
-                    "install",
-                    "--manifest",
-                    base + f"/{name}.json",
-                    "--sha256",
-                    digest,
-                ]
+                target = root / f"{name}.asmodel"
+                with tarfile.open(target, "w", format=tarfile.USTAR_FORMAT) as archive:
+                    for original, body in members:
+                        entry = copy.copy(original)
+                        if entry.name == "manifest.json":
+                            body = data
+                        entry.size = len(body or b"")
+                        archive.addfile(entry, io.BytesIO(body) if body is not None else None)
+                digest = hashlib.sha256(target.read_bytes()).hexdigest()
+                identities[digest] = hashlib.sha256(data).hexdigest()
+                return ["install", base + f"/{name}.asmodel", "--sha256", digest]
 
+            rejected = run("install", "--manifest", str(source), "--sha256", hashlib.sha256(source.read_bytes()).hexdigest(), expected=2)
+            assert "Usage:" in rejected["error"], rejected
             first = manifest("first")
             installed = run(*first)
             assert installed["validation_label"] == "7"
             assert (
                 installed["source_sha256"]
-                == "816d1a222d5272109166ffc819d7ce44aff923a673884e34d982aa74985ba587"
+                == template["source_sha256"]
             )
             version_dir = Path(installed["path"])
             # Brief external status/collection locks must not fail inference.
@@ -127,7 +135,7 @@ def check(command: Path, source: Path, license_file: Path, receipt: Path):
                 release = threading.Timer(0.15, fcntl.flock, (lock, fcntl.LOCK_UN))
                 release.start()
                 try:
-                    assert run("predict", "mnist", str(ml / "tests/seven.gray"))["runs"][0]["label"] == "7"
+                    assert run("predict", "mnist", str(image))["runs"][0]["label"] == "7"
                 finally:
                     release.join()
             times = {str(p): p.stat().st_mtime_ns for p in version_dir.rglob("*")}
@@ -135,34 +143,7 @@ def check(command: Path, source: Path, license_file: Path, receipt: Path):
             assert times == {
                 str(p): p.stat().st_mtime_ns for p in version_dir.rglob("*")
             }
-            # Restore a shipped S1 store fixture, whose active record predates
-            # receipt.json and per-version manifest files, then update through CLI.
-            legacy_digest = (
-                "6d513d2f4308a30f53f4e3daf19ac91c001950d5466f57db9638d5aaebf835c9"
-            )
-            legacy_home = root / "legacy-home"
-            legacy_root = (
-                legacy_home / "Library/Application Support/a-Shell/Models/mnist"
-            )
-            legacy_dir = legacy_root / legacy_digest
-            legacy_dir.mkdir(parents=True)
-            for name in ["MNISTClassifier.mlmodel", "LICENSE.txt"]:
-                shutil.copyfile(version_dir / name, legacy_dir / name)
-            shutil.copytree(
-                version_dir / "model.mlmodelc", legacy_dir / "model.mlmodelc"
-            )
-            legacy_record = json.loads((ml / "tests/legacy-mnist.json").read_bytes())
-            legacy_record["manifest_sha256"] = legacy_digest
-            (legacy_root / "active.json").write_text(json.dumps(legacy_record))
-            original_env = env
-            env = env | {"CFFIXED_USER_HOME": str(legacy_home)}
-            assert run("ls")["legacy_s1"] is True
-            run(*manifest("legacy-upgrade"))
-            assert run("rollback", "mnist")["manifest_sha256"] == legacy_digest
-            legacy_prediction = run("run", "mnist", str(ml / "tests/seven.gray"))
-            assert legacy_prediction["runs"][0]["label"] == "7"
-            env = original_env
-            run("run", "mnist", str(ml / "tests/seven.gray"), "--repeat", "2")
+            run("run", "mnist", str(image), "--repeat", "2")
 
             def unchanged():
                 assert run("ls")["manifest_sha256"] == installed["manifest_sha256"]
@@ -170,15 +151,14 @@ def check(command: Path, source: Path, license_file: Path, receipt: Path):
             # Native consumers do not expand shell variables in a local path.
             run(
                 "install",
-                "--manifest",
-                "$HOME/Documents/missing.json",
+                "$HOME/Documents/missing.asmodel",
                 "--sha256",
                 first[-1],
                 expected=2,
             )
             stopped = run("install-status", "mnist")
             assert (
-                stopped["phase"] == "manifest" and stopped["command_running"] is False
+                stopped["phase"] == "downloading" and stopped["command_running"] is False
             )
             unchanged()
             assert (
@@ -209,16 +189,14 @@ def check(command: Path, source: Path, license_file: Path, receipt: Path):
             ]:
                 run(*manifest(name, **changes), expected=75 if name == "disk" else 2)
                 unchanged()
-            # Actual HTTP bytes differ from the trusted manifest's correct pin.
-            (root / "MNISTClassifier.mlmodel").write_bytes(
-                b"invalid" + source.read_bytes()[7:]
-            )
-            run(*manifest("corrupt-body"), expected=2)
-            unchanged()
-            (root / "MNISTClassifier.mlmodel").write_bytes(source.read_bytes()[:-1])
-            run(*manifest("short-body"), expected=2)
-            unchanged()
-            (root / "MNISTClassifier.mlmodel").write_bytes(source.read_bytes())
+            # Corrupt actual HTTP archive bytes while retaining the caller's pin.
+            for name, truncate in (("corrupt-body", False), ("short-body", True)):
+                args = manifest(name)
+                target = root / f"{name}.asmodel"
+                data = target.read_bytes()
+                target.write_bytes(data[:-1] if truncate else b"invalid" + data[7:])
+                run(*args, expected=2)
+                unchanged()
 
             # Crash the consumer after real POSIX writes, with no installer test switch.
             for phase in ["downloading", "compiling", "activating", "published"]:
@@ -262,11 +240,11 @@ def check(command: Path, source: Path, license_file: Path, receipt: Path):
                 )
                 assert child.returncode == -signal.SIGKILL
                 if phase == "published":
-                    assert run("ls")["manifest_sha256"] == args[-1]
+                    assert run("ls")["manifest_sha256"] == identities[args[-1]]
                 else:
                     unchanged()
                 recovered = run(*args)
-                assert recovered["manifest_sha256"] == args[-1]
+                assert recovered["manifest_sha256"] == identities[args[-1]]
                 installed = recovered
 
             # Acknowledge cancellation after validation, just before publication.
@@ -312,7 +290,9 @@ def check(command: Path, source: Path, license_file: Path, receipt: Path):
             unchanged()
 
             # A slow external server lets cancellation run while the CLI is blocked.
-            slow = manifest("cancelled", source_url=base + "/slow.mlmodel")
+            slow = manifest("cancelled")
+            shutil.copyfile(root / "cancelled.asmodel", root / "slow.asmodel")
+            slow[1] = base + "/slow.asmodel"
             Fixture.started.clear()
             Fixture.release.clear()
             child = subprocess.Popen(
@@ -373,7 +353,7 @@ def check(command: Path, source: Path, license_file: Path, receipt: Path):
 
             # Backup restore may retain a record without the excluded files.
             installed = run("ls")
-            (Path(installed["path"]) / "MNISTClassifier.mlmodel").unlink()
+            (Path(installed["path"]) / "package" / template["model"]).unlink()
             error = run("ls", expected=2)
             assert "download again" in error["error"]
             run(*manifest("gc-update"))
