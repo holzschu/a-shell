@@ -282,6 +282,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if appVersion != "a-Shell-mini", #unavailable(iOS 26.2) {
             replaceCommand("codex", "codexUnavailable", true)
         }
+        // honor country restrictions for OpenAI as well:
+        // TODO: do the same for herdr, possibly move it into SceneDelegate.
+        cleanupQueue.async{
+            if let openAI = URL(string: "https://api.openai.com") {
+                do{
+                    let dataVal = try NSURLConnection.sendSynchronousRequest(URLRequest(url: openAI), returning: nil)
+                }
+                catch {
+                    replaceCommand("codex", "codexUnavailableCountry", true)
+                }
+            }
+        }
         // for debugging TeX issues / installing a new distribution
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))

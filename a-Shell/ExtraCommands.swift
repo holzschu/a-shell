@@ -2551,6 +2551,12 @@ public func codexUnavailable(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutab
     return 1
 }
 
+@_cdecl("codexUnavailableCountry")
+public func codexUnavailableCountry(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    fputs("codex is not available in your country (or the network was down when a-Shell started).\n", thread_stderr)
+    return 1
+}
+
 @_cdecl("wasmkitUnavailable")
 public func wasmkitUnavailable(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     fputs("wasmkit is only available for iOS 18 and above.\n", thread_stdout)
