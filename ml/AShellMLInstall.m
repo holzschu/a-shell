@@ -222,7 +222,7 @@ static NSDictionary *scopedASMLAcquireVersion(NSString *modelID, NSError **error
     // Serialize pointer resolution with activation, then pin only the chosen immutable version.
     int guard = lockFile(@".install-lock", LOCK_EX, YES, error); if (guard < 0) return nil;
     NSDictionary *active = readJSON([rootURL() URLByAppendingPathComponent:@"active.json"]);
-    NSString *digest = active[@"active"] ?: active[@"manifest_sha256"];
+    NSString *digest = active[@"active"];
     NSDictionary *identity = digestOK(digest) ? versionIdentity(version(digest)) : nil;
     NSDictionary *receipt; BOOL reused = NO;
     @synchronized (leases()) {
@@ -255,7 +255,6 @@ void ASMLReleaseVersion(NSString *leaseID) {
         int guard = lockFile(@".install-lock", LOCK_EX, NO, nil);
         if (guard >= 0) {
             NSDictionary *record = readJSON([rootURL() URLByAppendingPathComponent:@"active.json"]);
-            if (!record[@"active"] && digestOK(record[@"manifest_sha256"])) record = @{@"active":record[@"manifest_sha256"]};
             if (record) collect(record);
             close(guard);
         }

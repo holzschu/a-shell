@@ -29,6 +29,9 @@ int main(int argc, const char **argv) {
             if (ASMLEmbeddingTokenize(@(argv[2]), tokenizer, bad, &error) || error.code != 2) return 1;
         }
         NSError *error;
+        NSString *unit = [@(argv[2]) isEqual:@"minilm-l6"] ? @"hello " : @"hi";
+        NSString *overflow = [@"" stringByPaddingToLength:unit.length * 200 withString:unit startingAtIndex:0];
+        if (ASMLEmbeddingTokenize(@(argv[2]), tokenizer, @{@"texts":@[overflow]}, &error) || error.code != 2) return 1;
         NSString *overlength = [@"" stringByPaddingToLength:65537 withString:@"a" startingAtIndex:0];
         if (ASMLEmbeddingTokenize(@(argv[2]), tokenizer, @{@"texts":@[overlength]}, &error) || error.code != 2) return 1;
         if (model[@"long_letters"]) {
