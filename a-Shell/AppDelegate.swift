@@ -282,6 +282,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if appVersion != "a-Shell-mini", #unavailable(iOS 26.2) {
             replaceCommand("codex", "codexUnavailable", true)
         }
+        // honor country restrictions for OpenAI as well:
+        // TODO: do the same for herdr, possibly move it into SceneDelegate.
+        cleanupQueue.async{
+            if let openAI = URL(string: "https://api.openai.com") {
+                do{
+                    let dataVal = try NSURLConnection.sendSynchronousRequest(URLRequest(url: openAI), returning: nil)
+                }
+                catch {
+                    replaceCommand("codex", "codexUnavailableCountry", true)
+                }
+            }
+        }
         // for debugging TeX issues / installing a new distribution
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
         // addCommandList(Bundle.main.path(forResource: "luatexCommandsDictionary", ofType: "plist"))
@@ -295,7 +307,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                   create: true)
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
         versionUpToDate = !versionNumberIncreased()
-        appDependentPath = initializeCommandEnvironment(hostBundle: .main, documentsUrl: documentsUrl, libraryURL: libraryURL, groupURL: FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID))
+        appDependentPath = initializeCommandEnvironment(hostInfo: Bundle.main.infoDictionary!, resourcePath: Bundle.main.resourcePath!, documentsUrl: documentsUrl, libraryURL: libraryURL, groupURL: FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID))
         // Switch installed Python packages from 3.9 to 3.13:
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
             cleanupQueue.async{
