@@ -31,7 +31,10 @@ int main(int argc, const char **argv) {
         NSError *error;
         NSString *unit = [@(argv[2]) isEqual:@"minilm-l6"] ? @"hello " : @"hi";
         NSString *overflow = [@"" stringByPaddingToLength:unit.length * 200 withString:unit startingAtIndex:0];
-        if (ASMLEmbeddingTokenize(@(argv[2]), tokenizer, @{@"texts":@[overflow]}, &error) || error.code != 2) return 1;
+        if (ASMLEmbeddingTokenize(@(argv[2]), tokenizer, @{@"texts":@[overflow]}, &error) || error.code != 2 || ![error.localizedDescription containsString:@"exceeds 128 tokens"]) return 1;
+        NSDictionary *truncated = ASMLEmbeddingTokenize(@(argv[2]), tokenizer, @{@"texts":@[overflow], @"truncate":@YES}, &error);
+        if (![truncated[@"token_counts"] isEqual:@[@128]] || ![truncated[@"truncated"] isEqual:@[@YES]]) return 1;
+        printf("EMBEDDING_TOKEN_LIMIT_PASS %s rejected=2 truncated=true token_count=128\n", argv[2]);
         NSString *overlength = [@"" stringByPaddingToLength:65537 withString:@"a" startingAtIndex:0];
         if (ASMLEmbeddingTokenize(@(argv[2]), tokenizer, @{@"texts":@[overlength]}, &error) || error.code != 2) return 1;
         if (model[@"long_letters"]) {
