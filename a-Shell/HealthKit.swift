@@ -15,36 +15,40 @@ final class HealthArchive {
     }
 
     private let destination: URL
+    private let workspace: URL
     private let staging: URL
     private let partial: URL
     private let xml: FileHandle
     private let deleted: FileHandle
     private var finished = false
 
-    init(destination: URL) throws {
+    init(destination: URL, workspace: URL) throws {
         let manager = FileManager.default
         guard !manager.fileExists(atPath: destination.path) else { throw CocoaError(.fileWriteFileExists) }
         self.destination = destination
-        partial = destination.deletingLastPathComponent().appendingPathComponent("." + UUID().uuidString + ".partial")
-        staging = destination.deletingLastPathComponent().appendingPathComponent(
-            "apple_health_export-" + UUID().uuidString, isDirectory: true)
-        try manager.createDirectory(
-            at: staging, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+        self.workspace = workspace
+        partial = workspace.appendingPathComponent("export.zip.partial")
+        staging = workspace.appendingPathComponent("apple_health_export", isDirectory: true)
+        // The caller holds the export lock and reserves this directory for unfinished exports.
+        if manager.fileExists(atPath: workspace.path) { try manager.removeItem(at: workspace) }
+        var directoryAttributes = Self.fileAttributes
+        directoryAttributes[.posixPermissions] = 0o700
         do {
+            try manager.createDirectory(at: workspace, withIntermediateDirectories: false, attributes: directoryAttributes)
+            try manager.createDirectory(at: staging, withIntermediateDirectories: false, attributes: directoryAttributes)
             xml = try Self.open(staging.appendingPathComponent("export.xml"))
             deleted = try Self.open(staging.appendingPathComponent("deleted.jsonl"))
+            try write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HealthData locale=\"en_US\">\n")
         } catch {
-            try? manager.removeItem(at: staging)
+            try? manager.removeItem(at: workspace)
             throw error
         }
-        try write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HealthData locale=\"en_US\">\n")
     }
 
     deinit {
         try? xml.close()
         try? deleted.close()
-        try? FileManager.default.removeItem(at: staging)
-        try? FileManager.default.removeItem(at: partial)
+        try? FileManager.default.removeItem(at: workspace)
     }
 
     private static var fileAttributes: [FileAttributeKey: Any] {
@@ -64,7 +68,15 @@ final class HealthArchive {
     }
 
     private static func escaped(_ value: String) -> String {
-        value.replacingOccurrences(of: "&", with: "&amp;")
+        let isXMLCharacter: (Unicode.Scalar) -> Bool = { scalar in
+            switch scalar.value {
+            case 0x9, 0xA, 0xD, 0x20...0xFFFD, 0x10000...0x10FFFF: return true
+            default: return false
+            }
+        }
+        let legal = value.unicodeScalars.allSatisfy(isXMLCharacter)
+            ? value : String(value.unicodeScalars.filter(isXMLCharacter))
+        return legal.replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")
@@ -108,9 +120,17 @@ final class HealthArchive {
                         "<?xml version=\"1.0\"?><gpx version=\"1.1\" creator=\"a-Shell\" xmlns=\"http://www.topografix.com/GPX/1/1\"><trk><trkseg>\n"
                             .utf8))
                 for point in route.points {
-                    let attributes = Self.attributes(["lat": String(point.latitude), "lon": String(point.longitude)])
+                    guard (-90...90).contains(point.latitude), (-180...180).contains(point.longitude) else {
+                        throw CocoaError(.fileWriteUnknown)
+                    }
+                    let longitude = String(format: "%.8f", point.longitude)
+                    let attributes = Self.attributes([
+                        "lat": String(format: "%.8f", point.latitude),
+                        "lon": longitude == "180.00000000" ? "-180.00000000" : longitude,
+                    ])
+                    let elevation = point.elevation.isFinite ? String(format: "<ele>%.6f</ele>", point.elevation) : ""
                     let node =
-                        "<trkpt\(attributes)><ele>\(point.elevation)</ele><time>\(Self.escaped(point.time))</time></trkpt>\n"
+                        "<trkpt\(attributes)>\(elevation)<time>\(Self.escaped(point.time))</time></trkpt>\n"
                     try file.write(contentsOf: Data(node.utf8))
                 }
                 try file.write(contentsOf: Data("</trkseg></trk></gpx>\n".utf8))
@@ -210,8 +230,8 @@ final class HealthArchive {
             lock.unlock()
         }
 
-        func wait() throws -> Value {
-            guard done.wait(timeout: .now() + 120) == .success else { throw HealthKitFailure.timedOut }
+        func wait(timeout: DispatchTime = .now() + 120) throws -> Value {
+            guard done.wait(timeout: timeout) == .success else { throw HealthKitFailure.timedOut }
             lock.lock()
             defer { lock.unlock() }
             return try result!.get()
@@ -327,6 +347,7 @@ final class HealthArchive {
             Export HealthKit data to a local Apple Health-style ZIP. Exports are incremental per type.
             Defaults: Watch/iPhone quantities, sleep and workouts (including available GPS).
             TYPE: a HealthKit quantity/category identifier, or HKWorkoutTypeIdentifier.
+            When selecting types, use the same list for authorize and export.
             Authorize requires the foreground app and the system permission sheet.
             Export requires an unlocked device and prints the ZIP path.
             HealthKit reports denied read access as an empty result.
@@ -343,16 +364,16 @@ final class HealthArchive {
             return 2
         }
         let identifiers = args.count > 2 ? Array(args.dropFirst(2)) : healthKitDefaultTypes
-        let types = identifiers.compactMap(healthKitType)
-        guard types.count == identifiers.count, Set(identifiers).count == identifiers.count else {
-            fputs("healthkit: invalid or repeated sample type; see --help.\n", thread_stderr)
-            return 2
-        }
         guard !Thread.isMainThread && !runningInExtension && HKHealthStore.isHealthDataAvailable(),
             Bundle.main.object(forInfoDictionaryKey: "NSHealthShareUsageDescription") != nil
         else {
             fputs("healthkit: run in the a-Shell app on a HealthKit-capable device.\n", thread_stderr)
             return 1
+        }
+        let types = identifiers.compactMap(healthKitType)
+        guard types.count == identifiers.count, Set(identifiers).count == identifiers.count else {
+            fputs("healthkit: invalid or repeated sample type; see --help.\n", thread_stderr)
+            return 2
         }
         guard healthKitLock.try() else {
             fputs("healthkit: another export or authorization is running.\n", thread_stderr)
@@ -379,7 +400,7 @@ final class HealthArchive {
                         if let error = error { reply.finish(.failure(error)) } else { reply.finish(.success(success)) }
                     }
                 }
-                guard try reply.wait() else { throw HealthKitFailure.unavailable }
+                guard try reply.wait(timeout: .distantFuture) else { throw HealthKitFailure.unavailable }
                 fputs("{\"authorization_request_completed\":true,\"read_access_verified\":false}\n", thread_stdout)
                 return 0
             }
@@ -411,7 +432,8 @@ final class HealthArchive {
                 }
             }
             let destination = outbox.appendingPathComponent(UUID().uuidString + ".zip")
-            let archive = try HealthArchive(destination: destination)
+            let workspace = support.appendingPathComponent("export-in-progress", isDirectory: true)
+            let archive = try HealthArchive(destination: destination, workspace: workspace)
             let date = ISO8601DateFormatter()
             date.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             for type in types {

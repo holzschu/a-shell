@@ -5,7 +5,8 @@ import Foundation
 struct ArchiveTest {
     static func main() throws {
         let destination = URL(fileURLWithPath: CommandLine.arguments[1])
-        let archive = try HealthArchive(destination: destination)
+        let workspace = destination.deletingLastPathComponent().appendingPathComponent("working")
+        let archive = try HealthArchive(destination: destination, workspace: workspace)
         guard !FileManager.default.fileExists(atPath: destination.path) else {
             fatalError("Published before completion")
         }
@@ -13,7 +14,7 @@ struct ArchiveTest {
             attributes: [
                 "type": "HKQuantityTypeIdentifierHeartRate", "value": "60", "unit": "count/min",
                 "startDate": "2026-01-01T00:00:00Z", "endDate": "2026-01-01T00:00:01Z",
-                "sourceName": "Synthetic & <source> \"only\"",
+                "sourceName": "Synthetic & <source> \"only\"\u{1}",
             ], metadata: ["HKUUID": "00000000-0000-0000-0000-000000000001"])
         try archive.workout(
             attributes: [
@@ -24,7 +25,7 @@ struct ArchiveTest {
             routes: [
                 HealthArchive.Route(
                     identifier: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
-                    points: [.init(latitude: 0, longitude: 0, elevation: 1, time: "2026-01-01T00:00:00Z")]
+                    points: [.init(latitude: 0.00001, longitude: 180, elevation: 0.00001, time: "2026-01-01T00:00:00Z")]
                 )
             ])
         try archive.deletion(
@@ -33,16 +34,26 @@ struct ArchiveTest {
         try archive.finish()
         guard FileManager.default.fileExists(atPath: destination.path) else { fatalError("Missing archive") }
         do {
-            _ = try HealthArchive(destination: destination)
+            _ = try HealthArchive(destination: destination, workspace: workspace)
             fatalError("Existing archive was accepted")
         } catch CocoaError.fileWriteFileExists {}
         let incomplete = destination.deletingLastPathComponent().appendingPathComponent("incomplete.zip")
+        let interruptedWorkspace = workspace.deletingLastPathComponent().appendingPathComponent("interrupted")
+        try FileManager.default.createDirectory(at: interruptedWorkspace, withIntermediateDirectories: false)
+        let abandoned = interruptedWorkspace.appendingPathComponent("abandoned")
+        try Data("stale synthetic output".utf8).write(to: abandoned)
         do {
-            let interrupted = try HealthArchive(destination: incomplete)
+            let interrupted = try HealthArchive(destination: incomplete, workspace: interruptedWorkspace)
+            guard !FileManager.default.fileExists(atPath: abandoned.path) else {
+                fatalError("Retained staging from a previous export")
+            }
             try interrupted.record(attributes: ["type": "synthetic"], metadata: [:])
         }
         guard !FileManager.default.fileExists(atPath: incomplete.path) else {
             fatalError("Published incomplete archive")
+        }
+        guard !FileManager.default.fileExists(atPath: interruptedWorkspace.path) else {
+            fatalError("Retained staging after an interrupted export")
         }
         print("PASS synthetic archive and overwrite refusal")
     }
