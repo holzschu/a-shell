@@ -775,7 +775,7 @@ final class PhoneKeyboardToolbar: UIInputView, UIGestureRecognizerDelegate {
             var shown = Array(visible.prefix(overflow ? slots - 1 : slots))
             var extraButtons = visible.dropFirst(shown.count)
             // Are the arrows in "shown"?
-            if overflow {
+            if overflow && slots > 2 {
                 // if we're still overflowing, arrows must be four-arrow buttons
                 if shown.filter({ isArrow(title: title($0)) }).isEmpty && !extraButtons.filter({ isArrow(title: title($0)) }).isEmpty {
                     // There are no arrow buttons being shown, and there are arrow buttons in extraButtons
@@ -3427,6 +3427,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             if #available(iOS 15.0, *), false {
                 // Execution of asynchronous JS code, while still waiting for the result
+                // Note: this code has been deactivated. Try to find out why, possibly reactivate.
                 Task { @MainActor in
                     do {
                         let result = try await jscWebView?.callAsyncJavaScript(javascript, arguments: [:], in: nil, contentWorld: .page)
