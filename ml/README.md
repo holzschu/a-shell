@@ -29,7 +29,8 @@ Build the public host executable with `bash ml/build.sh --host /absolute/output/
 
 ```sh
 uv run ml/tests/fixtures.py /absolute/output/tokenizers
-xcrun clang -fobjc-arc -fblocks -Wall -Wextra -Werror ml/AShellEmbedding.m ml/tests/embedding-tokenizer.m -framework Foundation -framework CoreML -o /absolute/output/tokenizer
+xcrun clang -fobjc-arc -fblocks -Wall -Wextra -Werror -c ml/tests/embedding-tokenizer.m -o /absolute/output/tokenizer.o
+xcrun clang /absolute/output/tokenizer.o /absolute/output/runtime/objects/{AShellML,AShellMLInstall,AShellMLJob,AShellEmbedding}.o -framework Foundation -framework CoreML -framework CoreVideo -framework Accelerate -o /absolute/output/tokenizer
 /absolute/output/tokenizer /absolute/output/tokenizers/tokenizers.json minilm-l6 /absolute/output/tokenizers/minilm-l6-tokenizer.json
 /absolute/output/tokenizer /absolute/output/tokenizers/tokenizers.json qwen3-embedding-0.6b /absolute/output/tokenizers/qwen3-embedding-0.6b-tokenizer.json
 uv run ml/tests/packages.py /absolute/output/packages --archive /absolute/artifacts/mnist.asmodel --program-archive /absolute/artifacts/mnist-program.asmodel --image /absolute/artifacts/seven.gray --installer /absolute/output/runtime/coreml
