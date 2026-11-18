@@ -29,7 +29,9 @@ console = Console(stderr=True)
 
 
 @app.command()
-def check(command: Path, fixtures: Path, receipt: Path):
+def check(command: Path, fixtures: Path, image: Path, receipt: Path):
+    image = image.resolve()
+    assert image.is_file() and len(image.read_bytes()) == 784, "Pass the package-side known-answer image"
     command, fixtures = command.resolve(), fixtures.resolve()
     evidence = []
     with tempfile.TemporaryDirectory(
@@ -72,7 +74,9 @@ def check(command: Path, fixtures: Path, receipt: Path):
         package = fixtures / "first/mnist.asmodel"
         digest = hashlib.sha256(package.read_bytes()).hexdigest()
         installed = run("install", package, "--sha256", digest)
-        assert installed["source_bytes"] == 31823
+        with tarfile.open(package) as supplied:
+            plan = json.load(supplied.extractfile("manifest.json"))
+        assert installed["source_bytes"] == plan["source_bytes"]
         assert installed["validation_label"] == "7"
         assert installed["archive_sha256"] == digest
         assert installed["package_format"] == "ashell-model-ustar-v1"
@@ -81,7 +85,7 @@ def check(command: Path, fixtures: Path, receipt: Path):
         assert run("install", "mnist", package)["manifest_sha256"] == first
         assert Path(installed["path"]).stat().st_mtime_ns == before
         assert (
-            run("run", "mnist", Path(__file__).with_name("seven.gray"))["runs"][0][
+            run("run", "mnist", image)["runs"][0][
                 "label"
             ]
             == "7"
@@ -91,7 +95,7 @@ def check(command: Path, fixtures: Path, receipt: Path):
         assert program["model"].endswith(".mlpackage")
         assert program["manifest_sha256"] != first
         assert (
-            run("run", "mnist", Path(__file__).with_name("seven.gray"))["runs"][0][
+            run("run", "mnist", image)["runs"][0][
                 "label"
             ]
             == "7"

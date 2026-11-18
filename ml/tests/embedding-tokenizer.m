@@ -15,7 +15,7 @@ int main(int argc, const char **argv) {
         NSDictionary *fixtures = [NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:@(argv[1])] options:0 error:nil];
         NSDictionary *tokenizer = [NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:@(argv[3])] options:0 error:nil];
         NSDictionary *model = fixtures[@"models"][@(argv[2])];
-        NSArray *cases = [model[@"cases"] arrayByAddingObject:model[@"unicode_marks"]];
+        NSArray *cases = model[@"unicode_marks"] ? [model[@"cases"] arrayByAddingObject:model[@"unicode_marks"]] : model[@"cases"];
         if (!cases.count || !tokenizer) return 2;
         for (NSDictionary *entry in cases) {
             NSError *error;
@@ -29,7 +29,8 @@ int main(int argc, const char **argv) {
             if (ASMLEmbeddingTokenize(@(argv[2]), tokenizer, bad, &error) || error.code != 2) return 1;
         }
         NSError *error;
-        if (ASMLEmbeddingTokenize(@(argv[2]), tokenizer, @{@"texts":@[[ @"hello " stringByPaddingToLength:1200 withString:@"hello " startingAtIndex:0]]}, &error) || error.code != 2) return 1;
+        NSString *overlength = [@"" stringByPaddingToLength:65537 withString:@"a" startingAtIndex:0];
+        if (ASMLEmbeddingTokenize(@(argv[2]), tokenizer, @{@"texts":@[overlength]}, &error) || error.code != 2) return 1;
         if (model[@"long_letters"]) {
             NSDictionary *fixture = model[@"long_letters"];
             uint32_t state = [fixture[@"seed"] unsignedIntValue]; NSMutableString *text = [NSMutableString string];

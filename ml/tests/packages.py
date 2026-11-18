@@ -3,7 +3,7 @@
 # requires-python = "==3.12.13"
 # dependencies = ["typer==0.16.0", "rich==14.0.0", "coremltools==9.0", "numpy==2.2.6"]
 # ///
-"""Exercise conversion, parity, packages and an optional real S2 CLI as processes."""
+"""Exercise supplied portable archives through the real installer CLI."""
 
 import hashlib
 import io
@@ -60,11 +60,14 @@ def write_archive(path, files):
 @app.command()
 def check(
     output: Path,
+    archive: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
+    program_archive: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
+    image: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
     installer: Annotated[Path | None, typer.Option(exists=True, dir_okay=False)] = None,
 ):
     import coremltools as ct
 
-    root = Path(__file__).resolve().parents[1]
+    image = image.resolve()
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     evidence = []
@@ -90,67 +93,18 @@ def check(
         assert result.returncode == expected, evidence[-1]
         return result
 
-    source = root / "models/affine-fixture.json"
-    base = ["uv", "run", "--locked", root / "convert.py"]
-    build = [*base, "build", "--source", source]
-    result = run([*build, "--output", output / "first"])
     package = output / "first/mnist.asmodel"
+    package.parent.mkdir()
+    package.write_bytes(archive.read_bytes())
     manifest = validate(package)
-    receipt = json.loads(result.stdout)
-    assert receipt["parity"]["passed"] is True
-    assert receipt["parity"]["fixtures"] == 4
-    assert receipt["parity"]["atol"] == receipt["parity"]["rtol"] == 1e-4
-    run([*build, "--output", output / "second"])
-    assert package.read_bytes() == (output / "second/mnist.asmodel").read_bytes()
-    before = package.read_bytes()
-    reused = run([*build, "--output", output / "first"], expected=1)
-    assert "Output already exists" in reused.stderr
-    assert package.read_bytes() == before
-    console.print(
-        "PASS: FP32 conversion, four real Core ML parity cases, repeatable archive, preserved output"
-    )
-
     files = unpack(package)
+    assert manifest["model"].endswith(".mlmodel"), "Pass the single-file MNIST archive"
+    assert len(image.read_bytes()) == 784
     model = output / manifest["model"]
     model.write_bytes(files[manifest["model"]])
-    for case in ("source-feature", "model-feature", "parity"):
-        argv = [
-            *base,
-            "package",
-            "--source",
-            source,
-            "--model",
-            model,
-            "--output",
-            output / f"rejected-{case}",
-        ]
-        if case == "source-feature":
-            wrong = json.loads(source.read_bytes())
-            wrong["features"]["image"]["shape"] = [1, 784]
-            wrong_source = output / "wrong-source.json"
-            wrong_source.write_text(json.dumps(wrong))
-            argv[argv.index(source)] = wrong_source
-            message = "Unsupported source feature metadata"
-        else:
-            spec = ct.utils.load_spec(str(model))
-            if case == "model-feature":
-                spec.description.input[0].type.imageType.width = 27
-                message = "feature metadata differs"
-            else:
-                # A real model error preserves the winning label, so label-only gates miss it.
-                spec.neuralNetworkClassifier.layers[1].innerProduct.bias.floatValue[
-                    0
-                ] += 0.5
-                message = "FP32 parity failed"
-            changed = output / f"wrong-{case}.mlmodel"
-            ct.utils.save_spec(spec, str(changed))
-            argv[argv.index(model)] = changed
-        rejected = run(argv, expected=1)
-        assert message in " ".join(rejected.stderr.split()), rejected.stderr
-        assert not (output / f"rejected-{case}").exists()
-    console.print(
-        "PASS: bad source/model features and numerical regression fail before package publication"
-    )
+    spec = ct.utils.load_spec(str(model))
+    spec.description.input[0].type.imageType.width = 27
+    ct.utils.save_spec(spec, str(output / "wrong-model-feature.mlmodel"))
 
     for case in ("bad-feature", "bad-hash", "oversize", "unsupported-task"):
         changed = files.copy()
@@ -177,17 +131,12 @@ def check(
             changed["manifest.json"] = json.dumps(wrong).encode()
         write_archive(output / f"{case}.asmodel", changed)
 
-    for label in ("program", "program-repeat"):
-        run([*build, "--format", "mlprogram", "--output", output / label])
-        program_manifest = validate(output / label / "mnist.asmodel")
-        assert program_manifest["model"].endswith(".mlpackage")
-        assert program_manifest["minimum_ios"] == "15.0"
-    assert (output / "program/mnist.asmodel").read_bytes() == (
-        output / "program-repeat/mnist.asmodel"
-    ).read_bytes()
-    console.print(
-        "PASS: deterministic portable FP32 ML Program directory, four real parity cases, explicit iOS 15 minimum"
-    )
+    program = output / "program/mnist.asmodel"
+    program.parent.mkdir()
+    program.write_bytes(program_archive.read_bytes())
+    program_manifest = validate(program)
+    assert program_manifest["model"].endswith(".mlpackage")
+    assert program_manifest["minimum_ios"] == "15.0"
 
     renamed = []
     for name, original in (
@@ -254,7 +203,7 @@ def check(
             assert installed["manifest_sha256"] == repeat["manifest_sha256"]
             predicted = json.loads(
                 run(
-                    [installer, "run", "mnist", root / "tests/seven.gray"], env=env
+                    [installer, "run", "mnist", image], env=env
                 ).stdout
             )
             assert len(predicted["runs"]) == 1

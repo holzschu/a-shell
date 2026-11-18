@@ -21,4 +21,27 @@ The process shares one inference permit and one warm model cache. Requests queue
 
 For callers that exchange files, `coreml job create DIRECTORY`, `job run DIRECTORY coreml run mnist IMAGE [OPTIONS]`, and `job status DIRECTORY` use an absolute caller-owned directory. Write the job's nonce to its fixed `cancel` file to cancel that job. Directory descriptors fence access and symlinks are rejected. No transport or server is included.
 
-See [PACKAGE.md](PACKAGE.md) for archives and [MAC-CONVERSION.md](MAC-CONVERSION.md) for conversion and qualification. No archive hosting service is configured here. A distributor builds the archives, publishes the archives and their SHA256 values at its own HTTPS URLs, and users pass those URLs or local paths to `coreml install`. The converter records source revisions, licenses and hashes; model weights are not bundled in the application.
+See [PACKAGE.md](PACKAGE.md) for the archive contract. Conversion recipes, source and tokenizer fixtures, and model qualification tools belong in the `models/coreml/` directory of a-Shell-commands. Archives and generated reference vectors are distributed separately. The app contains the adapter contract, including fixed known-answer and tokenizer pins; an archive cannot replace that contract.
+
+## Host checks
+
+Build the public host executable with `bash ml/build.sh --host /absolute/output/runtime`. Tests that install a model require explicit package-side artifacts and fail when an input is missing. No model is downloaded implicitly.
+
+```sh
+uv run ml/tests/fixtures.py /absolute/output/tokenizers
+xcrun clang -fobjc-arc -fblocks -Wall -Wextra -Werror ml/AShellEmbedding.m ml/tests/embedding-tokenizer.m -framework Foundation -framework CoreML -o /absolute/output/tokenizer
+/absolute/output/tokenizer /absolute/output/tokenizers/tokenizers.json minilm-l6 /absolute/output/tokenizers/minilm-l6-tokenizer.json
+/absolute/output/tokenizer /absolute/output/tokenizers/tokenizers.json qwen3-embedding-0.6b /absolute/output/tokenizers/qwen3-embedding-0.6b-tokenizer.json
+uv run ml/tests/packages.py /absolute/output/packages --archive /absolute/artifacts/mnist.asmodel --program-archive /absolute/artifacts/mnist-program.asmodel --image /absolute/artifacts/seven.gray --installer /absolute/output/runtime/coreml
+uv run ml/tests/package-install.py /absolute/output/runtime/coreml /absolute/output/packages /absolute/artifacts/seven.gray /absolute/output/package-receipt.json
+bash ml/tests/check-install.sh /absolute/output/install /absolute/artifacts/mnist.asmodel /absolute/artifacts/seven.gray
+CFFIXED_USER_HOME=/absolute/output/model-home /absolute/output/runtime/coreml install /absolute/artifacts/mnist.asmodel
+CFFIXED_USER_HOME=/absolute/output/model-home bash ml/tests/cli.sh /absolute/output/runtime/coreml /absolute/artifacts/mnist.asmodel ARCHIVE_SHA256 /absolute/output/cli /absolute/artifacts/seven.gray
+bash ml/tests/check-jobs.sh /absolute/output/jobs /absolute/output/model-home /absolute/artifacts/seven.gray
+```
+
+The MNIST suites require the single-file and ML Program archives plus their 784-byte known-answer image. `packages.py` derives malformed archive fixtures from those supplied packages. The installer suite covers interrupted transactions, integrity failures, rollback, removal and leases. The CLI and job suites cover repeated inference, active and queued cancellation, nonce isolation and recovery. The tiny generated vocabularies test the public tokenizer C API without model weights; `tests/affine-fixture.json` records the untrained image conversion contract.
+
+Embedding qualification needs each real archive, its generated reference, pinned tokenizer and the package-side corpus fixtures. Run `models/coreml/tests/embedding-host.sh` from a-Shell-commands with this app checkout as its seventh argument. It builds this checkout's runtime and uses `embedding-tokenizer.m` and `embedding-session.m` to test tokenization, same-process cancellation, cache recovery and compiled-file tampering through public APIs. These native test consumers retain no model content.
+
+After an app build, run `bash ml/tests/app-link.sh /absolute/output/a-Shell.app` to verify the native entry point is exported for ios_system.

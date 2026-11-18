@@ -3,7 +3,8 @@
 set -eu
 command=${1:?Pass host coreml executable}
 root=${2:?Pass a fresh canonical absolute job parent}
-fixture=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)/seven.gray
+fixture=${3:?Pass the package-side known-answer image}
+test -f "$fixture"
 mkdir -p "$root"
 # A platform may expose the app home under multiple names (iOS /private/var and
 # /var). Only aliases of the trusted home may bypass ancestor no-follow walking.
