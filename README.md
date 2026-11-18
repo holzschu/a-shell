@@ -22,6 +22,10 @@ For more tips on how to use a-Shell, see <a href="https://bianshen00009.gitbook.
 
 a-Shell is now <a href="https://holzschu.github.io/a-Shell_iOS/">available on the AppStore</a>.
 
+## On-device machine learning
+
+`coreml` installs portable model packages and runs drawing classification or MiniLM/Qwen embeddings locally. CPU is the default; embedding packages require iOS 18. See [the Core ML guide](ml/README.md) for commands, model conversion and package distribution.
+
 ## How to compile it?
 
 Use macOS with Xcode and its iOS SDKs installed. Start with `a-Shell-noPython`, which uses the publicly downloadable frameworks. Both `a-Shell` and `a-Shell-mini` embed Python and need prebuilt Python frameworks, which are not currently published.

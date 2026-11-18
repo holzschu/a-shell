@@ -743,8 +743,9 @@ extension SceneDelegate {
                     // Do we have a way to interrupt JS execution in WkWebView?
                     // Make sure we're on the right session:
                     ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                    ios_setContext(self.shellContext?.bytes)
                     // Then send interrupt to the running command:
+                    _ = asml_interrupt_session(self.persistentIdentifier?.toCString())
                     ios_kill() // TODO: add printPrompt() here if no command running
                 }
                 if (currentCommand == "") {
@@ -1579,7 +1580,7 @@ extension SceneDelegate {
             // A surrounding interactive Dash otherwise forwards these as bytes.
             if myData.count == 1, let key = myData.first, key == 3 || key == 4 {
                 ios_switchSession(self.persistentIdentifier?.toCString())
-                ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                ios_setContext(self.shellContext?.bytes)
                 if let program = ios_progname(), String(cString: program) == "node" || (key == 3 && ["npm", "npx"].contains(String(cString: program))) {
                     send(source: source, inputString: key == 3 ? interrupt : endOfTransmission)
                     return
@@ -1591,7 +1592,7 @@ extension SceneDelegate {
                 if (tty_file_input != nil) {
                     let savedSession = ios_getContext()
                     ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                    ios_setContext(self.shellContext?.bytes)
                     ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                     do {
                         try tty_file_input?.write(contentsOf: myData)
@@ -1626,7 +1627,7 @@ extension SceneDelegate {
             // interactive command: send the data directly
             if (interactiveCommandRunning || terminalView!.isCurrentBufferAlternate) && !helpRunningInIpython {
                 ios_switchSession(self.persistentIdentifier?.toCString())
-                ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+                ios_setContext(self.shellContext?.bytes);
                 ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                 if (javascriptRunning && (thread_stdin_copy != nil)) {
                     // interactive WebAssembly commands

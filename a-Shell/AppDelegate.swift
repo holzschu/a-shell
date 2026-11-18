@@ -129,6 +129,11 @@ var appVersion: String? {
 @objcMembers
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
+    func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String, completionHandler: @escaping () -> Void) {
+        if asml_background_events(identifier, completionHandler) == 0 {
+            completionHandler()
+        }
+    }
     // to update Python distribution at each version update
     var versionUpToDate = true
     var libraryFilesUpToDate = true
@@ -235,6 +240,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
         replaceCommand("relay", "relay_main", true)
+        replaceCommand("coreml", "coreml_main", true)
         replaceCommand("history", "history", true)
         replaceCommand("help", "help", true)
         replaceCommand("clear", "clear", true)

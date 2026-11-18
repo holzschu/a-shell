@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>coreml</key>
+	<array>
+		<string>SELF</string>
+		<string>coreml_main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>alias</key>
 	<array>
 		<string>SELF</string>

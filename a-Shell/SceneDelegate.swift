@@ -925,6 +925,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var stdout_active = false
     var stdout_button_active = false
     var persistentIdentifier: String? = nil
+    // ios_system borrows this buffer; a temporary NSString conversion can dangle
+    // before Core ML copies the session name for Ctrl-C cancellation.
+    var shellContext: NSData? = nil
     var stdin_file: UnsafeMutablePointer<FILE>? = nil
     var stdin_file_input: FileHandle? = nil
     var stdout_file: UnsafeMutablePointer<FILE>? = nil
@@ -4027,7 +4030,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         let stdin_pipe = Pipe()
                         let stdin_file = fdopen(stdin_pipe.fileHandleForReading.fileDescriptor, "r")
                         ios_switchSession(self.persistentIdentifier?.toCString())
-                        ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                        ios_setContext(self.shellContext?.bytes)
                         ios_setStreams(stdin_file, stdout_file, stdout_file)
                         // don't run the scheduled command if another command is already running
                         // (either one from the user or another run of the scheduled command)
@@ -4320,7 +4323,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             self.stdout_active = true
             // Make sure we're on the right session:
             ios_switchSession(self.persistentIdentifier?.toCString())
-            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            ios_setContext(self.shellContext?.bytes);
             // Intents running in the app (Execute Long Command) move the process directory, and ios_switchSession
             // restores this session's directory only when this thread switches sessions:
             let intentsBefore = intentSessionsState()
@@ -4482,7 +4485,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // NSLog("Calling resetDirectoryAfterCommandTerminates to \(self.resetDirectoryAfterCommandTerminates)")
                 if (!changeDirectory(path: self.resetDirectoryAfterCommandTerminates)) {
                     ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                    ios_setContext(self.shellContext?.bytes)
                     changeDirectory(path: self.resetDirectoryAfterCommandTerminates)
                 }
                 self.resetDirectoryAfterCommandTerminates = ""
@@ -4845,7 +4848,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         NSLog("set previousDirectory to \(previousDirectory)")
                         // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
                         ios_switchSession(self.persistentIdentifier?.toCString())
-                        ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                        ios_setContext(self.shellContext?.bytes)
                         changeDirectory(path: previousDirectory) // call cd_main and checks secured bookmarked URLs
                     }
                 }
@@ -4870,7 +4873,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         NSLog("set currentDirectory to \(currentDirectory)")
                         // Call cd_main instead of executeCommand("cd dir") to avoid closing a prompt and history.
                         ios_switchSession(self.persistentIdentifier?.toCString())
-                        ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                        ios_setContext(self.shellContext?.bytes)
                         changeDirectory(path: currentDirectory) // call cd_main and checks secured bookmarked URLs
                     }
                 }
@@ -5105,9 +5108,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             //     }
             // }
             self.persistentIdentifier = session.persistentIdentifier
+            if shellContext == nil {
+                shellContext = Data((session.persistentIdentifier + "\0").utf8) as NSData
+            }
             NSLog("Setting identifier to \(session.persistentIdentifier)")
             ios_switchSession(self.persistentIdentifier?.toCString())
-            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            ios_setContext(self.shellContext?.bytes);
             terminalView = contentView?.terminalview.view
             if let terminalFont = terminalView?.font {
                 basicCharWidth = NSAttributedString(string: "m", attributes: [.font: terminalFont]).size().width
@@ -5248,7 +5254,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             let contentOfFile = try String(contentsOf: configFileUrl, encoding: String.Encoding.utf8)
                             let commands = contentOfFile.split(separator: "\n")
                             ios_switchSession(self.persistentIdentifier?.toCString())
-                            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+                            ios_setContext(self.shellContext?.bytes);
                             thread_stdin  = nil
                             thread_stdout = nil
                             thread_stderr = nil
@@ -5589,7 +5595,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     command += fileURL.path.removingPercentEncoding!.replacingOccurrences(of: " ", with: "\\ ") + "\n"
                     if let data = command.data(using: .utf8) {
                         ios_switchSession(self.persistentIdentifier?.toCString())
-                        ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+                        ios_setContext(self.shellContext?.bytes);
                         ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                         if (stdin_file_input != nil) {
                             stdin_file_input?.write(data)
@@ -5651,7 +5657,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 exitCommand += "\n"
                 if let data = exitCommand.data(using: .utf8) {
                     ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                    ios_setContext(self.shellContext?.bytes)
                     ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                     if (stdin_file_input != nil) {
                         stdin_file_input?.write(data)
@@ -5661,7 +5667,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             } else {
                 // NSLog("Un-recognized command: \(currentCommand)")
                 // send sigquit to the command:
-                if (self.pid != 0) {
+                _ = asml_interrupt_session(self.persistentIdentifier?.toCString())
+                if self.pid != 0 {
                     ios_killpid(self.pid, SIGQUIT)
                 }
             }
@@ -6064,7 +6071,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 // NSLog("Sending save command: \(saveCommand)")
                 if let data = saveCommand.data(using: .utf8) {
                     ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+                    ios_setContext(self.shellContext?.bytes);
                     ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                     if (stdin_file_input != nil) {
                         stdin_file_input?.write(data)
@@ -6443,7 +6450,7 @@ extension SceneDelegate: WKUIDelegate {
             }
             // Make sure we are on the right iOS session. This resets the current working directory.
             ios_switchSession(self.persistentIdentifier?.toCString())
-            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            ios_setContext(self.shellContext?.bytes);
             if (arguments[1] == "open") {
                 // NSLog("opening file: \(arguments[2])")
                 let rights = Int32(arguments[3]) ?? 577;
@@ -7030,7 +7037,7 @@ extension SceneDelegate: WKUIDelegate {
             // Make sure we are on the right iOS session. This resets the current working directory.
             // TODO: that's one call to ios_switchSession. Reset?
             ios_switchSession(self.persistentIdentifier?.toCString())
-            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            ios_setContext(self.shellContext?.bytes);
             if (arguments[1] == "readFile") {
                 do {
                     completionHandler(try String(contentsOf: URL(fileURLWithPath: arguments[2]), encoding: .utf8))
