@@ -16,6 +16,7 @@ import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
 import Network // for our local HTTPS server for WebAssembly
 import UniformTypeIdentifiers
+import StoreKit
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
@@ -281,15 +282,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         if appVersion != "a-Shell-mini", #unavailable(iOS 26.2) {
             replaceCommand("codex", "codexUnavailable", true)
-        }
-        // honor country restrictions for OpenAI as well:
-        // TODO: do the same for herdr, possibly move it into SceneDelegate.
-        cleanupQueue.async{
-            if let openAI = URL(string: "https://api.openai.com") {
-                do{
-                    let dataVal = try NSURLConnection.sendSynchronousRequest(URLRequest(url: openAI), returning: nil)
-                }
-                catch {
+        } else {
+            // TODO: do the same for herdr, possibly move it into SceneDelegate.
+            Task {
+                if (await Storefront.current)?.countryCode == "CHN" {
                     replaceCommand("codex", "codexUnavailableCountry", true)
                 }
             }
