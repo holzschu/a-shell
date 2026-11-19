@@ -78,8 +78,18 @@ private final class MergePair {
 }
 
 private struct BPE {
+    private static let byteMap: [String] = {
+        var extra = 0
+        return (0..<256).map { byte in
+            if (33...126).contains(byte) || (161...172).contains(byte) || byte >= 174 {
+                return String(UnicodeScalar(byte)!)
+            }
+            defer { extra += 1 }
+            return String(UnicodeScalar(256 + extra)!)
+        }
+    }()
+
     let regex: NSRegularExpression
-    let byteMap: [String]
     let ranks: [String: Int]
 
     init(_ tokenizer: JSON) throws {
@@ -90,14 +100,6 @@ private struct BPE {
             throw failure(2, "Missing Qwen byte pretokenizer")
         }
         regex = try NSRegularExpression(pattern: expression)
-        var extra = 0
-        byteMap = (0..<256).map { byte in
-            if (33...126).contains(byte) || (161...172).contains(byte) || byte >= 174 {
-                return String(UnicodeScalar(byte)!)
-            }
-            defer { extra += 1 }
-            return String(UnicodeScalar(256 + extra)!)
-        }
         let model = tokenizer["model"] as? JSON
         var ranks: [String: Int] = [:]
         for (index, pair) in (model?["merges"] as? [Any] ?? []).enumerated() {
@@ -113,7 +115,7 @@ private struct BPE {
         var ids: [Int] = []
         for match in regex.matches(in: text as String, range: NSRange(location: 0, length: text.length)) {
             try check()
-            var pieces = text.substring(with: match.range).utf8.map { byteMap[Int($0)] }
+            var pieces = text.substring(with: match.range).utf8.map { Self.byteMap[Int($0)] }
             let count = pieces.count
             var previous = (0..<count).map { $0 - 1 }
             var next = (0..<count).map { $0 + 1 }

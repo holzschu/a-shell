@@ -550,14 +550,9 @@ extension ModelStore {
             && digestOK(plan["license_sha256"] as? String) && boundedNumber(plan["license_bytes"], 1024 * 1024) != nil
             && (plan["version"] as? String)?.isEmpty == false
         if isEmbedding(model) {
-            do {
-                guard common, plan["license"] as? String == "Apache-2.0",
-                      (plan["disk_estimate_bytes"] as? NSNumber)?.uint64Value ?? 0 >= packageCeiling else {
-                    throw failure(2, "Invalid embedding package contract")
-                }
-                try validateEmbeddingPlan(plan)
-                try validatePackagePlan(plan)
-            } catch {
+            guard common, plan["license"] as? String == "Apache-2.0",
+                  (plan["disk_estimate_bytes"] as? NSNumber)?.uint64Value ?? 0 >= packageCeiling,
+                  (try? validateEmbeddingPlan(plan)) != nil, (try? validatePackagePlan(plan)) != nil else {
                 throw failure(2, "Invalid embedding package contract")
             }
 #if os(iOS)
@@ -1011,7 +1006,6 @@ extension ModelStore {
         let session = URLSession(configuration: configuration, delegate: transfer, delegateQueue: nil)
         defer { session.finishTasksAndInvalidate() }
         let task = session.downloadTask(with: url)
-        task.taskDescription = transfer.generation
 #endif
         task.resume()
         while transfer.finished.wait(timeout: .now() + .milliseconds(100)) == .timedOut {
@@ -1055,18 +1049,14 @@ extension ModelStore {
         defer { try? fm.removeItem(at: archive) }
         try phase(stage, transferID, generation, "downloading")
         // Like NSURL's original parser, a location that cannot form a URL is a local path.
-        if let url = URL(string: location), url.scheme != nil, !url.isFileURL {
+        let locationURL = URL(string: location)
+        if let url = locationURL, url.scheme != nil, !url.isFileURL {
             try fetchFile(url, Transfer(destination: archive, stage: stage, generation: generation, limit: packageCeiling))
         } else {
-            let url = URL(string: location)
-            try copyPackage(url?.isFileURL == true ? url! : URL(fileURLWithPath: location), archive,
-                            stage: stage, generation: generation)
+            let fileURL = locationURL.flatMap { $0.isFileURL ? $0 : nil } ?? URL(fileURLWithPath: location)
+            try copyPackage(fileURL, archive, stage: stage, generation: generation)
         }
-        let archiveSHA: String
-        do {
-            archiveSHA = try hashFile(archive, check: check)
-            guard digest == nil || archiveSHA == digest else { throw failure(2, "Archive SHA256 mismatch") }
-        } catch {
+        guard let archiveSHA = try? hashFile(archive, check: check), digest == nil || archiveSHA == digest else {
             try check()
             throw failure(2, "Archive SHA256 mismatch")
         }
@@ -1104,7 +1094,8 @@ extension ModelStore {
         guard let modelFile = plan["model"] as? String else { throw failure(2, "Package model is undeclared") }
         let temporary: URL
         do {
-            temporary = try compilePortableModel(contents.appendingPathComponent(modelFile))
+            // Keep compilation synchronous on the command's pthread.
+            temporary = try MLModel.compileModel(at: contents.appendingPathComponent(modelFile))
         } catch {
             try check()
             throw failure(2, "Portable model compilation rejected: " + error.localizedDescription)
@@ -1196,10 +1187,4 @@ extension ModelStore {
             }
         }
     }
-}
-
-// The synchronous compiler is required on the command's pthread. It remains
-// supported for synchronous callers on the deployment toolchain.
-private func compilePortableModel(_ model: URL) throws -> URL {
-    try MLModel.compileModel(at: model)
 }
