@@ -297,22 +297,35 @@ func validateEmbeddingPlan(_ plan: JSON) throws {
     let validation = plan["validation"] as? JSON
     let input: NSDictionary = ["dtype": "int32", "shape": [1, 128]]
     let outputs: NSDictionary = ["embedding": ["dtype": "float32", "shape": [width], "normalized": true]]
+    let sourceRevision: String = qwen ? "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3" : "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+    let preprocessing: String = qwen ? "qwen3-last-token-v1" : "minilm-masked-mean-v1"
+    let qualifiedBudget: UInt64 = qwen ? 3 * 1024 * 1024 * 1024 : 512 * 1024 * 1024
+    let tokenizerSHA256: String = qwen ? "def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a" : "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037"
+    let tokenizerBytes: Int = qwen ? 11423705 : 466247
+    let features: [AnyHashable: Any] = ["input_ids": input, "attention_mask": input]
+    let message = "Unsupported embedding package ABI/source/pooling/memory contract"
+
+    // One guard exceeded the type checker's time limit on Xcode 26.3 in CI.
     guard isEmbedding(model), plan["task"] as? String == "text-embedding",
           plan["adapter_version"] as? Int == 1, plan["minimum_ios"] as? String == "18.0",
-          plan["source_revision"] as? String == (qwen ? "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3" : "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"),
+          plan["source_revision"] as? String == sourceRevision,
           plan["model"] as? String == "Embedding.mlpackage", plan["tokenizer"] as? String == "tokenizer.json",
           plan["decoder"] as? String == "l2-v1",
-          plan["preprocessing"] as? String == (qwen ? "qwen3-last-token-v1" : "minilm-masked-mean-v1"),
-          (plan["features"] as? NSDictionary)?.isEqual(to: ["input_ids": input, "attention_mask": input]) == true,
+          plan["preprocessing"] as? String == preprocessing else {
+        throw failure(2, message)
+    }
+    guard (plan["features"] as? NSDictionary)?.isEqual(to: features) == true,
           (plan["outputs"] as? NSDictionary)?.isEqual(outputs) == true,
           profile?["kind"] as? String == "bounded-embedding-qualification",
-          budget == (qwen ? 3 * 1024 * 1024 * 1024 : 512 * 1024 * 1024) || mixedFP16,
-          tokenizer?["type"] as? String == "file", fixture?["type"] as? String == "file",
+          budget == qualifiedBudget || mixedFP16 else {
+        throw failure(2, message)
+    }
+    guard tokenizer?["type"] as? String == "file", fixture?["type"] as? String == "file",
           validation?["input"] as? String == "validation.json",
-          tokenizer?["sha256"] as? String == (qwen ? "def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a" : "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037"),
-          tokenizer?["bytes"] as? Int == (qwen ? 11423705 : 466247),
+          tokenizer?["sha256"] as? String == tokenizerSHA256,
+          tokenizer?["bytes"] as? Int == tokenizerBytes,
           (fixture?["bytes"] as? UInt64 ?? 0) <= 1048576 else {
-        throw failure(2, "Unsupported embedding package ABI/source/pooling/memory contract")
+        throw failure(2, message)
     }
 }
 
