@@ -220,5 +220,7 @@
 	</array>
 	<key>UISupportsDocumentBrowser</key>
 	<true/>
+	<key>ShellWorkerCount</key>
+	<integer>10</integer>
 </dict>
 </plist>
