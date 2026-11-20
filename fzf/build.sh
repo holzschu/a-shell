@@ -33,11 +33,17 @@ apple_target() {
 }
 
 prepare() {
-  mkdir -p "$cache"
-  [[ $(go env GOVERSION) == go1.27.2 ]] || {
-    echo 'Go 1.27.2 is required' >&2
+  # The runtime overlay requires an installed SDK, not an auto-downloaded module toolchain.
+  export GOTOOLCHAIN=local
+  go_command=$(command -v go || true)
+  if [[ -z $go_command || $("$go_command" env GOVERSION) != go1.27.2 ]]; then
+    go_command=$HOME/sdk/go1.27.2/bin/go
+  fi
+  [[ -x $go_command && $("$go_command" env GOVERSION) == go1.27.2 ]] || {
+    echo 'Install Go 1.27.2 on PATH or in ~/sdk/go1.27.2.' >&2
     return 1
   }
+  mkdir -p "$cache"
   if [[ ! -f $cache/fzf.tar.gz ]]; then
     curl -fLsS --connect-timeout 15 --max-time 120 \
       "https://codeload.github.com/junegunn/fzf/tar.gz/$revision" -o "$cache/fzf.tar.gz.part"
@@ -64,7 +70,7 @@ archive() {
   prepare
   case $platform in
   host)
-    go build -C "$source" -p 2 -trimpath -buildvcs=false -buildmode=c-archive -o "$cache/fzf-host.a" ./embedded
+    "$go_command" build -C "$source" -p 2 -trimpath -buildvcs=false -buildmode=c-archive -o "$cache/fzf-host.a" ./embedded
     ;;
   device | simulator | simulator-x86_64)
     local sdk sdk_name clang_target mach_platform
@@ -72,7 +78,7 @@ archive() {
     sdk=$(xcrun --sdk "$sdk_name" --show-sdk-path)
     local runtime_source runtime_copy overlay goarch=arm64
     [[ $platform != simulator-x86_64 ]] || goarch=amd64
-    runtime_source=$(go env GOROOT)/src/runtime/os_workdir_ios_arm64.go
+    runtime_source=$("$go_command" env GOROOT)/src/runtime/os_workdir_ios_arm64.go
     runtime_copy=$cache/os_workdir_ios_arm64.go
     overlay=$cache/go-ios-overlay.json
     # Embedded Go must preserve the host's process directory on first dlopen.
@@ -87,7 +93,7 @@ archive() {
     GOOS=ios GOARCH="$goarch" CGO_ENABLED=1 CC="$(xcrun --sdk "$sdk_name" --find clang)" \
     CGO_CFLAGS="-Oz -isysroot $sdk -target $clang_target" \
     CGO_LDFLAGS="-isysroot $sdk -target $clang_target" \
-      go build -C "$source" -ldflags="-s -w" -overlay "$overlay" -p 2 -trimpath -buildvcs=false -buildmode=c-archive -o "$cache/fzf-$platform.a" ./embedded
+      "$go_command" build -C "$source" -ldflags="-s -w" -overlay "$overlay" -p 2 -trimpath -buildvcs=false -buildmode=c-archive -o "$cache/fzf-$platform.a" ./embedded
     ;;
   *) return 2 ;;
   esac

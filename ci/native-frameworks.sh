@@ -2,7 +2,7 @@
 # Build one pinned app command for device and Simulator.
 set -euo pipefail
 app=$(cd "$(dirname "$0")/.." && pwd -P)
-product=${1:?Usage: ci/native-frameworks.sh helix|fd|fzf|navi|gitoxide|Ruff|rg|node}
+product=${1:?Usage: ci/native-frameworks.sh helix|fd|fzf|navi|gitoxide|Ruff|rg|zoxide|node}
 recipe=$product
 node_slice=${2:-}
 case $node_slice in
@@ -11,9 +11,17 @@ case $node_slice in
 esac
 [[ -z $node_slice || $product == node ]] || { echo "Only Node accepts a slice argument." >&2; exit 2; }
 case $product in
-  helix|fd|fzf|navi|gitoxide|Ruff|rg|node) ;;
+  helix|fd|fzf|navi|gitoxide|Ruff|rg|zoxide|node) ;;
   *) echo "Unknown native product: $product" >&2; exit 2 ;;
 esac
+if [[ $product == zoxide ]]; then
+  # Host selector checks otherwise fail only after the SDK/framework builds.
+  if ! host_fzf_version=$(fzf --version 2>/dev/null) || [[ ${host_fzf_version%% *} != 0.74.5 ]]; then
+    echo 'Install the fzf 0.74.5 CLI on PATH for the zoxide host checks.' >&2
+    exit 1
+  fi
+  command -v dash >/dev/null || { echo 'The zoxide host checks require dash on PATH.' >&2; exit 1; }
+fi
 work=$app/.build/native/$product
 dist=$app/.build/dist
 mkdir -p "$work" "$dist"
@@ -24,6 +32,7 @@ export CARGO_PROFILE_RELEASE_STRIP=symbols
 export HELIX_BUILD_CACHE=$work/command FD_BUILD_CACHE=$work/command
 export FZF_BUILD_CACHE=$work/command NAVI_BUILD_DIR=$work/command
 export GITOXIDE_BUILD_CACHE=$work/command RUFF_BUILD_CACHE=$work/command RG_BUILD_CACHE=$work/command
+export ZOXIDE_BUILD_CACHE=$work/command
 
 # All commands link the same public ios_system ABI. Never use a developer's SDK cache.
 revision=df998e76cea0266bd3615bb9a1f4f7d745f318a2
@@ -122,6 +131,7 @@ case $product in
   gitoxide) symbols=gix_ios_main ;;
   Ruff) symbols=ruff_ios_main ;;
   node) symbols='node_ios_main npm_ios_main npx_ios_main' ;;
+  zoxide) symbols='zoxide_ios_main zoxide_z_main zoxide_cd_main zoxide_zi_main zoxide_zi_complete_main' ;;
   *) symbols=${product}_ios_main ;;
 esac
 printf 'slice\tstripped_bytes\tgzip_bytes\n' >"$dist/$product.sizes.tsv"
@@ -169,4 +179,8 @@ Build source: ${GITHUB_SHA:-local}.
 EOF
 if [[ $product == node ]]; then
   printf '%s\n\n' 'Extract node-npm.zip into Resources/npm and node-fetch.zip into Resources/node-fetch.' >>"$dist/$product.release.md"
+fi
+if [[ $product == zoxide ]]; then
+  bash "$app/zoxide/build.sh" host
+  bash "$app/zoxide/tests/host.sh" "$work/command/host-command" "$(mktemp -d "$work/host-test.XXXXXX")/results"
 fi
