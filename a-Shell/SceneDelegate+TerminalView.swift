@@ -1723,13 +1723,28 @@ extension SceneDelegate {
             }
         }
         if (data.count >= 5) {
+           // These happen when restoring the terminal content.
+           // Some string gets constructed as Kitty control, and sends into an infinite loop.
+           // For now the solution is to disable them, but is there a better solution?
+           // Temporarily disable Kitty graphics when restoring terminal content?
             // kitty KB: (escape + [? + keyboardEnhancementFlags.rawValue + u)
             // escape + [ + ? + ??? + u
             if (data[0] == 0x1b) && (data[1] == 0x5b) && (data[2] == 0x3f) && (data[data.count-1] == 0x75) {
                 return
             }
         }
-        
+        if (data.count >= 7) {
+            // kitty OK: cc.APC, "\(controlData);OK", cc.ST
+            // kitty Error: cc.APC, "\(controlData);message", cc.ST
+            // APC = [0x1b, 0x5F]
+            // ST  = [0x1b, 0x5C]
+            // controlData = "G" + parts
+            if (data[0] == 0x1b) && (data[1] == 0x5f) && (data[2] == 0x47) && (data[data.count-2] == 0x1b) && (data[data.count-1] == 0x5c) {
+                return
+            }
+
+        }
+
         if let string = String(bytes: myData, encoding: .utf8) {
             // most frequent case:
             send(source: source, inputString: string)
