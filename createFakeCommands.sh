@@ -29,6 +29,7 @@ touch Resources/bin/grep
 touch Resources/bin/gunzip
 touch Resources/bin/gzip
 touch Resources/bin/head
+touch Resources/bin/healthkit
 touch Resources/bin/host
 touch Resources/bin/hx
 touch Resources/bin/ifconfig

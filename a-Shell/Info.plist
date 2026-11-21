@@ -147,6 +147,8 @@
 	<string>a-Shell would like to access your camera</string>
 	<key>NSContactsUsageDescription</key>
 	<string>a-Shell would like to access your contacts</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Allow a-Shell to read the health data you select and export it to a local ZIP file.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>a-Shell would like to access to your photo library to upload images</string>
 	<key>NSPhotoLibraryUsageDescription</key>
