@@ -280,13 +280,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if #unavailable(iOS 18) {
             replaceCommand("wasmkit", "wasmkitUnavailable", true)
         }
-        if appVersion != "a-Shell-mini", #unavailable(iOS 26.2) {
-            replaceCommand("codex", "codexUnavailable", true)
-        } else {
-            // TODO: do the same for herdr, possibly move it into SceneDelegate.
-            Task {
-                if (await Storefront.current)?.countryCode == "CHN" {
-                    replaceCommand("codex", "codexUnavailableCountry", true)
+        if appVersion != "a-Shell-mini" {
+            if #unavailable(iOS 26.2) {
+                replaceCommand("codex", "codexUnavailable", true)
+            } else {
+                // Make sure codex (and other LLMs) are unavailable in mainland China
+                // as requested.
+                // TODO: do the same for herdr.
+                Task {
+                    if (await Storefront.current)?.countryCode == "CHN" {
+                        replaceCommand("codex", "codexUnavailableCountry", true)
+                    }
                 }
             }
         }
