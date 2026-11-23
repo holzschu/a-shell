@@ -102,7 +102,7 @@ class GetFileIntentHandler: INExtension, GetFileIntentHandling
                         }
                     }
                     intentResponse.file = INFile(fileURL: fileURL, filename: fileName, typeIdentifier: nil)
-                    completion(intentResponse)
+                    completion(intentResponse) // iOS 27.2 issue: completion has returned. The error is either in completion or after.
                     return
                 } else if (errorIfNotFound == true) {
                     let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)

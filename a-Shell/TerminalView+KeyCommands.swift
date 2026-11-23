@@ -69,7 +69,7 @@ extension TerminalView {
         // var language = textInputMode?.primaryLanguage ?? "en-US"
         // command-W is now a system-based command, like command-backquote
         let remote = UIKeyCommand(input: "r", modifierFlags: [.alternate, .command], action: #selector(showRemoteAccess), discoverabilityTitle: "Remote access")
-        if #available(iOS 15, *) { remote.wantsPriorityOverSystemBehavior = true }
+        remote.wantsPriorityOverSystemBehavior = true
         let basicKeyCommands = [
             remote,
             // "discoverabilityTitle:)' was deprecated in iOS 13.0" but it's quite convenient

@@ -36,22 +36,55 @@ chevron.up.square			systemAction		control
 escape						insertString		\u{001B}
 doc.on.clipboard			systemAction		paste
 
-separator
+# Sub-menu with extra symbols (iPhones with iOS 26+ only, not on iPads)
+# (at most 24 symbols)
+[="extraKeys"
+opening.bracket insertString	[
+closing.bracket	insertString	]
+{				insertString	{
+}				insertString	}
+%				insertString	%
+"				insertString	"
+number			insertString	#
+*				insertString	*
+&				insertString	&
++				insertString	+
+_				insertString	_
+\				insertString	\
+;				insertString	;
+'				insertString	'
+<				insertString	<
+`				insertString	`
+|				insertString	|
+=				insertString	=
+-				insertString	-
+/				insertString	/
+.				insertString	.
+$				insertString	$
+>				insertString	>
+~				insertString	~
+] #+=
 
+separator
+ 
 # This button only appears once the internalbrowser has started
 network						systemAction		showBrowser
 
 # Arrows:
-# This is the default on iPhones:
-arrow.left.and.right		systemAction		left.right
-arrow.up.and.down			systemAction		up.down
-# You can also use the four-arrows-button if you need more space for other buttons:
+arrow.up					systemAction		up
+arrow.down					systemAction		down
+arrow.left					systemAction		left
+arrow.right					systemAction		right
+#
+# There are also "combined" arrow buttons, with two directions: 
+# arrow.left.and.right		systemAction		left.right
+# arrow.up.and.down			systemAction		up.down
+# and with all four directions:
 # arrow.up.and.down.and.arrow.left.and.right		systemAction	up.down.left.right
-# This is the default on iPads (and you can use it if your iPhone has a large screen):
-# arrow.up						systemAction		up
-# arrow.down					systemAction		down
-# arrow.left					systemAction		left
-# arrow.right					systemAction		right
+#
+# On an iPhone, if there is not enough space for the four individual arrow buttons, 
+# they will merge together into combined arrow buttons, as needed to keep space
+# avaiable for the other buttons.
 
 # Example buttons:
 #

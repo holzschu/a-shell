@@ -621,10 +621,7 @@ public func config(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<
             }
             continue
         case "-t", "--toolbar":
-            var configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
-            if (UIDevice.current.model.hasPrefix("iPad") || UIAccessibility.isVoiceOverRunning) {
-                configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar_iPad.txt")
-            }
+            let configFile = Bundle.main.resourceURL?.appendingPathComponent("defaultToolbar.txt")
             do {
                 let documentsUrl = try FileManager().url(for: .documentDirectory,
                                                          in: .userDomainMask,
@@ -2551,6 +2548,12 @@ public func repeatCommand(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutableP
 @_cdecl("codexUnavailable")
 public func codexUnavailable(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     fputs("codex requires iOS 26.2 or later.\n", thread_stderr)
+    return 1
+}
+
+@_cdecl("codexUnavailableCountry")
+public func codexUnavailableCountry(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    fputs("codex is not available in your country.\n", thread_stderr)
     return 1
 }
 

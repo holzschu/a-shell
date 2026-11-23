@@ -85,7 +85,7 @@ extension WKWebView {
         // In case we need keyboard personalization for specific languages
         // var language = textInputMode?.primaryLanguage ?? "en-US"
         let remote = UIKeyCommand(input: "r", modifierFlags: [.alternate, .command], action: #selector(showRemoteAccess), discoverabilityTitle: "Remote access")
-        if #available(iOS 15, *) { remote.wantsPriorityOverSystemBehavior = true }
+        remote.wantsPriorityOverSystemBehavior = true
         var basicKeyCommands = [
             remote,
             // UIKeyCommand(input: UIKeyCommand.inputUpArrow, modifierFlags: [], action: #selector(upAction)),
@@ -102,9 +102,7 @@ extension WKWebView {
             UIKeyCommand(input: "]", modifierFlags: [.command, .shift], action: #selector(goforwardkeyAction), discoverabilityTitle: "Next page")
         ]
         let aKey = UIKeyCommand(input: "a", modifierFlags:.command, action: #selector(selectAll_), discoverabilityTitle: "Select all")
-        if #available(iOS 15.0, *) {
-            aKey.wantsPriorityOverSystemBehavior = true
-        }
+        aKey.wantsPriorityOverSystemBehavior = true
         basicKeyCommands.append(aKey)
         return basicKeyCommands
     }

@@ -16,6 +16,7 @@ import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
 import Network // for our local HTTPS server for WebAssembly
 import UniformTypeIdentifiers
+import StoreKit
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
@@ -283,8 +284,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if #unavailable(iOS 18) {
             replaceCommand("wasmkit", "wasmkitUnavailable", true)
         }
-        if appVersion != "a-Shell-mini", #unavailable(iOS 26.2) {
-            replaceCommand("codex", "codexUnavailable", true)
+        if appVersion != "a-Shell-mini" {
+            if #unavailable(iOS 26.2) {
+                replaceCommand("codex", "codexUnavailable", true)
+            } else {
+                // Make sure codex (and other LLMs) are unavailable in mainland China
+                // as requested.
+                // TODO: do the same for herdr.
+                Task {
+                    if (await Storefront.current)?.countryCode == "CHN" {
+                        replaceCommand("codex", "codexUnavailableCountry", true)
+                    }
+                }
+            }
         }
         // for debugging TeX issues / installing a new distribution
         // addCommandList(Bundle.main.path(forResource: "texCommandsDictionary", ofType: "plist"))
