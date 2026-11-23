@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>heliocron</key>
+	<array>
+		<string>heliocron.framework/heliocron</string>
+		<string>heliocron_ios_main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>ruff</key>
 	<array>
 		<string>Ruff.framework/Ruff</string>
