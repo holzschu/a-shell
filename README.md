@@ -16,6 +16,8 @@ You can change the appearance of a-Shell using `config`. It lets you change the 
 
 When opening a new window, a-Shell executes the file `.profile` if it exists. You can use this mechanism to customize further, e.g. have custom environment variables or cleanup temporary files.
 
+Full a-Shell includes zoxide for directory navigation. Successful `cd` visits, including directory picker and bookmark navigation, are learned automatically. Use `z KEYWORDS` to revisit a directory, `z -` to return to the previous directory, or `zi KEYWORDS` to choose with fzf. Space followed by Tab after `z KEYWORDS` also opens the selector and submits the query as a command; canceling returns to an empty prompt, and no match reports an error. To enable keyword lookup through `cd`, add `export _ZO_CD=1` to `~/Documents/.profile` and open a new window. Existing paths retain stock `cd` behavior. See [zoxide/README.md](zoxide/README.md) for configuration and database storage.
+
 For more tips on how to use a-Shell, see <a href="https://bianshen00009.gitbook.io/a-guide-to-a-shell/">the document</a>.
 
 ## AppStore
@@ -40,7 +42,7 @@ In an existing checkout, run `git submodule sync` before updating initialized su
 Additional prerequisites:
 
 - Python and its associated libraries cannot be built from this clone alone: they require an iOS Fortran compiler built from a patched gcc. The Python targets therefore need prebuilt frameworks, which are not currently published; see [the build discussion](https://github.com/holzschu/a-shell/pull/1100#issuecomment-6265206051).
-- For full `a-Shell`, build the local frameworks using [node/README.md](node/README.md), [fd/README.md](fd/README.md), [fzf/README.md](fzf/README.md), [navi/README.md](navi/README.md), [gitoxide/README.md](gitoxide/README.md), [ruff/README.md](ruff/README.md), [rg/README.md](rg/README.md) and [helix/README.md](helix/README.md).
+- For full `a-Shell`, build the local frameworks using [node/README.md](node/README.md), [fd/README.md](fd/README.md), [fzf/README.md](fzf/README.md), [navi/README.md](navi/README.md), [gitoxide/README.md](gitoxide/README.md), [ruff/README.md](ruff/README.md), [rg/README.md](rg/README.md), [zoxide/README.md](zoxide/README.md) and [helix/README.md](helix/README.md).
 - The Python targets also reference inputs absent from the downloads, including `openrsync`/`openrsyncA`, `curl-impersonate`, `WasmKitCommand` and `blink`; full `a-Shell` references additional TeX, `cbc` and `perlC` frameworks. This list is not exhaustive; see [#1005](https://github.com/holzschu/a-shell/issues/1005).
 
 Open `a-Shell.xcodeproj` and select `a-Shell-noPython`. To build an unsigned app for iOS devices:

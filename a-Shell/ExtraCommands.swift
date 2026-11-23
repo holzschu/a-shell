@@ -188,6 +188,9 @@ a-Shell can do most of the things you can do in a terminal, locally on your iPho
         
         if (argc == 1) {
             delegate.printText(string: helpText)
+            if delegate.commandsArray().contains("zoxide") {
+                delegate.printText(string: "\n- zoxide learns successful cd, directory picker and bookmark visits. Use z KEYWORDS to revisit a directory, z - to go back, or zi KEYWORDS to choose with fzf. Space then Tab after z KEYWORDS submits the query and opens the selector; canceling returns to an empty prompt, and no match reports an error.\n- To enable cd keyword lookup, add export _ZO_CD=1 to ~/Documents/.profile and open a new window. Existing paths keep stock cd behavior.\n")
+            }
             let zshmarks = UserDefaults.standard.bool(forKey: "zshmarks")
             let bashmarks = UserDefaults.standard.bool(forKey: "bashmarks")
             if (zshmarks && bashmarks) {
@@ -1695,17 +1698,41 @@ public func deactivate(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
     return 0
 }
 
+// Use the same successful-visit hook as native cd when zoxide is bundled.
+// App startup resolves this symbol with replaceCommand; the shared dictionary keeps stock cd.
+@_cdecl("zoxide_cd_command")
+public func zoxide_cd_command(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32 {
+    guard let framework = Bundle.main.privateFrameworksURL?.appendingPathComponent("zoxide.framework/zoxide"),
+          let handle = dlopen(framework.path, RTLD_LAZY) else {
+        return cd_main(argc, argv)
+    }
+    defer { dlclose(handle) }
+    guard let symbol = dlsym(handle, "zoxide_cd_main") else {
+        return cd_main(argc, argv)
+    }
+    typealias Command = @convention(c) (Int32, UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32
+    return unsafeBitCast(symbol, to: Command.self)(argc, argv)
+}
+
 // tries to change the directory, returns false if path is a file:
-public func changeDirectory(path: String) -> Bool {
+public func changeDirectory(path: String, recordVisit: Bool = false) -> Bool {
     NSLog("calling changeDirectory with \(path)")
     var fileURL = URL(fileURLWithPath: path)
     let originalFileURL = URL(fileURLWithPath: path)
-    let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "cd".toCString()!), UnsafeMutablePointer(mutating: path.removingPercentEncoding!.toCString()!)]
+    // WASI chdir must not move to a keyword match and then report failure.
+    // Only explicit picker/bookmark visits learn; absolute paths disable keyword fallback.
+    let decodedPath = path.removingPercentEncoding!
+    let cdPath = recordVisit ? URL(fileURLWithPath: decodedPath).path : decodedPath
+    let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "cd".toCString()!), UnsafeMutablePointer(mutating: cdPath.toCString()!)]
     // temporarily redirect stderr
     let old_thread_stderr = thread_stderr
     thread_stderr = fopen("/dev/null", "w")
     let p_argv: UnsafeMutablePointer = UnsafeMutablePointer(mutating: argv)
-    cd_main(2, p_argv);
+    if recordVisit {
+        zoxide_cd_command(argc: 2, argv: p_argv)
+    } else {
+        cd_main(2, p_argv)
+    }
     if (originalFileURL.sameFileLocation(path: FileManager().currentDirectoryPath)) {
         fclose(thread_stderr)
         thread_stderr = old_thread_stderr
@@ -1775,7 +1802,7 @@ public func changeDirectory(path: String) -> Bool {
                 if (!targetURL.sameFileLocation(path: path)) {
                     fclose(thread_stderr)
                     thread_stderr = old_thread_stderr
-                    return changeDirectory(path: targetURL.path)
+                    return changeDirectory(path: targetURL.path, recordVisit: recordVisit)
                 }
                 stale = false
             }
@@ -1800,7 +1827,11 @@ public func changeDirectory(path: String) -> Bool {
                     continue // maybe there is another bookmark that will work?
                     // return fileURL.isDirectory
                 }
-                cd_main(2, p_argv);
+                if recordVisit {
+                    zoxide_cd_command(argc: 2, argv: p_argv)
+                } else {
+                    cd_main(2, p_argv)
+                }
                 fclose(thread_stderr)
                 thread_stderr = old_thread_stderr
                 if (originalFileURL.sameFileLocation(path: FileManager().currentDirectoryPath)) {
@@ -1867,7 +1898,7 @@ public func jump(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
     }
     let pathString = path as! String
     // We call cd_main so that "cd -" can still work.
-    if (changeDirectory(path: pathString)) {
+    if (changeDirectory(path: pathString, recordVisit: true)) {
         // changeDirectory also goes through all the list of bookmarks.
         return 0 // it worked
     } else {

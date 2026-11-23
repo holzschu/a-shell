@@ -250,7 +250,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("text", "text", true)  // send a text to a contact
         replaceCommand("play", "play_main", true)
         replaceCommand("view", "preview_main", true)
-        replaceCommand("z", "z_command", true) // change directory based on frequencys
+        // Startup must preserve the bundled zoxide command instead of replacing it.
+        if !(commandsAsArray() as? [String] ?? []).contains("z") {
+            replaceCommand("z", "z_command", true) // change directory based on frequencys
+        }
+        // Keep the shared Intents dictionary on stock cd; only the app owns this wrapper.
+        if (commandsAsArray() as? [String] ?? []).contains("zoxide") {
+            replaceCommand("cd", "zoxide_cd_command", true) // Also replaces chdir's cd_main entry.
+        }
         // replaceCommand("rehash", "rehash", true) // update list of commands for auto-complete
         replaceCommand("repeatCommand", "repeatCommand", true)
         replaceCommand("downloadFile", "downloadFile", true)

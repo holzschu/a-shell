@@ -92,3 +92,4 @@ Resources/npm/
 Resources/node-fetch/
 /fzf/fzf.xcframework/
 /navi/navi.xcframework/
+/zoxide/zoxide.xcframework/
