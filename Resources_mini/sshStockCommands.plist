@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>scp</key>
+	<array>
+		<string>@rpath/SCPStock.framework/SCPStock</string>
+		<string>ashell_scp_main</string>
+		<string>12346ABCTdfpqrtvF:J:P:S:c:i:l:o:</string>
+		<string>file</string>
+	</array>
+	<key>sftp</key>
+	<array>
+		<string>@rpath/SFTPStock.framework/SFTPStock</string>
+		<string>ashell_sftp_main</string>
+		<string>1246AafhNpqrvCc:D:i:l:o:s:S:b:B:F:J:P:R:</string>
+		<string>file</string>
+	</array>
+	<key>ssh</key>
+	<array>
+		<string>@rpath/SSHStock.framework/SSHStock</string>
+		<string>ashell_ssh_main</string>
+		<string>1246ab:c:e:fgi:kl:m:no:p:qstvxAB:CD:E:F:GI:J:KL:MNO:PQ:R:S:TVw:W:XYy</string>
+		<string>no</string>
+	</array>
+	<key>ssh-keygen</key>
+	<array>
+		<string>@rpath/SSHKeygenStock.framework/SSHKeygenStock</string>
+		<string>ashell_ssh_keygen_main</string>
+		<string>ABHLQXceghiklopquvxyC:D:E:F:G:I:J:K:M:N:O:P:R:S:T:V:W:Y:Z:a:b:f:g:j:m:n:r:s:t:w:z:</string>
+		<string>file</string>
+	</array>
+</dict>
+</plist>

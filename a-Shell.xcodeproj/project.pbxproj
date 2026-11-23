@@ -1281,6 +1281,47 @@
 		731431410000000000000201 /* SFTPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000002 /* SFTPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		731431410000000000000301 /* SSHKeygenStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000003 /* SSHKeygenStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8F1C3A27B5E4E0C9A61B2F4 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
+		731431410000000000000004 /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
+		0E6CB28F2E390FA7BDD5A0AD /* sshStockCommands.plist in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
+		};
+		631305DBB8D6610ACAA16FCF /* sshStockCommands.plist in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
+		};
+		BA926A37EC68326E951422FF /* sshStockCommands.plist in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
+		};
+		A9EF8A40131E082BF78C140E /* sshStockCommands.plist in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
+		};
+		87806CB937978E72E1E59179 /* sshStockCommands.plist in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
+		};
+		664EF28998AC682D4587F5AB /* sshStockCommands.plist in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
+		};
+		E6EE7A32A41968AF7EFAAF71 /* sshStockCommands.plist in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
+		};
+		059C086B6EEAB7CA8D2590E6 /* sshStockCommands.plist in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
+		};
+		731431410000000000000005 /* sshStockCommands.plist in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
+		};
+		35CEEFFA3E32E690A179CFAC /* sshStockCommands.plist in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
+		};
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -3205,6 +3246,7 @@
 		731431400000000000000001 /* SCPStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SCPStock.xcframework; path = xcfs/SCPStock.xcframework; sourceTree = SOURCE_ROOT; };
 		731431400000000000000002 /* SFTPStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SFTPStock.xcframework; path = xcfs/SFTPStock.xcframework; sourceTree = SOURCE_ROOT; };
 		731431400000000000000003 /* SSHKeygenStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SSHKeygenStock.xcframework; path = xcfs/SSHKeygenStock.xcframework; sourceTree = SOURCE_ROOT; };
+		731431400000000000000004 /* sshStockCommands.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = sshStockCommands.plist; path = Resources_mini/sshStockCommands.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3501,6 +3543,7 @@
 				22178EA4257A7A77008EB2B4 /* node_modules */,
 				229D25BF25793697004A78AC /* usr */,
 				229D25C025793699004A78AC /* commandDictionary.plist */,
+				731431400000000000000004 /* sshStockCommands.plist */,
 				229D25C12579369A004A78AC /* bin */,
 			);
 			name = Resources_mini;
@@ -4935,6 +4978,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				731431410000000000000004 /* sshStockCommands.plist in Resources */,
 				227B248C2BE12FF1003A8031 /* wasm_withWorker.js in Resources */,
 				22A536352C4521CA0031A9FF /* wasm_worker_wasm.js in Resources */,
 				22068CCC2F5C9AAF004307F7 /* wasm.js in Resources */,
@@ -4986,6 +5030,7 @@
 			isa = "PBXResourcesBuildPhase";
 			buildActionMask = 2147483647;
 			files = (
+				731431410000000000000005 /* sshStockCommands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4993,6 +5038,7 @@
 			isa = "PBXResourcesBuildPhase";
 			buildActionMask = 2147483647;
 			files = (
+				87806CB937978E72E1E59179 /* sshStockCommands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5000,6 +5046,7 @@
 			isa = "PBXResourcesBuildPhase";
 			buildActionMask = 2147483647;
 			files = (
+				059C086B6EEAB7CA8D2590E6 /* sshStockCommands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5007,6 +5054,7 @@
 			isa = "PBXResourcesBuildPhase";
 			buildActionMask = 2147483647;
 			files = (
+				BA926A37EC68326E951422FF /* sshStockCommands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5014,6 +5062,7 @@
 			isa = "PBXResourcesBuildPhase";
 			buildActionMask = 2147483647;
 			files = (
+				631305DBB8D6610ACAA16FCF /* sshStockCommands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5021,6 +5070,7 @@
 			isa = "PBXResourcesBuildPhase";
 			buildActionMask = 2147483647;
 			files = (
+				664EF28998AC682D4587F5AB /* sshStockCommands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5028,6 +5078,7 @@
 			isa = "PBXResourcesBuildPhase";
 			buildActionMask = 2147483647;
 			files = (
+				35CEEFFA3E32E690A179CFAC /* sshStockCommands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5035,6 +5086,7 @@
 			isa = "PBXResourcesBuildPhase";
 			buildActionMask = 2147483647;
 			files = (
+				E6EE7A32A41968AF7EFAAF71 /* sshStockCommands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5042,6 +5094,7 @@
 			isa = "PBXResourcesBuildPhase";
 			buildActionMask = 2147483647;
 			files = (
+				0E6CB28F2E390FA7BDD5A0AD /* sshStockCommands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5049,6 +5102,7 @@
 			isa = "PBXResourcesBuildPhase";
 			buildActionMask = 2147483647;
 			files = (
+				A9EF8A40131E082BF78C140E /* sshStockCommands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -250,6 +250,13 @@ __attribute__((used, visibility("default"))) int ashell_worker_host_interrupt(vo
         if (setenv([value substringToIndex:separator.location].UTF8String,
                    [value substringFromIndex:separator.location + 1].UTF8String, 1)) { int error = errno; [self releasePane]; reply(error, nil, nil, getpid()); return; }
     }
+    // The mini host opts all four Stock clients in together. Keep the base catalog for other workers.
+    const char *workerCommands = getenv("ASHELL_WORKER_COMMANDS");
+    if (!NSProcessInfo.processInfo.iOSAppOnMac && workerCommands &&
+        [[@(workerCommands) componentsSeparatedByString:@" "] containsObject:@"ssh"]) {
+        NSString *stockCommands = [NSBundle.mainBundle pathForResource:@"sshStockCommands" ofType:@"plist"];
+        if (!stockCommands || addCommandList(stockCommands)) { [self releasePane]; reply(ENOENT, nil, nil, getpid()); return; }
+    }
     // Match stock SceneDelegate before libedit decodes Unicode or measures it.
     if (setenv("LC_CTYPE", "UTF-8", 1)) { int error = errno; [self releasePane]; reply(error, nil, nil, getpid()); return; }
     const char *locale = setlocale(LC_CTYPE, "UTF-8");

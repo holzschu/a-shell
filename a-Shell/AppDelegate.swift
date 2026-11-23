@@ -208,10 +208,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NSLog("Application didFinishLaunchingWithOptions \(String(describing: launchOptions))")
         #endif
         _ = TerminalThemes.synchronizeSelection()
-        if ((Bundle.main.object(forInfoDictionaryKey: "ShellWorkerCount") as? NSNumber)?.intValue ?? 0) > 0 {
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        // Older ios_system builds cannot isolate Stock SSH's child processes.
+        let defaultSymbolScope = UnsafeMutableRawPointer(bitPattern: -2) // RTLD_DEFAULT
+        if #available(iOS 26.0, *), !ProcessInfo.processInfo.isiOSAppOnMac,
+           let stockCommands = Bundle.main.path(forResource: "sshStockCommands", ofType: "plist"),
+           ((Bundle.main.object(forInfoDictionaryKey: "ShellWorkerCount") as? NSNumber)?.intValue ?? 0) > 0,
+           dlsym(defaultSymbolScope, "ios_posix_spawn") != nil,
+           addCommandList(stockCommands) == nil {
             let workerCommands = getenv("ASHELL_WORKER_COMMANDS").map { String(cString: $0) } ?? ""
-            setenv("ASHELL_WORKER_COMMANDS", workerCommands + " ssh scp sftp ssh-keygen", 1)
+            if setenv("ASHELL_WORKER_COMMANDS", workerCommands + " ssh scp sftp ssh-keygen", 1) != 0 {
+                // The Stock entries require worker dispatch. Restore the base catalog if opt-in failed.
+                addCommandList(Bundle.main.path(forResource: "commandDictionary", ofType: "plist"))
+            }
         }
+        #endif
         _ = TerminalPrompts.synchronizeSelection()
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
