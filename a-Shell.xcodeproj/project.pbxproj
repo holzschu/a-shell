@@ -1015,6 +1015,27 @@
 		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AE1100000000000000000001 /* helix/helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix/helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8F1C3A27B5E4E0C9A61B2F4 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
+		98E3468FA1332A864BA012C5 /* AShellML.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C97E163975F0B76384E824 /* AShellML.swift */; };
+		C65A380ED9C106F32F62E6EE /* AShellMLInstall.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2DE7F4BD3205B0CCED463F /* AShellMLInstall.swift */; };
+		089FE29F553BD09EA08A4922 /* AShellMLJob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18DE82F26C93786584C7DB5E /* AShellMLJob.swift */; };
+		04674832A3C11B22BF64C729 /* AShellEmbedding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C351328E7C64579EEF6C507 /* AShellEmbedding.swift */; };
+		672DA256C6D4AE6D1602EF9C /* AShellML.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C97E163975F0B76384E824 /* AShellML.swift */; };
+		44DC949832C7EB91EA6BCBEB /* AShellMLInstall.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2DE7F4BD3205B0CCED463F /* AShellMLInstall.swift */; };
+		C2FA37E8D2E26C9286A3A3A7 /* AShellMLJob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18DE82F26C93786584C7DB5E /* AShellMLJob.swift */; };
+		A9F0C37E9E0B1275C70F1857 /* AShellEmbedding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C351328E7C64579EEF6C507 /* AShellEmbedding.swift */; };
+		ED528911AF340B8ECE8A76C3 /* AShellML.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C97E163975F0B76384E824 /* AShellML.swift */; };
+		5A2A4961C06BA39777FBE5E3 /* AShellMLInstall.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2DE7F4BD3205B0CCED463F /* AShellMLInstall.swift */; };
+		BB7289332D8AD9A04FCADEFD /* AShellMLJob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18DE82F26C93786584C7DB5E /* AShellMLJob.swift */; };
+		61C2A6356E03137EDBA58ECA /* AShellEmbedding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C351328E7C64579EEF6C507 /* AShellEmbedding.swift */; };
+		632C0F7BF6F74058EC949183 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2C4202A4141480DBD933BE7 /* CoreML.framework */; };
+		50CD902DD397BC6B85038AB4 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2C4202A4141480DBD933BE7 /* CoreML.framework */; };
+		CE5CD860C3A3580DA4E544DF /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2C4202A4141480DBD933BE7 /* CoreML.framework */; };
+		9EB731E7AE842D61B377FB9C /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 97ED6324A88D8C1AD2B2D6C1 /* CoreVideo.framework */; };
+		B244261CF3FB65DD2AFC1D9D /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 97ED6324A88D8C1AD2B2D6C1 /* CoreVideo.framework */; };
+		43BF3C2CC3B1FAE29B8657E6 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 97ED6324A88D8C1AD2B2D6C1 /* CoreVideo.framework */; };
+		706299DDBA0F638B3F5DB0DD /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2780BFE7D434F38C6FAEB084 /* Accelerate.framework */; };
+		28849F1CE48899A8214D8CEE /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2780BFE7D434F38C6FAEB084 /* Accelerate.framework */; };
+		79DD5A8ADABBCC8A054D290F /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2780BFE7D434F38C6FAEB084 /* Accelerate.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2806,6 +2827,13 @@
 		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework; sourceTree = SOURCE_ROOT; };
 		A59100000000000000000004 /* Relay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relay.swift; sourceTree = "<group>"; };
 		AE1100000000000000000002 /* helix/helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
+		84C97E163975F0B76384E824 /* AShellML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ml/AShellML.swift; sourceTree = SOURCE_ROOT; };
+		BE2DE7F4BD3205B0CCED463F /* AShellMLInstall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ml/AShellMLInstall.swift; sourceTree = SOURCE_ROOT; };
+		18DE82F26C93786584C7DB5E /* AShellMLJob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ml/AShellMLJob.swift; sourceTree = SOURCE_ROOT; };
+		5C351328E7C64579EEF6C507 /* AShellEmbedding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ml/AShellEmbedding.swift; sourceTree = SOURCE_ROOT; };
+		A2C4202A4141480DBD933BE7 /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
+		97ED6324A88D8C1AD2B2D6C1 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		2780BFE7D434F38C6FAEB084 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2829,6 +2857,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				706299DDBA0F638B3F5DB0DD /* Accelerate.framework in Frameworks */,
+				9EB731E7AE842D61B377FB9C /* CoreVideo.framework in Frameworks */,
+				632C0F7BF6F74058EC949183 /* CoreML.framework in Frameworks */,
 				2200010030F7400000000004 /* PhotosUI.framework in Frameworks */,
 				224A904D2ADD0999006DB9CC /* ios_system.xcframework in Frameworks */,
 				2225C1122F685BDD0013F533 /* NIOSSL in Frameworks */,
@@ -2840,6 +2871,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				28849F1CE48899A8214D8CEE /* Accelerate.framework in Frameworks */,
+				B244261CF3FB65DD2AFC1D9D /* CoreVideo.framework in Frameworks */,
+				50CD902DD397BC6B85038AB4 /* CoreML.framework in Frameworks */,
 				2200010030F7400000000001 /* PhotosUI.framework in Frameworks */,
 				228E13F825C95F4C0065D825 /* ios_system.xcframework in Frameworks */,
 				2225C1102F685BD50013F533 /* NIOSSL in Frameworks */,
@@ -2851,6 +2885,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				79DD5A8ADABBCC8A054D290F /* Accelerate.framework in Frameworks */,
+				43BF3C2CC3B1FAE29B8657E6 /* CoreVideo.framework in Frameworks */,
+				CE5CD860C3A3580DA4E544DF /* CoreML.framework in Frameworks */,
 				2200010030F7400000000002 /* PhotosUI.framework in Frameworks */,
 				228E13F625C95F400065D825 /* ios_system.xcframework in Frameworks */,
 				2225C10E2F685BCB0013F533 /* NIOSSL in Frameworks */,
@@ -2940,6 +2977,13 @@
 		22984EE122C93DBC00069497 = {
 			isa = PBXGroup;
 			children = (
+				84C97E163975F0B76384E824 /* AShellML.swift */,
+				BE2DE7F4BD3205B0CCED463F /* AShellMLInstall.swift */,
+				18DE82F26C93786584C7DB5E /* AShellMLJob.swift */,
+				5C351328E7C64579EEF6C507 /* AShellEmbedding.swift */,
+				A2C4202A4141480DBD933BE7 /* CoreML.framework */,
+				97ED6324A88D8C1AD2B2D6C1 /* CoreVideo.framework */,
+				2780BFE7D434F38C6FAEB084 /* Accelerate.framework */,
 				220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */,
 				223FC3CA2611F9C300CDC89F /* wasm.html */,
 				2220059F2871EF3300DC7A23 /* Intents.intentdefinition */,
@@ -4325,6 +4369,10 @@
 			files = (
 				D8F1C3A27B5E4E0C9A61B2F4 /* ExecuteLongCommandIntent.swift in Sources */,
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
+				98E3468FA1332A864BA012C5 /* AShellML.swift in Sources */,
+				C65A380ED9C106F32F62E6EE /* AShellMLInstall.swift in Sources */,
+				089FE29F553BD09EA08A4922 /* AShellMLJob.swift in Sources */,
+				04674832A3C11B22BF64C729 /* AShellEmbedding.swift in Sources */,
 				535000000000000000000002 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000002 /* TerminalTheme.swift in Sources */,
 				620000000000000000000002 /* TerminalPrompt.swift in Sources */,
@@ -4358,6 +4406,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
+				672DA256C6D4AE6D1602EF9C /* AShellML.swift in Sources */,
+				44DC949832C7EB91EA6BCBEB /* AShellMLInstall.swift in Sources */,
+				C2FA37E8D2E26C9286A3A3A7 /* AShellMLJob.swift in Sources */,
+				A9F0C37E9E0B1275C70F1857 /* AShellEmbedding.swift in Sources */,
 				535000000000000000000003 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000004 /* TerminalTheme.swift in Sources */,
 				620000000000000000000004 /* TerminalPrompt.swift in Sources */,
@@ -4392,6 +4444,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
+				ED528911AF340B8ECE8A76C3 /* AShellML.swift in Sources */,
+				5A2A4961C06BA39777FBE5E3 /* AShellMLInstall.swift in Sources */,
+				BB7289332D8AD9A04FCADEFD /* AShellMLJob.swift in Sources */,
+				61C2A6356E03137EDBA58ECA /* AShellEmbedding.swift in Sources */,
 				535000000000000000000004 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000003 /* TerminalTheme.swift in Sources */,
 				620000000000000000000003 /* TerminalPrompt.swift in Sources */,

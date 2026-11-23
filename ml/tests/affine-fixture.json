@@ -1,0 +1,13 @@
+{
+	"schema": 1,
+	"name": "affine-image-fixture",
+	"version": "affine-fixture-v1",
+	"description": "Untrained sparse affine image classifier for conversion and delivery qualification only",
+	"features": {"image": {"type": "image", "dtype": "uint8", "shape": [28, 28]}},
+	"outputs": {"classLabel": {"type": "int64"}, "labelProbabilities": {"type": "dictionary", "key_type": "int64", "count": 10}},
+	"image_scale": 0.00392156862745098,
+	"weights": [[0, 0, 0.25], [1, 100, -0.5], [2, 200, 0.75], [3, 300, -1.0], [4, 400, 1.25], [5, 500, -1.5], [6, 600, 1.75], [7, 350, 0.5], [8, 700, -0.25], [9, 783, 0.125]],
+	"bias": [0.0, 0.1, -0.2, 0.3, -0.4, 0.5, -0.6, 3.0, -0.8, 0.9],
+	"parity": {"precision": "float32", "atol": 0.0001, "rtol": 0.0001, "fixtures": ["seven", "zeros", "full", "ramp"]},
+	"license": "BSD-3-Clause"
+}
