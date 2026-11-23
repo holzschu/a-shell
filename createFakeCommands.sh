@@ -33,6 +33,7 @@ touch Resources/bin/host
 touch Resources/bin/hx
 touch Resources/bin/ifconfig
 touch Resources/bin/jsc
+touch Resources/bin/keychain
 touch Resources/bin/link
 touch Resources/bin/ln
 touch Resources/bin/ls

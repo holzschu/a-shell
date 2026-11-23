@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7C2300000000000000000002 /* Credentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2300000000000000000001 /* Credentials.swift */; };
+		7C2300000000000000000003 /* Credentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2300000000000000000001 /* Credentials.swift */; };
+		7C2300000000000000000004 /* Credentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2300000000000000000001 /* Credentials.swift */; };
 		2200010030F7400000000001 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2200010030F7400000000002 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2200010030F7400000000004 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
@@ -1940,6 +1943,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7C2300000000000000000001 /* Credentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credentials.swift; sourceTree = "<group>"; };
 		0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExecuteLongCommandIntent.swift; sourceTree = "<group>"; };
 		196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCommand.swift; sourceTree = "<group>"; };
 		2200010030F7400000000003 /* PhotosUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PhotosUI.framework; path = System/Library/Frameworks/PhotosUI.framework; sourceTree = SDKROOT; };
@@ -2979,6 +2983,7 @@
 				22B1B83322CBC53700F7C452 /* a-Shell.entitlements */,
 				22984EED22C93DBC00069497 /* AppDelegate.swift */,
 				22D23117231940B2005B0C12 /* ExtraCommands.swift */,
+				7C2300000000000000000001 /* Credentials.swift */,
 				A59100000000000000000004 /* Relay.swift */,
 				610000000000000000000010 /* Themes */,
 				610000000000000000000001 /* TerminalTheme.swift */,
@@ -4325,6 +4330,7 @@
 			files = (
 				D8F1C3A27B5E4E0C9A61B2F4 /* ExecuteLongCommandIntent.swift in Sources */,
 				224A903B2ADD0999006DB9CC /* ExtraCommands.swift in Sources */,
+				7C2300000000000000000002 /* Credentials.swift in Sources */,
 				535000000000000000000002 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000002 /* TerminalTheme.swift in Sources */,
 				620000000000000000000002 /* TerminalPrompt.swift in Sources */,
@@ -4358,6 +4364,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				22D23118231940B3005B0C12 /* ExtraCommands.swift in Sources */,
+				7C2300000000000000000003 /* Credentials.swift in Sources */,
 				535000000000000000000003 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000004 /* TerminalTheme.swift in Sources */,
 				620000000000000000000004 /* TerminalPrompt.swift in Sources */,
@@ -4392,6 +4399,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
+				7C2300000000000000000004 /* Credentials.swift in Sources */,
 				535000000000000000000004 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000003 /* TerminalTheme.swift in Sources */,
 				620000000000000000000003 /* TerminalPrompt.swift in Sources */,

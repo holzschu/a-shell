@@ -236,6 +236,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
         replaceCommand("relay", "relay_main", true)
+        replaceCommand("keychain", "keychain_main", true)
         replaceCommand("history", "history", true)
         replaceCommand("help", "help", true)
         replaceCommand("clear", "clear", true)
