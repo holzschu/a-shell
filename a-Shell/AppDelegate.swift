@@ -259,6 +259,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
         replaceCommand("photos", "photos_main", true)
+        replaceCommand("healthkit", "healthkit_main", true)
         replaceCommand("hideKeyboard", "hideKeyboard", true)
         replaceCommand("hideToolbar", "hideToolbar", true)
         replaceCommand("showToolbar", "showToolbar", true)

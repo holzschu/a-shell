@@ -23,6 +23,7 @@ touch Resources_mini/bin/grep
 touch Resources_mini/bin/gunzip
 touch Resources_mini/bin/gzip
 touch Resources_mini/bin/head
+touch Resources_mini/bin/healthkit
 touch Resources_mini/bin/host
 touch Resources_mini/bin/ifconfig
 touch Resources_mini/bin/jsc
