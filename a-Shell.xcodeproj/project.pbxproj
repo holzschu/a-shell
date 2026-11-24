@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A2B1818A0000000000000001 /* Herdr LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = A2B1818A0000000000000002 /* Herdr LICENSE */; };
 		2200010030F7400000000001 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2200010030F7400000000002 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2200010030F7400000000004 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
@@ -1271,6 +1272,8 @@
 			isa = "PBXBuildFile";
 			fileRef = "228E13F225C95F2D0065D825";
 		};
+		7F117665FA3CA0A131164904 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFDF212599A4C445C134125D /* a-Shell-mini-LongCommands.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		87BFA35D4A842B3F7BD8E197 /* ProgressCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22000000000000000000002 /* rg/rg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A22600000000000000000001 /* codex/codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex/codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -2219,9 +2222,41 @@
 			name = "Embed Shell Workers";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		49A255B4BCFBF00F034858F4 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				9FA1E9A5C72AF598227B3351 /* a-Shell-mini-LongCommands.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B427E6638A792BDC5802FE8 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				"D2F30C91685F9DC284616312",
+				"7068DDDA75BCEA8A404C09AD",
+				"FD33E045D3FF5D175364CB7C",
+				"27937DD7D9B079E79382E010",
+				"CDECC5E5A6CB9CC531134296",
+				"BD336245D81BD967822E8805",
+				"632684F10ED929FB4713B2AE",
+				"B20620C6A9ADEC432BF25194",
+				"4E381ABD8DEE9DA436598879",
+				"96976D843556F3E024DE3B2F",
+			);
+			name = "Embed Shell Workers";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A2B1818A0000000000000002 /* Herdr LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = "Herdr LICENSE"; path = Herdr/LICENSE; sourceTree = SOURCE_ROOT; };
 		0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExecuteLongCommandIntent.swift; sourceTree = "<group>"; };
 		196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCommand.swift; sourceTree = "<group>"; };
 		2200010030F7400000000003 /* PhotosUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PhotosUI.framework; path = System/Library/Frameworks/PhotosUI.framework; sourceTree = SDKROOT; };
@@ -3341,6 +3376,86 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4EF95B478646F901898E00B3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				"1277856148B9DF5BCFB73A45",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DEAB4E94790E3EA7168A48C3 = {
+			isa = "PBXFrameworksBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+				"0673335401F0E6294B1D6A65",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		258FF1E0CF03820F66E545A5 = {
+			isa = "PBXFrameworksBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+				"92590DF487A4D5B48CEE3C36",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		82F519E40E8A8147E4355208 = {
+			isa = "PBXFrameworksBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+				"539578FA38E5117D4FFA6F13",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B845E8A798AC3E84D1E78A6A = {
+			isa = "PBXFrameworksBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+				"210223C3B93B2D495C96B792",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		546F48346B8E1E84B6C5218F = {
+			isa = "PBXFrameworksBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+				"4C9CA710D4734D323992A80C",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3BAA79E324EBC4898A0D14A6 = {
+			isa = "PBXFrameworksBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+				"3AABA6ADD41BDE6C2C6BEC6E",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A1CAE50D727AC931A1AC17A = {
+			isa = "PBXFrameworksBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+				"5588CB35CBA255F519ECBB71",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FCA3F3734E17EAA67DAFC01F = {
+			isa = "PBXFrameworksBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+				"09D5DF2DB0BAEEB73DCFED25",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FCC490857271C3EA8FD0560 = {
+			isa = "PBXFrameworksBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+				"6B4BFFDBD16619E32E8DA990",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -3407,6 +3522,7 @@
 		22984EE122C93DBC00069497 = {
 			isa = PBXGroup;
 			children = (
+				A2B1818A0000000000000002 /* Herdr LICENSE */,
 				220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */,
 				223FC3CA2611F9C300CDC89F /* wasm.html */,
 				2220059F2871EF3300DC7A23 /* Intents.intentdefinition */,
@@ -4919,6 +5035,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2B1818A0000000000000001 /* Herdr LICENSE in Resources */,
 				227B248C2BE12FF1003A8031 /* wasm_withWorker.js in Resources */,
 				22A536352C4521CA0031A9FF /* wasm_worker_wasm.js in Resources */,
 				22068CCC2F5C9AAF004307F7 /* wasm.js in Resources */,
@@ -4982,6 +5099,269 @@
 		};
 		F87943363674934C30AE6197 = {
 			isa = "PBXResourcesBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3A1724BD1DB4BAD26BEFB1A0 = {
+			isa = "PBXResourcesBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		34CBB91233009C8ABD5A85B7 = {
+			isa = "PBXResourcesBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A3640D0AC75735AA97CA7E34 = {
+			isa = "PBXResourcesBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C98BBDD25082B6A0ADD867E = {
+			isa = "PBXResourcesBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BE93A368BA56F46061D5A30F = {
+			isa = "PBXResourcesBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0DB04B227C827E3026826B08 = {
+			isa = "PBXResourcesBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		81A62DB36AA951C12F501AA6 = {
+			isa = "PBXResourcesBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6EFE2B28D3AAE60946CE98D9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E9D1E579FDF61B49CE0FEC17 = {
+			isa = "PBXResourcesBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B6DFC70EFFFF8DF6433E72CB = {
+			isa = "PBXShellScriptBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/ShellWorkers/resources.sh",
+				"$(SRCROOT)/ShellWorkers/Worker.swift",
+			);
+			name = "Prepare worker assets";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/commandDictionary.plist",
+				"$(DERIVED_FILE_DIR)/Worker.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/bash";
+			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		B67A38D341342EF376079F91 = {
+			isa = "PBXShellScriptBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/ShellWorkers/resources.sh",
+				"$(SRCROOT)/ShellWorkers/Worker.swift",
+			);
+			name = "Prepare worker assets";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/commandDictionary.plist",
+				"$(DERIVED_FILE_DIR)/Worker.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/bash";
+			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		2D03C0D5AAA2F2256E34D090 = {
+			isa = "PBXShellScriptBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/ShellWorkers/resources.sh",
+				"$(SRCROOT)/ShellWorkers/Worker.swift",
+			);
+			name = "Prepare worker assets";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/commandDictionary.plist",
+				"$(DERIVED_FILE_DIR)/Worker.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/bash";
+			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		CD23A87555F8E9CB087A2CC3 = {
+			isa = "PBXShellScriptBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/ShellWorkers/resources.sh",
+				"$(SRCROOT)/ShellWorkers/Worker.swift",
+			);
+			name = "Prepare worker assets";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/commandDictionary.plist",
+				"$(DERIVED_FILE_DIR)/Worker.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/bash";
+			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		0A54213A9F754AD98D50483E = {
+			isa = "PBXShellScriptBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/ShellWorkers/resources.sh",
+				"$(SRCROOT)/ShellWorkers/Worker.swift",
+			);
+			name = "Prepare worker assets";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/commandDictionary.plist",
+				"$(DERIVED_FILE_DIR)/Worker.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/bash";
+			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		A8E67298AAEA82BF82D81A15 = {
+			isa = "PBXShellScriptBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/ShellWorkers/resources.sh",
+				"$(SRCROOT)/ShellWorkers/Worker.swift",
+			);
+			name = "Prepare worker assets";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/commandDictionary.plist",
+				"$(DERIVED_FILE_DIR)/Worker.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/bash";
+			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		9E2EF90743ED233D863DDABE = {
+			isa = "PBXShellScriptBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/ShellWorkers/resources.sh",
+				"$(SRCROOT)/ShellWorkers/Worker.swift",
+			);
+			name = "Prepare worker assets";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/commandDictionary.plist",
+				"$(DERIVED_FILE_DIR)/Worker.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/bash";
+			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		F47AB85C2E323C145A9C92C4 = {
+			isa = "PBXShellScriptBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/ShellWorkers/resources.sh",
+				"$(SRCROOT)/ShellWorkers/Worker.swift",
+			);
+			name = "Prepare worker assets";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/commandDictionary.plist",
+				"$(DERIVED_FILE_DIR)/Worker.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/bash";
+			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		4FD09DF0A4CEF6A5C5CBDEB5 = {
+			isa = "PBXShellScriptBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/ShellWorkers/resources.sh",
+				"$(SRCROOT)/ShellWorkers/Worker.swift",
+			);
+			name = "Prepare worker assets";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/commandDictionary.plist",
+				"$(DERIVED_FILE_DIR)/Worker.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/bash";
+			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		5BE30F6A540EDF0BD98793A1 = {
+			isa = "PBXShellScriptBuildPhase";
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/ShellWorkers/resources.sh",
+				"$(SRCROOT)/ShellWorkers/Worker.swift",
+			);
+			name = "Prepare worker assets";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/commandDictionary.plist",
+				"$(DERIVED_FILE_DIR)/Worker.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/bash";
+			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		7031073A0000000000000001 /* Match LongCommands version */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5473,6 +5853,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F904F3ABF06380EBAB8707BF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				"5A652AAB3F21AD3EEE1DC9B1",
+				"72B403FFF4DA5BA1CEDD5717",
+				"C14B2CCCCE38CFD39751A8F3",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -5511,6 +5901,48 @@
 		88F36AC8C5832103CAA7195E = {
 			isa = "PBXTargetDependency";
 			target = "B80CAEC73DAE28A7664A2FE7";
+		};
+		C07B3F85C9AAEB628033EA61 = {
+			isa = "PBXTargetDependency";
+			target = "EE8FF11D18D32F6F9601FA0D";
+		};
+		BB6767147D3C4FEA4C3C952B = {
+			isa = "PBXTargetDependency";
+			target = "F1BC0042128131FA3BB63FE6";
+		};
+		26F687795555A5D88B96304D = {
+			isa = "PBXTargetDependency";
+			target = "B1BF9CA28196AF7D11ED15C1";
+		};
+		A635836C211C3AB5C85C00A7 = {
+			isa = "PBXTargetDependency";
+			target = "CE532D2E94C62529D2EAC80C";
+		};
+		0AAC31F15A0DCCDD78983016 = {
+			isa = "PBXTargetDependency";
+			target = "E698830C007E12B930873C45";
+		};
+		42442DC659794242C4C4F078 = {
+			isa = "PBXTargetDependency";
+			target = "9C778EEDE9AFE25B17E919CD";
+		};
+		31A01BF362BE8594C88A7461 = {
+			isa = "PBXTargetDependency";
+			target = "BDF38991DBFB316DAA737CDC";
+		};
+		AD01960A41E12D8546D60344 = {
+			isa = "PBXTargetDependency";
+			target = "980C38795331054C0AB04808";
+		};
+		E119072ED69DB93517DB130D = {
+			isa = "PBXTargetDependency";
+			target = "A614E13CB5ADC97DAC1C52AC";
+		};
+		265206496F54531C61AB6A9F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "a-Shell-mini-LongCommands";
+			target = 05CD0AC3A045D4B4D1258F0B /* a-Shell-mini-LongCommands */;
+			targetProxy = F33F299FD852DC4CD1764F55 /* PBXContainerItemProxy */;
 		};
 		C07B3F85C9AAEB628033EA61 = {
 			isa = "PBXTargetDependency";
@@ -6043,6 +6475,8 @@
 					"$(PROJECT_DIR)/Frameworks",
 					"$(PROJECT_DIR)",
 				);
+				"HERDR_RUST_TARGET[sdk=iphoneos*]" = "aarch64-apple-ios";
+				"HERDR_RUST_TARGET[sdk=iphonesimulator*]" = "aarch64-apple-ios-sim";
 				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -6051,6 +6485,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
+					"$(SRCROOT)/Herdr/build/target/$(HERDR_RUST_TARGET)/release",
 					"$(inherited)",
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
@@ -6059,6 +6494,16 @@
 				MINIMUM_MACOS_VERSION = 12.0.0;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lherdr_ios",
+					"-Wl,-u,_herdr_ios_main",
+					"-framework",
+					"Security",
+					"-framework",
+					"SystemConfiguration",
+					"-lc++",
+					"-lz",
+					"-liconv",
 					"-L",
 					Frameworks/,
 				);
@@ -6074,6 +6519,7 @@
 				SWIFT_INSTALL_OBJC_HEADER = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "a-Shell/a-Shell-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) HERDR_EMBEDDED";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -6099,6 +6545,8 @@
 					"$(PROJECT_DIR)/Frameworks",
 					"$(PROJECT_DIR)",
 				);
+				"HERDR_RUST_TARGET[sdk=iphoneos*]" = "aarch64-apple-ios";
+				"HERDR_RUST_TARGET[sdk=iphonesimulator*]" = "aarch64-apple-ios-sim";
 				INFOPLIST_FILE = "a-Shell-mini-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -6107,6 +6555,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
+					"$(SRCROOT)/Herdr/build/target/$(HERDR_RUST_TARGET)/release",
 					"$(inherited)",
 					"$(SDKROOT)/usr/lib/swift",
 					"$(PROJECT_DIR)/Frameworks",
@@ -6115,6 +6564,16 @@
 				MINIMUM_MACOS_VERSION = 12.0.0;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lherdr_ios",
+					"-Wl,-u,_herdr_ios_main",
+					"-framework",
+					"Security",
+					"-framework",
+					"SystemConfiguration",
+					"-lc++",
+					"-lz",
+					"-liconv",
 					"-L",
 					Frameworks/,
 				);
@@ -6129,6 +6588,7 @@
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_INSTALL_OBJC_HEADER = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "a-Shell/a-Shell-Bridging-Header.h";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) HERDR_EMBEDDED";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -6410,6 +6870,185 @@
 			};
 			name = "Release";
 		};
+		3B469D9C278E63467CFA416D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerA";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerA";
+			};
+			name = "Debug";
+		};
+		BA1F3E3B5D416DFE86D9EE20 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerA";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerA";
+			};
+			name = "Release";
+		};
+		49EECCB6CADB39D8B8693B1A = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerB";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerB";
+			};
+			name = "Debug";
+		};
+		55B5C32D6ABB182F8415F3E8 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerB";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerB";
+			};
+			name = "Release";
+		};
+		3D16C484D9FB67F9E4A967F1 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerC";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerC";
+			};
+			name = "Debug";
+		};
+		389011DD426091393EAB6662 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerC";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerC";
+			};
+			name = "Release";
+		};
+		88DB69305DE72BD245EEEF21 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerD";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerD";
+			};
+			name = "Debug";
+		};
+		EF65C555B0AF51766A1051B8 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerD";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerD";
+			};
+			name = "Release";
+		};
+		201F025FCF49E73888B0B562 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerE";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerE";
+			};
+			name = "Debug";
+		};
+		40CDA083E3E201CEEC579D2C = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerE";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerE";
+			};
+			name = "Release";
+		};
+		4B6D89CD4EFC7D905940B09E = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerF";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerF";
+			};
+			name = "Debug";
+		};
+		D05AF64AC9567EE39EC70897 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerF";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerF";
+			};
+			name = "Release";
+		};
+		F9CACCCC7F5AA5543BB48468 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerG";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerG";
+			};
+			name = "Debug";
+		};
+		CB9596B242B3686F3D58FE8E = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerG";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerG";
+			};
+			name = "Release";
+		};
+		472F5990568AF73F0DDA5984 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerH";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerH";
+			};
+			name = "Debug";
+		};
+		AF505CCF3483810C2864282F = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerH";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerH";
+			};
+			name = "Release";
+		};
+		05813E7057E8747F469C45B5 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerI";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerI";
+			};
+			name = "Debug";
+		};
+		E408A607AE680275D025988F = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerI";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerI";
+			};
+			name = "Release";
+		};
+		5A3E39E37904499071CED2F3 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerJ";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerJ";
+			};
+			name = "Debug";
+		};
+		1572AF9E6C2EFC03C506A102 = {
+			isa = "XCBuildConfiguration";
+			baseConfigurationReference = "0893D186728BD261366E4BD1";
+			buildSettings = {
+				PRODUCT_NAME = "ShellWorkerJ";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerJ";
+			};
+			name = "Release";
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -6487,6 +7126,96 @@
 		};
 		AF05FF73FF3462482114110C = {
 			isa = "XCConfigurationList";
+			buildConfigurations = (
+				"DC87439DFACFBC5E6720ADF1",
+				"BA1F3E3B5D416DFE86D9EE20",
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "Release";
+		};
+		7B74F35F903EA73A5F1CC5CA = {
+			isa = "XCConfigurationList";
+			buildConfigurations = (
+				"49EECCB6CADB39D8B8693B1A",
+				"55B5C32D6ABB182F8415F3E8",
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "Release";
+		};
+		4E8FD56F38A3D6CA40A44BBA = {
+			isa = "XCConfigurationList";
+			buildConfigurations = (
+				"3D16C484D9FB67F9E4A967F1",
+				"389011DD426091393EAB6662",
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "Release";
+		};
+		C529F9BD8FC95FC69151E5D9 = {
+			isa = "XCConfigurationList";
+			buildConfigurations = (
+				"88DB69305DE72BD245EEEF21",
+				"EF65C555B0AF51766A1051B8",
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "Release";
+		};
+		357D1EE97A1181CB2C69AE7B = {
+			isa = "XCConfigurationList";
+			buildConfigurations = (
+				"201F025FCF49E73888B0B562",
+				"40CDA083E3E201CEEC579D2C",
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "Release";
+		};
+		63E3448BFC96684E006144BE = {
+			isa = "XCConfigurationList";
+			buildConfigurations = (
+				"4B6D89CD4EFC7D905940B09E",
+				"D05AF64AC9567EE39EC70897",
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "Release";
+		};
+		01298A57963C7D7FC8A5E943 = {
+			isa = "XCConfigurationList";
+			buildConfigurations = (
+				"F9CACCCC7F5AA5543BB48468",
+				"CB9596B242B3686F3D58FE8E",
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "Release";
+		};
+		BFB21F5FBA41F45FB2CB4F2F = {
+			isa = "XCConfigurationList";
+			buildConfigurations = (
+				"472F5990568AF73F0DDA5984",
+				"AF505CCF3483810C2864282F",
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "Release";
+		};
+		5444CAFE71E28CDFEBA55CCD = {
+			isa = "XCConfigurationList";
+			buildConfigurations = (
+				"05813E7057E8747F469C45B5",
+				"E408A607AE680275D025988F",
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "Release";
+		};
+		9094C1580181846504A7959E = {
+			isa = "XCConfigurationList";
+			buildConfigurations = (
+				"5A3E39E37904499071CED2F3",
+				"1572AF9E6C2EFC03C506A102",
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "Release";
+		};
+		392B2F6985B8AAC1FBC19481 /* Build configuration list for PBXNativeTarget "a-Shell-mini-LongCommands" */ = {
+			isa = XCConfigurationList;
 			buildConfigurations = (
 				"DC87439DFACFBC5E6720ADF1",
 				"BA1F3E3B5D416DFE86D9EE20",
