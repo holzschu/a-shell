@@ -38,8 +38,12 @@ enum TerminalThemes {
     }
 
     static func files(in directory: URL?) -> [URL] {
-        guard let directory = directory,
-              let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) else { return [] }
+        guard let directory = directory else { return [] }
+        guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
+        // FileManager().contentsOfDirectory(at: directory, ...) does not follow symbolic links
+        // but FileManager().contentsOfDirectory(atPath: path) does, so we use the latter
+        guard let filesAsPath = try? FileManager.default.contentsOfDirectory(atPath: directory.path) else { return [] }
+        let files = filesAsPath.map { directory.appendingPathComponent($0) }
         return files.filter { $0.pathExtension.lowercased() == "json" }.sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
 
@@ -60,7 +64,7 @@ enum TerminalThemes {
             throw TerminalThemeError.invalid("Use a theme file name with or without .json, without a directory path.")
         }
         guard let selectedFile = file(named: name) else {
-            let available = files(in: userDirectory).map { $0.lastPathComponent }.joined(separator: ", ")
+            let available = names().joined(separator: ", ")
             throw TerminalThemeError.invalid("Unknown theme \(name). Available Themes files: \(available.isEmpty ? "(none)" : available).")
         }
         let directory = selectedFile.deletingLastPathComponent()

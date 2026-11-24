@@ -677,6 +677,7 @@ extension SceneDelegate {
     }
 
     func send(source: SwiftTerm.TerminalView, inputString: String) {
+        if inputString.contains("\r") || inputString.contains("\n") { editorToolbar.closeSymbols() }
         var string = inputString
         // print("string: \(string)")
         // TODO: move this above, don't do data -> String -> data!
@@ -1501,6 +1502,7 @@ extension SceneDelegate {
     }
     
     func send(source: SwiftTerm.TerminalView, data: ArraySlice<UInt8>) {
+        if data.contains(13) || data.contains(10) { editorToolbar.closeSymbols() }
         // This is where I treat the incoming keypress
         if (currentCommand != "") && (commandBeforeCursor == "") && (commandAfterCursor == "") {
             // Sets the position of the end of the prompt for commands inside commands:
@@ -1515,35 +1517,34 @@ extension SceneDelegate {
         if (controlOn) {
             // a) switch control off
             controlOn = false
-            if #available(iOS 15.0, *) {
-                if (!useSystemToolbar) {
-                    for button in editorToolbar.items! {
-                        if title(button) == "control" {
-                            button.isSelected = controlOn
-                            break
-                        }
+            if (!useSystemToolbar) {
+                for button in editorToolbar.items! {
+                    if title(button) == "control" {
+                        button.isSelected = controlOn
+                        break
                     }
-                } else {
-                    var foundControl = false
-                    if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
-                        for leftButtonGroup in leftButtonGroups {
-                            for button in leftButtonGroup.barButtonItems {
-                                if title(button) == "control" {
-                                    foundControl = true
-                                    button.isSelected = controlOn
-                                    break
-                                }
+                }
+                editorToolbar.setNeedsLayout()
+            } else {
+                var foundControl = false
+                if let leftButtonGroups = terminalView?.inputAssistantItem.leadingBarButtonGroups {
+                    for leftButtonGroup in leftButtonGroups {
+                        for button in leftButtonGroup.barButtonItems {
+                            if title(button) == "control" {
+                                foundControl = true
+                                button.isSelected = controlOn
+                                break
                             }
                         }
                     }
-                    if (!foundControl) {
-                        if let rightButtonGroups = terminalView?.inputAssistantItem.trailingBarButtonGroups {
-                            for rightButtonGroup in rightButtonGroups {
-                                for button in rightButtonGroup.barButtonItems {
-                                    if title(button) == "control" {
-                                        button.isSelected = controlOn
-                                        break
-                                    }
+                }
+                if (!foundControl) {
+                    if let rightButtonGroups = terminalView?.inputAssistantItem.trailingBarButtonGroups {
+                        for rightButtonGroup in rightButtonGroups {
+                            for button in rightButtonGroup.barButtonItems {
+                                if title(button) == "control" {
+                                    button.isSelected = controlOn
+                                    break
                                 }
                             }
                         }
@@ -1730,13 +1731,28 @@ extension SceneDelegate {
             }
         }
         if (data.count >= 5) {
+           // These happen when restoring the terminal content.
+           // Some string gets constructed as Kitty control, and sends into an infinite loop.
+           // For now the solution is to disable them, but is there a better solution?
+           // Temporarily disable Kitty graphics when restoring terminal content?
             // kitty KB: (escape + [? + keyboardEnhancementFlags.rawValue + u)
             // escape + [ + ? + ??? + u
             if (data[0] == 0x1b) && (data[1] == 0x5b) && (data[2] == 0x3f) && (data[data.count-1] == 0x75) {
                 return
             }
         }
-        
+        if (data.count >= 7) {
+            // kitty OK: cc.APC, "\(controlData);OK", cc.ST
+            // kitty Error: cc.APC, "\(controlData);message", cc.ST
+            // APC = [0x1b, 0x5F]
+            // ST  = [0x1b, 0x5C]
+            // controlData = "G" + parts
+            if (data[0] == 0x1b) && (data[1] == 0x5f) && (data[2] == 0x47) && (data[data.count-2] == 0x1b) && (data[data.count-1] == 0x5c) {
+                return
+            }
+
+        }
+
         if let string = String(bytes: myData, encoding: .utf8) {
             // most frequent case:
             send(source: source, inputString: string)

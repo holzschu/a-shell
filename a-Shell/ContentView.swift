@@ -436,8 +436,7 @@ struct ServiceDetails: View {
         }
         .background(Group {
             if #available(iOS 26, *) { Color.clear.glassEffect(.regular, in: Rectangle()) }
-            else if #available(iOS 15, *) { Rectangle().fill(.regularMaterial) }
-            else { Color(UIColor.systemGroupedBackground) }
+            else { Rectangle().fill(.regularMaterial) }
         }.ignoresSafeArea())
     }
 }
@@ -907,6 +906,33 @@ extension View {
 }
 
 final class ConfirmingTerminalView: TerminalView {
+    private var focusTap: UITapGestureRecognizer?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        // SwiftTerm's single tap waits for its double and triple taps to fail (about 450 ms) before it calls becomeFirstResponder:
+        // while the terminal is not first responder, focus it on the first tap instead.
+        let focusTap = UITapGestureRecognizer(target: self, action: #selector(focusTapped))
+        for case let tap as UITapGestureRecognizer in gestureRecognizers ?? [] where tap.numberOfTapsRequired == 1 {
+            tap.require(toFail: focusTap)
+        }
+        addGestureRecognizer(focusTap)
+        self.focusTap = focusTap
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer === focusTap { return !isFirstResponder }
+        return super.gestureRecognizerShouldBegin(gestureRecognizer)
+    }
+
+    @objc private func focusTapped() {
+        _ = becomeFirstResponder()
+    }
+
     override func paste(_ sender: Any?) {
         guard let scene = terminalDelegate as? SceneDelegate, let text = UIPasteboard.general.string else { super.paste(sender); return }
         if getTerminal().bracketedPasteMode || !text.contains(where: { $0.isNewline }) { super.paste(sender); return }
@@ -922,7 +948,7 @@ struct Termview : UIViewRepresentable {
     let view: TerminalView
     
     init() {
-        view = ConfirmingTerminalView()
+        view = ConfirmingTerminalView(frame: .zero)
     }
     
     func makeUIView(context: Context) -> UIView {
@@ -942,35 +968,105 @@ struct Termview : UIViewRepresentable {
 }
 
 
+private final class TerminalKeyboardViewport: UIView {
+    weak var terminal: TerminalView?
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let terminal, bounds.width > 0, bounds.height > 0, terminal.bounds.size != bounds.size else { return }
+        terminal.layer.removeAllAnimations()
+        UIView.performWithoutAnimation {
+            terminal.transform = .identity
+            terminal.frame = bounds
+            terminal.layoutIfNeeded()
+        }
+    }
+}
+
 final class TerminalContainerView: UIView {
-    private var legacyBottomConstraint: NSLayoutConstraint?
+    private weak var terminal: TerminalView?
+    private var keyboardBottomConstraint: NSLayoutConstraint?
+    private var notificationBottomConstraint: NSLayoutConstraint?
+    private var keyboardViewport: TerminalKeyboardViewport?
+    private var keyboardSnapshot: UIView?
     private var keyboardFrame = CGRect.zero
+    private var keyboardGuideTop = CGFloat.nan
+    // With a hardware keyboard, iOS 27 posts no frame when the accessory appears and posts one taken mid-rotation on rotation: follow the guide until a software keyboard posts a frame.
+    private var insetFromGuide = true
     private var keyboardObservers: [NSObjectProtocol] = []
 
     init(terminal: TerminalView) {
+        self.terminal = terminal
         super.init(frame: .zero)
-        terminal.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(terminal)
-        NSLayoutConstraint.activate([
-            terminal.topAnchor.constraint(equalTo: topAnchor),
-            terminal.leadingAnchor.constraint(equalTo: leadingAnchor),
-            terminal.trailingAnchor.constraint(equalTo: trailingAnchor)
-        ])
-        if #available(iOS 15.0, *) {
-            keyboardLayoutGuide.followsUndockedKeyboard = UIDevice.current.userInterfaceIdiom == .pad
-            terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor).isActive = true
-        } else {
-            let bottom = terminal.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
+        if #available(iOS 26, *), [.phone, .pad].contains(UIDevice.current.userInterfaceIdiom) {
+            let viewport = TerminalKeyboardViewport()
+            viewport.translatesAutoresizingMaskIntoConstraints = false
+            viewport.clipsToBounds = true
+            addSubview(viewport)
+            NSLayoutConstraint.activate([
+                viewport.topAnchor.constraint(equalTo: topAnchor),
+                viewport.leadingAnchor.constraint(equalTo: leadingAnchor),
+                viewport.trailingAnchor.constraint(equalTo: trailingAnchor)
+            ])
+            viewport.addSubview(terminal)
+            viewport.terminal = terminal
+            terminal.contentMode = .topLeft
+            keyboardViewport = viewport
+            let bottom = viewport.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
             bottom.isActive = true
-            legacyBottomConstraint = bottom
-            for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
-                keyboardObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
-                    guard let self = self else { return }
-                    self.keyboardFrame = note.name == UIResponder.keyboardWillHideNotification ? .zero :
-                        (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero)
-                    self.updateLegacyKeyboardInset()
+            notificationBottomConstraint = bottom
+            // UIKit can post no keyboard notification when a hardware keyboard's accessory appears; a view pinned to the guide lays this view out again when the guide moves.
+            let guideTracker = UIView()
+            guideTracker.translatesAutoresizingMaskIntoConstraints = false
+            guideTracker.isHidden = true
+            addSubview(guideTracker)
+            NSLayoutConstraint.activate([
+                guideTracker.topAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor),
+                guideTracker.leadingAnchor.constraint(equalTo: leadingAnchor),
+                guideTracker.widthAnchor.constraint(equalToConstant: 0),
+                guideTracker.heightAnchor.constraint(equalToConstant: 0)
+            ])
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] note in
+                    guard let self, let terminal = self.keyboardViewport?.terminal else { return }
+                    let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
+                    if let accessory = terminal.inputAccessoryView, frame.height <= accessory.bounds.height {
+                        // No keyboard frame beyond the accessory (a hardware keyboard, a frame taken during a rotation, or no frame): the guide has the settled position.
+                        self.layoutIfNeeded()
+                        self.insetFromGuide = true
+                        self.setNeedsLayout()
+                        return
+                    }
+                    self.animateKeyboardChange(frame: frame,
+                                               duration: note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0,
+                                               curve: note.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt ?? 0)
                 })
+                // The guide can settle before the accessory: the frame above then finds the accessory mid-flight, the inset stays unchanged, and nothing lays this view out once the accessory lands (the terminal stayed 53 pt behind the bar after some launches on iOS 27.2). Measure again once the keyboard has settled.
+                keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidChangeFrameNotification, object: nil, queue: .main) { [weak self] _ in
+                    self?.updateKeyboardInset()
+                })
+            } else {
+                // On iPad the notification can be missing when the keyboard is minimized to the shortcut bar, so follow the guide,
+                // undocked as before (the non-viewport layout below sets the same).
+                keyboardLayoutGuide.followsUndockedKeyboard = true
             }
+        } else {
+            // before iOS 26
+            terminal.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(terminal)
+            NSLayoutConstraint.activate([
+                terminal.topAnchor.constraint(equalTo: topAnchor),
+                terminal.leadingAnchor.constraint(equalTo: leadingAnchor),
+                terminal.trailingAnchor.constraint(equalTo: trailingAnchor)
+            ])
+            keyboardLayoutGuide.followsUndockedKeyboard = UIDevice.current.userInterfaceIdiom == .pad
+            let bottom = terminal.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor)
+            bottom.isActive = true
+            keyboardBottomConstraint = bottom
+            // The accessory lands after the guide's last layout pass: check it again once the keyboard has settled.
+            keyboardObservers.append(NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidChangeFrameNotification, object: nil, queue: .main) { [weak self] _ in
+                self?.setNeedsLayout()
+            })
         }
     }
 
@@ -984,16 +1080,104 @@ final class TerminalContainerView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        updateLegacyKeyboardInset()
+        if let bottom = keyboardBottomConstraint {
+            var correction: CGFloat = 0
+            if UIDevice.current.userInterfaceIdiom == .phone, let terminal, terminal.isFirstResponder,
+               let accessory = terminal.inputAccessoryView as? PhoneKeyboardToolbar, accessory.window != nil,
+               let screen = window?.windowScene?.screen {
+                // The guide can leave the accessory out: after a rotation until the next input change, and with a hardware keyboard, where the accessory straddles the bottom safe area (iOS 17.5: 40 pt behind the bar after a rotation, 6 pt in portrait and 19 pt in landscape with a hardware keyboard). The accessory lives in the keyboard's window, so compare in screen space, and only while it reaches the guide's top from above: during a rotation its frame still belongs to the old orientation.
+                let accessoryFrame = accessory.convert(accessory.bounds, to: screen.coordinateSpace)
+                let guideTop = convert(keyboardLayoutGuide.layoutFrame, to: screen.coordinateSpace).minY
+                if accessoryFrame.minY < guideTop, accessoryFrame.maxY >= guideTop - 1 {
+                    correction = accessoryFrame.minY - guideTop
+                }
+            }
+            if abs(bottom.constant - correction) > 0.5 {
+                bottom.constant = correction
+                setNeedsLayout()
+            }
+        }
+        updateKeyboardInset()
+        followKeyboardGuide()
     }
 
-    private func updateLegacyKeyboardInset() {
-        guard let bottom = legacyBottomConstraint, let window = window else { return }
+    private func followKeyboardGuide() {
+        guard keyboardViewport != nil, UIDevice.current.userInterfaceIdiom == .pad, window != nil else { return }
+        let top = keyboardLayoutGuide.layoutFrame.minY
+        guard top != keyboardGuideTop else { return }
+        let duration = UIView.inheritedAnimationDuration
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let window = self.window else { return }
+            self.keyboardGuideTop = top
+            let guideFrame = CGRect(x: 0, y: top, width: self.bounds.width, height: max(0, self.bounds.height - top))
+            self.animateKeyboardChange(frame: window.convert(self.convert(guideFrame, to: window), to: nil as UIWindow?),
+                                       duration: duration, curve: UInt(UIView.AnimationCurve.easeInOut.rawValue))
+        }
+    }
+
+    private func animateKeyboardChange(frame: CGRect, duration: Double, curve: UInt) {
+        guard let viewport = keyboardViewport, let terminal = viewport.terminal else { return }
+        let initialWidth = viewport.bounds.width
+        let presentationOffset = terminal.layer.presentation()?.affineTransform().ty ?? 0
+        self.layoutIfNeeded()
+        let previousInset = self.notificationBottomConstraint?.constant
+        self.keyboardFrame = frame
+        self.insetFromGuide = false
+        self.updateKeyboardInset()
+        guard self.notificationBottomConstraint?.constant != previousInset else { return }
+        let initialTopRow = terminal.getTerminal().getTopVisibleRow()
+        let cellHeight = terminal.getOptimalFrameSize().height / CGFloat(max(1, terminal.getTerminal().rows))
+        // The snapshot fills rows the resized terminal no longer covers; glyphs stay unscaled.
+        let snapshot = self.snapshotView(afterScreenUpdates: false)
+        snapshot?.frame = self.bounds
+        snapshot?.isUserInteractionEnabled = false
+        self.keyboardSnapshot?.removeFromSuperview()
+        if let snapshot { viewport.insertSubview(snapshot, belowSubview: terminal) }
+        self.keyboardSnapshot = snapshot
+        UIView.animate(withDuration: duration, delay: 0, options: [UIView.AnimationOptions(rawValue: curve << 16), .beginFromCurrentState, .allowUserInteraction]) {
+            self.layoutIfNeeded()
+            guard viewport.bounds.width == initialWidth else {
+                snapshot?.removeFromSuperview()
+                if self.keyboardSnapshot === snapshot { self.keyboardSnapshot = nil }
+                return
+            }
+            let rowOffset = -CGFloat(terminal.getTerminal().getTopVisibleRow() - initialTopRow) * cellHeight - presentationOffset
+            UIView.performWithoutAnimation {
+                terminal.transform = CGAffineTransform(translationX: 0, y: -rowOffset)
+            }
+            UIView.animate(withDuration: duration, delay: 0, options: [UIView.AnimationOptions(rawValue: curve << 16), .allowUserInteraction]) {
+                terminal.transform = .identity
+            }
+            snapshot?.transform = CGAffineTransform(translationX: 0, y: rowOffset)
+        } completion: { [weak self, weak snapshot] _ in
+            snapshot?.removeFromSuperview()
+            if self?.keyboardSnapshot === snapshot { self?.keyboardSnapshot = nil }
+            // The accessory reaches its final frame only once the keyboard has settled.
+            self?.updateKeyboardInset()
+        }
+    }
+
+    private func updateKeyboardInset() {
+        guard let bottom = notificationBottomConstraint, let window = window else { return }
         let windowFrame = window.convert(keyboardFrame, from: nil as UIWindow?)
-        let intersection = bounds.intersection(convert(windowFrame, from: window))
-        let inset = intersection.isNull || intersection.isEmpty ? 0 : max(0, bounds.maxY - intersection.minY - safeAreaInsets.bottom)
-        if bottom.constant != -inset {
-            bottom.constant = -inset
+        var intersection = bounds.intersection(convert(windowFrame, from: window))
+        if keyboardViewport != nil, insetFromGuide {
+            intersection = bounds.intersection(keyboardLayoutGuide.layoutFrame)
+        }
+        var visibleBottom = intersection.minY
+        if !intersection.isNull, !intersection.isEmpty, let terminal = keyboardViewport?.terminal, terminal.isFirstResponder,
+           let accessory = terminal.inputAccessoryView, accessory.window != nil,
+           !accessory.isHidden, accessory.bounds.height > 0 {
+            // The keyboard frame excludes the accessory in some setups and includes it in others: subtract its height only when it sits above the frame.
+            let accessoryBottom = convert(accessory.convert(accessory.bounds, to: window), from: window).maxY
+            if accessoryBottom <= intersection.minY + 1 {
+                visibleBottom -= accessory.bounds.height
+            }
+        }
+        let inset = intersection.isNull || intersection.isEmpty ? 0 : max(0, bounds.maxY - visibleBottom - safeAreaInsets.bottom)
+        let panelInset = inset > 0 ? (terminal?.inputAccessoryView as? PhoneKeyboardToolbar)?.pinnedPanelHeight ?? 0 : 0
+        if bottom.constant != -(inset + panelInset) {
+            bottom.constant = -(inset + panelInset)
             setNeedsLayout()
         }
     }
@@ -1040,9 +1224,7 @@ struct Webview : UIViewRepresentable {
         if #available(iOS 15.4, *) {
             config.preferences.isElementFullscreenEnabled = true
         }
-        if #available(iOS 14.5, *) {
-            config.preferences.isTextInteractionEnabled = true
-        }
+        config.preferences.isTextInteractionEnabled = true
         config.preferences.setValue(true as Bool, forKey: "allowFileAccessFromFileURLs")
         config.setValue(true as Bool, forKey: "allowUniversalAccessFromFileURLs")
         // Does not change anything either way (??? !!!)
@@ -1054,11 +1236,9 @@ struct Webview : UIViewRepresentable {
             webView.isInspectable = true
         }
         webView.allowsBackForwardNavigationGestures = true
-        if #available(iOS 15.0, *) {
-            webView.keyboardLayoutGuide.topAnchor.constraint(equalTo: webView.bottomAnchor).isActive = true
-            // This is necessary to allow the various edge constraints to engage.
-            webView.keyboardLayoutGuide.followsUndockedKeyboard = true
-        }
+        webView.keyboardLayoutGuide.topAnchor.constraint(equalTo: webView.bottomAnchor).isActive = true
+        // This is necessary to allow the various edge constraints to engage.
+        webView.keyboardLayoutGuide.followsUndockedKeyboard = true
         if #available(iOS 17, *) {
             terminalIconName = "apple.terminal"
         }
@@ -1094,6 +1274,27 @@ public var showKeyboardAtStartup = true
 // automatic detection causes blank screen when switching back-forth
 // Make this a user-defined setup, with "ignoreSafeArea" the default.
 public var viewBehavior: ViewBehavior = .ignoreSafeArea
+final class TerminalHostingController: UIHostingController<ContentView> {
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        guard PhoneKeyboardToolbar.isCustom, let scene = view.window?.windowScene?.delegate as? SceneDelegate else { return }
+        scene.beginKeyboardSizeTransition(with: coordinator)
+        scene.editorToolbar.prepareForRotation(to: size, with: coordinator)
+    }
+
+    override var keyCommands: [UIKeyCommand]? {
+        guard PhoneKeyboardToolbar.isCustom else { return super.keyCommands }
+        let toolbar = UIKeyCommand(input: "t", modifierFlags: [.alternate, .command], action: #selector(toggleToolbar), discoverabilityTitle: (view.window?.windowScene?.delegate as? SceneDelegate)?.showToolbar ?? true ? "Hide Key Toolbar" : "Show Key Toolbar")
+        toolbar.wantsPriorityOverSystemBehavior = true
+        return [toolbar] + (super.keyCommands ?? [])
+    }
+
+    @objc private func toggleToolbar(_ sender: UIKeyCommand) {
+        (view.window?.windowScene?.delegate as? SceneDelegate)?.toggleKeyToolbar()
+    }
+
+}
+
 public var latestNotification: String = ""
 public var extendBy: CGFloat = 0
 public var showWebView = false
@@ -1155,7 +1356,7 @@ struct ContentView: View {
             Group {
                 if (showWebView && localShowWebView) {
                     // NavigationView is deprecated, but the replacement only works for iOS 16 and above.
-                    // I'm trying to keep a-Shell active for iOS 14 and above.
+                    // I'm trying to keep a-Shell active for iOS 15 and above.
                     NavigationView {
                         webview
                             .toolbar {
@@ -1357,10 +1558,8 @@ struct ContentView: View {
         let active = items.contains { $0.clients.contains { $0.open } }
         let symbol = items.isEmpty ? "antenna.radiowaves.left.and.right.slash" : "antenna.radiowaves.left.and.right"
         var image = UIImage(systemName: symbol)
-        if #available(iOS 15, *) {
-            let configuration = UIImage.SymbolConfiguration(paletteColors: [.label, active ? .systemBlue : .label])
-            image = image?.withConfiguration(configuration)
-        }
+        let configuration = UIImage.SymbolConfiguration(paletteColors: [.label, active ? .systemBlue : .label])
+        image = image?.withConfiguration(configuration)
         let action = UIAction(title: "Remote access", image: image) { [weak scene] _ in
             guard let scene else { return }
             let release = NSSelectorFromString("releaseToolbarControl")
