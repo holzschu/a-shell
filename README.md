@@ -240,14 +240,14 @@ bash ssh-stock/build.sh iphoneos "$SSH_INPUTS" "$SSH_DEVICE_OUTPUT" "$SSH_DEVICE
 bash ssh-stock/build.sh iphonesimulator "$SSH_INPUTS" "$SSH_SIMULATOR_OUTPUT" "$SSH_SIMULATOR_FRAMEWORKS"
 ```
 
-Package the resulting frameworks with Apple's `xcodebuild -create-xcframework`. For example, with the two recipe output directories in `SSH_DEVICE_OUTPUT` and `SSH_SIMULATOR_OUTPUT`:
+Package the resulting frameworks with Apple's `xcodebuild -create-xcframework`. Set `ASHELL_ROOT` to the absolute path of the a-Shell checkout. Use the absolute recipe output directories in `SSH_DEVICE_OUTPUT` and `SSH_SIMULATOR_OUTPUT`:
 
 ```sh
 for name in SSHStock SCPStock SFTPStock SSHKeygenStock; do
     xcodebuild -create-xcframework \
         -framework "$SSH_DEVICE_OUTPUT/sdk/$name.framework" \
         -framework "$SSH_SIMULATOR_OUTPUT/sdk/$name.framework" \
-        -output "xcfs/$name.xcframework"
+        -output "$ASHELL_ROOT/xcfs/$name.xcframework"
 done
 ```
 
