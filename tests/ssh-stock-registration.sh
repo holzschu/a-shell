@@ -23,6 +23,17 @@ case ${1:-} in
                 map(["@rpath/ssh_cmd.framework/ssh_cmd", .]))
         ' >/dev/null
         for name in ssh scp sftp ssh-keygen; do test -x "$work/worker/bin/$name"; done
+        SRCROOT=$PWD TARGET_BUILD_DIR=$work UNLOCALIZED_RESOURCES_FOLDER_PATH=full-worker \
+            DERIVED_FILE_DIR=$work/full-derived ASHELL_WORKER_HOST_IDENTIFIER=test.a-Shell \
+            ASHELL_WORKER_COMMAND_CATALOG=Resources/commandDictionary.plist \
+            bash ShellWorkers/resources.sh
+        plutil -convert json -o - "$work/full-worker/commandDictionary.plist" | jq -e '
+            has("node") and .ssh[:2] == ["@rpath/ssh_cmd.framework/ssh_cmd", "ssh_main"]
+        ' >/dev/null
+        test -x "$work/full-worker/bin/node"
+        test ! -e "$work/worker/bin/node"
+        grep -Fq 'Identifier(host: "test.a-Shell", name: "ShellWorker")' "$work/full-derived/Worker.swift"
+        grep -Fq 'Identifier(host: "test.a-Shell-mini", name: "ShellWorker")' "$work/derived/Worker.swift"
         plutil -convert json -o - Resources_mini/sshStockCommands.plist | jq -e '
             keys == ["scp", "sftp", "ssh", "ssh-keygen"] and
             ([ .ssh[:2], .scp[:2], .sftp[:2], .["ssh-keygen"][:2] ] == [

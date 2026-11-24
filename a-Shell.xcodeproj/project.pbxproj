@@ -4917,7 +4917,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/$(ASHELL_WORKER_COMMAND_CATALOG)",
 				"$(SRCROOT)/ShellWorkers/resources.sh",
 				"$(SRCROOT)/ShellWorkers/Worker.swift",
 			);
@@ -4936,7 +4936,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/$(ASHELL_WORKER_COMMAND_CATALOG)",
 				"$(SRCROOT)/ShellWorkers/resources.sh",
 				"$(SRCROOT)/ShellWorkers/Worker.swift",
 			);
@@ -4955,7 +4955,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/$(ASHELL_WORKER_COMMAND_CATALOG)",
 				"$(SRCROOT)/ShellWorkers/resources.sh",
 				"$(SRCROOT)/ShellWorkers/Worker.swift",
 			);
@@ -4974,7 +4974,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/$(ASHELL_WORKER_COMMAND_CATALOG)",
 				"$(SRCROOT)/ShellWorkers/resources.sh",
 				"$(SRCROOT)/ShellWorkers/Worker.swift",
 			);
@@ -4993,7 +4993,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/$(ASHELL_WORKER_COMMAND_CATALOG)",
 				"$(SRCROOT)/ShellWorkers/resources.sh",
 				"$(SRCROOT)/ShellWorkers/Worker.swift",
 			);
@@ -5012,7 +5012,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/$(ASHELL_WORKER_COMMAND_CATALOG)",
 				"$(SRCROOT)/ShellWorkers/resources.sh",
 				"$(SRCROOT)/ShellWorkers/Worker.swift",
 			);
@@ -5031,7 +5031,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/$(ASHELL_WORKER_COMMAND_CATALOG)",
 				"$(SRCROOT)/ShellWorkers/resources.sh",
 				"$(SRCROOT)/ShellWorkers/Worker.swift",
 			);
@@ -5050,7 +5050,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/$(ASHELL_WORKER_COMMAND_CATALOG)",
 				"$(SRCROOT)/ShellWorkers/resources.sh",
 				"$(SRCROOT)/ShellWorkers/Worker.swift",
 			);
@@ -5069,7 +5069,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/$(ASHELL_WORKER_COMMAND_CATALOG)",
 				"$(SRCROOT)/ShellWorkers/resources.sh",
 				"$(SRCROOT)/ShellWorkers/Worker.swift",
 			);
@@ -5088,7 +5088,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Resources_mini/commandDictionary.plist",
+				"$(SRCROOT)/$(ASHELL_WORKER_COMMAND_CATALOG)",
 				"$(SRCROOT)/ShellWorkers/resources.sh",
 				"$(SRCROOT)/ShellWorkers/Worker.swift",
 			);
