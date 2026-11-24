@@ -127,6 +127,14 @@ var appVersion: String? {
     return Bundle.main.infoDictionary?["CFBundleName"] as? String
 }
 
+// Set at app startup before the host accepts worker spawn requests.
+private var stockSSHEnabled = false
+
+@_cdecl("ashell_stock_ssh_enabled")
+func ashellStockSSHEnabled() -> Bool {
+    return stockSSHEnabled
+}
+
 @objcMembers
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -217,7 +225,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
            dlsym(defaultSymbolScope, "ios_posix_spawn") != nil,
            addCommandList(stockCommands) == nil {
             let workerCommands = getenv("ASHELL_WORKER_COMMANDS").map { String(cString: $0) } ?? ""
-            if setenv("ASHELL_WORKER_COMMANDS", workerCommands + " ssh scp sftp ssh-keygen", 1) != 0 {
+            if setenv("ASHELL_WORKER_COMMANDS", workerCommands + " ssh scp sftp ssh-keygen", 1) == 0 {
+                stockSSHEnabled = true
+            } else {
                 // The Stock entries require worker dispatch. Restore the base catalog if opt-in failed.
                 addCommandList(Bundle.main.path(forResource: "commandDictionary", ofType: "plist"))
             }

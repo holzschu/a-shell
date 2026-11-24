@@ -435,29 +435,44 @@ int worker_pool_check_main(int argc, char **argv) {
             return 1;
         }
         NSString *directory = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
+        BOOL legacySSH = argc == 2 && !strcmp(argv[1], "ssh-legacy");
+        BOOL stockSSH = argc == 2 && !strcmp(argv[1], "ssh-stock");
         const char *environment[] = {"POOL_VALUE=isolated", "_DASH_LOGIN_SHELL=1", NULL};
+        const char *sshEnvironment[] = {"ASHELL_WORKER_COMMANDS=ssh", NULL};
+        const char *command = (legacySSH || stockSSH) ? "ssh -V" : "dash -c 'printf \"WORKER=%s\\n\" \"$POOL_VALUE\"'";
         int descriptor = -1;
         void *job = NULL;
-        int error = spawn("dash -c 'printf \"WORKER=%s\\n\" \"$POOL_VALUE\"'", directory.fileSystemRepresentation, 80, 24, environment, &descriptor, &job);
+        int error = spawn(command, directory.fileSystemRepresentation, 80, 24,
+                          (legacySSH || stockSSH) ? sshEnvironment : environment, &descriptor, &job);
         if (error) { fprintf(thread_stdout, "worker startup error=%d: FAIL\n", error); return 1; }
         char output[256] = {0};
         size_t used = 0;
-        BOOL completed = NO;
+        BOOL completed = NO, eof = NO;
         int status = -1;
         NSTimeInterval deadline = NSProcessInfo.processInfo.systemUptime + 20;
-        while (NSProcessInfo.processInfo.systemUptime < deadline) {
-            struct pollfd ready = {.fd = descriptor, .events = POLLIN};
+        while (!(completed && eof) && NSProcessInfo.processInfo.systemUptime < deadline) {
+            struct pollfd ready = {.fd = eof ? -1 : descriptor, .events = POLLIN};
             if (poll(&ready, 1, 100) > 0 && used < sizeof(output) - 1) {
                 ssize_t count = read(descriptor, output + used, sizeof(output) - used - 1);
                 if (count > 0) used += count;
+                if (count == 0) eof = YES;
             }
-            int result = pollJob(job, &status);
-            if (result < 0) break;
-            if (result == 1) { completed = YES; break; }
+            if (!completed) {
+                int result = pollJob(job, &status);
+                if (result < 0) break;
+                completed = result == 1;
+            }
         }
         release(job);
         close(descriptor);
-        BOOL passed = completed && status == 0 && !strcmp(output, "WORKER=isolated\n");
+        BOOL passed = completed && eof && status == 0;
+        if (legacySSH || stockSSH) {
+            BOOL stockVersion = strstr(output, "OpenSSH_10.6") != NULL;
+            passed = passed && strstr(output, "OpenSSH_") != NULL && stockVersion == stockSSH;
+            fprintf(thread_stdout, "worker ssh version: %s\n", output);
+        } else {
+            passed = passed && !strcmp(output, "WORKER=isolated\n");
+        }
         fprintf(thread_stdout, "worker stdout=%zu status=%d: %s\n", used, status, passed ? "PASS" : "FAIL");
         return passed ? 0 : 1;
     }

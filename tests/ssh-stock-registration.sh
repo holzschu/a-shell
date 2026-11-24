@@ -78,6 +78,16 @@ case ${1:-} in
                 any(phase("PBXResourcesBuildPhase") | files; . == "Resources_mini/commandDictionary.plist"))
         ' >/dev/null || { echo 'Incorrect Stock SSH resource or framework membership' >&2; exit 1; }
         ;;
-    *) echo "usage: $0 catalog|project" >&2; exit 2 ;;
+    activation)
+        # Pin both sides of the spawn request. Runtime version checks are in worker-pool.md.
+        grep -Fq 'stockSSH:(BOOL)stockSSH' ShellWorkers/PaneWire.h
+        grep -Fq 'stockSSH:ashell_stock_ssh_enabled()' ShellWorkers/RemotePane.m
+        grep -Fq 'if (stockSSH && !NSProcessInfo.processInfo.iOSAppOnMac)' ShellWorkers/Worker.m
+        if grep -Fq 'ASHELL_WORKER_COMMANDS' ShellWorkers/Worker.m; then
+            echo 'Worker routing must not enable the Stock catalog' >&2
+            exit 1
+        fi
+        ;;
+    *) echo "usage: $0 catalog|project|activation" >&2; exit 2 ;;
 esac
 echo "Stock SSH $1 check passed"
