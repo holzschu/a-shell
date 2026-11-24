@@ -2133,7 +2133,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		070AE9F6D58955EE5B3B2FB9 /* Worker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Worker.swift; path = "/Users/holzschu/src/Xcode_iPad/a-Shell/ShellWorkers/Worker.swift"; sourceTree = "<absolute>"; };
+		070AE9F6D58955EE5B3B2FB9 /* Worker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Worker.swift; path = "$(DERIVED_FILE_DIR)/Worker.swift"; sourceTree = "<absolute>"; };
 		0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ShellWorkers/Worker.xcconfig; sourceTree = SOURCE_ROOT; };
 		0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExecuteLongCommandIntent.swift; sourceTree = "<group>"; };
 		11189940A2AF26A6542BDEAF /* ShellWorkers/RemotePane.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/RemotePane.m; sourceTree = SOURCE_ROOT; };
