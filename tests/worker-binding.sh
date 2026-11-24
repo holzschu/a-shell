@@ -18,13 +18,15 @@ plutil -convert json -o "$work/project.json" a-Shell.xcodeproj/project.pbxproj
 if ! jq -e '
     .objects as $objects
     | [$objects[] | select(.isa == "PBXNativeTarget" and (.name | test("^ShellWorker[A-Z]$")))]
-    | length > 0 and all(.[];
+    | (map(.name) | sort) == ["ShellWorkerA", "ShellWorkerB", "ShellWorkerC", "ShellWorkerD", "ShellWorkerE",
+                              "ShellWorkerF", "ShellWorkerG", "ShellWorkerH", "ShellWorkerI", "ShellWorkerJ"]
+      and all(.[];
         [.buildPhases[] | $objects[.] | select(.isa == "PBXSourcesBuildPhase")
          | .files[] | $objects[$objects[.].fileRef]
          | select(.path | endswith("/Worker.swift"))]
-        | length == 1 and .[0].path == "$(DERIVED_FILE_DIR)/Worker.swift")
+        | length == 1 and .[0].path == "$(DERIVED_FILE_DIR)/Worker.swift" and .[0].sourceTree == "<absolute>")
 ' "$work/project.json" >/dev/null; then
     echo 'FAIL worker targets do not compile the generated Worker.swift' >&2
     exit 1
 fi
-printf 'PASS worker targets use the generated host binding\n'
+printf 'PASS generated host binding and all ten worker source references\n'
