@@ -8,7 +8,7 @@ final class PaneExtension: AppExtension {
 
     @AppExtensionPoint.Bind
     var extensionPoint: AppExtensionPoint {
-        AppExtensionPoint.Identifier(host: "@ASHELL_WORKER_HOST_IDENTIFIER", name: "ShellWorker")
+        AppExtensionPoint.Identifier(host: "@ASHELL_WORKER_HOST_IDENTIFIER@", name: "ShellWorker")
     }
 
     var configuration: some AppExtensionConfiguration { PaneConfiguration() }
