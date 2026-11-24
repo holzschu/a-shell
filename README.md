@@ -191,6 +191,10 @@ Workers share the host's command libraries. Build with ios_system changes #179â€
 
 `tests/worker-pool.m` is a real app-command consumer for Simulator qualification. Device memory limits, background execution without other host background modes, and App Store acceptance require separate validation. Retaining the process handle provides no promise of unlimited background execution.
 
+## Embedded Herdr
+
+The mini target registers `herdr` as a native embedded command. Build its pinned static archive with `./Herdr/build.sh aarch64-apple-ios-sim` before a Simulator build, or select `aarch64-apple-ios` for a device build. See [Herdr/README.md](Herdr/README.md) for toolchain requirements, supported operations and qualification limits.
+
 ## Terminal color themes
 
 Use `config --theme` to list bundled presets and JSON files in `~/Documents/Themes`. Select a theme with `config --theme dracula`. Add `-g` to update every open window and save the theme in Settings, for example `config --theme catppuccin-latte -g`. Use `-p` to save the current window settings, including font and color overrides. Choosing a theme in Settings or with `config --theme name -g` or `config --theme name -p` clears saved background, foreground and cursor overrides. The presets include all four Catppuccin flavors and Catppuccin OLED, adapted from Mocha with a pure black background and distinct neutral ANSI colors ordered from black through bright white. Catppuccin Latte and Rose Pine Dawn are light presets. Existing font and color options still work. `config --theme default` restores the saved theme and color overrides without changing the font. `config --theme factory` restores system foreground, background and cursor colors and the default ANSI palette; `config -r` also resets the other terminal settings.

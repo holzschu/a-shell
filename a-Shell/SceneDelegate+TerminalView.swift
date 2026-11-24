@@ -9,6 +9,11 @@ import SwiftTerm // for the terminal window
 import ios_system
 import TipKit // for helpful tips
 
+#if HERDR_EMBEDDED
+@_silgen_name("herdr_ios_resize")
+private func herdrResize(_ cols: UInt16, _ rows: UInt16)
+#endif
+
 extension SceneDelegate {
     
     func longestCommonPrefix(_ strs: [String]) -> String {
@@ -633,6 +638,9 @@ extension SceneDelegate {
     func sizeChanged(source: SwiftTerm.TerminalView, newCols: Int, newRows: Int) {
         if (newRows != height) || (newCols != width) {
             ios_setWindowSize(Int32(newCols), Int32(newRows), self.persistentIdentifier?.toCString())
+            #if HERDR_EMBEDDED
+            herdrResize(UInt16(clamping: newCols), UInt16(clamping: newRows))
+            #endif
         }
         if (newRows != height) {
             height = newRows
@@ -1732,13 +1740,11 @@ extension SceneDelegate {
             if (data[0] == 0x1b) && (data[1] == 0x5b) && (data[2] == 0x3f) && (data[data.count-1] == 0x75) {
                 return
             }
-        }
-        if (data.count >= 7) {
             // kitty OK: cc.APC, "\(controlData);OK", cc.ST
             // kitty Error: cc.APC, "\(controlData);message", cc.ST
             // APC = [0x1b, 0x5F]
             // ST  = [0x1b, 0x5C]
-            // controlData = "G" + parts
+            // controlData = "G" (0x47) + parts
             if (data[0] == 0x1b) && (data[1] == 0x5f) && (data[2] == 0x47) && (data[data.count-2] == 0x1b) && (data[data.count-1] == 0x5c) {
                 return
             }

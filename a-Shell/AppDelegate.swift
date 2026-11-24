@@ -247,6 +247,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             viewBehavior = .ignoreSafeArea
         }
         initializeEnvironment()
+        #if HERDR_EMBEDDED
+        replaceCommand("herdr", "herdr_ios_main", false)
+        #endif
         replaceCommand("progress", "ashell_progress", false)
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
