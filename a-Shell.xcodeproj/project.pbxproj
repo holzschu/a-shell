@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01254C24560A350B59662101 /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		0673335401F0E6294B1D6A65 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		084FF2541A50122906582CAC /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
+		09D5DF2DB0BAEEB73DCFED25 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		1277856148B9DF5BCFB73A45 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		188B14A9B070A4E709C1A447 /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		1C7B8B3BAEF7289AACBD231D /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		210223C3B93B2D495C96B792 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		2200010030F7400000000001 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2200010030F7400000000002 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
 		2200010030F7400000000004 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2200010030F7400000000003 /* PhotosUI.framework */; };
@@ -984,9 +992,23 @@
 		22F9641B30852E8100868C46 /* Ruff.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22F9641A30852E7600868C46 /* Ruff.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22FFB44229E87D950054F01F /* require_jscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44129E87D920054F01F /* require_jscore.js */; };
 		22FFB44429E88AE80054F01F /* url-polyfill.js in Resources */ = {isa = PBXBuildFile; fileRef = 22FFB44329E88AE60054F01F /* url-polyfill.js */; };
+		27937DD7D9B079E79382E010 /* ShellWorkerD.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 671E1D67938C7F8A1BF10D84 /* ShellWorkerD.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2A45EE5BE77CD575DD0ADEBE /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		359DDEBBC7AB6E4D48032723 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		3AABA6ADD41BDE6C2C6BEC6E /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		4096B185162EAE2C4738E1C1 /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
+		4C9CA710D4734D323992A80C /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		4E381ABD8DEE9DA436598879 /* ShellWorkerI.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 1A10CFCE432C459F3DD1051D /* ShellWorkerI.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		535000000000000000000002 /* Util/CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* Util/CommandEnvironment.swift */; };
 		535000000000000000000003 /* Util/CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* Util/CommandEnvironment.swift */; };
 		535000000000000000000004 /* Util/CommandEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535000000000000000000001 /* Util/CommandEnvironment.swift */; };
+		539578FA38E5117D4FFA6F13 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		556FE5F2A7285723350E4CAC /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		5588CB35CBA255F519ECBB71 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		59144CB4855198131ED069B3 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		5A652AAB3F21AD3EEE1DC9B1 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		601A00000000000000000001 /* ShellWorkers/HostPane.m in Sources */ = {isa = PBXBuildFile; fileRef = 601A00000000000000000002 /* ShellWorkers/HostPane.m */; };
+		60BA73F3EE45C345CD0C593D /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
 		610000000000000000000002 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
 		610000000000000000000003 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
 		610000000000000000000004 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610000000000000000000001 /* TerminalTheme.swift */; };
@@ -997,6 +1019,8 @@
 		620000000000000000000002 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
 		620000000000000000000003 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
 		620000000000000000000004 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
+		632684F10ED929FB4713B2AE /* ShellWorkerG.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = A490F7519B2E1597438D0853 /* ShellWorkerG.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6B4BFFDBD16619E32E8DA990 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		6BD953662BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
 		6BD953672BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
 		6BD953682BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
@@ -1006,277 +1030,44 @@
 		6BD9536E2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		6BD9536F2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
 		6BD953702BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */; };
+		6C8E5746297C24B1080C03AF /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		7068DDDA75BCEA8A404C09AD /* ShellWorkerB.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 295B641B253C35B85CBD0100 /* ShellWorkerB.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		707000000000000000000002 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		707000000000000000000003 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		707000000000000000000004 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
-		7A025EB47CCEBDAA7E49CB3E = {
-			isa = "PBXBuildFile";
-			fileRef = "D847238C57D48CADF264887A";
-		};
-		601A00000000000000000001 = {
-			isa = "PBXBuildFile";
-			fileRef = "601A00000000000000000002";
-		};
-		C608987E0D35D7D8C92CF091 = {
-			isa = "PBXBuildFile";
-			fileRef = "11189940A2AF26A6542BDEAF";
-		};
-		A1C0F473B5B02A405758E45F = {
-			isa = "PBXBuildFile";
-			fileRef = "070AE9F6D58955EE5B3B2FB9";
-		};
-		01254C24560A350B59662101 = {
-			isa = "PBXBuildFile";
-			fileRef = "BA7967007CF5D5AF7BEE03CE";
-		};
-		948BA9E69DBEE6BFD829414C = {
-			isa = "PBXBuildFile";
-			fileRef = "CBB6E958A8AF3B33B29AA4A8";
-		};
-		D2F30C91685F9DC284616312 = {
-			isa = "PBXBuildFile";
-			fileRef = "3BA328FE78F02ED540EFB7DA";
-			settings = {
-				ATTRIBUTES = (
-					"RemoveHeadersOnCopy",
-				);
-			};
-		};
-		59144CB4855198131ED069B3 = {
-			isa = "PBXBuildFile";
-			fileRef = "070AE9F6D58955EE5B3B2FB9";
-		};
-		188B14A9B070A4E709C1A447 = {
-			isa = "PBXBuildFile";
-			fileRef = "BA7967007CF5D5AF7BEE03CE";
-		};
-		C27C502276A1F0301FBC2CBA = {
-			isa = "PBXBuildFile";
-			fileRef = "CBB6E958A8AF3B33B29AA4A8";
-		};
-		7068DDDA75BCEA8A404C09AD = {
-			isa = "PBXBuildFile";
-			fileRef = "295B641B253C35B85CBD0100";
-			settings = {
-				ATTRIBUTES = (
-					"RemoveHeadersOnCopy",
-				);
-			};
-		};
-		2A45EE5BE77CD575DD0ADEBE = {
-			isa = "PBXBuildFile";
-			fileRef = "070AE9F6D58955EE5B3B2FB9";
-		};
-		DB9A503B8C8690B9298B35E3 = {
-			isa = "PBXBuildFile";
-			fileRef = "BA7967007CF5D5AF7BEE03CE";
-		};
-		8F4F306A0A771AF4667582BA = {
-			isa = "PBXBuildFile";
-			fileRef = "CBB6E958A8AF3B33B29AA4A8";
-		};
-		FD33E045D3FF5D175364CB7C = {
-			isa = "PBXBuildFile";
-			fileRef = "1D81B2E2F18AE7821D05A7AD";
-			settings = {
-				ATTRIBUTES = (
-					"RemoveHeadersOnCopy",
-				);
-			};
-		};
-		F2D20BDE70DB7C92C03509DE = {
-			isa = "PBXBuildFile";
-			fileRef = "070AE9F6D58955EE5B3B2FB9";
-		};
-		70E66D31CD0F42D23FBC3EFC = {
-			isa = "PBXBuildFile";
-			fileRef = "BA7967007CF5D5AF7BEE03CE";
-		};
-		A85A41CEA814190D8404E105 = {
-			isa = "PBXBuildFile";
-			fileRef = "CBB6E958A8AF3B33B29AA4A8";
-		};
-		27937DD7D9B079E79382E010 = {
-			isa = "PBXBuildFile";
-			fileRef = "671E1D67938C7F8A1BF10D84";
-			settings = {
-				ATTRIBUTES = (
-					"RemoveHeadersOnCopy",
-				);
-			};
-		};
-		F1632FC1E103CFB4010F7006 = {
-			isa = "PBXBuildFile";
-			fileRef = "070AE9F6D58955EE5B3B2FB9";
-		};
-		6C8E5746297C24B1080C03AF = {
-			isa = "PBXBuildFile";
-			fileRef = "BA7967007CF5D5AF7BEE03CE";
-		};
-		7407B0C9B5E07D5492D98053 = {
-			isa = "PBXBuildFile";
-			fileRef = "CBB6E958A8AF3B33B29AA4A8";
-		};
-		CDECC5E5A6CB9CC531134296 = {
-			isa = "PBXBuildFile";
-			fileRef = "366758A2DEC0386D139D2234";
-			settings = {
-				ATTRIBUTES = (
-					"RemoveHeadersOnCopy",
-				);
-			};
-		};
-		8299DBD0E93022AAEACE5F54 = {
-			isa = "PBXBuildFile";
-			fileRef = "070AE9F6D58955EE5B3B2FB9";
-		};
-		B70CFF8BCD5A858CCB5D600B = {
-			isa = "PBXBuildFile";
-			fileRef = "BA7967007CF5D5AF7BEE03CE";
-		};
-		084FF2541A50122906582CAC = {
-			isa = "PBXBuildFile";
-			fileRef = "CBB6E958A8AF3B33B29AA4A8";
-		};
-		BD336245D81BD967822E8805 = {
-			isa = "PBXBuildFile";
-			fileRef = "A8EA5B4748F0CC00F65BA1A1";
-			settings = {
-				ATTRIBUTES = (
-					"RemoveHeadersOnCopy",
-				);
-			};
-		};
-		E357BFCCA00A4DD6EF1D0235 = {
-			isa = "PBXBuildFile";
-			fileRef = "070AE9F6D58955EE5B3B2FB9";
-		};
-		60BA73F3EE45C345CD0C593D = {
-			isa = "PBXBuildFile";
-			fileRef = "BA7967007CF5D5AF7BEE03CE";
-		};
-		755E22C57BB293CDAD64CB41 = {
-			isa = "PBXBuildFile";
-			fileRef = "CBB6E958A8AF3B33B29AA4A8";
-		};
-		632684F10ED929FB4713B2AE = {
-			isa = "PBXBuildFile";
-			fileRef = "A490F7519B2E1597438D0853";
-			settings = {
-				ATTRIBUTES = (
-					"RemoveHeadersOnCopy",
-				);
-			};
-		};
-		556FE5F2A7285723350E4CAC = {
-			isa = "PBXBuildFile";
-			fileRef = "070AE9F6D58955EE5B3B2FB9";
-		};
-		1C7B8B3BAEF7289AACBD231D = {
-			isa = "PBXBuildFile";
-			fileRef = "BA7967007CF5D5AF7BEE03CE";
-		};
-		C3EEB3DED5B57200DA36F34E = {
-			isa = "PBXBuildFile";
-			fileRef = "CBB6E958A8AF3B33B29AA4A8";
-		};
-		B20620C6A9ADEC432BF25194 = {
-			isa = "PBXBuildFile";
-			fileRef = "5A7F8536C04A2BAC1834B3E7";
-			settings = {
-				ATTRIBUTES = (
-					"RemoveHeadersOnCopy",
-				);
-			};
-		};
-		359DDEBBC7AB6E4D48032723 = {
-			isa = "PBXBuildFile";
-			fileRef = "070AE9F6D58955EE5B3B2FB9";
-		};
-		E2CFAA905BF589905A69D32F = {
-			isa = "PBXBuildFile";
-			fileRef = "BA7967007CF5D5AF7BEE03CE";
-		};
-		4096B185162EAE2C4738E1C1 = {
-			isa = "PBXBuildFile";
-			fileRef = "CBB6E958A8AF3B33B29AA4A8";
-		};
-		4E381ABD8DEE9DA436598879 = {
-			isa = "PBXBuildFile";
-			fileRef = "1A10CFCE432C459F3DD1051D";
-			settings = {
-				ATTRIBUTES = (
-					"RemoveHeadersOnCopy",
-				);
-			};
-		};
-		5A652AAB3F21AD3EEE1DC9B1 = {
-			isa = "PBXBuildFile";
-			fileRef = "070AE9F6D58955EE5B3B2FB9";
-		};
-		72B403FFF4DA5BA1CEDD5717 = {
-			isa = "PBXBuildFile";
-			fileRef = "BA7967007CF5D5AF7BEE03CE";
-		};
-		C14B2CCCCE38CFD39751A8F3 = {
-			isa = "PBXBuildFile";
-			fileRef = "CBB6E958A8AF3B33B29AA4A8";
-		};
-		96976D843556F3E024DE3B2F = {
-			isa = "PBXBuildFile";
-			fileRef = "93314A863CABFBA3A5626312";
-			settings = {
-				ATTRIBUTES = (
-					"RemoveHeadersOnCopy",
-				);
-			};
-		};
-		1277856148B9DF5BCFB73A45 = {
-			isa = "PBXBuildFile";
-			fileRef = "228E13F225C95F2D0065D825";
-		};
-		0673335401F0E6294B1D6A65 = {
-			isa = "PBXBuildFile";
-			fileRef = "228E13F225C95F2D0065D825";
-		};
-		92590DF487A4D5B48CEE3C36 = {
-			isa = "PBXBuildFile";
-			fileRef = "228E13F225C95F2D0065D825";
-		};
-		539578FA38E5117D4FFA6F13 = {
-			isa = "PBXBuildFile";
-			fileRef = "228E13F225C95F2D0065D825";
-		};
-		210223C3B93B2D495C96B792 = {
-			isa = "PBXBuildFile";
-			fileRef = "228E13F225C95F2D0065D825";
-		};
-		4C9CA710D4734D323992A80C = {
-			isa = "PBXBuildFile";
-			fileRef = "228E13F225C95F2D0065D825";
-		};
-		3AABA6ADD41BDE6C2C6BEC6E = {
-			isa = "PBXBuildFile";
-			fileRef = "228E13F225C95F2D0065D825";
-		};
-		5588CB35CBA255F519ECBB71 = {
-			isa = "PBXBuildFile";
-			fileRef = "228E13F225C95F2D0065D825";
-		};
-		09D5DF2DB0BAEEB73DCFED25 = {
-			isa = "PBXBuildFile";
-			fileRef = "228E13F225C95F2D0065D825";
-		};
-		6B4BFFDBD16619E32E8DA990 = {
-			isa = "PBXBuildFile";
-			fileRef = "228E13F225C95F2D0065D825";
-		};
+		70E66D31CD0F42D23FBC3EFC /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		72B403FFF4DA5BA1CEDD5717 /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		7407B0C9B5E07D5492D98053 /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
+		755E22C57BB293CDAD64CB41 /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
+		7A025EB47CCEBDAA7E49CB3E /* ShellWorkers/Host.swift in Sources */ = {isa = PBXBuildFile; fileRef = D847238C57D48CADF264887A /* ShellWorkers/Host.swift */; };
+		8299DBD0E93022AAEACE5F54 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		8F4F306A0A771AF4667582BA /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
+		92590DF487A4D5B48CEE3C36 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		948BA9E69DBEE6BFD829414C /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
+		96976D843556F3E024DE3B2F /* ShellWorkerJ.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 93314A863CABFBA3A5626312 /* ShellWorkerJ.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A1C0F473B5B02A405758E45F /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
 		A22000000000000000000001 /* rg/rg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22000000000000000000002 /* rg/rg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A22600000000000000000001 /* codex/codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex/codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A85A41CEA814190D8404E105 /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AE1100000000000000000001 /* helix/helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix/helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B20620C6A9ADEC432BF25194 /* ShellWorkerH.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 5A7F8536C04A2BAC1834B3E7 /* ShellWorkerH.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B70CFF8BCD5A858CCB5D600B /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		BD336245D81BD967822E8805 /* ShellWorkerF.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = A8EA5B4748F0CC00F65BA1A1 /* ShellWorkerF.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C14B2CCCCE38CFD39751A8F3 /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
+		C27C502276A1F0301FBC2CBA /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
+		C3EEB3DED5B57200DA36F34E /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
+		C608987E0D35D7D8C92CF091 /* ShellWorkers/RemotePane.m in Sources */ = {isa = PBXBuildFile; fileRef = 11189940A2AF26A6542BDEAF /* ShellWorkers/RemotePane.m */; };
+		CDECC5E5A6CB9CC531134296 /* ShellWorkerE.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 366758A2DEC0386D139D2234 /* ShellWorkerE.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D2F30C91685F9DC284616312 /* ShellWorkerA.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 3BA328FE78F02ED540EFB7DA /* ShellWorkerA.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D8F1C3A27B5E4E0C9A61B2F4 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
+		DB9A503B8C8690B9298B35E3 /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		E2CFAA905BF589905A69D32F /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		E357BFCCA00A4DD6EF1D0235 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		F1632FC1E103CFB4010F7006 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		F2D20BDE70DB7C92C03509DE /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		FD33E045D3FF5D175364CB7C /* ShellWorkerC.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 1D81B2E2F18AE7821D05A7AD /* ShellWorkerC.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1321,6 +1112,76 @@
 			proxyType = 1;
 			remoteGlobalIDString = 22AD8717246EBFFA00F415DE;
 			remoteInfo = "a-Shell-Intents";
+		};
+		22DD73C630B5C06E0080E04D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A614E13CB5ADC97DAC1C52AC;
+			remoteInfo = ShellWorkerJ;
+		};
+		22DD73C730B5C06E0080E04D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 980C38795331054C0AB04808;
+			remoteInfo = ShellWorkerI;
+		};
+		22DD73C830B5C06E0080E04D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BDF38991DBFB316DAA737CDC;
+			remoteInfo = ShellWorkerH;
+		};
+		22DD73C930B5C06E0080E04D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9C778EEDE9AFE25B17E919CD;
+			remoteInfo = ShellWorkerG;
+		};
+		22DD73CA30B5C06E0080E04D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E698830C007E12B930873C45;
+			remoteInfo = ShellWorkerF;
+		};
+		22DD73CB30B5C06E0080E04D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE532D2E94C62529D2EAC80C;
+			remoteInfo = ShellWorkerE;
+		};
+		22DD73CC30B5C06E0080E04D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B1BF9CA28196AF7D11ED15C1;
+			remoteInfo = ShellWorkerD;
+		};
+		22DD73CD30B5C06E0080E04D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F1BC0042128131FA3BB63FE6;
+			remoteInfo = ShellWorkerC;
+		};
+		22DD73CE30B5C06E0080E04D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EE8FF11D18D32F6F9601FA0D;
+			remoteInfo = ShellWorkerB;
+		};
+		22DD73CF30B5C06E0080E04D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 22984EE222C93DBC00069497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B80CAEC73DAE28A7664A2FE7;
+			remoteInfo = ShellWorkerA;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -2199,22 +2060,22 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		612A319DA4E81CC5CF4B62F3 = {
-			isa = "PBXCopyFilesBuildPhase";
+		612A319DA4E81CC5CF4B62F3 /* Embed Shell Workers */ = {
+			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
 			dstSubfolderSpec = 16;
 			files = (
-				"D2F30C91685F9DC284616312",
-				"7068DDDA75BCEA8A404C09AD",
-				"FD33E045D3FF5D175364CB7C",
-				"27937DD7D9B079E79382E010",
-				"CDECC5E5A6CB9CC531134296",
-				"BD336245D81BD967822E8805",
-				"632684F10ED929FB4713B2AE",
-				"B20620C6A9ADEC432BF25194",
-				"4E381ABD8DEE9DA436598879",
-				"96976D843556F3E024DE3B2F",
+				D2F30C91685F9DC284616312 /* ShellWorkerA.appex in Embed Shell Workers */,
+				7068DDDA75BCEA8A404C09AD /* ShellWorkerB.appex in Embed Shell Workers */,
+				FD33E045D3FF5D175364CB7C /* ShellWorkerC.appex in Embed Shell Workers */,
+				27937DD7D9B079E79382E010 /* ShellWorkerD.appex in Embed Shell Workers */,
+				CDECC5E5A6CB9CC531134296 /* ShellWorkerE.appex in Embed Shell Workers */,
+				BD336245D81BD967822E8805 /* ShellWorkerF.appex in Embed Shell Workers */,
+				632684F10ED929FB4713B2AE /* ShellWorkerG.appex in Embed Shell Workers */,
+				B20620C6A9ADEC432BF25194 /* ShellWorkerH.appex in Embed Shell Workers */,
+				4E381ABD8DEE9DA436598879 /* ShellWorkerI.appex in Embed Shell Workers */,
+				96976D843556F3E024DE3B2F /* ShellWorkerJ.appex in Embed Shell Workers */,
 			);
 			name = "Embed Shell Workers";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2222,8 +2083,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		070AE9F6D58955EE5B3B2FB9 /* Worker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Worker.swift; path = "/Users/holzschu/src/Xcode_iPad/a-Shell/ShellWorkers/Worker.swift"; sourceTree = "<absolute>"; };
+		0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ShellWorkers/Worker.xcconfig; sourceTree = SOURCE_ROOT; };
 		0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExecuteLongCommandIntent.swift; sourceTree = "<group>"; };
+		11189940A2AF26A6542BDEAF /* ShellWorkers/RemotePane.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/RemotePane.m; sourceTree = SOURCE_ROOT; };
 		196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCommand.swift; sourceTree = "<group>"; };
+		1A10CFCE432C459F3DD1051D /* ShellWorkerI.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerI.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D81B2E2F18AE7821D05A7AD /* ShellWorkerC.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerC.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2200010030F7400000000003 /* PhotosUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PhotosUI.framework; path = System/Library/Frameworks/PhotosUI.framework; sourceTree = SDKROOT; };
 		22068CC52F51BFCE004307F7 /* TerminalView+KeyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+KeyCommands.swift"; sourceTree = "<group>"; };
 		2208ACBE22CCE57E003985D6 /* String+C.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "String+C.swift"; path = "Util/String+C.swift"; sourceTree = SOURCE_ROOT; };
@@ -3068,11 +2934,17 @@
 		22F9641A30852E7600868C46 /* Ruff.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Ruff.xcframework; path = ruff/Ruff.xcframework; sourceTree = "<group>"; };
 		22FFB44129E87D920054F01F /* require_jscore.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = require_jscore.js; sourceTree = "<group>"; };
 		22FFB44329E88AE60054F01F /* url-polyfill.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "url-polyfill.js"; sourceTree = "<group>"; };
+		295B641B253C35B85CBD0100 /* ShellWorkerB.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerB.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		366758A2DEC0386D139D2234 /* ShellWorkerE.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerE.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3BA328FE78F02ED540EFB7DA /* ShellWorkerA.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerA.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		535000000000000000000001 /* Util/CommandEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util/CommandEnvironment.swift; sourceTree = SOURCE_ROOT; };
+		5A7F8536C04A2BAC1834B3E7 /* ShellWorkerH.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerH.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		601A00000000000000000002 /* ShellWorkers/HostPane.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/HostPane.m; sourceTree = SOURCE_ROOT; };
 		610000000000000000000001 /* TerminalTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTheme.swift; sourceTree = "<group>"; };
 		610000000000000000000010 /* Themes */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Themes; path = Resources/Themes; sourceTree = SOURCE_ROOT; };
 		619225000000000000000002 /* gitoxide/gitoxide.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = gitoxide/gitoxide.xcframework; sourceTree = SOURCE_ROOT; };
 		620000000000000000000001 /* TerminalPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPrompt.swift; sourceTree = "<group>"; };
+		671E1D67938C7F8A1BF10D84 /* ShellWorkerD.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerD.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PutFileIntentHandler.swift; sourceTree = "<group>"; };
 		6BD953692BFFCC4000C2508F /* GetFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetFileIntentHandler.swift; sourceTree = "<group>"; };
 		6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecuteCommandIntentHandler.swift; sourceTree = "<group>"; };
@@ -3081,121 +2953,38 @@
 		8916088E2713056900CED1C9 /* KBWebViewBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KBWebViewBase.m; sourceTree = "<group>"; };
 		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
 		898384A83061A39800A1E18D /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
-		D847238C57D48CADF264887A = {
-			isa = "PBXFileReference";
-			path = "ShellWorkers/Host.swift";
-			sourceTree = "SOURCE_ROOT";
-		};
-		601A00000000000000000002 = {
-			isa = "PBXFileReference";
-			path = "ShellWorkers/HostPane.m";
-			sourceTree = "SOURCE_ROOT";
-		};
-		11189940A2AF26A6542BDEAF = {
-			isa = "PBXFileReference";
-			path = "ShellWorkers/RemotePane.m";
-			sourceTree = "SOURCE_ROOT";
-		};
-		070AE9F6D58955EE5B3B2FB9 = {
-			isa = "PBXFileReference";
-			path = "$(DERIVED_FILE_DIR)/Worker.swift";
-			sourceTree = "<absolute>";
-		};
-		BA7967007CF5D5AF7BEE03CE = {
-			isa = "PBXFileReference";
-			path = "ShellWorkers/Worker.m";
-			sourceTree = "SOURCE_ROOT";
-		};
-		CBB6E958A8AF3B33B29AA4A8 = {
-			isa = "PBXFileReference";
-			path = "ShellWorkers/NativePane.m";
-			sourceTree = "SOURCE_ROOT";
-		};
-		EBFE9D103C0EF60A16FFF4FE = {
-			isa = "PBXFileReference";
-			path = "ShellWorkers/NativePane.h";
-			sourceTree = "SOURCE_ROOT";
-		};
-		829DEA185012AF6B325E7867 = {
-			isa = "PBXFileReference";
-			path = "ShellWorkers/PaneWire.h";
-			sourceTree = "SOURCE_ROOT";
-		};
-		0893D186728BD261366E4BD1 = {
-			isa = "PBXFileReference";
-			path = "ShellWorkers/Worker.xcconfig";
-			sourceTree = "SOURCE_ROOT";
-		};
-		3BA328FE78F02ED540EFB7DA = {
-			isa = "PBXFileReference";
-			explicitFileType = "wrapper.app-extension";
-			path = "ShellWorkerA.appex";
-			sourceTree = "BUILT_PRODUCTS_DIR";
-		};
-		295B641B253C35B85CBD0100 = {
-			isa = "PBXFileReference";
-			explicitFileType = "wrapper.app-extension";
-			path = "ShellWorkerB.appex";
-			sourceTree = "BUILT_PRODUCTS_DIR";
-		};
-		1D81B2E2F18AE7821D05A7AD = {
-			isa = "PBXFileReference";
-			explicitFileType = "wrapper.app-extension";
-			path = "ShellWorkerC.appex";
-			sourceTree = "BUILT_PRODUCTS_DIR";
-		};
-		671E1D67938C7F8A1BF10D84 = {
-			isa = "PBXFileReference";
-			explicitFileType = "wrapper.app-extension";
-			path = "ShellWorkerD.appex";
-			sourceTree = "BUILT_PRODUCTS_DIR";
-		};
-		366758A2DEC0386D139D2234 = {
-			isa = "PBXFileReference";
-			explicitFileType = "wrapper.app-extension";
-			path = "ShellWorkerE.appex";
-			sourceTree = "BUILT_PRODUCTS_DIR";
-		};
-		A8EA5B4748F0CC00F65BA1A1 = {
-			isa = "PBXFileReference";
-			explicitFileType = "wrapper.app-extension";
-			path = "ShellWorkerF.appex";
-			sourceTree = "BUILT_PRODUCTS_DIR";
-		};
-		A490F7519B2E1597438D0853 = {
-			isa = "PBXFileReference";
-			explicitFileType = "wrapper.app-extension";
-			path = "ShellWorkerG.appex";
-			sourceTree = "BUILT_PRODUCTS_DIR";
-		};
-		5A7F8536C04A2BAC1834B3E7 = {
-			isa = "PBXFileReference";
-			explicitFileType = "wrapper.app-extension";
-			path = "ShellWorkerH.appex";
-			sourceTree = "BUILT_PRODUCTS_DIR";
-		};
-		1A10CFCE432C459F3DD1051D = {
-			isa = "PBXFileReference";
-			explicitFileType = "wrapper.app-extension";
-			path = "ShellWorkerI.appex";
-			sourceTree = "BUILT_PRODUCTS_DIR";
-		};
-		93314A863CABFBA3A5626312 = {
-			isa = "PBXFileReference";
-			explicitFileType = "wrapper.app-extension";
-			path = "ShellWorkerJ.appex";
-			sourceTree = "BUILT_PRODUCTS_DIR";
-		};
+		93314A863CABFBA3A5626312 /* ShellWorkerJ.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerJ.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A22000000000000000000002 /* rg/rg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = rg/rg.xcframework; sourceTree = SOURCE_ROOT; };
 		A22600000000000000000002 /* codex/codex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = codex/codex.xcframework; sourceTree = SOURCE_ROOT; };
+		A490F7519B2E1597438D0853 /* ShellWorkerG.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerG.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A53600000000000000000001 /* freetype.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = freetype.xcframework; path = xcfs/.build/artifacts/xcfs/freetype/freetype.xcframework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000002 /* harfbuzz.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = harfbuzz.xcframework; path = xcfs/.build/artifacts/xcfs/harfbuzz/harfbuzz.xcframework; sourceTree = SOURCE_ROOT; };
 		A53600000000000000000003 /* libpng.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libpng.xcframework; path = xcfs/.build/artifacts/xcfs/libpng/libpng.xcframework; sourceTree = SOURCE_ROOT; };
 		A59100000000000000000004 /* Relay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relay.swift; sourceTree = "<group>"; };
+		A8EA5B4748F0CC00F65BA1A1 /* ShellWorkerF.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerF.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE1100000000000000000002 /* helix/helix.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = helix/helix.xcframework; sourceTree = SOURCE_ROOT; };
+		BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/Worker.m; sourceTree = SOURCE_ROOT; };
+		CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/NativePane.m; sourceTree = SOURCE_ROOT; };
+		D847238C57D48CADF264887A /* ShellWorkers/Host.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellWorkers/Host.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0FCC490857271C3EA8FD0560 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B4BFFDBD16619E32E8DA990 /* ios_system.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		14FF53A4F006E7098AEAAE7F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1277856148B9DF5BCFB73A45 /* ios_system.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22178EF5257BBBA4008EB2B4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -3261,83 +3050,67 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		14FF53A4F006E7098AEAAE7F = {
-			isa = "PBXFrameworksBuildPhase";
+		258FF1E0CF03820F66E545A5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"1277856148B9DF5BCFB73A45",
+				92590DF487A4D5B48CEE3C36 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		DEAB4E94790E3EA7168A48C3 = {
-			isa = "PBXFrameworksBuildPhase";
+		3BAA79E324EBC4898A0D14A6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"0673335401F0E6294B1D6A65",
+				3AABA6ADD41BDE6C2C6BEC6E /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		258FF1E0CF03820F66E545A5 = {
-			isa = "PBXFrameworksBuildPhase";
+		546F48346B8E1E84B6C5218F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"92590DF487A4D5B48CEE3C36",
+				4C9CA710D4734D323992A80C /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		82F519E40E8A8147E4355208 = {
-			isa = "PBXFrameworksBuildPhase";
+		5A1CAE50D727AC931A1AC17A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"539578FA38E5117D4FFA6F13",
+				5588CB35CBA255F519ECBB71 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B845E8A798AC3E84D1E78A6A = {
-			isa = "PBXFrameworksBuildPhase";
+		82F519E40E8A8147E4355208 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"210223C3B93B2D495C96B792",
+				539578FA38E5117D4FFA6F13 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		546F48346B8E1E84B6C5218F = {
-			isa = "PBXFrameworksBuildPhase";
+		B845E8A798AC3E84D1E78A6A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"4C9CA710D4734D323992A80C",
+				210223C3B93B2D495C96B792 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		3BAA79E324EBC4898A0D14A6 = {
-			isa = "PBXFrameworksBuildPhase";
+		DEAB4E94790E3EA7168A48C3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"3AABA6ADD41BDE6C2C6BEC6E",
+				0673335401F0E6294B1D6A65 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		5A1CAE50D727AC931A1AC17A = {
-			isa = "PBXFrameworksBuildPhase";
+		FCA3F3734E17EAA67DAFC01F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"5588CB35CBA255F519ECBB71",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		FCA3F3734E17EAA67DAFC01F = {
-			isa = "PBXFrameworksBuildPhase";
-			buildActionMask = 2147483647;
-			files = (
-				"09D5DF2DB0BAEEB73DCFED25",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0FCC490857271C3EA8FD0560 = {
-			isa = "PBXFrameworksBuildPhase";
-			buildActionMask = 2147483647;
-			files = (
-				"6B4BFFDBD16619E32E8DA990",
+				09D5DF2DB0BAEEB73DCFED25 /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3422,6 +3195,7 @@
 				22B1B80D22CB9A5A00F7C452 /* Frameworks */,
 				898384A83061A39800A1E18D /* Build.xcconfig */,
 				9C5656AC927E171D1D99F3D1 /* a-Shell-LongCommands */,
+				22DD73C530B5C0500080E04D /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -4387,6 +4161,30 @@
 			name = ios_system;
 			sourceTree = SOURCE_ROOT;
 		};
+		22DD73C530B5C0500080E04D /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				070AE9F6D58955EE5B3B2FB9 /* Worker.swift */,
+				BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */,
+				CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */,
+				3BA328FE78F02ED540EFB7DA /* ShellWorkerA.appex */,
+				295B641B253C35B85CBD0100 /* ShellWorkerB.appex */,
+				1D81B2E2F18AE7821D05A7AD /* ShellWorkerC.appex */,
+				671E1D67938C7F8A1BF10D84 /* ShellWorkerD.appex */,
+				366758A2DEC0386D139D2234 /* ShellWorkerE.appex */,
+				A8EA5B4748F0CC00F65BA1A1 /* ShellWorkerF.appex */,
+				A490F7519B2E1597438D0853 /* ShellWorkerG.appex */,
+				5A7F8536C04A2BAC1834B3E7 /* ShellWorkerH.appex */,
+				1A10CFCE432C459F3DD1051D /* ShellWorkerI.appex */,
+				93314A863CABFBA3A5626312 /* ShellWorkerJ.appex */,
+				11189940A2AF26A6542BDEAF /* ShellWorkers/RemotePane.m */,
+				601A00000000000000000002 /* ShellWorkers/HostPane.m */,
+				D847238C57D48CADF264887A /* ShellWorkers/Host.swift */,
+				0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		22F201762652609A004FBA5C /* Perl */ = {
 			isa = PBXGroup;
 			children = (
@@ -4498,7 +4296,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 229D25A3257931E4004A78AC /* Build configuration list for PBXNativeTarget "a-Shell-mini" */;
 			buildPhases = (
-				612A319DA4E81CC5CF4B62F3,
+				612A319DA4E81CC5CF4B62F3 /* Embed Shell Workers */,
 				229D2476257931E4004A78AC /* Sources */,
 				229D2486257931E4004A78AC /* Frameworks */,
 				229D2488257931E4004A78AC /* Resources */,
@@ -4508,16 +4306,16 @@
 			buildRules = (
 			);
 			dependencies = (
-				E119072ED69DB93517DB130D,
-				AD01960A41E12D8546D60344,
-				31A01BF362BE8594C88A7461,
-				42442DC659794242C4C4F078,
-				0AAC31F15A0DCCDD78983016,
-				A635836C211C3AB5C85C00A7,
-				26F687795555A5D88B96304D,
-				BB6767147D3C4FEA4C3C952B,
-				C07B3F85C9AAEB628033EA61,
-				88F36AC8C5832103CAA7195E,
+				E119072ED69DB93517DB130D /* PBXTargetDependency */,
+				AD01960A41E12D8546D60344 /* PBXTargetDependency */,
+				31A01BF362BE8594C88A7461 /* PBXTargetDependency */,
+				42442DC659794242C4C4F078 /* PBXTargetDependency */,
+				0AAC31F15A0DCCDD78983016 /* PBXTargetDependency */,
+				A635836C211C3AB5C85C00A7 /* PBXTargetDependency */,
+				26F687795555A5D88B96304D /* PBXTargetDependency */,
+				BB6767147D3C4FEA4C3C952B /* PBXTargetDependency */,
+				C07B3F85C9AAEB628033EA61 /* PBXTargetDependency */,
+				88F36AC8C5832103CAA7195E /* PBXTargetDependency */,
 				22178F0B257BBBA6008EB2B4 /* PBXTargetDependency */,
 				22178F0E257BBBA6008EB2B4 /* PBXTargetDependency */,
 			);
@@ -4565,184 +4363,184 @@
 			productReference = 22AD8721246EBFFB00F415DE /* a-Shell-IntentsUI.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		B80CAEC73DAE28A7664A2FE7 = {
-			isa = "PBXNativeTarget";
-			buildConfigurationList = "AF05FF73FF3462482114110C";
+		980C38795331054C0AB04808 /* ShellWorkerI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5444CAFE71E28CDFEBA55CCD /* Build configuration list for PBXNativeTarget "ShellWorkerI" */;
 			buildPhases = (
-				14FF53A4F006E7098AEAAE7F,
-				B6DFC70EFFFF8DF6433E72CB,
-				"718D17729DFE061A0416ECA4",
-				"EC1A1AC5948AC9AA36F4B087",
+				FCA3F3734E17EAA67DAFC01F /* Frameworks */,
+				4FD09DF0A4CEF6A5C5CBDEB5 /* Prepare worker assets */,
+				05343EBACA43E356190F5510 /* Sources */,
+				0DB04B227C827E3026826B08 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "ShellWorkerA";
-			productName = "ShellWorkerA";
-			productReference = "3BA328FE78F02ED540EFB7DA";
+			name = ShellWorkerI;
+			productName = ShellWorkerI;
+			productReference = 1A10CFCE432C459F3DD1051D /* ShellWorkerI.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
-		EE8FF11D18D32F6F9601FA0D = {
-			isa = "PBXNativeTarget";
-			buildConfigurationList = "7B74F35F903EA73A5F1CC5CA";
+		9C778EEDE9AFE25B17E919CD /* ShellWorkerG */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 01298A57963C7D7FC8A5E943 /* Build configuration list for PBXNativeTarget "ShellWorkerG" */;
 			buildPhases = (
-				DEAB4E94790E3EA7168A48C3,
-				B67A38D341342EF376079F91,
-				"95713C2B5DDEC29599BCB5F5",
-				"E9D1E579FDF61B49CE0FEC17",
+				3BAA79E324EBC4898A0D14A6 /* Frameworks */,
+				9E2EF90743ED233D863DDABE /* Prepare worker assets */,
+				8565DB4F80836EA220237CA0 /* Sources */,
+				3C98BBDD25082B6A0ADD867E /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "ShellWorkerB";
-			productName = "ShellWorkerB";
-			productReference = "295B641B253C35B85CBD0100";
+			name = ShellWorkerG;
+			productName = ShellWorkerG;
+			productReference = A490F7519B2E1597438D0853 /* ShellWorkerG.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
-		F1BC0042128131FA3BB63FE6 = {
-			isa = "PBXNativeTarget";
-			buildConfigurationList = "4E8FD56F38A3D6CA40A44BBA";
+		A614E13CB5ADC97DAC1C52AC /* ShellWorkerJ */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9094C1580181846504A7959E /* Build configuration list for PBXNativeTarget "ShellWorkerJ" */;
 			buildPhases = (
-				258FF1E0CF03820F66E545A5,
-				2D03C0D5AAA2F2256E34D090,
-				"2DC585EAE450FD4D0A61AFE3",
-				"F87943363674934C30AE6197",
+				0FCC490857271C3EA8FD0560 /* Frameworks */,
+				5BE30F6A540EDF0BD98793A1 /* Prepare worker assets */,
+				5E23CF762C8E87A5C4F07026 /* Sources */,
+				81A62DB36AA951C12F501AA6 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "ShellWorkerC";
-			productName = "ShellWorkerC";
-			productReference = "1D81B2E2F18AE7821D05A7AD";
+			name = ShellWorkerJ;
+			productName = ShellWorkerJ;
+			productReference = 93314A863CABFBA3A5626312 /* ShellWorkerJ.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
-		B1BF9CA28196AF7D11ED15C1 = {
-			isa = "PBXNativeTarget";
-			buildConfigurationList = "C529F9BD8FC95FC69151E5D9";
+		B1BF9CA28196AF7D11ED15C1 /* ShellWorkerD */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C529F9BD8FC95FC69151E5D9 /* Build configuration list for PBXNativeTarget "ShellWorkerD" */;
 			buildPhases = (
-				82F519E40E8A8147E4355208,
-				CD23A87555F8E9CB087A2CC3,
-				"6531237C17643573A10DC2A8",
-				"3A1724BD1DB4BAD26BEFB1A0",
+				82F519E40E8A8147E4355208 /* Frameworks */,
+				CD23A87555F8E9CB087A2CC3 /* Prepare worker assets */,
+				6531237C17643573A10DC2A8 /* Sources */,
+				3A1724BD1DB4BAD26BEFB1A0 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "ShellWorkerD";
-			productName = "ShellWorkerD";
-			productReference = "671E1D67938C7F8A1BF10D84";
+			name = ShellWorkerD;
+			productName = ShellWorkerD;
+			productReference = 671E1D67938C7F8A1BF10D84 /* ShellWorkerD.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
-		CE532D2E94C62529D2EAC80C = {
-			isa = "PBXNativeTarget";
-			buildConfigurationList = "357D1EE97A1181CB2C69AE7B";
+		B80CAEC73DAE28A7664A2FE7 /* ShellWorkerA */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF05FF73FF3462482114110C /* Build configuration list for PBXNativeTarget "ShellWorkerA" */;
 			buildPhases = (
-				B845E8A798AC3E84D1E78A6A,
-				0A54213A9F754AD98D50483E,
-				"FB4B4076C7B39F3D49510853",
-				"34CBB91233009C8ABD5A85B7",
+				14FF53A4F006E7098AEAAE7F /* Frameworks */,
+				B6DFC70EFFFF8DF6433E72CB /* Prepare worker assets */,
+				718D17729DFE061A0416ECA4 /* Sources */,
+				EC1A1AC5948AC9AA36F4B087 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "ShellWorkerE";
-			productName = "ShellWorkerE";
-			productReference = "366758A2DEC0386D139D2234";
+			name = ShellWorkerA;
+			productName = ShellWorkerA;
+			productReference = 3BA328FE78F02ED540EFB7DA /* ShellWorkerA.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
-		E698830C007E12B930873C45 = {
-			isa = "PBXNativeTarget";
-			buildConfigurationList = "63E3448BFC96684E006144BE";
+		BDF38991DBFB316DAA737CDC /* ShellWorkerH */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BFB21F5FBA41F45FB2CB4F2F /* Build configuration list for PBXNativeTarget "ShellWorkerH" */;
 			buildPhases = (
-				546F48346B8E1E84B6C5218F,
-				A8E67298AAEA82BF82D81A15,
-				"9E5D451B8CEF1EF743CC2B97",
-				"A3640D0AC75735AA97CA7E34",
+				5A1CAE50D727AC931A1AC17A /* Frameworks */,
+				F47AB85C2E323C145A9C92C4 /* Prepare worker assets */,
+				C9B665B86623DA45589D3DD5 /* Sources */,
+				BE93A368BA56F46061D5A30F /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "ShellWorkerF";
-			productName = "ShellWorkerF";
-			productReference = "A8EA5B4748F0CC00F65BA1A1";
+			name = ShellWorkerH;
+			productName = ShellWorkerH;
+			productReference = 5A7F8536C04A2BAC1834B3E7 /* ShellWorkerH.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
-		9C778EEDE9AFE25B17E919CD = {
-			isa = "PBXNativeTarget";
-			buildConfigurationList = "01298A57963C7D7FC8A5E943";
+		CE532D2E94C62529D2EAC80C /* ShellWorkerE */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 357D1EE97A1181CB2C69AE7B /* Build configuration list for PBXNativeTarget "ShellWorkerE" */;
 			buildPhases = (
-				3BAA79E324EBC4898A0D14A6,
-				9E2EF90743ED233D863DDABE,
-				"8565DB4F80836EA220237CA0",
-				"3C98BBDD25082B6A0ADD867E",
+				B845E8A798AC3E84D1E78A6A /* Frameworks */,
+				0A54213A9F754AD98D50483E /* Prepare worker assets */,
+				FB4B4076C7B39F3D49510853 /* Sources */,
+				34CBB91233009C8ABD5A85B7 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "ShellWorkerG";
-			productName = "ShellWorkerG";
-			productReference = "A490F7519B2E1597438D0853";
+			name = ShellWorkerE;
+			productName = ShellWorkerE;
+			productReference = 366758A2DEC0386D139D2234 /* ShellWorkerE.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
-		BDF38991DBFB316DAA737CDC = {
-			isa = "PBXNativeTarget";
-			buildConfigurationList = "BFB21F5FBA41F45FB2CB4F2F";
+		E698830C007E12B930873C45 /* ShellWorkerF */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 63E3448BFC96684E006144BE /* Build configuration list for PBXNativeTarget "ShellWorkerF" */;
 			buildPhases = (
-				5A1CAE50D727AC931A1AC17A,
-				F47AB85C2E323C145A9C92C4,
-				"C9B665B86623DA45589D3DD5",
-				"BE93A368BA56F46061D5A30F",
+				546F48346B8E1E84B6C5218F /* Frameworks */,
+				A8E67298AAEA82BF82D81A15 /* Prepare worker assets */,
+				9E5D451B8CEF1EF743CC2B97 /* Sources */,
+				A3640D0AC75735AA97CA7E34 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "ShellWorkerH";
-			productName = "ShellWorkerH";
-			productReference = "5A7F8536C04A2BAC1834B3E7";
+			name = ShellWorkerF;
+			productName = ShellWorkerF;
+			productReference = A8EA5B4748F0CC00F65BA1A1 /* ShellWorkerF.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
-		980C38795331054C0AB04808 = {
-			isa = "PBXNativeTarget";
-			buildConfigurationList = "5444CAFE71E28CDFEBA55CCD";
+		EE8FF11D18D32F6F9601FA0D /* ShellWorkerB */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7B74F35F903EA73A5F1CC5CA /* Build configuration list for PBXNativeTarget "ShellWorkerB" */;
 			buildPhases = (
-				FCA3F3734E17EAA67DAFC01F,
-				4FD09DF0A4CEF6A5C5CBDEB5,
-				"05343EBACA43E356190F5510",
-				"0DB04B227C827E3026826B08",
+				DEAB4E94790E3EA7168A48C3 /* Frameworks */,
+				B67A38D341342EF376079F91 /* Prepare worker assets */,
+				95713C2B5DDEC29599BCB5F5 /* Sources */,
+				E9D1E579FDF61B49CE0FEC17 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "ShellWorkerI";
-			productName = "ShellWorkerI";
-			productReference = "1A10CFCE432C459F3DD1051D";
+			name = ShellWorkerB;
+			productName = ShellWorkerB;
+			productReference = 295B641B253C35B85CBD0100 /* ShellWorkerB.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
-		A614E13CB5ADC97DAC1C52AC = {
-			isa = "PBXNativeTarget";
-			buildConfigurationList = "9094C1580181846504A7959E";
+		F1BC0042128131FA3BB63FE6 /* ShellWorkerC */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4E8FD56F38A3D6CA40A44BBA /* Build configuration list for PBXNativeTarget "ShellWorkerC" */;
 			buildPhases = (
-				0FCC490857271C3EA8FD0560,
-				5BE30F6A540EDF0BD98793A1,
-				"5E23CF762C8E87A5C4F07026",
-				"81A62DB36AA951C12F501AA6",
+				258FF1E0CF03820F66E545A5 /* Frameworks */,
+				2D03C0D5AAA2F2256E34D090 /* Prepare worker assets */,
+				2DC585EAE450FD4D0A61AFE3 /* Sources */,
+				F87943363674934C30AE6197 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "ShellWorkerJ";
-			productName = "ShellWorkerJ";
-			productReference = "93314A863CABFBA3A5626312";
+			name = ShellWorkerC;
+			productName = ShellWorkerC;
+			productReference = 1D81B2E2F18AE7821D05A7AD /* ShellWorkerC.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
 		};
 /* End PBXNativeTarget section */
@@ -4796,16 +4594,16 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B80CAEC73DAE28A7664A2FE7,
-				EE8FF11D18D32F6F9601FA0D,
-				F1BC0042128131FA3BB63FE6,
-				B1BF9CA28196AF7D11ED15C1,
-				CE532D2E94C62529D2EAC80C,
-				E698830C007E12B930873C45,
-				9C778EEDE9AFE25B17E919CD,
-				BDF38991DBFB316DAA737CDC,
-				980C38795331054C0AB04808,
-				A614E13CB5ADC97DAC1C52AC,
+				B80CAEC73DAE28A7664A2FE7 /* ShellWorkerA */,
+				EE8FF11D18D32F6F9601FA0D /* ShellWorkerB */,
+				F1BC0042128131FA3BB63FE6 /* ShellWorkerC */,
+				B1BF9CA28196AF7D11ED15C1 /* ShellWorkerD */,
+				CE532D2E94C62529D2EAC80C /* ShellWorkerE */,
+				E698830C007E12B930873C45 /* ShellWorkerF */,
+				9C778EEDE9AFE25B17E919CD /* ShellWorkerG */,
+				BDF38991DBFB316DAA737CDC /* ShellWorkerH */,
+				980C38795331054C0AB04808 /* ShellWorkerI */,
+				A614E13CB5ADC97DAC1C52AC /* ShellWorkerJ */,
 				22984EE922C93DBC00069497 /* a-Shell */,
 				22AD8717246EBFFA00F415DE /* a-Shell-Intents */,
 				22AD8720246EBFFB00F415DE /* a-Shell-IntentsUI */,
@@ -4818,6 +4616,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0DB04B227C827E3026826B08 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22178EF6257BBBA4008EB2B4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -4966,71 +4771,64 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		EC1A1AC5948AC9AA36F4B087 = {
-			isa = "PBXResourcesBuildPhase";
+		34CBB91233009C8ABD5A85B7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		E9D1E579FDF61B49CE0FEC17 = {
-			isa = "PBXResourcesBuildPhase";
+		3A1724BD1DB4BAD26BEFB1A0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F87943363674934C30AE6197 = {
-			isa = "PBXResourcesBuildPhase";
+		3C98BBDD25082B6A0ADD867E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		3A1724BD1DB4BAD26BEFB1A0 = {
-			isa = "PBXResourcesBuildPhase";
+		81A62DB36AA951C12F501AA6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		34CBB91233009C8ABD5A85B7 = {
-			isa = "PBXResourcesBuildPhase";
+		A3640D0AC75735AA97CA7E34 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A3640D0AC75735AA97CA7E34 = {
-			isa = "PBXResourcesBuildPhase";
+		BE93A368BA56F46061D5A30F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		3C98BBDD25082B6A0ADD867E = {
-			isa = "PBXResourcesBuildPhase";
+		E9D1E579FDF61B49CE0FEC17 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		BE93A368BA56F46061D5A30F = {
-			isa = "PBXResourcesBuildPhase";
+		EC1A1AC5948AC9AA36F4B087 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0DB04B227C827E3026826B08 = {
-			isa = "PBXResourcesBuildPhase";
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		81A62DB36AA951C12F501AA6 = {
-			isa = "PBXResourcesBuildPhase";
+		F87943363674934C30AE6197 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5039,8 +4837,8 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		B6DFC70EFFFF8DF6433E72CB = {
-			isa = "PBXShellScriptBuildPhase";
+		0A54213A9F754AD98D50483E /* Prepare worker assets */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5055,11 +4853,11 @@
 				"$(DERIVED_FILE_DIR)/Worker.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash";
+			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
 		};
-		B67A38D341342EF376079F91 = {
-			isa = "PBXShellScriptBuildPhase";
+		2D03C0D5AAA2F2256E34D090 /* Prepare worker assets */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5074,11 +4872,11 @@
 				"$(DERIVED_FILE_DIR)/Worker.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash";
+			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
 		};
-		2D03C0D5AAA2F2256E34D090 = {
-			isa = "PBXShellScriptBuildPhase";
+		4FD09DF0A4CEF6A5C5CBDEB5 /* Prepare worker assets */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5093,11 +4891,11 @@
 				"$(DERIVED_FILE_DIR)/Worker.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash";
+			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
 		};
-		CD23A87555F8E9CB087A2CC3 = {
-			isa = "PBXShellScriptBuildPhase";
+		5BE30F6A540EDF0BD98793A1 /* Prepare worker assets */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5112,11 +4910,11 @@
 				"$(DERIVED_FILE_DIR)/Worker.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash";
+			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
 		};
-		0A54213A9F754AD98D50483E = {
-			isa = "PBXShellScriptBuildPhase";
+		9E2EF90743ED233D863DDABE /* Prepare worker assets */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5131,11 +4929,11 @@
 				"$(DERIVED_FILE_DIR)/Worker.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash";
+			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
 		};
-		A8E67298AAEA82BF82D81A15 = {
-			isa = "PBXShellScriptBuildPhase";
+		A8E67298AAEA82BF82D81A15 /* Prepare worker assets */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5150,11 +4948,11 @@
 				"$(DERIVED_FILE_DIR)/Worker.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash";
+			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
 		};
-		9E2EF90743ED233D863DDABE = {
-			isa = "PBXShellScriptBuildPhase";
+		B67A38D341342EF376079F91 /* Prepare worker assets */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5169,11 +4967,11 @@
 				"$(DERIVED_FILE_DIR)/Worker.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash";
+			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
 		};
-		F47AB85C2E323C145A9C92C4 = {
-			isa = "PBXShellScriptBuildPhase";
+		B6DFC70EFFFF8DF6433E72CB /* Prepare worker assets */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5188,11 +4986,11 @@
 				"$(DERIVED_FILE_DIR)/Worker.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash";
+			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
 		};
-		4FD09DF0A4CEF6A5C5CBDEB5 = {
-			isa = "PBXShellScriptBuildPhase";
+		CD23A87555F8E9CB087A2CC3 /* Prepare worker assets */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5207,11 +5005,11 @@
 				"$(DERIVED_FILE_DIR)/Worker.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash";
+			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
 		};
-		5BE30F6A540EDF0BD98793A1 = {
-			isa = "PBXShellScriptBuildPhase";
+		F47AB85C2E323C145A9C92C4 /* Prepare worker assets */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5226,12 +5024,22 @@
 				"$(DERIVED_FILE_DIR)/Worker.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash";
+			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		05343EBACA43E356190F5510 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				359DDEBBC7AB6E4D48032723 /* Worker.swift in Sources */,
+				E2CFAA905BF589905A69D32F /* ShellWorkers/Worker.m in Sources */,
+				4096B185162EAE2C4738E1C1 /* ShellWorkers/NativePane.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22178EF4257BBBA4008EB2B4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -5322,9 +5130,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C608987E0D35D7D8C92CF091,
-				"601A00000000000000000001",
-				7A025EB47CCEBDAA7E49CB3E,
+				C608987E0D35D7D8C92CF091 /* ShellWorkers/RemotePane.m in Sources */,
+				601A00000000000000000001 /* ShellWorkers/HostPane.m in Sources */,
+				7A025EB47CCEBDAA7E49CB3E /* ShellWorkers/Host.swift in Sources */,
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
 				535000000000000000000004 /* Util/CommandEnvironment.swift in Sources */,
 				610000000000000000000003 /* TerminalTheme.swift in Sources */,
@@ -5373,109 +5181,104 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		718D17729DFE061A0416ECA4 = {
-			isa = "PBXSourcesBuildPhase";
+		2DC585EAE450FD4D0A61AFE3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"A1C0F473B5B02A405758E45F",
-				"01254C24560A350B59662101",
-				"948BA9E69DBEE6BFD829414C",
+				2A45EE5BE77CD575DD0ADEBE /* Worker.swift in Sources */,
+				DB9A503B8C8690B9298B35E3 /* ShellWorkers/Worker.m in Sources */,
+				8F4F306A0A771AF4667582BA /* ShellWorkers/NativePane.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		95713C2B5DDEC29599BCB5F5 = {
-			isa = "PBXSourcesBuildPhase";
+		5E23CF762C8E87A5C4F07026 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"59144CB4855198131ED069B3",
-				"188B14A9B070A4E709C1A447",
-				"C27C502276A1F0301FBC2CBA",
+				5A652AAB3F21AD3EEE1DC9B1 /* Worker.swift in Sources */,
+				72B403FFF4DA5BA1CEDD5717 /* ShellWorkers/Worker.m in Sources */,
+				C14B2CCCCE38CFD39751A8F3 /* ShellWorkers/NativePane.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2DC585EAE450FD4D0A61AFE3 = {
-			isa = "PBXSourcesBuildPhase";
+		6531237C17643573A10DC2A8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"2A45EE5BE77CD575DD0ADEBE",
-				"DB9A503B8C8690B9298B35E3",
-				"8F4F306A0A771AF4667582BA",
+				F2D20BDE70DB7C92C03509DE /* Worker.swift in Sources */,
+				70E66D31CD0F42D23FBC3EFC /* ShellWorkers/Worker.m in Sources */,
+				A85A41CEA814190D8404E105 /* ShellWorkers/NativePane.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		6531237C17643573A10DC2A8 = {
-			isa = "PBXSourcesBuildPhase";
+		718D17729DFE061A0416ECA4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"F2D20BDE70DB7C92C03509DE",
-				"70E66D31CD0F42D23FBC3EFC",
-				"A85A41CEA814190D8404E105",
+				A1C0F473B5B02A405758E45F /* Worker.swift in Sources */,
+				01254C24560A350B59662101 /* ShellWorkers/Worker.m in Sources */,
+				948BA9E69DBEE6BFD829414C /* ShellWorkers/NativePane.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FB4B4076C7B39F3D49510853 = {
-			isa = "PBXSourcesBuildPhase";
+		8565DB4F80836EA220237CA0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"F1632FC1E103CFB4010F7006",
-				"6C8E5746297C24B1080C03AF",
-				"7407B0C9B5E07D5492D98053",
+				E357BFCCA00A4DD6EF1D0235 /* Worker.swift in Sources */,
+				60BA73F3EE45C345CD0C593D /* ShellWorkers/Worker.m in Sources */,
+				755E22C57BB293CDAD64CB41 /* ShellWorkers/NativePane.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9E5D451B8CEF1EF743CC2B97 = {
-			isa = "PBXSourcesBuildPhase";
+		95713C2B5DDEC29599BCB5F5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"8299DBD0E93022AAEACE5F54",
-				"B70CFF8BCD5A858CCB5D600B",
-				"084FF2541A50122906582CAC",
+				59144CB4855198131ED069B3 /* Worker.swift in Sources */,
+				188B14A9B070A4E709C1A447 /* ShellWorkers/Worker.m in Sources */,
+				C27C502276A1F0301FBC2CBA /* ShellWorkers/NativePane.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		8565DB4F80836EA220237CA0 = {
-			isa = "PBXSourcesBuildPhase";
+		9E5D451B8CEF1EF743CC2B97 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"E357BFCCA00A4DD6EF1D0235",
-				"60BA73F3EE45C345CD0C593D",
-				"755E22C57BB293CDAD64CB41",
+				8299DBD0E93022AAEACE5F54 /* Worker.swift in Sources */,
+				B70CFF8BCD5A858CCB5D600B /* ShellWorkers/Worker.m in Sources */,
+				084FF2541A50122906582CAC /* ShellWorkers/NativePane.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C9B665B86623DA45589D3DD5 = {
-			isa = "PBXSourcesBuildPhase";
+		C9B665B86623DA45589D3DD5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"556FE5F2A7285723350E4CAC",
-				"1C7B8B3BAEF7289AACBD231D",
-				"C3EEB3DED5B57200DA36F34E",
+				556FE5F2A7285723350E4CAC /* Worker.swift in Sources */,
+				1C7B8B3BAEF7289AACBD231D /* ShellWorkers/Worker.m in Sources */,
+				C3EEB3DED5B57200DA36F34E /* ShellWorkers/NativePane.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		05343EBACA43E356190F5510 = {
-			isa = "PBXSourcesBuildPhase";
+		FB4B4076C7B39F3D49510853 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				"359DDEBBC7AB6E4D48032723",
-				"E2CFAA905BF589905A69D32F",
-				"4096B185162EAE2C4738E1C1",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		5E23CF762C8E87A5C4F07026 = {
-			isa = "PBXSourcesBuildPhase";
-			buildActionMask = 2147483647;
-			files = (
-				"5A652AAB3F21AD3EEE1DC9B1",
-				"72B403FFF4DA5BA1CEDD5717",
-				"C14B2CCCCE38CFD39751A8F3",
+				F1632FC1E103CFB4010F7006 /* Worker.swift in Sources */,
+				6C8E5746297C24B1080C03AF /* ShellWorkers/Worker.m in Sources */,
+				7407B0C9B5E07D5492D98053 /* ShellWorkers/NativePane.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		0AAC31F15A0DCCDD78983016 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E698830C007E12B930873C45 /* ShellWorkerF */;
+			targetProxy = 22DD73CA30B5C06E0080E04D /* PBXContainerItemProxy */;
+		};
 		22178F0B257BBBA6008EB2B4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			platformFilter = ios;
@@ -5508,45 +5311,50 @@
 			target = 22AD8717246EBFFA00F415DE /* a-Shell-Intents */;
 			targetProxy = 22AD872E246EBFFD00F415DE /* PBXContainerItemProxy */;
 		};
-		88F36AC8C5832103CAA7195E = {
-			isa = "PBXTargetDependency";
-			target = "B80CAEC73DAE28A7664A2FE7";
+		26F687795555A5D88B96304D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B1BF9CA28196AF7D11ED15C1 /* ShellWorkerD */;
+			targetProxy = 22DD73CC30B5C06E0080E04D /* PBXContainerItemProxy */;
 		};
-		C07B3F85C9AAEB628033EA61 = {
-			isa = "PBXTargetDependency";
-			target = "EE8FF11D18D32F6F9601FA0D";
+		31A01BF362BE8594C88A7461 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BDF38991DBFB316DAA737CDC /* ShellWorkerH */;
+			targetProxy = 22DD73C830B5C06E0080E04D /* PBXContainerItemProxy */;
 		};
-		BB6767147D3C4FEA4C3C952B = {
-			isa = "PBXTargetDependency";
-			target = "F1BC0042128131FA3BB63FE6";
+		42442DC659794242C4C4F078 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9C778EEDE9AFE25B17E919CD /* ShellWorkerG */;
+			targetProxy = 22DD73C930B5C06E0080E04D /* PBXContainerItemProxy */;
 		};
-		26F687795555A5D88B96304D = {
-			isa = "PBXTargetDependency";
-			target = "B1BF9CA28196AF7D11ED15C1";
+		88F36AC8C5832103CAA7195E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B80CAEC73DAE28A7664A2FE7 /* ShellWorkerA */;
+			targetProxy = 22DD73CF30B5C06E0080E04D /* PBXContainerItemProxy */;
 		};
-		A635836C211C3AB5C85C00A7 = {
-			isa = "PBXTargetDependency";
-			target = "CE532D2E94C62529D2EAC80C";
+		A635836C211C3AB5C85C00A7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE532D2E94C62529D2EAC80C /* ShellWorkerE */;
+			targetProxy = 22DD73CB30B5C06E0080E04D /* PBXContainerItemProxy */;
 		};
-		0AAC31F15A0DCCDD78983016 = {
-			isa = "PBXTargetDependency";
-			target = "E698830C007E12B930873C45";
+		AD01960A41E12D8546D60344 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 980C38795331054C0AB04808 /* ShellWorkerI */;
+			targetProxy = 22DD73C730B5C06E0080E04D /* PBXContainerItemProxy */;
 		};
-		42442DC659794242C4C4F078 = {
-			isa = "PBXTargetDependency";
-			target = "9C778EEDE9AFE25B17E919CD";
+		BB6767147D3C4FEA4C3C952B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F1BC0042128131FA3BB63FE6 /* ShellWorkerC */;
+			targetProxy = 22DD73CD30B5C06E0080E04D /* PBXContainerItemProxy */;
 		};
-		31A01BF362BE8594C88A7461 = {
-			isa = "PBXTargetDependency";
-			target = "BDF38991DBFB316DAA737CDC";
+		C07B3F85C9AAEB628033EA61 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EE8FF11D18D32F6F9601FA0D /* ShellWorkerB */;
+			targetProxy = 22DD73CE30B5C06E0080E04D /* PBXContainerItemProxy */;
 		};
-		AD01960A41E12D8546D60344 = {
-			isa = "PBXTargetDependency";
-			target = "980C38795331054C0AB04808";
-		};
-		E119072ED69DB93517DB130D = {
-			isa = "PBXTargetDependency";
-			target = "A614E13CB5ADC97DAC1C52AC";
+		E119072ED69DB93517DB130D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A614E13CB5ADC97DAC1C52AC /* ShellWorkerJ */;
+			targetProxy = 22DD73C630B5C06E0080E04D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -5595,6 +5403,33 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		05813E7057E8747F469C45B5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerI";
+				PRODUCT_NAME = ShellWorkerI;
+			};
+			name = Debug;
+		};
+		1572AF9E6C2EFC03C506A102 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerJ";
+				PRODUCT_NAME = ShellWorkerJ;
+			};
+			name = Release;
+		};
+		201F025FCF49E73888B0B562 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerE";
+				PRODUCT_NAME = ShellWorkerE;
+			};
+			name = Debug;
+		};
 		22178F11257BBBA6008EB2B4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -6230,189 +6065,171 @@
 			};
 			name = Release;
 		};
-		DC87439DFACFBC5E6720ADF1 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
+		389011DD426091393EAB6662 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerA";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerA";
-			};
-			name = "Debug";
-		};
-		BA1F3E3B5D416DFE86D9EE20 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerA";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerA";
-			};
-			name = "Release";
-		};
-		49EECCB6CADB39D8B8693B1A = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerB";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerB";
-			};
-			name = "Debug";
-		};
-		55B5C32D6ABB182F8415F3E8 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerB";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerB";
-			};
-			name = "Release";
-		};
-		3D16C484D9FB67F9E4A967F1 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerC";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerC";
+				PRODUCT_NAME = ShellWorkerC;
 			};
-			name = "Debug";
+			name = Release;
 		};
-		389011DD426091393EAB6662 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
+		3D16C484D9FB67F9E4A967F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerC";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerC";
+				PRODUCT_NAME = ShellWorkerC;
 			};
-			name = "Release";
+			name = Debug;
 		};
-		88DB69305DE72BD245EEEF21 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
+		40CDA083E3E201CEEC579D2C /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerD";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerD";
-			};
-			name = "Debug";
-		};
-		EF65C555B0AF51766A1051B8 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerD";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerD";
-			};
-			name = "Release";
-		};
-		201F025FCF49E73888B0B562 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerE";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerE";
+				PRODUCT_NAME = ShellWorkerE;
 			};
-			name = "Debug";
+			name = Release;
 		};
-		40CDA083E3E201CEEC579D2C = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
+		472F5990568AF73F0DDA5984 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerE";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerE";
-			};
-			name = "Release";
-		};
-		4B6D89CD4EFC7D905940B09E = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerF";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerF";
-			};
-			name = "Debug";
-		};
-		D05AF64AC9567EE39EC70897 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerF";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerF";
-			};
-			name = "Release";
-		};
-		F9CACCCC7F5AA5543BB48468 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerG";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerG";
-			};
-			name = "Debug";
-		};
-		CB9596B242B3686F3D58FE8E = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerG";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerG";
-			};
-			name = "Release";
-		};
-		472F5990568AF73F0DDA5984 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerH";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerH";
+				PRODUCT_NAME = ShellWorkerH;
 			};
-			name = "Debug";
+			name = Debug;
 		};
-		AF505CCF3483810C2864282F = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
+		49EECCB6CADB39D8B8693B1A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerH";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerB";
+				PRODUCT_NAME = ShellWorkerB;
+			};
+			name = Debug;
+		};
+		4B6D89CD4EFC7D905940B09E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerF";
+				PRODUCT_NAME = ShellWorkerF;
+			};
+			name = Debug;
+		};
+		55B5C32D6ABB182F8415F3E8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerB";
+				PRODUCT_NAME = ShellWorkerB;
+			};
+			name = Release;
+		};
+		5A3E39E37904499071CED2F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerJ";
+				PRODUCT_NAME = ShellWorkerJ;
+			};
+			name = Debug;
+		};
+		88DB69305DE72BD245EEEF21 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerD";
+				PRODUCT_NAME = ShellWorkerD;
+			};
+			name = Debug;
+		};
+		AF505CCF3483810C2864282F /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerH";
+				PRODUCT_NAME = ShellWorkerH;
 			};
-			name = "Release";
+			name = Release;
 		};
-		05813E7057E8747F469C45B5 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
+		BA1F3E3B5D416DFE86D9EE20 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerI";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerA";
+				PRODUCT_NAME = ShellWorkerA;
+			};
+			name = Release;
+		};
+		CB9596B242B3686F3D58FE8E /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerG";
+				PRODUCT_NAME = ShellWorkerG;
+			};
+			name = Release;
+		};
+		D05AF64AC9567EE39EC70897 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerF";
+				PRODUCT_NAME = ShellWorkerF;
+			};
+			name = Release;
+		};
+		DC87439DFACFBC5E6720ADF1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerA";
+				PRODUCT_NAME = ShellWorkerA;
+			};
+			name = Debug;
+		};
+		E408A607AE680275D025988F /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
+			buildSettings = {
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerI";
+				PRODUCT_NAME = ShellWorkerI;
 			};
-			name = "Debug";
+			name = Release;
 		};
-		E408A607AE680275D025988F = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
+		EF65C555B0AF51766A1051B8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerI";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerI";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerD";
+				PRODUCT_NAME = ShellWorkerD;
 			};
-			name = "Release";
+			name = Release;
 		};
-		5A3E39E37904499071CED2F3 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
+		F9CACCCC7F5AA5543BB48468 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerJ";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerJ";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerG";
+				PRODUCT_NAME = ShellWorkerG;
 			};
-			name = "Debug";
-		};
-		1572AF9E6C2EFC03C506A102 = {
-			isa = "XCBuildConfiguration";
-			baseConfigurationReference = "0893D186728BD261366E4BD1";
-			buildSettings = {
-				PRODUCT_NAME = "ShellWorkerJ";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_PREFIX:default=AsheKube.app).a-Shell-mini.ShellWorkerJ";
-			};
-			name = "Release";
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		01298A57963C7D7FC8A5E943 /* Build configuration list for PBXNativeTarget "ShellWorkerG" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F9CACCCC7F5AA5543BB48468 /* Debug */,
+				CB9596B242B3686F3D58FE8E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		22178F10257BBBA6008EB2B4 /* Build configuration list for PBXNativeTarget "a-Shell-mini-IntentsUI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -6485,95 +6302,86 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AF05FF73FF3462482114110C = {
-			isa = "XCConfigurationList";
+		357D1EE97A1181CB2C69AE7B /* Build configuration list for PBXNativeTarget "ShellWorkerE" */ = {
+			isa = XCConfigurationList;
 			buildConfigurations = (
-				"DC87439DFACFBC5E6720ADF1",
-				"BA1F3E3B5D416DFE86D9EE20",
+				201F025FCF49E73888B0B562 /* Debug */,
+				40CDA083E3E201CEEC579D2C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = Release;
 		};
-		7B74F35F903EA73A5F1CC5CA = {
-			isa = "XCConfigurationList";
+		4E8FD56F38A3D6CA40A44BBA /* Build configuration list for PBXNativeTarget "ShellWorkerC" */ = {
+			isa = XCConfigurationList;
 			buildConfigurations = (
-				"49EECCB6CADB39D8B8693B1A",
-				"55B5C32D6ABB182F8415F3E8",
+				3D16C484D9FB67F9E4A967F1 /* Debug */,
+				389011DD426091393EAB6662 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = Release;
 		};
-		4E8FD56F38A3D6CA40A44BBA = {
-			isa = "XCConfigurationList";
+		5444CAFE71E28CDFEBA55CCD /* Build configuration list for PBXNativeTarget "ShellWorkerI" */ = {
+			isa = XCConfigurationList;
 			buildConfigurations = (
-				"3D16C484D9FB67F9E4A967F1",
-				"389011DD426091393EAB6662",
+				05813E7057E8747F469C45B5 /* Debug */,
+				E408A607AE680275D025988F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = Release;
 		};
-		C529F9BD8FC95FC69151E5D9 = {
-			isa = "XCConfigurationList";
+		63E3448BFC96684E006144BE /* Build configuration list for PBXNativeTarget "ShellWorkerF" */ = {
+			isa = XCConfigurationList;
 			buildConfigurations = (
-				"88DB69305DE72BD245EEEF21",
-				"EF65C555B0AF51766A1051B8",
+				4B6D89CD4EFC7D905940B09E /* Debug */,
+				D05AF64AC9567EE39EC70897 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = Release;
 		};
-		357D1EE97A1181CB2C69AE7B = {
-			isa = "XCConfigurationList";
+		7B74F35F903EA73A5F1CC5CA /* Build configuration list for PBXNativeTarget "ShellWorkerB" */ = {
+			isa = XCConfigurationList;
 			buildConfigurations = (
-				"201F025FCF49E73888B0B562",
-				"40CDA083E3E201CEEC579D2C",
+				49EECCB6CADB39D8B8693B1A /* Debug */,
+				55B5C32D6ABB182F8415F3E8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = Release;
 		};
-		63E3448BFC96684E006144BE = {
-			isa = "XCConfigurationList";
+		9094C1580181846504A7959E /* Build configuration list for PBXNativeTarget "ShellWorkerJ" */ = {
+			isa = XCConfigurationList;
 			buildConfigurations = (
-				"4B6D89CD4EFC7D905940B09E",
-				"D05AF64AC9567EE39EC70897",
+				5A3E39E37904499071CED2F3 /* Debug */,
+				1572AF9E6C2EFC03C506A102 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = Release;
 		};
-		01298A57963C7D7FC8A5E943 = {
-			isa = "XCConfigurationList";
+		AF05FF73FF3462482114110C /* Build configuration list for PBXNativeTarget "ShellWorkerA" */ = {
+			isa = XCConfigurationList;
 			buildConfigurations = (
-				"F9CACCCC7F5AA5543BB48468",
-				"CB9596B242B3686F3D58FE8E",
+				DC87439DFACFBC5E6720ADF1 /* Debug */,
+				BA1F3E3B5D416DFE86D9EE20 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = Release;
 		};
-		BFB21F5FBA41F45FB2CB4F2F = {
-			isa = "XCConfigurationList";
+		BFB21F5FBA41F45FB2CB4F2F /* Build configuration list for PBXNativeTarget "ShellWorkerH" */ = {
+			isa = XCConfigurationList;
 			buildConfigurations = (
-				"472F5990568AF73F0DDA5984",
-				"AF505CCF3483810C2864282F",
+				472F5990568AF73F0DDA5984 /* Debug */,
+				AF505CCF3483810C2864282F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = Release;
 		};
-		5444CAFE71E28CDFEBA55CCD = {
-			isa = "XCConfigurationList";
+		C529F9BD8FC95FC69151E5D9 /* Build configuration list for PBXNativeTarget "ShellWorkerD" */ = {
+			isa = XCConfigurationList;
 			buildConfigurations = (
-				"05813E7057E8747F469C45B5",
-				"E408A607AE680275D025988F",
+				88DB69305DE72BD245EEEF21 /* Debug */,
+				EF65C555B0AF51766A1051B8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
-		};
-		9094C1580181846504A7959E = {
-			isa = "XCConfigurationList";
-			buildConfigurations = (
-				"5A3E39E37904499071CED2F3",
-				"1572AF9E6C2EFC03C506A102",
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
