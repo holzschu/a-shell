@@ -309,7 +309,7 @@ def stage(root, manifest, scheme, platform, dry_run):
     if dry_run:
         for path in options:
             print(path)
-        return missing, len(paths)
+        return missing, paths
 
     working = root / ".build/app-frameworks"
     cache = working / "archives"
@@ -372,7 +372,7 @@ def stage(root, manifest, scheme, platform, dry_run):
             temporary = owned_file.with_suffix(".tmp")
             temporary.write_text(json.dumps(sorted(owned)) + "\n")
             temporary.replace(owned_file)
-    return missing, len(paths)
+    return missing, paths
 
 
 def prepare_inputs(root, manifest, scheme, platform, dry_run=False):
@@ -380,7 +380,7 @@ def prepare_inputs(root, manifest, scheme, platform, dry_run=False):
         raise typer.BadParameter("expected an app scheme and device or simulator")
     manifest = manifest or root / "xcfs/frameworks.json"
     try:
-        missing, count = stage(root, manifest, scheme, platform, dry_run)
+        missing, paths = stage(root, manifest, scheme, platform, dry_run)
     except (
         InputError,
         OSError,
@@ -392,6 +392,7 @@ def prepare_inputs(root, manifest, scheme, platform, dry_run=False):
     ) as error:
         report(scheme, platform, f"Input preparation failed: {error}")
         raise typer.Exit(1) from error
+    count = len(paths)
     if missing:
         lines = [
             f"{len(missing)} of {count} required framework inputs unavailable:",
@@ -404,6 +405,7 @@ def prepare_inputs(root, manifest, scheme, platform, dry_run=False):
         raise typer.Exit(1)
     if not dry_run:
         report(scheme, platform, f"Verified all {count} required framework inputs.")
+    return paths
 
 
 @cli.command()
@@ -427,9 +429,40 @@ def build(
     dry_run: bool = False,
 ):
     """Verify inputs, build the app and check its executable architectures."""
-    prepare_inputs(root, manifest, scheme, platform, dry_run)
+    paths = prepare_inputs(root, manifest, scheme, platform, dry_run)
     if dry_run:
         return
+    runtimes = [path for path in paths if path.name == "ios_system.xcframework"]
+    if len(runtimes) != 1:
+        report(scheme, platform, "Expected exactly one staged ios_system.xcframework.")
+        raise typer.Exit(1)
+    try:
+        result = subprocess.run(
+            [
+                "bash",
+                Path(__file__).with_name("check-ios-system.sh"),
+                root,
+                root / runtimes[0],
+                platform,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as error:
+        detail = (
+            error.stdout
+            if isinstance(error, subprocess.CalledProcessError)
+            else str(error)
+        )
+        report(
+            scheme,
+            platform,
+            f"Pinned ios_system ABI check failed:\n\n```text\n{detail}\n```",
+        )
+        raise typer.Exit(1) from error
+    report(scheme, platform, result.stdout.strip())
     destination, sdk, archs = DESTINATIONS[platform]
     derived = root / ".build/app" / f"{scheme}-{platform}"
     try:
