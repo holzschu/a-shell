@@ -910,9 +910,10 @@ final class ConfirmingTerminalView: TerminalView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+        opensLinksOnTap = true
         // SwiftTerm's single tap waits for its double and triple taps to fail (about 450 ms) before it calls becomeFirstResponder:
         // while the terminal is not first responder, focus it on the first tap instead.
-        let focusTap = UITapGestureRecognizer(target: self, action: #selector(focusTapped))
+        let focusTap = UITapGestureRecognizer(target: self, action: #selector(focusTapped(_:)))
         for case let tap as UITapGestureRecognizer in gestureRecognizers ?? [] where tap.numberOfTapsRequired == 1 {
             tap.require(toFail: focusTap)
         }
@@ -922,6 +923,7 @@ final class ConfirmingTerminalView: TerminalView {
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+        opensLinksOnTap = true
     }
 
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
@@ -929,7 +931,8 @@ final class ConfirmingTerminalView: TerminalView {
         return super.gestureRecognizerShouldBegin(gestureRecognizer)
     }
 
-    @objc private func focusTapped() {
+    @objc private func focusTapped(_ gestureRecognizer: UITapGestureRecognizer) {
+        if gestureRecognizer.modifierFlags.isEmpty && activateLink(at: gestureRecognizer.location(in: self)) { return }
         _ = becomeFirstResponder()
     }
 
