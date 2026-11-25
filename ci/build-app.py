@@ -201,14 +201,52 @@ def unpack_zip(archive, folder):
         raise InputError("could not extract ZIP")
 
 
-def unpack_framework(archive, member, folder, path, platform):
+def python_a_source(path):
+    if path.suffix != ".framework":
+        return None
+    if path.stem == "pythonA":
+        return "Python"
+    if path.stem.startswith("PythonA") and len(path.stem) > len("PythonA"):
+        return "Python-" + path.stem.removeprefix("PythonA")
+    return None
+
+
+def rename_python_framework(bundle, name):
+    # Keep the second interpreter's identities the same as updatePythonFiles.sh.
+    info = bundle / "Info.plist"
+    plist = plistlib.loads(info.read_bytes())
+    original = plist["CFBundleExecutable"]
+    bundle = bundle.rename(bundle.with_name(f"{name}.framework"))
+    binary = (bundle / original).rename(bundle / name)
+    origin = bundle / f"{original}.origin"
+    if origin.is_file():
+        origin.rename(bundle / f"{name}.origin")
+    plist.update(
+        CFBundleExecutable=name,
+        CFBundleIdentifier="Nicolas-Holzschuch." + name.replace("_", "-"),
+        CFBundleName=name,
+    )
+    (bundle / "Info.plist").write_bytes(plistlib.dumps(plist))
+    rewrite = ["xcrun", "install_name_tool", "-id", f"@rpath/{name}.framework/{name}"]
+    if name != "pythonA":
+        rewrite += [
+            "-change",
+            "@rpath/Python.framework/Python",
+            "@rpath/pythonA.framework/pythonA",
+        ]
+    subprocess.run([*rewrite, binary], check=True)
+    subprocess.run(["codesign", "--force", "--sign", "-", bundle], check=True)
+    return bundle
+
+
+def unpack_framework(archive, member, folder, path, platform, name):
     folder.mkdir()
     if member:
         inner = folder / "framework.zip"
         copy_member(archive, member, inner)
         archive = inner
     unpack_zip(archive, folder)
-    framework = folder / f"{path.stem}.xcframework"
+    framework = folder / f"{name}.xcframework"
     if not framework.is_dir():
         raise InputError(f"ZIP does not contain {framework.name}")
     library = select_library(framework, platform)
@@ -216,6 +254,8 @@ def unpack_framework(archive, member, folder, path, platform):
         return framework
     if library.suffix != path.suffix:
         raise InputError(f"expected a {path.suffix} product, found {library.name}")
+    if name != path.stem:
+        return rename_python_framework(library, path.stem)
     return library
 
 
@@ -288,12 +328,15 @@ def stage(root, manifest, scheme, platform, dry_run):
     missing, options = {}, {}
     for path in sorted(paths):
         checkout_path(root, path)
-        release = data["releases"].get(path.stem)
+        name = path.stem
+        if name not in data["releases"] and name not in artifacts:
+            name = python_a_source(path) or name
+        release = data["releases"].get(name)
         choices = [(release, None)] if release else []
-        if path.stem in artifacts:
-            choices.append(artifacts[path.stem])
+        if name in artifacts:
+            choices.append(artifacts[name])
         if choices:
-            options[path] = choices
+            options[path] = (name, choices)
         else:
             recipe = data["pending"].get(path.stem) or next(
                 (
@@ -321,7 +364,7 @@ def stage(root, manifest, scheme, platform, dry_run):
         ThreadPoolExecutor(4) as pool,
     ):
         downloads = {
-            choices[0][0]["sha256"]: choices[0][0] for choices in options.values()
+            choices[0][0]["sha256"]: choices[0][0] for _, choices in options.values()
         }
         futures = {
             sha: pool.submit(fetch, cache, source) for sha, source in downloads.items()
@@ -333,7 +376,7 @@ def stage(root, manifest, scheme, platform, dry_run):
                 futures[sha] = pool.submit(fetch, cache, source)
             return futures[sha].result()
 
-        for index, (path, choices) in enumerate(options.items()):
+        for index, (path, (name, choices)) in enumerate(options.items()):
             for attempt, (source, member) in enumerate(choices):
                 try:
                     product = unpack_framework(
@@ -342,6 +385,7 @@ def stage(root, manifest, scheme, platform, dry_run):
                         Path(directory) / f"{index}-{attempt}",
                         path,
                         platform,
+                        name,
                     )
                     install(root, path, product, owned)
                     break
@@ -354,6 +398,7 @@ def stage(root, manifest, scheme, platform, dry_run):
                     zipfile.BadZipFile,
                     KeyError,
                     plistlib.InvalidFileException,
+                    subprocess.CalledProcessError,
                 ) as error:
                     missing[path] = str(error)
                     break
