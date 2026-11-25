@@ -6,12 +6,14 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <stdatomic.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 extern void ashell_extension_connect(void (^)(NSXPCConnection *, NSError *));
 extern void ashell_extension_disconnect(NSXPCConnection *);
 extern void ashell_extension_observe(NSXPCConnection *, pid_t);
 extern int ashell_extension_capacity(void);
+extern bool ashell_stock_ssh_enabled(void);
 
 static void log_host_library(const char *phase) {
     int saved = errno;
@@ -208,7 +210,7 @@ int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, un
         for (size_t i = 0; envp && envp[i]; i++) [env addObject:@(envp[i])];
         __block int fd = -1, err_fd = -1;
         BOOL separate = options->separate_stderr != 0;
-        [pane.proxy spawn:@(command) cwd:cwdBookmark home:homeBookmark documents:documentsBookmark probe:pane.probeDirectory env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:separate reply:^(int code, NSFileHandle *handle, NSFileHandle *errorHandle, int pid) {
+        [pane.proxy spawn:@(command) cwd:cwdBookmark home:homeBookmark documents:documentsBookmark probe:pane.probeDirectory env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:separate stockSSH:ashell_stock_ssh_enabled() reply:^(int code, NSFileHandle *handle, NSFileHandle *errorHandle, int pid) {
             ashell_extension_observe(pane.connection, pid);
             error = code;
             if (!code && (!handle || (separate && !errorHandle))) error = EPROTO;

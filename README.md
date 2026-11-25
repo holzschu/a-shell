@@ -228,3 +228,29 @@ Font files are refreshed when running `config` or returning to the app. Removing
 `bash scripts/build-pico.sh` builds Pico 5.09 from checksum-pinned Alpine 2.26 using Xcode and uv. The output under `.build/pico/dist` includes `pico.xcframework.zip`, checksums and an artifact audit. The framework targets iOS 14 with arm64 device and universal arm64/x86_64 Simulator slices. The framework includes the Apache-2.0 and ios_system BSD-3-Clause licenses and the Alpine and IMAP NOTICE files.
 
 The port uses ios_system streams, terminal geometry and interactive mode. It restores signal handlers on command exit. Job suspension reports an error. The workflow checks 20 edit/save invocations through ios_system, including UTF-8 file contents, reentry and descriptor counts, on an arm64 Simulator.
+
+## Stock OpenSSH clients
+
+The OpenSSH 10.6p1 client recipe comes from [ios_system#203](https://github.com/holzschu/ios_system/pull/203), merged as `854a6134`. For local qualification, use the [recipe at ios_system `f187d273`](https://github.com/holzschu/ios_system/blob/f187d27373865977db4705b38d3a35eec13415ec/ssh-stock/README.md). Use matching `ios_system.framework` and `openssl.framework` inputs for each SDK. The runtime must export `ios_posix_spawn` and `ios_setenv_pid`; the `ios_system` v3.0.5 artifact pinned in `xcfs/Package.swift` lacks `ios_posix_spawn`. A locally built runtime is not a release artifact. A distribution build still needs a compatible published runtime and the four Stock XCFrameworks.
+
+From the pinned ios_system checkout, put the [OpenSSH portable tarball](https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-10.6p1.tar.gz) in `SSH_INPUTS`. Set `SSH_DEVICE_FRAMEWORKS` and `SSH_SIMULATOR_FRAMEWORKS` to directories containing the respective SDK's two input frameworks, and use fresh output directories. The recipe verifies the source checksum and writes receipts with the unsigned frameworks. No SSH server or security-key provider is needed to build the clients.
+
+```sh
+bash ssh-stock/build.sh iphoneos "$SSH_INPUTS" "$SSH_DEVICE_OUTPUT" "$SSH_DEVICE_FRAMEWORKS"
+bash ssh-stock/build.sh iphonesimulator "$SSH_INPUTS" "$SSH_SIMULATOR_OUTPUT" "$SSH_SIMULATOR_FRAMEWORKS"
+```
+
+Package the resulting frameworks with Apple's `xcodebuild -create-xcframework`. Set `ASHELL_ROOT` to the absolute path of the a-Shell checkout. Use the absolute recipe output directories in `SSH_DEVICE_OUTPUT` and `SSH_SIMULATOR_OUTPUT`:
+
+```sh
+for name in SSHStock SCPStock SFTPStock SSHKeygenStock; do
+    xcodebuild -create-xcframework \
+        -framework "$SSH_DEVICE_OUTPUT/sdk/$name.framework" \
+        -framework "$SSH_SIMULATOR_OUTPUT/sdk/$name.framework" \
+        -output "$ASHELL_ROOT/xcfs/$name.xcframework"
+done
+```
+
+For a Simulator-only build, omit the device framework argument. Use fresh output paths when changing inputs. The mini Embed Frameworks phase signs these XCFrameworks. Stock routing is enabled only in mini on iOS 26 or later, with a positive `ShellWorkerCount` and an `ios_system` build that provides `ios_posix_spawn`. Mini on Mac and other targets keep their legacy clients. After startup installs the Stock catalog and adds the four commands to the existing worker selection, it passes a separate opt-in to workers. A preconfigured worker route on its own does not select Stock. The matching runtime runs each admitted root once and requires a fresh worker for nested client invocations; missing worker APIs or exhausted admission return status 127.
+
+Copy [`phone-client.sh`](https://github.com/holzschu/ios_system/blob/f187d27373865977db4705b38d3a35eec13415ec/ssh-stock/phone-client.sh) into the app's accessible files and run `dash phone-client.sh ABSOLUTE_NEW_CASE_DIRECTORY HOST PORT USER IDENTITY KNOWN_HOSTS` in the app, using a disposable SSH account, throwaway key and known-hosts file for that server. The fixture checks key generation, strict login, scp/sftp byte round trips, a failed SCP source and a following successful login. Use the producer's `home-migration.sh` separately to verify default `.ssh` lookup under `SSH_HOME` (Documents by default) or `HOME` when unset. The catalog, project and activation-wiring checks are host-only; they do not execute the app or prove worker selection. See [worker pool checks](tests/worker-pool.md) for the paired in-app routing cases.

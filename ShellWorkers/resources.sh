@@ -1,7 +1,7 @@
 #!/bin/bash
 # Reuse the host catalogue; workers locate shared libraries through their rpaths.
 set -euo pipefail
-source_dictionary="$SRCROOT/Resources_mini/commandDictionary.plist"
+source_dictionary="$SRCROOT/${ASHELL_WORKER_COMMAND_CATALOG:-Resources_mini/commandDictionary.plist}"
 resources="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH"
 mkdir -p "$resources/bin" "$DERIVED_FILE_DIR"
 # ExtensionFoundation requires a literal StaticString for its host binding.
