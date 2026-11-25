@@ -9,48 +9,48 @@
       "sha256": "329e8317cf9bee8e138da5d032330a7a1bd2473cf44c9c083cb2f0636abb8b80"
     },
     "ios_system": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/ios_system.xcframework.zip",
-      "sha256": "d429e68102926f58bedd8e8b7105dcd169478cd6da1cef494a5f468482d1c8f5"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/ios_system.xcframework.zip",
+      "sha256": "bac0689c792901cbf410899162c06ab22a950b032adfb5f94b5c3ab6a661e883"
     },
     "awk": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/awk.xcframework.zip",
-      "sha256": "283f368df6c44ed9d49d15651ca4281706cdd86eb2b6ddb81808c8a3b18a4f7d"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/awk.xcframework.zip",
+      "sha256": "d797f840ca1f749273a4dc966b99c1b822c3dc9b513e43d75f7e062dd1fd5d7d"
     },
     "curl_ios": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/curl_ios.xcframework.zip",
-      "sha256": "d7e2f05c9f2689d103db32f83ab045bfb6ab28ce84e3017e0c23e4b4db7ab169"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/curl_ios.xcframework.zip",
+      "sha256": "116b429ee3c0188c271021e4640e20a4a4b896889d12a70903d22e98a9ea43e6"
     },
     "files": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/files.xcframework.zip",
-      "sha256": "b0ee1f58c65ba306f178cd559fd6bce79ec8f275280526908c2a992bfcafedd5"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/files.xcframework.zip",
+      "sha256": "88a9f39c248e3ab05d1110d2e0a9f602dc5da16a6fc9191574dcaa7d121efaa2"
     },
     "shell": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/shell.xcframework.zip",
-      "sha256": "855ff9b12bfbbdbd5298324377d91e18e6ac97dbb19d3c9311ce5a023ee51b2e"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/shell.xcframework.zip",
+      "sha256": "dedafb755fa062afd96b37d15a98953f7696ee3509f57426b6914d3a66da2e52"
     },
     "ssh_cmd": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/ssh_cmd.xcframework.zip",
-      "sha256": "0943d53cfec57909fbdb121bafa3d1845a82e7accf896e1dd7864aa640a57836"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/ssh_cmd.xcframework.zip",
+      "sha256": "ffe6cde587123ebd3020dd5566f6f25685a2be6763ef8acd3b44fce2c4ed8af6"
     },
     "ssh_cmdA": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/ssh_cmdA.xcframework.zip",
-      "sha256": "87ca4a8f3b4729173297b784a696aad96f6d1b9d81a06cda15aa70f0b88839a1"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/ssh_cmdA.xcframework.zip",
+      "sha256": "11ca969fd79e87d6a86009507d55896f043ac62cac37620bd05ed3b029d11c9f"
     },
     "ssh_agent": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/ssh_agent.xcframework.zip",
-      "sha256": "3d0022084855fa3c1e1da3c51437b97e6e5532e9c4133bd4c651ebf5d1017eaa"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/ssh_agent.xcframework.zip",
+      "sha256": "597f10bff0f39268964d287c69f993e784e9d0822daa0f43e1821842d1c7a331"
     },
     "sshd": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/sshd.xcframework.zip",
-      "sha256": "e682f5c445799a77dd8b133c5d3f51481236a277fba488556a5a5d4f918d681f"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/sshd.xcframework.zip",
+      "sha256": "312c9a5d7ba551f76a3e121e44b03c2f0c630eef1a687d8a946290c34b3a7f27"
     },
     "tar": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/tar.xcframework.zip",
-      "sha256": "207ab260f8dfb3101938c9e2a949cfd7b76f0e90a000637bbfd6aff47b014a68"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/tar.xcframework.zip",
+      "sha256": "58b9fe593c232a308e2c72c452457138b3d2c5109b17d42da3e1c81b84be4c29"
     },
     "text": {
-      "url": "https://github.com/holzschu/ios_system/releases/download/v3.0.5/text.xcframework.zip",
-      "sha256": "6fed763c6e941817b2a2af2051871bdfb8a1af4177fad1ab7837f72023dffb79"
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/text.xcframework.zip",
+      "sha256": "e6851aae912cfd0dd5cdf99f24b06c35df26bd82f3ed81566add6e6802381e4d"
     },
     "network_ios": {
       "url": "https://github.com/holzschu/network_ios/releases/download/v0.2/network_ios.xcframework.zip",
