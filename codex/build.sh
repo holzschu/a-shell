@@ -88,10 +88,8 @@ rust_build() {
   prepare
   "$rustup" target add --toolchain 1.96.1 "$target"
   echo "Build Codex 0.160.0 for $target with $CARGO_BUILD_JOBS jobs"
-  (cd "$source/codex-rs" && "$cargo" +1.96.1 build --locked --release --target "$target" -p codex-ios-embedded) >"$cache/build-$target.log" 2>&1 || {
-    tail -n 30 "$cache/build-$target.log" >&2
-    return 1
-  }
+  # Stream progress before cancellation as well as keeping the full local log.
+  (cd "$source/codex-rs" && "$cargo" +1.96.1 build --locked --release --target "$target" -p codex-ios-embedded) 2>&1 | tee "$cache/build-$target.log"
 }
 
 framework() {

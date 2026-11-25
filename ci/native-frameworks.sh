@@ -142,7 +142,10 @@ case $product in
   Herdr) symbols='herdr_ios_main herdr_ios_resize' ;;
   *) symbols=${product}_ios_main ;;
 esac
+nm_flags=(-gU)
 if [[ $product == Herdr ]]; then
+  # Rust archives contain Mach-O symbols alongside bitcode newer than Xcode's LLVM.
+  nm_flags+=(--no-llvm-bc)
   libraries=(-library "$device" -library "$simulator")
   binaries=("$device" "$simulator")
 else
@@ -154,7 +157,7 @@ slice=device
 for binary in "${binaries[@]}"; do
   [[ $product == Herdr ]] || xcrun strip -S -x "$binary"
   for arch in $(xcrun lipo -archs "$binary"); do
-    exports=$(xcrun nm -arch "$arch" -gU "$binary")
+    exports=$(xcrun nm -arch "$arch" "${nm_flags[@]}" "$binary")
     for symbol in $symbols; do
       grep -E " T _$symbol$" <<<"$exports" >/dev/null || {
         echo "$binary ($arch): missing export _$symbol" >&2
