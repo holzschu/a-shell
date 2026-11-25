@@ -177,7 +177,7 @@ __attribute__((used, visibility("default"))) int ashell_worker_host_interrupt(vo
     void *_pane;
     NSMutableArray<NSURL *> *_directories;
 }
-- (void)spawn:(NSString *)command cwd:(NSData *)cwd home:(NSData *)home documents:(NSData *)documents probe:(NSString *)probe env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separateStderr reply:(void (^)(int, NSFileHandle *, NSFileHandle *, int))reply {
+- (void)spawn:(NSString *)command cwd:(NSData *)cwd home:(NSData *)home documents:(NSData *)documents probe:(NSString *)probe env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separateStderr stockSSH:(BOOL)stockSSH reply:(void (^)(int, NSFileHandle *, NSFileHandle *, int))reply {
     if (_pane) { reply(EBUSY, nil, nil, getpid()); return; }
     NSXPCConnection *connection = NSXPCConnection.currentConnection;
     connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(AShellSpawnBrokerWire)];
@@ -249,6 +249,10 @@ __attribute__((used, visibility("default"))) int ashell_worker_host_interrupt(vo
         if (separator.location == NSNotFound || separator.location == 0) { [self releasePane]; reply(EINVAL, nil, nil, getpid()); return; }
         if (setenv([value substringToIndex:separator.location].UTF8String,
                    [value substringFromIndex:separator.location + 1].UTF8String, 1)) { int error = errno; [self releasePane]; reply(error, nil, nil, getpid()); return; }
+    }
+    if (stockSSH && !NSProcessInfo.processInfo.iOSAppOnMac) {
+        NSString *stockCommands = [NSBundle.mainBundle pathForResource:@"sshStockCommands" ofType:@"plist"];
+        if (!stockCommands || addCommandList(stockCommands)) { [self releasePane]; reply(ENOENT, nil, nil, getpid()); return; }
     }
     // Match stock SceneDelegate before libedit decodes Unicode or measures it.
     if (setenv("LC_CTYPE", "UTF-8", 1)) { int error = errno; [self releasePane]; reply(error, nil, nil, getpid()); return; }

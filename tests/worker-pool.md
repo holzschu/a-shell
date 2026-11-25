@@ -35,6 +35,32 @@ The upstream configuration remains ten workers. Historical iOS 27 Simulator test
 
 `pane-descriptors.m` is a standalone consumer of the public native pane API. Compile it together with `ShellWorkers/NativePane.m`, linking Foundation and the matching ios_system framework, for an owned Simulator and run it with `xcrun simctl spawn <UUID> <binary>`. It limits only its disposable process to 64 descriptors, fills the table, and retries separate-stderr/plain-stream spawns with zero through six available descriptors. Every call must return `EMFILE`, leave all outputs empty and preserve the open-descriptor count. It restores the original limit before reporting. The baseline leaks one descriptor with three available slots; the fixed runner passes all seven budgets. Do not run it inside the app process.
 
+To check Stock activation, use two disposable mini builds on an arm64 simulator running iOS 26 or later. Each needs the matching simulator `ios_system.framework` and OpenSSL framework, the four Stock XCFrameworks with simulator slices, the mini worker extensions, and the registered `WorkerPoolChecks.framework` above. The default SwiftPM runtime cannot qualify this fixture because it lacks `ios_posix_spawn`. The README links the producer recipe; a compatible published runtime and the four packaged frameworks still need to be supplied independently of the test.
+
+From the disposable checkout, set `SIM_RUNTIME_FRAMEWORKS` to the absolute directory containing the matching simulator `ios_system.framework`, `CHECK_FRAMEWORK` to the absolute path of a prepared `WorkerPoolChecks.framework` directory, `DERIVED_DATA` to a fresh output path for each build, and `SIM_UDID` to the destination UUID. Prepare the framework's Info.plist and host registration as described above. Use only the mini scheme, which builds its worker dependencies:
+
+```sh
+xcrun --sdk iphonesimulator clang -arch arm64 -mios-simulator-version-min=26.0 \
+    -fobjc-arc -dynamiclib tests/worker-pool.m -F "$SIM_RUNTIME_FRAMEWORKS" \
+    -framework Foundation -framework ios_system \
+    -install_name @rpath/WorkerPoolChecks.framework/WorkerPoolChecks \
+    -o "$CHECK_FRAMEWORK/WorkerPoolChecks"
+xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-mini -configuration Debug \
+    -sdk iphonesimulator -destination "id=$SIM_UDID" -derivedDataPath "$DERIVED_DATA" build
+```
+
+For a smaller check of the native XPC selector and call sites, use the same SDK and runtime headers without building or running an app:
+
+```sh
+xcrun --sdk iphonesimulator clang -arch arm64 -mios-simulator-version-min=26.0 \
+    -fobjc-arc -fsyntax-only -F "$SIM_RUNTIME_FRAMEWORKS" \
+    ShellWorkers/RemotePane.m ShellWorkers/Worker.m tests/worker-pool.m
+```
+
+The syntax check does not link the host or exercise XPC. The `activation-wiring` mode of `tests/ssh-stock-registration.sh` is a static source check only; it does not validate when the host sets the opt-in flag.
+
+In the legacy fixture, omit `sshStockCommands.plist` from the host bundle only; keep the overlay in the workers so an erroneous activation can still select it. Run `worker-pool-check ssh-legacy` and require a legacy OpenSSH version with exit zero. Restore the host overlay for the second build, verify successful host activation, and run `worker-pool-check ssh-stock`; require OpenSSH 10.6 with exit zero. Both checks send `ASHELL_WORKER_COMMANDS=ssh` in the spawn environment. That route must not opt the worker into Stock on its own.
+
 `worker-pool-check loss` starts the disposable crash command and requires `-EPIPE` with no fabricated command status. Explicit cancellation remains distinct from unexpected XPC loss.
 
 `worker-pool-check host` starts a real extension command, which calls `ashell_worker_host_spawn_ex` to run the payload back in the app process. Register `worker-pool-nested-host` and `worker-pool-host-payload` with entries `worker_pool_nested_host_main` and `worker_pool_host_payload_main` in the disposable catalogues. It checks the original app PID, absence of worker identity markers, plain streams, separate stderr, status, resource usage and `EBUSY` for a second host pane. The command admission policy and high-memory workload qualification belong to the caller.
