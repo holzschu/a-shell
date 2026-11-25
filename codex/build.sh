@@ -65,8 +65,14 @@ apple_target() {
     triple=arm64-apple-ios26.2-simulator
     mach_platform=IOSSIMULATOR
     ;;
+  simulator-x86_64)
+    sdk_name=iphonesimulator
+    target=x86_64-apple-ios
+    triple=x86_64-apple-ios26.2-simulator
+    mach_platform=IOSSIMULATOR
+    ;;
   *)
-    echo 'Expected device or simulator' >&2
+    echo 'Expected device, simulator, or simulator-x86_64' >&2
     return 2
     ;;
   esac
@@ -143,7 +149,7 @@ xcframework)
   rmdir "$staging"
   ;;
 *)
-  echo 'Usage: build.sh prepare | archive device|simulator | framework MATCHING_FRAMEWORKS device|simulator | xcframework DEVICE_FRAMEWORKS SIMULATOR_FRAMEWORKS' >&2
+  echo 'Usage: build.sh prepare | archive PLATFORM | framework MATCHING_FRAMEWORKS PLATFORM | xcframework DEVICE_FRAMEWORKS SIMULATOR_FRAMEWORKS' >&2
   exit 2
   ;;
 esac

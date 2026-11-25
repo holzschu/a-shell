@@ -4,7 +4,9 @@ Embeds OpenAI Codex CLI 0.160.0 (source tag `rust-v0.160.0`, commit `a956835d020
 
 ## Build
 
-Use Xcode, Rust 1.96.1 and its `aarch64-apple-ios` and `aarch64-apple-ios-sim` targets. Supply matching device and arm64 Simulator ios_system frameworks with the owned-stream and native-TTY prerequisites below, including `Headers/ios_system.h`:
+The full app embeds `codex/codex.xcframework`. See [the native framework guide](../ci/README.md) to build or stage the verified device and universal Simulator ZIP.
+
+For a local arm64-only build using supplied frameworks, use Xcode, Rust 1.96.1 and its `aarch64-apple-ios` and `aarch64-apple-ios-sim` targets. Supply matching device and arm64 Simulator ios_system frameworks with the owned-stream and native-TTY prerequisites below, including `Headers/ios_system.h`:
 
 ```sh
 nice -n 15 bash codex/build.sh xcframework DEVICE_FRAMEWORKS SIMULATOR_FRAMEWORKS

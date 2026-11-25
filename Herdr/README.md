@@ -2,14 +2,14 @@
 
 The mini target embeds Herdr v0.9.3 (`7b116c05bfda646af39d2524c54e70c751f57ee8`). Its original Rust client, server, renderer and Ghostty terminal engine run inside the app. Each pane runs its shell in a Generic Non-UI extension worker through `ashell_pane_*`.
 
-Install Rust 1.96.1 with the appropriate iOS target, Zig 0.16.0, Git and Xcode. Build the static archive before building the mini app:
+The mini app links `Herdr/Herdr.xcframework`. See [the native framework guide](../ci/README.md) for staging the verified ZIP before building mini. To build the ZIP locally, install Rust 1.96.1, Zig 0.16.0, Git, Xcode and uv, then run from the app checkout:
 
 ```sh
-rustup target add --toolchain 1.96.1 aarch64-apple-ios-sim
-./Herdr/build.sh aarch64-apple-ios-sim
+rustup target add --toolchain 1.96.1 aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+bash ci/native-frameworks.sh Herdr
 ```
 
-For a signed device build, select `aarch64-apple-ios` in both commands. The recipe downloads the pinned source, applies the adapter patches, builds with the locked dependencies and prints the archive checksum. `Herdr/build/` contains generated files and is ignored. Rerunning resets only the recipe's generated source checkout and preserves its build caches. Set `ZIG` to select a Zig executable or `ZIG_GLOBAL_CACHE_DIR` to use an existing package cache.
+The producer runs `Herdr/build.sh` for all three targets. That recipe downloads the pinned source, applies the adapter patches and builds with locked dependencies. Its generated checkout and caches live in the ignored `Herdr/build/` directory. Set `ZIG` to select a Zig executable or `ZIG_GLOBAL_CACHE_DIR` to use an existing package cache.
 
 The mini target selects the archive matching its SDK, retains `herdr_ios_main` for command lookup, registers `herdr`, forwards terminal resize events and includes Herdr's Apache 2.0 license in the app resources. The worker pool requires iOS 26 or later and its matching ios_system and Dash prerequisites.
 

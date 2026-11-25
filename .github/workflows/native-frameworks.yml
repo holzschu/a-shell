@@ -4,6 +4,11 @@ on:
     paths-ignore:
       - '**.md'
   workflow_dispatch:
+    inputs:
+      embedded_only:
+        description: Build only Codex and Herdr
+        type: boolean
+        default: false
   push:
     tags:
       - 'native-*'
@@ -16,12 +21,14 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: ${{ (matrix.product == 'codex' || matrix.product == 'Herdr') && 'macos-26-intel' || 'macos-26' }}
+    env:
+      DEVELOPER_DIR: ${{ (matrix.product == 'codex' || matrix.product == 'Herdr') && '/Applications/Xcode_26.6.app/Contents/Developer' || '/Applications/Xcode_26.3.app/Contents/Developer' }}
     timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
-        product: [helix, fd, fzf, navi, gitoxide, Ruff, rg]
+        product: ${{ fromJSON(inputs.embedded_only && '["codex","Herdr"]' || '["helix","fd","fzf","navi","gitoxide","Ruff","rg","codex","Herdr"]') }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -47,6 +54,16 @@ jobs:
           rustup override set "$version"
           rustup target add --toolchain "$version" aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
           rustc --version
+      - name: Install Zig 0.16.0 for Herdr
+        if: matrix.product == 'Herdr'
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          archive=zig-x86_64-macos-0.16.0.tar.xz
+          curl -fLsS --retry 2 "https://ziglang.org/download/0.16.0/$archive" -o "$archive"
+          echo "0387557ed1877bc6a2e1802c8391953baddba76081876301c522f52977b52ba7  $archive" | shasum -a 256 -c -
+          tar -xf "$archive"
+          echo "ZIG=$RUNNER_TEMP/${archive%.tar.xz}/zig" >>"$GITHUB_ENV"
       - name: Toolchain and resources
         run: |
           xcodebuild -version
@@ -75,6 +92,7 @@ jobs:
           if-no-files-found: ignore
           path: .build/native/**/*.log
   node-slice:
+    if: ${{ !inputs.embedded_only }}
     runs-on: macos-26
     timeout-minutes: 360
     strategy:
@@ -150,7 +168,7 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
-          for product in helix fd fzf navi gitoxide Ruff rg node; do
+          for product in helix fd fzf navi gitoxide Ruff rg node codex Herdr; do
             test -s "$product.xcframework.zip"
             test -s "$product.audit.json"
             test -s "$product.checksums.txt"

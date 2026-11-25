@@ -2,7 +2,7 @@
 # Build one pinned app command for device and Simulator.
 set -euo pipefail
 app=$(cd "$(dirname "$0")/.." && pwd -P)
-product=${1:?Usage: ci/native-frameworks.sh helix|fd|fzf|navi|gitoxide|Ruff|rg|node}
+product=${1:?Usage: ci/native-frameworks.sh helix|fd|fzf|navi|gitoxide|Ruff|rg|node|codex|Herdr}
 recipe=$product
 node_slice=${2:-}
 case $node_slice in
@@ -11,7 +11,7 @@ case $node_slice in
 esac
 [[ -z $node_slice || $product == node ]] || { echo "Only Node accepts a slice argument." >&2; exit 2; }
 case $product in
-  helix|fd|fzf|navi|gitoxide|Ruff|rg|node) ;;
+  helix|fd|fzf|navi|gitoxide|Ruff|rg|node|codex|Herdr) ;;
   *) echo "Unknown native product: $product" >&2; exit 2 ;;
 esac
 work=$app/.build/native/$product
@@ -24,11 +24,19 @@ export CARGO_PROFILE_RELEASE_STRIP=symbols
 export HELIX_BUILD_CACHE=$work/command FD_BUILD_CACHE=$work/command
 export FZF_BUILD_CACHE=$work/command NAVI_BUILD_DIR=$work/command
 export GITOXIDE_BUILD_CACHE=$work/command RUFF_BUILD_CACHE=$work/command RG_BUILD_CACHE=$work/command
+export CODEX_BUILD_CACHE=$work/command
 
-# All commands link the same public ios_system ABI. Never use a developer's SDK cache.
+# Never use a developer's SDK cache. Codex needs the newer owned-stream ABI.
 revision=df998e76cea0266bd3615bb9a1f4f7d745f318a2
 checksum=6d2201c1dee131b831b8108b578ede560277d1c205fd8c64f2fb9dcd70e7baca
-if [[ $product != node || -n $node_slice ]]; then
+sdk_minimum=14.0
+if [[ $product == codex ]]; then
+  export CARGO_BUILD_JOBS=2
+  sdk_minimum=15.0
+  revision=f187d27373865977db4705b38d3a35eec13415ec
+  checksum=a7b8881369549973ae46bd362702b92980abafdbd2537befa3c339b94029d38b
+fi
+if [[ $product != Herdr && ( $product != node || -n $node_slice ) ]]; then
   if [[ ! -f $work/ios-system.tar.gz ]]; then
     curl -fLsS --retry 2 --connect-timeout 15 --max-time 300 \
       "https://codeload.github.com/holzschu/ios_system/tar.gz/$revision" -o "$work/ios-system.tar.gz.part"
@@ -49,7 +57,7 @@ if [[ $product != node || -n $node_slice ]]; then
     [[ $platform != simulator-x86_64 ]] || arch=x86_64
     if ! xcodebuild -project "$work/ios-system/ios_system.xcodeproj" -target ios_system \
       -configuration Release -sdk "$sdk" -jobs 4 ARCHS="$arch" ONLY_ACTIVE_ARCH=NO \
-      IPHONEOS_DEPLOYMENT_TARGET=14.0 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+      IPHONEOS_DEPLOYMENT_TARGET="$sdk_minimum" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
       CONFIGURATION_BUILD_DIR="$work/sdk/$platform" build >"$work/sdk-$platform.log" 2>&1; then
       tail -n 60 "$work/sdk-$platform.log" >&2
       exit 1
@@ -97,8 +105,17 @@ if [[ $product == node ]]; then
   device=$work/prebuilt/device/device/node.framework
   simulator=$work/prebuilt/simulator/simulator/node.framework
   cp "$input/node-npm.zip" "$input/node-fetch.zip" "$dist/"
+elif [[ $product == Herdr ]]; then
+  for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
+    bash "$app/Herdr/build.sh" "$target"
+  done
+  target_dir=$app/Herdr/build/target
+  mkdir -p "$work/universal"
+  device=$target_dir/aarch64-apple-ios/release/libherdr_ios.a
+  simulator=$work/universal/libherdr_ios.a
+  xcrun lipo -create "$target_dir/aarch64-apple-ios-sim/release/libherdr_ios.a" \
+    "$target_dir/x86_64-apple-ios/release/libherdr_ios.a" -output "$simulator"
 else
-  recipe=$product
   [[ $product != Ruff ]] || recipe=ruff
   for platform in device simulator simulator-x86_64; do
     if [[ $product == navi ]]; then
@@ -122,12 +139,20 @@ case $product in
   gitoxide) symbols=gix_ios_main ;;
   Ruff) symbols=ruff_ios_main ;;
   node) symbols='node_ios_main npm_ios_main npx_ios_main' ;;
+  Herdr) symbols='herdr_ios_main herdr_ios_resize' ;;
   *) symbols=${product}_ios_main ;;
 esac
+if [[ $product == Herdr ]]; then
+  libraries=(-library "$device" -library "$simulator")
+  binaries=("$device" "$simulator")
+else
+  libraries=(-framework "$device" -framework "$simulator")
+  binaries=("$device/$product" "$simulator/$product")
+fi
 printf 'slice\tstripped_bytes\tgzip_bytes\n' >"$dist/$product.sizes.tsv"
 slice=device
-for binary in "$device/$product" "$simulator/$product"; do
-  xcrun strip -S -x "$binary"
+for binary in "${binaries[@]}"; do
+  [[ $product == Herdr ]] || xcrun strip -S -x "$binary"
   for arch in $(xcrun lipo -archs "$binary"); do
     exports=$(xcrun nm -arch "$arch" -gU "$binary")
     for symbol in $symbols; do
@@ -141,11 +166,20 @@ for binary in "$device/$product" "$simulator/$product"; do
   slice=simulator
 done
 [[ ! -d $work/$product.xcframework ]] || rm -rf "$work/$product.xcframework"
-xcodebuild -create-xcframework -framework "$device" \
-  -framework "$simulator" -output "$work/$product.xcframework"
+xcodebuild -create-xcframework "${libraries[@]}" -output "$work/$product.xcframework"
+if [[ $product == Herdr ]]; then
+  cp "$app/Herdr/LICENSE" "$work/Herdr.xcframework/LICENSE"
+  cp "$app/Herdr/build/source/vendor/libghostty-vt/LICENSE" "$work/Herdr.xcframework/LICENSE-Ghostty"
+fi
 ditto -c -k --norsrc --keepParent "$work/$product.xcframework" "$dist/$product.xcframework.zip"
 minimum=14.0
-[[ $product != node ]] || minimum=16.0
+simulator_arches=arm64/x86_64
+dependency="Link dependency: ios_system $revision, archive SHA256 $checksum."
+case $product in
+  node) minimum=16.0; simulator_arches=arm64 ;;
+  codex) minimum=26.2 ;;
+  Herdr) minimum=15.0; dependency="Static archive; the app provides the Herdr host functions." ;;
+esac
 sum=$(swift package compute-checksum "$dist/$product.xcframework.zip")
 uv run "$app/ci/audit-artifact.py" "$dist/$product.xcframework.zip" \
   --sha256 "$sum" --max-minos "$minimum" >"$dist/$product.audit.json"
@@ -161,9 +195,9 @@ shasum -a 256 "$dist/$product.xcframework.zip"
 cat >"$dist/$product.release.md" <<EOF
 ## $product
 
-Device arm64; Simulator arm64 for Node, universal arm64/x86_64 for other products; minimum iOS $minimum.
+Device arm64; Simulator $simulator_arches; binary deployment target iOS $minimum.
 Sources and patches: the repository's $recipe/build.sh recipe.
-Link dependency: ios_system $revision, archive SHA256 $checksum.
+$dependency
 Build source: ${GITHUB_SHA:-local}.
 
 EOF
