@@ -1,0 +1,7 @@
+--- a/src/file.c
++++ b/src/file.c
+@@ -186 +186,3 @@
+-	fclose(stdin);
++#ifndef MULTIMARKDOWN_IOS
++	fclose(stdin);
++#endif
