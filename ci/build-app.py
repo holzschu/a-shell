@@ -433,6 +433,13 @@ def build(
     destination, sdk, archs = DESTINATIONS[platform]
     derived = root / ".build/app" / f"{scheme}-{platform}"
     try:
+        derived.mkdir(parents=True, exist_ok=True)
+        settings = derived / "app-architectures.xcconfig"
+        # A global ARCHS=arm64 builds SwiftTerm's macOS tool for the wrong CPU on Intel.
+        settings.write_text(
+            f"ARCHS[sdk={sdk}*] = {' '.join(sorted(archs))}\n"
+            f"ONLY_ACTIVE_ARCH[sdk={sdk}*] = NO\n"
+        )
         subprocess.run(
             ["git", "submodule", "update", "--init", "--", "SwiftTerm"],
             cwd=root,
@@ -456,8 +463,8 @@ def build(
                 derived,
                 "-jobs",
                 "4",
-                "ONLY_ACTIVE_ARCH=NO",
-                f"ARCHS={' '.join(sorted(archs))}",
+                "-xcconfig",
+                settings,
                 "CODE_SIGNING_ALLOWED=NO",
                 "build",
             ],
