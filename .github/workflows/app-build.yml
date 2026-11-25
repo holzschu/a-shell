@@ -3,6 +3,12 @@ name: App build
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      runner:
+        description: GitHub-hosted macOS runner
+        type: choice
+        default: macos-26-intel
+        options: [macos-26-intel, macos-26]
   push:
     branches: ['ci/app-build-*']
 
@@ -12,7 +18,7 @@ permissions:
 jobs:
   build:
     name: ${{ matrix.scheme }} (${{ matrix.platform }})
-    runs-on: macos-26
+    runs-on: ${{ inputs.runner || 'macos-26-intel' }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -20,7 +26,7 @@ jobs:
         scheme: [a-Shell-noPython, a-Shell-mini, a-Shell]
         platform: [device, simulator]
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:

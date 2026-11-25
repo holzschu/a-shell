@@ -1,8 +1,8 @@
 # App build matrix
 
-`.github/workflows/app-build.yml` builds the existing `a-Shell-noPython`, `a-Shell-mini` and `a-Shell` targets for generic iOS (arm64) and iOS Simulator (arm64 and x86_64 in the same app). These are unsigned compile, link and architecture checks, not signing, installation or runtime tests. Use a `ci/app-build-*` branch for a fork run without updating its default branch.
+`.github/workflows/app-build.yml` builds the existing `a-Shell-noPython`, `a-Shell-mini` and `a-Shell` targets for generic iOS (arm64) and iOS Simulator (arm64 and x86_64 in the same app). These are unsigned compile, link and architecture checks, not signing, installation or runtime tests. Use a `ci/app-build-*` branch for a fork run without updating its default branch. CI defaults to `macos-26-intel`; a manual dispatch can set `runner` to `macos-26` to use an Arm64 host instead. This does not change the app architectures.
 
-Use Xcode 26.3 and uv from a clean, dedicated checkout:
+Use Xcode 26.6 and uv from a clean, dedicated checkout:
 
 ```sh
 uv run ci/build-app.py build a-Shell-noPython device
