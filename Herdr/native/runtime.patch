@@ -1777,3 +1777,16 @@
 +        } else {
 +            &notice.body
 +        },
+--- a/src/integration/registry.rs
++++ b/src/integration/registry.rs
+@@ -102,2 +102,10 @@ pub(crate) fn integration_target_available(target: crate::api::schema::IntegrationTarget) -> bool {
++    // a-Shell's `pkg install kilo` puts the namesake text editor on PATH.
++    // Only offer the Kilo Code plugin if its installer prerequisite is met.
++    #[cfg(target_os = "ios")]
++    if matches!(target, crate::api::schema::IntegrationTarget::Kilo)
++        && !kilo_dir().is_ok_and(|dir| dir.is_dir())
++    {
++        return false;
++    }
+     integration_target_command_names(target)
+         .iter()
