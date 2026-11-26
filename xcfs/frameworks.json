@@ -386,10 +386,10 @@
       }
     },
     "a-shell-pico": {
-      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12555962371.zip",
-      "sha256": "35aaf46dd0d105ba931d5606f67ff04aad3ad08f68514f8e8204f64114d5f8c9",
-      "run": "https://github.com/demrom/a-shell/actions/runs/40082442923/attempts/1",
-      "revision": "a2be7e1a780fdcb8b589d08f8455a6f23022de6d",
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15154261375.zip",
+      "sha256": "60fc304005ac21f60290b35c5a85bd7e753c7c084d1b7d690fb685296de1003c",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45895590183/attempts/1",
+      "revision": "5b24ba54955cc2cdcd3360c9dede75c3ba87ad52",
       "frameworks": {
         "pico": "pico.xcframework.zip"
       }
@@ -869,10 +869,10 @@
       }
     },
     "a-shell-WasmKitCommand": {
-      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15058226425.zip",
-      "sha256": "fd33c2a104747996e50f83e5a9c5ef1e070dc2d6184c3f415bd836c4c5b002ef",
-      "run": "https://github.com/demrom/a-shell/actions/runs/45683695487/attempts/1",
-      "revision": "227299fe9ae7c1831cde24bae6c57c3aea048eda",
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15154097308.zip",
+      "sha256": "857e300df9969ddba8524837591643dd8011eb6dca738012578a65843730d3b7",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45895579926/attempts/1",
+      "revision": "5b24ba54955cc2cdcd3360c9dede75c3ba87ad52",
       "frameworks": {
         "WasmKitCommand": "WasmKitCommand.xcframework.zip"
       }
