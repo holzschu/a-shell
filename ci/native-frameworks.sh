@@ -2,18 +2,21 @@
 # Build one pinned app command for device and Simulator.
 set -euo pipefail
 app=$(cd "$(dirname "$0")/.." && pwd -P)
-product=${1:?Usage: ci/native-frameworks.sh helix|fd|fzf|navi|gitoxide|Ruff|rg|node|codex|Herdr}
+product=${1:?Usage: ci/native-frameworks.sh PRODUCT [SLICE|package]}
 recipe=$product
-node_slice=${2:-}
-case $node_slice in
-  ""|device|simulator) ;;
-  *) echo "Unknown Node slice: $node_slice" >&2; exit 2 ;;
-esac
-[[ -z $node_slice || $product == node ]] || { echo "Only Node accepts a slice argument." >&2; exit 2; }
+stage=${2:-}
 case $product in
   helix|fd|fzf|navi|gitoxide|Ruff|rg|node|codex|Herdr) ;;
   *) echo "Unknown native product: $product" >&2; exit 2 ;;
 esac
+case $product:$stage in
+  *:|node:device|node:simulator|codex:device|codex:simulator|codex:simulator-x86_64|codex:package) ;;
+  *) echo "Invalid stage for $product: $stage" >&2; exit 2 ;;
+esac
+platforms=(device simulator simulator-x86_64)
+if [[ -n $stage && $stage != package ]]; then
+  platforms=("$stage")
+fi
 work=$app/.build/native/$product
 dist=$app/.build/dist
 mkdir -p "$work" "$dist"
@@ -36,7 +39,7 @@ if [[ $product == codex ]]; then
   revision=f187d27373865977db4705b38d3a35eec13415ec
   checksum=a7b8881369549973ae46bd362702b92980abafdbd2537befa3c339b94029d38b
 fi
-if [[ $product != Herdr && ( $product != node || -n $node_slice ) ]]; then
+if [[ $product != Herdr && ( $product != node || -n $stage ) && $stage != package ]]; then
   if [[ ! -f $work/ios-system.tar.gz ]]; then
     curl -fLsS --retry 2 --connect-timeout 15 --max-time 300 \
       "https://codeload.github.com/holzschu/ios_system/tar.gz/$revision" -o "$work/ios-system.tar.gz.part"
@@ -48,9 +51,7 @@ if [[ $product != Herdr && ( $product != node || -n $node_slice ) ]]; then
     mkdir -p "$work/ios-system"
     tar -xzf "$work/ios-system.tar.gz" --strip-components=1 -C "$work/ios-system"
   fi
-  sdk_platforms="device simulator simulator-x86_64"
-  [[ $product != node ]] || sdk_platforms=$node_slice
-  for platform in $sdk_platforms; do
+  for platform in "${platforms[@]}"; do
     sdk=iphonesimulator
     arch=arm64
     [[ $platform != device ]] || sdk=iphoneos
@@ -67,32 +68,32 @@ if [[ $product != Herdr && ( $product != node || -n $node_slice ) ]]; then
 fi
 
 if [[ $product == node ]]; then
-  if [[ -n $node_slice ]]; then
+  if [[ -n $stage ]]; then
     [[ ! -d $work/ios_system.xcframework ]] || rm -rf "$work/ios_system.xcframework"
-    xcodebuild -create-xcframework -framework "$work/sdk/$node_slice/ios_system.framework" \
+    xcodebuild -create-xcframework -framework "$work/sdk/$stage/ios_system.framework" \
       -output "$work/ios_system.xcframework"
     export IOS_SYSTEM_XCFRAMEWORK=$work/ios_system.xcframework
     export NODE_IOS_XCFRAMEWORK=$work/node-package.xcframework NODE_IOS_JOBS=4
     export IOS_SYSTEM_SIMULATOR_SLICE=ios-arm64-simulator
-    export NODE_IOS_CACHE=$work/node-$node_slice
+    export NODE_IOS_CACHE=$work/node-$stage
     node_platform=simulator
     node_stage=node
-    if [[ $node_slice == device ]]; then
+    if [[ $stage == device ]]; then
       node_platform=device
       node_stage=device
     fi
     export NODE_IOS_PLATFORMS=$node_platform
     bash "$app/node/build.sh" "$node_stage"
     bash "$app/node/build.sh" package
-    tar -czf "$dist/node-$node_slice.tar.gz" -C "$NODE_IOS_CACHE/framework" "$node_platform"
-    files=("node-$node_slice.tar.gz")
-    if [[ $node_slice == device ]]; then
+    tar -czf "$dist/node-$stage.tar.gz" -C "$NODE_IOS_CACHE/framework" "$node_platform"
+    files=("node-$stage.tar.gz")
+    if [[ $stage == device ]]; then
       # These scripts belong in app resources, never in a signed framework.
       ditto -c -k --norsrc "$app/Resources/npm" "$dist/node-npm.zip"
       ditto -c -k --norsrc "$app/Resources/node-fetch" "$dist/node-fetch.zip"
       files+=(node-npm.zip node-fetch.zip)
     fi
-    (cd "$dist"; shasum -a 256 "${files[@]}" >"node-$node_slice.sha256")
+    (cd "$dist"; shasum -a 256 "${files[@]}" >"node-$stage.sha256")
     exit 0
   fi
   # Join the two immutable slice artifacts; this job never recompiles Node.
@@ -117,21 +118,48 @@ elif [[ $product == Herdr ]]; then
     "$target_dir/x86_64-apple-ios/release/libherdr_ios.a" -output "$simulator"
 else
   [[ $product != Ruff ]] || recipe=ruff
-  for platform in device simulator simulator-x86_64; do
-    if [[ $product == navi ]]; then
-      bash "$app/$recipe/build.sh" framework "$platform" "$work/sdk/$platform"
-    else
-      bash "$app/$recipe/build.sh" framework "$work/sdk/$platform" "$platform"
+  command_dir=$work/command
+  universal=$work/universal
+  if [[ $stage == package ]]; then
+    # Package the immutable CI inputs without rebuilding them or overlaying an old framework.
+    input=$app/.build/codex-slices
+    staging=$(mktemp -d "$work/package.XXXXXX")
+    trap 'rm -r "$staging"' EXIT
+    command_dir=$staging
+    universal=$staging/universal
+    for platform in "${platforms[@]}"; do
+      archive=codex-$platform.tar.gz
+      (cd "$input"; shasum -a 256 "$archive" | cmp -s - "codex-$platform.sha256") || {
+        echo "$archive: FAILED checksum verification" >&2
+        exit 1
+      }
+      tar -xzf "$input/$archive" -C "$staging"
+    done
+  else
+    for platform in "${platforms[@]}"; do
+      if [[ $product == navi ]]; then
+        bash "$app/$recipe/build.sh" framework "$platform" "$work/sdk/$platform"
+      else
+        bash "$app/$recipe/build.sh" framework "$work/sdk/$platform" "$platform"
+      fi
+    done
+    if [[ -n $stage ]]; then
+      slices=$app/.build/codex-slices
+      mkdir -p "$slices"
+      archive=codex-$stage.tar.gz
+      tar -czf "$slices/$archive" -C "$command_dir" "$stage"
+      (cd "$slices"; shasum -a 256 "$archive" >"codex-$stage.sha256")
+      exit 0
     fi
-  done
-  device=$work/command/device/$product.framework
-  simulator=$work/command/simulator/$product.framework
-  intel=$work/command/simulator-x86_64/$product.framework
-  mkdir -p "$work/universal"
-  ditto "$simulator" "$work/universal/$product.framework"
+  fi
+  device=$command_dir/device/$product.framework
+  simulator=$command_dir/simulator/$product.framework
+  intel=$command_dir/simulator-x86_64/$product.framework
+  mkdir -p "$universal"
+  ditto "$simulator" "$universal/$product.framework"
   xcrun lipo -create "$simulator/$product" "$intel/$product" \
-    -output "$work/universal/$product.framework/$product"
-  simulator=$work/universal/$product.framework
+    -output "$universal/$product.framework/$product"
+  simulator=$universal/$product.framework
 fi
 
 case $product in
