@@ -829,6 +829,18 @@
         "multimarkdown": "multimarkdown.xcframework.zip"
       }
     },
+    "llvm-project-xcframeworks": {
+      "url": "https://nightly.link/demrom/llvm-project/actions/artifacts/12571115353.zip",
+      "sha256": "618256352360d0d7670a059cbd892027e6a622ba87a7ab3afcf7cd7ab54040b1",
+      "run": "https://github.com/demrom/llvm-project/actions/runs/40104602095/attempts/1",
+      "revision": "ffee11e1ca543dcbc23dac4be9df489151b2b932",
+      "frameworks": {
+        "ar": "ar.xcframework.zip",
+        "clang": "clang.xcframework.zip",
+        "libLLVM": "libLLVM.xcframework.zip",
+        "lld": "lld.xcframework.zip"
+      }
+    },
     "a-shell-native-Herdr": {
       "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15070121525.zip",
       "sha256": "613c1c437d211170c401e48f34b51c5a5a21dacd15b89a8cdfc0ededde528a4e",
