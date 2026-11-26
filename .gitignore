@@ -95,5 +95,6 @@ xcfs/node.xcframework/
 /xcfs/SSHStock.xcframework/
 Resources/npm/
 Resources/node-fetch/
+/Resources/proj/
 /fzf/fzf.xcframework/
 /navi/navi.xcframework/

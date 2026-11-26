@@ -360,10 +360,10 @@
       }
     },
     "Python-aux-xcframeworks": {
-      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/12555252036.zip",
-      "sha256": "4eb0a33088a05149114a33308df244fe6711d39d385fc20d2fe8de38977df00e",
-      "run": "https://github.com/demrom/Python-aux/actions/runs/40079675529/attempts/1",
-      "revision": "524d4448bf6e66b8ca3f0c6c0155a2cd614272b6",
+      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/15128566447.zip",
+      "sha256": "35f5fa28c1043503d0660a8129fa314c057c3617d9ac3115ed9412dc69414777",
+      "run": "https://github.com/demrom/Python-aux/actions/runs/45833551274/attempts/1",
+      "revision": "ea72fdc9fc610eb8404fe8d11a5cb7549898e782",
       "frameworks": {
         "freetype": "freetype.xcframework.zip",
         "harfbuzz": "harfbuzz.xcframework.zip",
@@ -505,10 +505,10 @@
       }
     },
     "Python-aux-gis": {
-      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/12555363171.zip",
-      "sha256": "505e41454f4bb4e5bb7df4a9e723938198d452e7eee73a33a94a1c79cb3117e1",
-      "run": "https://github.com/demrom/Python-aux/actions/runs/40079675529/attempts/1",
-      "revision": "524d4448bf6e66b8ca3f0c6c0155a2cd614272b6",
+      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/15130968108.zip",
+      "sha256": "4148b18c14a167182d158e8efb9a605915161c2cbe0c870b3fe05cc5c853fd98",
+      "run": "https://github.com/demrom/Python-aux/actions/runs/45833551274/attempts/1",
+      "revision": "ea72fdc9fc610eb8404fe8d11a5cb7549898e782",
       "frameworks": {
         "libgdal": "libgdal.xcframework.zip",
         "libgeos": "libgeos.xcframework.zip",
@@ -560,10 +560,10 @@
       }
     },
     "Python-aux-openblas": {
-      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/12555750114.zip",
-      "sha256": "3189520575306a4908400f22b8ef802e8d6f2c894f802788035c027998f2e7db",
-      "run": "https://github.com/demrom/Python-aux/actions/runs/40079675529/attempts/1",
-      "revision": "524d4448bf6e66b8ca3f0c6c0155a2cd614272b6",
+      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/15117664742.zip",
+      "sha256": "107f7bd69ce4d439ac86acee5cca782d5b66a630a8e8a2e3c5cecbe9f45056cc",
+      "run": "https://github.com/demrom/Python-aux/actions/runs/45804946800/attempts/1",
+      "revision": "b0cbe0e0738567fa8e8c579d7c81e6055f19c933",
       "frameworks": {
         "flang_rt": "flang_rt.xcframework.zip",
         "libomp": "libomp.xcframework.zip",
@@ -571,10 +571,10 @@
       }
     },
     "Python-aux-science": {
-      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/12558508386.zip",
-      "sha256": "b911ad2d54aaa560550b3042f6edf1248b98dd2df6cf70a0ee58372efde2eda3",
-      "run": "https://github.com/demrom/Python-aux/actions/runs/40079675529/attempts/1",
-      "revision": "524d4448bf6e66b8ca3f0c6c0155a2cd614272b6",
+      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/15145384318.zip",
+      "sha256": "1b8e574727751497fc42dd5d65e8c70f91f32ce150933e125b01f2a0a4607d95",
+      "run": "https://github.com/demrom/Python-aux/actions/runs/45833551274/attempts/4",
+      "revision": "ea72fdc9fc610eb8404fe8d11a5cb7549898e782",
       "frameworks": {
         "Python-_argon2_cffi_bindings._ffi": "Python-_argon2_cffi_bindings._ffi.xcframework.zip",
         "Python-PIL.PIL": "Python-PIL.PIL.xcframework.zip",
