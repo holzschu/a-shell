@@ -65,7 +65,7 @@ class PutFileIntentHandler: INExtension, PutFileIntentHandling
             for file in fileList {
                 if (FileManager().fileExists(atPath: file.filename) && (intent.overwrite != 1)) {
                     intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
-                    intentResponse.error = "File \(file.filename) already exists."
+                    intentResponse.error = String(localized: "File \(file.filename) already exists.")
                     completion(intentResponse)
                     return
                 }
@@ -78,7 +78,7 @@ class PutFileIntentHandler: INExtension, PutFileIntentHandling
                         let isReadable = FileManager().isReadableFile(atPath: distantURL.path)
                         guard isSecuredURL && isReadable else {
                             intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
-                            intentResponse.error = "Could not get permission to access file \(file.filename)."
+                            intentResponse.error = String(localized: "Could not get permission to access file \(file.filename).")
                             completion(intentResponse)
                             return
                         }
@@ -93,7 +93,7 @@ class PutFileIntentHandler: INExtension, PutFileIntentHandling
                     }
                     catch {
                         intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
-                        intentResponse.error = "Could not create file \(file.filename): \(error.localizedDescription)"
+                        intentResponse.error = String(localized: "Could not create file \(file.filename): \(error.localizedDescription)")
                         completion(intentResponse)
                         return
                     }
@@ -107,13 +107,13 @@ class PutFileIntentHandler: INExtension, PutFileIntentHandling
                     }
                     catch {
                         intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
-                        intentResponse.error = "Could not create file from data \(file.filename): \(error.localizedDescription)"
+                        intentResponse.error = String(localized: "Could not create file from data \(file.filename): \(error.localizedDescription)")
                         completion(intentResponse)
                         return
                     }
                 } else {
                     intentResponse = PutFileIntentResponse(code: .failure, userActivity: nil)
-                    intentResponse.error = "Could not access file \(file.filename)."
+                    intentResponse.error = String(localized: "Could not access file \(file.filename).")
                     completion(intentResponse)
                     return
                 }
