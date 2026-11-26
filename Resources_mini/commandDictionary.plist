@@ -79,6 +79,13 @@
 		<string>ACEHILNPRVXafghinorstuvwx</string>
 		<string>file</string>
 	</array>
+	<key>codex</key>
+	<array>
+		<string>codex.framework/codex</string>
+		<string>codex_ios_main</string>
+		<string></string>
+		<string>file</string>
+	</array>
 	<key>compress</key>
 	<array>
 		<string>files.framework/files</string>
@@ -140,7 +147,7 @@
 		<string>shell.framework/shell</string>
 		<string>dirname_main</string>
 		<string></string>
-		<string>none</string>
+		<string>file</string>
 	</array>
 	<key>du</key>
 	<array>
