@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BD38832A31B54982B7A1DF41 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6340626F325A4F91A38BF63C /* Localizable.xcstrings */; };
+		830BC06085C3439AB6B9CF38 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6340626F325A4F91A38BF63C /* Localizable.xcstrings */; };
+		C641E445E2774E1083C01C0A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6340626F325A4F91A38BF63C /* Localizable.xcstrings */; };
+		2D38E053FCDE4311A49EFF55 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6340626F325A4F91A38BF63C /* Localizable.xcstrings */; };
+		92340F9058C04FF08197BBD0 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6340626F325A4F91A38BF63C /* Localizable.xcstrings */; };
 		01254C24560A350B59662101 /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
 		059C086B6EEAB7CA8D2590E6 /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
 		0673335401F0E6294B1D6A65 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
@@ -2105,6 +2110,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6340626F325A4F91A38BF63C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		070AE9F6D58955EE5B3B2FB9 /* Worker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Worker.swift; path = "$(DERIVED_FILE_DIR)/Worker.swift"; sourceTree = "<absolute>"; };
 		0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ShellWorkers/Worker.xcconfig; sourceTree = SOURCE_ROOT; };
 		0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExecuteLongCommandIntent.swift; sourceTree = "<group>"; };
@@ -3212,6 +3218,7 @@
 				220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */,
 				223FC3CA2611F9C300CDC89F /* wasm.html */,
 				2220059F2871EF3300DC7A23 /* Intents.intentdefinition */,
+				6340626F325A4F91A38BF63C /* Localizable.xcstrings */,
 				22BF6242231589DB00FEA585 /* Settings.bundle */,
 				22B1B81A22CB9E5500F7C452 /* Resources */,
 				229D25BE25793675004A78AC /* Resources_mini */,
@@ -4670,6 +4677,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BD38832A31B54982B7A1DF41 /* Localizable.xcstrings in Resources */,
 				22178F08257BBBA6008EB2B4 /* MainInterface.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4678,6 +4686,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				830BC06085C3439AB6B9CF38 /* Localizable.xcstrings in Resources */,
 				224A904F2ADD0999006DB9CC /* terminfo in Resources */,
 				224A90502ADD0999006DB9CC /* Settings.bundle in Resources */,
 				22A6E07F3098D9840018310F /* wasm_withWorker.js in Resources */,
@@ -4716,6 +4725,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C641E445E2774E1083C01C0A /* Localizable.xcstrings in Resources */,
 				227F0FB930868CE400FCC674 /* npm in Resources */,
 				22F0FE7B3A1C4B0D00A1B2C3 /* node-fetch in Resources */,
 				22D1335D2E61E35B00E76E2E /* Library in Resources */,
@@ -4759,6 +4769,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D38E053FCDE4311A49EFF55 /* Localizable.xcstrings in Resources */,
 				731431410000000000000004 /* sshStockCommands.plist in Resources */,
 				A2B1818A0000000000000001 /* Herdr LICENSE in Resources */,
 				227B248C2BE12FF1003A8031 /* wasm_withWorker.js in Resources */,
@@ -4804,6 +4815,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				92340F9058C04FF08197BBD0 /* Localizable.xcstrings in Resources */,
 				22AD8729246EBFFD00F415DE /* MainInterface.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
