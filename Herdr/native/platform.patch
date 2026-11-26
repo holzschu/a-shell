@@ -1,3 +1,17 @@
+--- a/crates/ghostty-vt/build.rs
++++ b/crates/ghostty-vt/build.rs
+@@ -11,8 +11,9 @@
+         "aarch64-unknown-linux-musl" => "aarch64-linux-musl",
+         "x86_64-apple-darwin" => "x86_64-macos",
+         "aarch64-apple-darwin" => "aarch64-macos",
+-        "aarch64-apple-ios" => "aarch64-ios",
+-        "aarch64-apple-ios-sim" => "aarch64-ios-simulator",
++        "aarch64-apple-ios" => "aarch64-ios.15.0",
++        "aarch64-apple-ios-sim" => "aarch64-ios.15.0-simulator",
++        "x86_64-apple-ios" => "x86_64-ios.15.0-simulator",
+         "x86_64-pc-windows-msvc" => "x86_64-windows-msvc",
+         "aarch64-pc-windows-msvc" => "aarch64-windows-msvc",
+         other => panic!("unsupported target for libghostty-vt build: {other}"),
 --- a/src/platform/macos.rs
 +++ b/src/platform/macos.rs
 @@ -29,145 +29,7 @@
