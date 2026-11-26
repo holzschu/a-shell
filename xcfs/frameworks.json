@@ -395,10 +395,10 @@
       }
     },
     "cpython-python-ios": {
-      "url": "https://nightly.link/demrom/cpython/actions/artifacts/12547482345.zip",
-      "sha256": "b74fdbc87f3fde2d0481a6992556e4c23feb451aaccda4e3597413a5847b3502",
-      "run": "https://github.com/demrom/cpython/actions/runs/39985582184/attempts/2",
-      "revision": "fb086f726fe3dca49239717f7b48180998c36507",
+      "url": "https://nightly.link/demrom/cpython/actions/artifacts/15063107116.zip",
+      "sha256": "d41e75444e3b4706739b75c876945dc87f7f69c01dd5b7440a6dae10d14160c7",
+      "run": "https://github.com/demrom/cpython/actions/runs/45690794689/attempts/2",
+      "revision": "7da3f37148cbd272df89f06bbb2bb73a7e4152ad",
       "frameworks": {
         "Python-_ctypes_test": "Python-_ctypes_test.xcframework.zip",
         "Python-_testexternalinspection": "Python-_testexternalinspection.xcframework.zip",
@@ -411,10 +411,10 @@
       }
     },
     "cpython-python-mini": {
-      "url": "https://nightly.link/demrom/cpython/actions/artifacts/12547696903.zip",
-      "sha256": "1ee1ff8f40b720d7441951648088c59667730b5ca3944e558b719fe55e7f8bf8",
-      "run": "https://github.com/demrom/cpython/actions/runs/39985582184/attempts/2",
-      "revision": "fb086f726fe3dca49239717f7b48180998c36507",
+      "url": "https://nightly.link/demrom/cpython/actions/artifacts/15063843546.zip",
+      "sha256": "26607f56547d63db0a172104ceb3afcd9aa37af06b4ae7408ef2d7658647c81b",
+      "run": "https://github.com/demrom/cpython/actions/runs/45690794689/attempts/2",
+      "revision": "7da3f37148cbd272df89f06bbb2bb73a7e4152ad",
       "frameworks": {
         "Python-Crypto.Cipher._ARC4": "Python-Crypto.Cipher._ARC4.xcframework.zip",
         "Python-Crypto.Cipher._Salsa20": "Python-Crypto.Cipher._Salsa20.xcframework.zip",
@@ -829,6 +829,42 @@
         "multimarkdown": "multimarkdown.xcframework.zip"
       }
     },
+    "a-shell-native-Herdr": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15070121525.zip",
+      "sha256": "613c1c437d211170c401e48f34b51c5a5a21dacd15b89a8cdfc0ededde528a4e",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45711267704/attempts/1",
+      "revision": "b0ae11af48a7ad4fa75e095e1b50870ad6b3310a",
+      "frameworks": {
+        "Herdr": "Herdr.xcframework.zip"
+      }
+    },
+    "a-shell-curl-impersonate": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15059772153.zip",
+      "sha256": "384a3ee5e3169c69585478cf4d2c5f5e5bff108dbcd99a17252d1ff652c8e094",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45688911319/attempts/1",
+      "revision": "0ae1b4e7e3a31bc8cb57ab27ea0869e9e5e3f3f2",
+      "frameworks": {
+        "curl-impersonate": "curl-impersonate.xcframework.zip"
+      }
+    },
+    "a-shell-WasmKitCommand": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15058226425.zip",
+      "sha256": "fd33c2a104747996e50f83e5a9c5ef1e070dc2d6184c3f415bd836c4c5b002ef",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45683695487/attempts/1",
+      "revision": "227299fe9ae7c1831cde24bae6c57c3aea048eda",
+      "frameworks": {
+        "WasmKitCommand": "WasmKitCommand.xcframework.zip"
+      }
+    },
+    "a-shell-cbc-framework": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15058867133.zip",
+      "sha256": "a0c460066e1c07c992f816a740d9aa7b01c006845f0984897092bfecc50ded1b",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45687325271/attempts/1",
+      "revision": "cb394bf41ddafdbc027912758b0a7bbca225d6f1",
+      "frameworks": {
+        "cbc": "cbc.xcframework.zip"
+      }
+    },
     "bc-xcframeworks": {
       "url": "https://nightly.link/demrom/bc/actions/artifacts/12484767352.zip",
       "sha256": "83206868ec9d359df5c865cbe063df74f61103d3656b86ded51a4bcf7bd22455",
@@ -840,40 +876,28 @@
     }
   },
   "pending": {
-    "WasmKitCommand": "WasmKitCommand iOS command framework",
-    "cbc": "CBC iOS command framework",
     "codex": "codex/build.sh",
-    "curl-impersonate": "curl-impersonate iOS command framework",
-    "libgfortran": "scientific Python legacy libgfortran dependency",
-    "libherdr_ios": "Herdr/build.sh",
-    "pythonA": "CPython second interpreter packaging"
+    "SCPStock": "ios_system/ssh-stock/build.sh",
+    "SFTPStock": "ios_system/ssh-stock/build.sh",
+    "SSHKeygenStock": "ios_system/ssh-stock/build.sh",
+    "SSHStock": "ios_system/ssh-stock/build.sh"
   },
   "pending_prefixes": {
     "Python-": "CPython iOS extension build",
-    "PythonA": "CPython second interpreter packaging"
-  },
-  "extra": {
-    "a-Shell-mini": {
-      "device": [
-        "Herdr/build/target/aarch64-apple-ios/release/libherdr_ios.a"
-      ],
-      "simulator": [
-        "Herdr/build/target/aarch64-apple-ios-sim/release/libherdr_ios.a"
-      ]
-    }
+    "PythonA": "CPython iOS extension build for the second interpreter"
   },
   "resources": {
     "a-Shell-mini": {
-      "Resources_mini/Library/lib": [
+      "Resources_mini/Library/lib/python3.13": [
         {
           "artifact": "cpython-python-ios",
           "member": "python-stdlib.tar.gz",
-          "source": "{sdk}/lib"
+          "source": "{sdk}/lib/python3.13"
         },
         {
           "artifact": "cpython-python-mini",
           "member": "python-mini.tar.gz",
-          "source": "{sdk}/lib"
+          "source": "{sdk}/lib/python3.13"
         }
       ]
     },

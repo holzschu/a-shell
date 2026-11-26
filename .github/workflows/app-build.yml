@@ -38,6 +38,9 @@ jobs:
         run: |
           xcodebuild -version
           uv run ci/build-app.py package --check
+      - name: Test framework staging
+        if: matrix.scheme == 'a-Shell-noPython' && matrix.platform == 'simulator'
+        run: bash tests/app-frameworks.sh
       - name: Build unsigned app from pinned frameworks
         shell: bash
         env:

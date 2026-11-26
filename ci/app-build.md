@@ -13,7 +13,7 @@ Use `prepare` instead of `build` to verify and install the inputs without compil
 
 ## Update an input
 
-`xcfs/frameworks.json` owns the pins. `releases` contains the published SwiftPM ZIPs and their SHA-256 digests. `artifacts` groups exact `.xcframework.zip` members by fork Actions archive; each record pins the archive URL, SHA-256, producer run attempt and source revision. A release is preferred if it contains the job's full architecture set. The resolver tries the pinned fork artifact if the release lacks a compatible slice; a checksum failure never falls back. Compatibility is checked against both the xcframework's `Info.plist` and its Mach-O architectures.
+`xcfs/frameworks.json` owns the pins. `releases` contains the published SwiftPM ZIPs and their SHA-256 digests. `artifacts` groups exact `.xcframework.zip` members by fork Actions archive; each record pins the archive URL, SHA-256, producer run attempt and source revision. A release is preferred if it contains the job's full architecture set. The resolver tries the pinned fork artifact if the release lacks a compatible slice; a checksum failure never falls back. Compatibility is checked against both the xcframework's `Info.plist` and its Mach-O architectures. For the app's second Python interpreter, the build driver stages `pythonA.framework` and the `PythonA*` extensions from the same pinned inputs, with separate bundle and Mach-O identities.
 
 Fill in a pending input by adding the exact artifact member to its producer archive's `frameworks` map. For a new producer run, verify the outer archive digest and audit the inner ZIP and its binaries before changing a pin. Actions archives expire; replace an unavailable archive with a verified upstream release when published or with a new qualified artifact pinned to its exact run attempt. `extra` lists link inputs specified through build settings rather than file references. `resources` lists non-framework runtime files supplied by the same producer archives.
 
@@ -24,4 +24,4 @@ uv run ci/build-app.py package > xcfs/Package.swift
 uv run ci/build-app.py package --check
 ```
 
-Run `bash tests/app-frameworks.sh` to check the staging CLI's missing-input summary, universal Simulator fallback, rerun and checksum failure behavior without network downloads.
+Run `bash tests/app-frameworks.sh` to check the staging CLI's missing-input summary, universal Simulator fallback, rerun, checksum failure and second-interpreter packaging without network downloads.

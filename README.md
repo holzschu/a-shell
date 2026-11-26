@@ -63,7 +63,7 @@ Because Python 3.x uses functions that are only available on the iOS 14 SDK, I'v
 
 ### Continuous integration
 
-The [App build workflow](.github/workflows/app-build.yml) checks `a-Shell-noPython`, `a-Shell-mini`, and `a-Shell` for generic iOS devices (arm64) and Simulator (arm64 and x86_64) with Xcode 26.3. These are unsigned build checks; they do not run the app or its commands.
+The [App build workflow](.github/workflows/app-build.yml) checks `a-Shell-noPython`, `a-Shell-mini`, and `a-Shell` for generic iOS devices (arm64) and Simulator (arm64 and x86_64) with Xcode 26.6. These are unsigned build checks; they do not run the app or its commands.
 
 CI verifies the framework pins in [`xcfs/frameworks.json`](xcfs/frameworks.json) before building. If an input is unavailable, the job fails and lists every unavailable framework in its summary. See [App build matrix](ci/app-build.md) for the local command and instructions for updating pins.
 
