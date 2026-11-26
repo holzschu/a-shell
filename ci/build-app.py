@@ -32,6 +32,12 @@ cli = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False)
 console = Console(stderr=True, markup=False, highlight=False)
 
 
+def app_archs(scheme, platform):
+    if (scheme, platform) == ("a-Shell", "simulator"):
+        return {"arm64"}
+    return DESTINATIONS[platform][2]
+
+
 class InputError(Exception):
     pass
 
@@ -154,8 +160,7 @@ def verify_archs(binary, archs):
         raise IncompatibleSlice(f"requires {need}; found {got}")
 
 
-def select_library(framework, platform):
-    _, _, archs = DESTINATIONS[platform]
+def select_library(framework, platform, archs):
     with (framework / "Info.plist").open("rb") as stream:
         libraries = plistlib.load(stream)["AvailableLibraries"]
     variant = "simulator" if platform == "simulator" else None
@@ -239,7 +244,7 @@ def rename_python_framework(bundle, name):
     return bundle
 
 
-def unpack_framework(archive, member, folder, path, platform, name):
+def unpack_framework(archive, member, folder, path, platform, name, archs):
     folder.mkdir()
     if member:
         inner = folder / "framework.zip"
@@ -249,7 +254,7 @@ def unpack_framework(archive, member, folder, path, platform, name):
     framework = folder / f"{name}.xcframework"
     if not framework.is_dir():
         raise InputError(f"ZIP does not contain {framework.name}")
-    library = select_library(framework, platform)
+    library = select_library(framework, platform, archs)
     if path.suffix == ".xcframework":
         return framework
     if library.suffix != path.suffix:
@@ -377,6 +382,11 @@ def stage(root, manifest, scheme, platform, dry_run):
             return futures[sha].result()
 
         for index, (path, (name, choices)) in enumerate(options.items()):
+            archs = (
+                app_archs(scheme, platform)
+                if path == Path("xcfs/node.xcframework")
+                else DESTINATIONS[platform][2]
+            )
             for attempt, (source, member) in enumerate(choices):
                 try:
                     product = unpack_framework(
@@ -386,6 +396,7 @@ def stage(root, manifest, scheme, platform, dry_run):
                         path,
                         platform,
                         name,
+                        archs,
                     )
                     install(root, path, product, owned)
                     break
@@ -508,7 +519,8 @@ def build(
         )
         raise typer.Exit(1) from error
     report(scheme, platform, result.stdout.strip())
-    destination, sdk, archs = DESTINATIONS[platform]
+    destination, sdk, _ = DESTINATIONS[platform]
+    archs = app_archs(scheme, platform)
     derived = root / ".build/app" / f"{scheme}-{platform}"
     try:
         derived.mkdir(parents=True, exist_ok=True)
