@@ -957,7 +957,7 @@
 	<key>curl-impersonate</key>
 	<array>
 		<string>curl-impersonate.framework/curl-impersonate</string>
-		<string>main</string>
+		<string>curl_impersonate_main</string>
 		<string>2346aAbBcCdDeEfgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwxXYyz#</string>
 		<string>file</string>
 	</array>
