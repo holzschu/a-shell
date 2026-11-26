@@ -1,12 +1,14 @@
 "0MCBCc" = "${message}";
 
-"0ltuRO-Ev6eBG" = "There are ${count} options matching ‘default (depends on commands)’.";
+"0ltuRO" = "${count} options correspondent à « ${openWindow} ».";
 
-"0ltuRO-EzhjO7" = "There are ${count} options matching ‘yes’.";
+"0ltuRO-Ev6eBG" = "${count} options correspondent à « si nécessaire (dépend des commandes) ».";
 
-"0ltuRO-N556Rd" = "There are ${count} options matching ‘default (depend on commands)’.";
+"0ltuRO-EzhjO7" = "${count} options correspondent à « oui ».";
 
-"0ltuRO-i2Vf9p" = "There are ${count} options matching ‘no (run in extension)’.";
+"0ltuRO-N556Rd" = "${count} options correspondent à « si nécessaire (dépend des commandes) ».";
+
+"0ltuRO-i2Vf9p" = "${count} options correspondent à « non (lancer dans l'extension) ».";
 
 "2PGaCe" = "Continuer après une erreur";
 
@@ -16,13 +18,15 @@
 
 "41sJlD" = "Exécuter une commande";
 
-"4yCt8L-Ev6eBG" = "Just to confirm, you wanted ‘default (depends on commands)’?";
+"4yCt8L" = "Confirmez-vous avoir choisi « ${openWindow} » ?";
 
-"4yCt8L-EzhjO7" = "Just to confirm, you wanted ‘yes’?";
+"4yCt8L-Ev6eBG" = "Confirmez-vous avoir choisi « si nécessaire (dépend des commandes) » ?";
 
-"4yCt8L-N556Rd" = "Just to confirm, you wanted ‘default (depend on commands)’?";
+"4yCt8L-EzhjO7" = "Confirmez-vous avoir choisi « oui » ?";
 
-"4yCt8L-i2Vf9p" = "Just to confirm, you wanted ‘no (run in extension)’?";
+"4yCt8L-N556Rd" = "Confirmez-vous avoir choisi « si nécessaire (dépend des commandes) » ?";
+
+"4yCt8L-i2Vf9p" = "Confirmez-vous avoir choisi « non (lancer dans l'extension) » ?";
 
 "58h7pK" = "${file}";
 
@@ -52,6 +56,8 @@
 
 "J7zfzK" = "Le fichier a été créé";
 
+"JAGmzw" = "vrai";
+
 "JJgpB5" = "Ouvrir l'application ?";
 
 "KqS0gJ" = "Lancer une commande";
@@ -66,13 +72,19 @@
 
 "SMk14K" = "Code d'erreur ${property1}. ${property}";
 
+"TBJT0J" = "vrai";
+
 "UvKwrp" = "Créer un fichier dans a-Shell";
 
 "W4gWBJ" = "Impossible de créer le fichier : ${error}";
 
+"WJSlGu" = "Signaler une erreur si le fichier est introuvable ?";
+
 "Y7KKwU" = "commande(s)";
 
 "YxbbRt" = "Exécuter ${command}";
+
+"a2n63A" = "Copier ${file} dans a-Shell";
 
 "a2n63A-epnx1H" = "Copier ${file} dans a-Shell (sans écraser)";
 
@@ -86,6 +98,8 @@
 
 "epnx1H" = "faux";
 
+"fHyzxH" = "faux";
+
 "fyMs4g" = "${message}";
 
 "i2Vf9p" = "non (lancer dans l'extension)";
@@ -94,21 +108,31 @@
 
 "isZTIL" = "Copier ${file} dans a-Shell";
 
+"iyshAF" = "(en tant que copie)";
+
 "mT8e9Y" = "nom du fichier";
+
+"me3N9R" = "Erreur si le fichier est introuvable";
 
 "n11Zfh" = "Récupérer ${fileName} depuis a-Shell";
 
 "pHBUcg" = "Impossible de créer le fichier : ${error}";
 
-"qDIloo" = "openWindow";
+"qDIloo" = "Ouverture de l’application";
+
+"rOKYAZ" = "Récupérer le fichier sous forme de copie pour éviter un problème de suppression sous iOS 18 ?";
 
 "rz0Hmn" = "Exécuter une commande";
+
+"swf9DK" = "faux";
 
 "tIMaMc" = "Copier ${file} dans a-Shell";
 
 "uW0NxR" = "Message";
 
 "umwm1q" = "Exécuter ${command}";
+
+"vH0brs" = "Récupérer ${fileName} depuis a-Shell";
 
 "vk5k4v" = "Exécuter les commandes dans a-Shell";
 
