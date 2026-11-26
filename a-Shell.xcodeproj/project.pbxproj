@@ -326,6 +326,7 @@
 		22AD8741246F1CD700F415DE /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
 		22AF02F729F70A630085290B /* openblas.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22AF02D229F669C20085290B /* openblas.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22AF02F829F70A640085290B /* flang_rt.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22AF02D329F669DE0085290B /* flang_rt.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22AF02F929F70A640085290B /* libomp.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22AF02D429F669DE0085290B /* libomp.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B0C0172F9E054E0001BEBF /* PythonAcurl_cffi._wrapper.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B0C0162F9E04DF0001BEBF /* PythonAcurl_cffi._wrapper.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B0C0182F9E05670001BEBF /* Python-curl_cffi._wrapper.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B0C0152F9E04900001BEBF /* Python-curl_cffi._wrapper.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B0C0192F9E05810001BEBF /* curl-impersonate.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2269076D2F97BBB40071F551 /* curl-impersonate.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1628,6 +1629,7 @@
 				227318AD28F02E290027A736 /* multimarkdown.framework in Embed Frameworks */,
 				22AF02F729F70A630085290B /* openblas.xcframework in Embed Frameworks */,
 				22AF02F829F70A640085290B /* flang_rt.xcframework in Embed Frameworks */,
+				22AF02F929F70A640085290B /* libomp.xcframework in Embed Frameworks */,
 				2219EDCB2A023F2F008C66F2 /* xetex.xcframework in Embed Frameworks */,
 				2219EDCC2A023F2F008C66F2 /* xetexA.xcframework in Embed Frameworks */,
 				225BF07A2A02753B00EEC45B /* xdvipdfmx.xcframework in Embed Frameworks */,
@@ -2277,6 +2279,7 @@
 		22AD8740246EDD4C00F415DE /* a-Shell-IntentsUI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell-IntentsUI.entitlements"; sourceTree = "<group>"; };
 		22AF02D229F669C20085290B /* openblas.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = openblas.xcframework; path = cpython/XcFrameworks/openblas.xcframework; sourceTree = "<group>"; };
 		22AF02D329F669DE0085290B /* flang_rt.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = flang_rt.xcframework; path = cpython/XcFrameworks/flang_rt.xcframework; sourceTree = "<group>"; };
+		22AF02D429F669DE0085290B /* libomp.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libomp.xcframework; path = cpython/XcFrameworks/libomp.xcframework; sourceTree = "<group>"; };
 		22B0C0152F9E04900001BEBF /* Python-curl_cffi._wrapper.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-curl_cffi._wrapper.framework"; path = "Resources/Frameworks/Python-curl_cffi._wrapper.framework"; sourceTree = SOURCE_ROOT; };
 		22B0C0162F9E04DF0001BEBF /* PythonAcurl_cffi._wrapper.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAcurl_cffi._wrapper.framework; path = Resources/Frameworks/PythonAcurl_cffi._wrapper.framework; sourceTree = SOURCE_ROOT; };
 		22B0CA642E75DCC100FDF6FE /* Python-zmq.backend.cffi._cffi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-zmq.backend.cffi._cffi.framework"; path = "Resources/Frameworks/Python-zmq.backend.cffi._cffi.framework"; sourceTree = SOURCE_ROOT; };
@@ -3392,6 +3395,7 @@
 				2294A9BE254C19D0008C1490 /* freetype.xcframework */,
 				22AF02D229F669C20085290B /* openblas.xcframework */,
 				22AF02D329F669DE0085290B /* flang_rt.xcframework */,
+				22AF02D429F669DE0085290B /* libomp.xcframework */,
 				2294A9F7254C2C21008C1490 /* harfbuzz.xcframework */,
 				2294A9F4254C2AA7008C1490 /* libpng.xcframework */,
 				221FA42B2A1C9A9D00463D5B /* libgdal.xcframework */,
