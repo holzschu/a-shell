@@ -841,11 +841,20 @@
         "lld": "lld.xcframework.zip"
       }
     },
+    "a-shell-native-codex": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15118358708.zip",
+      "sha256": "56a8f09160a80fbba920d1f82267f54998610dcd227d5b89344205654d5d13f0",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45756196319/attempts/1",
+      "revision": "ec0cb887446b82ab0153b49a20970bcd04281290",
+      "frameworks": {
+        "codex": "codex.xcframework.zip"
+      }
+    },
     "a-shell-native-Herdr": {
-      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15070121525.zip",
-      "sha256": "613c1c437d211170c401e48f34b51c5a5a21dacd15b89a8cdfc0ededde528a4e",
-      "run": "https://github.com/demrom/a-shell/actions/runs/45711267704/attempts/1",
-      "revision": "b0ae11af48a7ad4fa75e095e1b50870ad6b3310a",
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15117313153.zip",
+      "sha256": "e9fb50654c9b4c939400d511f0523e53e94318f363624f2b8ad8bd5499f67b18",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45756196319/attempts/1",
+      "revision": "ec0cb887446b82ab0153b49a20970bcd04281290",
       "frameworks": {
         "Herdr": "Herdr.xcframework.zip"
       }
@@ -885,15 +894,21 @@
       "frameworks": {
         "bc_ios": "bc_ios.xcframework.zip"
       }
+    },
+    "ios_system-stock-openssh": {
+      "url": "https://nightly.link/demrom/ios_system/actions/artifacts/15119107313.zip",
+      "sha256": "fccf8a67e1c5f8df3da34cbd70cd8c9c865c549045a18e36266f6beae5d708a7",
+      "run": "https://github.com/demrom/ios_system/actions/runs/45823599462/attempts/1",
+      "revision": "73915662bee6ea0b2e22ce49c17883a438155bc5",
+      "frameworks": {
+        "SCPStock": "SCPStock.xcframework.zip",
+        "SFTPStock": "SFTPStock.xcframework.zip",
+        "SSHKeygenStock": "SSHKeygenStock.xcframework.zip",
+        "SSHStock": "SSHStock.xcframework.zip"
+      }
     }
   },
-  "pending": {
-    "codex": "codex/build.sh",
-    "SCPStock": "ios_system/ssh-stock/build.sh",
-    "SFTPStock": "ios_system/ssh-stock/build.sh",
-    "SSHKeygenStock": "ios_system/ssh-stock/build.sh",
-    "SSHStock": "ios_system/ssh-stock/build.sh"
-  },
+  "pending": {},
   "pending_prefixes": {
     "Python-": "CPython iOS extension build",
     "PythonA": "CPython iOS extension build for the second interpreter"

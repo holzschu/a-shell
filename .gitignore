@@ -89,6 +89,10 @@ helix/helix.xcframework/
 /ruff/Ruff.xcframework/
 gitoxide/gitoxide.xcframework/
 xcfs/node.xcframework/
+/xcfs/SCPStock.xcframework/
+/xcfs/SFTPStock.xcframework/
+/xcfs/SSHKeygenStock.xcframework/
+/xcfs/SSHStock.xcframework/
 Resources/npm/
 Resources/node-fetch/
 /fzf/fzf.xcframework/
