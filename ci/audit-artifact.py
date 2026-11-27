@@ -56,10 +56,19 @@ def within(root: Path, relative: str) -> Path:
     return target
 
 
-def audit_binary(binary: Path, platform: str, maximum: str, signed: bool) -> dict:
+def audit_binary(
+    binary: Path, platform: str, maximum: str, signed: bool, *, require_dylib: bool = False
+) -> dict:
     architectures = run("xcrun", "lipo", "-archs", str(binary)).split()
     slices = []
     for arch in architectures:
+        if require_dylib:
+            header = run("xcrun", "otool", "-arch", arch, "-hv", str(binary))
+            filetypes = re.findall(
+                r"^\s*MH_MAGIC(?:_64)?\s+(?:\S+\s+){3}(\S+)", header, re.MULTILINE
+            )
+            if filetypes != ["DYLIB"]:
+                raise ValueError(f"{binary} ({arch}): expected MH_DYLIB, got {filetypes}")
         build = run("xcrun", "vtool", "-arch", arch, "-show-build", str(binary))
         platforms = re.findall(r"^\s*platform\s+(\S+)", build, re.MULTILINE)
         minimums = re.findall(r"^\s*minos\s+(\S+)", build, re.MULTILINE)
@@ -151,7 +160,9 @@ def audit_framework(root: Path, maximum: str) -> list[dict]:
             )
         with (product / "Info.plist").open("rb") as source:
             executable = plistlib.load(source)["CFBundleExecutable"]
-        row = audit_binary(within(product, executable), platform, maximum, signed=False)
+        row = audit_binary(
+            within(product, executable), platform, maximum, signed=False, require_dylib=True
+        )
         actual = {item["arch"] for item in row["slices"]}
         if actual != expected[library["LibraryIdentifier"]]:
             raise ValueError(f"{product}: unexpected slice architectures")
