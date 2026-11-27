@@ -58,13 +58,13 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
             .appendingPathComponent(name + ".plist")
     }
 
-    func save(to file: URL, runningCommand: String) {
+    func save(to file: URL, runningCommand: String, workingDirectory: String? = nil) {
         guard UserDefaults.standard.bool(forKey: "restart_vim") else {
             Self.discard(at: file)
             return
         }
         let arguments = runningCommand.split(whereSeparator: \.isWhitespace)
-        guard let checkpoint = resumeCheckpoint(for: runningCommand, arguments: arguments) else {
+        guard let checkpoint = resumeCheckpoint(for: runningCommand, arguments: arguments, workingDirectory: workingDirectory) else {
             Self.discard(at: file)
             return
         }
@@ -77,10 +77,10 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
         }
     }
 
-    private func resumeCheckpoint(for commandLine: String, arguments: [Substring]) -> [String: String]? {
+    private func resumeCheckpoint(for commandLine: String, arguments: [Substring], workingDirectory: String?) -> [String: String]? {
 #if NVIM_EMBEDDED
-        if let command = Self.neovimInvocation(commandLine) {
-            return ["command": "nvim", "token": command]
+        if let command = Self.neovimInvocation(commandLine), let workingDirectory, workingDirectory.hasPrefix("/") {
+            return ["command": "nvim", "token": command, "cwd": workingDirectory]
         }
 #endif
         guard let command = arguments.first.map(String.init),
@@ -89,7 +89,7 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
         return native
     }
 
-    static func consume(from file: URL) -> String? {
+    static func consume(from file: URL, restoreWorkingDirectory: (String) -> Bool = { _ in false }) -> String? {
         guard UserDefaults.standard.bool(forKey: "restart_vim") else {
             discard(at: file)
             return nil
@@ -98,7 +98,12 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
               let checkpoint = try? PropertyListDecoder().decode([String: String].self, from: data),
               let command = checkpoint["command"], let token = checkpoint["token"] else { return nil }
 #if NVIM_EMBEDDED
-        if command == "nvim" { return neovimInvocation(token) }
+        if command == "nvim" {
+            // UIKit's restoration activity may be stale after a forced kill.
+            guard let invocation = neovimInvocation(token), let directory = checkpoint["cwd"],
+                  directory.hasPrefix("/"), !directory.utf8.contains(0), restoreWorkingDirectory(directory) else { return nil }
+            return invocation
+        }
 #endif
         return rules[command]?.resume(token)
     }

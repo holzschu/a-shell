@@ -5335,11 +5335,34 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             InteractiveCommandRestoration.discard(at: checkpoint)
                             return
                         }
+#if NVIM_EMBEDDED
+                        var restoredNeovimDirectory = false
+                        let command = InteractiveCommandRestoration.consume(from: checkpoint) { directory in
+                            if !keepContent {
+                                self.restoreHistoryAndDirectories(scene: scene)
+                                self.restoreEnvironment(scene: scene)
+                            }
+                            ios_switchSession(self.shellContext?.bytes)
+                            ios_setContext(self.shellContext?.bytes)
+                            guard changeDirectory(path: directory, decodePath: false) else { return false }
+                            let restoredDirectory = FileManager().currentDirectoryPath
+                            guard URL(fileURLWithPath: directory).sameFileLocation(path: restoredDirectory) else { return false }
+                            self.currentDirectory = restoredDirectory
+                            restoredNeovimDirectory = true
+                            return true
+                        }
+                        guard let command else { return }
+                        if !keepContent && !restoredNeovimDirectory {
+                            self.restoreHistoryAndDirectories(scene: scene)
+                            self.restoreEnvironment(scene: scene)
+                        }
+#else
                         guard let command = InteractiveCommandRestoration.consume(from: checkpoint) else { return }
                         if !keepContent {
                             self.restoreHistoryAndDirectories(scene: scene)
                             self.restoreEnvironment(scene: scene)
                         }
+#endif
                         self.currentCommand = command
                         self.executeCommand(command: command)
                     }
@@ -6051,7 +6074,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         scene.session.stateRestorationActivity?.userInfo!["currentCommand"] = currentCommand
         if let checkpoint = InteractiveCommandRestoration.checkpointURL(for: scene.session.persistentIdentifier) {
+#if NVIM_EMBEDDED
+            interactiveCommandRestoration.save(to: checkpoint, runningCommand: currentCommand, workingDirectory: currentDirectory)
+#else
             interactiveCommandRestoration.save(to: checkpoint, runningCommand: currentCommand)
+#endif
         }
         // save the environment variables:
         var env = [String]()

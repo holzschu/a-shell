@@ -17,7 +17,7 @@ This checks the notification-to-checkpoint handoff, one-shot consumption, remova
 
 ## Neovim on a physical iPhone
 
-With the restart preference on, enter `nvim sample.lua` from a disposable Documents subdirectory. Background the app, terminate that exact host PID, and relaunch normally. Check that the new editor opened the same file and accepts input. Repeat with restart off: the shell must accept a command without starting Neovim. Restore the initial preference. The restore contract reopens operands; it does not save unsaved buffers or replay shell syntax, quoted operands, or editor flags such as `-S`.
+Put different contents in `sample.lua` in a disposable Documents directory and its subdirectory. With restart on and scrollback off, enter `nvim sample.lua` from the subdirectory. Background the app, terminate that exact host PID, and relaunch normally. After relaunch, enter a Neovim command that writes the absolute buffer path and first line to a receipt. Compare both values to the pre-kill receipt; the new receipt also proves that the relaunched editor accepted input. Repeat with restart off and scrollback on: the shell must accept a command without starting Neovim. Restore and read back the initial restart and scrollback preferences if you changed them. The restore contract reopens operands; it does not save unsaved buffers or replay shell syntax, quoted operands, or editor flags such as `-S`.
 
 ## Codex on a physical iPhone
 
