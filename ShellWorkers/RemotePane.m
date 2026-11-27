@@ -67,13 +67,13 @@ static void log_host_library(const char *phase) {
     if ((self = [super init])) _children = [NSMutableDictionary new];
     return self;
 }
-- (void)spawnChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
-    [self spawn:command cwd:cwd env:env cols:cols rows:rows tty:tty separateStderr:separate host:NO reply:reply];
+- (void)spawnChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate secretInput:(NSFileHandle *)secretInput reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
+    [self spawn:command cwd:cwd env:env cols:cols rows:rows tty:tty separateStderr:separate secretInput:secretInput host:NO reply:reply];
 }
 - (void)spawnHostChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
-    [self spawn:command cwd:cwd env:env cols:cols rows:rows tty:tty separateStderr:separate host:YES reply:reply];
+    [self spawn:command cwd:cwd env:env cols:cols rows:rows tty:tty separateStderr:separate secretInput:nil host:YES reply:reply];
 }
-- (void)spawn:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate host:(BOOL)host reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
+- (void)spawn:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate secretInput:(NSFileHandle *)secretInput host:(BOOL)host reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply {
     const char **values = calloc(env.count + 2, sizeof(*values));
     if (!values) { reply(ENOMEM, nil, nil, nil); return; }
     NSUInteger count = 0;
@@ -86,7 +86,9 @@ static void log_host_library(const char *phase) {
     int fd = -1;
     BrokerChild *child = [BrokerChild new];
     child.host = host;
-    ashell_pane_options options = { .size = sizeof(options), .tty = tty, .separate_stderr = separate };
+    int secretFd = secretInput ? secretInput.fileDescriptor : -1;
+    ashell_pane_options options = { .size = sizeof(options), .tty = tty, .separate_stderr = separate,
+        .secret_input_fd = secretInput ? &secretFd : NULL };
     void *job = NULL;
     int error = (host ? ashell_host_pane_spawn_ex : ashell_pane_spawn_ex)(command.UTF8String, cwd.fileSystemRepresentation, cols, rows, values, &options, &fd, &job);
     free(values);
@@ -140,7 +142,7 @@ int ashell_pane_spawn(const char *command, const char *cwd, unsigned cols, unsig
 int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
     if (fd_out) *fd_out = -1;
     if (job_out) *job_out = NULL;
-    if (!options || options->size < sizeof(*options)) return EINVAL;
+    if (!options || options->size < offsetof(ashell_pane_options, secret_input_fd)) return EINVAL;
     options->stderr_fd = -1;
     if (!command || !cwd || !fd_out || !job_out || !cols || !rows) return EINVAL;
     if (NSThread.isMainThread) return EDEADLK;
@@ -210,7 +212,9 @@ int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, un
         for (size_t i = 0; envp && envp[i]; i++) [env addObject:@(envp[i])];
         __block int fd = -1, err_fd = -1;
         BOOL separate = options->separate_stderr != 0;
-        [pane.proxy spawn:@(command) cwd:cwdBookmark home:homeBookmark documents:documentsBookmark probe:pane.probeDirectory env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:separate stockSSH:ashell_stock_ssh_enabled() reply:^(int code, NSFileHandle *handle, NSFileHandle *errorHandle, int pid) {
+        int secretFd = ashell_pane_secret_input_fd(options);
+        NSFileHandle *secretInput = secretFd < 0 ? nil : [[NSFileHandle alloc] initWithFileDescriptor:secretFd closeOnDealloc:NO];
+        [pane.proxy spawn:@(command) cwd:cwdBookmark home:homeBookmark documents:documentsBookmark probe:pane.probeDirectory env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:separate secretInput:secretInput stockSSH:ashell_stock_ssh_enabled() reply:^(int code, NSFileHandle *handle, NSFileHandle *errorHandle, int pid) {
             ashell_extension_observe(pane.connection, pid);
             error = code;
             if (!code && (!handle || (separate && !errorHandle))) error = EPROTO;

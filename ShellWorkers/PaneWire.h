@@ -2,7 +2,7 @@
 
 // One connection owns one real process and one existing native pane handle.
 @protocol AShellPaneWire
-- (void)spawn:(NSString *)command cwd:(NSData *)cwd home:(NSData *)home documents:(NSData *)documents probe:(NSString *)probe env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separateStderr stockSSH:(BOOL)stockSSH reply:(void (^)(int, NSFileHandle *, NSFileHandle *, int))reply;
+- (void)spawn:(NSString *)command cwd:(NSData *)cwd home:(NSData *)home documents:(NSData *)documents probe:(NSString *)probe env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separateStderr secretInput:(NSFileHandle *)secretInput stockSSH:(BOOL)stockSSH reply:(void (^)(int, NSFileHandle *, NSFileHandle *, int))reply;
 - (void)poll:(void (^)(int, int))reply;
 - (void)pollUsage:(void (^)(int, int, NSData *))reply;
 - (void)resize:(unsigned)cols rows:(unsigned)rows reply:(void (^)(int))reply;
@@ -17,7 +17,7 @@ NSObject<AShellPaneWire> *ashell_worker_service(void);
 
 // A worker asks its owning host to allocate another isolated process.
 @protocol AShellSpawnBrokerWire
-- (void)spawnChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply;
+- (void)spawnChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate secretInput:(NSFileHandle *)secretInput reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply;
 - (void)spawnHostChild:(NSString *)command cwd:(NSString *)cwd env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separate reply:(void (^)(int, NSString *, NSFileHandle *, NSFileHandle *))reply;
 - (void)pollChild:(NSString *)token reply:(void (^)(int, int))reply;
 - (void)pollChildUsage:(NSString *)token reply:(void (^)(int, int, NSData *))reply;
