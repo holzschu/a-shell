@@ -4553,8 +4553,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             self.currentCommand = ""
-            if let activity = self.windowScene?.session.stateRestorationActivity {
-                InteractiveCommandRestoration.discard(from: activity)
+            if let identifier = self.persistentIdentifier,
+               let checkpoint = InteractiveCommandRestoration.checkpointURL(for: identifier) {
+                InteractiveCommandRestoration.discard(at: checkpoint)
             }
             self.pid = 0
             self.printPrompt() // Needs to be in main queue
@@ -5303,8 +5304,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             }
             // restore window content, using commandQueue so it happens after the .profile has been loaded:
             // also move the environment variables code here (separate function?)
-            if UserDefaults.standard.bool(forKey: "keep_content") {
-                let normalLaunch = connectionOptions.urlContexts.isEmpty && connectionOptions.userActivities.isEmpty
+            let keepContent = UserDefaults.standard.bool(forKey: "keep_content")
+            let normalLaunch = connectionOptions.urlContexts.isEmpty && connectionOptions.userActivities.isEmpty
+                && connectionOptions.shortcutItem == nil && connectionOptions.notificationResponse == nil
+            let checkpoint = InteractiveCommandRestoration.checkpointURL(for: session.persistentIdentifier)
+            if let checkpoint, !keepContent || !normalLaunch {
+                InteractiveCommandRestoration.discard(at: checkpoint)
+            }
+            if keepContent {
                 // commandQueue so that it is executed after the .profile loading,
                 // DispatchQueue.main because SwiftTerm can crash if it receives data outside the main queue.
                 // Note: if the .profile prints something, we can see that something printed twice (once by the
@@ -5320,9 +5327,8 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                         self.restoreHistoryAndDirectories(scene: scene)
                         self.restoreEnvironment(scene: scene)
-                        if normalLaunch, self.currentCommand.isEmpty,
-                           let activity = scene.session.stateRestorationActivity,
-                           let command = InteractiveCommandRestoration.consume(from: activity) {
+                        if normalLaunch, self.currentCommand.isEmpty, let checkpoint,
+                           let command = InteractiveCommandRestoration.consume(from: checkpoint) {
                             self.currentCommand = command
                             self.executeCommand(command: command)
                         }
@@ -6032,8 +6038,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             scene.session.stateRestorationActivity?.userInfo!["fontLigature"] = terminalFontLigature!
         }
         scene.session.stateRestorationActivity?.userInfo!["currentCommand"] = currentCommand
-        if let activity = scene.session.stateRestorationActivity {
-            interactiveCommandRestoration.save(in: activity, runningCommand: currentCommand)
+        if let checkpoint = InteractiveCommandRestoration.checkpointURL(for: scene.session.persistentIdentifier) {
+            if UserDefaults.standard.bool(forKey: "keep_content") {
+                interactiveCommandRestoration.save(to: checkpoint, runningCommand: currentCommand)
+            } else {
+                InteractiveCommandRestoration.discard(at: checkpoint)
+            }
         }
         // save the environment variables:
         var env = [String]()

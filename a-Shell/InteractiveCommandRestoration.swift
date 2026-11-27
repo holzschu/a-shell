@@ -17,7 +17,6 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
             return "codex resume \(token.lowercased())"
         })
     ]
-    private static let key = "interactiveCommandCheckpoint"
     private static let notification = Notification.Name("AsheKube.app.a-Shell.InteractiveCommandCheckpoint")
 
     private let lock = NSLock()
@@ -52,25 +51,49 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
         }
     }
 
-    func save(in activity: NSUserActivity, runningCommand: String) {
+    static func checkpointURL(for sceneIdentifier: String) -> URL? {
+        guard let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first,
+              let name = sceneIdentifier.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else { return nil }
+        return directory.appendingPathComponent("InteractiveCommandRestoration", isDirectory: true)
+            .appendingPathComponent(name + ".plist")
+    }
+
+    func save(to file: URL, runningCommand: String) {
         let arguments = runningCommand.split(whereSeparator: \.isWhitespace)
         guard let command = arguments.first.map(String.init),
               let rule = Self.rules[command], rule.accepts(Array(arguments.dropFirst())),
               let checkpoint = lock.withLock({ checkpoint }), checkpoint["command"] == command else {
-            Self.discard(from: activity)
+            Self.discard(at: file)
             return
         }
-        activity.addUserInfoEntries(from: [Self.key: checkpoint])
+        do {
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try PropertyListEncoder().encode(checkpoint).write(to: file, options: .atomic)
+        } catch {
+            Self.discard(at: file)
+            NSLog("Could not save interactive command checkpoint")
+        }
     }
 
-    static func consume(from activity: NSUserActivity) -> String? {
-        let checkpoint = activity.userInfo?[key] as? [String: String]
-        discard(from: activity)
-        guard let command = checkpoint?["command"], let token = checkpoint?["token"] else { return nil }
+    static func consume(from file: URL) -> String? {
+        guard let data = try? Data(contentsOf: file), discard(at: file),
+              let checkpoint = try? PropertyListDecoder().decode([String: String].self, from: data),
+              let command = checkpoint["command"], let token = checkpoint["token"] else { return nil }
         return rules[command]?.resume(token)
     }
 
-    static func discard(from activity: NSUserActivity) {
-        activity.userInfo?.removeValue(forKey: key)
+    // The previous UIKit restoration snapshot can survive SIGKILL even after command exit.
+    // Keep this one-shot checkpoint separate so completion can remove it before showing the prompt.
+    @discardableResult
+    static func discard(at file: URL) -> Bool {
+        do {
+            try FileManager.default.removeItem(at: file)
+            return true
+        } catch CocoaError.fileNoSuchFile {
+            return false
+        } catch {
+            NSLog("Could not remove interactive command checkpoint")
+            return false
+        }
     }
 }

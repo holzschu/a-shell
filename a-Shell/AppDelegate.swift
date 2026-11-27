@@ -453,6 +453,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the user discards a scene session.
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
+        for session in sceneSessions {
+            if let checkpoint = InteractiveCommandRestoration.checkpointURL(for: session.persistentIdentifier) {
+                InteractiveCommandRestoration.discard(at: checkpoint)
+            }
+        }
         // Delete Vim sessions here using sceneSessions.first.persistentIdentifier
         do {
             let documentsUrl = try FileManager().url(for: .documentDirectory,
