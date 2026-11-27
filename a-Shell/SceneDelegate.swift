@@ -5863,6 +5863,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
         NSLog("sceneDidBecomeActive: \(self.persistentIdentifier).")
+        (window?.rootViewController as? TerminalHostingController)?.updateSystemBarAppearance()
         let traitCollection = terminalView!.traitCollection
         // Set scene parameters (unless they were set before)
         let backgroundColor = terminalBackgroundColor ?? UIColor.systemBackground.resolvedColor(with: traitCollection)

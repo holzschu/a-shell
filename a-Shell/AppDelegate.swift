@@ -243,6 +243,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // What color should the keyboard and system toolbar be? (screen: same mode as the screen itself)
         UserDefaults.standard.register(defaults: ["toolbar_color" : "screen"])
         UserDefaults.standard.register(defaults: ["screen_space" : "default"])
+        UserDefaults.standard.register(defaults: ["hide_status_bar" : false])
         UserDefaults.standard.register(defaults: ["restart_vim" : false])
         UserDefaults.standard.register(defaults: ["keep_content" : true])
         toolbarShouldBeShown = UserDefaults.standard.bool(forKey: "show_toolbar")
@@ -532,6 +533,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     @objc func settingsChanged() {
         DispatchQueue.main.async {
+            for scene in UIApplication.shared.connectedScenes {
+                let delegate = scene.delegate as? SceneDelegate
+                (delegate?.window?.rootViewController as? TerminalHostingController)?.updateSystemBarAppearance()
+            }
             if TerminalThemes.synchronizeSelection() {
                 let themeName = TerminalThemes.savedName
                 for scene in UIApplication.shared.connectedScenes {
