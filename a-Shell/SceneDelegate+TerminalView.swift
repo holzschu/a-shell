@@ -637,7 +637,7 @@ extension SceneDelegate {
     // TerminalViewDelegate stubs:
     func sizeChanged(source: SwiftTerm.TerminalView, newCols: Int, newRows: Int) {
         if (newRows != height) || (newCols != width) {
-            ios_setWindowSize(Int32(newCols), Int32(newRows), self.persistentIdentifier?.toCString())
+            ios_setWindowSize(Int32(newCols), Int32(newRows), self.shellContext?.bytes)
             #if HERDR_EMBEDDED
             herdrResize(UInt16(clamping: newCols), UInt16(clamping: newRows))
             #endif
@@ -750,8 +750,8 @@ extension SceneDelegate {
                     // Calling ios_kill while executing webAssembly or JavaScript is a bad idea.
                     // Do we have a way to interrupt JS execution in WkWebView?
                     // Make sure we're on the right session:
-                    ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                    ios_switchSession(self.shellContext?.bytes)
+                    ios_setContext(self.shellContext?.bytes)
                     // Then send interrupt to the running command:
                     ios_kill() // TODO: add printPrompt() here if no command running
                 }
@@ -1586,8 +1586,8 @@ extension SceneDelegate {
             // Node owns command streams, not a terminal signal-generating process.
             // A surrounding interactive Dash otherwise forwards these as bytes.
             if myData.count == 1, let key = myData.first, key == 3 || key == 4 {
-                ios_switchSession(self.persistentIdentifier?.toCString())
-                ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                ios_switchSession(self.shellContext?.bytes)
+                ios_setContext(self.shellContext?.bytes)
                 if let program = ios_progname(), String(cString: program) == "node" || (key == 3 && ["npm", "npx"].contains(String(cString: program))) {
                     send(source: source, inputString: key == 3 ? interrupt : endOfTransmission)
                     return
@@ -1598,8 +1598,8 @@ extension SceneDelegate {
             if (ios_activePager() != 0) {
                 if (tty_file_input != nil) {
                     let savedSession = ios_getContext()
-                    ios_switchSession(self.persistentIdentifier?.toCString())
-                    ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()))
+                    ios_switchSession(self.shellContext?.bytes)
+                    ios_setContext(self.shellContext?.bytes)
                     ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                     do {
                         try tty_file_input?.write(contentsOf: myData)
@@ -1633,8 +1633,8 @@ extension SceneDelegate {
             }
             // interactive command: send the data directly
             if (interactiveCommandRunning || terminalView!.isCurrentBufferAlternate) && !helpRunningInIpython {
-                ios_switchSession(self.persistentIdentifier?.toCString())
-                ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+                ios_switchSession(self.shellContext?.bytes)
+                ios_setContext(self.shellContext?.bytes);
                 ios_setStreams(self.stdin_file, self.stdout_file, self.stdout_file)
                 if (javascriptRunning && (thread_stdin_copy != nil)) {
                     // interactive WebAssembly commands
