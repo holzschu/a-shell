@@ -2,12 +2,19 @@ name: DuckDB command framework
 
 on:
   workflow_dispatch:
-  push:
-    branches: [feature/duckdb]
+  pull_request:
     paths:
       - 'ports/duckdb/**'
       - 'tests/duckdb/**'
       - '.github/workflows/duckdb-command.yml'
+      - 'xcfs/frameworks.json'
+  push:
+    branches: ['feature/duckdb*']
+    paths:
+      - 'ports/duckdb/**'
+      - 'tests/duckdb/**'
+      - '.github/workflows/duckdb-command.yml'
+      - 'xcfs/frameworks.json'
 
 permissions:
   contents: read
@@ -24,9 +31,10 @@ jobs:
         run: |
           set -euo pipefail
           file="$RUNNER_TEMP/ios_system.xcframework.zip"
-          curl --fail --location --retry 3 --output "$file" \
-            https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/ios_system.xcframework.zip
-          printf '%s  %s\n' bac0689c792901cbf410899162c06ab22a950b032adfb5f94b5c3ab6a661e883 "$file" | shasum -a 256 -c
+          runtime=$(jq -er '.releases.ios_system | [.url, .sha256] | @tsv' xcfs/frameworks.json)
+          IFS=$'\t' read -r url sha256 <<<"$runtime"
+          curl --fail --location --retry 3 --output "$file" "$url"
+          printf '%s  %s\n' "$sha256" "$file" | shasum -a 256 -c
           ditto -x -k "$file" "$RUNNER_TEMP"
       - name: Build and audit both platforms
         run: |
@@ -54,8 +62,18 @@ jobs:
               $1 == "@rpath/DuckDBCommand.framework/DuckDBCommand" { install_name = 1 }
               END { exit !(runtime && install_name) }
             '
-            mkdir -p "$build/DuckDBCommand.framework/Notices"
-            cp "$build/_deps/duckdb-src/LICENSE" "$build/DuckDBCommand.framework/Notices/DuckDB-LICENSE"
+            local notices="$build/DuckDBCommand.framework/Notices"
+            mkdir -p "$notices"
+            (
+              cd "$build/_deps/duckdb-src"
+              cp LICENSE "$notices/DuckDB-LICENSE"
+              find third_party -type f \( -iname 'license*' -o -iname 'notice*' -o -iname 'copying*' -o -iname 'copyright*' \) -print0 |
+                while IFS= read -r -d '' notice; do
+                  mkdir -p "$notices/$(dirname "$notice")"
+                  cp "$notice" "$notices/$notice"
+                done
+              test -s "$notices/third_party/parquet/LICENSE"
+            )
             printf '%s: %s bytes\n' "$sdk" "$(stat -f%z "$binary")" | tee -a "$GITHUB_STEP_SUMMARY"
           }
           xcodebuild -version

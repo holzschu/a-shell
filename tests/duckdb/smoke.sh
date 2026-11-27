@@ -27,8 +27,10 @@ trap 'rm -f "$parquet"' EXIT
 "$@" -c "COPY (SELECT * FROM read_csv('fixture.csv')) TO '$parquet' (FORMAT PARQUET);" >/dev/null
 test "$("$@" -c "SELECT category, SUM(amount)::BIGINT AS total FROM read_parquet('$parquet') GROUP BY category ORDER BY category;")" = "$expected"
 
-if "$@" -c 'SELECT missing FROM nowhere;' >/dev/null; then
-    echo 'Invalid SQL unexpectedly succeeded' >&2
+test "$("$@" -c 'SELECT 1 AS first; SELECT 2 AS second;')" = 'first
+1'
+if "$@" -c 'SELECT 1; SELECT missing FROM nowhere;' >/dev/null; then
+    echo 'Invalid SQL in a later statement unexpectedly succeeded' >&2
     exit 1
 fi
 test "$("$@" -c 'SELECT 7 AS recovered;')" = 'recovered
