@@ -241,6 +241,9 @@ __attribute__((used, visibility("default"))) int ashell_worker_host_interrupt(vo
     [environment addObject:[NSString stringWithFormat:@"ASHELL_WORKER_PID=%d", getpid()]];
     env = environment;
     initializeEnvironment();
+    // The app embeds Python and pythonA only. Reuse those slots instead of
+    // resolving missing pythonB and pythonC on later invocations in this pane.
+    numPythonInterpreters = 2;
     replaceCommand(@"clear", @"clear", true);
     // This process owns exactly one shell. Native Rust clients enumerate libc's
     // environment as well as ios_system's forked command environment.
