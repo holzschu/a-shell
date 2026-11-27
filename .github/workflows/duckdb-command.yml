@@ -1,0 +1,78 @@
+name: DuckDB command framework
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/duckdb]
+    paths:
+      - 'ports/duckdb/**'
+      - 'tests/duckdb/**'
+      - '.github/workflows/duckdb-command.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Fetch the runtime used by the a-Shell app build
+        run: |
+          set -euo pipefail
+          file="$RUNNER_TEMP/ios_system.xcframework.zip"
+          curl --fail --location --retry 3 --output "$file" \
+            https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/ios_system.xcframework.zip
+          printf '%s  %s\n' bac0689c792901cbf410899162c06ab22a950b032adfb5f94b5c3ab6a661e883 "$file" | shasum -a 256 -c
+          ditto -x -k "$file" "$RUNNER_TEMP"
+      - name: Build and audit both platforms
+        run: |
+          set -euo pipefail
+          build() {
+            local sdk=$1 slice=$2 archs=$3 platform=$4
+            local build="$RUNNER_TEMP/duckdb-$sdk"
+            cmake -G Ninja -S ports/duckdb -B "$build" \
+              -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT="$sdk" \
+              -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_OSX_ARCHITECTURES="$archs" \
+              -DCMAKE_BUILD_TYPE=MinSizeRel \
+              -DIOS_SYSTEM_FRAMEWORK="$RUNNER_TEMP/ios_system.xcframework/$slice/ios_system.framework"
+            cmake --build "$build" --target DuckDBCommand --parallel 4
+            local binary="$build/DuckDBCommand.framework/DuckDBCommand"
+            xcrun lipo "$binary" -verify_arch arm64
+            if [[ $sdk == iphonesimulator ]]; then xcrun lipo "$binary" -verify_arch x86_64; fi
+            xcrun vtool -show-build "$binary" | awk -v platform="$platform" '
+              $1 == "platform" { if ($2 != platform) exit 1; platforms++ }
+              $1 == "minos" { if ($2 != "15.0") exit 1; versions++ }
+              END { if (platforms == 0 || versions != platforms) exit 1 }
+            '
+            xcrun nm -gU "$binary" | awk '$NF == "_duckdb_ios_main" { found = 1 } END { exit !found }'
+            xcrun otool -L "$binary" | awk '
+              $1 == "@rpath/ios_system.framework/ios_system" { runtime = 1 }
+              $1 == "@rpath/DuckDBCommand.framework/DuckDBCommand" { install_name = 1 }
+              END { exit !(runtime && install_name) }
+            '
+            mkdir -p "$build/DuckDBCommand.framework/Notices"
+            cp "$build/_deps/duckdb-src/LICENSE" "$build/DuckDBCommand.framework/Notices/DuckDB-LICENSE"
+            printf '%s: %s bytes\n' "$sdk" "$(stat -f%z "$binary")" | tee -a "$GITHUB_STEP_SUMMARY"
+          }
+          xcodebuild -version
+          build iphoneos ios-arm64 arm64 IOS
+          build iphonesimulator ios-arm64_x86_64-simulator 'arm64;x86_64' IOSSIMULATOR
+          mkdir -p "$RUNNER_TEMP/duckdb-dist"
+          xcodebuild -create-xcframework \
+            -framework "$RUNNER_TEMP/duckdb-iphoneos/DuckDBCommand.framework" \
+            -framework "$RUNNER_TEMP/duckdb-iphonesimulator/DuckDBCommand.framework" \
+            -output "$RUNNER_TEMP/duckdb-dist/DuckDBCommand.xcframework"
+          cd "$RUNNER_TEMP/duckdb-dist"
+          ditto -c -k --keepParent DuckDBCommand.xcframework DuckDBCommand.xcframework.zip
+          shasum -a 256 DuckDBCommand.xcframework.zip > SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: DuckDBCommand-xcframework
+          path: |
+            ${{ runner.temp }}/duckdb-dist/DuckDBCommand.xcframework.zip
+            ${{ runner.temp }}/duckdb-dist/SHA256SUMS
+          if-no-files-found: error
