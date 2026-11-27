@@ -1790,3 +1790,13 @@
 +    }
      integration_target_command_names(target)
          .iter()
+@@ -128,1 +136,9 @@
++#[cfg(target_os = "ios")]
++#[path = "../ios_command.rs"]
++mod ios_command;
++
++#[cfg(target_os = "ios")]
++pub(crate) use ios_command::command_available;
++
++#[cfg(not(target_os = "ios"))]
+ pub(crate) fn command_available(command: &str) -> bool {
