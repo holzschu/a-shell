@@ -286,6 +286,14 @@ int ashell_pane_close_stdin(void *job) {
     [pane.proxy closeInput:^(int error) { result = error; }];
     return result;
 }
+__attribute__((used, visibility("default"))) void ashell_pane_sftp_escape_control(void *job, bool interrupt, void (^reply)(bool)) {
+    RemotePane *pane = (__bridge RemotePane *)job;
+    if (!pane || pane.interrupted) { reply(false); return; }
+    id<AShellPaneWire> proxy = [pane.connection remoteObjectProxyWithErrorHandler:^(NSError *error) {
+        reply(false);
+    }];
+    [proxy controlSFTPEscape:interrupt reply:^(BOOL handled) { reply(handled); }];
+}
 int ashell_pane_interrupt(void *job) {
     RemotePane *pane = (__bridge RemotePane *)job;
     if (!pane || pane.interrupted) return ESRCH;
