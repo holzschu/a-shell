@@ -1,0 +1,198 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Another long command is already running. Try again when it finishes." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une autre commande de longue durée est en cours. Réessayez lorsqu’elle sera terminée."
+          }
+        }
+      }
+    },
+    "Command" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commande"
+          }
+        }
+      }
+    },
+    "Command execution was cancelled." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’exécution de la commande a été annulée."
+          }
+        }
+      }
+    },
+    "Command exited with status %d." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La commande s’est terminée avec le code de sortie %d."
+          }
+        }
+      }
+    },
+    "Command output exceeds 8 MiB. Write large results to a file instead." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sortie de la commande dépasse 8 Mio. Enregistrez les résultats volumineux dans un fichier."
+          }
+        }
+      }
+    },
+    "Continue After Error" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuer après une erreur"
+          }
+        }
+      }
+    },
+    "Could not access file %@." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d’accéder au fichier « %@ »."
+          }
+        }
+      }
+    },
+    "Could not create file %@: %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de créer le fichier « %@ » : %@"
+          }
+        }
+      }
+    },
+    "Could not create file from data %@: %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de créer le fichier « %@ » à partir des données : %@"
+          }
+        }
+      }
+    },
+    "Could not get permission to access file %@." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d’obtenir l’autorisation d’accéder au fichier « %@ »."
+          }
+        }
+      }
+    },
+    "Enter a command to execute." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez une commande à exécuter."
+          }
+        }
+      }
+    },
+    "Execute ${command}" : {
+      "comment" : "Keep ${command}. Shortcuts replaces it with the editable command field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exécuter ${command}"
+          }
+        }
+      }
+    },
+    "Execute Long Command" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exécuter une commande de longue durée"
+          }
+        }
+      }
+    },
+    "File %@ already exists." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier « %@ » existe déjà."
+          }
+        }
+      }
+    },
+    "File %@ not found error" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier « %@ » est introuvable."
+          }
+        }
+      }
+    },
+    "File %@ successfully created." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier « %@ » a été créé."
+          }
+        }
+      }
+    },
+    "No filename provided." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun nom de fichier n’a été indiqué."
+          }
+        }
+      }
+    },
+    "Run a noninteractive command with extended background runtime. Output is returned when it finishes. iOS may cancel work that does not report progress. Scripts can report real progress with the progress command, without adding progress text to the returned output. Cancellation takes effect between commands; the current command may continue until it finishes." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exécute une commande non interactive avec une durée d’exécution prolongée en arrière-plan. La sortie est renvoyée à la fin de la commande. iOS peut annuler une tâche qui ne signale pas sa progression. Les scripts peuvent signaler leur progression avec la commande progress, sans ajouter de texte à la sortie renvoyée. L’annulation prend effet entre deux commandes. La commande en cours peut continuer jusqu’à la fin."
+          }
+        }
+      }
+    },
+    "The Shortcuts shared directory is unavailable." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le dossier partagé de Raccourcis est indisponible."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -40,7 +40,7 @@ class IntentViewController: UIViewController, INUIHostedViewControlling {
                 responseView.font = UIFont.systemFont(ofSize: 13)
                 if let fileList = intent.file {
                     for file in fileList {
-                        responseView.text += "File " + file.filename + " successfully created.\n"
+                        responseView.text += String(localized: "File \(file.filename) successfully created.") + "\n"
                     }
                 }
             }

@@ -25,4 +25,6 @@ To check an installed disposable Simulator app, install AXe and jq, start with a
 
 The harness enters commands through the public terminal UI with paced keystrokes, confirms each new tab's name, and checks that three panes produce distinct worker PIDs belonging to the installed app and remain alive together. It then detaches and checks `herdr --version` through the same app process. Receipt files stay in the app's Documents directory. Against an app without Herdr, the same harness fails on the first missing receipt.
 
+On a disposable portrait iPhone Simulator, run `pkg install kilo`, complete Herdr onboarding, return to the mini prompt and hide the software keyboard. Leave `~/.config/kilo` absent. With AXe and uv installed, run `./Herdr/tests/kilo-integration.sh SIMULATOR_UDID APP_BUNDLE_ID RECEIPT_DIR`. In the same app window, each case records `command -v kilo` before opening Herdr Settings. The test expects `kilo not found` without the config directory and `kilo available` with a temporary directory that it removes after the check. Captured panels, recognized text and PATH receipts go in the receipt directory.
+
 CPU overlap, pane isolation and cancellation, physical-device behavior, application backgrounding, saved-session migration and worker WASM routing require separate qualification.

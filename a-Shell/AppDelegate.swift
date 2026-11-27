@@ -284,6 +284,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         replaceCommand("downloadFile", "downloadFile", true)
         replaceCommand("downloadFolder", "downloadFolder", true)
         replaceCommand("photos", "photos_main", true)
+        replaceCommand("ocr", "ocr_main", false)
         replaceCommand("hideKeyboard", "hideKeyboard", true)
         replaceCommand("hideToolbar", "hideToolbar", true)
         replaceCommand("showToolbar", "showToolbar", true)
@@ -336,6 +337,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         FileManager().changeCurrentDirectoryPath(documentsUrl.path)
         versionUpToDate = !versionNumberIncreased()
         appDependentPath = initializeCommandEnvironment(hostInfo: Bundle.main.infoDictionary!, resourcePath: Bundle.main.resourcePath!, documentsUrl: documentsUrl, libraryURL: libraryURL, groupURL: FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroupID))
+        #if HERDR_EMBEDDED
+        if #available(iOS 26.2, *),
+           let codex = Bundle.main.privateFrameworksURL?.appendingPathComponent("codex.framework/codex"),
+           FileManager.default.isReadableFile(atPath: codex.path) {
+            let status = codex_ios_export_default_home()
+            if status != 0 {
+                NSLog("Cannot prepare shared Codex home (errno %d)", status)
+            }
+        }
+        #endif
         // Switch installed Python packages from 3.9 to 3.13:
         if (FileManager().fileExists(atPath: libraryURL.path + "/lib/python3.9/site-packages/")) {
             cleanupQueue.async{
@@ -453,6 +464,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the user discards a scene session.
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
+        for session in sceneSessions {
+            if let checkpoint = InteractiveCommandRestoration.checkpointURL(for: session.persistentIdentifier) {
+                InteractiveCommandRestoration.discard(at: checkpoint)
+            }
+        }
         // Delete Vim sessions here using sceneSessions.first.persistentIdentifier
         do {
             let documentsUrl = try FileManager().url(for: .documentDirectory,

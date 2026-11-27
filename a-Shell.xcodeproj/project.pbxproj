@@ -7,10 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BD38832A31B54982B7A1DF41 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6340626F325A4F91A38BF63C /* Localizable.xcstrings */; };
+		830BC06085C3439AB6B9CF38 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6340626F325A4F91A38BF63C /* Localizable.xcstrings */; };
+		C641E445E2774E1083C01C0A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6340626F325A4F91A38BF63C /* Localizable.xcstrings */; };
+		2D38E053FCDE4311A49EFF55 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6340626F325A4F91A38BF63C /* Localizable.xcstrings */; };
+		92340F9058C04FF08197BBD0 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6340626F325A4F91A38BF63C /* Localizable.xcstrings */; };
 		01254C24560A350B59662101 /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		059C086B6EEAB7CA8D2590E6 /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
 		0673335401F0E6294B1D6A65 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		084FF2541A50122906582CAC /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		09D5DF2DB0BAEEB73DCFED25 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
+		0E6CB28F2E390FA7BDD5A0AD /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
 		1277856148B9DF5BCFB73A45 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		188B14A9B070A4E709C1A447 /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
 		1C7B8B3BAEF7289AACBD231D /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
@@ -121,6 +128,9 @@
 		224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EED22C93DBC00069497 /* AppDelegate.swift */; };
 		224A903E2ADD0999006DB9CC /* Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223A1C1B2A5EDCA700B1B9AD /* Tips.swift */; };
 		224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22984EEF22C93DBC00069497 /* SceneDelegate.swift */; };
+		F4276B2BA7C245A48B6E2821 /* InteractiveCommandRestoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4276B2BA7C245A48B6E2820 /* InteractiveCommandRestoration.swift */; };
+		F4276B2BA7C245A48B6E2822 /* InteractiveCommandRestoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4276B2BA7C245A48B6E2820 /* InteractiveCommandRestoration.swift */; };
+		F4276B2BA7C245A48B6E2823 /* InteractiveCommandRestoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4276B2BA7C245A48B6E2820 /* InteractiveCommandRestoration.swift */; };
 		224A90402ADD0999006DB9CC /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 2220059F2871EF3300DC7A23 /* Intents.intentdefinition */; };
 		224A90412ADD0999006DB9CC /* UIColor+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291286622D9DAC40004A5EA /* UIColor+hexString.swift */; };
 		224A90422ADD0999006DB9CC /* UIViewController+showAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226AD81D23436B7A00E5D672 /* UIViewController+showAlert.swift */; };
@@ -209,6 +219,7 @@
 		225F45B0282A4B2D0010E698 /* texlua53A.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F45AB282A4B090010E698 /* texlua53A.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		226012EF231D239500AEB059 /* texCommandsDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 226012EE231D238B00AEB059 /* texCommandsDictionary.plist */; };
 		22601307232195AD00AEB059 /* luatexCommandsDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 22601306232195A100AEB059 /* luatexCommandsDictionary.plist */; };
+		226045B130B8951100697491 /* codex/codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex/codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2263E34429FFC8770096EFBF /* perlC.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2263E34329FFC8590096EFBF /* perlC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22675A15271C24B200459BEF /* listTeXscripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221DA54B26F7688100BEA92A /* listTeXscripts.swift */; };
 		2269076E2F97BBD20071F551 /* curl-impersonate.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2269076D2F97BBB40071F551 /* curl-impersonate.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -995,6 +1006,7 @@
 		27937DD7D9B079E79382E010 /* ShellWorkerD.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 671E1D67938C7F8A1BF10D84 /* ShellWorkerD.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2A45EE5BE77CD575DD0ADEBE /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
 		359DDEBBC7AB6E4D48032723 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		35CEEFFA3E32E690A179CFAC /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
 		3AABA6ADD41BDE6C2C6BEC6E /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		4096B185162EAE2C4738E1C1 /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		4C9CA710D4734D323992A80C /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
@@ -1019,7 +1031,9 @@
 		620000000000000000000002 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
 		620000000000000000000003 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
 		620000000000000000000004 /* TerminalPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620000000000000000000001 /* TerminalPrompt.swift */; };
+		631305DBB8D6610ACAA16FCF /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
 		632684F10ED929FB4713B2AE /* ShellWorkerG.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = A490F7519B2E1597438D0853 /* ShellWorkerG.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		664EF28998AC682D4587F5AB /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
 		6B4BFFDBD16619E32E8DA990 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		6BD953662BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
 		6BD953672BFFCC0C00C2508F /* PutFileIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD953652BFFCC0C00C2508F /* PutFileIntentHandler.swift */; };
@@ -1037,10 +1051,17 @@
 		707000000000000000000004 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707000000000000000000001 /* TerminalFont.swift */; };
 		70E66D31CD0F42D23FBC3EFC /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
 		72B403FFF4DA5BA1CEDD5717 /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		731431410000000000000001 /* SSHStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000000 /* SSHStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000004 /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
+		731431410000000000000005 /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
+		731431410000000000000101 /* SCPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000001 /* SCPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000201 /* SFTPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000002 /* SFTPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		731431410000000000000301 /* SSHKeygenStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000003 /* SSHKeygenStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		7407B0C9B5E07D5492D98053 /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		755E22C57BB293CDAD64CB41 /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		7A025EB47CCEBDAA7E49CB3E /* ShellWorkers/Host.swift in Sources */ = {isa = PBXBuildFile; fileRef = D847238C57D48CADF264887A /* ShellWorkers/Host.swift */; };
 		8299DBD0E93022AAEACE5F54 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		87806CB937978E72E1E59179 /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
 		89483CE425CC48B2008EF012 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
 		8F4F306A0A771AF4667582BA /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		92590DF487A4D5B48CEE3C36 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 228E13F225C95F2D0065D825 /* ios_system.xcframework */; };
@@ -1052,69 +1073,28 @@
 		A22600000000000000000001 /* codex/codex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A22600000000000000000002 /* codex/codex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A2B1818A0000000000000001 /* Herdr LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = A2B1818A0000000000000002 /* Herdr LICENSE */; };
 		A85A41CEA814190D8404E105 /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
+		A9EF8A40131E082BF78C140E /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
 		AA7100000000000000000001 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AE1100000000000000000001 /* helix/helix.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE1100000000000000000002 /* helix/helix.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B20620C6A9ADEC432BF25194 /* ShellWorkerH.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 5A7F8536C04A2BAC1834B3E7 /* ShellWorkerH.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B70CFF8BCD5A858CCB5D600B /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
+		BA926A37EC68326E951422FF /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
 		BD336245D81BD967822E8805 /* ShellWorkerF.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = A8EA5B4748F0CC00F65BA1A1 /* ShellWorkerF.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C14B2CCCCE38CFD39751A8F3 /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		C27C502276A1F0301FBC2CBA /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		C3EEB3DED5B57200DA36F34E /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		C608987E0D35D7D8C92CF091 /* ShellWorkers/RemotePane.m in Sources */ = {isa = PBXBuildFile; fileRef = 11189940A2AF26A6542BDEAF /* ShellWorkers/RemotePane.m */; };
+		C608987E0D35D7D8C92CF092 /* codex/home.m in Sources */ = {isa = PBXBuildFile; fileRef = 11189940A2AF26A6542BDEB0 /* codex/home.m */; };
 		CDECC5E5A6CB9CC531134296 /* ShellWorkerE.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 366758A2DEC0386D139D2234 /* ShellWorkerE.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D2F30C91685F9DC284616312 /* ShellWorkerA.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 3BA328FE78F02ED540EFB7DA /* ShellWorkerA.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D8F1C3A27B5E4E0C9A61B2F4 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
 		DB9A503B8C8690B9298B35E3 /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
 		E2CFAA905BF589905A69D32F /* ShellWorkers/Worker.m in Sources */ = {isa = PBXBuildFile; fileRef = BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */; };
 		E357BFCCA00A4DD6EF1D0235 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
+		E6EE7A32A41968AF7EFAAF71 /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
 		F1632FC1E103CFB4010F7006 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
 		F2D20BDE70DB7C92C03509DE /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
 		FD33E045D3FF5D175364CB7C /* ShellWorkerC.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 1D81B2E2F18AE7821D05A7AD /* ShellWorkerC.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		731431410000000000000001 /* SSHStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000000 /* SSHStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		731431410000000000000101 /* SCPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000001 /* SCPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		731431410000000000000201 /* SFTPStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000002 /* SFTPStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		731431410000000000000301 /* SSHKeygenStock.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 731431400000000000000003 /* SSHKeygenStock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		731431410000000000000004 /* sshStockCommands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 731431400000000000000004 /* sshStockCommands.plist */; };
-		0E6CB28F2E390FA7BDD5A0AD /* sshStockCommands.plist in Resources */ = {
-			isa = PBXBuildFile;
-			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
-		};
-		631305DBB8D6610ACAA16FCF /* sshStockCommands.plist in Resources */ = {
-			isa = PBXBuildFile;
-			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
-		};
-		BA926A37EC68326E951422FF /* sshStockCommands.plist in Resources */ = {
-			isa = PBXBuildFile;
-			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
-		};
-		A9EF8A40131E082BF78C140E /* sshStockCommands.plist in Resources */ = {
-			isa = PBXBuildFile;
-			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
-		};
-		87806CB937978E72E1E59179 /* sshStockCommands.plist in Resources */ = {
-			isa = PBXBuildFile;
-			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
-		};
-		664EF28998AC682D4587F5AB /* sshStockCommands.plist in Resources */ = {
-			isa = PBXBuildFile;
-			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
-		};
-		E6EE7A32A41968AF7EFAAF71 /* sshStockCommands.plist in Resources */ = {
-			isa = PBXBuildFile;
-			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
-		};
-		059C086B6EEAB7CA8D2590E6 /* sshStockCommands.plist in Resources */ = {
-			isa = PBXBuildFile;
-			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
-		};
-		731431410000000000000005 /* sshStockCommands.plist in Resources */ = {
-			isa = PBXBuildFile;
-			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
-		};
-		35CEEFFA3E32E690A179CFAC /* sshStockCommands.plist in Resources */ = {
-			isa = PBXBuildFile;
-			fileRef = 731431400000000000000004 /* sshStockCommands.plist */;
-		};
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1546,6 +1526,7 @@
 				226B0BF92E9FD5F200B14A3F /* openrsync.framework in Embed Frameworks */,
 				223E91E62EC1251900A81615 /* openrsyncA.framework in Embed Frameworks */,
 				2236B29F30640BDC002B6F9E /* WasmKitCommand.framework in Embed Frameworks */,
+				226045B130B8951100697491 /* codex/codex.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2134,10 +2115,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6340626F325A4F91A38BF63C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		070AE9F6D58955EE5B3B2FB9 /* Worker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Worker.swift; path = "$(DERIVED_FILE_DIR)/Worker.swift"; sourceTree = "<absolute>"; };
 		0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ShellWorkers/Worker.xcconfig; sourceTree = SOURCE_ROOT; };
 		0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExecuteLongCommandIntent.swift; sourceTree = "<group>"; };
 		11189940A2AF26A6542BDEAF /* ShellWorkers/RemotePane.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/RemotePane.m; sourceTree = SOURCE_ROOT; };
+		11189940A2AF26A6542BDEB0 /* codex/home.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = codex/home.m; sourceTree = SOURCE_ROOT; };
 		196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCommand.swift; sourceTree = "<group>"; };
 		1A10CFCE432C459F3DD1051D /* ShellWorkerI.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerI.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D81B2E2F18AE7821D05A7AD /* ShellWorkerC.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerC.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2270,6 +2253,7 @@
 		22984EEA22C93DBC00069497 /* a-Shell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "a-Shell.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		22984EED22C93DBC00069497 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		22984EEF22C93DBC00069497 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		F4276B2BA7C245A48B6E2820 /* InteractiveCommandRestoration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveCommandRestoration.swift; sourceTree = "<group>"; };
 		22984EF122C93DBC00069497 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		22984EF322C93DBF00069497 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		22984EF622C93DBF00069497 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -3000,6 +2984,11 @@
 		6BD953692BFFCC4000C2508F /* GetFileIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetFileIntentHandler.swift; sourceTree = "<group>"; };
 		6BD9536D2BFFCC6400C2508F /* ExecuteCommandIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecuteCommandIntentHandler.swift; sourceTree = "<group>"; };
 		707000000000000000000001 /* TerminalFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalFont.swift; sourceTree = "<group>"; };
+		731431400000000000000000 /* SSHStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SSHStock.xcframework; path = xcfs/SSHStock.xcframework; sourceTree = SOURCE_ROOT; };
+		731431400000000000000001 /* SCPStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SCPStock.xcframework; path = xcfs/SCPStock.xcframework; sourceTree = SOURCE_ROOT; };
+		731431400000000000000002 /* SFTPStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SFTPStock.xcframework; path = xcfs/SFTPStock.xcframework; sourceTree = SOURCE_ROOT; };
+		731431400000000000000003 /* SSHKeygenStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SSHKeygenStock.xcframework; path = xcfs/SSHKeygenStock.xcframework; sourceTree = SOURCE_ROOT; };
+		731431400000000000000004 /* sshStockCommands.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = sshStockCommands.plist; path = Resources_mini/sshStockCommands.plist; sourceTree = "<group>"; };
 		8916088D2713056800CED1C9 /* a-Shell-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "a-Shell-Bridging-Header.h"; sourceTree = "<group>"; };
 		8916088E2713056900CED1C9 /* KBWebViewBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KBWebViewBase.m; sourceTree = "<group>"; };
 		8916088F2713056A00CED1C9 /* KBWebViewBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KBWebViewBase.h; sourceTree = "<group>"; };
@@ -3019,11 +3008,6 @@
 		BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/Worker.m; sourceTree = SOURCE_ROOT; };
 		CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/NativePane.m; sourceTree = SOURCE_ROOT; };
 		D847238C57D48CADF264887A /* ShellWorkers/Host.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellWorkers/Host.swift; sourceTree = SOURCE_ROOT; };
-		731431400000000000000000 /* SSHStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SSHStock.xcframework; path = xcfs/SSHStock.xcframework; sourceTree = SOURCE_ROOT; };
-		731431400000000000000001 /* SCPStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SCPStock.xcframework; path = xcfs/SCPStock.xcframework; sourceTree = SOURCE_ROOT; };
-		731431400000000000000002 /* SFTPStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SFTPStock.xcframework; path = xcfs/SFTPStock.xcframework; sourceTree = SOURCE_ROOT; };
-		731431400000000000000003 /* SSHKeygenStock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SSHKeygenStock.xcframework; path = xcfs/SSHKeygenStock.xcframework; sourceTree = SOURCE_ROOT; };
-		731431400000000000000004 /* sshStockCommands.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = sshStockCommands.plist; path = Resources_mini/sshStockCommands.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3243,6 +3227,7 @@
 				220F36512BC458C800842FEE /* PrivacyInfo.xcprivacy */,
 				223FC3CA2611F9C300CDC89F /* wasm.html */,
 				2220059F2871EF3300DC7A23 /* Intents.intentdefinition */,
+				6340626F325A4F91A38BF63C /* Localizable.xcstrings */,
 				22BF6242231589DB00FEA585 /* Settings.bundle */,
 				22B1B81A22CB9E5500F7C452 /* Resources */,
 				229D25BE25793675004A78AC /* Resources_mini */,
@@ -3286,6 +3271,7 @@
 				620000000000000000000001 /* TerminalPrompt.swift */,
 				707000000000000000000001 /* TerminalFont.swift */,
 				22984EEF22C93DBC00069497 /* SceneDelegate.swift */,
+				F4276B2BA7C245A48B6E2820 /* InteractiveCommandRestoration.swift */,
 				224754D42EFBDF2C007C35FE /* SceneDelegate+TerminalView.swift */,
 				22984EF122C93DBC00069497 /* ContentView.swift */,
 				2208ACC822D24703003985D6 /* WkWebViewExtension.swift */,
@@ -4244,6 +4230,7 @@
 				1A10CFCE432C459F3DD1051D /* ShellWorkerI.appex */,
 				93314A863CABFBA3A5626312 /* ShellWorkerJ.appex */,
 				11189940A2AF26A6542BDEAF /* ShellWorkers/RemotePane.m */,
+				11189940A2AF26A6542BDEB0 /* codex/home.m */,
 				601A00000000000000000002 /* ShellWorkers/HostPane.m */,
 				D847238C57D48CADF264887A /* ShellWorkers/Host.swift */,
 				0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */,
@@ -4702,6 +4689,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BD38832A31B54982B7A1DF41 /* Localizable.xcstrings in Resources */,
 				22178F08257BBBA6008EB2B4 /* MainInterface.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4710,6 +4698,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				830BC06085C3439AB6B9CF38 /* Localizable.xcstrings in Resources */,
 				224A904F2ADD0999006DB9CC /* terminfo in Resources */,
 				224A90502ADD0999006DB9CC /* Settings.bundle in Resources */,
 				22A6E07F3098D9840018310F /* wasm_withWorker.js in Resources */,
@@ -4748,6 +4737,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C641E445E2774E1083C01C0A /* Localizable.xcstrings in Resources */,
 				227F0FB930868CE400FCC674 /* npm in Resources */,
 				22F0FE7B3A1C4B0D00A1B2C3 /* node-fetch in Resources */,
 				22D1335D2E61E35B00E76E2E /* Library in Resources */,
@@ -4791,6 +4781,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D38E053FCDE4311A49EFF55 /* Localizable.xcstrings in Resources */,
 				731431410000000000000004 /* sshStockCommands.plist in Resources */,
 				A2B1818A0000000000000001 /* Herdr LICENSE in Resources */,
 				227B248C2BE12FF1003A8031 /* wasm_withWorker.js in Resources */,
@@ -4836,6 +4827,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				92340F9058C04FF08197BBD0 /* Localizable.xcstrings in Resources */,
 				22AD8729246EBFFD00F415DE /* MainInterface.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5149,6 +5141,7 @@
 				224A903C2ADD0999006DB9CC /* AppDelegate.swift in Sources */,
 				224A903E2ADD0999006DB9CC /* Tips.swift in Sources */,
 				224A903F2ADD0999006DB9CC /* SceneDelegate.swift in Sources */,
+				F4276B2BA7C245A48B6E2821 /* InteractiveCommandRestoration.swift in Sources */,
 				6BD9536C2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
 				224A90402ADD0999006DB9CC /* Intents.intentdefinition in Sources */,
 				227814F530A85966003A4910 /* ProgressCommand.swift in Sources */,
@@ -5181,6 +5174,7 @@
 				707000000000000000000004 /* TerminalFont.swift in Sources */,
 				22984EEE22C93DBC00069497 /* AppDelegate.swift in Sources */,
 				22984EF022C93DBC00069497 /* SceneDelegate.swift in Sources */,
+				F4276B2BA7C245A48B6E2822 /* InteractiveCommandRestoration.swift in Sources */,
 				223A1C1C2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				222005982871EF3300DC7A23 /* Intents.intentdefinition in Sources */,
 				227814F130A8595D003A4910 /* ExecuteLongCommandIntent.swift in Sources */,
@@ -5209,6 +5203,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C608987E0D35D7D8C92CF091 /* ShellWorkers/RemotePane.m in Sources */,
+				C608987E0D35D7D8C92CF092 /* codex/home.m in Sources */,
 				601A00000000000000000001 /* ShellWorkers/HostPane.m in Sources */,
 				7A025EB47CCEBDAA7E49CB3E /* ShellWorkers/Host.swift in Sources */,
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
@@ -5220,6 +5215,7 @@
 				223A1C1D2A5EDCA700B1B9AD /* Tips.swift in Sources */,
 				224754D72EFBDF48007C35FE /* SceneDelegate+TerminalView.swift in Sources */,
 				229D2479257931E4004A78AC /* SceneDelegate.swift in Sources */,
+				F4276B2BA7C245A48B6E2823 /* InteractiveCommandRestoration.swift in Sources */,
 				227814F230A8595D003A4910 /* ExecuteLongCommandIntent.swift in Sources */,
 				6BD9536B2BFFCC4000C2508F /* GetFileIntentHandler.swift in Sources */,
 				227814F430A85966003A4910 /* ProgressCommand.swift in Sources */,
@@ -5948,7 +5944,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 614;
+				CURRENT_PROJECT_VERSION = 619;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;
@@ -6014,7 +6010,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "a-Shell/a-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 614;
+				CURRENT_PROJECT_VERSION = 619;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_ASSET_PATHS = "a-Shell/Preview\\ Content";
 				ENABLE_ON_DEMAND_RESOURCES = NO;

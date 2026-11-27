@@ -1,0 +1,45 @@
+name: MultiMarkdown xcframework
+on:
+  pull_request:
+    paths:
+      - 'scripts/build-multimarkdown.sh'
+      - 'multimarkdown/**'
+      - 'ci/audit-artifact.py'
+      - 'ci/test-universal-audit.sh'
+      - '.github/workflows/multimarkdown-framework.yml'
+  workflow_dispatch:
+  push:
+    branches:
+      - 'ci/multimarkdown-xcframework'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-26-intel
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Exercise build paths that contain spaces.
+          path: source checkout
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+      - name: Check build tools
+        run: command -v cmake && command -v ninja
+      - name: Build and audit XCFrameworks
+        working-directory: source checkout
+        run: |
+          xcodebuild -version
+          bash scripts/build-multimarkdown.sh
+          bash ci/test-universal-audit.sh .build/multimarkdown/dist/multimarkdown.xcframework.zip
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: multimarkdown-xcframework
+          include-hidden-files: true
+          if-no-files-found: error
+          path: |
+            source checkout/.build/multimarkdown/dist/multimarkdown.xcframework.zip
+            source checkout/.build/multimarkdown/dist/multimarkdown-audit.json
+            source checkout/.build/multimarkdown/dist/checksums.txt

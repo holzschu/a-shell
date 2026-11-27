@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdatomic.h>
 #include <dirent.h>
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <locale.h>
 #include <signal.h>
@@ -241,6 +242,9 @@ __attribute__((used, visibility("default"))) int ashell_worker_host_interrupt(vo
     [environment addObject:[NSString stringWithFormat:@"ASHELL_WORKER_PID=%d", getpid()]];
     env = environment;
     initializeEnvironment();
+    // The app embeds Python and pythonA only. Reuse those slots instead of
+    // resolving missing pythonB and pythonC on later invocations in this pane.
+    numPythonInterpreters = 2;
     replaceCommand(@"clear", @"clear", true);
     // This process owns exactly one shell. Native Rust clients enumerate libc's
     // environment as well as ios_system's forked command environment.
@@ -292,6 +296,10 @@ __attribute__((used, visibility("default"))) int ashell_worker_host_interrupt(vo
     reply(_pane ? ashell_pane_resize(_pane, cols, rows) : ESRCH);
 }
 - (void)closeInput:(void (^)(int))reply { reply(_pane ? ashell_pane_close_stdin(_pane) : ESRCH); }
+- (void)controlSFTPEscape:(BOOL)interrupt reply:(void (^)(BOOL))reply {
+    bool (*accept)(bool) = dlsym(RTLD_DEFAULT, "ios_accept_sftp_escape_control");
+    reply(_pane && accept && accept(interrupt));
+}
 - (void)interrupt:(void (^)(int))reply {
     // Stream-backed TUIs have no kernel termios state. ENOTSUP sends the ETX
     // byte through the existing host input path instead of cancelling a thread.

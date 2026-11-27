@@ -13,6 +13,10 @@ import ios_system
 import Photos
 import PhotosUI
 import CryptoKit
+import ImageIO
+import PDFKit
+import UniformTypeIdentifiers
+import Vision
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
@@ -1893,6 +1897,149 @@ public func jump(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<In
     return 0
 }
     
+@_cdecl("ocr_main")
+public func ocr(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+    let usage = "Usage: ocr [-l language[,language...]] [--fast] [--] file ...\n"
+    guard let args = convertCArguments(argc: argc, argv: argv) else { return 1 }
+    let request = VNRecognizeTextRequest()
+    request.recognitionLevel = .accurate
+    var languages = ["en"]
+    var index = 1
+    options: while index < args.count {
+        switch args[index] {
+        case "-h", "--help":
+            fputs(usage, thread_stdout)
+            return 0
+        case "--":
+            index += 1
+            break options
+        case "--fast":
+            request.recognitionLevel = .fast
+        case "-l":
+            index += 1
+            guard index < args.count else {
+                fputs(usage, thread_stderr)
+                return 1
+            }
+            languages = args[index].components(separatedBy: ",")
+        default:
+            if args[index].hasPrefix("-") {
+                fputs("ocr: unknown option: \(args[index])\n" + usage, thread_stderr)
+                return 1
+            }
+            break options
+        }
+        index += 1
+    }
+    guard index < args.count else {
+        fputs(usage, thread_stderr)
+        return 1
+    }
+
+    do {
+        let supported = try request.supportedRecognitionLanguages()
+        var selected: [String] = []
+        for language in languages {
+            let code = language.lowercased()
+            let match = supported.first { $0.lowercased() == code }
+                ?? supported.first { $0.lowercased().hasPrefix(code + "-") }
+            guard let match else {
+                let mode = request.recognitionLevel == .fast ? "fast" : "accurate"
+                fputs("ocr: unsupported language for \(mode) recognition: \(language)\n", thread_stderr)
+                return 1
+            }
+            if !selected.contains(match) { selected.append(match) }
+        }
+        request.recognitionLanguages = selected
+    } catch {
+        fputs("ocr: \(error.localizedDescription)\n", thread_stderr)
+        return 1
+    }
+
+    let workingDirectory = URL(fileURLWithPath: String(cString: ios_getenv("PWD")), isDirectory: true)
+    var status: Int32 = 0
+    for path in args[index...] {
+        pthread_testcancel()
+        do {
+            try autoreleasepool {
+                let url = URL(fileURLWithPath: path, relativeTo: workingDirectory)
+                try recognizeText(in: url.absoluteURL, request: request)
+            }
+        } catch {
+            fputs("ocr: \(path): \(error.localizedDescription)\n", thread_stderr)
+            status = 1
+        }
+    }
+    if fflush(thread_stdout) != 0 {
+        fputs("ocr: could not write to stdout\n", thread_stderr)
+        return 1
+    }
+    return status
+}
+
+private func recognizeText(in url: URL, request: VNRecognizeTextRequest) throws {
+    guard FileManager.default.fileExists(atPath: url.path) else {
+        throw CocoaError(.fileReadNoSuchFile)
+    }
+    let source = CGImageSourceCreateWithURL(url as CFURL, nil)
+    if let source, let type = CGImageSourceGetType(source), type as String != UTType.pdf.identifier {
+        // ImageIO applies EXIF orientation and bounds the decoded image size.
+        let options = [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                       kCGImageSourceCreateThumbnailWithTransform: true,
+                       kCGImageSourceThumbnailMaxPixelSize: 4096] as CFDictionary
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options) else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        try recognizeText(in: image, request: request)
+        return
+    }
+    guard let document = PDFDocument(url: url), !document.isLocked, document.pageCount > 0 else {
+        throw CocoaError(.fileReadCorruptFile)
+    }
+    for index in 0..<document.pageCount {
+        pthread_testcancel()
+        try autoreleasepool {
+            guard let page = document.page(at: index)?.pageRef, let image = renderOCRPage(page) else {
+                throw CocoaError(.fileReadCorruptFile, userInfo: [
+                    NSLocalizedDescriptionKey: "could not render PDF page \(index + 1)"
+                ])
+            }
+            try recognizeText(in: image, request: request)
+        }
+    }
+}
+
+private func renderOCRPage(_ page: CGPDFPage) -> CGImage? {
+    let crop = page.getBoxRect(.cropBox).size
+    let rotated = page.rotationAngle % 180 != 0
+    let size = rotated ? CGSize(width: crop.height, height: crop.width) : crop
+    let longestSide = max(size.width, size.height)
+    guard longestSide.isFinite, size.width > 0, size.height > 0 else { return nil }
+    // Render at roughly 300 dpi, capped to avoid allocating an unbounded bitmap.
+    let scale = min(300.0 / 72.0, 4096.0 / longestSide)
+    let width = Int(ceil(size.width * scale))
+    let height = Int(ceil(size.height * scale))
+    let bounds = CGRect(x: 0, y: 0, width: width, height: height)
+    guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
+                                  bytesPerRow: 0, space: CGColorSpaceCreateDeviceGray(),
+                                  bitmapInfo: CGImageAlphaInfo.none.rawValue) else { return nil }
+    context.setFillColor(gray: 1, alpha: 1)
+    context.fill(bounds)
+    context.concatenate(page.getDrawingTransform(.cropBox, rect: bounds, rotate: 0, preserveAspectRatio: true))
+    context.drawPDFPage(page)
+    return context.makeImage()
+}
+
+private func recognizeText(in image: CGImage, request: VNRecognizeTextRequest) throws {
+    try VNImageRequestHandler(cgImage: image).perform([request])
+    for observation in request.results ?? [] {
+        if let text = observation.topCandidates(1).first?.string,
+           fputs(text + "\n", thread_stdout) == EOF {
+            throw CocoaError(.fileWriteUnknown)
+        }
+    }
+}
+
 @_cdecl("play_main")
 public func play_media(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
     let args = convertCArguments(argc: argc, argv: argv)
