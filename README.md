@@ -14,6 +14,8 @@ For help, type `help` in the command line. `help -l` lists all the available com
 
 You can change the appearance of a-Shell using `config`. It lets you change the font, the font size, the background color, the text color and the cursor color and shape. Each window can have its own appearance. `config -p` will make the settings for the current window permanent, that is used for all future windows. With `config -t` you can also configure the toolbar.
 
+Use `ocr [-l ru,en] [--fast] [--] file ...` to recognize text in PNG, JPEG, HEIC, and PDF files on the device. The command processes files and PDF pages in order and writes recognized lines to standard output. English and accurate recognition are the defaults. Available languages depend on iOS and the recognition mode; an unsupported language or unreadable file is reported to standard error and yields a nonzero exit status.
+
 When opening a new window, a-Shell executes the file `.profile` if it exists. You can use this mechanism to customize further, e.g. have custom environment variables or cleanup temporary files.
 
 For more tips on how to use a-Shell, see <a href="https://bianshen00009.gitbook.io/a-guide-to-a-shell/">the document</a>.
