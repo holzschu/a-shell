@@ -3,49 +3,57 @@ name: App build
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      runner:
+        description: GitHub-hosted macOS runner
+        type: choice
+        default: macos-26-intel
+        options: [macos-26-intel, macos-26]
+  push:
+    branches: ['ci/app-build-*']
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: a-Shell-noPython (${{ matrix.platform }})
-    runs-on: macos-15
+    name: ${{ matrix.scheme }} (${{ matrix.platform }})
+    runs-on: ${{ inputs.runner || 'macos-26-intel' }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: iOS
-            arch: arm64
-          - platform: iOS Simulator
-            arch: x86_64
+        scheme: [a-Shell-noPython, a-Shell-mini, a-Shell]
+        platform: [device, simulator]
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-    defaults:
-      run:
-        shell: bash
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - name: Initialize SwiftTerm
-        run: git submodule update --init SwiftTerm
-      - name: Cache Swift package artifacts
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
-          path: xcfs/.build
-          key: xcfs-${{ runner.os }}-${{ runner.arch }}-xcode26.3-${{ hashFiles('xcfs/Package.swift', 'xcfs/Package.resolved') }}
-      - name: Download frameworks and verify SPM checksums
-        run: nice -n 15 ./downloadFrameworks.sh --jobs 4
-      - name: Build unsigned app
-        env:
-          PLATFORM: ${{ matrix.platform }}
-          ARCH: ${{ matrix.arch }}
+          version: '0.11.21'
+      - name: Check toolchain and SwiftPM manifest
         run: |
-          nice -n 15 xcodebuild -project a-Shell.xcodeproj \
-            -scheme a-Shell-noPython -configuration Debug \
-            -destination "generic/platform=$PLATFORM" \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" -jobs 4 \
-            ARCHS="$ARCH" \
-            CODE_SIGNING_ALLOWED=NO build
+          xcodebuild -version
+          uv run ci/build-app.py package --check
+      - name: Test framework staging
+        if: matrix.scheme == 'a-Shell-noPython' && matrix.platform == 'simulator'
+        run: bash tests/app-frameworks.sh
+      - name: Build unsigned app from pinned frameworks
+        shell: bash
+        env:
+          SCHEME: ${{ matrix.scheme }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          status=0
+          uv run ci/build-app.py build "$SCHEME" "$PLATFORM" || status=$?
+          cp "$GITHUB_STEP_SUMMARY" "$RUNNER_TEMP/app-build-summary.md"
+          exit "$status"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: app-build-${{ matrix.scheme }}-${{ matrix.platform }}-summary
+          path: ${{ runner.temp }}/app-build-summary.md
+          if-no-files-found: error

@@ -64,6 +64,7 @@
 		221FA4322A1C9ACE00463D5B /* libproj.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 221FA42E2A1C9AA700463D5B /* libproj.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		221FA4352A1C9CE800463D5B /* libspatialindex_c.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 221FA4332A1C9CD700463D5B /* libspatialindex_c.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		221FA4362A1C9CE800463D5B /* libspatialindex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 221FA4342A1C9CD700463D5B /* libspatialindex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22AF02FA29F70A640085290B /* libzmq.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22AF02D529F669DE0085290B /* libzmq.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		221FA4392A1CA00D00463D5B /* proj in Resources */ = {isa = PBXBuildFile; fileRef = 221FA4382A1CA00400463D5B /* proj */; };
 		222005982871EF3300DC7A23 /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 2220059F2871EF3300DC7A23 /* Intents.intentdefinition */; };
 		222005992871EF3300DC7A23 /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 2220059F2871EF3300DC7A23 /* Intents.intentdefinition */; };
@@ -328,7 +329,8 @@
 		22AD8730246EBFFD00F415DE /* a-Shell-Intents.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 22AD8718246EBFFA00F415DE /* a-Shell-Intents.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		22AD8741246F1CD700F415DE /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2208ACBE22CCE57E003985D6 /* String+C.swift */; };
 		22AF02F729F70A630085290B /* openblas.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22AF02D229F669C20085290B /* openblas.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22AF02F829F70A640085290B /* libgfortran.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22AF02D329F669DE0085290B /* libgfortran.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22AF02F829F70A640085290B /* flang_rt.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22AF02D329F669DE0085290B /* flang_rt.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22AF02F929F70A640085290B /* libomp.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22AF02D429F669DE0085290B /* libomp.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B0C0172F9E054E0001BEBF /* PythonAcurl_cffi._wrapper.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B0C0162F9E04DF0001BEBF /* PythonAcurl_cffi._wrapper.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B0C0182F9E05670001BEBF /* Python-curl_cffi._wrapper.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B0C0152F9E04900001BEBF /* Python-curl_cffi._wrapper.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B0C0192F9E05810001BEBF /* curl-impersonate.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2269076D2F97BBB40071F551 /* curl-impersonate.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -654,7 +656,51 @@
 		22D1452C2E62098800E76E2E /* Python-matplotlib._ttconv.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1437A2E62095C00E76E2E /* Python-matplotlib._ttconv.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D1452D2E62098800E76E2E /* Python-matplotlib.ft2font.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1437B2E62095C00E76E2E /* Python-matplotlib.ft2font.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D1452E2E62098800E76E2E /* Python-numpy.numpy.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1437C2E62095C00E76E2E /* Python-numpy.numpy.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22D1452F2E62098800E76E2E /* Python-pandas.pandas.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1437D2E62095C00E76E2E /* Python-pandas.pandas.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000010 /* Python-pandas._libs._cyutility.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000011 /* Python-pandas._libs._cyutility.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000012 /* Python-pandas._libs._ujson.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000013 /* Python-pandas._libs._ujson.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000014 /* Python-pandas._libs.algos.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000015 /* Python-pandas._libs.algos.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000016 /* Python-pandas._libs.arrays.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000017 /* Python-pandas._libs.arrays.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000018 /* Python-pandas._libs.byteswap.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000019 /* Python-pandas._libs.byteswap.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000001A /* Python-pandas._libs.groupby.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000001B /* Python-pandas._libs.groupby.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000001C /* Python-pandas._libs.hashing.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000001D /* Python-pandas._libs.hashing.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000001E /* Python-pandas._libs.hashtable.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000001F /* Python-pandas._libs.hashtable.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000020 /* Python-pandas._libs.index.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000021 /* Python-pandas._libs.index.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000022 /* Python-pandas._libs.indexing.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000023 /* Python-pandas._libs.indexing.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000024 /* Python-pandas._libs.internals.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000025 /* Python-pandas._libs.internals.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000026 /* Python-pandas._libs.interval.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000027 /* Python-pandas._libs.interval.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000028 /* Python-pandas._libs.join.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000029 /* Python-pandas._libs.join.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000002A /* Python-pandas._libs.lib.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000002B /* Python-pandas._libs.lib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000002C /* Python-pandas._libs.missing.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000002D /* Python-pandas._libs.missing.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000002E /* Python-pandas._libs.ops.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000002F /* Python-pandas._libs.ops.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000030 /* Python-pandas._libs.ops_dispatch.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000031 /* Python-pandas._libs.ops_dispatch.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000032 /* Python-pandas._libs.pandas_datetime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000033 /* Python-pandas._libs.pandas_datetime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000034 /* Python-pandas._libs.pandas_parser.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000035 /* Python-pandas._libs.pandas_parser.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000036 /* Python-pandas._libs.parsers.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000037 /* Python-pandas._libs.parsers.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000038 /* Python-pandas._libs.properties.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000039 /* Python-pandas._libs.properties.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000003A /* Python-pandas._libs.reshape.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000003B /* Python-pandas._libs.reshape.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000003C /* Python-pandas._libs.sas.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000003D /* Python-pandas._libs.sas.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000003E /* Python-pandas._libs.sparse.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000003F /* Python-pandas._libs.sparse.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000040 /* Python-pandas._libs.testing.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000041 /* Python-pandas._libs.testing.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000042 /* Python-pandas._libs.tslib.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000043 /* Python-pandas._libs.tslib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000044 /* Python-pandas._libs.tslibs.base.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000045 /* Python-pandas._libs.tslibs.base.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000046 /* Python-pandas._libs.tslibs.ccalendar.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000047 /* Python-pandas._libs.tslibs.ccalendar.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000048 /* Python-pandas._libs.tslibs.conversion.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000049 /* Python-pandas._libs.tslibs.conversion.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000004A /* Python-pandas._libs.tslibs.dtypes.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000004B /* Python-pandas._libs.tslibs.dtypes.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000004C /* Python-pandas._libs.tslibs.fields.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000004D /* Python-pandas._libs.tslibs.fields.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000004E /* Python-pandas._libs.tslibs.nattype.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000004F /* Python-pandas._libs.tslibs.nattype.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000050 /* Python-pandas._libs.tslibs.np_datetime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000051 /* Python-pandas._libs.tslibs.np_datetime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000052 /* Python-pandas._libs.tslibs.offsets.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000053 /* Python-pandas._libs.tslibs.offsets.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000054 /* Python-pandas._libs.tslibs.parsing.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000055 /* Python-pandas._libs.tslibs.parsing.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000056 /* Python-pandas._libs.tslibs.period.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000057 /* Python-pandas._libs.tslibs.period.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000058 /* Python-pandas._libs.tslibs.strptime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000059 /* Python-pandas._libs.tslibs.strptime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000005A /* Python-pandas._libs.tslibs.timedeltas.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000005B /* Python-pandas._libs.tslibs.timedeltas.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000005C /* Python-pandas._libs.tslibs.timestamps.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000005D /* Python-pandas._libs.tslibs.timestamps.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000005E /* Python-pandas._libs.tslibs.timezones.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000005F /* Python-pandas._libs.tslibs.timezones.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000060 /* Python-pandas._libs.tslibs.tzconversion.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000061 /* Python-pandas._libs.tslibs.tzconversion.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000062 /* Python-pandas._libs.tslibs.vectorized.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000063 /* Python-pandas._libs.tslibs.vectorized.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000064 /* Python-pandas._libs.window.aggregations.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000065 /* Python-pandas._libs.window.aggregations.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000066 /* Python-pandas._libs.window.indexers.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000067 /* Python-pandas._libs.window.indexers.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000068 /* Python-pandas._libs.writers.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000069 /* Python-pandas._libs.writers.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D145302E62098800E76E2E /* Python-PIL.PIL.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1437E2E62095C00E76E2E /* Python-PIL.PIL.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D145312E62098800E76E2E /* Python-psutil._psutil_ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1437F2E62095C00E76E2E /* Python-psutil._psutil_ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D145322E62098800E76E2E /* Python-psutil._psutil_posix.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D143802E62095C00E76E2E /* Python-psutil._psutil_posix.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -673,9 +719,11 @@
 		22D1453F2E62098800E76E2E /* Python-scipy.special._special_ufuncs.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1438D2E62095C00E76E2E /* Python-scipy.special._special_ufuncs.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D145402E62098800E76E2E /* Python-scipy.special._ufuncs.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1438E2E62095C00E76E2E /* Python-scipy.special._ufuncs.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D145412E62098800E76E2E /* Python-scipy.special._ufuncs_cxx.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1438F2E62095C00E76E2E /* Python-scipy.special._ufuncs_cxx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22D145422E62098800E76E2E /* Python-shapely.speedups._speedups.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D143902E62095C00E76E2E /* Python-shapely.speedups._speedups.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22D145432E62098800E76E2E /* Python-shapely.vectorized._vectorized.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D143912E62095C00E76E2E /* Python-shapely.vectorized._vectorized.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000006A /* Python-shapely._geometry_helpers.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000006B /* Python-shapely._geometry_helpers.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000006C /* Python-shapely._geos.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000006D /* Python-shapely._geos.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000006E /* Python-shapely.lib.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000006F /* Python-shapely.lib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D145442E62098800E76E2E /* Python-sklearn.__check_build._check_build.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D143922E62095C00E76E2E /* Python-sklearn.__check_build._check_build.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000001 /* Python-sklearn._cyutility.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000002 /* Python-sklearn._cyutility.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D145452E62098800E76E2E /* Python-sklearn._isotonic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D143932E62095C00E76E2E /* Python-sklearn._isotonic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D145462E62098800E76E2E /* Python-sklearn._loss._loss.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D143942E62095C00E76E2E /* Python-sklearn._loss._loss.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D145472E62098800E76E2E /* Python-sklearn.cluster._dbscan_inner.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D143952E62095C00E76E2E /* Python-sklearn.cluster._dbscan_inner.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -869,7 +917,51 @@
 		22D146052E62098800E76E2E /* PythonAmatplotlib._ttconv.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144532E62095C00E76E2E /* PythonAmatplotlib._ttconv.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146062E62098800E76E2E /* PythonAmatplotlib.ft2font.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144542E62095C00E76E2E /* PythonAmatplotlib.ft2font.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146072E62098800E76E2E /* PythonAnumpy.numpy.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144552E62095C00E76E2E /* PythonAnumpy.numpy.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22D146082E62098800E76E2E /* PythonApandas.pandas.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144562E62095C00E76E2E /* PythonApandas.pandas.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000070 /* PythonApandas._libs._cyutility.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000071 /* PythonApandas._libs._cyutility.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000072 /* PythonApandas._libs._ujson.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000073 /* PythonApandas._libs._ujson.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000074 /* PythonApandas._libs.algos.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000075 /* PythonApandas._libs.algos.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000076 /* PythonApandas._libs.arrays.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000077 /* PythonApandas._libs.arrays.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000078 /* PythonApandas._libs.byteswap.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000079 /* PythonApandas._libs.byteswap.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000007A /* PythonApandas._libs.groupby.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000007B /* PythonApandas._libs.groupby.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000007C /* PythonApandas._libs.hashing.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000007D /* PythonApandas._libs.hashing.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000007E /* PythonApandas._libs.hashtable.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000007F /* PythonApandas._libs.hashtable.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000080 /* PythonApandas._libs.index.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000081 /* PythonApandas._libs.index.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000082 /* PythonApandas._libs.indexing.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000083 /* PythonApandas._libs.indexing.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000084 /* PythonApandas._libs.internals.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000085 /* PythonApandas._libs.internals.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000086 /* PythonApandas._libs.interval.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000087 /* PythonApandas._libs.interval.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000088 /* PythonApandas._libs.join.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000089 /* PythonApandas._libs.join.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000008A /* PythonApandas._libs.lib.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000008B /* PythonApandas._libs.lib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000008C /* PythonApandas._libs.missing.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000008D /* PythonApandas._libs.missing.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000008E /* PythonApandas._libs.ops.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000008F /* PythonApandas._libs.ops.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000090 /* PythonApandas._libs.ops_dispatch.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000091 /* PythonApandas._libs.ops_dispatch.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000092 /* PythonApandas._libs.pandas_datetime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000093 /* PythonApandas._libs.pandas_datetime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000094 /* PythonApandas._libs.pandas_parser.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000095 /* PythonApandas._libs.pandas_parser.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000096 /* PythonApandas._libs.parsers.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000097 /* PythonApandas._libs.parsers.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000098 /* PythonApandas._libs.properties.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000099 /* PythonApandas._libs.properties.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000009A /* PythonApandas._libs.reshape.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000009B /* PythonApandas._libs.reshape.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000009C /* PythonApandas._libs.sas.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000009D /* PythonApandas._libs.sas.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C00000000000000009E /* PythonApandas._libs.sparse.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C00000000000000009F /* PythonApandas._libs.sparse.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000A0 /* PythonApandas._libs.testing.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000A1 /* PythonApandas._libs.testing.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000A2 /* PythonApandas._libs.tslib.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000A3 /* PythonApandas._libs.tslib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000A4 /* PythonApandas._libs.tslibs.base.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000A5 /* PythonApandas._libs.tslibs.base.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000A6 /* PythonApandas._libs.tslibs.ccalendar.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000A7 /* PythonApandas._libs.tslibs.ccalendar.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000A8 /* PythonApandas._libs.tslibs.conversion.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000A9 /* PythonApandas._libs.tslibs.conversion.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000AA /* PythonApandas._libs.tslibs.dtypes.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000AB /* PythonApandas._libs.tslibs.dtypes.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000AC /* PythonApandas._libs.tslibs.fields.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000AD /* PythonApandas._libs.tslibs.fields.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000AE /* PythonApandas._libs.tslibs.nattype.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000AF /* PythonApandas._libs.tslibs.nattype.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000B0 /* PythonApandas._libs.tslibs.np_datetime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000B1 /* PythonApandas._libs.tslibs.np_datetime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000B2 /* PythonApandas._libs.tslibs.offsets.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000B3 /* PythonApandas._libs.tslibs.offsets.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000B4 /* PythonApandas._libs.tslibs.parsing.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000B5 /* PythonApandas._libs.tslibs.parsing.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000B6 /* PythonApandas._libs.tslibs.period.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000B7 /* PythonApandas._libs.tslibs.period.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000B8 /* PythonApandas._libs.tslibs.strptime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000B9 /* PythonApandas._libs.tslibs.strptime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000BA /* PythonApandas._libs.tslibs.timedeltas.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000BB /* PythonApandas._libs.tslibs.timedeltas.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000BC /* PythonApandas._libs.tslibs.timestamps.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000BD /* PythonApandas._libs.tslibs.timestamps.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000BE /* PythonApandas._libs.tslibs.timezones.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000BF /* PythonApandas._libs.tslibs.timezones.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000C0 /* PythonApandas._libs.tslibs.tzconversion.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000C1 /* PythonApandas._libs.tslibs.tzconversion.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000C2 /* PythonApandas._libs.tslibs.vectorized.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000C3 /* PythonApandas._libs.tslibs.vectorized.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000C4 /* PythonApandas._libs.window.aggregations.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000C5 /* PythonApandas._libs.window.aggregations.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000C6 /* PythonApandas._libs.window.indexers.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000C7 /* PythonApandas._libs.window.indexers.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000C8 /* PythonApandas._libs.writers.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000C9 /* PythonApandas._libs.writers.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146092E62098800E76E2E /* PythonAPIL.PIL.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144572E62095C00E76E2E /* PythonAPIL.PIL.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D1460A2E62098800E76E2E /* PythonApsutil._psutil_ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144582E62095C00E76E2E /* PythonApsutil._psutil_ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D1460B2E62098800E76E2E /* PythonApsutil._psutil_posix.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144592E62095C00E76E2E /* PythonApsutil._psutil_posix.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -888,9 +980,11 @@
 		22D146182E62098800E76E2E /* PythonAscipy.special._special_ufuncs.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144662E62095C00E76E2E /* PythonAscipy.special._special_ufuncs.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146192E62098800E76E2E /* PythonAscipy.special._ufuncs.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144672E62095C00E76E2E /* PythonAscipy.special._ufuncs.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D1461A2E62098800E76E2E /* PythonAscipy.special._ufuncs_cxx.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144682E62095C00E76E2E /* PythonAscipy.special._ufuncs_cxx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22D1461B2E62098800E76E2E /* PythonAshapely.speedups._speedups.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D144692E62095C00E76E2E /* PythonAshapely.speedups._speedups.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22D1461C2E62098800E76E2E /* PythonAshapely.vectorized._vectorized.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1446A2E62095C00E76E2E /* PythonAshapely.vectorized._vectorized.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000CA /* PythonAshapely._geometry_helpers.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000CB /* PythonAshapely._geometry_helpers.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000CC /* PythonAshapely._geos.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000CD /* PythonAshapely._geos.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C0000000000000000CE /* PythonAshapely.lib.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C0000000000000000CF /* PythonAshapely.lib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D1461D2E62098800E76E2E /* PythonAsklearn.__check_build._check_build.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1446B2E62095C00E76E2E /* PythonAsklearn.__check_build._check_build.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		22D15C000000000000000003 /* PythonAsklearn._cyutility.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D15C000000000000000004 /* PythonAsklearn._cyutility.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D1461E2E62098800E76E2E /* PythonAsklearn._isotonic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1446C2E62095C00E76E2E /* PythonAsklearn._isotonic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D1461F2E62098800E76E2E /* PythonAsklearn._loss._loss.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1446D2E62095C00E76E2E /* PythonAsklearn._loss._loss.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22D146202E62098800E76E2E /* PythonAsklearn.cluster._dbscan_inner.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22D1446E2E62095C00E76E2E /* PythonAsklearn.cluster._dbscan_inner.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1631,7 +1725,8 @@
 				2203367A28C4B8070027664C /* pico.framework in Embed Frameworks */,
 				227318AD28F02E290027A736 /* multimarkdown.framework in Embed Frameworks */,
 				22AF02F729F70A630085290B /* openblas.xcframework in Embed Frameworks */,
-				22AF02F829F70A640085290B /* libgfortran.xcframework in Embed Frameworks */,
+				22AF02F829F70A640085290B /* flang_rt.xcframework in Embed Frameworks */,
+				22AF02F929F70A640085290B /* libomp.xcframework in Embed Frameworks */,
 				2219EDCB2A023F2F008C66F2 /* xetex.xcframework in Embed Frameworks */,
 				2219EDCC2A023F2F008C66F2 /* xetexA.xcframework in Embed Frameworks */,
 				225BF07A2A02753B00EEC45B /* xdvipdfmx.xcframework in Embed Frameworks */,
@@ -1647,6 +1742,7 @@
 				221FA4322A1C9ACE00463D5B /* libproj.xcframework in Embed Frameworks */,
 				221FA4352A1C9CE800463D5B /* libspatialindex_c.xcframework in Embed Frameworks */,
 				221FA4362A1C9CE800463D5B /* libspatialindex.xcframework in Embed Frameworks */,
+				22AF02FA29F70A640085290B /* libzmq.xcframework in Embed Frameworks */,
 				224DF74C2B76429B00F13C58 /* ssh_agent.xcframework in Embed Frameworks */,
 				22D144B72E62098800E76E2E /* Python.framework in Embed Frameworks */,
 				22D144B82E62098800E76E2E /* Python-_argon2_cffi_bindings._ffi.framework in Embed Frameworks */,
@@ -1766,7 +1862,51 @@
 				22D1452C2E62098800E76E2E /* Python-matplotlib._ttconv.framework in Embed Frameworks */,
 				22D1452D2E62098800E76E2E /* Python-matplotlib.ft2font.framework in Embed Frameworks */,
 				22D1452E2E62098800E76E2E /* Python-numpy.numpy.framework in Embed Frameworks */,
-				22D1452F2E62098800E76E2E /* Python-pandas.pandas.framework in Embed Frameworks */,
+				22D15C000000000000000010 /* Python-pandas._libs._cyutility.framework in Embed Frameworks */,
+				22D15C000000000000000012 /* Python-pandas._libs._ujson.framework in Embed Frameworks */,
+				22D15C000000000000000014 /* Python-pandas._libs.algos.framework in Embed Frameworks */,
+				22D15C000000000000000016 /* Python-pandas._libs.arrays.framework in Embed Frameworks */,
+				22D15C000000000000000018 /* Python-pandas._libs.byteswap.framework in Embed Frameworks */,
+				22D15C00000000000000001A /* Python-pandas._libs.groupby.framework in Embed Frameworks */,
+				22D15C00000000000000001C /* Python-pandas._libs.hashing.framework in Embed Frameworks */,
+				22D15C00000000000000001E /* Python-pandas._libs.hashtable.framework in Embed Frameworks */,
+				22D15C000000000000000020 /* Python-pandas._libs.index.framework in Embed Frameworks */,
+				22D15C000000000000000022 /* Python-pandas._libs.indexing.framework in Embed Frameworks */,
+				22D15C000000000000000024 /* Python-pandas._libs.internals.framework in Embed Frameworks */,
+				22D15C000000000000000026 /* Python-pandas._libs.interval.framework in Embed Frameworks */,
+				22D15C000000000000000028 /* Python-pandas._libs.join.framework in Embed Frameworks */,
+				22D15C00000000000000002A /* Python-pandas._libs.lib.framework in Embed Frameworks */,
+				22D15C00000000000000002C /* Python-pandas._libs.missing.framework in Embed Frameworks */,
+				22D15C00000000000000002E /* Python-pandas._libs.ops.framework in Embed Frameworks */,
+				22D15C000000000000000030 /* Python-pandas._libs.ops_dispatch.framework in Embed Frameworks */,
+				22D15C000000000000000032 /* Python-pandas._libs.pandas_datetime.framework in Embed Frameworks */,
+				22D15C000000000000000034 /* Python-pandas._libs.pandas_parser.framework in Embed Frameworks */,
+				22D15C000000000000000036 /* Python-pandas._libs.parsers.framework in Embed Frameworks */,
+				22D15C000000000000000038 /* Python-pandas._libs.properties.framework in Embed Frameworks */,
+				22D15C00000000000000003A /* Python-pandas._libs.reshape.framework in Embed Frameworks */,
+				22D15C00000000000000003C /* Python-pandas._libs.sas.framework in Embed Frameworks */,
+				22D15C00000000000000003E /* Python-pandas._libs.sparse.framework in Embed Frameworks */,
+				22D15C000000000000000040 /* Python-pandas._libs.testing.framework in Embed Frameworks */,
+				22D15C000000000000000042 /* Python-pandas._libs.tslib.framework in Embed Frameworks */,
+				22D15C000000000000000044 /* Python-pandas._libs.tslibs.base.framework in Embed Frameworks */,
+				22D15C000000000000000046 /* Python-pandas._libs.tslibs.ccalendar.framework in Embed Frameworks */,
+				22D15C000000000000000048 /* Python-pandas._libs.tslibs.conversion.framework in Embed Frameworks */,
+				22D15C00000000000000004A /* Python-pandas._libs.tslibs.dtypes.framework in Embed Frameworks */,
+				22D15C00000000000000004C /* Python-pandas._libs.tslibs.fields.framework in Embed Frameworks */,
+				22D15C00000000000000004E /* Python-pandas._libs.tslibs.nattype.framework in Embed Frameworks */,
+				22D15C000000000000000050 /* Python-pandas._libs.tslibs.np_datetime.framework in Embed Frameworks */,
+				22D15C000000000000000052 /* Python-pandas._libs.tslibs.offsets.framework in Embed Frameworks */,
+				22D15C000000000000000054 /* Python-pandas._libs.tslibs.parsing.framework in Embed Frameworks */,
+				22D15C000000000000000056 /* Python-pandas._libs.tslibs.period.framework in Embed Frameworks */,
+				22D15C000000000000000058 /* Python-pandas._libs.tslibs.strptime.framework in Embed Frameworks */,
+				22D15C00000000000000005A /* Python-pandas._libs.tslibs.timedeltas.framework in Embed Frameworks */,
+				22D15C00000000000000005C /* Python-pandas._libs.tslibs.timestamps.framework in Embed Frameworks */,
+				22D15C00000000000000005E /* Python-pandas._libs.tslibs.timezones.framework in Embed Frameworks */,
+				22D15C000000000000000060 /* Python-pandas._libs.tslibs.tzconversion.framework in Embed Frameworks */,
+				22D15C000000000000000062 /* Python-pandas._libs.tslibs.vectorized.framework in Embed Frameworks */,
+				22D15C000000000000000064 /* Python-pandas._libs.window.aggregations.framework in Embed Frameworks */,
+				22D15C000000000000000066 /* Python-pandas._libs.window.indexers.framework in Embed Frameworks */,
+				22D15C000000000000000068 /* Python-pandas._libs.writers.framework in Embed Frameworks */,
 				22D145302E62098800E76E2E /* Python-PIL.PIL.framework in Embed Frameworks */,
 				22D145312E62098800E76E2E /* Python-psutil._psutil_ios.framework in Embed Frameworks */,
 				22D145322E62098800E76E2E /* Python-psutil._psutil_posix.framework in Embed Frameworks */,
@@ -1785,9 +1925,11 @@
 				22D1453F2E62098800E76E2E /* Python-scipy.special._special_ufuncs.framework in Embed Frameworks */,
 				22D145402E62098800E76E2E /* Python-scipy.special._ufuncs.framework in Embed Frameworks */,
 				22D145412E62098800E76E2E /* Python-scipy.special._ufuncs_cxx.framework in Embed Frameworks */,
-				22D145422E62098800E76E2E /* Python-shapely.speedups._speedups.framework in Embed Frameworks */,
-				22D145432E62098800E76E2E /* Python-shapely.vectorized._vectorized.framework in Embed Frameworks */,
+				22D15C00000000000000006A /* Python-shapely._geometry_helpers.framework in Embed Frameworks */,
+				22D15C00000000000000006C /* Python-shapely._geos.framework in Embed Frameworks */,
+				22D15C00000000000000006E /* Python-shapely.lib.framework in Embed Frameworks */,
 				22D145442E62098800E76E2E /* Python-sklearn.__check_build._check_build.framework in Embed Frameworks */,
+				22D15C000000000000000001 /* Python-sklearn._cyutility.framework in Embed Frameworks */,
 				22D145452E62098800E76E2E /* Python-sklearn._isotonic.framework in Embed Frameworks */,
 				22D145462E62098800E76E2E /* Python-sklearn._loss._loss.framework in Embed Frameworks */,
 				22D145472E62098800E76E2E /* Python-sklearn.cluster._dbscan_inner.framework in Embed Frameworks */,
@@ -1980,7 +2122,51 @@
 				22D146052E62098800E76E2E /* PythonAmatplotlib._ttconv.framework in Embed Frameworks */,
 				22D146062E62098800E76E2E /* PythonAmatplotlib.ft2font.framework in Embed Frameworks */,
 				22D146072E62098800E76E2E /* PythonAnumpy.numpy.framework in Embed Frameworks */,
-				22D146082E62098800E76E2E /* PythonApandas.pandas.framework in Embed Frameworks */,
+				22D15C000000000000000070 /* PythonApandas._libs._cyutility.framework in Embed Frameworks */,
+				22D15C000000000000000072 /* PythonApandas._libs._ujson.framework in Embed Frameworks */,
+				22D15C000000000000000074 /* PythonApandas._libs.algos.framework in Embed Frameworks */,
+				22D15C000000000000000076 /* PythonApandas._libs.arrays.framework in Embed Frameworks */,
+				22D15C000000000000000078 /* PythonApandas._libs.byteswap.framework in Embed Frameworks */,
+				22D15C00000000000000007A /* PythonApandas._libs.groupby.framework in Embed Frameworks */,
+				22D15C00000000000000007C /* PythonApandas._libs.hashing.framework in Embed Frameworks */,
+				22D15C00000000000000007E /* PythonApandas._libs.hashtable.framework in Embed Frameworks */,
+				22D15C000000000000000080 /* PythonApandas._libs.index.framework in Embed Frameworks */,
+				22D15C000000000000000082 /* PythonApandas._libs.indexing.framework in Embed Frameworks */,
+				22D15C000000000000000084 /* PythonApandas._libs.internals.framework in Embed Frameworks */,
+				22D15C000000000000000086 /* PythonApandas._libs.interval.framework in Embed Frameworks */,
+				22D15C000000000000000088 /* PythonApandas._libs.join.framework in Embed Frameworks */,
+				22D15C00000000000000008A /* PythonApandas._libs.lib.framework in Embed Frameworks */,
+				22D15C00000000000000008C /* PythonApandas._libs.missing.framework in Embed Frameworks */,
+				22D15C00000000000000008E /* PythonApandas._libs.ops.framework in Embed Frameworks */,
+				22D15C000000000000000090 /* PythonApandas._libs.ops_dispatch.framework in Embed Frameworks */,
+				22D15C000000000000000092 /* PythonApandas._libs.pandas_datetime.framework in Embed Frameworks */,
+				22D15C000000000000000094 /* PythonApandas._libs.pandas_parser.framework in Embed Frameworks */,
+				22D15C000000000000000096 /* PythonApandas._libs.parsers.framework in Embed Frameworks */,
+				22D15C000000000000000098 /* PythonApandas._libs.properties.framework in Embed Frameworks */,
+				22D15C00000000000000009A /* PythonApandas._libs.reshape.framework in Embed Frameworks */,
+				22D15C00000000000000009C /* PythonApandas._libs.sas.framework in Embed Frameworks */,
+				22D15C00000000000000009E /* PythonApandas._libs.sparse.framework in Embed Frameworks */,
+				22D15C0000000000000000A0 /* PythonApandas._libs.testing.framework in Embed Frameworks */,
+				22D15C0000000000000000A2 /* PythonApandas._libs.tslib.framework in Embed Frameworks */,
+				22D15C0000000000000000A4 /* PythonApandas._libs.tslibs.base.framework in Embed Frameworks */,
+				22D15C0000000000000000A6 /* PythonApandas._libs.tslibs.ccalendar.framework in Embed Frameworks */,
+				22D15C0000000000000000A8 /* PythonApandas._libs.tslibs.conversion.framework in Embed Frameworks */,
+				22D15C0000000000000000AA /* PythonApandas._libs.tslibs.dtypes.framework in Embed Frameworks */,
+				22D15C0000000000000000AC /* PythonApandas._libs.tslibs.fields.framework in Embed Frameworks */,
+				22D15C0000000000000000AE /* PythonApandas._libs.tslibs.nattype.framework in Embed Frameworks */,
+				22D15C0000000000000000B0 /* PythonApandas._libs.tslibs.np_datetime.framework in Embed Frameworks */,
+				22D15C0000000000000000B2 /* PythonApandas._libs.tslibs.offsets.framework in Embed Frameworks */,
+				22D15C0000000000000000B4 /* PythonApandas._libs.tslibs.parsing.framework in Embed Frameworks */,
+				22D15C0000000000000000B6 /* PythonApandas._libs.tslibs.period.framework in Embed Frameworks */,
+				22D15C0000000000000000B8 /* PythonApandas._libs.tslibs.strptime.framework in Embed Frameworks */,
+				22D15C0000000000000000BA /* PythonApandas._libs.tslibs.timedeltas.framework in Embed Frameworks */,
+				22D15C0000000000000000BC /* PythonApandas._libs.tslibs.timestamps.framework in Embed Frameworks */,
+				22D15C0000000000000000BE /* PythonApandas._libs.tslibs.timezones.framework in Embed Frameworks */,
+				22D15C0000000000000000C0 /* PythonApandas._libs.tslibs.tzconversion.framework in Embed Frameworks */,
+				22D15C0000000000000000C2 /* PythonApandas._libs.tslibs.vectorized.framework in Embed Frameworks */,
+				22D15C0000000000000000C4 /* PythonApandas._libs.window.aggregations.framework in Embed Frameworks */,
+				22D15C0000000000000000C6 /* PythonApandas._libs.window.indexers.framework in Embed Frameworks */,
+				22D15C0000000000000000C8 /* PythonApandas._libs.writers.framework in Embed Frameworks */,
 				22D146092E62098800E76E2E /* PythonAPIL.PIL.framework in Embed Frameworks */,
 				22D1460A2E62098800E76E2E /* PythonApsutil._psutil_ios.framework in Embed Frameworks */,
 				22D1460B2E62098800E76E2E /* PythonApsutil._psutil_posix.framework in Embed Frameworks */,
@@ -1999,9 +2185,11 @@
 				22D146182E62098800E76E2E /* PythonAscipy.special._special_ufuncs.framework in Embed Frameworks */,
 				22D146192E62098800E76E2E /* PythonAscipy.special._ufuncs.framework in Embed Frameworks */,
 				22D1461A2E62098800E76E2E /* PythonAscipy.special._ufuncs_cxx.framework in Embed Frameworks */,
-				22D1461B2E62098800E76E2E /* PythonAshapely.speedups._speedups.framework in Embed Frameworks */,
-				22D1461C2E62098800E76E2E /* PythonAshapely.vectorized._vectorized.framework in Embed Frameworks */,
+				22D15C0000000000000000CA /* PythonAshapely._geometry_helpers.framework in Embed Frameworks */,
+				22D15C0000000000000000CC /* PythonAshapely._geos.framework in Embed Frameworks */,
+				22D15C0000000000000000CE /* PythonAshapely.lib.framework in Embed Frameworks */,
 				22D1461D2E62098800E76E2E /* PythonAsklearn.__check_build._check_build.framework in Embed Frameworks */,
+				22D15C000000000000000003 /* PythonAsklearn._cyutility.framework in Embed Frameworks */,
 				22D1461E2E62098800E76E2E /* PythonAsklearn._isotonic.framework in Embed Frameworks */,
 				22D1461F2E62098800E76E2E /* PythonAsklearn._loss._loss.framework in Embed Frameworks */,
 				22D146202E62098800E76E2E /* PythonAsklearn.cluster._dbscan_inner.framework in Embed Frameworks */,
@@ -2156,6 +2344,7 @@
 		221FA42E2A1C9AA700463D5B /* libproj.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libproj.xcframework; path = "cpython/Python-aux/libproj.xcframework"; sourceTree = "<group>"; };
 		221FA4332A1C9CD700463D5B /* libspatialindex_c.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libspatialindex_c.xcframework; path = "cpython/Python-aux/libspatialindex_c.xcframework"; sourceTree = "<group>"; };
 		221FA4342A1C9CD700463D5B /* libspatialindex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libspatialindex.xcframework; path = "cpython/Python-aux/libspatialindex.xcframework"; sourceTree = "<group>"; };
+		22AF02D529F669DE0085290B /* libzmq.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libzmq.xcframework; path = "cpython/Python-aux/libzmq.xcframework"; sourceTree = "<group>"; };
 		221FA4382A1CA00400463D5B /* proj */ = {isa = PBXFileReference; lastKnownFileType = folder; name = proj; path = Resources/proj; sourceTree = "<group>"; };
 		222005A02871EF8900DC7A23 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; name = Base; path = Base.lproj/Intents.intentdefinition; sourceTree = "<group>"; };
 		222005A12871F13400DC7A23 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Intents.strings; sourceTree = "<group>"; };
@@ -2282,7 +2471,8 @@
 		22AD873F246EDD2E00F415DE /* a-Shell-Intents.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell-Intents.entitlements"; sourceTree = "<group>"; };
 		22AD8740246EDD4C00F415DE /* a-Shell-IntentsUI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "a-Shell-IntentsUI.entitlements"; sourceTree = "<group>"; };
 		22AF02D229F669C20085290B /* openblas.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = openblas.xcframework; path = cpython/XcFrameworks/openblas.xcframework; sourceTree = "<group>"; };
-		22AF02D329F669DE0085290B /* libgfortran.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libgfortran.xcframework; path = cpython/XcFrameworks/libgfortran.xcframework; sourceTree = "<group>"; };
+		22AF02D329F669DE0085290B /* flang_rt.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = flang_rt.xcframework; path = cpython/XcFrameworks/flang_rt.xcframework; sourceTree = "<group>"; };
+		22AF02D429F669DE0085290B /* libomp.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libomp.xcframework; path = cpython/XcFrameworks/libomp.xcframework; sourceTree = "<group>"; };
 		22B0C0152F9E04900001BEBF /* Python-curl_cffi._wrapper.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-curl_cffi._wrapper.framework"; path = "Resources/Frameworks/Python-curl_cffi._wrapper.framework"; sourceTree = SOURCE_ROOT; };
 		22B0C0162F9E04DF0001BEBF /* PythonAcurl_cffi._wrapper.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAcurl_cffi._wrapper.framework; path = Resources/Frameworks/PythonAcurl_cffi._wrapper.framework; sourceTree = SOURCE_ROOT; };
 		22B0CA642E75DCC100FDF6FE /* Python-zmq.backend.cffi._cffi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-zmq.backend.cffi._cffi.framework"; path = "Resources/Frameworks/Python-zmq.backend.cffi._cffi.framework"; sourceTree = SOURCE_ROOT; };
@@ -2615,7 +2805,51 @@
 		22D1437A2E62095C00E76E2E /* Python-matplotlib._ttconv.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-matplotlib._ttconv.framework"; path = "Resources/Frameworks/Python-matplotlib._ttconv.framework"; sourceTree = SOURCE_ROOT; };
 		22D1437B2E62095C00E76E2E /* Python-matplotlib.ft2font.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-matplotlib.ft2font.framework"; path = "Resources/Frameworks/Python-matplotlib.ft2font.framework"; sourceTree = SOURCE_ROOT; };
 		22D1437C2E62095C00E76E2E /* Python-numpy.numpy.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-numpy.numpy.framework"; path = "Resources/Frameworks/Python-numpy.numpy.framework"; sourceTree = SOURCE_ROOT; };
-		22D1437D2E62095C00E76E2E /* Python-pandas.pandas.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas.pandas.framework"; path = "Resources/Frameworks/Python-pandas.pandas.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000011 /* Python-pandas._libs._cyutility.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs._cyutility.framework"; path = "Resources/Frameworks/Python-pandas._libs._cyutility.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000013 /* Python-pandas._libs._ujson.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs._ujson.framework"; path = "Resources/Frameworks/Python-pandas._libs._ujson.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000015 /* Python-pandas._libs.algos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.algos.framework"; path = "Resources/Frameworks/Python-pandas._libs.algos.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000017 /* Python-pandas._libs.arrays.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.arrays.framework"; path = "Resources/Frameworks/Python-pandas._libs.arrays.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000019 /* Python-pandas._libs.byteswap.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.byteswap.framework"; path = "Resources/Frameworks/Python-pandas._libs.byteswap.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000001B /* Python-pandas._libs.groupby.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.groupby.framework"; path = "Resources/Frameworks/Python-pandas._libs.groupby.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000001D /* Python-pandas._libs.hashing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.hashing.framework"; path = "Resources/Frameworks/Python-pandas._libs.hashing.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000001F /* Python-pandas._libs.hashtable.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.hashtable.framework"; path = "Resources/Frameworks/Python-pandas._libs.hashtable.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000021 /* Python-pandas._libs.index.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.index.framework"; path = "Resources/Frameworks/Python-pandas._libs.index.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000023 /* Python-pandas._libs.indexing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.indexing.framework"; path = "Resources/Frameworks/Python-pandas._libs.indexing.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000025 /* Python-pandas._libs.internals.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.internals.framework"; path = "Resources/Frameworks/Python-pandas._libs.internals.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000027 /* Python-pandas._libs.interval.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.interval.framework"; path = "Resources/Frameworks/Python-pandas._libs.interval.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000029 /* Python-pandas._libs.join.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.join.framework"; path = "Resources/Frameworks/Python-pandas._libs.join.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000002B /* Python-pandas._libs.lib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.lib.framework"; path = "Resources/Frameworks/Python-pandas._libs.lib.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000002D /* Python-pandas._libs.missing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.missing.framework"; path = "Resources/Frameworks/Python-pandas._libs.missing.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000002F /* Python-pandas._libs.ops.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.ops.framework"; path = "Resources/Frameworks/Python-pandas._libs.ops.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000031 /* Python-pandas._libs.ops_dispatch.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.ops_dispatch.framework"; path = "Resources/Frameworks/Python-pandas._libs.ops_dispatch.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000033 /* Python-pandas._libs.pandas_datetime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.pandas_datetime.framework"; path = "Resources/Frameworks/Python-pandas._libs.pandas_datetime.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000035 /* Python-pandas._libs.pandas_parser.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.pandas_parser.framework"; path = "Resources/Frameworks/Python-pandas._libs.pandas_parser.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000037 /* Python-pandas._libs.parsers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.parsers.framework"; path = "Resources/Frameworks/Python-pandas._libs.parsers.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000039 /* Python-pandas._libs.properties.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.properties.framework"; path = "Resources/Frameworks/Python-pandas._libs.properties.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000003B /* Python-pandas._libs.reshape.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.reshape.framework"; path = "Resources/Frameworks/Python-pandas._libs.reshape.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000003D /* Python-pandas._libs.sas.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.sas.framework"; path = "Resources/Frameworks/Python-pandas._libs.sas.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000003F /* Python-pandas._libs.sparse.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.sparse.framework"; path = "Resources/Frameworks/Python-pandas._libs.sparse.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000041 /* Python-pandas._libs.testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.testing.framework"; path = "Resources/Frameworks/Python-pandas._libs.testing.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000043 /* Python-pandas._libs.tslib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslib.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslib.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000045 /* Python-pandas._libs.tslibs.base.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.base.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.base.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000047 /* Python-pandas._libs.tslibs.ccalendar.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.ccalendar.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.ccalendar.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000049 /* Python-pandas._libs.tslibs.conversion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.conversion.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.conversion.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000004B /* Python-pandas._libs.tslibs.dtypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.dtypes.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.dtypes.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000004D /* Python-pandas._libs.tslibs.fields.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.fields.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.fields.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000004F /* Python-pandas._libs.tslibs.nattype.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.nattype.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.nattype.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000051 /* Python-pandas._libs.tslibs.np_datetime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.np_datetime.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.np_datetime.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000053 /* Python-pandas._libs.tslibs.offsets.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.offsets.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.offsets.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000055 /* Python-pandas._libs.tslibs.parsing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.parsing.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.parsing.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000057 /* Python-pandas._libs.tslibs.period.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.period.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.period.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000059 /* Python-pandas._libs.tslibs.strptime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.strptime.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.strptime.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000005B /* Python-pandas._libs.tslibs.timedeltas.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.timedeltas.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.timedeltas.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000005D /* Python-pandas._libs.tslibs.timestamps.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.timestamps.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.timestamps.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000005F /* Python-pandas._libs.tslibs.timezones.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.timezones.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.timezones.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000061 /* Python-pandas._libs.tslibs.tzconversion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.tzconversion.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.tzconversion.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000063 /* Python-pandas._libs.tslibs.vectorized.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.tslibs.vectorized.framework"; path = "Resources/Frameworks/Python-pandas._libs.tslibs.vectorized.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000065 /* Python-pandas._libs.window.aggregations.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.window.aggregations.framework"; path = "Resources/Frameworks/Python-pandas._libs.window.aggregations.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000067 /* Python-pandas._libs.window.indexers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.window.indexers.framework"; path = "Resources/Frameworks/Python-pandas._libs.window.indexers.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000069 /* Python-pandas._libs.writers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-pandas._libs.writers.framework"; path = "Resources/Frameworks/Python-pandas._libs.writers.framework"; sourceTree = SOURCE_ROOT; };
 		22D1437E2E62095C00E76E2E /* Python-PIL.PIL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-PIL.PIL.framework"; path = "Resources/Frameworks/Python-PIL.PIL.framework"; sourceTree = SOURCE_ROOT; };
 		22D1437F2E62095C00E76E2E /* Python-psutil._psutil_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-psutil._psutil_ios.framework"; path = "Resources/Frameworks/Python-psutil._psutil_ios.framework"; sourceTree = SOURCE_ROOT; };
 		22D143802E62095C00E76E2E /* Python-psutil._psutil_posix.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-psutil._psutil_posix.framework"; path = "Resources/Frameworks/Python-psutil._psutil_posix.framework"; sourceTree = SOURCE_ROOT; };
@@ -2634,9 +2868,11 @@
 		22D1438D2E62095C00E76E2E /* Python-scipy.special._special_ufuncs.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-scipy.special._special_ufuncs.framework"; path = "Resources/Frameworks/Python-scipy.special._special_ufuncs.framework"; sourceTree = SOURCE_ROOT; };
 		22D1438E2E62095C00E76E2E /* Python-scipy.special._ufuncs.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-scipy.special._ufuncs.framework"; path = "Resources/Frameworks/Python-scipy.special._ufuncs.framework"; sourceTree = SOURCE_ROOT; };
 		22D1438F2E62095C00E76E2E /* Python-scipy.special._ufuncs_cxx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-scipy.special._ufuncs_cxx.framework"; path = "Resources/Frameworks/Python-scipy.special._ufuncs_cxx.framework"; sourceTree = SOURCE_ROOT; };
-		22D143902E62095C00E76E2E /* Python-shapely.speedups._speedups.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-shapely.speedups._speedups.framework"; path = "Resources/Frameworks/Python-shapely.speedups._speedups.framework"; sourceTree = SOURCE_ROOT; };
-		22D143912E62095C00E76E2E /* Python-shapely.vectorized._vectorized.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-shapely.vectorized._vectorized.framework"; path = "Resources/Frameworks/Python-shapely.vectorized._vectorized.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000006B /* Python-shapely._geometry_helpers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-shapely._geometry_helpers.framework"; path = "Resources/Frameworks/Python-shapely._geometry_helpers.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000006D /* Python-shapely._geos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-shapely._geos.framework"; path = "Resources/Frameworks/Python-shapely._geos.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000006F /* Python-shapely.lib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-shapely.lib.framework"; path = "Resources/Frameworks/Python-shapely.lib.framework"; sourceTree = SOURCE_ROOT; };
 		22D143922E62095C00E76E2E /* Python-sklearn.__check_build._check_build.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-sklearn.__check_build._check_build.framework"; path = "Resources/Frameworks/Python-sklearn.__check_build._check_build.framework"; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000002 /* Python-sklearn._cyutility.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-sklearn._cyutility.framework"; path = "Resources/Frameworks/Python-sklearn._cyutility.framework"; sourceTree = SOURCE_ROOT; };
 		22D143932E62095C00E76E2E /* Python-sklearn._isotonic.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-sklearn._isotonic.framework"; path = "Resources/Frameworks/Python-sklearn._isotonic.framework"; sourceTree = SOURCE_ROOT; };
 		22D143942E62095C00E76E2E /* Python-sklearn._loss._loss.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-sklearn._loss._loss.framework"; path = "Resources/Frameworks/Python-sklearn._loss._loss.framework"; sourceTree = SOURCE_ROOT; };
 		22D143952E62095C00E76E2E /* Python-sklearn.cluster._dbscan_inner.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Python-sklearn.cluster._dbscan_inner.framework"; path = "Resources/Frameworks/Python-sklearn.cluster._dbscan_inner.framework"; sourceTree = SOURCE_ROOT; };
@@ -2830,7 +3066,51 @@
 		22D144532E62095C00E76E2E /* PythonAmatplotlib._ttconv.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAmatplotlib._ttconv.framework; path = Resources/Frameworks/PythonAmatplotlib._ttconv.framework; sourceTree = SOURCE_ROOT; };
 		22D144542E62095C00E76E2E /* PythonAmatplotlib.ft2font.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAmatplotlib.ft2font.framework; path = Resources/Frameworks/PythonAmatplotlib.ft2font.framework; sourceTree = SOURCE_ROOT; };
 		22D144552E62095C00E76E2E /* PythonAnumpy.numpy.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAnumpy.numpy.framework; path = Resources/Frameworks/PythonAnumpy.numpy.framework; sourceTree = SOURCE_ROOT; };
-		22D144562E62095C00E76E2E /* PythonApandas.pandas.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas.pandas.framework; path = Resources/Frameworks/PythonApandas.pandas.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000071 /* PythonApandas._libs._cyutility.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs._cyutility.framework; path = Resources/Frameworks/PythonApandas._libs._cyutility.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000073 /* PythonApandas._libs._ujson.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs._ujson.framework; path = Resources/Frameworks/PythonApandas._libs._ujson.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000075 /* PythonApandas._libs.algos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.algos.framework; path = Resources/Frameworks/PythonApandas._libs.algos.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000077 /* PythonApandas._libs.arrays.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.arrays.framework; path = Resources/Frameworks/PythonApandas._libs.arrays.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000079 /* PythonApandas._libs.byteswap.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.byteswap.framework; path = Resources/Frameworks/PythonApandas._libs.byteswap.framework; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000007B /* PythonApandas._libs.groupby.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.groupby.framework; path = Resources/Frameworks/PythonApandas._libs.groupby.framework; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000007D /* PythonApandas._libs.hashing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.hashing.framework; path = Resources/Frameworks/PythonApandas._libs.hashing.framework; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000007F /* PythonApandas._libs.hashtable.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.hashtable.framework; path = Resources/Frameworks/PythonApandas._libs.hashtable.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000081 /* PythonApandas._libs.index.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.index.framework; path = Resources/Frameworks/PythonApandas._libs.index.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000083 /* PythonApandas._libs.indexing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.indexing.framework; path = Resources/Frameworks/PythonApandas._libs.indexing.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000085 /* PythonApandas._libs.internals.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.internals.framework; path = Resources/Frameworks/PythonApandas._libs.internals.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000087 /* PythonApandas._libs.interval.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.interval.framework; path = Resources/Frameworks/PythonApandas._libs.interval.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000089 /* PythonApandas._libs.join.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.join.framework; path = Resources/Frameworks/PythonApandas._libs.join.framework; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000008B /* PythonApandas._libs.lib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.lib.framework; path = Resources/Frameworks/PythonApandas._libs.lib.framework; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000008D /* PythonApandas._libs.missing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.missing.framework; path = Resources/Frameworks/PythonApandas._libs.missing.framework; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000008F /* PythonApandas._libs.ops.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.ops.framework; path = Resources/Frameworks/PythonApandas._libs.ops.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000091 /* PythonApandas._libs.ops_dispatch.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.ops_dispatch.framework; path = Resources/Frameworks/PythonApandas._libs.ops_dispatch.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000093 /* PythonApandas._libs.pandas_datetime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.pandas_datetime.framework; path = Resources/Frameworks/PythonApandas._libs.pandas_datetime.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000095 /* PythonApandas._libs.pandas_parser.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.pandas_parser.framework; path = Resources/Frameworks/PythonApandas._libs.pandas_parser.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000097 /* PythonApandas._libs.parsers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.parsers.framework; path = Resources/Frameworks/PythonApandas._libs.parsers.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000099 /* PythonApandas._libs.properties.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.properties.framework; path = Resources/Frameworks/PythonApandas._libs.properties.framework; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000009B /* PythonApandas._libs.reshape.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.reshape.framework; path = Resources/Frameworks/PythonApandas._libs.reshape.framework; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000009D /* PythonApandas._libs.sas.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.sas.framework; path = Resources/Frameworks/PythonApandas._libs.sas.framework; sourceTree = SOURCE_ROOT; };
+		22D15C00000000000000009F /* PythonApandas._libs.sparse.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.sparse.framework; path = Resources/Frameworks/PythonApandas._libs.sparse.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000A1 /* PythonApandas._libs.testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.testing.framework; path = Resources/Frameworks/PythonApandas._libs.testing.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000A3 /* PythonApandas._libs.tslib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslib.framework; path = Resources/Frameworks/PythonApandas._libs.tslib.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000A5 /* PythonApandas._libs.tslibs.base.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.base.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.base.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000A7 /* PythonApandas._libs.tslibs.ccalendar.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.ccalendar.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.ccalendar.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000A9 /* PythonApandas._libs.tslibs.conversion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.conversion.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.conversion.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000AB /* PythonApandas._libs.tslibs.dtypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.dtypes.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.dtypes.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000AD /* PythonApandas._libs.tslibs.fields.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.fields.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.fields.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000AF /* PythonApandas._libs.tslibs.nattype.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.nattype.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.nattype.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000B1 /* PythonApandas._libs.tslibs.np_datetime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.np_datetime.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.np_datetime.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000B3 /* PythonApandas._libs.tslibs.offsets.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.offsets.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.offsets.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000B5 /* PythonApandas._libs.tslibs.parsing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.parsing.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.parsing.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000B7 /* PythonApandas._libs.tslibs.period.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.period.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.period.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000B9 /* PythonApandas._libs.tslibs.strptime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.strptime.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.strptime.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000BB /* PythonApandas._libs.tslibs.timedeltas.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.timedeltas.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.timedeltas.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000BD /* PythonApandas._libs.tslibs.timestamps.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.timestamps.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.timestamps.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000BF /* PythonApandas._libs.tslibs.timezones.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.timezones.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.timezones.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000C1 /* PythonApandas._libs.tslibs.tzconversion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.tzconversion.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.tzconversion.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000C3 /* PythonApandas._libs.tslibs.vectorized.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.tslibs.vectorized.framework; path = Resources/Frameworks/PythonApandas._libs.tslibs.vectorized.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000C5 /* PythonApandas._libs.window.aggregations.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.window.aggregations.framework; path = Resources/Frameworks/PythonApandas._libs.window.aggregations.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000C7 /* PythonApandas._libs.window.indexers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.window.indexers.framework; path = Resources/Frameworks/PythonApandas._libs.window.indexers.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000C9 /* PythonApandas._libs.writers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApandas._libs.writers.framework; path = Resources/Frameworks/PythonApandas._libs.writers.framework; sourceTree = SOURCE_ROOT; };
 		22D144572E62095C00E76E2E /* PythonAPIL.PIL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAPIL.PIL.framework; path = Resources/Frameworks/PythonAPIL.PIL.framework; sourceTree = SOURCE_ROOT; };
 		22D144582E62095C00E76E2E /* PythonApsutil._psutil_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApsutil._psutil_ios.framework; path = Resources/Frameworks/PythonApsutil._psutil_ios.framework; sourceTree = SOURCE_ROOT; };
 		22D144592E62095C00E76E2E /* PythonApsutil._psutil_posix.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonApsutil._psutil_posix.framework; path = Resources/Frameworks/PythonApsutil._psutil_posix.framework; sourceTree = SOURCE_ROOT; };
@@ -2849,9 +3129,11 @@
 		22D144662E62095C00E76E2E /* PythonAscipy.special._special_ufuncs.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAscipy.special._special_ufuncs.framework; path = Resources/Frameworks/PythonAscipy.special._special_ufuncs.framework; sourceTree = SOURCE_ROOT; };
 		22D144672E62095C00E76E2E /* PythonAscipy.special._ufuncs.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAscipy.special._ufuncs.framework; path = Resources/Frameworks/PythonAscipy.special._ufuncs.framework; sourceTree = SOURCE_ROOT; };
 		22D144682E62095C00E76E2E /* PythonAscipy.special._ufuncs_cxx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAscipy.special._ufuncs_cxx.framework; path = Resources/Frameworks/PythonAscipy.special._ufuncs_cxx.framework; sourceTree = SOURCE_ROOT; };
-		22D144692E62095C00E76E2E /* PythonAshapely.speedups._speedups.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAshapely.speedups._speedups.framework; path = Resources/Frameworks/PythonAshapely.speedups._speedups.framework; sourceTree = SOURCE_ROOT; };
-		22D1446A2E62095C00E76E2E /* PythonAshapely.vectorized._vectorized.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAshapely.vectorized._vectorized.framework; path = Resources/Frameworks/PythonAshapely.vectorized._vectorized.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000CB /* PythonAshapely._geometry_helpers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAshapely._geometry_helpers.framework; path = Resources/Frameworks/PythonAshapely._geometry_helpers.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000CD /* PythonAshapely._geos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAshapely._geos.framework; path = Resources/Frameworks/PythonAshapely._geos.framework; sourceTree = SOURCE_ROOT; };
+		22D15C0000000000000000CF /* PythonAshapely.lib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAshapely.lib.framework; path = Resources/Frameworks/PythonAshapely.lib.framework; sourceTree = SOURCE_ROOT; };
 		22D1446B2E62095C00E76E2E /* PythonAsklearn.__check_build._check_build.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAsklearn.__check_build._check_build.framework; path = Resources/Frameworks/PythonAsklearn.__check_build._check_build.framework; sourceTree = SOURCE_ROOT; };
+		22D15C000000000000000004 /* PythonAsklearn._cyutility.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAsklearn._cyutility.framework; path = Resources/Frameworks/PythonAsklearn._cyutility.framework; sourceTree = SOURCE_ROOT; };
 		22D1446C2E62095C00E76E2E /* PythonAsklearn._isotonic.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAsklearn._isotonic.framework; path = Resources/Frameworks/PythonAsklearn._isotonic.framework; sourceTree = SOURCE_ROOT; };
 		22D1446D2E62095C00E76E2E /* PythonAsklearn._loss._loss.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAsklearn._loss._loss.framework; path = Resources/Frameworks/PythonAsklearn._loss._loss.framework; sourceTree = SOURCE_ROOT; };
 		22D1446E2E62095C00E76E2E /* PythonAsklearn.cluster._dbscan_inner.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonAsklearn.cluster._dbscan_inner.framework; path = Resources/Frameworks/PythonAsklearn.cluster._dbscan_inner.framework; sourceTree = SOURCE_ROOT; };
@@ -3398,7 +3680,8 @@
 				A53600000000000000000003 /* libpng.xcframework */,
 				2294A9BE254C19D0008C1490 /* freetype.xcframework */,
 				22AF02D229F669C20085290B /* openblas.xcframework */,
-				22AF02D329F669DE0085290B /* libgfortran.xcframework */,
+				22AF02D329F669DE0085290B /* flang_rt.xcframework */,
+				22AF02D429F669DE0085290B /* libomp.xcframework */,
 				2294A9F7254C2C21008C1490 /* harfbuzz.xcframework */,
 				2294A9F4254C2AA7008C1490 /* libpng.xcframework */,
 				221FA42B2A1C9A9D00463D5B /* libgdal.xcframework */,
@@ -3408,6 +3691,7 @@
 				2242DBC02E646FCB000AC08A /* cbc.framework */,
 				221FA4332A1C9CD700463D5B /* libspatialindex_c.xcframework */,
 				221FA4342A1C9CD700463D5B /* libspatialindex.xcframework */,
+				22AF02D529F669DE0085290B /* libzmq.xcframework */,
 				22AD8722246EBFFB00F415DE /* IntentsUI.framework */,
 				226B0BF72E9FD5C300B14A3F /* openrsync.framework */,
 				223E91E52EC11C7500A81615 /* openrsyncA.framework */,
@@ -3808,7 +4092,51 @@
 				22D1437A2E62095C00E76E2E /* Python-matplotlib._ttconv.framework */,
 				22D1437B2E62095C00E76E2E /* Python-matplotlib.ft2font.framework */,
 				22D1437C2E62095C00E76E2E /* Python-numpy.numpy.framework */,
-				22D1437D2E62095C00E76E2E /* Python-pandas.pandas.framework */,
+				22D15C000000000000000011 /* Python-pandas._libs._cyutility.framework */,
+				22D15C000000000000000013 /* Python-pandas._libs._ujson.framework */,
+				22D15C000000000000000015 /* Python-pandas._libs.algos.framework */,
+				22D15C000000000000000017 /* Python-pandas._libs.arrays.framework */,
+				22D15C000000000000000019 /* Python-pandas._libs.byteswap.framework */,
+				22D15C00000000000000001B /* Python-pandas._libs.groupby.framework */,
+				22D15C00000000000000001D /* Python-pandas._libs.hashing.framework */,
+				22D15C00000000000000001F /* Python-pandas._libs.hashtable.framework */,
+				22D15C000000000000000021 /* Python-pandas._libs.index.framework */,
+				22D15C000000000000000023 /* Python-pandas._libs.indexing.framework */,
+				22D15C000000000000000025 /* Python-pandas._libs.internals.framework */,
+				22D15C000000000000000027 /* Python-pandas._libs.interval.framework */,
+				22D15C000000000000000029 /* Python-pandas._libs.join.framework */,
+				22D15C00000000000000002B /* Python-pandas._libs.lib.framework */,
+				22D15C00000000000000002D /* Python-pandas._libs.missing.framework */,
+				22D15C00000000000000002F /* Python-pandas._libs.ops.framework */,
+				22D15C000000000000000031 /* Python-pandas._libs.ops_dispatch.framework */,
+				22D15C000000000000000033 /* Python-pandas._libs.pandas_datetime.framework */,
+				22D15C000000000000000035 /* Python-pandas._libs.pandas_parser.framework */,
+				22D15C000000000000000037 /* Python-pandas._libs.parsers.framework */,
+				22D15C000000000000000039 /* Python-pandas._libs.properties.framework */,
+				22D15C00000000000000003B /* Python-pandas._libs.reshape.framework */,
+				22D15C00000000000000003D /* Python-pandas._libs.sas.framework */,
+				22D15C00000000000000003F /* Python-pandas._libs.sparse.framework */,
+				22D15C000000000000000041 /* Python-pandas._libs.testing.framework */,
+				22D15C000000000000000043 /* Python-pandas._libs.tslib.framework */,
+				22D15C000000000000000045 /* Python-pandas._libs.tslibs.base.framework */,
+				22D15C000000000000000047 /* Python-pandas._libs.tslibs.ccalendar.framework */,
+				22D15C000000000000000049 /* Python-pandas._libs.tslibs.conversion.framework */,
+				22D15C00000000000000004B /* Python-pandas._libs.tslibs.dtypes.framework */,
+				22D15C00000000000000004D /* Python-pandas._libs.tslibs.fields.framework */,
+				22D15C00000000000000004F /* Python-pandas._libs.tslibs.nattype.framework */,
+				22D15C000000000000000051 /* Python-pandas._libs.tslibs.np_datetime.framework */,
+				22D15C000000000000000053 /* Python-pandas._libs.tslibs.offsets.framework */,
+				22D15C000000000000000055 /* Python-pandas._libs.tslibs.parsing.framework */,
+				22D15C000000000000000057 /* Python-pandas._libs.tslibs.period.framework */,
+				22D15C000000000000000059 /* Python-pandas._libs.tslibs.strptime.framework */,
+				22D15C00000000000000005B /* Python-pandas._libs.tslibs.timedeltas.framework */,
+				22D15C00000000000000005D /* Python-pandas._libs.tslibs.timestamps.framework */,
+				22D15C00000000000000005F /* Python-pandas._libs.tslibs.timezones.framework */,
+				22D15C000000000000000061 /* Python-pandas._libs.tslibs.tzconversion.framework */,
+				22D15C000000000000000063 /* Python-pandas._libs.tslibs.vectorized.framework */,
+				22D15C000000000000000065 /* Python-pandas._libs.window.aggregations.framework */,
+				22D15C000000000000000067 /* Python-pandas._libs.window.indexers.framework */,
+				22D15C000000000000000069 /* Python-pandas._libs.writers.framework */,
 				22D1437E2E62095C00E76E2E /* Python-PIL.PIL.framework */,
 				22D1437F2E62095C00E76E2E /* Python-psutil._psutil_ios.framework */,
 				22D143802E62095C00E76E2E /* Python-psutil._psutil_posix.framework */,
@@ -3827,9 +4155,11 @@
 				22D1438D2E62095C00E76E2E /* Python-scipy.special._special_ufuncs.framework */,
 				22D1438E2E62095C00E76E2E /* Python-scipy.special._ufuncs.framework */,
 				22D1438F2E62095C00E76E2E /* Python-scipy.special._ufuncs_cxx.framework */,
-				22D143902E62095C00E76E2E /* Python-shapely.speedups._speedups.framework */,
-				22D143912E62095C00E76E2E /* Python-shapely.vectorized._vectorized.framework */,
+				22D15C00000000000000006B /* Python-shapely._geometry_helpers.framework */,
+				22D15C00000000000000006D /* Python-shapely._geos.framework */,
+				22D15C00000000000000006F /* Python-shapely.lib.framework */,
 				22D143922E62095C00E76E2E /* Python-sklearn.__check_build._check_build.framework */,
+				22D15C000000000000000002 /* Python-sklearn._cyutility.framework */,
 				22D143932E62095C00E76E2E /* Python-sklearn._isotonic.framework */,
 				22D143942E62095C00E76E2E /* Python-sklearn._loss._loss.framework */,
 				22D143952E62095C00E76E2E /* Python-sklearn.cluster._dbscan_inner.framework */,
@@ -4024,7 +4354,51 @@
 				22D144532E62095C00E76E2E /* PythonAmatplotlib._ttconv.framework */,
 				22D144542E62095C00E76E2E /* PythonAmatplotlib.ft2font.framework */,
 				22D144552E62095C00E76E2E /* PythonAnumpy.numpy.framework */,
-				22D144562E62095C00E76E2E /* PythonApandas.pandas.framework */,
+				22D15C000000000000000071 /* PythonApandas._libs._cyutility.framework */,
+				22D15C000000000000000073 /* PythonApandas._libs._ujson.framework */,
+				22D15C000000000000000075 /* PythonApandas._libs.algos.framework */,
+				22D15C000000000000000077 /* PythonApandas._libs.arrays.framework */,
+				22D15C000000000000000079 /* PythonApandas._libs.byteswap.framework */,
+				22D15C00000000000000007B /* PythonApandas._libs.groupby.framework */,
+				22D15C00000000000000007D /* PythonApandas._libs.hashing.framework */,
+				22D15C00000000000000007F /* PythonApandas._libs.hashtable.framework */,
+				22D15C000000000000000081 /* PythonApandas._libs.index.framework */,
+				22D15C000000000000000083 /* PythonApandas._libs.indexing.framework */,
+				22D15C000000000000000085 /* PythonApandas._libs.internals.framework */,
+				22D15C000000000000000087 /* PythonApandas._libs.interval.framework */,
+				22D15C000000000000000089 /* PythonApandas._libs.join.framework */,
+				22D15C00000000000000008B /* PythonApandas._libs.lib.framework */,
+				22D15C00000000000000008D /* PythonApandas._libs.missing.framework */,
+				22D15C00000000000000008F /* PythonApandas._libs.ops.framework */,
+				22D15C000000000000000091 /* PythonApandas._libs.ops_dispatch.framework */,
+				22D15C000000000000000093 /* PythonApandas._libs.pandas_datetime.framework */,
+				22D15C000000000000000095 /* PythonApandas._libs.pandas_parser.framework */,
+				22D15C000000000000000097 /* PythonApandas._libs.parsers.framework */,
+				22D15C000000000000000099 /* PythonApandas._libs.properties.framework */,
+				22D15C00000000000000009B /* PythonApandas._libs.reshape.framework */,
+				22D15C00000000000000009D /* PythonApandas._libs.sas.framework */,
+				22D15C00000000000000009F /* PythonApandas._libs.sparse.framework */,
+				22D15C0000000000000000A1 /* PythonApandas._libs.testing.framework */,
+				22D15C0000000000000000A3 /* PythonApandas._libs.tslib.framework */,
+				22D15C0000000000000000A5 /* PythonApandas._libs.tslibs.base.framework */,
+				22D15C0000000000000000A7 /* PythonApandas._libs.tslibs.ccalendar.framework */,
+				22D15C0000000000000000A9 /* PythonApandas._libs.tslibs.conversion.framework */,
+				22D15C0000000000000000AB /* PythonApandas._libs.tslibs.dtypes.framework */,
+				22D15C0000000000000000AD /* PythonApandas._libs.tslibs.fields.framework */,
+				22D15C0000000000000000AF /* PythonApandas._libs.tslibs.nattype.framework */,
+				22D15C0000000000000000B1 /* PythonApandas._libs.tslibs.np_datetime.framework */,
+				22D15C0000000000000000B3 /* PythonApandas._libs.tslibs.offsets.framework */,
+				22D15C0000000000000000B5 /* PythonApandas._libs.tslibs.parsing.framework */,
+				22D15C0000000000000000B7 /* PythonApandas._libs.tslibs.period.framework */,
+				22D15C0000000000000000B9 /* PythonApandas._libs.tslibs.strptime.framework */,
+				22D15C0000000000000000BB /* PythonApandas._libs.tslibs.timedeltas.framework */,
+				22D15C0000000000000000BD /* PythonApandas._libs.tslibs.timestamps.framework */,
+				22D15C0000000000000000BF /* PythonApandas._libs.tslibs.timezones.framework */,
+				22D15C0000000000000000C1 /* PythonApandas._libs.tslibs.tzconversion.framework */,
+				22D15C0000000000000000C3 /* PythonApandas._libs.tslibs.vectorized.framework */,
+				22D15C0000000000000000C5 /* PythonApandas._libs.window.aggregations.framework */,
+				22D15C0000000000000000C7 /* PythonApandas._libs.window.indexers.framework */,
+				22D15C0000000000000000C9 /* PythonApandas._libs.writers.framework */,
 				22D144572E62095C00E76E2E /* PythonAPIL.PIL.framework */,
 				22D144582E62095C00E76E2E /* PythonApsutil._psutil_ios.framework */,
 				22D144592E62095C00E76E2E /* PythonApsutil._psutil_posix.framework */,
@@ -4043,9 +4417,11 @@
 				22D144662E62095C00E76E2E /* PythonAscipy.special._special_ufuncs.framework */,
 				22D144672E62095C00E76E2E /* PythonAscipy.special._ufuncs.framework */,
 				22D144682E62095C00E76E2E /* PythonAscipy.special._ufuncs_cxx.framework */,
-				22D144692E62095C00E76E2E /* PythonAshapely.speedups._speedups.framework */,
-				22D1446A2E62095C00E76E2E /* PythonAshapely.vectorized._vectorized.framework */,
+				22D15C0000000000000000CB /* PythonAshapely._geometry_helpers.framework */,
+				22D15C0000000000000000CD /* PythonAshapely._geos.framework */,
+				22D15C0000000000000000CF /* PythonAshapely.lib.framework */,
 				22D1446B2E62095C00E76E2E /* PythonAsklearn.__check_build._check_build.framework */,
+				22D15C000000000000000004 /* PythonAsklearn._cyutility.framework */,
 				22D1446C2E62095C00E76E2E /* PythonAsklearn._isotonic.framework */,
 				22D1446D2E62095C00E76E2E /* PythonAsklearn._loss._loss.framework */,
 				22D1446E2E62095C00E76E2E /* PythonAsklearn.cluster._dbscan_inner.framework */,

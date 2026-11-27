@@ -1,0 +1,975 @@
+{
+  "releases": {
+    "libssh2": {
+      "url": "https://github.com/holzschu/libssh2-apple/releases/download/v1.11.0/libssh2-dynamic.xcframework.zip",
+      "sha256": "cacfe1789b197b727119f7e32f561eaf9acc27bf38cd19975b74fce107f868a6"
+    },
+    "openssl": {
+      "url": "https://github.com/holzschu/openssl-apple/releases/download/v1.1.1w/openssl-dynamic.xcframework.zip",
+      "sha256": "329e8317cf9bee8e138da5d032330a7a1bd2473cf44c9c083cb2f0636abb8b80"
+    },
+    "ios_system": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/ios_system.xcframework.zip",
+      "sha256": "bac0689c792901cbf410899162c06ab22a950b032adfb5f94b5c3ab6a661e883"
+    },
+    "awk": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/awk.xcframework.zip",
+      "sha256": "d797f840ca1f749273a4dc966b99c1b822c3dc9b513e43d75f7e062dd1fd5d7d"
+    },
+    "curl_ios": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/curl_ios.xcframework.zip",
+      "sha256": "116b429ee3c0188c271021e4640e20a4a4b896889d12a70903d22e98a9ea43e6"
+    },
+    "files": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/files.xcframework.zip",
+      "sha256": "88a9f39c248e3ab05d1110d2e0a9f602dc5da16a6fc9191574dcaa7d121efaa2"
+    },
+    "shell": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/shell.xcframework.zip",
+      "sha256": "dedafb755fa062afd96b37d15a98953f7696ee3509f57426b6914d3a66da2e52"
+    },
+    "ssh_cmd": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/ssh_cmd.xcframework.zip",
+      "sha256": "ffe6cde587123ebd3020dd5566f6f25685a2be6763ef8acd3b44fce2c4ed8af6"
+    },
+    "ssh_cmdA": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/ssh_cmdA.xcframework.zip",
+      "sha256": "11ca969fd79e87d6a86009507d55896f043ac62cac37620bd05ed3b029d11c9f"
+    },
+    "ssh_agent": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/ssh_agent.xcframework.zip",
+      "sha256": "597f10bff0f39268964d287c69f993e784e9d0822daa0f43e1821842d1c7a331"
+    },
+    "sshd": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/sshd.xcframework.zip",
+      "sha256": "312c9a5d7ba551f76a3e121e44b03c2f0c630eef1a687d8a946290c34b3a7f27"
+    },
+    "tar": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/tar.xcframework.zip",
+      "sha256": "58b9fe593c232a308e2c72c452457138b3d2c5109b17d42da3e1c81b84be4c29"
+    },
+    "text": {
+      "url": "https://github.com/demrom/ios_system/releases/download/ios-system-preview-2c560334ecca/text.xcframework.zip",
+      "sha256": "e6851aae912cfd0dd5cdf99f24b06c35df26bd82f3ed81566add6e6802381e4d"
+    },
+    "network_ios": {
+      "url": "https://github.com/holzschu/network_ios/releases/download/v0.2/network_ios.xcframework.zip",
+      "sha256": "18e96112ae86ec39390487d850e7732d88e446f9f233b2792d633933d4606d46"
+    },
+    "bc_ios": {
+      "url": "https://github.com/holzschu/bc/releases/download/v1.0/bc_ios.xcframework.zip",
+      "sha256": "e3d72c562f726614e273efb06f6e63ccd23f9e38b14c468cf9febd4302df5fdd"
+    },
+    "lua_ios": {
+      "url": "https://github.com/holzschu/lua_ios/releases/download/1.0/lua_ios.xcframework.zip",
+      "sha256": "0ccdab671f31c20daf8833452cc36598b49f84441851d7142b305443425bc527"
+    },
+    "magick": {
+      "url": "https://github.com/holzschu/ImageMagick/releases/download/1.0/magick.xcframework.zip",
+      "sha256": "15366ec4c270a21008cffcfefed6862619dcee193112fa634213ae5ce4437aba"
+    },
+    "task": {
+      "url": "https://github.com/holzschu/taskwarrior/releases/download/1.0/task.xcframework.zip",
+      "sha256": "ac6589d1e90ed5eb2a969d50a618f9c92da2a74305ef9f6caa2d8b4d36837b70"
+    },
+    "lex": {
+      "url": "https://github.com/holzschu/taskwarrior/releases/download/1.0/lex.xcframework.zip",
+      "sha256": "08916648891bd2070e61c0c202dcd6eed1840981ffd6dc38ffd940b03e31939b"
+    },
+    "calc": {
+      "url": "https://github.com/holzschu/taskwarrior/releases/download/1.0/calc.xcframework.zip",
+      "sha256": "4732b1eaad5f9060faaea73b33e43fb5d59af884b3eff678df27e2abb9b98cf0"
+    },
+    "vim": {
+      "url": "https://github.com/holzschu/vim/releases/download/ios_1.0/vim.xcframework.zip",
+      "sha256": "02acb74bec3e6b4ba9c120873a19a770773e3c3e2d141365808a9342ddf41fe7"
+    },
+    "xxd": {
+      "url": "https://github.com/holzschu/vim/releases/download/ios_1.0/xxd.xcframework.zip",
+      "sha256": "1c48b9f77310b71499a7bd76a16882405c8a81b55f56c7c7577ae2a0ce347ba6"
+    },
+    "ar": {
+      "url": "https://github.com/holzschu/llvm-project/releases/download/14.0.0/ar.xcframework.zip",
+      "sha256": "69727d7f851ad5b0a77732e7cff70112a0cf8ec12d8e8fc869f6470a1880c1c5"
+    },
+    "lld": {
+      "url": "https://github.com/holzschu/llvm-project/releases/download/14.0.0/lld.xcframework.zip",
+      "sha256": "240c1cd5cfc7557dd859af9b9d20aa9623f935dc92746a8be21edba8dbd11f34"
+    },
+    "llc": {
+      "url": "https://github.com/holzschu/llvm-project/releases/download/14.0.0/llc.xcframework.zip",
+      "sha256": "bfd1cf1e42a5af03716bdd0d3d5404cde7d56f86c52cfebcc69a7ecbd2d5127b"
+    },
+    "clang": {
+      "url": "https://github.com/holzschu/llvm-project/releases/download/14.0.0/clang.xcframework.zip",
+      "sha256": "9de9f72334c99f27d3ac5844b8d3feffcaed3086997e7c2538f887667e8ca179"
+    },
+    "dis": {
+      "url": "https://github.com/holzschu/llvm-project/releases/download/14.0.0/dis.xcframework.zip",
+      "sha256": "6613ee063331e39fdea044cc119511ef61df8eb247e6db2e376240af224623c7"
+    },
+    "libLLVM": {
+      "url": "https://github.com/holzschu/llvm-project/releases/download/14.0.0/libLLVM.xcframework.zip",
+      "sha256": "bbae5b3a7952b2f1e89fb93b25b41931a53b6d8c99d24dfe6a893e615b177428"
+    },
+    "link": {
+      "url": "https://github.com/holzschu/llvm-project/releases/download/14.0.0/link.xcframework.zip",
+      "sha256": "3bf79972c961f418c9964df04dec81794dd6beae88f07702e8b51e074ed2085f"
+    },
+    "lli": {
+      "url": "https://github.com/holzschu/llvm-project/releases/download/14.0.0/lli.xcframework.zip",
+      "sha256": "a7976820f7349daf1c136ae513d506c954502ff10b92a92dbd3538bd625e0719"
+    },
+    "nm": {
+      "url": "https://github.com/holzschu/llvm-project/releases/download/14.0.0/nm.xcframework.zip",
+      "sha256": "3c004f6d5345bde727bb34d2daa252c46a9cf5ee3e053c7a18b2933cf0df16c0"
+    },
+    "opt": {
+      "url": "https://github.com/holzschu/llvm-project/releases/download/14.0.0/opt.xcframework.zip",
+      "sha256": "616d858d3bfd3f2782baedda34ba1fb6c449704faeae0db59e742d27169710ab"
+    },
+    "texlua53": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/texlua53.xcframework.zip",
+      "sha256": "99e66932e5025a91496acd1228b6a0d03d19043db7585c2b608d0fc5f9eb5cff"
+    },
+    "kpathsea": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/kpathsea.xcframework.zip",
+      "sha256": "2f04e8d8c589eecf3d022a34f71b57292a9271c88d48a7a767c68fdcfc937f23"
+    },
+    "makeindex": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/makeindex.xcframework.zip",
+      "sha256": "91b7c0bcaf3f1cd75d550a3115f91d45a7e31e9752b82bc1eb46095aa77687ed"
+    },
+    "luatex": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/luatex.xcframework.zip",
+      "sha256": "36beb9e8811a5d51f3a938b9fb057b4b769333cf1069247d19b5e82ed8a8e40a"
+    },
+    "luahbtex": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/luahbtex.xcframework.zip",
+      "sha256": "fdda49fa86031e9d13d2e53485f5b3c9874d03c11a8b241598f64c28964a0eba"
+    },
+    "pdftex": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/pdftex.xcframework.zip",
+      "sha256": "e98163dbe715f621c1d44e14eb8484ba4e906129c02b6e0cd3e8dcc206775bd7"
+    },
+    "bibtex": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/bibtex.xcframework.zip",
+      "sha256": "70b0608f634e3f7cbac88b8623d28e98113d67c8d5052abefd26e92544c59b80"
+    },
+    "kpsewhich": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/kpsewhich.xcframework.zip",
+      "sha256": "0908aeb72d34d47ab8f530cf5e822d366b060c2c9a7b7f2d4a799082775373c7"
+    },
+    "texlua53A": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/texlua53A.xcframework.zip",
+      "sha256": "5bdcafed346a1bf713dd6a2cc2fefd8ebc70199c5df0a120d02be13ee58f9610"
+    },
+    "kpathseaA": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/kpathseaA.xcframework.zip",
+      "sha256": "b304a4080eb3cfc1d90187a74b8327a32c400ba5b466e4fda1051e0d5d55194a"
+    },
+    "luatexA": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/luatexA.xcframework.zip",
+      "sha256": "e572cf1ea77ed50f895a7a6f74d6996b46ef614b89435f4a7eaae95983748aac"
+    },
+    "luahbtexA": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/luahbtexA.xcframework.zip",
+      "sha256": "71f7f4b17f77fe8ff67be4a3abce40ab8f3f360636d0f73edb5156bcc5e88da6"
+    },
+    "pdftexA": {
+      "url": "https://github.com/holzschu/texlive-source/releases/download/texlive-2022/pdftexA.xcframework.zip",
+      "sha256": "16130dd0486e8fb352be4bc461f382733436576a5ad5c0ecccec847f3db8c506"
+    },
+    "freetype": {
+      "url": "https://github.com/holzschu/Python-aux/releases/download/1.0/freetype.xcframework.zip",
+      "sha256": "8fdf22c7911a2ea47c60df723a0ee268bd5606a1153023f338b3e6395149089e"
+    },
+    "harfbuzz": {
+      "url": "https://github.com/holzschu/Python-aux/releases/download/1.0/harfbuzz.xcframework.zip",
+      "sha256": "9a983795826d1662ba354f563b19a7b980e4c744138b3afb68491991e2c8a66a"
+    },
+    "libpng": {
+      "url": "https://github.com/holzschu/Python-aux/releases/download/1.0/libpng.xcframework.zip",
+      "sha256": "30ff80e9a2c20d7f266e7f788e94e44b2e105ac9c8107b44eb91f6869d6d8aa4"
+    },
+    "perl": {
+      "url": "https://github.com/holzschu/perl5/releases/download/iOS_1.0/perl.xcframework.zip",
+      "sha256": "98a680b9cd2411e1133a55eaac7f7429b0d3d184a25b9a7b9c4c047dbe0626d4"
+    },
+    "perlA": {
+      "url": "https://github.com/holzschu/perl5/releases/download/iOS_1.0/perlA.xcframework.zip",
+      "sha256": "20a18a5aa496dc54af7a3a11161a1ef2b7bbf3bd037d527673f371f800e72665"
+    },
+    "perlB": {
+      "url": "https://github.com/holzschu/perl5/releases/download/iOS_1.0/perlB.xcframework.zip",
+      "sha256": "593ba4f8f734d669040f9d9be63092e275d5dba72f1b1826c6806f3c4cec7604"
+    },
+    "lg2": {
+      "url": "https://github.com/holzschu/libgit2/releases/download/ios_1.0/lg2.xcframework.zip",
+      "sha256": "7d205a771be8d120a80d2f7281135dfffd21a3713c86eb4f1957638f6b4b365e"
+    },
+    "mandoc": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/mandoc.xcframework.zip",
+      "sha256": "86428238cb357ece2da6b813fe493dfcee1f4efc91ec535d73b3e581d9b8e21b"
+    },
+    "make": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/make.xcframework.zip",
+      "sha256": "6f9dca82bfdee1be8ad0ec1e52870bee6b3e309ac29f0995a6d5a41003c26d4f"
+    },
+    "dash": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dash.xcframework.zip",
+      "sha256": "9a30ac6b3780dd68d2268d10467902214e32333e980c59090faa6099f0d250fc"
+    },
+    "dashA": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dashA.xcframework.zip",
+      "sha256": "a45eb647bf81caf0fd80dba704326842ce03668c60499488d387dce26cf30ee6"
+    },
+    "dashB": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dashB.xcframework.zip",
+      "sha256": "c0de9fdc7c9cc2386012a1dccdbb112cf4b15243699ffcf49c9dbc6d17163bce"
+    },
+    "dashC": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dashC.xcframework.zip",
+      "sha256": "553d98fa8c5705754a9cdd2f4d2f5d3cd5d1dc5f765921f5fb0f3422848e09bf"
+    },
+    "dashD": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dashD.xcframework.zip",
+      "sha256": "7aa457e359b3bb215fdd56df5b689b826863f2e96d72a87a3046a3116f2dd30c"
+    },
+    "dashE": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/dashE.xcframework.zip",
+      "sha256": "9f79675fa3c797257931853ca746337a66f8218157d44736d1c14425030aff3e"
+    },
+    "unrar": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/unrar.xcframework.zip",
+      "sha256": "b1c2318db3b89a668abd66f69036ec9c3c5d474b2d75a0b1ffbaf2ac47b02782"
+    },
+    "vimproc": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/vimproc.xcframework.zip",
+      "sha256": "400dcf3f4414562a9c62f1541b349be4176bdae9f7fcd95a5c7ed34046586982"
+    },
+    "ffmpeg": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/ffmpeg.xcframework.zip",
+      "sha256": "627a9392a8d4704e4e04636692e3baeacb7af4f273e61fe676270aa16b1ef371"
+    },
+    "ffprobe": {
+      "url": "https://github.com/holzschu/ios_system/releases/download/Auxiliary/ffprobe.xcframework.zip",
+      "sha256": "c66df5198becb1e0432c27c8f0df628fa185224c9f0bcff2039e3bd21246b130"
+    },
+    "jq": {
+      "url": "https://github.com/fprimex/jq/releases/download/ios/jq.xcframework.zip",
+      "sha256": "d3c4486e5ed788995b0ad9586465d3407e463d90f4e91b843846cabfe21f297f"
+    }
+  },
+  "artifacts": {
+    "taskwarrior-xcframeworks": {
+      "url": "https://nightly.link/demrom/taskwarrior/actions/artifacts/12485091283.zip",
+      "sha256": "33e96ed18481068f34e72f9eff934ce3bfdc38ae398b1476021f3d5987f5480c",
+      "run": "https://github.com/demrom/taskwarrior/actions/runs/39915552547/attempts/1",
+      "revision": "88e39a4d5265cee98c3ef6fa20ec24e37e6cb154",
+      "frameworks": {
+        "calc": "calc.xcframework.zip",
+        "lex": "lex.xcframework.zip",
+        "task": "task.xcframework.zip"
+      }
+    },
+    "vim-xcframeworks": {
+      "url": "https://nightly.link/demrom/vim/actions/artifacts/12483924951.zip",
+      "sha256": "146e4f142d338f343400c091b492ace9d0023a518334b36ddf26352b20d3f874",
+      "run": "https://github.com/demrom/vim/actions/runs/39915872196/attempts/1",
+      "revision": "8a0738f1bd8f9d0185353440dff3a3f54c646208",
+      "frameworks": {
+        "vim": "vim.xcframework.zip",
+        "xxd": "xxd.xcframework.zip"
+      }
+    },
+    "ImageMagick-xcframeworks": {
+      "url": "https://nightly.link/demrom/ImageMagick/actions/artifacts/12487369871.zip",
+      "sha256": "24ed0be69c23a174540250fc8558129de9acc5ddc3c7e28f6f62637b91dda845",
+      "run": "https://github.com/demrom/ImageMagick/actions/runs/39921580736/attempts/1",
+      "revision": "ddc754a4ca19dced10a28e9154d90de24a63bd2b",
+      "frameworks": {
+        "magick": "magick.xcframework.zip"
+      }
+    },
+    "libgit2-xcframeworks": {
+      "url": "https://nightly.link/demrom/libgit2/actions/artifacts/12484761583.zip",
+      "sha256": "e7d8a1cea601963d60b6febc78b46c25d0257c292df69c85f3e43dd580ec7d2b",
+      "run": "https://github.com/demrom/libgit2/actions/runs/39915571460/attempts/1",
+      "revision": "7030e754c39c0404348987e3d6419af18ce31038",
+      "frameworks": {
+        "lg2": "lg2.xcframework.zip"
+      }
+    },
+    "ios_system-ffmpeg-xcframeworks": {
+      "url": "https://nightly.link/demrom/ios_system/actions/artifacts/12490674791.zip",
+      "sha256": "6083097bdffe675d9bf5df59254da621c2a0d59488ba6fdaa1a1ab2038c52173",
+      "run": "https://github.com/demrom/ios_system/actions/runs/39930110575/attempts/1",
+      "revision": "bae736ec230899620a8ecfc8f0aa36aac8cb6d75",
+      "frameworks": {
+        "ffmpeg": "ffmpeg.xcframework.zip",
+        "ffprobe": "ffprobe.xcframework.zip"
+      }
+    },
+    "ios_system-jq-xcframework": {
+      "url": "https://nightly.link/demrom/ios_system/actions/artifacts/12479793870.zip",
+      "sha256": "0978c59a6764c4496c3b481b74d73234c799536b0bba1d43218a8740aa83bb25",
+      "run": "https://github.com/demrom/ios_system/actions/runs/39904113429/attempts/1",
+      "revision": "cfb4de563ffa479ad8b26db30f13a23b477b8e23",
+      "frameworks": {
+        "jq": "jq.xcframework.zip"
+      }
+    },
+    "vimproc.vim-xcframeworks": {
+      "url": "https://nightly.link/demrom/vimproc.vim/actions/artifacts/12497911617.zip",
+      "sha256": "d3d6589be2a21edf64bf52a5fe6fc343df0e681ee17440d6092ca4818eda7727",
+      "run": "https://github.com/demrom/vimproc.vim/actions/runs/39945023464/attempts/1",
+      "revision": "3dd900041767f07535fa2091282ec9ff1f99b0a2",
+      "frameworks": {
+        "vimproc": "vimproc.xcframework.zip"
+      }
+    },
+    "ios_system-auxiliary": {
+      "url": "https://nightly.link/demrom/ios_system/actions/artifacts/12511497874.zip",
+      "sha256": "6f52edf9aaba8baf82d7f0fa4103694043ed6ca003089f994231ec4abd5b0ec7",
+      "run": "https://github.com/demrom/ios_system/actions/runs/39975375851/attempts/1",
+      "revision": "0106478045c886ed2c4b8dc3aba11d6f989153de",
+      "frameworks": {
+        "make": "make.xcframework.zip",
+        "mandoc": "mandoc.xcframework.zip",
+        "unrar": "unrar.xcframework.zip"
+      }
+    },
+    "a-shell-blink-xcframework": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12501012139.zip",
+      "sha256": "e6cb03f4929e99e95a703d1c11a1e00969b67b83cb5a7886573acbe47d3e15dd",
+      "run": "https://github.com/demrom/a-shell/actions/runs/39951004002/attempts/1",
+      "revision": "7baf0309554d074e0782a0e0955d56d761e7e519",
+      "frameworks": {
+        "blink": "blink.xcframework.zip"
+      }
+    },
+    "a-shell-xcframeworks": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12533652849.zip",
+      "sha256": "cf2eee2fb2fca912df6fd692705292b6e83066c4a0cb899188a1e71df2ae838f",
+      "run": "https://github.com/demrom/a-shell/actions/runs/40023827397/attempts/2",
+      "revision": "ed36bb705e6a4a1092421dac355a4aab3bb52b16",
+      "frameworks": {
+        "openrsync": "openrsync.xcframework.zip",
+        "openrsyncA": "openrsyncA.xcframework.zip"
+      }
+    },
+    "Python-aux-xcframeworks": {
+      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/15128566447.zip",
+      "sha256": "35f5fa28c1043503d0660a8129fa314c057c3617d9ac3115ed9412dc69414777",
+      "run": "https://github.com/demrom/Python-aux/actions/runs/45833551274/attempts/1",
+      "revision": "ea72fdc9fc610eb8404fe8d11a5cb7549898e782",
+      "frameworks": {
+        "freetype": "freetype.xcframework.zip",
+        "harfbuzz": "harfbuzz.xcframework.zip",
+        "libpng": "libpng.xcframework.zip",
+        "libzmq": "libzmq.xcframework.zip"
+      }
+    },
+    "dash_iOS-xcframeworks": {
+      "url": "https://nightly.link/demrom/dash_iOS/actions/artifacts/12512731116.zip",
+      "sha256": "0254d6362af64379411e9ec6a8d43cf4b5645b5f465a864640e9486cb993098c",
+      "run": "https://github.com/demrom/dash_iOS/actions/runs/39978088018/attempts/1",
+      "revision": "7e2f2618154eaef97b7fa929b46dd289b1a4b3d9",
+      "frameworks": {
+        "dash": "products/dash.xcframework.zip",
+        "dashA": "products/dashA.xcframework.zip",
+        "dashB": "products/dashB.xcframework.zip",
+        "dashC": "products/dashC.xcframework.zip",
+        "dashD": "products/dashD.xcframework.zip",
+        "dashE": "products/dashE.xcframework.zip"
+      }
+    },
+    "a-shell-pico": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15154261375.zip",
+      "sha256": "60fc304005ac21f60290b35c5a85bd7e753c7c084d1b7d690fb685296de1003c",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45895590183/attempts/1",
+      "revision": "5b24ba54955cc2cdcd3360c9dede75c3ba87ad52",
+      "frameworks": {
+        "pico": "pico.xcframework.zip"
+      }
+    },
+    "cpython-python-ios": {
+      "url": "https://nightly.link/demrom/cpython/actions/artifacts/15063107116.zip",
+      "sha256": "d41e75444e3b4706739b75c876945dc87f7f69c01dd5b7440a6dae10d14160c7",
+      "run": "https://github.com/demrom/cpython/actions/runs/45690794689/attempts/2",
+      "revision": "7da3f37148cbd272df89f06bbb2bb73a7e4152ad",
+      "frameworks": {
+        "Python-_ctypes_test": "Python-_ctypes_test.xcframework.zip",
+        "Python-_testexternalinspection": "Python-_testexternalinspection.xcframework.zip",
+        "Python-_testimportmultiple": "Python-_testimportmultiple.xcframework.zip",
+        "Python-_testmultiphase": "Python-_testmultiphase.xcframework.zip",
+        "Python-_testsinglephase": "Python-_testsinglephase.xcframework.zip",
+        "Python-xxlimited": "Python-xxlimited.xcframework.zip",
+        "Python-xxlimited_35": "Python-xxlimited_35.xcframework.zip",
+        "Python": "Python.xcframework.zip"
+      }
+    },
+    "cpython-python-mini": {
+      "url": "https://nightly.link/demrom/cpython/actions/artifacts/15063843546.zip",
+      "sha256": "26607f56547d63db0a172104ceb3afcd9aa37af06b4ae7408ef2d7658647c81b",
+      "run": "https://github.com/demrom/cpython/actions/runs/45690794689/attempts/2",
+      "revision": "7da3f37148cbd272df89f06bbb2bb73a7e4152ad",
+      "frameworks": {
+        "Python-Crypto.Cipher._ARC4": "Python-Crypto.Cipher._ARC4.xcframework.zip",
+        "Python-Crypto.Cipher._Salsa20": "Python-Crypto.Cipher._Salsa20.xcframework.zip",
+        "Python-Crypto.Cipher._chacha20": "Python-Crypto.Cipher._chacha20.xcframework.zip",
+        "Python-Crypto.Cipher._pkcs1_decode": "Python-Crypto.Cipher._pkcs1_decode.xcframework.zip",
+        "Python-Crypto.Cipher._raw_aes": "Python-Crypto.Cipher._raw_aes.xcframework.zip",
+        "Python-Crypto.Cipher._raw_arc2": "Python-Crypto.Cipher._raw_arc2.xcframework.zip",
+        "Python-Crypto.Cipher._raw_blowfish": "Python-Crypto.Cipher._raw_blowfish.xcframework.zip",
+        "Python-Crypto.Cipher._raw_cast": "Python-Crypto.Cipher._raw_cast.xcframework.zip",
+        "Python-Crypto.Cipher._raw_cbc": "Python-Crypto.Cipher._raw_cbc.xcframework.zip",
+        "Python-Crypto.Cipher._raw_cfb": "Python-Crypto.Cipher._raw_cfb.xcframework.zip",
+        "Python-Crypto.Cipher._raw_ctr": "Python-Crypto.Cipher._raw_ctr.xcframework.zip",
+        "Python-Crypto.Cipher._raw_des": "Python-Crypto.Cipher._raw_des.xcframework.zip",
+        "Python-Crypto.Cipher._raw_des3": "Python-Crypto.Cipher._raw_des3.xcframework.zip",
+        "Python-Crypto.Cipher._raw_ecb": "Python-Crypto.Cipher._raw_ecb.xcframework.zip",
+        "Python-Crypto.Cipher._raw_eksblowfish": "Python-Crypto.Cipher._raw_eksblowfish.xcframework.zip",
+        "Python-Crypto.Cipher._raw_ocb": "Python-Crypto.Cipher._raw_ocb.xcframework.zip",
+        "Python-Crypto.Cipher._raw_ofb": "Python-Crypto.Cipher._raw_ofb.xcframework.zip",
+        "Python-Crypto.Hash._BLAKE2b": "Python-Crypto.Hash._BLAKE2b.xcframework.zip",
+        "Python-Crypto.Hash._BLAKE2s": "Python-Crypto.Hash._BLAKE2s.xcframework.zip",
+        "Python-Crypto.Hash._MD2": "Python-Crypto.Hash._MD2.xcframework.zip",
+        "Python-Crypto.Hash._MD4": "Python-Crypto.Hash._MD4.xcframework.zip",
+        "Python-Crypto.Hash._MD5": "Python-Crypto.Hash._MD5.xcframework.zip",
+        "Python-Crypto.Hash._RIPEMD160": "Python-Crypto.Hash._RIPEMD160.xcframework.zip",
+        "Python-Crypto.Hash._SHA1": "Python-Crypto.Hash._SHA1.xcframework.zip",
+        "Python-Crypto.Hash._SHA224": "Python-Crypto.Hash._SHA224.xcframework.zip",
+        "Python-Crypto.Hash._SHA256": "Python-Crypto.Hash._SHA256.xcframework.zip",
+        "Python-Crypto.Hash._SHA384": "Python-Crypto.Hash._SHA384.xcframework.zip",
+        "Python-Crypto.Hash._SHA512": "Python-Crypto.Hash._SHA512.xcframework.zip",
+        "Python-Crypto.Hash._ghash_portable": "Python-Crypto.Hash._ghash_portable.xcframework.zip",
+        "Python-Crypto.Hash._keccak": "Python-Crypto.Hash._keccak.xcframework.zip",
+        "Python-Crypto.Hash._poly1305": "Python-Crypto.Hash._poly1305.xcframework.zip",
+        "Python-Crypto.Math._modexp": "Python-Crypto.Math._modexp.xcframework.zip",
+        "Python-Crypto.Protocol._scrypt": "Python-Crypto.Protocol._scrypt.xcframework.zip",
+        "Python-Crypto.PublicKey._curve25519": "Python-Crypto.PublicKey._curve25519.xcframework.zip",
+        "Python-Crypto.PublicKey._curve448": "Python-Crypto.PublicKey._curve448.xcframework.zip",
+        "Python-Crypto.PublicKey._ec_ws": "Python-Crypto.PublicKey._ec_ws.xcframework.zip",
+        "Python-Crypto.PublicKey._ed25519": "Python-Crypto.PublicKey._ed25519.xcframework.zip",
+        "Python-Crypto.PublicKey._ed448": "Python-Crypto.PublicKey._ed448.xcframework.zip",
+        "Python-Crypto.Util._cpuid_c": "Python-Crypto.Util._cpuid_c.xcframework.zip",
+        "Python-Crypto.Util._strxor": "Python-Crypto.Util._strxor.xcframework.zip",
+        "Python-Cryptodome.Cipher._ARC4": "Python-Cryptodome.Cipher._ARC4.xcframework.zip",
+        "Python-Cryptodome.Cipher._Salsa20": "Python-Cryptodome.Cipher._Salsa20.xcframework.zip",
+        "Python-Cryptodome.Cipher._chacha20": "Python-Cryptodome.Cipher._chacha20.xcframework.zip",
+        "Python-Cryptodome.Cipher._pkcs1_decode": "Python-Cryptodome.Cipher._pkcs1_decode.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_aes": "Python-Cryptodome.Cipher._raw_aes.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_arc2": "Python-Cryptodome.Cipher._raw_arc2.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_blowfish": "Python-Cryptodome.Cipher._raw_blowfish.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_cast": "Python-Cryptodome.Cipher._raw_cast.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_cbc": "Python-Cryptodome.Cipher._raw_cbc.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_cfb": "Python-Cryptodome.Cipher._raw_cfb.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_ctr": "Python-Cryptodome.Cipher._raw_ctr.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_des": "Python-Cryptodome.Cipher._raw_des.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_des3": "Python-Cryptodome.Cipher._raw_des3.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_ecb": "Python-Cryptodome.Cipher._raw_ecb.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_eksblowfish": "Python-Cryptodome.Cipher._raw_eksblowfish.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_ocb": "Python-Cryptodome.Cipher._raw_ocb.xcframework.zip",
+        "Python-Cryptodome.Cipher._raw_ofb": "Python-Cryptodome.Cipher._raw_ofb.xcframework.zip",
+        "Python-Cryptodome.Hash._BLAKE2b": "Python-Cryptodome.Hash._BLAKE2b.xcframework.zip",
+        "Python-Cryptodome.Hash._BLAKE2s": "Python-Cryptodome.Hash._BLAKE2s.xcframework.zip",
+        "Python-Cryptodome.Hash._MD2": "Python-Cryptodome.Hash._MD2.xcframework.zip",
+        "Python-Cryptodome.Hash._MD4": "Python-Cryptodome.Hash._MD4.xcframework.zip",
+        "Python-Cryptodome.Hash._MD5": "Python-Cryptodome.Hash._MD5.xcframework.zip",
+        "Python-Cryptodome.Hash._RIPEMD160": "Python-Cryptodome.Hash._RIPEMD160.xcframework.zip",
+        "Python-Cryptodome.Hash._SHA1": "Python-Cryptodome.Hash._SHA1.xcframework.zip",
+        "Python-Cryptodome.Hash._SHA224": "Python-Cryptodome.Hash._SHA224.xcframework.zip",
+        "Python-Cryptodome.Hash._SHA256": "Python-Cryptodome.Hash._SHA256.xcframework.zip",
+        "Python-Cryptodome.Hash._SHA384": "Python-Cryptodome.Hash._SHA384.xcframework.zip",
+        "Python-Cryptodome.Hash._SHA512": "Python-Cryptodome.Hash._SHA512.xcframework.zip",
+        "Python-Cryptodome.Hash._ghash_portable": "Python-Cryptodome.Hash._ghash_portable.xcframework.zip",
+        "Python-Cryptodome.Hash._keccak": "Python-Cryptodome.Hash._keccak.xcframework.zip",
+        "Python-Cryptodome.Hash._poly1305": "Python-Cryptodome.Hash._poly1305.xcframework.zip",
+        "Python-Cryptodome.Math._modexp": "Python-Cryptodome.Math._modexp.xcframework.zip",
+        "Python-Cryptodome.Protocol._scrypt": "Python-Cryptodome.Protocol._scrypt.xcframework.zip",
+        "Python-Cryptodome.PublicKey._curve25519": "Python-Cryptodome.PublicKey._curve25519.xcframework.zip",
+        "Python-Cryptodome.PublicKey._curve448": "Python-Cryptodome.PublicKey._curve448.xcframework.zip",
+        "Python-Cryptodome.PublicKey._ec_ws": "Python-Cryptodome.PublicKey._ec_ws.xcframework.zip",
+        "Python-Cryptodome.PublicKey._ed25519": "Python-Cryptodome.PublicKey._ed25519.xcframework.zip",
+        "Python-Cryptodome.PublicKey._ed448": "Python-Cryptodome.PublicKey._ed448.xcframework.zip",
+        "Python-Cryptodome.Util._cpuid_c": "Python-Cryptodome.Util._cpuid_c.xcframework.zip",
+        "Python-Cryptodome.Util._strxor": "Python-Cryptodome.Util._strxor.xcframework.zip",
+        "Python-_cffi_backend": "Python-_cffi_backend.xcframework.zip",
+        "Python-cryptography.hazmat.bindings._openssl": "Python-cryptography.hazmat.bindings._openssl.xcframework.zip",
+        "Python-cryptography.hazmat.bindings._padding": "Python-cryptography.hazmat.bindings._padding.xcframework.zip",
+        "Python-curl_cffi._wrapper": "Python-curl_cffi._wrapper.xcframework.zip",
+        "Python-lxml.lxml": "Python-lxml.lxml.xcframework.zip",
+        "Python-regex._regex": "Python-regex._regex.xcframework.zip"
+      }
+    },
+    "Python-aux-gis": {
+      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/15130968108.zip",
+      "sha256": "4148b18c14a167182d158e8efb9a605915161c2cbe0c870b3fe05cc5c853fd98",
+      "run": "https://github.com/demrom/Python-aux/actions/runs/45833551274/attempts/1",
+      "revision": "ea72fdc9fc610eb8404fe8d11a5cb7549898e782",
+      "frameworks": {
+        "libgdal": "libgdal.xcframework.zip",
+        "libgeos": "libgeos.xcframework.zip",
+        "libgeos_c": "libgeos_c.xcframework.zip",
+        "libproj": "libproj.xcframework.zip",
+        "libspatialindex": "libspatialindex.xcframework.zip",
+        "libspatialindex_c": "libspatialindex_c.xcframework.zip"
+      }
+    },
+    "perl5-xcframeworks": {
+      "url": "https://nightly.link/demrom/perl5/actions/artifacts/12502305150.zip",
+      "sha256": "1749de8b3ba7523104852a73b1e46de6b39c0c48943788c8bd782d3d062f3d5a",
+      "run": "https://github.com/demrom/perl5/actions/runs/39950986465/attempts/1",
+      "revision": "ecb9b8ef3048d2a272f00f2dc04650f1c26714df",
+      "frameworks": {
+        "perl": "perl.xcframework.zip",
+        "perlA": "perlA.xcframework.zip",
+        "perlB": "perlB.xcframework.zip",
+        "perlC": "perlC.xcframework.zip"
+      }
+    },
+    "texlive-source-xcframeworks": {
+      "url": "https://nightly.link/demrom/texlive-source/actions/artifacts/12500478816.zip",
+      "sha256": "e20151ec9a2f7eac531750bf59b6fd715d691364c921930144be0275332f8b81",
+      "run": "https://github.com/demrom/texlive-source/actions/runs/39944440341/attempts/1",
+      "revision": "49c3d01eb689f99e393b9aa8f13881ffc6e72f6d",
+      "frameworks": {
+        "bibtex": "bibtex.xcframework.zip",
+        "euptex": "euptex.xcframework.zip",
+        "euptexA": "euptexA.xcframework.zip",
+        "kpathsea": "kpathsea.xcframework.zip",
+        "kpathseaA": "kpathseaA.xcframework.zip",
+        "kpsewhich": "kpsewhich.xcframework.zip",
+        "luahbtex": "luahbtex.xcframework.zip",
+        "luahbtexA": "luahbtexA.xcframework.zip",
+        "luatex": "luatex.xcframework.zip",
+        "luatexA": "luatexA.xcframework.zip",
+        "makeindex": "makeindex.xcframework.zip",
+        "pdftex": "pdftex.xcframework.zip",
+        "pdftexA": "pdftexA.xcframework.zip",
+        "ptexenc": "ptexenc.xcframework.zip",
+        "ptexencA": "ptexencA.xcframework.zip",
+        "texlua53": "texlua53.xcframework.zip",
+        "texlua53A": "texlua53A.xcframework.zip",
+        "xdvipdfmx": "xdvipdfmx.xcframework.zip",
+        "xdvipdfmxA": "xdvipdfmxA.xcframework.zip",
+        "xetex": "xetex.xcframework.zip",
+        "xetexA": "xetexA.xcframework.zip"
+      }
+    },
+    "Python-aux-openblas": {
+      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/15117664742.zip",
+      "sha256": "107f7bd69ce4d439ac86acee5cca782d5b66a630a8e8a2e3c5cecbe9f45056cc",
+      "run": "https://github.com/demrom/Python-aux/actions/runs/45804946800/attempts/1",
+      "revision": "b0cbe0e0738567fa8e8c579d7c81e6055f19c933",
+      "frameworks": {
+        "flang_rt": "flang_rt.xcframework.zip",
+        "libomp": "libomp.xcframework.zip",
+        "openblas": "openblas.xcframework.zip"
+      }
+    },
+    "Python-aux-science": {
+      "url": "https://nightly.link/demrom/Python-aux/actions/artifacts/15145384318.zip",
+      "sha256": "1b8e574727751497fc42dd5d65e8c70f91f32ce150933e125b01f2a0a4607d95",
+      "run": "https://github.com/demrom/Python-aux/actions/runs/45833551274/attempts/4",
+      "revision": "ea72fdc9fc610eb8404fe8d11a5cb7549898e782",
+      "frameworks": {
+        "Python-_argon2_cffi_bindings._ffi": "Python-_argon2_cffi_bindings._ffi.xcframework.zip",
+        "Python-PIL.PIL": "Python-PIL.PIL.xcframework.zip",
+        "Python-astropy.astropy": "Python-astropy.astropy.xcframework.zip",
+        "Python-cartopy.trace": "Python-cartopy.trace.xcframework.zip",
+        "Python-contourpy._contourpy": "Python-contourpy._contourpy.xcframework.zip",
+        "Python-coremltools._deps.kmeans1d._core": "Python-coremltools._deps.kmeans1d._core.xcframework.zip",
+        "Python-coremltools.libcoremlpython": "Python-coremltools.libcoremlpython.xcframework.zip",
+        "Python-coremltools.libmilstoragepython": "Python-coremltools.libmilstoragepython.xcframework.zip",
+        "Python-coremltools.libmodelpackage": "Python-coremltools.libmodelpackage.xcframework.zip",
+        "Python-cv2.cv2": "Python-cv2.cv2.xcframework.zip",
+        "Python-cvxopt.amd": "Python-cvxopt.amd.xcframework.zip",
+        "Python-cvxopt.base": "Python-cvxopt.base.xcframework.zip",
+        "Python-cvxopt.blas": "Python-cvxopt.blas.xcframework.zip",
+        "Python-cvxopt.cholmod": "Python-cvxopt.cholmod.xcframework.zip",
+        "Python-cvxopt.fftw": "Python-cvxopt.fftw.xcframework.zip",
+        "Python-cvxopt.lapack": "Python-cvxopt.lapack.xcframework.zip",
+        "Python-cvxopt.misc_solvers": "Python-cvxopt.misc_solvers.xcframework.zip",
+        "Python-cvxopt.umfpack": "Python-cvxopt.umfpack.xcframework.zip",
+        "Python-erfa.ufunc": "Python-erfa.ufunc.xcframework.zip",
+        "Python-fiona.fiona": "Python-fiona.fiona.xcframework.zip",
+        "Python-kiwisolver._cext": "Python-kiwisolver._cext.xcframework.zip",
+        "Python-matplotlib._backend_agg": "Python-matplotlib._backend_agg.xcframework.zip",
+        "Python-matplotlib._c_internal_utils": "Python-matplotlib._c_internal_utils.xcframework.zip",
+        "Python-matplotlib._image": "Python-matplotlib._image.xcframework.zip",
+        "Python-matplotlib._path": "Python-matplotlib._path.xcframework.zip",
+        "Python-matplotlib._qhull": "Python-matplotlib._qhull.xcframework.zip",
+        "Python-matplotlib._tkagg": "Python-matplotlib._tkagg.xcframework.zip",
+        "Python-matplotlib._tri": "Python-matplotlib._tri.xcframework.zip",
+        "Python-matplotlib.ft2font": "Python-matplotlib.ft2font.xcframework.zip",
+        "Python-matplotlib._ttconv": "Python-matplotlib._ttconv.xcframework.zip",
+        "Python-numpy.numpy": "Python-numpy.numpy.xcframework.zip",
+        "Python-pandas._libs._cyutility": "Python-pandas._libs._cyutility.xcframework.zip",
+        "Python-pandas._libs._ujson": "Python-pandas._libs._ujson.xcframework.zip",
+        "Python-pandas._libs.algos": "Python-pandas._libs.algos.xcframework.zip",
+        "Python-pandas._libs.arrays": "Python-pandas._libs.arrays.xcframework.zip",
+        "Python-pandas._libs.byteswap": "Python-pandas._libs.byteswap.xcframework.zip",
+        "Python-pandas._libs.groupby": "Python-pandas._libs.groupby.xcframework.zip",
+        "Python-pandas._libs.hashing": "Python-pandas._libs.hashing.xcframework.zip",
+        "Python-pandas._libs.hashtable": "Python-pandas._libs.hashtable.xcframework.zip",
+        "Python-pandas._libs.index": "Python-pandas._libs.index.xcframework.zip",
+        "Python-pandas._libs.indexing": "Python-pandas._libs.indexing.xcframework.zip",
+        "Python-pandas._libs.internals": "Python-pandas._libs.internals.xcframework.zip",
+        "Python-pandas._libs.interval": "Python-pandas._libs.interval.xcframework.zip",
+        "Python-pandas._libs.join": "Python-pandas._libs.join.xcframework.zip",
+        "Python-pandas._libs.lib": "Python-pandas._libs.lib.xcframework.zip",
+        "Python-pandas._libs.missing": "Python-pandas._libs.missing.xcframework.zip",
+        "Python-pandas._libs.ops": "Python-pandas._libs.ops.xcframework.zip",
+        "Python-pandas._libs.ops_dispatch": "Python-pandas._libs.ops_dispatch.xcframework.zip",
+        "Python-pandas._libs.pandas_datetime": "Python-pandas._libs.pandas_datetime.xcframework.zip",
+        "Python-pandas._libs.pandas_parser": "Python-pandas._libs.pandas_parser.xcframework.zip",
+        "Python-pandas._libs.parsers": "Python-pandas._libs.parsers.xcframework.zip",
+        "Python-pandas._libs.properties": "Python-pandas._libs.properties.xcframework.zip",
+        "Python-pandas._libs.reshape": "Python-pandas._libs.reshape.xcframework.zip",
+        "Python-pandas._libs.sas": "Python-pandas._libs.sas.xcframework.zip",
+        "Python-pandas._libs.sparse": "Python-pandas._libs.sparse.xcframework.zip",
+        "Python-pandas._libs.testing": "Python-pandas._libs.testing.xcframework.zip",
+        "Python-pandas._libs.tslib": "Python-pandas._libs.tslib.xcframework.zip",
+        "Python-pandas._libs.tslibs.base": "Python-pandas._libs.tslibs.base.xcframework.zip",
+        "Python-pandas._libs.tslibs.ccalendar": "Python-pandas._libs.tslibs.ccalendar.xcframework.zip",
+        "Python-pandas._libs.tslibs.conversion": "Python-pandas._libs.tslibs.conversion.xcframework.zip",
+        "Python-pandas._libs.tslibs.dtypes": "Python-pandas._libs.tslibs.dtypes.xcframework.zip",
+        "Python-pandas._libs.tslibs.fields": "Python-pandas._libs.tslibs.fields.xcframework.zip",
+        "Python-pandas._libs.tslibs.nattype": "Python-pandas._libs.tslibs.nattype.xcframework.zip",
+        "Python-pandas._libs.tslibs.np_datetime": "Python-pandas._libs.tslibs.np_datetime.xcframework.zip",
+        "Python-pandas._libs.tslibs.offsets": "Python-pandas._libs.tslibs.offsets.xcframework.zip",
+        "Python-pandas._libs.tslibs.parsing": "Python-pandas._libs.tslibs.parsing.xcframework.zip",
+        "Python-pandas._libs.tslibs.period": "Python-pandas._libs.tslibs.period.xcframework.zip",
+        "Python-pandas._libs.tslibs.strptime": "Python-pandas._libs.tslibs.strptime.xcframework.zip",
+        "Python-pandas._libs.tslibs.timedeltas": "Python-pandas._libs.tslibs.timedeltas.xcframework.zip",
+        "Python-pandas._libs.tslibs.timestamps": "Python-pandas._libs.tslibs.timestamps.xcframework.zip",
+        "Python-pandas._libs.tslibs.timezones": "Python-pandas._libs.tslibs.timezones.xcframework.zip",
+        "Python-pandas._libs.tslibs.tzconversion": "Python-pandas._libs.tslibs.tzconversion.xcframework.zip",
+        "Python-pandas._libs.tslibs.vectorized": "Python-pandas._libs.tslibs.vectorized.xcframework.zip",
+        "Python-pandas._libs.window.aggregations": "Python-pandas._libs.window.aggregations.xcframework.zip",
+        "Python-pandas._libs.window.indexers": "Python-pandas._libs.window.indexers.xcframework.zip",
+        "Python-pandas._libs.writers": "Python-pandas._libs.writers.xcframework.zip",
+        "Python-psutil._psutil_ios": "Python-psutil._psutil_ios.xcframework.zip",
+        "Python-psutil._psutil_posix": "Python-psutil._psutil_posix.xcframework.zip",
+        "Python-pyfftw.pyfftw": "Python-pyfftw.pyfftw.xcframework.zip",
+        "Python-pygeos._geos": "Python-pygeos._geos.xcframework.zip",
+        "Python-pygeos.lib": "Python-pygeos.lib.xcframework.zip",
+        "Python-pygeos._geometry": "Python-pygeos._geometry.xcframework.zip",
+        "Python-pyproj.pyproj": "Python-pyproj.pyproj.xcframework.zip",
+        "Python-rasterio.rasterio": "Python-rasterio.rasterio.xcframework.zip",
+        "Python-qutip.qutip": "Python-qutip.qutip.xcframework.zip",
+        "Python-scipy.optimize.cython_optimize._zeros": "Python-scipy.optimize.cython_optimize._zeros.xcframework.zip",
+        "Python-scipy.scipy": "Python-scipy.scipy.xcframework.zip",
+        "Python-scipy.special._ellip_harm_2": "Python-scipy.special._ellip_harm_2.xcframework.zip",
+        "Python-scipy.special._gufuncs": "Python-scipy.special._gufuncs.xcframework.zip",
+        "Python-scipy.special._special_ufuncs": "Python-scipy.special._special_ufuncs.xcframework.zip",
+        "Python-scipy.special._ufuncs": "Python-scipy.special._ufuncs.xcframework.zip",
+        "Python-scipy.special._ufuncs_cxx": "Python-scipy.special._ufuncs_cxx.xcframework.zip",
+        "Python-shapely._geometry_helpers": "Python-shapely._geometry_helpers.xcframework.zip",
+        "Python-shapely._geos": "Python-shapely._geos.xcframework.zip",
+        "Python-shapely.lib": "Python-shapely.lib.xcframework.zip",
+        "Python-sklearn.__check_build._check_build": "Python-sklearn.__check_build._check_build.xcframework.zip",
+        "Python-sklearn._cyutility": "Python-sklearn._cyutility.xcframework.zip",
+        "Python-sklearn._isotonic": "Python-sklearn._isotonic.xcframework.zip",
+        "Python-sklearn._loss._loss": "Python-sklearn._loss._loss.xcframework.zip",
+        "Python-sklearn.cluster._dbscan_inner": "Python-sklearn.cluster._dbscan_inner.xcframework.zip",
+        "Python-sklearn.cluster._hdbscan._linkage": "Python-sklearn.cluster._hdbscan._linkage.xcframework.zip",
+        "Python-sklearn.cluster._hdbscan._reachability": "Python-sklearn.cluster._hdbscan._reachability.xcframework.zip",
+        "Python-sklearn.cluster._hdbscan._tree": "Python-sklearn.cluster._hdbscan._tree.xcframework.zip",
+        "Python-sklearn.cluster._hierarchical_fast": "Python-sklearn.cluster._hierarchical_fast.xcframework.zip",
+        "Python-sklearn.cluster._k_means_common": "Python-sklearn.cluster._k_means_common.xcframework.zip",
+        "Python-sklearn.cluster._k_means_elkan": "Python-sklearn.cluster._k_means_elkan.xcframework.zip",
+        "Python-sklearn.cluster._k_means_lloyd": "Python-sklearn.cluster._k_means_lloyd.xcframework.zip",
+        "Python-sklearn.cluster._k_means_minibatch": "Python-sklearn.cluster._k_means_minibatch.xcframework.zip",
+        "Python-sklearn.datasets._svmlight_format_fast": "Python-sklearn.datasets._svmlight_format_fast.xcframework.zip",
+        "Python-sklearn.decomposition._cdnmf_fast": "Python-sklearn.decomposition._cdnmf_fast.xcframework.zip",
+        "Python-sklearn.decomposition._online_lda_fast": "Python-sklearn.decomposition._online_lda_fast.xcframework.zip",
+        "Python-sklearn.ensemble._gradient_boosting": "Python-sklearn.ensemble._gradient_boosting.xcframework.zip",
+        "Python-sklearn.ensemble._hist_gradient_boosting._binning": "Python-sklearn.ensemble._hist_gradient_boosting._binning.xcframework.zip",
+        "Python-sklearn.ensemble._hist_gradient_boosting._bitset": "Python-sklearn.ensemble._hist_gradient_boosting._bitset.xcframework.zip",
+        "Python-sklearn.ensemble._hist_gradient_boosting._gradient_boosting": "Python-sklearn.ensemble._hist_gradient_boosting._gradient_boosting.xcframework.zip",
+        "Python-sklearn.ensemble._hist_gradient_boosting._predictor": "Python-sklearn.ensemble._hist_gradient_boosting._predictor.xcframework.zip",
+        "Python-sklearn.ensemble._hist_gradient_boosting.histogram": "Python-sklearn.ensemble._hist_gradient_boosting.histogram.xcframework.zip",
+        "Python-sklearn.ensemble._hist_gradient_boosting.common": "Python-sklearn.ensemble._hist_gradient_boosting.common.xcframework.zip",
+        "Python-sklearn.ensemble._hist_gradient_boosting.splitting": "Python-sklearn.ensemble._hist_gradient_boosting.splitting.xcframework.zip",
+        "Python-sklearn.feature_extraction._hashing_fast": "Python-sklearn.feature_extraction._hashing_fast.xcframework.zip",
+        "Python-sklearn.linear_model._cd_fast": "Python-sklearn.linear_model._cd_fast.xcframework.zip",
+        "Python-sklearn.linear_model._sag_fast": "Python-sklearn.linear_model._sag_fast.xcframework.zip",
+        "Python-sklearn.linear_model._sgd_fast": "Python-sklearn.linear_model._sgd_fast.xcframework.zip",
+        "Python-sklearn.manifold._barnes_hut_tsne": "Python-sklearn.manifold._barnes_hut_tsne.xcframework.zip",
+        "Python-sklearn.manifold._utils": "Python-sklearn.manifold._utils.xcframework.zip",
+        "Python-sklearn.metrics._dist_metrics": "Python-sklearn.metrics._dist_metrics.xcframework.zip",
+        "Python-sklearn.metrics._pairwise_distances_reduction._argkmin": "Python-sklearn.metrics._pairwise_distances_reduction._argkmin.xcframework.zip",
+        "Python-sklearn.metrics._pairwise_distances_reduction._argkmin_classmode": "Python-sklearn.metrics._pairwise_distances_reduction._argkmin_classmode.xcframework.zip",
+        "Python-sklearn.metrics._pairwise_distances_reduction._base": "Python-sklearn.metrics._pairwise_distances_reduction._base.xcframework.zip",
+        "Python-sklearn.metrics._pairwise_distances_reduction._datasets_pair": "Python-sklearn.metrics._pairwise_distances_reduction._datasets_pair.xcframework.zip",
+        "Python-sklearn.metrics._pairwise_distances_reduction._middle_term_computer": "Python-sklearn.metrics._pairwise_distances_reduction._middle_term_computer.xcframework.zip",
+        "Python-sklearn.metrics._pairwise_distances_reduction._radius_neighbors": "Python-sklearn.metrics._pairwise_distances_reduction._radius_neighbors.xcframework.zip",
+        "Python-sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode": "Python-sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode.xcframework.zip",
+        "Python-sklearn.metrics._pairwise_fast": "Python-sklearn.metrics._pairwise_fast.xcframework.zip",
+        "Python-sklearn.metrics.cluster._expected_mutual_info_fast": "Python-sklearn.metrics.cluster._expected_mutual_info_fast.xcframework.zip",
+        "Python-sklearn.neighbors._ball_tree": "Python-sklearn.neighbors._ball_tree.xcframework.zip",
+        "Python-sklearn.neighbors._kd_tree": "Python-sklearn.neighbors._kd_tree.xcframework.zip",
+        "Python-sklearn.neighbors._partition_nodes": "Python-sklearn.neighbors._partition_nodes.xcframework.zip",
+        "Python-sklearn.neighbors._quad_tree": "Python-sklearn.neighbors._quad_tree.xcframework.zip",
+        "Python-sklearn.preprocessing._csr_polynomial_expansion": "Python-sklearn.preprocessing._csr_polynomial_expansion.xcframework.zip",
+        "Python-sklearn.preprocessing._target_encoder_fast": "Python-sklearn.preprocessing._target_encoder_fast.xcframework.zip",
+        "Python-sklearn.svm._liblinear": "Python-sklearn.svm._liblinear.xcframework.zip",
+        "Python-sklearn.svm._libsvm": "Python-sklearn.svm._libsvm.xcframework.zip",
+        "Python-sklearn.svm._libsvm_sparse": "Python-sklearn.svm._libsvm_sparse.xcframework.zip",
+        "Python-sklearn.svm._newrand": "Python-sklearn.svm._newrand.xcframework.zip",
+        "Python-sklearn.tree._partitioner": "Python-sklearn.tree._partitioner.xcframework.zip",
+        "Python-sklearn.tree._criterion": "Python-sklearn.tree._criterion.xcframework.zip",
+        "Python-sklearn.tree._splitter": "Python-sklearn.tree._splitter.xcframework.zip",
+        "Python-sklearn.tree._utils": "Python-sklearn.tree._utils.xcframework.zip",
+        "Python-sklearn.utils._cython_blas": "Python-sklearn.utils._cython_blas.xcframework.zip",
+        "Python-sklearn.tree._tree": "Python-sklearn.tree._tree.xcframework.zip",
+        "Python-sklearn.utils._fast_dict": "Python-sklearn.utils._fast_dict.xcframework.zip",
+        "Python-sklearn.utils._isfinite": "Python-sklearn.utils._isfinite.xcframework.zip",
+        "Python-sklearn.utils._heap": "Python-sklearn.utils._heap.xcframework.zip",
+        "Python-sklearn.utils._openmp_helpers": "Python-sklearn.utils._openmp_helpers.xcframework.zip",
+        "Python-sklearn.utils._random": "Python-sklearn.utils._random.xcframework.zip",
+        "Python-sklearn.utils._seq_dataset": "Python-sklearn.utils._seq_dataset.xcframework.zip",
+        "Python-sklearn.utils._sorting": "Python-sklearn.utils._sorting.xcframework.zip",
+        "Python-sklearn.utils._typedefs": "Python-sklearn.utils._typedefs.xcframework.zip",
+        "Python-sklearn.utils._weight_vector": "Python-sklearn.utils._weight_vector.xcframework.zip",
+        "Python-sklearn.utils.arrayfuncs": "Python-sklearn.utils.arrayfuncs.xcframework.zip",
+        "Python-sklearn.utils._vector_sentinel": "Python-sklearn.utils._vector_sentinel.xcframework.zip",
+        "Python-sklearn.utils.murmurhash": "Python-sklearn.utils.murmurhash.xcframework.zip",
+        "Python-statsmodels.statsmodels": "Python-statsmodels.statsmodels.xcframework.zip",
+        "Python-statsmodels.tsa.statespace._filters._conventional": "Python-statsmodels.tsa.statespace._filters._conventional.xcframework.zip",
+        "Python-sklearn.utils.sparsefuncs_fast": "Python-sklearn.utils.sparsefuncs_fast.xcframework.zip",
+        "Python-statsmodels.tsa.statespace._filters._univariate": "Python-statsmodels.tsa.statespace._filters._univariate.xcframework.zip",
+        "Python-statsmodels.tsa.statespace._filters._univariate_diffuse": "Python-statsmodels.tsa.statespace._filters._univariate_diffuse.xcframework.zip",
+        "Python-wordcloud.query_integral_image": "Python-wordcloud.query_integral_image.xcframework.zip",
+        "Python-zmq.backend.cffi._cffi": "Python-zmq.backend.cffi._cffi.xcframework.zip"
+      }
+    },
+    "a-shell-native-node": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15162493605.zip",
+      "sha256": "2767ae6daa8e78e71b07258e3603574bbcb277fef622b9b78d43f02b091dc350",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45903338008/attempts/1",
+      "revision": "2959536a14f3701782673ca8cfba42592bec8b43",
+      "frameworks": {
+        "node": "node.xcframework.zip"
+      }
+    },
+    "a-shell-native-helix": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15157806608.zip",
+      "sha256": "78e691f9c4009e0600ec5bc9ade3591bf84ae81c26f9b6f2b5b53c4fcb6ac56e",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45903338008/attempts/1",
+      "revision": "2959536a14f3701782673ca8cfba42592bec8b43",
+      "frameworks": {
+        "helix": "helix.xcframework.zip"
+      }
+    },
+    "a-shell-native-gitoxide": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12521485654.zip",
+      "sha256": "dfa74ed4faf4deb848a78779f15e120c8f4048ebcacfe99fdbfeead7b636d979",
+      "run": "https://github.com/demrom/a-shell/actions/runs/39996782368/attempts/1",
+      "revision": "0b0c20bb8d645aaee11c76553990d962482949bc",
+      "frameworks": {
+        "gitoxide": "gitoxide.xcframework.zip"
+      }
+    },
+    "a-shell-native-rg": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12521225640.zip",
+      "sha256": "63ec9a3b07afd7df114d3e4873078c69c2575b29628fca6c9f8fca23c32a7395",
+      "run": "https://github.com/demrom/a-shell/actions/runs/39996782368/attempts/1",
+      "revision": "0b0c20bb8d645aaee11c76553990d962482949bc",
+      "frameworks": {
+        "rg": "rg.xcframework.zip"
+      }
+    },
+    "a-shell-native-navi": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12520048956.zip",
+      "sha256": "ad56645325bf7c168802a275ba4fe64f75ed076a99c9d65d92735ea9762a59e6",
+      "run": "https://github.com/demrom/a-shell/actions/runs/39996782368/attempts/1",
+      "revision": "0b0c20bb8d645aaee11c76553990d962482949bc",
+      "frameworks": {
+        "navi": "navi.xcframework.zip"
+      }
+    },
+    "a-shell-native-Ruff": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15157815667.zip",
+      "sha256": "5750f3ca618e0401fac459246a8126e048807a1e0dc482499b96e087f465ec90",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45903338008/attempts/1",
+      "revision": "2959536a14f3701782673ca8cfba42592bec8b43",
+      "frameworks": {
+        "Ruff": "Ruff.xcframework.zip"
+      }
+    },
+    "a-shell-native-fzf": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12520746507.zip",
+      "sha256": "c99b66066b70e686392a9c3f5eee57af47316b8511111f61da521219003eb57e",
+      "run": "https://github.com/demrom/a-shell/actions/runs/39996782368/attempts/1",
+      "revision": "0b0c20bb8d645aaee11c76553990d962482949bc",
+      "frameworks": {
+        "fzf": "fzf.xcframework.zip"
+      }
+    },
+    "a-shell-native-fd": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12520323661.zip",
+      "sha256": "154bf4081716b97216e43c5ccaf2f86af8c1e7f66ed5475f3ae93817879d8695",
+      "run": "https://github.com/demrom/a-shell/actions/runs/39996782368/attempts/1",
+      "revision": "0b0c20bb8d645aaee11c76553990d962482949bc",
+      "frameworks": {
+        "fd": "fd.xcframework.zip"
+      }
+    },
+    "a-shell-multimarkdown-framework": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12562508747.zip",
+      "sha256": "145cec8bf5b1b2d57b178c8b807a2d481d86cf6fd0dbfcee8ab4236d42349d57",
+      "run": "https://github.com/demrom/a-shell/actions/runs/40100779031/attempts/1",
+      "revision": "40ea48e58b728bf311a3a00322fa06cffdcbe0c7",
+      "frameworks": {
+        "multimarkdown": "multimarkdown.xcframework.zip"
+      }
+    },
+    "llvm-project-xcframeworks": {
+      "url": "https://nightly.link/demrom/llvm-project/actions/artifacts/12571115353.zip",
+      "sha256": "618256352360d0d7670a059cbd892027e6a622ba87a7ab3afcf7cd7ab54040b1",
+      "run": "https://github.com/demrom/llvm-project/actions/runs/40104602095/attempts/1",
+      "revision": "ffee11e1ca543dcbc23dac4be9df489151b2b932",
+      "frameworks": {
+        "ar": "ar.xcframework.zip",
+        "clang": "clang.xcframework.zip",
+        "libLLVM": "libLLVM.xcframework.zip",
+        "lld": "lld.xcframework.zip"
+      }
+    },
+    "a-shell-native-codex": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15118358708.zip",
+      "sha256": "56a8f09160a80fbba920d1f82267f54998610dcd227d5b89344205654d5d13f0",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45756196319/attempts/1",
+      "revision": "ec0cb887446b82ab0153b49a20970bcd04281290",
+      "frameworks": {
+        "codex": "codex.xcframework.zip"
+      }
+    },
+    "a-shell-native-Herdr": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15165135306.zip",
+      "sha256": "3581c09b3ce99488179508c7fe70df64e8f0a07de5aabd6a32223a243c22cae5",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45917490305/attempts/1",
+      "revision": "b2b87fdcfe0bfa6e85ac3874e1622629854c8b0c",
+      "frameworks": {
+        "Herdr": "Herdr.xcframework.zip"
+      }
+    },
+    "a-shell-curl-impersonate": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15059772153.zip",
+      "sha256": "384a3ee5e3169c69585478cf4d2c5f5e5bff108dbcd99a17252d1ff652c8e094",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45688911319/attempts/1",
+      "revision": "0ae1b4e7e3a31bc8cb57ab27ea0869e9e5e3f3f2",
+      "frameworks": {
+        "curl-impersonate": "curl-impersonate.xcframework.zip"
+      }
+    },
+    "a-shell-WasmKitCommand": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15154097308.zip",
+      "sha256": "857e300df9969ddba8524837591643dd8011eb6dca738012578a65843730d3b7",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45895579926/attempts/1",
+      "revision": "5b24ba54955cc2cdcd3360c9dede75c3ba87ad52",
+      "frameworks": {
+        "WasmKitCommand": "WasmKitCommand.xcframework.zip"
+      }
+    },
+    "a-shell-cbc-framework": {
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15058867133.zip",
+      "sha256": "a0c460066e1c07c992f816a740d9aa7b01c006845f0984897092bfecc50ded1b",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45687325271/attempts/1",
+      "revision": "cb394bf41ddafdbc027912758b0a7bbca225d6f1",
+      "frameworks": {
+        "cbc": "cbc.xcframework.zip"
+      }
+    },
+    "bc-xcframeworks": {
+      "url": "https://nightly.link/demrom/bc/actions/artifacts/12484767352.zip",
+      "sha256": "83206868ec9d359df5c865cbe063df74f61103d3656b86ded51a4bcf7bd22455",
+      "run": "https://github.com/demrom/bc/actions/runs/39915561528/attempts/1",
+      "revision": "c1e7daba38c8fdb8c301ac0f1e48220781ddde71",
+      "frameworks": {
+        "bc_ios": "bc_ios.xcframework.zip"
+      }
+    },
+    "ios_system-stock-openssh": {
+      "url": "https://nightly.link/demrom/ios_system/actions/artifacts/15119107313.zip",
+      "sha256": "fccf8a67e1c5f8df3da34cbd70cd8c9c865c549045a18e36266f6beae5d708a7",
+      "run": "https://github.com/demrom/ios_system/actions/runs/45823599462/attempts/1",
+      "revision": "73915662bee6ea0b2e22ce49c17883a438155bc5",
+      "frameworks": {
+        "SCPStock": "SCPStock.xcframework.zip",
+        "SFTPStock": "SFTPStock.xcframework.zip",
+        "SSHKeygenStock": "SSHKeygenStock.xcframework.zip",
+        "SSHStock": "SSHStock.xcframework.zip"
+      }
+    }
+  },
+  "pending": {},
+  "pending_prefixes": {
+    "Python-": "CPython iOS extension build",
+    "PythonA": "CPython iOS extension build for the second interpreter"
+  },
+  "resources": {
+    "a-Shell-mini": {
+      "Resources_mini/Library/lib/python3.13": [
+        {
+          "artifact": "cpython-python-ios",
+          "member": "python-stdlib.tar.gz",
+          "source": "{sdk}/lib/python3.13"
+        },
+        {
+          "artifact": "cpython-python-mini",
+          "member": "python-mini.tar.gz",
+          "source": "{sdk}/lib/python3.13"
+        }
+      ]
+    },
+    "a-Shell": {
+      "Resources/Library/lib": [
+        {
+          "artifact": "cpython-python-ios",
+          "member": "python-stdlib.tar.gz",
+          "source": "{sdk}/lib"
+        },
+        {
+          "artifact": "cpython-python-mini",
+          "member": "python-mini.tar.gz",
+          "source": "{sdk}/lib"
+        },
+        {
+          "artifact": "Python-aux-science",
+          "member": "python-science.tar.gz",
+          "source": "{sdk}/lib"
+        },
+        {
+          "artifact": "Python-aux-science",
+          "member": "python-full.tar.gz",
+          "source": "{sdk}/lib"
+        }
+      ],
+      "Resources/proj": [
+        {
+          "artifact": "Python-aux-gis",
+          "member": "proj-data.tar.gz",
+          "source": "proj"
+        }
+      ],
+      "Resources/npm": [
+        {
+          "artifact": "a-shell-native-node",
+          "member": "node-npm.zip"
+        }
+      ],
+      "Resources/node-fetch": [
+        {
+          "artifact": "a-shell-native-node",
+          "member": "node-fetch.zip"
+        }
+      ]
+    }
+  }
+}

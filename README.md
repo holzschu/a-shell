@@ -65,11 +65,9 @@ Because Python 3.x uses functions that are only available on the iOS 14 SDK, I'v
 
 ### Continuous integration
 
-The [App build workflow](.github/workflows/app-build.yml) builds `a-Shell-noPython` on every pull request and can also be run manually with `workflow_dispatch`. It builds unsigned Debug apps for generic iOS devices (arm64) and Simulator (x86_64) with Xcode 26.3 on `macos-15`. These are build checks; they do not run the app or its commands.
+The [App build workflow](.github/workflows/app-build.yml) checks `a-Shell-noPython`, `a-Shell-mini`, and `a-Shell` for generic iOS devices (arm64) and Simulator with Xcode 26.6. On Simulator, noPython and mini are universal (arm64 and x86_64); full is arm64-only because of Node. These are unsigned build checks; they do not run the app or its commands.
 
-CI initializes only the SwiftTerm submodule and runs `./downloadFrameworks.sh --jobs 4`; the script passes extra arguments to `swift package`. It uses `swift package resolve` to download the binary targets and verify their checksums against `xcfs/Package.swift`. A failed download or checksum mismatch stops the script, and a failed `xcodebuild` fails the job. Swift package downloads are cached. The workflow token has read-only access to repository contents.
-
-CI preserves the project's iOS 14.0 deployment target with Xcode 26.3. The Python variants remain outside CI because their required Python 3.13 frameworks are not publicly available.
+CI verifies the framework pins in [`xcfs/frameworks.json`](xcfs/frameworks.json) before building. If an input is unavailable, the job fails and lists every unavailable framework in its summary. See [App build matrix](ci/app-build.md) for the local command and instructions for updating pins.
 
 ## Home directory
 
