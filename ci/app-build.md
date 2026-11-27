@@ -9,7 +9,7 @@ uv run ci/build-app.py build a-Shell-noPython device
 uv run ci/build-app.py build a-Shell-noPython simulator
 ```
 
-Use `prepare` instead of `build` to verify and install the inputs without compiling. Add `--dry-run` to list the selected installation paths without downloading or replacing files. Repeated runs verify cached archives and replace only outputs the script previously installed. Do not use a checkout populated by `downloadFrameworks.sh` or another framework installation. The script leaves `project.pbxproj` unchanged. The build produces apps under `.build/app/`, and the job summary lists each unavailable framework path, including inputs of dependent targets. The workflow also attaches the same summary as a text artifact.
+Use `prepare` instead of `build` to verify and install the inputs without compiling. Add `--dry-run` to list the selected installation paths without downloading or replacing files. Repeated runs verify cached archives and replace only outputs the script previously installed. If preparation stops partway through, fix the error and rerun the same command. Run only one build or prepare at a time in each checkout. Do not use a checkout populated by `downloadFrameworks.sh` or another framework installation. The script leaves `project.pbxproj` unchanged. The build produces apps under `.build/app/`, and the job summary lists each unavailable framework path, including inputs of dependent targets. The workflow also attaches the same summary as a text artifact.
 
 ## Update an input
 

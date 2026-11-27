@@ -104,6 +104,35 @@ prepare() {
     a-Shell-mini simulator --root "$fixture" --manifest "$fixture/manifest.json"
 }
 
+# The first install must be recoverable even if a later input aborts prepare.
+mkdir -p "$fixture/Malformed/Second.xcframework"
+printf '<plist version="1.0"><integer>not-an-integer</integer></plist>\n' > "$fixture/Malformed/Second.xcframework/Info.plist"
+ditto -c -k --keepParent "$fixture/Malformed/Second.xcframework" "$fixture/malformed.zip"
+malformed=$(shasum -a 256 "$fixture/malformed.zip" | cut -d ' ' -f 1)
+cp "$fixture/malformed.zip" "$cache/$malformed.zip"
+cp "$fixture/manifest.json" "$fixture/good-manifest.json"
+jq --arg sha "$malformed" '.releases.Second = {sha256: $sha, url: "https://example.invalid/malformed.zip"}' \
+  "$fixture/good-manifest.json" > "$fixture/manifest.json"
+status=0
+prepare > "$fixture/interrupted.log" 2>&1 || status=$?
+[[ $status == 1 ]]
+grep -Fq 'not-an-integer' "$fixture/interrupted.log"
+cmp "$fixture/Staged/First.xcframework/ios-sim/libFixture.a" "$fixture/Vendor/First.xcframework/ios-sim/libFixture.a"
+test ! -e "$fixture/Vendor/Second.xcframework"
+mv "$fixture/good-manifest.json" "$fixture/manifest.json"
+
+# Retry may replace the first input, but must leave an unmanaged path alone.
+unmanaged="$fixture/Vendor/Second.xcframework"
+mkdir "$unmanaged"
+printf 'unmanaged\n' > "$unmanaged/receipt.txt"
+status=0
+prepare > "$fixture/unmanaged.log" 2>&1 || status=$?
+[[ $status == 1 ]]
+grep -Fq 'Vendor/Second.xcframework; use a clean worktree' "$fixture/unmanaged.log"
+grep -Fxq 'unmanaged' "$unmanaged/receipt.txt"
+rm "$unmanaged/receipt.txt"
+rmdir "$unmanaged"
+
 prepare
 file "$fixture/Vendor/First.xcframework/ios-sim/libFixture.a" > "$fixture/file.txt"
 grep -Fq '[arm64:' "$fixture/file.txt"

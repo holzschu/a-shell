@@ -271,10 +271,38 @@ def checkout_path(root, path):
     return destination
 
 
-def install(root, path, product, owned):
+def save_ownership(file, state):
+    temporary = file.with_suffix(".tmp")
+    temporary.write_text(json.dumps(state) + "\n")
+    temporary.replace(file)
+
+
+def load_ownership(root, file):
+    if not file.exists():
+        return set()
+    state = json.loads(file.read_text())
+    if isinstance(state, list):
+        return set(state)
+    owned = set(state["installed"])
+    key, device, inode = state["pending"]
+    destination = checkout_path(root, Path(key))
+    try:
+        info = destination.lstat()
+    except FileNotFoundError:
+        pass
+    else:
+        if (info.st_dev, info.st_ino) == (device, inode):
+            owned.add(key)
+    save_ownership(file, sorted(owned))
+    return owned
+
+
+def install(root, path, product, owned, owned_file):
     destination = checkout_path(root, path)
+    key = str(path)
+    new = key not in owned
     if destination.exists() or destination.is_symlink():
-        if str(path) not in owned:
+        if new:
             raise InputError(
                 f"destination already exists: {path}; use a clean worktree"
             )
@@ -283,11 +311,22 @@ def install(root, path, product, owned):
         else:
             destination.unlink()
     destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.move(product, destination)
-    owned.add(str(path))
+    if new:
+        info = product.lstat()
+        # Journal the staged inode before rename so a retry adopts only our output.
+        save_ownership(
+            owned_file,
+            {"installed": sorted(owned), "pending": [key, info.st_dev, info.st_ino]},
+        )
+    product.rename(destination)
+    if new:
+        owned.add(key)
+        save_ownership(owned_file, sorted(owned))
 
 
-def stage_resources(root, plan, artifacts, get_archive, directory, platform, owned):
+def stage_resources(
+    root, plan, artifacts, get_archive, directory, platform, owned, owned_file
+):
     _, sdk, _ = DESTINATIONS[platform]
     for group_index, (destination, layers) in enumerate(plan.items()):
         group = directory / f"resources-{group_index}"
@@ -309,7 +348,7 @@ def stage_resources(root, plan, artifacts, get_archive, directory, platform, own
             if not subtree.is_dir() or not subtree.resolve().is_relative_to(payload):
                 raise InputError(f"resource directory missing from {member}: {subtree}")
             shutil.copytree(subtree, result, dirs_exist_ok=True, symlinks=True)
-        install(root, Path(destination), result, owned)
+        install(root, Path(destination), result, owned, owned_file)
 
 
 def report(scheme, platform, result):
@@ -363,7 +402,7 @@ def stage(root, manifest, scheme, platform, dry_run):
     cache = working / "archives"
     cache.mkdir(parents=True, exist_ok=True)
     owned_file = working / "installed.json"
-    owned = set(json.loads(owned_file.read_text())) if owned_file.exists() else set()
+    owned = load_ownership(root, owned_file)
     with (
         tempfile.TemporaryDirectory(dir=working) as directory,
         ThreadPoolExecutor(4) as pool,
@@ -398,7 +437,7 @@ def stage(root, manifest, scheme, platform, dry_run):
                         name,
                         archs,
                     )
-                    install(root, path, product, owned)
+                    install(root, path, product, owned, owned_file)
                     break
                 except IncompatibleSlice as error:
                     if attempt == len(choices) - 1:
@@ -413,21 +452,17 @@ def stage(root, manifest, scheme, platform, dry_run):
                 ) as error:
                     missing[path] = str(error)
                     break
-        try:
-            if not missing:
-                stage_resources(
-                    root,
-                    data.get("resources", {}).get(scheme, {}),
-                    data["artifacts"],
-                    get_archive,
-                    Path(directory),
-                    platform,
-                    owned,
-                )
-        finally:
-            temporary = owned_file.with_suffix(".tmp")
-            temporary.write_text(json.dumps(sorted(owned)) + "\n")
-            temporary.replace(owned_file)
+        if not missing:
+            stage_resources(
+                root,
+                data.get("resources", {}).get(scheme, {}),
+                data["artifacts"],
+                get_archive,
+                Path(directory),
+                platform,
+                owned,
+                owned_file,
+            )
     return missing, paths
 
 
