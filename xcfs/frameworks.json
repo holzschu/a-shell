@@ -80,6 +80,14 @@
       "url": "https://github.com/holzschu/taskwarrior/releases/download/1.0/calc.xcframework.zip",
       "sha256": "4732b1eaad5f9060faaea73b33e43fb5d59af884b3eff678df27e2abb9b98cf0"
     },
+    "Nvim": {
+      "url": "https://github.com/demrom/a-shell/releases/download/neovim-v0.12.6-ios/Nvim.xcframework.zip",
+      "sha256": "7626f6010296de833e79d95edaebce0dd0a6802dafe88788309701fb4bf0812a"
+    },
+    "NvimCommand": {
+      "url": "https://github.com/demrom/a-shell/releases/download/neovim-v0.12.6-ios/NvimCommand.xcframework.zip",
+      "sha256": "13c2a395b151549477b7a7d15174c8174d7100fae6db4c07948b2af93386124b"
+    },
     "vim": {
       "url": "https://github.com/holzschu/vim/releases/download/ios_1.0/vim.xcframework.zip",
       "sha256": "02acb74bec3e6b4ba9c120873a19a770773e3c3e2d141365808a9342ddf41fe7"
