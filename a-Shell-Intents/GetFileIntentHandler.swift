@@ -102,11 +102,11 @@ class GetFileIntentHandler: INExtension, GetFileIntentHandling
                         }
                     }
                     intentResponse.file = INFile(fileURL: fileURL, filename: fileName, typeIdentifier: nil)
-                    completion(intentResponse)
+                    completion(intentResponse) // iOS 27.2 issue: completion has returned. The error is either in completion or after.
                     return
                 } else if (errorIfNotFound == true) {
                     let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
-                    intentResponse.message = "File \(fileName) not found error"
+                    intentResponse.message = String(localized: "File \(fileName) not found error")
                     completion(intentResponse)
                 } else {
                     let intentResponse = GetFileIntentResponse(code: .success, userActivity: nil)
@@ -116,7 +116,7 @@ class GetFileIntentHandler: INExtension, GetFileIntentHandling
             }
         }
         let intentResponse = GetFileIntentResponse(code: .failure, userActivity: nil)
-        intentResponse.message = "No filename provided."
+        intentResponse.message = String(localized: "No filename provided.")
         completion(intentResponse)
     }
 

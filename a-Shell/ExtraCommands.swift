@@ -2553,7 +2553,7 @@ public func codexUnavailable(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutab
 
 @_cdecl("codexUnavailableCountry")
 public func codexUnavailableCountry(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
-    fputs("codex is not available in your country (or the network was down when a-Shell started).\n", thread_stderr)
+    fputs("codex is not available in your country.\n", thread_stderr)
     return 1
 }
 

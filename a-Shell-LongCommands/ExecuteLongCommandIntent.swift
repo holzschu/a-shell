@@ -16,7 +16,7 @@ struct ExecuteLongCommandIntent: LongRunningIntent, CancellableIntent {
     var keepGoing: Bool
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Execute \(\.$command)") {
+        Summary("Execute \(\.$command)", table: "Localizable") {
             \.$keepGoing
         }
     }
@@ -44,12 +44,12 @@ enum CommandExecutionError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .emptyCommand: return "Enter a command to execute."
-        case .busy: return "Another long command is already running. Try again when it finishes."
-        case .cancelled: return "Command execution was cancelled."
-        case .outputTooLarge: return "Command output exceeds 8 MiB. Write large results to a file instead."
-        case .unavailableDirectory: return "The Shortcuts shared directory is unavailable."
-        case .exitStatus(let status): return "Command exited with status \(status)."
+        case .emptyCommand: return String(localized: "Enter a command to execute.")
+        case .busy: return String(localized: "Another long command is already running. Try again when it finishes.")
+        case .cancelled: return String(localized: "Command execution was cancelled.")
+        case .outputTooLarge: return String(localized: "Command output exceeds 8 MiB. Write large results to a file instead.")
+        case .unavailableDirectory: return String(localized: "The Shortcuts shared directory is unavailable.")
+        case .exitStatus(let status): return String(localized: "Command exited with status \(status).")
         }
     }
 }

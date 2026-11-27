@@ -37,6 +37,34 @@ The upstream configuration remains ten workers. Historical iOS 27 Simulator test
 
 `pane-interrupt.m` is a standalone consumer of public `spawn_ex`, `interrupt` and `poll`. Compile it with `ShellWorkers/NativePane.m`, Foundation and the matching ios_system framework. Supply a commandDictionary.plist and current Dash and shell frameworks beside the executable, with their runtime dependencies resolvable through `@rpath`. Create `bin/dash`, `bin/sleep` and `bin/pane-raw-reader` PATH markers beside it. Run the executable through an owned Simulator. The default mode starts real interactive Dash, interrupts a direct `sleep 30`, requires status 130, runs the next command and waits for the shell's actual completion with status 0. Run again with argument `raw`: a registered terminal reader switches its real PTY to raw mode, requires interrupt to return `ENOTSUP`, accepts input and completes normally. Run with `raw-socket` to force `ASHELL_IOS_PTY=0`; the reader uses the public interactive-input callbacks and must receive ETX and then x, completing normally. Run with `raw-socket-isolation` to stop the embedding UI's interactive mode while the remote reader remains active; interrupt must still return `ENOTSUP` and preserve both input bytes and normal completion. PTY denial fails the PTY control rather than claiming raw-reader coverage. The modes are bounded by a process alarm. Run `raw-then-cooked` to exit a raw socket reader, then interrupt sleep with status130 and recover the same shell. Run `cooked-isolation` to keep an unrelated local Dash alive during remote interruption: require remote130/next command/exit0 and local0. Run `pipeline-error-cooked` to let a pipeline consumer enter raw mode before a gated builtin producer raises a shell error; the following sleep must interrupt with130 and recover. Run `pipeline-error-delayed` to let a consumer enter interactive mode after the producer errors, then require cooked interruption130 and same-shell recovery. On iOS, Dash currently evaluates `&` inline and waits before the following command, so `background-idle` is a non-discriminating guard. Run `background-idle` to complete `sleep 1 & sleep 3`, require a prompt interrupt to return `ESRCH`, and then check cooked interruption and recovery. The matching runtime must preserve direct-command SIGINT status through its targeted `ios_interruptpid` API; a proxy-only implementation does not qualify this path.
 
+To check Stock activation, use two disposable mini builds on an arm64 simulator running iOS 26 or later. Each needs the matching simulator `ios_system.framework` and OpenSSL framework, the four Stock XCFrameworks with simulator slices, the mini worker extensions, and the registered `WorkerPoolChecks.framework` above. The default SwiftPM runtime cannot qualify this fixture because it lacks `ios_posix_spawn`. The README links the producer recipe; a compatible published runtime and the four packaged frameworks still need to be supplied independently of the test.
+
+Before either mini build, follow the [Herdr build instructions](../Herdr/README.md) to produce the `aarch64-apple-ios-sim` archive. Follow the [SSH server build instructions](../SSHServer/README.md) to build for `iphonesimulator` with the matching simulator frameworks and copy `SSHServer.framework` to `SSHServer/build/sdk/SSHServer.framework`.
+
+From the disposable checkout, set `SIM_RUNTIME_FRAMEWORKS` to the absolute directory containing the matching simulator `ios_system.framework`, `CHECK_FRAMEWORK` to the absolute path of a prepared `WorkerPoolChecks.framework` directory, `DERIVED_DATA` to a fresh output path for each build, and `SIM_UDID` to the destination UUID. Prepare the framework's Info.plist and host registration as described above. Use only the mini scheme, which builds its worker dependencies:
+
+```sh
+xcrun --sdk iphonesimulator clang -arch arm64 -mios-simulator-version-min=26.0 \
+    -fobjc-arc -dynamiclib tests/worker-pool.m -F "$SIM_RUNTIME_FRAMEWORKS" \
+    -framework Foundation -framework ios_system \
+    -install_name @rpath/WorkerPoolChecks.framework/WorkerPoolChecks \
+    -o "$CHECK_FRAMEWORK/WorkerPoolChecks"
+xcodebuild -project a-Shell.xcodeproj -scheme a-Shell-mini -configuration Debug \
+    -sdk iphonesimulator -destination "id=$SIM_UDID" -derivedDataPath "$DERIVED_DATA" build
+```
+
+For a smaller check of the native XPC selector and call sites, use the same SDK and runtime headers without building or running an app:
+
+```sh
+xcrun --sdk iphonesimulator clang -arch arm64 -mios-simulator-version-min=26.0 \
+    -fobjc-arc -fsyntax-only -F "$SIM_RUNTIME_FRAMEWORKS" \
+    ShellWorkers/RemotePane.m ShellWorkers/Worker.m tests/worker-pool.m
+```
+
+The syntax check does not link the host or exercise XPC. The `activation-wiring` mode of `tests/ssh-stock-registration.sh` is a static source check only; it does not validate when the host sets the opt-in flag.
+
+In the legacy fixture, omit `sshStockCommands.plist` from the host bundle only; keep the overlay in the workers so an erroneous activation can still select it. Run `worker-pool-check ssh-legacy` and require a legacy OpenSSH version with exit zero. Restore the host overlay for the second build, verify successful host activation, and run `worker-pool-check ssh-stock`; require OpenSSH 10.6 with exit zero. Both checks send `ASHELL_WORKER_COMMANDS=ssh` in the spawn environment. That route must not opt the worker into Stock on its own.
+
 `worker-pool-check loss` starts the disposable crash command and requires `-EPIPE` with no fabricated command status. Explicit cancellation remains distinct from unexpected XPC loss.
 
 `worker-pool-check host` starts a real extension command, which calls `ashell_worker_host_spawn_ex` to run the payload back in the app process. Register `worker-pool-nested-host` and `worker-pool-host-payload` with entries `worker_pool_nested_host_main` and `worker_pool_host_payload_main` in the disposable catalogues. It checks the original app PID, absence of worker identity markers, plain streams, separate stderr, status, resource usage and `EBUSY` for a second host pane. The command admission policy and high-memory workload qualification belong to the caller.

@@ -16,6 +16,7 @@ import AVFoundation // for media playback
 import TipKit // Display some helpful messages for users
 import Network // for our local HTTPS server for WebAssembly
 import UniformTypeIdentifiers
+import StoreKit
 
 private let appGroupID = (Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String) ?? "group.AsheKube.a-Shell"
 
@@ -126,6 +127,14 @@ var appVersion: String? {
     return Bundle.main.infoDictionary?["CFBundleName"] as? String
 }
 
+// Set at app startup before the host accepts worker spawn requests.
+private var stockSSHEnabled = false
+
+@_cdecl("ashell_stock_ssh_enabled")
+func ashellStockSSHEnabled() -> Bool {
+    return stockSSHEnabled
+}
+
 @objcMembers
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -207,6 +216,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NSLog("Application didFinishLaunchingWithOptions \(String(describing: launchOptions))")
         #endif
         _ = TerminalThemes.synchronizeSelection()
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        // Older ios_system builds cannot isolate Stock SSH's child processes.
+        let defaultSymbolScope = UnsafeMutableRawPointer(bitPattern: -2) // RTLD_DEFAULT
+        if #available(iOS 26.0, *), !ProcessInfo.processInfo.isiOSAppOnMac,
+           let stockCommands = Bundle.main.path(forResource: "sshStockCommands", ofType: "plist"),
+           ((Bundle.main.object(forInfoDictionaryKey: "ShellWorkerCount") as? NSNumber)?.intValue ?? 0) > 0,
+           dlsym(defaultSymbolScope, "ios_posix_spawn") != nil,
+           addCommandList(stockCommands) == nil {
+            let workerCommands = getenv("ASHELL_WORKER_COMMANDS").map { String(cString: $0) } ?? ""
+            if setenv("ASHELL_WORKER_COMMANDS", workerCommands + " ssh scp sftp ssh-keygen", 1) == 0 {
+                stockSSHEnabled = true
+            } else {
+                // The Stock entries require worker dispatch. Restore the base catalog if opt-in failed.
+                addCommandList(Bundle.main.path(forResource: "commandDictionary", ofType: "plist"))
+            }
+        }
+        #endif
         _ = TerminalPrompts.synchronizeSelection()
         // Store variables in User Defaults:
         UserDefaults.standard.register(defaults: ["zshmarks" : true])
@@ -231,6 +257,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             viewBehavior = .ignoreSafeArea
         }
         initializeEnvironment()
+        #if HERDR_EMBEDDED
+        replaceCommand("herdr", "herdr_ios_main", false)
+        #endif
         replaceCommand("progress", "ashell_progress", false)
         joinMainThread = false
         ios_setBookmarkDictionaryName("bookmarkNames")
@@ -279,18 +308,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if #unavailable(iOS 18) {
             replaceCommand("wasmkit", "wasmkitUnavailable", true)
         }
-        if appVersion != "a-Shell-mini", #unavailable(iOS 26.2) {
-            replaceCommand("codex", "codexUnavailable", true)
-        }
-        // honor country restrictions for OpenAI as well:
-        // TODO: do the same for herdr, possibly move it into SceneDelegate.
-        cleanupQueue.async{
-            if let openAI = URL(string: "https://api.openai.com") {
-                do{
-                    let dataVal = try NSURLConnection.sendSynchronousRequest(URLRequest(url: openAI), returning: nil)
-                }
-                catch {
-                    replaceCommand("codex", "codexUnavailableCountry", true)
+        if appVersion != "a-Shell-mini" {
+            if #unavailable(iOS 26.2) {
+                replaceCommand("codex", "codexUnavailable", true)
+            } else {
+                // Make sure codex (and other LLMs) are unavailable in mainland China
+                // as requested.
+                // TODO: do the same for herdr.
+                Task {
+                    if (await Storefront.current)?.countryCode == "CHN" {
+                        replaceCommand("codex", "codexUnavailableCountry", true)
+                    }
                 }
             }
         }
@@ -425,6 +453,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the user discards a scene session.
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
+        for session in sceneSessions {
+            if let checkpoint = InteractiveCommandRestoration.checkpointURL(for: session.persistentIdentifier) {
+                InteractiveCommandRestoration.discard(at: checkpoint)
+            }
+        }
         // Delete Vim sessions here using sceneSessions.first.persistentIdentifier
         do {
             let documentsUrl = try FileManager().url(for: .documentDirectory,

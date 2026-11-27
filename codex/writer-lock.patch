@@ -1,3 +1,41 @@
+--- a/core-plugins/src/startup_sync.rs
++++ b/core-plugins/src/startup_sync.rs
+@@ -31,7 +31,7 @@
+ const CURATED_PLUGINS_FETCH_REF: &str = "refs/codex/curated-sync";
+ const CURATED_PLUGINS_RELATIVE_DIR: &str = ".tmp/plugins";
+ const CURATED_PLUGINS_SHA_FILE: &str = ".tmp/plugins.sha";
+-const CURATED_PLUGINS_SYNC_LOCK_FILE: &str = ".tmp/plugins.sync.lock";
++const CURATED_PLUGINS_SYNC_LOCK_FILE: &str = "plugins.sync.lock";
+ const CURATED_PLUGINS_BACKUP_ARCHIVE_FALLBACK_VERSION: &str = "export-backup";
+ const CURATED_PLUGINS_GIT_TIMEOUT: Duration = Duration::from_secs(30);
+ const CURATED_PLUGINS_HTTP_TIMEOUT: Duration = Duration::from_secs(30);
+@@ -167,9 +167,13 @@
+ }
+ 
+ fn lock_curated_plugins_startup_sync(codex_home: &Path) -> Result<File, String> {
+-    let lock_path = codex_home.join(CURATED_PLUGINS_SYNC_LOCK_FILE);
+-    std::fs::create_dir_all(codex_home.join(".tmp"))
++    let lock_directory = codex_utils_absolute_path::ashell_service_lock_dir(
++        &codex_home.join(".tmp"),
++    )
++    .map_err(|err| format!("failed to locate curated plugins sync lock directory: {err}"))?;
++    std::fs::create_dir_all(&lock_directory)
+         .map_err(|err| format!("failed to create curated plugins sync directory: {err}"))?;
++    let lock_path = lock_directory.join(CURATED_PLUGINS_SYNC_LOCK_FILE);
+     let lock_file = File::options()
+         .write(true)
+         .create(true)
+--- a/rollout/src/maintenance.rs
++++ b/rollout/src/maintenance.rs
+@@ -24,7 +24,7 @@
+ pub fn try_acquire_rollout_maintenance_lock(
+     codex_home: &Path,
+ ) -> io::Result<Option<RolloutMaintenanceGuard>> {
+-    let directory = codex_home.join(".tmp");
++    let directory = codex_utils_absolute_path::ashell_service_lock_dir(&codex_home.join(".tmp"))?;
+     fs::create_dir_all(&directory)?;
+     let file = OpenOptions::new()
+         .read(true)
 --- a/rollout/src/writer_lock.rs
 +++ b/rollout/src/writer_lock.rs
 @@ -34,7 +34,7 @@
@@ -9,40 +47,15 @@
              cleanup_attempted: AtomicBool::new(false),
          }
      }
-@@ -171,6 +171,43 @@
+@@ -171,6 +171,18 @@
      }
  }
  
-+// iOS kills a suspended app that holds a file lock inside a shared App Group container
-+// (0xDEAD10CC). On an iPhone 16 Pro with iOS 27.0.1, a thread lock in a-Shell's group Codex
-+// home got the app killed a few seconds after each switch away (a-Shell #1158). Codex runs in
-+// one process there, one invocation at a time, so the locks live in the app's private
-+// temporary directory. confstr names it even when the shell has exported another TMPDIR into
-+// the process environment.
 +#[cfg(target_os = "ios")]
 +fn writer_lock_directory(_codex_home: &Path) -> PathBuf {
-+    use std::ffi::c_char;
-+    use std::ffi::c_int;
-+    use std::os::unix::ffi::OsStringExt;
-+    const _CS_DARWIN_USER_TEMP_DIR: c_int = 65537;
-+    unsafe extern "C" {
-+        fn confstr(name: c_int, buf: *mut c_char, len: usize) -> usize;
-+    }
-+    let mut buffer = vec![0u8; 1024];
-+    let length = unsafe {
-+        confstr(
-+            _CS_DARWIN_USER_TEMP_DIR,
-+            buffer.as_mut_ptr().cast(),
-+            buffer.len(),
-+        )
-+    };
-+    let directory = if length == 0 || length > buffer.len() {
-+        std::env::temp_dir()
-+    } else {
-+        buffer.truncate(length - 1);
-+        PathBuf::from(std::ffi::OsString::from_vec(buffer))
-+    };
-+    directory.join(WRITER_LOCK_DIR)
++    codex_utils_absolute_path::ios_private_temp_dir()
++        .unwrap_or_else(|_| std::env::temp_dir())
++        .join(WRITER_LOCK_DIR)
 +}
 +
 +#[cfg(not(target_os = "ios"))]
@@ -53,3 +66,75 @@
  impl Drop for WriterLockGuard {
      fn drop(&mut self) {
          let coordination_lock = match self.coordinator.lock_coordination() {
+--- a/state/src/runtime/reclamation.rs
++++ b/state/src/runtime/reclamation.rs
+@@ -113,12 +113,15 @@
+ }
+ 
+ async fn try_ownership(home: &Path) -> std::io::Result<Option<File>> {
++    let lock_directory = codex_utils_absolute_path::ashell_service_lock_dir(home)?;
++    #[cfg(target_os = "ios")]
++    tokio::fs::create_dir_all(&lock_directory).await?;
+     let lock = tokio::fs::OpenOptions::new()
+         .read(true)
+         .write(true)
+         .create(true)
+         .truncate(false)
+-        .open(home.join(".sqlite-maintenance.lock"))
++        .open(lock_directory.join(".sqlite-maintenance.lock"))
+         .await?
+         .into_std()
+         .await;
+--- a/utils/absolute-path/src/lib.rs
++++ b/utils/absolute-path/src/lib.rs
+@@ -13,6 +13,50 @@
+ 
+ mod absolutize;
+ mod system_aliases;
++
++/// The app's private temporary directory, independent of the command's TMPDIR.
++#[cfg(target_os = "ios")]
++pub fn ios_private_temp_dir() -> std::io::Result<PathBuf> {
++    use std::ffi::c_char;
++    use std::ffi::c_int;
++    use std::os::unix::ffi::OsStringExt;
++
++    const _CS_DARWIN_USER_TEMP_DIR: c_int = 65537;
++    unsafe extern "C" {
++        fn confstr(name: c_int, buf: *mut c_char, len: usize) -> usize;
++    }
++
++    let mut buffer = vec![0; 1024];
++    // SAFETY: confstr can write at most buffer.len() bytes to this writable buffer.
++    let length = unsafe {
++        confstr(
++            _CS_DARWIN_USER_TEMP_DIR,
++            buffer.as_mut_ptr().cast(),
++            buffer.len(),
++        )
++    };
++    if length <= 1 || length > buffer.len() {
++        return Err(std::io::Error::other(
++            "could not locate the iOS private temporary directory",
++        ));
++    }
++    buffer.truncate(length - 1);
++    Ok(PathBuf::from(std::ffi::OsString::from_vec(buffer)))
++}
++
++/// Keep service locks out of App Group storage so iOS can suspend a-Shell (0xDEAD10CC).
++/// The embedded command runs one Codex invocation at a time in the app process.
++pub fn ashell_service_lock_dir(_default: &Path) -> std::io::Result<PathBuf> {
++    #[cfg(target_os = "ios")]
++    {
++        Ok(ios_private_temp_dir()?.join("ashell-codex-locks"))
++    }
++
++    #[cfg(not(target_os = "ios"))]
++    {
++        Ok(_default.to_path_buf())
++    }
++}
+ 
+ /// A path that is guaranteed to be absolute and normalized (though it is not
+ /// guaranteed to be canonicalized or exist on the filesystem).
