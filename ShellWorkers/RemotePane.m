@@ -14,25 +14,6 @@ extern void ashell_extension_disconnect(NSXPCConnection *);
 extern void ashell_extension_observe(NSXPCConnection *, pid_t);
 extern int ashell_extension_capacity(void);
 extern bool ashell_stock_ssh_enabled(void);
-extern int codex_ios_prepare_home(const char *const env[]);
-
-static void prepare_codex_home(void) {
-    if (@available(iOS 26.2, *)) {
-        NSString *groupID = [NSBundle.mainBundle objectForInfoDictionaryKey:@"AppGroupIdentifier"];
-        if (groupID.length == 0) return;
-        NSFileManager *files = NSFileManager.defaultManager;
-        NSURL *group = [files containerURLForSecurityApplicationGroupIdentifier:groupID];
-        if (!group) return;
-        if ([files fileExistsAtPath:[group.path stringByAppendingPathComponent:@"Library/codex"]]) return;
-        // Only the host may migrate its private Codex state. Do not use HOME,
-        // GROUP or CODEX_HOME supplied by a pane or a brokered child.
-        NSString *home = [@"HOME=" stringByAppendingString:NSHomeDirectory()];
-        NSString *shared = [@"GROUP=" stringByAppendingString:group.path];
-        const char *env[] = {home.UTF8String, shared.UTF8String, NULL};
-        int error = codex_ios_prepare_home(env);
-        if (error) NSLog(@"Cannot prepare shared Codex home (errno %d)", error);
-    }
-}
 
 static void log_host_library(const char *phase) {
     int saved = errno;
@@ -206,7 +187,6 @@ int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, un
         if (!mkdtemp(probe)) { int code = errno; free(probe); return code; }
         pane.probeDirectory = [[NSFileManager defaultManager] stringWithFileSystemRepresentation:probe length:strlen(probe)];
         free(probe);
-        prepare_codex_home();
         NSTimeInterval started = NSProcessInfo.processInfo.systemUptime;
         dispatch_semaphore_t ready = dispatch_semaphore_create(0);
         __block int error = 0;
