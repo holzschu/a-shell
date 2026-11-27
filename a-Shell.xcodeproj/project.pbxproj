@@ -1189,6 +1189,8 @@
 		F1632FC1E103CFB4010F7006 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
 		F2D20BDE70DB7C92C03509DE /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070AE9F6D58955EE5B3B2FB9 /* Worker.swift */; };
 		FD33E045D3FF5D175364CB7C /* ShellWorkerC.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 1D81B2E2F18AE7821D05A7AD /* ShellWorkerC.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C02100000000000000000001 /* Nvim.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C02100000000000000000003 /* Nvim.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C02100000000000000000002 /* NvimCommand.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C02100000000000000000004 /* NvimCommand.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1621,6 +1623,8 @@
 				223E91E62EC1251900A81615 /* openrsyncA.framework in Embed Frameworks */,
 				2236B29F30640BDC002B6F9E /* WasmKitCommand.framework in Embed Frameworks */,
 				226045B130B8951100697491 /* codex/codex.xcframework in Embed Frameworks */,
+				C02100000000000000000001 /* Nvim.xcframework in Embed Frameworks */,
+				C02100000000000000000002 /* NvimCommand.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3290,6 +3294,8 @@
 		BA7967007CF5D5AF7BEE03CE /* ShellWorkers/Worker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/Worker.m; sourceTree = SOURCE_ROOT; };
 		CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/NativePane.m; sourceTree = SOURCE_ROOT; };
 		D847238C57D48CADF264887A /* ShellWorkers/Host.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellWorkers/Host.swift; sourceTree = SOURCE_ROOT; };
+		C02100000000000000000003 /* Nvim.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Neovim/Nvim.xcframework; sourceTree = SOURCE_ROOT; };
+		C02100000000000000000004 /* NvimCommand.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Neovim/NvimCommand.xcframework; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3639,6 +3645,8 @@
 			children = (
 				A22600000000000000000004 /* Herdr.xcframework */,
 				A22600000000000000000002 /* codex/codex.xcframework */,
+				C02100000000000000000003 /* Nvim.xcframework */,
+				C02100000000000000000004 /* NvimCommand.xcframework */,
 				2200010030F7400000000003 /* PhotosUI.framework */,
 				227F058230867C0300FCC674 /* node.xcframework */,
 				A22000000000000000000002 /* rg/rg.xcframework */,

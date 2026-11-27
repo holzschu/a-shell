@@ -1,0 +1,1 @@
+NVIM_TUI_PEAK_RSS_BYTES=74629120 status=0 threads=1

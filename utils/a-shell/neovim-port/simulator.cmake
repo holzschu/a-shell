@@ -1,0 +1,10 @@
+# Native iOS dependencies; code generators run on the Mac.
+set(CMAKE_SYSTEM_NAME iOS)
+set(CMAKE_OSX_SYSROOT "$ENV{NVIM_IOS_SDK}" CACHE STRING "Neovim target SDK")
+set(CMAKE_OSX_ARCHITECTURES "$ENV{NVIM_IOS_ARCH}" CACHE STRING "Neovim target architecture")
+set(CMAKE_OSX_DEPLOYMENT_TARGET 16.0)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+# Bundled libraries have absolute paths outside the SDK sysroot.
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
