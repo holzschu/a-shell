@@ -6,15 +6,19 @@ source_root="$root/build/source"
 target=${1:-aarch64-apple-ios-sim}
 revision=7b116c05bfda646af39d2524c54e70c751f57ee8
 case "$target" in
-aarch64-apple-ios-sim | aarch64-apple-ios) ;;
+aarch64-apple-ios-sim | aarch64-apple-ios | x86_64-apple-ios) ;;
 *)
-	echo "usage: $0 [aarch64-apple-ios-sim|aarch64-apple-ios]" >&2
+	echo "usage: $0 [aarch64-apple-ios-sim|aarch64-apple-ios|x86_64-apple-ios]" >&2
 	exit 2
 	;;
 esac
 command -v cargo >/dev/null
 command -v git >/dev/null
-command -v "${ZIG:-zig}" >/dev/null
+zig=${ZIG:-zig}
+if [ "$("$zig" version)" != 0.16.0 ]; then
+	echo "Herdr requires Zig 0.16.0; set ZIG to its executable" >&2
+	exit 2
+fi
 if [ -L "$root/build" ] || [ -L "$source_root" ]; then
 	echo "Herdr build directories must not be symbolic links" >&2
 	exit 2
@@ -44,6 +48,7 @@ cp "$root/native/host_io.rs" "$source_root/src/host_io.rs"
 cp "$root/native/ios_ipc.rs" "$source_root/src/ios_ipc.rs"
 cp "$root/native/ios_pty.rs" "$source_root/src/pty/ios.rs"
 export CARGO_TARGET_DIR="$root/build/target"
+export IPHONEOS_DEPLOYMENT_TARGET=15.0
 export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$root/build/zig-cache}"
 export LIBGHOSTTY_VT_SIMD=false LIBGHOSTTY_VT_OPTIMIZE=ReleaseSmall
 (

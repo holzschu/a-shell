@@ -123,6 +123,51 @@ def audit_binary(
     }
 
 
+def audit_archive(archive: Path, platform: str, maximum: str) -> dict:
+    slices = []
+    for arch in run("xcrun", "lipo", "-archs", str(archive)).split():
+        load = run("xcrun", "otool", "-arch", arch, "-lv", str(archive))
+        member_blocks = re.split(
+            rf"^{re.escape(str(archive))}\((.+?)\)(?: \(architecture [^)]+\))?:$",
+            load,
+            flags=re.MULTILINE,
+        )
+        if len(member_blocks) == 1:
+            raise ValueError(f"{archive} ({arch}): no archive members")
+        mins = []
+        for name, block in zip(member_blocks[1::2], member_blocks[2::2], strict=True):
+            records = re.findall(
+                r"^\s*cmd (LC_BUILD_VERSION|LC_VERSION_MIN_\w+)\n\s*cmdsize \d+\n"
+                r"(?:\s*platform (\S+)\n)?\s*(?:minos|version) (\S+)",
+                block,
+                re.MULTILINE,
+            )
+            if len(records) != 1:
+                raise ValueError(
+                    f"{archive} ({arch}) member {name}: expected one Mach-O build record"
+                )
+            command, member_platform, minimum = records[0]
+            if command == "LC_VERSION_MIN_IPHONEOS":
+                member_platform = "IOSSIMULATOR" if arch == "x86_64" else "IOS"
+            if member_platform != platform or version(minimum) > version(maximum):
+                raise ValueError(
+                    f"{archive} ({arch}): incompatible member {member_platform or command} "
+                    f"minimum OS {minimum}; expected {platform} <= {maximum} ({name})"
+                )
+            mins.append(minimum)
+        slices.append(
+            {
+                "arch": arch,
+                "platform": platform,
+                "minos": max(mins, key=version),
+                "member_build_records": len(mins),
+            }
+        )
+    with archive.open("rb") as source:
+        digest = hashlib.file_digest(source, "sha256").hexdigest()
+    return {"binary": str(archive), "sha256": digest, "slices": slices}
+
+
 def audit_framework(root: Path, maximum: str) -> list[dict]:
     with (root / "Info.plist").open("rb") as source:
         libraries = plistlib.load(source)["AvailableLibraries"]
@@ -154,15 +199,16 @@ def audit_framework(root: Path, maximum: str) -> list[dict]:
         }[variant]
         member = within(root, library["LibraryIdentifier"])
         product = within(member, library["LibraryPath"])
-        if product.suffix != ".framework":
-            raise ValueError(
-                "Static archives require a recipe-specific member audit; this checker accepts dynamic frameworks"
+        if product.suffix == ".framework":
+            with (product / "Info.plist").open("rb") as source:
+                executable = plistlib.load(source)["CFBundleExecutable"]
+            row = audit_binary(
+                within(product, executable), platform, maximum, signed=False, require_dylib=True
             )
-        with (product / "Info.plist").open("rb") as source:
-            executable = plistlib.load(source)["CFBundleExecutable"]
-        row = audit_binary(
-            within(product, executable), platform, maximum, signed=False, require_dylib=True
-        )
+        elif product.suffix == ".a":
+            row = audit_archive(product, platform, maximum)
+        else:
+            raise ValueError(f"Unsupported XCFramework library: {product.name}")
         actual = {item["arch"] for item in row["slices"]}
         if actual != expected[library["LibraryIdentifier"]]:
             raise ValueError(f"{product}: unexpected slice architectures")
@@ -203,7 +249,7 @@ def main(
         Path,
         typer.Argument(
             exists=True,
-            help="Dynamic .xcframework, signed .app, or ZIP containing one xcframework.",
+            help="An .xcframework, signed .app, or ZIP containing one xcframework.",
         ),
     ],
     max_minos: str = typer.Option(

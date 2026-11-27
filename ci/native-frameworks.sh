@@ -2,18 +2,21 @@
 # Build one pinned app command for device and Simulator.
 set -euo pipefail
 app=$(cd "$(dirname "$0")/.." && pwd -P)
-product=${1:?Usage: ci/native-frameworks.sh helix|fd|fzf|navi|gitoxide|Ruff|rg|node}
+product=${1:?Usage: ci/native-frameworks.sh PRODUCT [SLICE|package]}
 recipe=$product
-node_slice=${2:-}
-case $node_slice in
-  ""|device|simulator) ;;
-  *) echo "Unknown Node slice: $node_slice" >&2; exit 2 ;;
-esac
-[[ -z $node_slice || $product == node ]] || { echo "Only Node accepts a slice argument." >&2; exit 2; }
+stage=${2:-}
 case $product in
-  helix|fd|fzf|navi|gitoxide|Ruff|rg|node) ;;
+  helix|fd|fzf|navi|gitoxide|Ruff|rg|node|codex|Herdr) ;;
   *) echo "Unknown native product: $product" >&2; exit 2 ;;
 esac
+case $product:$stage in
+  *:|node:device|node:simulator|codex:device|codex:simulator|codex:simulator-x86_64|codex:package) ;;
+  *) echo "Invalid stage for $product: $stage" >&2; exit 2 ;;
+esac
+platforms=(device simulator simulator-x86_64)
+if [[ -n $stage && $stage != package ]]; then
+  platforms=("$stage")
+fi
 work=$app/.build/native/$product
 dist=$app/.build/dist
 mkdir -p "$work" "$dist"
@@ -24,11 +27,19 @@ export CARGO_PROFILE_RELEASE_STRIP=symbols
 export HELIX_BUILD_CACHE=$work/command FD_BUILD_CACHE=$work/command
 export FZF_BUILD_CACHE=$work/command NAVI_BUILD_DIR=$work/command
 export GITOXIDE_BUILD_CACHE=$work/command RUFF_BUILD_CACHE=$work/command RG_BUILD_CACHE=$work/command
+export CODEX_BUILD_CACHE=$work/command
 
-# All commands link the same public ios_system ABI. Never use a developer's SDK cache.
+# Never use a developer's SDK cache. Codex needs the newer owned-stream ABI.
 revision=df998e76cea0266bd3615bb9a1f4f7d745f318a2
 checksum=6d2201c1dee131b831b8108b578ede560277d1c205fd8c64f2fb9dcd70e7baca
-if [[ $product != node || -n $node_slice ]]; then
+sdk_minimum=14.0
+if [[ $product == codex ]]; then
+  export CARGO_BUILD_JOBS=2
+  sdk_minimum=15.0
+  revision=f187d27373865977db4705b38d3a35eec13415ec
+  checksum=a7b8881369549973ae46bd362702b92980abafdbd2537befa3c339b94029d38b
+fi
+if [[ $product != Herdr && ( $product != node || -n $stage ) && $stage != package ]]; then
   if [[ ! -f $work/ios-system.tar.gz ]]; then
     curl -fLsS --retry 2 --connect-timeout 15 --max-time 300 \
       "https://codeload.github.com/holzschu/ios_system/tar.gz/$revision" -o "$work/ios-system.tar.gz.part"
@@ -40,16 +51,14 @@ if [[ $product != node || -n $node_slice ]]; then
     mkdir -p "$work/ios-system"
     tar -xzf "$work/ios-system.tar.gz" --strip-components=1 -C "$work/ios-system"
   fi
-  sdk_platforms="device simulator simulator-x86_64"
-  [[ $product != node ]] || sdk_platforms=$node_slice
-  for platform in $sdk_platforms; do
+  for platform in "${platforms[@]}"; do
     sdk=iphonesimulator
     arch=arm64
     [[ $platform != device ]] || sdk=iphoneos
     [[ $platform != simulator-x86_64 ]] || arch=x86_64
     if ! xcodebuild -project "$work/ios-system/ios_system.xcodeproj" -target ios_system \
       -configuration Release -sdk "$sdk" -jobs 4 ARCHS="$arch" ONLY_ACTIVE_ARCH=NO \
-      IPHONEOS_DEPLOYMENT_TARGET=14.0 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+      IPHONEOS_DEPLOYMENT_TARGET="$sdk_minimum" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
       CONFIGURATION_BUILD_DIR="$work/sdk/$platform" build >"$work/sdk-$platform.log" 2>&1; then
       tail -n 60 "$work/sdk-$platform.log" >&2
       exit 1
@@ -59,32 +68,32 @@ if [[ $product != node || -n $node_slice ]]; then
 fi
 
 if [[ $product == node ]]; then
-  if [[ -n $node_slice ]]; then
+  if [[ -n $stage ]]; then
     [[ ! -d $work/ios_system.xcframework ]] || rm -rf "$work/ios_system.xcframework"
-    xcodebuild -create-xcframework -framework "$work/sdk/$node_slice/ios_system.framework" \
+    xcodebuild -create-xcframework -framework "$work/sdk/$stage/ios_system.framework" \
       -output "$work/ios_system.xcframework"
     export IOS_SYSTEM_XCFRAMEWORK=$work/ios_system.xcframework
     export NODE_IOS_XCFRAMEWORK=$work/node-package.xcframework NODE_IOS_JOBS=4
     export IOS_SYSTEM_SIMULATOR_SLICE=ios-arm64-simulator
-    export NODE_IOS_CACHE=$work/node-$node_slice
+    export NODE_IOS_CACHE=$work/node-$stage
     node_platform=simulator
     node_stage=node
-    if [[ $node_slice == device ]]; then
+    if [[ $stage == device ]]; then
       node_platform=device
       node_stage=device
     fi
     export NODE_IOS_PLATFORMS=$node_platform
     bash "$app/node/build.sh" "$node_stage"
     bash "$app/node/build.sh" package
-    tar -czf "$dist/node-$node_slice.tar.gz" -C "$NODE_IOS_CACHE/framework" "$node_platform"
-    files=("node-$node_slice.tar.gz")
-    if [[ $node_slice == device ]]; then
+    tar -czf "$dist/node-$stage.tar.gz" -C "$NODE_IOS_CACHE/framework" "$node_platform"
+    files=("node-$stage.tar.gz")
+    if [[ $stage == device ]]; then
       # These scripts belong in app resources, never in a signed framework.
       ditto -c -k --norsrc "$app/Resources/npm" "$dist/node-npm.zip"
       ditto -c -k --norsrc "$app/Resources/node-fetch" "$dist/node-fetch.zip"
       files+=(node-npm.zip node-fetch.zip)
     fi
-    (cd "$dist"; shasum -a 256 "${files[@]}" >"node-$node_slice.sha256")
+    (cd "$dist"; shasum -a 256 "${files[@]}" >"node-$stage.sha256")
     exit 0
   fi
   # Join the two immutable slice artifacts; this job never recompiles Node.
@@ -97,24 +106,60 @@ if [[ $product == node ]]; then
   device=$work/prebuilt/device/device/node.framework
   simulator=$work/prebuilt/simulator/simulator/node.framework
   cp "$input/node-npm.zip" "$input/node-fetch.zip" "$dist/"
-else
-  recipe=$product
-  [[ $product != Ruff ]] || recipe=ruff
-  for platform in device simulator simulator-x86_64; do
-    if [[ $product == navi ]]; then
-      bash "$app/$recipe/build.sh" framework "$platform" "$work/sdk/$platform"
-    else
-      bash "$app/$recipe/build.sh" framework "$work/sdk/$platform" "$platform"
-    fi
+elif [[ $product == Herdr ]]; then
+  for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
+    bash "$app/Herdr/build.sh" "$target"
   done
-  device=$work/command/device/$product.framework
-  simulator=$work/command/simulator/$product.framework
-  intel=$work/command/simulator-x86_64/$product.framework
+  target_dir=$app/Herdr/build/target
   mkdir -p "$work/universal"
-  ditto "$simulator" "$work/universal/$product.framework"
+  device=$target_dir/aarch64-apple-ios/release/libherdr_ios.a
+  simulator=$work/universal/libherdr_ios.a
+  xcrun lipo -create "$target_dir/aarch64-apple-ios-sim/release/libherdr_ios.a" \
+    "$target_dir/x86_64-apple-ios/release/libherdr_ios.a" -output "$simulator"
+else
+  [[ $product != Ruff ]] || recipe=ruff
+  command_dir=$work/command
+  universal=$work/universal
+  if [[ $stage == package ]]; then
+    # Package the immutable CI inputs without rebuilding them or overlaying an old framework.
+    input=$app/.build/codex-slices
+    staging=$(mktemp -d "$work/package.XXXXXX")
+    trap 'rm -r "$staging"' EXIT
+    command_dir=$staging
+    universal=$staging/universal
+    for platform in "${platforms[@]}"; do
+      archive=codex-$platform.tar.gz
+      (cd "$input"; shasum -a 256 "$archive" | cmp -s - "codex-$platform.sha256") || {
+        echo "$archive: FAILED checksum verification" >&2
+        exit 1
+      }
+      tar -xzf "$input/$archive" -C "$staging"
+    done
+  else
+    for platform in "${platforms[@]}"; do
+      if [[ $product == navi ]]; then
+        bash "$app/$recipe/build.sh" framework "$platform" "$work/sdk/$platform"
+      else
+        bash "$app/$recipe/build.sh" framework "$work/sdk/$platform" "$platform"
+      fi
+    done
+    if [[ -n $stage ]]; then
+      slices=$app/.build/codex-slices
+      mkdir -p "$slices"
+      archive=codex-$stage.tar.gz
+      tar -czf "$slices/$archive" -C "$command_dir" "$stage"
+      (cd "$slices"; shasum -a 256 "$archive" >"codex-$stage.sha256")
+      exit 0
+    fi
+  fi
+  device=$command_dir/device/$product.framework
+  simulator=$command_dir/simulator/$product.framework
+  intel=$command_dir/simulator-x86_64/$product.framework
+  mkdir -p "$universal"
+  ditto "$simulator" "$universal/$product.framework"
   xcrun lipo -create "$simulator/$product" "$intel/$product" \
-    -output "$work/universal/$product.framework/$product"
-  simulator=$work/universal/$product.framework
+    -output "$universal/$product.framework/$product"
+  simulator=$universal/$product.framework
 fi
 
 case $product in
@@ -122,14 +167,25 @@ case $product in
   gitoxide) symbols=gix_ios_main ;;
   Ruff) symbols=ruff_ios_main ;;
   node) symbols='node_ios_main npm_ios_main npx_ios_main' ;;
+  Herdr) symbols='herdr_ios_main herdr_ios_resize' ;;
   *) symbols=${product}_ios_main ;;
 esac
+nm_flags=(-gU)
+if [[ $product == Herdr ]]; then
+  # Rust archives contain Mach-O symbols alongside bitcode newer than Xcode's LLVM.
+  nm_flags+=(--no-llvm-bc)
+  libraries=(-library "$device" -library "$simulator")
+  binaries=("$device" "$simulator")
+else
+  libraries=(-framework "$device" -framework "$simulator")
+  binaries=("$device/$product" "$simulator/$product")
+fi
 printf 'slice\tstripped_bytes\tgzip_bytes\n' >"$dist/$product.sizes.tsv"
 slice=device
-for binary in "$device/$product" "$simulator/$product"; do
-  xcrun strip -S -x "$binary"
+for binary in "${binaries[@]}"; do
+  [[ $product == Herdr ]] || xcrun strip -S -x "$binary"
   for arch in $(xcrun lipo -archs "$binary"); do
-    exports=$(xcrun nm -arch "$arch" -gU "$binary")
+    exports=$(xcrun nm -arch "$arch" "${nm_flags[@]}" "$binary")
     for symbol in $symbols; do
       grep -E " T _$symbol$" <<<"$exports" >/dev/null || {
         echo "$binary ($arch): missing export _$symbol" >&2
@@ -141,11 +197,20 @@ for binary in "$device/$product" "$simulator/$product"; do
   slice=simulator
 done
 [[ ! -d $work/$product.xcframework ]] || rm -rf "$work/$product.xcframework"
-xcodebuild -create-xcframework -framework "$device" \
-  -framework "$simulator" -output "$work/$product.xcframework"
+xcodebuild -create-xcframework "${libraries[@]}" -output "$work/$product.xcframework"
+if [[ $product == Herdr ]]; then
+  cp "$app/Herdr/LICENSE" "$work/Herdr.xcframework/LICENSE"
+  cp "$app/Herdr/build/source/vendor/libghostty-vt/LICENSE" "$work/Herdr.xcframework/LICENSE-Ghostty"
+fi
 ditto -c -k --norsrc --keepParent "$work/$product.xcframework" "$dist/$product.xcframework.zip"
 minimum=14.0
-[[ $product != node ]] || minimum=16.0
+simulator_arches=arm64/x86_64
+dependency="Link dependency: ios_system $revision, archive SHA256 $checksum."
+case $product in
+  node) minimum=16.0; simulator_arches=arm64 ;;
+  codex) minimum=26.2 ;;
+  Herdr) minimum=15.0; dependency="Static archive; the app provides the Herdr host functions." ;;
+esac
 sum=$(swift package compute-checksum "$dist/$product.xcframework.zip")
 uv run "$app/ci/audit-artifact.py" "$dist/$product.xcframework.zip" \
   --sha256 "$sum" --max-minos "$minimum" >"$dist/$product.audit.json"
@@ -161,9 +226,9 @@ shasum -a 256 "$dist/$product.xcframework.zip"
 cat >"$dist/$product.release.md" <<EOF
 ## $product
 
-Device arm64; Simulator arm64 for Node, universal arm64/x86_64 for other products; minimum iOS $minimum.
+Device arm64; Simulator $simulator_arches; binary deployment target iOS $minimum.
 Sources and patches: the repository's $recipe/build.sh recipe.
-Link dependency: ios_system $revision, archive SHA256 $checksum.
+$dependency
 Build source: ${GITHUB_SHA:-local}.
 
 EOF

@@ -65,8 +65,14 @@ apple_target() {
     triple=arm64-apple-ios26.2-simulator
     mach_platform=IOSSIMULATOR
     ;;
+  simulator-x86_64)
+    sdk_name=iphonesimulator
+    target=x86_64-apple-ios
+    triple=x86_64-apple-ios26.2-simulator
+    mach_platform=IOSSIMULATOR
+    ;;
   *)
-    echo 'Expected device or simulator' >&2
+    echo 'Expected device, simulator, or simulator-x86_64' >&2
     return 2
     ;;
   esac
@@ -82,10 +88,8 @@ rust_build() {
   prepare
   "$rustup" target add --toolchain 1.96.1 "$target"
   echo "Build Codex 0.160.0 for $target with $CARGO_BUILD_JOBS jobs"
-  (cd "$source/codex-rs" && "$cargo" +1.96.1 build --locked --release --target "$target" -p codex-ios-embedded) >"$cache/build-$target.log" 2>&1 || {
-    tail -n 30 "$cache/build-$target.log" >&2
-    return 1
-  }
+  # Stream progress before cancellation as well as keeping the full local log.
+  (cd "$source/codex-rs" && "$cargo" +1.96.1 build --locked --release --target "$target" -p codex-ios-embedded) 2>&1 | tee "$cache/build-$target.log"
 }
 
 framework() {
@@ -143,7 +147,7 @@ xcframework)
   rmdir "$staging"
   ;;
 *)
-  echo 'Usage: build.sh prepare | archive device|simulator | framework MATCHING_FRAMEWORKS device|simulator | xcframework DEVICE_FRAMEWORKS SIMULATOR_FRAMEWORKS' >&2
+  echo 'Usage: build.sh prepare | archive PLATFORM | framework MATCHING_FRAMEWORKS PLATFORM | xcframework DEVICE_FRAMEWORKS SIMULATOR_FRAMEWORKS' >&2
   exit 2
   ;;
 esac

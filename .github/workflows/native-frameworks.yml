@@ -4,6 +4,11 @@ on:
     paths-ignore:
       - '**.md'
   workflow_dispatch:
+    inputs:
+      embedded_only:
+        description: Build only Codex and Herdr
+        type: boolean
+        default: false
   push:
     tags:
       - 'native-*'
@@ -16,12 +21,14 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: ${{ matrix.product == 'Herdr' && 'macos-26-intel' || 'macos-26' }}
+    env:
+      DEVELOPER_DIR: ${{ matrix.product == 'Herdr' && '/Applications/Xcode_26.6.app/Contents/Developer' || '/Applications/Xcode_26.3.app/Contents/Developer' }}
     timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
-        product: [helix, fd, fzf, navi, gitoxide, Ruff, rg]
+        product: ${{ fromJSON(inputs.embedded_only && '["Herdr"]' || '["helix","fd","fzf","navi","gitoxide","Ruff","rg","Herdr"]') }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -47,6 +54,16 @@ jobs:
           rustup override set "$version"
           rustup target add --toolchain "$version" aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
           rustc --version
+      - name: Install Zig 0.16.0 for Herdr
+        if: matrix.product == 'Herdr'
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          archive=zig-x86_64-macos-0.16.0.tar.xz
+          curl -fLsS --retry 2 "https://ziglang.org/download/0.16.0/$archive" -o "$archive"
+          echo "0387557ed1877bc6a2e1802c8391953baddba76081876301c522f52977b52ba7  $archive" | shasum -a 256 -c -
+          tar -xf "$archive"
+          echo "ZIG=$RUNNER_TEMP/${archive%.tar.xz}/zig" >>"$GITHUB_ENV"
       - name: Toolchain and resources
         run: |
           xcodebuild -version
@@ -74,7 +91,77 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
           path: .build/native/**/*.log
+  codex-slice:
+    runs-on: macos-26-intel
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [device, simulator, simulator-x86_64]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Rust toolchain
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.96.1 --profile minimal --no-self-update
+          rustup override set 1.96.1
+          rustc --version
+      - name: Toolchain and resources
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk iphonesimulator --show-sdk-version
+          df -h .
+          sysctl hw.memsize
+          sysctl vm.swapusage
+      - name: Build pinned Codex slice
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: nice -n 15 bash ci/native-frameworks.sh codex "$PLATFORM"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: codex-slice-${{ matrix.platform }}
+          include-hidden-files: true
+          if-no-files-found: error
+          path: .build/codex-slices/*
+      - name: Retain diagnostics
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: codex-logs-${{ matrix.platform }}
+          include-hidden-files: true
+          if-no-files-found: ignore
+          path: .build/native/**/*.log
+  codex:
+    needs: codex-slice
+    runs-on: macos-26-intel
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: codex-slice-*
+          merge-multiple: true
+          path: .build/codex-slices
+      - name: Package and audit Codex
+        run: nice -n 15 bash ci/native-frameworks.sh codex package
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-codex
+          include-hidden-files: true
+          if-no-files-found: error
+          path: .build/dist/*
   node-slice:
+    if: ${{ !inputs.embedded_only }}
     runs-on: macos-26
     timeout-minutes: 360
     strategy:
@@ -133,7 +220,7 @@ jobs:
           if-no-files-found: error
           path: .build/dist/*
   release:
-    needs: [build, node]
+    needs: [build, node, codex]
     if: github.repository == 'holzschu/a-shell' && startsWith(github.ref, 'refs/tags/native-')
     runs-on: ubuntu-latest
     permissions:
@@ -150,7 +237,7 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
-          for product in helix fd fzf navi gitoxide Ruff rg node; do
+          for product in helix fd fzf navi gitoxide Ruff rg node codex Herdr; do
             test -s "$product.xcframework.zip"
             test -s "$product.audit.json"
             test -s "$product.checksums.txt"
