@@ -26,12 +26,15 @@ assert(assert(loadfile(first))() == 43, 'source change did not invalidate cache'
 vim.fn.writefile({'return 7'}, 'loader-ordinary.lua')
 assert(assert(loadfile('loader-ordinary.lua'))() == 7)
 assert(vim.uv.fs_stat(vim.loader.path .. '/loader-ordinary.luac'), 'ordinary cache name changed')
-local collision = vim.fn.sha256(first) .. '.lua'
+local collision = 'sha256-' .. vim.fn.sha256(first) .. '.lua'
 vim.fn.writefile({'return 11'}, collision)
 vim.uv.fs_utime(first, 0, 0)
 vim.uv.fs_utime(collision, 0, 0)
 assert(assert(loadfile(first))() == 43)
 assert(assert(loadfile(collision))() == 11, 'hashed and ordinary cache names collided')
+assert(assert(loadfile(first))() == 43, 'ordinary load replaced hashed bytecode')
+assert(vim.uv.fs_stat(vim.loader.path .. '/=' .. collision .. 'c'), 'reserved cache entry missing')
+assert(vim.uv.fs_stat(vim.loader.path .. '/' .. collision .. 'c'), 'ordinary cache entry missing')
 
 local timer_path = deep .. '/timer.lua'
 vim.fn.writefile({'return 99'}, timer_path)

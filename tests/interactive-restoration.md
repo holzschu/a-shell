@@ -7,11 +7,17 @@ Run this regression through the terminal and a normal app relaunch. A displayed 
 Run from the repository root:
 
 ```sh
-swiftc -swift-version 6 a-Shell/InteractiveCommandRestoration.swift tests/interactive-restoration.swift -o /tmp/interactive-restoration
-/tmp/interactive-restoration
+swiftc -swift-version 6 a-Shell/InteractiveCommandRestoration.swift tests/interactive-restoration.swift -o /tmp/interactive-restoration-full
+/tmp/interactive-restoration-full
+swiftc -swift-version 6 -D NVIM_EMBEDDED a-Shell/InteractiveCommandRestoration.swift tests/interactive-restoration.swift -o /tmp/interactive-restoration-mini
+/tmp/interactive-restoration-mini
 ```
 
 This checks the notification-to-checkpoint handoff, one-shot consumption, removal on normal exit, and the restart preference independently of the scrollback preference. It does not test whether UIKit reconnects the same scene after process death.
+
+## Neovim on a physical iPhone
+
+With the restart preference on, enter `nvim sample.lua` from a disposable Documents subdirectory. Background the app, terminate that exact host PID, and relaunch normally. Check that the new editor opened the same file and accepts input. Repeat with restart off: the shell must accept a command without starting Neovim. Restore the initial preference. The restore contract reopens operands; it does not save unsaved buffers or replay shell syntax, quoted operands, or editor flags such as `-S`.
 
 ## Codex on a physical iPhone
 

@@ -69,7 +69,7 @@ orient() {
     -resultBundlePath "$result/$method.xcresult" >"$result/$method.log" 2>&1
 }
 
-launch=$(xcrun simctl launch "$device" "$bundle")
+launch=$(xcrun simctl launch --terminate-running-process "$device" "$bundle")
 process_before=${launch##* }
 printf '%s\n' "$process_before" >"$result/app-pid-before.out"
 if [ -n "$matrix" ]; then

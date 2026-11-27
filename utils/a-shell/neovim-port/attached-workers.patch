@@ -1,0 +1,27 @@
+--- a/src/nvim/event/libuv_proc.c
++++ b/src/nvim/event/libuv_proc.c
+@@ -89,6 +89,12 @@
+   if (proc->detach) {
+     uvproc->uvopts.flags |= UV_PROCESS_DETACHED;
+   }
++#elif defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
++  // Worker sessions are already isolated. Forward actual detach requests so
++  // the iOS libuv bridge can reject them rather than blocking on teardown.
++  if (proc->detach) {
++    uvproc->uvopts.flags |= UV_PROCESS_DETACHED;
++  }
+ #else
+   // Always setsid() on unix-likes. #8107
+   uvproc->uvopts.flags |= UV_PROCESS_DETACHED;
+--- a/src/nvim/ui_client.c
++++ b/src/nvim/ui_client.c
+@@ -62,4 +62,9 @@
++#if defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
++  // A shell worker cannot outlive the native command that owns its waiter.
++  bool detach = false;
++#else
+   bool detach = true;
++#endif
+   varnumber_T exit_status;
+   Channel *channel = channel_job_start(args, exepath,
+                                        CALLBACK_READER_INIT, on_err, CALLBACK_NONE,

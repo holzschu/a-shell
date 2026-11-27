@@ -8,17 +8,18 @@ Neovim keeps its upstream split UI: the TUI launches `nvim --embed` via the a-Sh
 
 `NvimCommand.framework` registers `nvim_ios_main`. It opens `Nvim.framework` using a path relative to the host app, including when called from a worker extension. It duplicates the command's three logical streams into owned descriptors above 2 without replacing process descriptors 0–2. The port uses ios_system terminal dimensions and interactive-input hooks. The editor's runtime and licenses live in `Nvim.framework`; seven pinned upstream Tree-sitter parsers are linked statically rather than loaded as separately signed libraries.
 
-| Feature | Status on the current Simulator build |
+| Feature | Qualification results before the #1201 rebase, unless specified |
 | --- | --- |
 | TUI, Lua config, Lua syntax capture, edit/save/quit, rotation, repeat invocation, toolbar Esc and Ctrl-C | Passed in a Herdr pane using actual toolbar touches and saved-state readbacks. Rotation changed 52×45 to 71×20. |
 | Local lazy.nvim | Passed with LuaJIT and JIT disabled. The 0.8.3 port could not load this checkout. |
-| `system()`, `:!`, non-PTY `jobstart()` | `system('echo ok')` and `:!ls` exited 0. A direct `ls` job returned stderr and status 1 for a missing file. Dash jobs using `>&2` appended `worker connection failed: Bad file descriptor` and returned 125 instead of the command's exit status, so the strict subprocess check remains red. |
+| `system()`, `:!`, non-PTY `jobstart()` | `system('echo ok')` and `:!ls` exited 0. A direct `ls` job returned stderr and status 1 for a missing file. The current ios_system worker has a separately tracked limitation: Dash stdout-to-stderr duplication with `dash -c '… >&2'` appends `worker connection failed: Bad file descriptor` and returns 125 instead of the command's exit status. |
 | PTY jobs and `:terminal` | Unsupported: the worker stream API cannot allocate a PTY. `:terminal dash` returned E903 `function not implemented`. |
+| Detached jobs | Unsupported: a worker waiter cannot outlive the editor invocation. The embedded editor server runs as an attached worker. Closing a live process handle cancels and reaps its worker. |
 | LSP | On Simulator, `vim.lsp.start()` completed initialize and shutdown over stdio with a Lua fixture launched by the registered `nvim` command. Other LSP servers, providers and native plugin binaries were not tested. |
 | Lua `os.execute` | Unsupported; raises `os.execute is unsupported on iOS`. |
 | Physical iPhone | A framework overlay on an older worker failed at E903 `Operation not supported`. In the source-built app, a Herdr pane passed Lua init and syntax capture, toolbar Esc, edit/save/quit, rotation, and a second edit discarded with toolbar Ctrl-C. Both invocations returned status 0 to the same host process. The final lazy.nvim replay timed out waiting for XCTest input. An earlier device package with the same Neovim framework pins passed headless with cache and state in a writable test directory. |
 
-The current overlap control delivered 20 unrelated output lines to their original fd 1 and zero to Neovim. The test-only legacy redirect leaked all 20 into Neovim.
+In the pre-rebase Simulator overlap test, the port delivered 20 unrelated output lines to their original fd 1 and zero to Neovim. The test-only legacy redirect leaked all 20 into Neovim. The Simulator `spawn-rollback.c` fixture exercises public `uv_spawn` with a fake external worker broker. Duplicate streams, waiter-thread exhaustion, broker rejection and a detached request admit no worker, leave no exit callback, and allow the caller to close both handles and the loop. Closing a live worker cancels it without delivering an exit callback after close.
 
 On iPhone 16 Pro, the same live editor survived 15, 60 and 180 seconds behind Settings and behind Safari. All six rows retained the app and editor worker PIDs, the active Herdr command and the editor's screen marker. No new crash paths appeared. This measures survival across foreground switches, not continuous execution while backgrounded.
 
@@ -33,7 +34,7 @@ RSS includes shared pages. Do not add the two processes or use these readings as
 
 ## Build and package
 
-Requirements: Xcode, CMake, Ninja, host LuaJIT, Perl, curl, rsync, patch and shasum. Point `NVIM_IOS_FRAMEWORKS` at the matching slice directory of a worker-capable `ios_system.framework` that includes `Headers/ios_spawn.h`. The app must ship a runtime that exports the corresponding spawn ABI. The old ios_system pin in a-Shell master does not. Use a separate build cache for each SDK and architecture. The recipe verifies upstream source digests and uses the pinned Neovim dependency superbuild.
+Requirements: Xcode, CMake, Ninja, host LuaJIT, Perl, curl, rsync, patch and shasum. Point `NVIM_IOS_FRAMEWORKS` at the matching slice directory of a worker-capable `ios_system.framework` that includes `Headers/ios_spawn.h`. The app must ship a runtime that exports the corresponding spawn ABI. The recipe, cache, framework and Xcode SDK paths must not contain whitespace: the dependency builds pass them through shell word lists. Use a separate build cache for each SDK and architecture. The recipe verifies upstream source digests and uses the pinned Neovim dependency superbuild.
 
 ```sh
 port=utils/a-shell/neovim-port
@@ -56,7 +57,7 @@ The app build pipeline in [a-Shell #1201](https://github.com/holzschu/a-shell/pu
 
 ## Verify
 
-Use an owned Simulator and an already built mini app. `isolation.sh` compiles the retained overlap fixture against the exact SDK headers, then exercises the production command entry point. Run it against a disposable copy of the app; the script temporarily places a standalone probe next to the app binary.
+Use an owned Simulator and an already built mini app. Install AXe, `jq` and `rg` before running the UI driver. `isolation.sh` compiles the retained overlap fixture against the exact SDK headers, then exercises the production command entry point. Run it against a disposable copy of the app; the script temporarily places a standalone probe next to the app binary.
 
 ```sh
 bash "$port/isolation.sh" OWNED_SIMULATOR_UUID BUILT_APP IOS_SYSTEM_SLICE RECEIPTS
@@ -73,7 +74,7 @@ NVIM_APP_BUNDLE=YOUR_MINI_BUNDLE_ID bash "$port/escape-acceptance.sh" \
   OWNED_SIMULATOR_UUID /path/to/Probe.xctestrun
 ```
 
-XCTest supplies orientation changes only. AXe sends terminal input and taps the actual accessory buttons. If HID input hid the accessory, the driver opens it with a-Shell's Option-Command-T shortcut before matching and tapping the button. A keyboard substitute cannot pass the toolbar check. The driver prints its receipt directory and runs `verify.sh` on the files saved by the live pane. The strict subprocess row is part of this check. See [device-acceptance.md](device-acceptance.md) for the physical matrix.
+XCTest supplies orientation changes only. AXe sends terminal input and taps the actual accessory buttons. If HID input hid the accessory, the driver opens it with a-Shell's Option-Command-T shortcut before matching and tapping the button. A keyboard substitute cannot pass the toolbar check. The driver prints its receipt directory and runs `verify.sh` on the files saved by the live pane. The subprocess row checks `system('echo ok')`, `:!ls`, a direct native `ls` job and reentry. Run `nvim --headless -u NONE -i NONE -l dash-stderr.lua` separately to diagnose Dash stderr duplication. The diagnostic expects the correct stderr and exit status, and is currently red; it does not gate the supported checks. See [device-acceptance.md](device-acceptance.md) for the physical matrix.
 
 ### Long Lua paths
 

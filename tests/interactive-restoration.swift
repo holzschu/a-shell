@@ -62,6 +62,38 @@ struct RestorationContract {
         publish("\(thread); echo unsafe")
         scene.save(to: file, runningCommand: "codex")
         precondition(InteractiveCommandRestoration.consume(from: file) == nil)
+#if NVIM_EMBEDDED
+        for command in ["nvim", "nvim sample.lua other.lua", "nvim ~/Documents/sample.lua"] {
+            scene.save(to: file, runningCommand: command)
+            precondition(InteractiveCommandRestoration.consume(from: file) == command,
+                         "Restart on must reopen Neovim with its original file arguments")
+            precondition(InteractiveCommandRestoration.consume(from: file) == nil)
+        }
+        scene.save(to: file, runningCommand: "nvim sample.lua")
+        setPreferences(restart: false, scrollback: true)
+        precondition(InteractiveCommandRestoration.consume(from: file) == nil)
+        scene.save(to: file, runningCommand: "nvim sample.lua")
+        precondition(!FileManager.default.fileExists(atPath: file.path))
+        setPreferences(restart: true, scrollback: false)
+        for command in ["nvim --headless", "nvim file | other", "nvim file\nother", "nvim -S $(other)", "nvim -S ~/Documents/session.vim", "nvim -S", "nvim file +quit", "nvim file>log"] {
+            scene.save(to: file, runningCommand: command)
+            precondition(InteractiveCommandRestoration.consume(from: file) == nil,
+                         "Non-interactive invocations and shell syntax must not be replayed")
+        }
+#else
+        scene.save(to: file, runningCommand: "nvim sample.lua")
+        precondition(!FileManager.default.fileExists(atPath: file.path), "Full app must not save Neovim checkpoints")
+#endif
+        let session = try! PropertyListEncoder().encode(["command": "nvim", "token": "nvim -S changed.vim"])
+        try! session.write(to: file)
+        precondition(InteractiveCommandRestoration.consume(from: file) == nil,
+                     "A checkpoint from an older build must not source a session on relaunch")
+#if !NVIM_EMBEDDED
+        let files = try! PropertyListEncoder().encode(["command": "nvim", "token": "nvim sample.lua"])
+        try! files.write(to: file)
+        precondition(InteractiveCommandRestoration.consume(from: file) == nil,
+                     "Full app must not consume Neovim checkpoints")
+#endif
         print("Interactive restoration contract passed")
     }
 

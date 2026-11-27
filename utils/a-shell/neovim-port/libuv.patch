@@ -50,7 +50,7 @@
    if (kill(pid, signum)) {
  #if defined(__MVS__)
      /* EPERM is returned if the process is a zombie. */
-@@ -1111,10 +1130,20 @@
+@@ -1111,10 +1130,22 @@
      return UV__ERR(errno);
    } else
      return 0;
@@ -64,6 +64,8 @@
 +  if (worker != NULL) {
 +    worker->process = NULL;
 +    handle->ios_worker = NULL;
++    // Attached workers do not survive handle close on iOS.
++    ios_killpid(worker->pid, SIGKILL);
 +    // Drain the admitted child before the private image can be unloaded.
 +    uv_ref((uv_handle_t *)&worker->completed);
 +  }

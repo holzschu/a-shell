@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "ios_system.h"
+#include "port-entry.h"
 
 static pthread_mutex_t command_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -37,7 +38,7 @@ int nvim_ios_main(int argc, char **argv) {
         fprintf(thread_stderr, "Cannot load Neovim: %s\n", dlerror());
         goto cleanup;
     }
-    int (*run)(int, char **, FILE **, const char *) = dlsym(library, "nvim_port_run");
+    nvim_port_run_fn run = dlsym(library, "nvim_port_run");
     if (!run) {
         fprintf(thread_stderr, "Cannot resolve Neovim entry: %s\n", dlerror());
         goto cleanup;

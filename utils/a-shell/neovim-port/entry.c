@@ -3,7 +3,9 @@
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
+#include "port-entry.h"
 
 extern int nvim_main(int argc, char **argv);
 extern int ios_isatty(int);
@@ -35,8 +37,18 @@ _Noreturn void nvim_port_exit(int status) {
 }
 
 __attribute__((visibility("default")))
-int nvim_port_run(int argc, char **argv, FILE **streams, char *runtime) {
+int nvim_port_run(int argc, char **argv, FILE **streams, const char *runtime) {
+    runtime_path = strdup(runtime);
+    if (!runtime_path) return 1;
     command_streams = streams;
-    runtime_path = runtime;
-    return setjmp(exit_target) ? exit_status : nvim_main(argc, argv);
+    int status;
+    if (setjmp(exit_target) == 0) {
+        status = nvim_main(argc, argv);
+    } else {
+        status = exit_status;
+    }
+    free(runtime_path);
+    runtime_path = NULL;
+    command_streams = NULL;
+    return status;
 }

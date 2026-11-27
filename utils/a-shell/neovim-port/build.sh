@@ -44,6 +44,11 @@ apply_patch() {
 native() {
   local tool ios_frameworks
   ios_frameworks=${NVIM_IOS_FRAMEWORKS:?Set NVIM_IOS_FRAMEWORKS to the worker-capable ios_system framework directory}
+  # The bundled Make/CMake compiler flag variables are shell word lists.
+  if [[ $here = *[[:space:]]* || $cache = *[[:space:]]* || $ios_frameworks = *[[:space:]]* || $sdk = *[[:space:]]* ]]; then
+    echo 'The recipe, cache, ios_system framework and SDK paths must not contain whitespace' >&2
+    return 1
+  fi
   [[ -f $ios_frameworks/ios_system.framework/Headers/ios_spawn.h ]] || { echo 'Missing ios_spawn.h' >&2; return 1; }
   for tool in cmake ninja luajit perl; do command -v "$tool" >/dev/null; done
   [[ $(df -k /System/Volumes/Data | tail -1 | awk '{print $4}') -ge 8388608 ]] || { echo 'At least 8 GiB free on the data volume is required' >&2; return 1; }
@@ -73,6 +78,7 @@ native() {
   nice -n 15 cmake --install "$cache/deps/build/src/treesitter-build"
   apply_patch "$cache/neovim-0.12.6" neovim.patch
   apply_patch "$cache/neovim-0.12.6" worker-commands.patch
+  apply_patch "$cache/neovim-0.12.6" attached-workers.patch
   apply_patch "$cache/neovim-0.12.6" terminal.patch
   apply_patch "$cache/neovim-0.12.6" loader-cache.patch
   nice -n 15 cmake -S "$cache/neovim-0.12.6" -B "$cache/build" -G Ninja -DCMAKE_TOOLCHAIN_FILE="$here/simulator.cmake" -DCMAKE_OSX_SYSROOT="$sdk_name" -DCMAKE_PREFIX_PATH="$cache/deps/usr" -DNLUA0_HOST_PRG="$cache/host/lib/libnlua0.so" -DLUA_GEN_PRG="$(command -v luajit)" -DLUA_PRG="$(command -v luajit)" -DENABLE_LIBINTL=OFF -DENABLE_LTO=OFF -DCMAKE_MACOSX_BUNDLE=OFF -DHAVE_BE64TOH=OFF -DHAVE_BE64TOH_FUNC=OFF -DCMAKE_C_FLAGS="-Dexit=nvim_port_exit -Dfork=nvim_port_fork -fvisibility=hidden -include $here/stdio.h" -DCMAKE_BUILD_TYPE=Release
