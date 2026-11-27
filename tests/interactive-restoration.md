@@ -11,14 +11,14 @@ swiftc -swift-version 6 a-Shell/InteractiveCommandRestoration.swift tests/intera
 /tmp/interactive-restoration
 ```
 
-This checks the notification-to-checkpoint handoff, one-shot consumption, and removal on normal exit. It does not test whether UIKit reconnects the same scene after process death.
+This checks the notification-to-checkpoint handoff, one-shot consumption, removal on normal exit, and the restart preference independently of the scrollback preference. It does not test whether UIKit reconnects the same scene after process death.
 
 ## Codex on a physical iPhone
 
-1. On an iPhone running an a-Shell build with native Codex, enable "Keep screen content between sessions". Launch `codex` from the terminal, signed in. Send a throwaway prompt asking for a unique reply and wait for the reply to be visible. Use `/status` to record the conversation ID. Do not inspect any authentication files.
+1. On an iPhone running an a-Shell build with native Codex, enable "Restart vim/dash/codex after closing a-Shell" and disable "Keep screen content between sessions". Launch `codex` from the terminal, signed in. Send a throwaway prompt asking for a unique reply and wait for the reply to be visible. Use `/status` to record the conversation ID. Do not inspect any authentication files.
 2. Open another app. Wait for a-Shell's background transition in the device log. Read the PID of the a-Shell process and kill that exact PID with `devicectl device process terminate --kill --pid`. Verify the original PID has disappeared.
 3. Launch a-Shell normally, without a payload URL, debugger or terminal input. Verify a new process is running and shows the reply from step 1 inside Codex, not just in shell scrollback. Use `/status` to check the same conversation ID and submit a follow-up prompt to verify the restored TUI accepts input.
 4. Exit Codex normally and confirm the shell prompt. Kill a-Shell again without sending it to the background first. Relaunch normally; it must return to the shell without restarting Codex from the earlier background save.
-5. Repeat steps 1–3 with "Keep screen content between sessions" disabled. Relaunch must not start Codex. Restore the prior setting when the test finishes.
+5. Repeat steps 1–3 with "Restart vim/dash/codex after closing a-Shell" disabled and "Keep screen content between sessions" enabled. Relaunch must not start Codex, even if it restores the terminal text. Restore the prior settings when the test finishes.
 
 The first relaunch on the baseline must fail step 3: it shows a shell prompt, even if the saved terminal text contains the reply. Record baseline and candidate bundle versions, before/after PIDs, any device termination evidence, and the displayed conversation ID and reply. An unauthenticated Codex screen or a substitute conversation does not qualify a device run.

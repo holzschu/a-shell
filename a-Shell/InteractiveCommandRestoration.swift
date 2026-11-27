@@ -60,7 +60,8 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
 
     func save(to file: URL, runningCommand: String) {
         let arguments = runningCommand.split(whereSeparator: \.isWhitespace)
-        guard let command = arguments.first.map(String.init),
+        guard UserDefaults.standard.bool(forKey: "restart_vim"),
+              let command = arguments.first.map(String.init),
               let rule = Self.rules[command], rule.accepts(Array(arguments.dropFirst())),
               let checkpoint = lock.withLock({ checkpoint }), checkpoint["command"] == command else {
             Self.discard(at: file)
@@ -76,6 +77,10 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
     }
 
     static func consume(from file: URL) -> String? {
+        guard UserDefaults.standard.bool(forKey: "restart_vim") else {
+            discard(at: file)
+            return nil
+        }
         guard let data = try? Data(contentsOf: file), discard(at: file),
               let checkpoint = try? PropertyListDecoder().decode([String: String].self, from: data),
               let command = checkpoint["command"], let token = checkpoint["token"] else { return nil }

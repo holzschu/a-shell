@@ -5308,9 +5308,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             let normalLaunch = connectionOptions.urlContexts.isEmpty && connectionOptions.userActivities.isEmpty
                 && connectionOptions.shortcutItem == nil && connectionOptions.notificationResponse == nil
             let checkpoint = InteractiveCommandRestoration.checkpointURL(for: session.persistentIdentifier)
-            if let checkpoint, !keepContent || !normalLaunch {
-                InteractiveCommandRestoration.discard(at: checkpoint)
-            }
             if keepContent {
                 // commandQueue so that it is executed after the .profile loading,
                 // DispatchQueue.main because SwiftTerm can crash if it receives data outside the main queue.
@@ -5327,13 +5324,24 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                         self.restoreHistoryAndDirectories(scene: scene)
                         self.restoreEnvironment(scene: scene)
-                        if normalLaunch, self.currentCommand.isEmpty, let checkpoint,
-                           let command = InteractiveCommandRestoration.consume(from: checkpoint) {
-                            self.currentCommand = command
-                            self.executeCommand(command: command)
-                        }
                     }
                 }
+            }
+            // Resume after profile loading and optional scrollback restoration.
+            if let checkpoint, normalLaunch {
+                commandQueue.async {
+                    DispatchQueue.main.async {
+                        guard self.currentCommand.isEmpty else {
+                            InteractiveCommandRestoration.discard(at: checkpoint)
+                            return
+                        }
+                        guard let command = InteractiveCommandRestoration.consume(from: checkpoint) else { return }
+                        self.currentCommand = command
+                        self.executeCommand(command: command)
+                    }
+                }
+            } else if let checkpoint {
+                InteractiveCommandRestoration.discard(at: checkpoint)
             }
             // Now load wasm.html:
             commandQueue.async { // Make sure this is loaded after the .profile + .bashrc + restoreEnvironment
@@ -6039,11 +6047,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         }
         scene.session.stateRestorationActivity?.userInfo!["currentCommand"] = currentCommand
         if let checkpoint = InteractiveCommandRestoration.checkpointURL(for: scene.session.persistentIdentifier) {
-            if UserDefaults.standard.bool(forKey: "keep_content") {
-                interactiveCommandRestoration.save(to: checkpoint, runningCommand: currentCommand)
-            } else {
-                InteractiveCommandRestoration.discard(at: checkpoint)
-            }
+            interactiveCommandRestoration.save(to: checkpoint, runningCommand: currentCommand)
         }
         // save the environment variables:
         var env = [String]()
