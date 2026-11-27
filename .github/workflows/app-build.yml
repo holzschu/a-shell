@@ -63,7 +63,9 @@ jobs:
         env:
           SCHEME: ${{ matrix.scheme }}
         run: |
-          app=".build/app/$SCHEME-simulator/Build/Products/Debug-iphonesimulator/$SCHEME.app"
+          product=".build/app/$SCHEME-simulator/Build/Products/Debug-iphonesimulator/$SCHEME.app"
+          app="$RUNNER_TEMP/$SCHEME.app"
+          ditto --arch arm64 "$product" "$app"
           # Startup needs the shared container even on Simulator.
           group=$(plutil -extract AppGroupIdentifier raw -o - "$app/Info.plist")
           entitlements="$RUNNER_TEMP/simulator-app-entitlements.plist"

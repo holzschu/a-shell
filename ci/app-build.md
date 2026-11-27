@@ -1,6 +1,6 @@
 # App build matrix
 
-`.github/workflows/app-build.yml` builds the existing `a-Shell-noPython`, `a-Shell-mini` and `a-Shell` targets for generic iOS and iOS Simulator. All device builds use arm64. The noPython and mini Simulator builds use arm64 and x86_64 in the same app. The full Simulator build uses arm64 only because the pinned Node framework has no x86_64 Simulator slice. These are unsigned compile, link and architecture checks, not signing, installation or runtime tests. Use a `ci/app-build-*` branch for a fork run without updating its default branch. CI defaults to `macos-26-intel`; a manual dispatch can set `runner` to `macos-26` to use an Arm64 host instead. This does not change the app architectures.
+`.github/workflows/app-build.yml` builds the existing `a-Shell-noPython`, `a-Shell-mini` and `a-Shell` targets for generic iOS and iOS Simulator. All device builds use arm64. The noPython and mini Simulator builds use arm64 and x86_64 in the same app. The full Simulator build uses arm64 only because the pinned Node framework has no x86_64 Simulator slice. The build step checks compile, link and architecture without signing, installing or running the app. Use a `ci/app-build-*` branch for a fork run without updating its default branch. CI defaults to `macos-26-intel`; a manual dispatch can set `runner` to `macos-26` to use an Arm64 host instead. This does not change the app architectures.
 
 Use Xcode 26.6 and uv from a clean, dedicated checkout:
 
@@ -14,6 +14,16 @@ uv run ci/build-app.py build a-Shell simulator
 ```
 
 Use `prepare` instead of `build` to verify and install the inputs without compiling. Add `--dry-run` to list the selected installation paths without downloading or replacing files. Repeated runs verify cached archives and replace only outputs the script previously installed. If preparation stops partway through, fix the error and rerun the same command. Run only one build or prepare at a time in each checkout. Do not use a checkout populated by `downloadFrameworks.sh` or another framework installation. The script leaves `project.pbxproj` unchanged. The build produces apps under `.build/app/`, and the job summary lists each unavailable framework path, including inputs of dependent targets. The workflow also attaches the same summary as a text artifact.
+
+## Download a Simulator app
+
+On an Apple silicon Mac, download a `*-simulator.zip` from the pull request's App build run and unzip it. Boot an iOS simulator, then install the extracted `.app`:
+
+```sh
+xcrun simctl install booted "/path/to/a-Shell-mini.app"
+```
+
+Use the simulator's UDID instead of `booted` if multiple simulators are running. The downloads are available for 3 days. CI signs and packages an arm64-only copy; the universal noPython and mini build checks still run as before. The ZIPs are for Simulator, not physical iOS devices.
 
 ## Update an input
 
