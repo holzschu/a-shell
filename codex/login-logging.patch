@@ -1,0 +1,579 @@
+--- a/cli/src/login.rs
++++ b/cli/src/login.rs
+@@ -25,19 +25,19 @@
+ use codex_protocol::auth::AuthMode;
+ use codex_protocol::config_types::ForcedLoginMethod;
+ use codex_utils_cli::CliConfigOverrides;
+ use std::fs::OpenOptions;
+ #[cfg(not(target_os = "ios"))]
+ use std::io::IsTerminal;
+ #[cfg(target_os = "ios")]
+ use crossterm::tty::IsTerminal;
+ use std::io::Read;
+ use std::path::Path;
+ use std::path::PathBuf;
+ use tracing_appender::non_blocking;
+-use tracing_appender::non_blocking::WorkerGuard;
+ use tracing_subscriber::EnvFilter;
+ use tracing_subscriber::Layer;
+ use tracing_subscriber::layer::SubscriberExt;
++#[cfg(not(target_os = "ios"))]
+ use tracing_subscriber::util::SubscriberInitExt;
+ 
+ const CHATGPT_LOGIN_DISABLED_MESSAGE: &str =
+@@ -48,19 +48,19 @@
+     "Access token login is disabled. Use API key login instead.";
+ const LOGIN_SUCCESS_MESSAGE: &str = "Successfully logged in";
+ 
+-/// Installs a small file-backed tracing layer for direct `codex login` flows.
++/// Runs a direct `codex login` flow with its small file-backed tracing layer.
+ ///
+ /// This deliberately duplicates a narrow slice of the TUI logging setup instead of reusing it
+ /// wholesale. The TUI stack includes session-oriented layers that are valuable for interactive
+ /// runs but unnecessary for a one-shot login command. Keeping the direct CLI path local lets this
+ /// command produce a durable `codex-login.log` artifact without coupling it to the TUI's broader
+ /// telemetry and feedback initialization.
+-fn init_login_file_logging(config: &Config) -> Option<WorkerGuard> {
++async fn with_login_file_logging<T>(config: &Config, login: impl Future<Output = T>) -> T {
+     let log_dir = match codex_core::config::log_dir(config) {
+         Ok(log_dir) => log_dir,
+         Err(err) => {
+             eprintln!("Warning: failed to resolve login log directory: {err}");
+-            return None;
++            return login.await;
+         }
+     };
+ 
+@@ -69,7 +69,7 @@
+             "Warning: failed to create login log directory {}: {err}",
+             log_dir.display()
+         );
+-        return None;
++        return login.await;
+     }
+ 
+     let mut log_file_opts = OpenOptions::new();
+@@ -89,11 +89,18 @@
+                 "Warning: failed to open login log file {}: {err}",
+                 log_path.display()
+             );
+-            return None;
++            return login.await;
+         }
+     };
+ 
+     let (non_blocking, guard) = non_blocking(log_file);
++    #[cfg(target_os = "ios")]
++    let non_blocking = move || {
++        // The callback and an already started blocking save can outlive the login future.
++        // Keep the writer running until the last dispatcher using it is dropped.
++        let _guard = &guard;
++        non_blocking.clone()
++    };
+     let env_filter = EnvFilter::try_from_default_env()
+         .unwrap_or_else(|_| EnvFilter::new("codex_cli=info,codex_core=info,codex_login=info"));
+     let file_layer = tracing_subscriber::fmt::layer()
+@@ -105,15 +112,27 @@
+     // Direct `codex login` otherwise relies on ephemeral stderr and browser output.
+     // Persist the same login targets to a file so support can inspect auth failures
+     // without reproducing them through TUI or app-server.
+-    if let Err(err) = tracing_subscriber::registry().with(file_layer).try_init() {
+-        eprintln!(
+-            "Warning: failed to initialize login log file {}: {err}",
+-            log_path.display()
+-        );
+-        return None;
+-    }
++    let subscriber = tracing_subscriber::registry().with(file_layer);
++    #[cfg(target_os = "ios")]
++    let login = {
++        use tracing::instrument::WithSubscriber;
++        login.with_subscriber(subscriber)
++    };
++
++    #[cfg(not(target_os = "ios"))]
++    let _guard = match subscriber.try_init() {
++        Ok(()) => Some(guard),
++        Err(err) => {
++            eprintln!(
++                "Warning: failed to initialize login log file {}: {err}",
++                log_path.display()
++            );
++            drop(guard);
++            None
++        }
++    };
+ 
+-    Some(guard)
++    login.await
+ }
+ 
+ fn print_login_server_start(actual_port: u16, auth_url: &str) {
+@@ -172,36 +191,38 @@
+ 
+ pub async fn run_login_with_chatgpt(cli_config_overrides: CliConfigOverrides) -> ! {
+     let config = load_config_or_exit(cli_config_overrides).await;
+-    let _login_log_guard = init_login_file_logging(&config);
+-    tracing::info!("starting browser login flow");
++    with_login_file_logging(&config, async {
++        tracing::info!("starting browser login flow");
+ 
+-    if !config
+-        .auth_config()
+-        .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
+-    {
+-        eprintln!("{CHATGPT_LOGIN_DISABLED_MESSAGE}");
+-        crate::embedded_exit(1);
+-    }
+-
+-    let effective_chatgpt_workspaces = config.auth_config().effective_chatgpt_workspaces();
+-    match login_with_chatgpt(
+-        config.codex_home.to_path_buf(),
+-        effective_chatgpt_workspaces,
+-        config.cli_auth_credentials_store_mode,
+-        config.auth_keyring_backend_kind(),
+-        config.auth_route_config(),
+-    )
+-    .await
+-    {
+-        Ok(_) => {
+-            eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-            crate::embedded_exit(0);
+-        }
+-        Err(e) => {
+-            eprintln!("Error logging in: {e}");
++        if !config
++            .auth_config()
++            .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
++        {
++            eprintln!("{CHATGPT_LOGIN_DISABLED_MESSAGE}");
+             crate::embedded_exit(1);
+         }
+-    }
++
++        let effective_chatgpt_workspaces = config.auth_config().effective_chatgpt_workspaces();
++        match login_with_chatgpt(
++            config.codex_home.to_path_buf(),
++            effective_chatgpt_workspaces,
++            config.cli_auth_credentials_store_mode,
++            config.auth_keyring_backend_kind(),
++            config.auth_route_config(),
++        )
++        .await
++        {
++            Ok(_) => {
++                eprintln!("{LOGIN_SUCCESS_MESSAGE}");
++                crate::embedded_exit(0);
++            }
++            Err(e) => {
++                eprintln!("Error logging in: {e}");
++                crate::embedded_exit(1);
++            }
++        }
++    })
++    .await
+ }
+ 
+ pub async fn run_login_with_api_key(
+@@ -209,32 +230,34 @@
+     api_key: String,
+ ) -> ! {
+     let config = load_config_or_exit(cli_config_overrides).await;
+-    let _login_log_guard = init_login_file_logging(&config);
+-    tracing::info!("starting api key login flow");
++    with_login_file_logging(&config, async {
++        tracing::info!("starting api key login flow");
+ 
+-    if !config
+-        .auth_config()
+-        .is_login_method_allowed(ForcedLoginMethod::Api)
+-    {
+-        eprintln!("{API_KEY_LOGIN_DISABLED_MESSAGE}");
+-        crate::embedded_exit(1);
+-    }
+-
+-    match login_with_api_key(
+-        &config.codex_home,
+-        &api_key,
+-        config.cli_auth_credentials_store_mode,
+-        config.auth_keyring_backend_kind(),
+-    ) {
+-        Ok(_) => {
+-            eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-            crate::embedded_exit(0);
+-        }
+-        Err(e) => {
+-            eprintln!("Error logging in: {e}");
++        if !config
++            .auth_config()
++            .is_login_method_allowed(ForcedLoginMethod::Api)
++        {
++            eprintln!("{API_KEY_LOGIN_DISABLED_MESSAGE}");
+             crate::embedded_exit(1);
+         }
+-    }
++
++        match login_with_api_key(
++            &config.codex_home,
++            &api_key,
++            config.cli_auth_credentials_store_mode,
++            config.auth_keyring_backend_kind(),
++        ) {
++            Ok(_) => {
++                eprintln!("{LOGIN_SUCCESS_MESSAGE}");
++                crate::embedded_exit(0);
++            }
++            Err(e) => {
++                eprintln!("Error logging in: {e}");
++                crate::embedded_exit(1);
++            }
++        }
++    })
++    .await
+ }
+ 
+ pub async fn run_login_with_access_token(
+@@ -242,39 +265,41 @@
+     access_token: String,
+ ) -> ! {
+     let config = load_config_or_exit(cli_config_overrides).await;
+-    let _login_log_guard = init_login_file_logging(&config);
+-    tracing::info!("starting access token login flow");
++    with_login_file_logging(&config, async {
++        tracing::info!("starting access token login flow");
+ 
+-    if !config
+-        .auth_config()
+-        .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
+-    {
+-        eprintln!("{ACCESS_TOKEN_LOGIN_DISABLED_MESSAGE}");
+-        crate::embedded_exit(1);
+-    }
+-
+-    let auth_route_config = config.auth_route_config();
+-    let effective_chatgpt_workspaces = config.auth_config().effective_chatgpt_workspaces();
+-    match login_with_access_token(
+-        &config.codex_home,
+-        &access_token,
+-        config.cli_auth_credentials_store_mode,
+-        effective_chatgpt_workspaces.as_deref(),
+-        Some(&config.chatgpt_base_url),
+-        config.auth_keyring_backend_kind(),
+-        &auth_route_config,
+-    )
+-    .await
+-    {
+-        Ok(_) => {
+-            eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-            crate::embedded_exit(0);
+-        }
+-        Err(e) => {
+-            eprintln!("Error logging in with access token: {e}");
++        if !config
++            .auth_config()
++            .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
++        {
++            eprintln!("{ACCESS_TOKEN_LOGIN_DISABLED_MESSAGE}");
+             crate::embedded_exit(1);
+         }
+-    }
++
++        let auth_route_config = config.auth_route_config();
++        let effective_chatgpt_workspaces = config.auth_config().effective_chatgpt_workspaces();
++        match login_with_access_token(
++            &config.codex_home,
++            &access_token,
++            config.cli_auth_credentials_store_mode,
++            effective_chatgpt_workspaces.as_deref(),
++            Some(&config.chatgpt_base_url),
++            config.auth_keyring_backend_kind(),
++            &auth_route_config,
++        )
++        .await
++        {
++            Ok(_) => {
++                eprintln!("{LOGIN_SUCCESS_MESSAGE}");
++                crate::embedded_exit(0);
++            }
++            Err(e) => {
++                eprintln!("Error logging in with access token: {e}");
++                crate::embedded_exit(1);
++            }
++        }
++    })
++    .await
+ }
+ 
+ pub fn read_api_key_from_stdin() -> String {
+@@ -325,45 +350,47 @@
+     client_id: Option<String>,
+ ) -> ! {
+     let config = load_config_or_exit(cli_config_overrides).await;
+-    let _login_log_guard = init_login_file_logging(&config);
+-    tracing::info!("starting device code login flow");
+-    if !config
+-        .auth_config()
+-        .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
+-    {
+-        eprintln!("{CHATGPT_LOGIN_DISABLED_MESSAGE}");
+-        crate::embedded_exit(1);
+-    }
+-    let auth_route_config = config.auth_route_config();
+-    clear_existing_auth_before_login(
+-        &config.codex_home,
+-        config.cli_auth_credentials_store_mode,
+-        config.auth_keyring_backend_kind(),
+-        &auth_route_config,
+-    )
+-    .await;
+-    let effective_chatgpt_workspaces = config.auth_config().effective_chatgpt_workspaces();
+-    let mut opts = ServerOptions::new(
+-        config.codex_home.to_path_buf(),
+-        client_id.unwrap_or(CLIENT_ID.to_string()),
+-        effective_chatgpt_workspaces,
+-        config.cli_auth_credentials_store_mode,
+-        config.auth_keyring_backend_kind(),
+-        auth_route_config,
+-    );
+-    if let Some(iss) = issuer_base_url {
+-        opts.issuer = iss;
+-    }
+-    match run_device_code_login(opts).await {
+-        Ok(()) => {
+-            eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-            crate::embedded_exit(0);
+-        }
+-        Err(e) => {
+-            eprintln!("Error logging in with device code: {e}");
++    with_login_file_logging(&config, async {
++        tracing::info!("starting device code login flow");
++        if !config
++            .auth_config()
++            .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
++        {
++            eprintln!("{CHATGPT_LOGIN_DISABLED_MESSAGE}");
+             crate::embedded_exit(1);
+         }
+-    }
++        let auth_route_config = config.auth_route_config();
++        clear_existing_auth_before_login(
++            &config.codex_home,
++            config.cli_auth_credentials_store_mode,
++            config.auth_keyring_backend_kind(),
++            &auth_route_config,
++        )
++        .await;
++        let effective_chatgpt_workspaces = config.auth_config().effective_chatgpt_workspaces();
++        let mut opts = ServerOptions::new(
++            config.codex_home.to_path_buf(),
++            client_id.unwrap_or(CLIENT_ID.to_string()),
++            effective_chatgpt_workspaces,
++            config.cli_auth_credentials_store_mode,
++            config.auth_keyring_backend_kind(),
++            auth_route_config,
++        );
++        if let Some(iss) = issuer_base_url {
++            opts.issuer = iss;
++        }
++        match run_device_code_login(opts).await {
++            Ok(()) => {
++                eprintln!("{LOGIN_SUCCESS_MESSAGE}");
++                crate::embedded_exit(0);
++            }
++            Err(e) => {
++                eprintln!("Error logging in with device code: {e}");
++                crate::embedded_exit(1);
++            }
++        }
++    })
++    .await
+ }
+ 
+ /// Prefers device-code login (with `open_browser = false`) when headless environment is detected, but keeps
+@@ -376,71 +403,73 @@
+     client_id: Option<String>,
+ ) -> ! {
+     let config = load_config_or_exit(cli_config_overrides).await;
+-    let _login_log_guard = init_login_file_logging(&config);
+-    tracing::info!("starting login flow with device code fallback");
+-    if !config
+-        .auth_config()
+-        .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
+-    {
+-        eprintln!("{CHATGPT_LOGIN_DISABLED_MESSAGE}");
+-        crate::embedded_exit(1);
+-    }
+-    let auth_route_config = config.auth_route_config();
+-    clear_existing_auth_before_login(
+-        &config.codex_home,
+-        config.cli_auth_credentials_store_mode,
+-        config.auth_keyring_backend_kind(),
+-        &auth_route_config,
+-    )
+-    .await;
+-
+-    let effective_chatgpt_workspaces = config.auth_config().effective_chatgpt_workspaces();
+-    let mut opts = ServerOptions::new(
+-        config.codex_home.to_path_buf(),
+-        client_id.unwrap_or(CLIENT_ID.to_string()),
+-        effective_chatgpt_workspaces,
+-        config.cli_auth_credentials_store_mode,
+-        config.auth_keyring_backend_kind(),
+-        auth_route_config,
+-    );
+-    if let Some(iss) = issuer_base_url {
+-        opts.issuer = iss;
+-    }
+-    opts.open_browser = false;
++    with_login_file_logging(&config, async {
++        tracing::info!("starting login flow with device code fallback");
++        if !config
++            .auth_config()
++            .is_login_method_allowed(ForcedLoginMethod::Chatgpt)
++        {
++            eprintln!("{CHATGPT_LOGIN_DISABLED_MESSAGE}");
++            crate::embedded_exit(1);
++        }
++        let auth_route_config = config.auth_route_config();
++        clear_existing_auth_before_login(
++            &config.codex_home,
++            config.cli_auth_credentials_store_mode,
++            config.auth_keyring_backend_kind(),
++            &auth_route_config,
++        )
++        .await;
++
++        let effective_chatgpt_workspaces = config.auth_config().effective_chatgpt_workspaces();
++        let mut opts = ServerOptions::new(
++            config.codex_home.to_path_buf(),
++            client_id.unwrap_or(CLIENT_ID.to_string()),
++            effective_chatgpt_workspaces,
++            config.cli_auth_credentials_store_mode,
++            config.auth_keyring_backend_kind(),
++            auth_route_config,
++        );
++        if let Some(iss) = issuer_base_url {
++            opts.issuer = iss;
++        }
++        opts.open_browser = false;
+ 
+-    match run_device_code_login(opts.clone()).await {
+-        Ok(()) => {
+-            eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-            crate::embedded_exit(0);
+-        }
+-        Err(e) => {
+-            if e.kind() == std::io::ErrorKind::NotFound {
+-                eprintln!("Device code login is not enabled; falling back to browser login.");
+-                match run_login_server(opts) {
+-                    Ok(server) => {
+-                        print_login_server_start(server.actual_port, &server.auth_url);
+-                        match server.block_until_done().await {
+-                            Ok(()) => {
+-                                eprintln!("{LOGIN_SUCCESS_MESSAGE}");
+-                                crate::embedded_exit(0);
+-                            }
+-                            Err(e) => {
+-                                eprintln!("Error logging in: {e}");
+-                                crate::embedded_exit(1);
++        match run_device_code_login(opts.clone()).await {
++            Ok(()) => {
++                eprintln!("{LOGIN_SUCCESS_MESSAGE}");
++                crate::embedded_exit(0);
++            }
++            Err(e) => {
++                if e.kind() == std::io::ErrorKind::NotFound {
++                    eprintln!("Device code login is not enabled; falling back to browser login.");
++                    match run_login_server(opts) {
++                        Ok(server) => {
++                            print_login_server_start(server.actual_port, &server.auth_url);
++                            match server.block_until_done().await {
++                                Ok(()) => {
++                                    eprintln!("{LOGIN_SUCCESS_MESSAGE}");
++                                    crate::embedded_exit(0);
++                                }
++                                Err(e) => {
++                                    eprintln!("Error logging in: {e}");
++                                    crate::embedded_exit(1);
++                                }
+                             }
+                         }
++                        Err(e) => {
++                            eprintln!("Error logging in: {e}");
++                            crate::embedded_exit(1);
++                        }
+                     }
+-                    Err(e) => {
+-                        eprintln!("Error logging in: {e}");
+-                        crate::embedded_exit(1);
+-                    }
++                } else {
++                    eprintln!("Error logging in with device code: {e}");
++                    crate::embedded_exit(1);
+                 }
+-            } else {
+-                eprintln!("Error logging in with device code: {e}");
+-                crate::embedded_exit(1);
+             }
+         }
+-    }
++    })
++    .await
+ }
+ 
+ pub async fn run_login_status(cli_config_overrides: CliConfigOverrides) -> ! {
+--- a/login/src/server.rs
++++ b/login/src/server.rs
+@@ -226,7 +226,7 @@
+     let server_handle = {
+         let shutdown_notify = shutdown_notify.clone();
+         let server = server;
+-        tokio::spawn(async move {
++        let server_task = async move {
+             let mut callback_result = LoginCallbackResult::default();
+             let result = loop {
+                 tokio::select! {
+@@ -311,7 +311,13 @@
+             // running `server.recv()` in a loop exits cleanly.
+             server.unblock();
+             result
+-        })
++        };
++        #[cfg(target_os = "ios")]
++        let server_task = {
++            use tracing::instrument::WithSubscriber;
++            server_task.with_current_subscriber()
++        };
++        tokio::spawn(server_task)
+     };
+ 
+     Ok(LoginServer {
+@@ -839,7 +845,7 @@
+ ) -> io::Result<()> {
+     // Reuse existing synchronous logic but run it off the async runtime.
+     let codex_home = codex_home.to_path_buf();
+-    tokio::task::spawn_blocking(move || {
++    let persist = move || {
+         let mut tokens = TokenData {
+             id_token: parse_chatgpt_jwt_claims(&id_token).map_err(io::Error::other)?,
+             access_token,
+@@ -868,9 +874,16 @@
+             auth_credentials_store_mode,
+             keyring_backend_kind,
+         )
+-    })
+-    .await
+-    .map_err(|e| io::Error::other(format!("persist task failed: {e}")))?
++    };
++    #[cfg(target_os = "ios")]
++    let persist = {
++        use tracing::dispatcher;
++        let dispatch = dispatcher::get_default(Clone::clone);
++        move || dispatcher::with_default(&dispatch, persist)
++    };
++    tokio::task::spawn_blocking(persist)
++        .await
++        .map_err(|e| io::Error::other(format!("persist task failed: {e}")))?
+ }
+ 
+ /// Validates the ID token against an optional workspace restriction.

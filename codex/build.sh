@@ -43,7 +43,7 @@ prepare() {
   cp "$here/ios-relocation.rs" "$stage/codex-rs/rollout/src/ios_relocation.rs"
   cp "$here/tests/relocation.rs" "$stage/codex-rs/thread-store/src/local/ios_relocation_tests.rs"
   cp -R "$here/embedded" "$stage/codex-rs/ios-embedded"
-  for name in lock stderr; do
+  for name in lock stderr login-logging; do
     patch -s -f -V never -F 0 -p1 -d "$stage/codex-rs" <"$here/$name.patch"
   done
   mkdir -p "$source"
