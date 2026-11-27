@@ -1,0 +1,42 @@
+--- a/tui/src/app/startup.rs
++++ b/tui/src/app/startup.rs
+@@ -1043,6 +1043,8 @@
+         let mut reconnect = None;
+         let mut waiting_for_initial_session_configured = wait_for_initial_session_configured;
+         let mut waiting_for_initial_session_header = true;
++        #[cfg(target_os = "ios")]
++        let mut checkpointed_thread_id = None;
+ 
+         #[cfg(not(debug_assertions))]
+         let pre_loop_exit_reason = if let Some(latest_version) = upgrade_version {
+@@ -1069,6 +1071,30 @@
+             Ok(exit_reason)
+         } else {
+             loop {
++                #[cfg(target_os = "ios")]
++                {
++                    // Only local, persistent primary threads can be resumed by the host.
++                    let thread_id = if matches!(app.app_server_target, AppServerTarget::Embedded)
++                        && !app.config.ephemeral
++                    {
++                        app.primary_thread_id
++                    } else {
++                        None
++                    };
++                    if thread_id != checkpointed_thread_id {
++                        unsafe extern "C" {
++                            fn codex_ios_checkpoint_thread(thread_id: *const std::ffi::c_char);
++                        }
++                        let token =
++                            thread_id.and_then(|id| std::ffi::CString::new(id.to_string()).ok());
++                        unsafe {
++                            codex_ios_checkpoint_thread(
++                                token.as_ref().map_or(std::ptr::null(), |id| id.as_ptr()),
++                            );
++                        }
++                        checkpointed_thread_id = thread_id;
++                    }
++                }
+                 // Reconnect can dismiss an overlay from the server-event path.
+                 if app.overlay.is_none() {
+                     if !tui.is_owned_screen() && tui.is_alt_screen_active() {

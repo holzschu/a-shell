@@ -213,6 +213,19 @@ static struct termios terminal_mode;
 static int terminal_has_mode;
 static int terminal_input = -1;
 
+// The ios_system context is an opaque key, never dereferenced here. Posting
+// synchronously lets the background transition see the last published thread.
+void codex_ios_checkpoint_thread(const char *thread_id) {
+    if (!terminal_session) return;
+    @autoreleasepool {
+        NSMutableDictionary *info = [NSMutableDictionary dictionaryWithDictionary:
+            @{@"context": @((uintptr_t)terminal_session), @"command": @"codex"}];
+        if (thread_id) info[@"token"] = [NSString stringWithUTF8String:thread_id];
+        [NSNotificationCenter.defaultCenter postNotificationName:@"AsheKube.app.a-Shell.InteractiveCommandCheckpoint"
+                                                           object:nil userInfo:info];
+    }
+}
+
 // Borrowed until the Rust runtime and its event reader have stopped.
 int codex_ios_terminal_input(void) {
     return terminal_streams[0] ? terminal_input : -1;
@@ -295,6 +308,7 @@ static void restore_command(void *context) {
             close(state->saved[fd]);
         }
     }
+    codex_ios_checkpoint_thread(NULL);
     memset(terminal_streams, 0, sizeof(terminal_streams));
     terminal_session = NULL;
     terminal_has_mode = 0;

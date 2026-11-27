@@ -957,6 +957,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
     var resetDirectoryAfterCommandTerminates = ""
     private var intentSessionsSeen = (generation: 0, active: false) // only used on commandQueue
     var currentCommand = ""
+    private let interactiveCommandRestoration = InteractiveCommandRestoration()
     var interactiveCommandRunning = true
     //
     var windowPrintedContent = ""
@@ -4321,7 +4322,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             self.stdout_active = true
             // Make sure we're on the right session:
             ios_switchSession(self.persistentIdentifier?.toCString())
-            ios_setContext(UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString()));
+            let terminalContext = UnsafeMutableRawPointer(mutating: self.persistentIdentifier?.toCString())
+            ios_setContext(terminalContext)
+            self.interactiveCommandRestoration.bind(to: terminalContext)
             // Intents running in the app (Execute Long Command) move the process directory, and ios_switchSession
             // restores this session's directory only when this thread switches sessions:
             let intentsBefore = intentSessionsState()
@@ -4548,6 +4551,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                 }
             }
             self.currentCommand = ""
+            if let activity = self.windowScene?.session.stateRestorationActivity {
+                InteractiveCommandRestoration.discard(from: activity)
+            }
             self.pid = 0
             self.printPrompt() // Needs to be in main queue
         }
@@ -5293,6 +5299,7 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // restore window content, using commandQueue so it happens after the .profile has been loaded:
             // also move the environment variables code here (separate function?)
             if UserDefaults.standard.bool(forKey: "keep_content") {
+                let normalLaunch = connectionOptions.urlContexts.isEmpty && connectionOptions.userActivities.isEmpty
                 // commandQueue so that it is executed after the .profile loading,
                 // DispatchQueue.main because SwiftTerm can crash if it receives data outside the main queue.
                 // Note: if the .profile prints something, we can see that something printed twice (once by the
@@ -5308,6 +5315,12 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                         }
                         self.restoreHistoryAndDirectories(scene: scene)
                         self.restoreEnvironment(scene: scene)
+                        if normalLaunch, self.currentCommand.isEmpty,
+                           let activity = scene.session.stateRestorationActivity,
+                           let command = InteractiveCommandRestoration.consume(from: activity) {
+                            self.currentCommand = command
+                            self.executeCommand(command: command)
+                        }
                     }
                 }
             }
@@ -5485,9 +5498,11 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             if (currentCommand == "") {
                 commandQueue.async {
                     DispatchQueue.main.async {
-                        // printPrompt needs to be in the same queue as restoreHistoryAndDirectories
-                        // otherwise the prompt is printed with the wrong directory.
-                        self.printPrompt()
+                        // Restoration may have queued a command after the profile loaded.
+                        // Print only after restoring the directory and only if still idle.
+                        if self.currentCommand.isEmpty {
+                            self.printPrompt()
+                        }
                     }
                 }
             }
@@ -6012,6 +6027,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             scene.session.stateRestorationActivity?.userInfo!["fontLigature"] = terminalFontLigature!
         }
         scene.session.stateRestorationActivity?.userInfo!["currentCommand"] = currentCommand
+        if let activity = scene.session.stateRestorationActivity {
+            interactiveCommandRestoration.save(in: activity, runningCommand: currentCommand)
+        }
         // save the environment variables:
         var env = [String]()
         var currentPath: String = ""
