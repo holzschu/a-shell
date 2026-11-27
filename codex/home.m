@@ -102,3 +102,28 @@ int codex_ios_prepare_home(const char *const env[]) {
         return result;
     }
 }
+
+// The host calls this during environment setup, before Herdr starts its threads.
+int codex_ios_export_default_home(void) {
+    const char *override = getenv("CODEX_HOME");
+    if (override && *override) return 0;
+    // Resolve migration paths in the host, independently of pane environments.
+    NSString *groupID = [NSBundle.mainBundle objectForInfoDictionaryKey:@"AppGroupIdentifier"];
+    if (!groupID.length) return ENOENT;
+    NSString *group = [NSFileManager.defaultManager containerURLForSecurityApplicationGroupIdentifier:groupID].path;
+    if (!group.length) return ENOENT;
+    NSString *shared = [group stringByAppendingPathComponent:@"Library/codex"];
+    struct stat info;
+    if (stat(shared.fileSystemRepresentation, &info)) {
+        if (errno != ENOENT) return errno;
+        NSString *groupEntry = [@"GROUP=" stringByAppendingString:group];
+        NSString *homeEntry = [@"HOME=" stringByAppendingString:NSHomeDirectory()];
+        const char *env[] = {groupEntry.UTF8String, homeEntry.UTF8String, NULL};
+        // Prepare the missing home before publishing a default that bypasses migration.
+        int error = codex_ios_prepare_home(env);
+        if (error) return error;
+    } else if (!S_ISDIR(info.st_mode)) {
+        return ENOTDIR;
+    }
+    return setenv("CODEX_HOME", shared.fileSystemRepresentation, 1) == 0 ? 0 : errno;
+}
