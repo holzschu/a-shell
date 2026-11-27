@@ -749,19 +749,19 @@
       }
     },
     "a-shell-native-node": {
-      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12528580705.zip",
-      "sha256": "6de7e78b200ef73e13e33bfcf19f2e0c4eab7b6dd67f2147bbccbeeebd1a58f7",
-      "run": "https://github.com/demrom/a-shell/actions/runs/39996782368/attempts/1",
-      "revision": "0b0c20bb8d645aaee11c76553990d962482949bc",
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15162493605.zip",
+      "sha256": "2767ae6daa8e78e71b07258e3603574bbcb277fef622b9b78d43f02b091dc350",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45903338008/attempts/1",
+      "revision": "2959536a14f3701782673ca8cfba42592bec8b43",
       "frameworks": {
         "node": "node.xcframework.zip"
       }
     },
     "a-shell-native-helix": {
-      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12521003645.zip",
-      "sha256": "6e8e5ac714e7af6a4130539e8e39d0fd84690b0468e6f50f922aef1e8483a0fa",
-      "run": "https://github.com/demrom/a-shell/actions/runs/39996782368/attempts/1",
-      "revision": "0b0c20bb8d645aaee11c76553990d962482949bc",
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15157806608.zip",
+      "sha256": "78e691f9c4009e0600ec5bc9ade3591bf84ae81c26f9b6f2b5b53c4fcb6ac56e",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45903338008/attempts/1",
+      "revision": "2959536a14f3701782673ca8cfba42592bec8b43",
       "frameworks": {
         "helix": "helix.xcframework.zip"
       }
@@ -794,10 +794,10 @@
       }
     },
     "a-shell-native-Ruff": {
-      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/12521655176.zip",
-      "sha256": "0f98f3106bfef21d7a01ab421d823af4b1d4d6ca9d546adc087bd4ab3e595077",
-      "run": "https://github.com/demrom/a-shell/actions/runs/39996782368/attempts/1",
-      "revision": "0b0c20bb8d645aaee11c76553990d962482949bc",
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15157815667.zip",
+      "sha256": "5750f3ca618e0401fac459246a8126e048807a1e0dc482499b96e087f465ec90",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45903338008/attempts/1",
+      "revision": "2959536a14f3701782673ca8cfba42592bec8b43",
       "frameworks": {
         "Ruff": "Ruff.xcframework.zip"
       }
