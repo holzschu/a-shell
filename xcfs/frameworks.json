@@ -851,10 +851,10 @@
       }
     },
     "a-shell-native-Herdr": {
-      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15117313153.zip",
-      "sha256": "e9fb50654c9b4c939400d511f0523e53e94318f363624f2b8ad8bd5499f67b18",
-      "run": "https://github.com/demrom/a-shell/actions/runs/45756196319/attempts/1",
-      "revision": "ec0cb887446b82ab0153b49a20970bcd04281290",
+      "url": "https://nightly.link/demrom/a-shell/actions/artifacts/15165135306.zip",
+      "sha256": "3581c09b3ce99488179508c7fe70df64e8f0a07de5aabd6a32223a243c22cae5",
+      "run": "https://github.com/demrom/a-shell/actions/runs/45917490305/attempts/1",
+      "revision": "b2b87fdcfe0bfa6e85ac3874e1622629854c8b0c",
       "frameworks": {
         "Herdr": "Herdr.xcframework.zip"
       }
