@@ -7,6 +7,7 @@
 - (void)pollUsage:(void (^)(int, int, NSData *))reply;
 - (void)resize:(unsigned)cols rows:(unsigned)rows reply:(void (^)(int))reply;
 - (void)closeInput:(void (^)(int))reply;
+- (void)controlSFTPEscape:(BOOL)interrupt reply:(void (^)(BOOL))reply;
 - (void)interrupt:(void (^)(int))reply;
 - (void)releasePane;
 // The worker exits instead of replying; synchronous callers observe XPC loss.

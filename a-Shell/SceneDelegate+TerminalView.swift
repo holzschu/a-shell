@@ -676,6 +676,43 @@ extension SceneDelegate {
         }
     }
 
+    private typealias SFTPEscapeReply = @convention(block) (Bool) -> Void
+    private typealias SFTPEscapeControl = @convention(c) (UnsafeRawPointer?, SFTPEscapeReply?) -> Bool
+
+    private func sftpEscapeControl() -> SFTPEscapeControl? {
+        let defaultSymbolScope = UnsafeMutableRawPointer(bitPattern: -2) // RTLD_DEFAULT
+        guard let symbol = dlsym(defaultSymbolScope, "ios_forward_sftp_escape_control") else { return nil }
+        return unsafeBitCast(symbol, to: SFTPEscapeControl.self)
+    }
+
+    private func interruptNativeCommand() {
+        ios_switchSession(self.shellContext?.bytes)
+        ios_setContext(self.shellContext?.bytes)
+        ios_kill()
+    }
+
+    private func interruptSFTPEscape() -> Bool {
+        guard let session = shellContext?.bytes, let forward = sftpEscapeControl(),
+              let input = stdin_file_input else { return false }
+        let command = currentCommand
+        var completed = false
+        let complete: @MainActor (Bool) -> Void = { [weak self] handled in
+            guard !completed else { return }
+            completed = true
+            // Do not apply a declined or timed-out interrupt to a replacement command.
+            guard !handled, let self, self.stdin_file_input === input,
+                  self.currentCommand == command else { return }
+            self.interruptNativeCommand()
+        }
+        let routed = forward(session) { handled in
+            DispatchQueue.main.async { complete(handled) }
+        }
+        if routed {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { complete(false) }
+        }
+        return routed
+    }
+
     func send(source: SwiftTerm.TerminalView, inputString: String) {
         if inputString.contains("\r") || inputString.contains("\n") { editorToolbar.closeSymbols() }
         var string = inputString
@@ -706,6 +743,19 @@ extension SceneDelegate {
                     commandAfterCursor = ""
                     return
                 } else {
+                    if sftpEscapeControl()?(shellContext?.bytes, nil) == true {
+                        // SFTP uses cooked input. Queue the unfinished line and EOF
+                        // together so neither the app nor the worker can reorder them.
+                        let input = Data((commandBeforeCursor + commandAfterCursor + string).utf8)
+                        do {
+                            try stdin_file_input?.write(contentsOf: input)
+                            commandBeforeCursor = ""
+                            commandAfterCursor = ""
+                            return
+                        } catch {
+                            // Fall back to ending terminal input if the pipe is gone.
+                        }
+                    }
                     do {
                         try stdin_file_input?.close()
                     }
@@ -749,11 +799,8 @@ extension SceneDelegate {
                 if (currentCommand != "") && (!javascriptRunning) {
                     // Calling ios_kill while executing webAssembly or JavaScript is a bad idea.
                     // Do we have a way to interrupt JS execution in WkWebView?
-                    // Make sure we're on the right session:
-                    ios_switchSession(self.shellContext?.bytes)
-                    ios_setContext(self.shellContext?.bytes)
-                    // Then send interrupt to the running command:
-                    ios_kill() // TODO: add printPrompt() here if no command running
+                    if interruptSFTPEscape() { return }
+                    interruptNativeCommand()
                 }
                 if (currentCommand == "") {
                     // disable auto-complete menu if running
