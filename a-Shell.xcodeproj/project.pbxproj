@@ -1080,6 +1080,7 @@
 		C27C502276A1F0301FBC2CBA /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		C3EEB3DED5B57200DA36F34E /* ShellWorkers/NativePane.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB6E958A8AF3B33B29AA4A8 /* ShellWorkers/NativePane.m */; };
 		C608987E0D35D7D8C92CF091 /* ShellWorkers/RemotePane.m in Sources */ = {isa = PBXBuildFile; fileRef = 11189940A2AF26A6542BDEAF /* ShellWorkers/RemotePane.m */; };
+		C608987E0D35D7D8C92CF092 /* codex/home.m in Sources */ = {isa = PBXBuildFile; fileRef = 11189940A2AF26A6542BDEB0 /* codex/home.m */; };
 		CDECC5E5A6CB9CC531134296 /* ShellWorkerE.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 366758A2DEC0386D139D2234 /* ShellWorkerE.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D2F30C91685F9DC284616312 /* ShellWorkerA.appex in Embed Shell Workers */ = {isa = PBXBuildFile; fileRef = 3BA328FE78F02ED540EFB7DA /* ShellWorkerA.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D8F1C3A27B5E4E0C9A61B2F4 /* ExecuteLongCommandIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */; };
@@ -2115,6 +2116,7 @@
 		0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ShellWorkers/Worker.xcconfig; sourceTree = SOURCE_ROOT; };
 		0D42108A37D6DADFD0F492BE /* ExecuteLongCommandIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExecuteLongCommandIntent.swift; sourceTree = "<group>"; };
 		11189940A2AF26A6542BDEAF /* ShellWorkers/RemotePane.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShellWorkers/RemotePane.m; sourceTree = SOURCE_ROOT; };
+		11189940A2AF26A6542BDEB0 /* codex/home.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = codex/home.m; sourceTree = SOURCE_ROOT; };
 		196EF73B3E7DE25B1CE754F5 /* ProgressCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCommand.swift; sourceTree = "<group>"; };
 		1A10CFCE432C459F3DD1051D /* ShellWorkerI.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerI.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D81B2E2F18AE7821D05A7AD /* ShellWorkerC.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; path = ShellWorkerC.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -4219,6 +4221,7 @@
 				1A10CFCE432C459F3DD1051D /* ShellWorkerI.appex */,
 				93314A863CABFBA3A5626312 /* ShellWorkerJ.appex */,
 				11189940A2AF26A6542BDEAF /* ShellWorkers/RemotePane.m */,
+				11189940A2AF26A6542BDEB0 /* codex/home.m */,
 				601A00000000000000000002 /* ShellWorkers/HostPane.m */,
 				D847238C57D48CADF264887A /* ShellWorkers/Host.swift */,
 				0893D186728BD261366E4BD1 /* ShellWorkers/Worker.xcconfig */,
@@ -5189,6 +5192,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C608987E0D35D7D8C92CF091 /* ShellWorkers/RemotePane.m in Sources */,
+				C608987E0D35D7D8C92CF092 /* codex/home.m in Sources */,
 				601A00000000000000000001 /* ShellWorkers/HostPane.m in Sources */,
 				7A025EB47CCEBDAA7E49CB3E /* ShellWorkers/Host.swift in Sources */,
 				229D2477257931E4004A78AC /* ExtraCommands.swift in Sources */,
