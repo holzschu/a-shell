@@ -14,31 +14,27 @@ struct RestorationContract {
         let otherFile = directory.appendingPathComponent("other-scene.plist")
 
         let defaults = UserDefaults.standard
-        let originalRestart = defaults.object(forKey: "restart_vim")
-        let originalKeepContent = defaults.object(forKey: "keep_content")
-        defer {
-            defaults.set(originalRestart, forKey: "restart_vim")
-            defaults.set(originalKeepContent, forKey: "keep_content")
+        func setPreferences(restart: Bool, scrollback: Bool) {
+            defaults.setVolatileDomain(["restart_vim": restart, "keep_content": scrollback],
+                                       forName: UserDefaults.argumentDomain)
         }
 
         publish(thread)
-        defaults.set(true, forKey: "restart_vim")
-        defaults.set(false, forKey: "keep_content")
+        setPreferences(restart: true, scrollback: false)
         scene.save(to: file, runningCommand: "codex")
         precondition(InteractiveCommandRestoration.consume(from: file) == "codex resume \(thread)",
                      "Restart on must resume Codex even when scrollback is off")
 
         scene.save(to: file, runningCommand: "codex")
         precondition(FileManager.default.fileExists(atPath: file.path))
-        defaults.set(true, forKey: "keep_content")
-        defaults.set(false, forKey: "restart_vim")
+        setPreferences(restart: false, scrollback: true)
         precondition(InteractiveCommandRestoration.consume(from: file) == nil,
                      "Restart off must not resume an existing Codex checkpoint, even when scrollback is on")
         precondition(!FileManager.default.fileExists(atPath: file.path))
         scene.save(to: file, runningCommand: "codex")
         precondition(!FileManager.default.fileExists(atPath: file.path),
                      "Restart off must not save a new checkpoint")
-        defaults.set(true, forKey: "restart_vim")
+        setPreferences(restart: true, scrollback: true)
 
         otherScene.save(to: otherFile, runningCommand: "codex")
         precondition(InteractiveCommandRestoration.consume(from: otherFile) == nil)

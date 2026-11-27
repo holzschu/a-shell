@@ -5336,6 +5336,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             return
                         }
                         guard let command = InteractiveCommandRestoration.consume(from: checkpoint) else { return }
+                        if !keepContent {
+                            self.restoreHistoryAndDirectories(scene: scene)
+                            self.restoreEnvironment(scene: scene)
+                        }
                         self.currentCommand = command
                         self.executeCommand(command: command)
                     }
