@@ -78,8 +78,13 @@ first=$(shasum -a 256 "$fixture/First.xcframework.zip" | cut -d ' ' -f 1)
 cp "$fixture/First.xcframework.zip" "$cache/$first.zip"
 make_framework First universal
 make_framework Second universal
-mkdir -p "$fixture/data/iphonesimulator/lib" "$fixture/data/iphoneos/lib"
+mkdir -p "$fixture/data/iphonesimulator/lib/bin" "$fixture/data/iphonesimulator/bin" "$fixture/data/iphoneos/lib"
 printf 'simulator library\n' > "$fixture/data/iphonesimulator/lib/receipt.txt"
+for file in lib/.lock lib/sample.a lib/sample.dylib lib/sample.so lib/sample.exe lib/sample.dll lib/cbc bin/maturin bin/python3.13; do
+  printf 'packaged file\n' > "$fixture/data/iphonesimulator/$file"
+done
+touch "$fixture/data/iphonesimulator/bin/python3" \
+  "$fixture/data/iphonesimulator/lib/keep.pyc" "$fixture/data/iphonesimulator/lib/bin/python3.13"
 printf 'device library\n' > "$fixture/data/iphoneos/lib/receipt.txt"
 tar -czf "$fixture/python.tar.gz" -C "$fixture/data" iphonesimulator iphoneos
 (cd "$fixture" && zip -q "$fixture/fork.zip" First.xcframework.zip Second.xcframework.zip python.tar.gz)
@@ -93,9 +98,11 @@ cat > "$fixture/manifest.json" <<MANIFEST
     "frameworks": {"First": "First.xcframework.zip", "Second": "Second.xcframework.zip"}
   }},
   "pending": {},
-  "resources": {"a-Shell-mini": {"Resources/Library/lib": [
-    {"artifact": "fork", "member": "python.tar.gz", "source": "{sdk}/lib"}
-  ]}}
+  "resources": {"a-Shell-mini": {
+    "Resources/Library": [{"artifact": "fork", "member": "python.tar.gz", "source": "{sdk}"}],
+    "Resources_mini/Library/lib/python3.13": [{"artifact": "fork", "member": "python.tar.gz", "source": "{sdk}/lib"}],
+    "Resources/node-fetch": [{"artifact": "fork", "member": "python.tar.gz", "source": "{sdk}/lib"}]
+  }}
 }
 MANIFEST
 
@@ -138,6 +145,18 @@ file "$fixture/Vendor/First.xcframework/ios-sim/libFixture.a" > "$fixture/file.t
 grep -Fq '[arm64:' "$fixture/file.txt"
 grep -Fq '[x86_64:' "$fixture/file.txt"
 grep -Fqx 'simulator library' "$fixture/Resources/Library/lib/receipt.txt"
+for file in lib/.lock lib/sample.a lib/sample.dylib lib/sample.so lib/sample.exe lib/sample.dll lib/cbc bin/maturin; do
+  test ! -e "$fixture/Resources/Library/$file"
+done
+for file in python3 python3.13; do
+  test -f "$fixture/Resources/Library/bin/$file"
+  test ! -s "$fixture/Resources/Library/bin/$file"
+done
+test -f "$fixture/Resources/Library/lib/keep.pyc"
+test -f "$fixture/Resources/Library/lib/bin/python3.13"
+test ! -e "$fixture/Resources_mini/Library/lib/python3.13/.lock"
+test -f "$fixture/Resources_mini/Library/lib/python3.13/keep.pyc"
+test -f "$fixture/Resources/node-fetch/.lock"
 prepare
 
 test -d "$fixture/Vendor/Second.xcframework"

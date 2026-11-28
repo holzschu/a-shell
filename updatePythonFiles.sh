@@ -63,19 +63,7 @@ echo cleaning up:
 for directory in Resources/Library Resources_mini/Library 
 do
 	find $directory -name __pycache__ -exec rm -rf {} \;
-	find $directory -name \*.a -delete
-	find $directory -name \*.dylib -delete
-	find $directory -name \*.so -delete
-	find $directory -name \.\* -delete
-	# Also remove MS Windows executables:
-	find $directory -name \*.exe -delete
-	find $directory -name \*.dll -delete
-	# remove x86_64 executables:
-	rm $directory/bin/maturin
-	rm $directory/bin/python3
-	rm $directory/bin/python3.13
-	# remove the cbc executable:
-	find $directory -type f -name cbc -delete
+	sh scripts/clean-python-library.sh "$PWD/$directory" || exit 1
 	# Create fake binaries for pip
 	touch $directory/bin/python3
 	touch $directory/bin/python3.13
