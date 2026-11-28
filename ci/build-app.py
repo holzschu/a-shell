@@ -596,10 +596,13 @@ def build(
             cwd=root,
             check=True,
         )
-        verify_archs(
-            derived / "Build/Products" / f"Debug-{sdk}" / f"{scheme}.app" / scheme,
-            archs,
-        )
+        app = derived / "Build/Products" / f"Debug-{sdk}" / f"{scheme}.app"
+        verify_archs(app / scheme, archs)
+        if scheme in {"a-Shell", "a-Shell-mini"}:
+            subprocess.run(
+                ["sh", root / "scripts/python-stdlib-tests.sh", "--check", app],
+                check=True,
+            )
     except (InputError, OSError, subprocess.CalledProcessError) as error:
         report(scheme, platform, f"Build or executable verification failed: {error}")
         raise typer.Exit(1) from error
