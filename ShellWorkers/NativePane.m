@@ -36,6 +36,8 @@ typedef struct {
     FILE *streams[3];
     // Without a tty the session streams differ from the command streams, so stock isatty reports false.
     FILE *session_in, *session_out, *session_err;
+    FILE *secret_input;
+    void (*set_secret_input)(FILE *);
     void *registration;
     char key[64];
     char *command, *cwd, *previous_cwd;
@@ -482,6 +484,8 @@ static int close_streams(pane_job *job) {
         if (*session[i] && fclose(*session[i]) && !error) error = errno;
         *session[i] = NULL;
     }
+    if (job->secret_input && fclose(job->secret_input) && !error) error = errno;
+    job->secret_input = NULL;
     return error;
 }
 
@@ -501,6 +505,7 @@ static void *run_pane(void *cookie) {
         ios_setContext(job->key);
         baseline_streams(job, job->streams[0]);
         ios_settty(job->streams[0]);
+        if (job->set_secret_input) job->set_secret_input(job->secret_input);
         thread_stdin = job->streams[0];
         thread_stdout = job->streams[1];
         thread_stderr = job->streams[2];
@@ -591,7 +596,7 @@ int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, un
                          int *fd_out, void **job_out) {
     if (fd_out) *fd_out = -1;
     if (job_out) *job_out = NULL;
-    if (!options || options->size < sizeof(*options)) return EINVAL;
+    if (!options || options->size < offsetof(ashell_pane_options, secret_input_fd)) return EINVAL;
     options->stderr_fd = -1;
     int peer_err = -1;
     if (!fd_out || !job_out || !command || !*command || !cwd || cwd[0] != '/' ||
@@ -701,6 +706,16 @@ int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, un
             /* Match terminal stdout: libedit flushes each completed redraw. */
             int buffering = !job->is_pty && i == 1 ? _IOLBF : _IONBF;
             if (setvbuf(job->streams[i], NULL, buffering, 0)) { error = EIO; goto failed; }
+        }
+        int secretFd = ashell_pane_secret_input_fd(options);
+        if (secretFd >= 0) {
+            job->set_secret_input = dlsym(RTLD_DEFAULT, "ios_setSecretInput");
+            if (!job->set_secret_input) { error = ENOTSUP; goto failed; }
+            int ownedFd = fcntl(secretFd, F_DUPFD_CLOEXEC, 0);
+            if (ownedFd < 0) { error = errno; goto failed; }
+            job->secret_input = fdopen(ownedFd, "r");
+            if (!job->secret_input) { error = errno; close(ownedFd); goto failed; }
+            if (setvbuf(job->secret_input, NULL, _IONBF, 0)) { error = EIO; goto failed; }
         }
         if (!options->tty) {
             job->session_in = fopen("/dev/null", "r");

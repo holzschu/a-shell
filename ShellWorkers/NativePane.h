@@ -37,7 +37,15 @@ typedef struct ashell_pane_options {
     // Output, -1 unless separate_stderr succeeded. The caller owns and closes it. Drain it
     // as well as the main fd; a full unread stderr blocks the command like a full stdout.
     int stderr_fd;
+    // Optional borrowed virtual terminal input, distinct from protocol stdin.
+    // The spawn call duplicates or transfers it before returning.
+    const int *secret_input_fd;
 } ashell_pane_options;
+
+static inline int ashell_pane_secret_input_fd(const ashell_pane_options *options) {
+    return options->size >= sizeof(*options) && options->secret_input_fd
+        ? *options->secret_input_fd : -1;
+}
 
 // ashell_pane_spawn with options. ashell_pane_spawn is this call with tty = 1 and
 // separate_stderr = 0, so its behaviour is unchanged. Returns 0 or positive errno.

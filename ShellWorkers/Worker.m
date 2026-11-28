@@ -67,7 +67,7 @@ static id<AShellSpawnBrokerWire> spawnBroker;
 static int broker_spawn(BOOL host, const char *command, const char *cwd, unsigned cols, unsigned rows, const char *const *envp, ashell_pane_options *options, int *fd_out, void **job_out) {
     if (fd_out) *fd_out = -1;
     if (job_out) *job_out = NULL;
-    if (!options || options->size < sizeof(*options)) return EINVAL;
+    if (!options || options->size < offsetof(ashell_pane_options, secret_input_fd)) return EINVAL;
     options->stderr_fd = -1;
     if (!command || !*command || !cwd || cwd[0] != '/' || !cols || cols > 9999 || !rows || rows > 9999 || !fd_out || !job_out) return EINVAL;
     if (!spawnBroker) return ENOTSUP;
@@ -98,7 +98,11 @@ static int broker_spawn(BOOL host, const char *command, const char *cwd, unsigne
         }
     };
     if (host) [child.broker spawnHostChild:@(command) cwd:@(cwd) env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:options->separate_stderr != 0 reply:reply];
-    else [child.broker spawnChild:@(command) cwd:@(cwd) env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:options->separate_stderr != 0 reply:reply];
+    else {
+        int secretFd = ashell_pane_secret_input_fd(options);
+        NSFileHandle *secretInput = secretFd < 0 ? nil : [[NSFileHandle alloc] initWithFileDescriptor:secretFd closeOnDealloc:NO];
+        [child.broker spawnChild:@(command) cwd:@(cwd) env:env cols:cols rows:rows tty:options->tty != 0 separateStderr:options->separate_stderr != 0 secretInput:secretInput reply:reply];
+    }
     if (error) return error;
     *job_out = (__bridge_retained void *)child;
     return 0;
@@ -178,7 +182,7 @@ __attribute__((used, visibility("default"))) int ashell_worker_host_interrupt(vo
     void *_pane;
     NSMutableArray<NSURL *> *_directories;
 }
-- (void)spawn:(NSString *)command cwd:(NSData *)cwd home:(NSData *)home documents:(NSData *)documents probe:(NSString *)probe env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separateStderr stockSSH:(BOOL)stockSSH reply:(void (^)(int, NSFileHandle *, NSFileHandle *, int))reply {
+- (void)spawn:(NSString *)command cwd:(NSData *)cwd home:(NSData *)home documents:(NSData *)documents probe:(NSString *)probe env:(NSArray<NSString *> *)env cols:(unsigned)cols rows:(unsigned)rows tty:(BOOL)tty separateStderr:(BOOL)separateStderr secretInput:(NSFileHandle *)secretInput stockSSH:(BOOL)stockSSH reply:(void (^)(int, NSFileHandle *, NSFileHandle *, int))reply {
     if (_pane) { reply(EBUSY, nil, nil, getpid()); return; }
     NSXPCConnection *connection = NSXPCConnection.currentConnection;
     connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(AShellSpawnBrokerWire)];
@@ -274,7 +278,9 @@ __attribute__((used, visibility("default"))) int ashell_worker_host_interrupt(vo
     values[env.count] = "LC_CTYPE=UTF-8";
     values[env.count + 1] = "ASHELL_IOS_SOCKET_INPUT=1";
     int fd = -1;
-    ashell_pane_options options = {.size = sizeof(options), .tty = tty, .separate_stderr = separateStderr};
+    int secretFd = secretInput ? secretInput.fileDescriptor : -1;
+    ashell_pane_options options = {.size = sizeof(options), .tty = tty, .separate_stderr = separateStderr,
+        .secret_input_fd = secretInput ? &secretFd : NULL};
     int error = ashell_pane_spawn_ex(command.UTF8String, directory.path.UTF8String, cols, rows, values, &options, &fd, &_pane);
     free(values);
     if (error) [self releasePane];
