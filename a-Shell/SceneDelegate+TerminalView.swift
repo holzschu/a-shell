@@ -1842,18 +1842,13 @@ extension SceneDelegate {
     }
     
     func requestOpenLink(source: SwiftTerm.TerminalView, link: String, params: [String : String]) {
-        if let fixedup = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
-            if let url = NSURLComponents(string: fixedup) {
-                if let nested = url.url {
-                    if let browserEnvVar = ios_getenv("BROWSER") {
-                        let browser = (String(utf8String: browserEnvVar) ?? "safari").lowercased()
-                        NSLog("nested: \(nested) string: \(nested.absoluteString)")
-                        openurl_internal(browser: browser, url: nested)
-                    } else {
-                        UIApplication.shared.open (nested)
-                    }
-                }
-            }
+        guard let url = URL(string: link), let scheme = url.scheme?.lowercased(),
+              scheme == "http" || scheme == "https", let host = url.host, !host.isEmpty else { return }
+        if let browserEnvVar = ios_getenv("BROWSER") {
+            let browser = (String(utf8String: browserEnvVar) ?? "safari").lowercased()
+            openurl_internal(browser: browser, url: url)
+        } else {
+            UIApplication.shared.open(url)
         }
     }
     
