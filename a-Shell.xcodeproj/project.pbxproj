@@ -4703,6 +4703,7 @@
 				22984EE622C93DBC00069497 /* Sources */,
 				22984EE722C93DBC00069497 /* Frameworks */,
 				22984EE822C93DBC00069497 /* Resources */,
+				F4A2D63EB5F44C25000A3100 /* Remove bundled Python bytecode */,
 				22B1B81522CB9D6500F7C452 /* Embed Frameworks */,
 				22AD8731246EBFFD00F415DE /* Embed App Extensions */,
 			);
@@ -4729,6 +4730,7 @@
 				229D2476257931E4004A78AC /* Sources */,
 				229D2486257931E4004A78AC /* Frameworks */,
 				229D2488257931E4004A78AC /* Resources */,
+				F4A2D63EB5F44C25000A3200 /* Remove bundled Python bytecode */,
 				229D24A1257931E4004A78AC /* Embed Frameworks */,
 				22178EEF257BBB6E008EB2B4 /* Embed App Extensions */,
 			);
@@ -5472,6 +5474,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
 			shellScript = "/bin/bash \"$SRCROOT/ShellWorkers/resources.sh\"\n";
+		};
+		F4A2D63EB5F44C25000A3100 /* Remove bundled Python bytecode */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "Remove bundled Python bytecode";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"$SRCROOT/scripts/python-bytecode.sh\" --remove \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\n";
+		};
+		F4A2D63EB5F44C25000A3200 /* Remove bundled Python bytecode */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "Remove bundled Python bytecode";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"$SRCROOT/scripts/python-bytecode.sh\" --remove \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
