@@ -329,8 +329,16 @@ def stage_resources(
 ):
     _, sdk, _ = DESTINATIONS[platform]
     for group_index, (destination, layers) in enumerate(plan.items()):
+        path = Path(destination)
+        if ".." in path.parts:
+            raise InputError(f"resource destination contains a parent reference: {path}")
+        checkout_path(root, path)
         group = directory / f"resources-{group_index}"
+        library = None
         result = group / "resource"
+        if path.parts[:2] in {("Resources", "Library"), ("Resources_mini", "Library")}:
+            library = group / "Library"
+            result = library.joinpath(*path.parts[2:])
         result.mkdir(parents=True)
         for index, layer in enumerate(layers):
             member = layer["member"]
@@ -348,7 +356,11 @@ def stage_resources(
             if not subtree.is_dir() or not subtree.resolve().is_relative_to(payload):
                 raise InputError(f"resource directory missing from {member}: {subtree}")
             shutil.copytree(subtree, result, dirs_exist_ok=True, symlinks=True)
-        install(root, Path(destination), result, owned, owned_file)
+        if library is not None:
+            subprocess.run(
+                ["sh", ROOT / "scripts/clean-python-library.sh", library], check=True
+            )
+        install(root, path, result, owned, owned_file)
 
 
 def report(scheme, platform, result):
