@@ -3,6 +3,11 @@ import Foundation
 /// Binds native checkpoints to the terminal scene they came from. Only registered
 /// commands may construct a resume invocation; saved shell text is never replayed.
 final class InteractiveCommandRestoration: @unchecked Sendable {
+    struct Invocation: Sendable {
+        let command: String
+        let workingDirectory: String
+    }
+
     private struct Rule: Sendable {
         let accepts: @Sendable ([Substring]) -> Bool
         let resume: @Sendable (String) -> String?
@@ -21,6 +26,7 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
 
     private let lock = NSLock()
     private var terminalContext: UInt?
+    private var workingDirectory: String?
     private var checkpoint: [String: String]?
     private var observer: NSObjectProtocol?
 
@@ -31,8 +37,9 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
                   let rule = Self.rules[command] else { return }
             self.lock.withLock {
                 guard self.terminalContext == context else { return }
-                if let token = notification.userInfo?["token"] as? String, rule.resume(token) != nil {
-                    self.checkpoint = ["command": command, "token": token]
+                if let token = notification.userInfo?["token"] as? String, rule.resume(token) != nil,
+                   let workingDirectory = self.workingDirectory {
+                    self.checkpoint = ["command": command, "token": token, "cwd": workingDirectory]
                 } else if self.checkpoint?["command"] == command {
                     self.checkpoint = nil
                 }
@@ -44,9 +51,10 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
         if let observer { NotificationCenter.default.removeObserver(observer) }
     }
 
-    func bind(to context: UnsafeRawPointer?) {
+    func bind(to context: UnsafeRawPointer?, workingDirectory: String?) {
         lock.withLock {
             terminalContext = context.map { UInt(bitPattern: $0) }
+            self.workingDirectory = workingDirectory
             checkpoint = nil
         }
     }
@@ -76,15 +84,18 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
         }
     }
 
-    static func consume(from file: URL) -> String? {
+    static func consume(from file: URL) -> Invocation? {
         guard UserDefaults.standard.bool(forKey: "restart_vim") else {
             discard(at: file)
             return nil
         }
         guard let data = try? Data(contentsOf: file), discard(at: file),
               let checkpoint = try? PropertyListDecoder().decode([String: String].self, from: data),
-              let command = checkpoint["command"], let token = checkpoint["token"] else { return nil }
-        return rules[command]?.resume(token)
+              let command = checkpoint["command"], let token = checkpoint["token"],
+              let workingDirectory = checkpoint["cwd"], workingDirectory.hasPrefix("/"),
+              !workingDirectory.utf8.contains(0),
+              let resume = rules[command]?.resume(token) else { return nil }
+        return Invocation(command: resume, workingDirectory: workingDirectory)
     }
 
     // The previous UIKit restoration snapshot can survive SIGKILL even after command exit.

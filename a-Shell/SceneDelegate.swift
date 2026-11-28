@@ -4191,7 +4191,26 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
         return true
     }
     
-    func executeCommand(command: String) {
+    private func restoreCommandDirectory(_ directory: String) -> Bool {
+        // cd_main writes errors to the thread-local stream, not the session stream.
+        let previousStderr = thread_stderr
+        thread_stderr = stdout_file
+        defer {
+            fflush(thread_stderr)
+            thread_stderr = previousStderr
+        }
+        "cd".withCString { command in
+            directory.withCString { path in
+                // cd_main reads the arguments but takes a mutable C argv.
+                var argv = [UnsafeMutablePointer(mutating: command), UnsafeMutablePointer(mutating: path), nil]
+                _ = cd_main(2, &argv)
+            }
+        }
+        // cd_main can report success even if it did not change directories.
+        return URL(fileURLWithPath: directory).sameFileLocation(path: FileManager.default.currentDirectoryPath)
+    }
+
+    func executeCommand(command: String, restoringDirectory: String? = nil) {
         // This line, specifically, causes a crash with the following command:
         // open shortcuts://run-shortcut?name=%EC%9C%A0%ED%8A%9C%EB%B8%8C%20%EB%B0%9B%EA%B8%B0&input=%22hi%22
         // See: https://discord.com/channels/935519150305050644/1452153688284987443/1534518700500320329
@@ -4326,7 +4345,6 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             ios_switchSession(self.shellContext?.bytes)
             let terminalContext = self.shellContext?.bytes
             ios_setContext(terminalContext)
-            self.interactiveCommandRestoration.bind(to: terminalContext)
             // Intents running in the app (Execute Long Command) move the process directory, and ios_switchSession
             // restores this session's directory only when this thread switches sessions:
             let intentsBefore = intentSessionsState()
@@ -4351,7 +4369,14 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
             // Setting these breaks lualatex -- not setting them might break something else.
             // setenv("LC_ALL", "UTF-8", 1);
             // setlocale(LC_ALL, "UTF-8");
-            let commands = command.components(separatedBy: "\n")
+            // Restore in the selected ios_system session, not on UIKit's thread.
+            // Skip dispatch if the workspace is gone; normal cleanup shows the shell prompt.
+            let commands: [String]
+            if let restoringDirectory, !self.restoreCommandDirectory(restoringDirectory) {
+                commands = []
+            } else {
+                commands = command.components(separatedBy: "\n")
+            }
             for command in commands {
                 let arguments = command.components(separatedBy: " ")
                 if let actualCommand = aliasedCommand(arguments[0]) {
@@ -4403,6 +4428,10 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                     }
                 }
                 self.resultStack.removeAll()
+                let workingDirectory = ios_getenv("PWD").flatMap { String(validatingUTF8: $0) }.map {
+                    URL(fileURLWithPath: $0).resolvingSymlinksInPath().path
+                }
+                self.interactiveCommandRestoration.bind(to: terminalContext, workingDirectory: workingDirectory)
                 self.pid = ios_fork()
                 DispatchQueue.main.async {
                     UIApplication.shared.isIdleTimerDisabled = true
@@ -5335,13 +5364,9 @@ class SceneDelegate: UIViewController, UIWindowSceneDelegate, WKNavigationDelega
                             InteractiveCommandRestoration.discard(at: checkpoint)
                             return
                         }
-                        guard let command = InteractiveCommandRestoration.consume(from: checkpoint) else { return }
-                        if !keepContent {
-                            self.restoreHistoryAndDirectories(scene: scene)
-                            self.restoreEnvironment(scene: scene)
-                        }
-                        self.currentCommand = command
-                        self.executeCommand(command: command)
+                        guard let resume = InteractiveCommandRestoration.consume(from: checkpoint) else { return }
+                        self.currentCommand = resume.command
+                        self.executeCommand(command: resume.command, restoringDirectory: resume.workingDirectory)
                     }
                 }
             } else if let checkpoint {
