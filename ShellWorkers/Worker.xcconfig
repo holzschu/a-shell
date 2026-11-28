@@ -21,3 +21,6 @@ SKIP_INSTALL = YES
 CURRENT_PROJECT_VERSION = 616
 MARKETING_VERSION = 2.5.0
 CODE_SIGN_STYLE = Automatic
+
+// Pane commands need the host app group to open the shared Codex home.
+CODE_SIGN_ENTITLEMENTS = ShellWorkers/Worker.entitlements
