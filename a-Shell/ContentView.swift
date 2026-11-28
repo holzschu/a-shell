@@ -1275,6 +1275,24 @@ public var showKeyboardAtStartup = true
 // Make this a user-defined setup, with "ignoreSafeArea" the default.
 public var viewBehavior: ViewBehavior = .ignoreSafeArea
 final class TerminalHostingController: UIHostingController<ContentView> {
+    private var hidesSystemBars = UserDefaults.standard.bool(forKey: "hide_status_bar")
+
+    override var prefersStatusBarHidden: Bool {
+        hidesSystemBars || super.prefersStatusBarHidden
+    }
+
+    override var prefersHomeIndicatorAutoHidden: Bool {
+        hidesSystemBars || super.prefersHomeIndicatorAutoHidden
+    }
+
+    func updateSystemBarAppearance() {
+        let hidesSystemBars = UserDefaults.standard.bool(forKey: "hide_status_bar")
+        guard self.hidesSystemBars != hidesSystemBars else { return }
+        self.hidesSystemBars = hidesSystemBars
+        setNeedsStatusBarAppearanceUpdate()
+        setNeedsUpdateOfHomeIndicatorAutoHidden()
+    }
+
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         guard PhoneKeyboardToolbar.isCustom, let scene = view.window?.windowScene?.delegate as? SceneDelegate else { return }
