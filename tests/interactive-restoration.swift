@@ -4,9 +4,10 @@ import Foundation
 struct RestorationContract {
     static func main() {
         let scene = InteractiveCommandRestoration()
-        scene.bind(to: UnsafeRawPointer(bitPattern: 1))
+        let workspace = "/private/var/mobile/Documents/Project with spaces %"
+        scene.bind(to: UnsafeRawPointer(bitPattern: 1), workingDirectory: workspace)
         let otherScene = InteractiveCommandRestoration()
-        otherScene.bind(to: UnsafeRawPointer(bitPattern: 2))
+        otherScene.bind(to: UnsafeRawPointer(bitPattern: 2), workingDirectory: "/other")
         let thread = "c122cba2-0e43-4f31-9954-13075b990cd1"
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -22,7 +23,10 @@ struct RestorationContract {
         publish(thread)
         setPreferences(restart: true, scrollback: false)
         scene.save(to: file, runningCommand: "codex")
-        precondition(InteractiveCommandRestoration.consume(from: file) == "codex resume \(thread)",
+        let resume = InteractiveCommandRestoration.consume(from: file)
+        precondition(resume?.workingDirectory == workspace,
+                     "Resume must use the command's original directory verbatim")
+        precondition(resume?.command == "codex resume \(thread)",
                      "Restart on must resume Codex even when scrollback is off")
 
         scene.save(to: file, runningCommand: "codex")
@@ -44,18 +48,31 @@ struct RestorationContract {
         precondition(InteractiveCommandRestoration.consume(from: file) == nil)
         scene.save(to: file, runningCommand: "codex")
         precondition(InteractiveCommandRestoration.consume(from: otherFile) == nil)
-        precondition(InteractiveCommandRestoration.consume(from: file) == "codex resume \(thread)")
+        precondition(InteractiveCommandRestoration.consume(from: file)?.command == "codex resume \(thread)")
         precondition(InteractiveCommandRestoration.consume(from: file) == nil)
 
         scene.save(to: file, runningCommand: "codex resume \(thread)")
         InteractiveCommandRestoration.discard(at: otherFile)
-        precondition(InteractiveCommandRestoration.consume(from: file) == "codex resume \(thread)")
+        precondition(InteractiveCommandRestoration.consume(from: file)?.command == "codex resume \(thread)")
         // Record a background save, exit normally without another save, then relaunch.
         scene.save(to: file, runningCommand: "codex")
         InteractiveCommandRestoration.discard(at: file)
         precondition(InteractiveCommandRestoration.consume(from: file) == nil,
                      "A stale background snapshot must not restart a normally exited command")
 
+        for unsafeDirectory in ["", "relative", "/dir\0suffix"] {
+            scene.bind(to: UnsafeRawPointer(bitPattern: 1), workingDirectory: unsafeDirectory)
+            publish(thread)
+            scene.save(to: file, runningCommand: "codex")
+            precondition(InteractiveCommandRestoration.consume(from: file) == nil,
+                         "Invalid directory data must leave the user at the shell")
+        }
+        let oldCheckpoint = ["command": "codex", "token": thread]
+        try! PropertyListEncoder().encode(oldCheckpoint).write(to: file)
+        precondition(InteractiveCommandRestoration.consume(from: file) == nil)
+        precondition(!FileManager.default.fileExists(atPath: file.path))
+
+        scene.bind(to: UnsafeRawPointer(bitPattern: 1), workingDirectory: workspace)
         publish(nil)
         scene.save(to: file, runningCommand: "codex")
         precondition(InteractiveCommandRestoration.consume(from: file) == nil)
