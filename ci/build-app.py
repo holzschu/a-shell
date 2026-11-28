@@ -600,7 +600,7 @@ def build(
         verify_archs(app / scheme, archs)
         if scheme in {"a-Shell", "a-Shell-mini"}:
             subprocess.run(
-                ["sh", root / "scripts/python-optimized-bytecode.sh", "--check", app],
+                ["sh", root / "scripts/python-bytecode.sh", "--check", app],
                 check=True,
             )
     except (InputError, OSError, subprocess.CalledProcessError) as error:
