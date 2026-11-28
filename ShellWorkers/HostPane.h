@@ -14,8 +14,9 @@ extern "C" {
 // No extension allocation or automatic routing is performed. Do not forward worker
 // identity environment overrides. Cancellation returns ENOTSUP while running.
 // Interrupt requires a Dash foreground command with ASHELL_IOS_SOCKET_INPUT=1
-// in envp; otherwise it can return ESRCH. Its PID hook is process-wide: unrelated
-// Dash sessions must not enable that variable concurrently. Release retains live cleanup.
+// in envp; otherwise it can return ESRCH. The embedding server scopes foreground
+// PID publication to the owning pane; unrelated Dash sessions are ignored.
+// Release retains live cleanup.
 // poll_usage returns the app process RUSAGE_SELF at exit, not per-command usage.
 int ashell_host_pane_spawn(const char *, const char *, unsigned, unsigned, const char *const *, int *, void **);
 int ashell_host_pane_spawn_ex(const char *, const char *, unsigned, unsigned, const char *const *, ashell_pane_options *, int *, void **);

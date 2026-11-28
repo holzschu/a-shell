@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <pthread.h>
 #include <poll.h>
+#include <signal.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,8 @@ typedef struct {
     struct rusage usage;
     int usage_available;
     int peer_control, input_closed, is_pty;
+    atomic_int interactive;
+    atomic_int foreground_command_pid;
     unsigned char eof_key;
     FILE *streams[3];
     // Without a tty the session streams differ from the command streams, so stock isatty reports false.
@@ -47,13 +50,23 @@ typedef struct {
 // One pane owns this process. Dash's optional evaluation hook borrows a fresh
 // stdin pipe, while the relay keeps the editor pipe and socket alive.
 static _Atomic(pane_job *) foreground_pane;
+
+// ios_system asks the owning pane before calling visible-terminal callbacks.
+// A different session returns -1 so the app's existing UI behavior is retained.
+__attribute__((used, visibility("default"))) int ashell_pane_interactive(const void *context, int mode) {
+    pane_job *job = atomic_load(&foreground_pane);
+    if (!job || context != job->key) return -1;
+    if (mode >= 0) atomic_store(&job->interactive, mode != 0);
+    return atomic_load(&job->interactive);
+}
 // Dash publishes the synthetic child PID before dispatch and restores its
 // parent's PID after waiting. lastThreadId instead names the first descendant,
 // which can be a shell blocked in ios_waitpid rather than the running command.
-static _Atomic int foreground_command_pid;
 
 __attribute__((used, visibility("default"))) int ashell_pane_exchange_foreground_pid(int pid) {
-    return atomic_exchange(&foreground_command_pid, pid);
+    pane_job *job = atomic_load(&foreground_pane);
+    if (!job || ios_getContext() != job->key) return 0;
+    return atomic_exchange(&job->foreground_command_pid, pid);
 }
 
 typedef struct {
@@ -78,7 +91,6 @@ typedef struct pane_input_relay {
     int request, request_done, request_error;
     command_input *command, *requested_command;
     input_queue editor_queue, command_queue;
-    int (*interactive)(void);
 } pane_input_relay;
 
 enum { INPUT_BEGIN = 1, INPUT_END, INPUT_RETIRE };
@@ -124,7 +136,7 @@ static int route_input(pane_input_relay *relay, const unsigned char *bytes, size
     for (size_t i = 0; i < length; i++) {
         unsigned char byte = bytes[i];
         int foreground = relay->command && !relay->command_eof;
-        int raw = foreground && relay->interactive && relay->interactive();
+        int raw = foreground && atomic_load(&relay->command->job->interactive);
         if (foreground && !raw && byte == 4) {
             relay->command_eof = 1;
             continue;
@@ -194,8 +206,18 @@ static void *relay_input(void *cookie) {
         if (relay->command && (relay->command_eof || relay->input_eof) &&
             !relay->command_queue.length)
             close_input_writer(&relay->command->writer);
-        if (relay->input_eof && !relay->editor_queue.length)
-            close_input_writer(&relay->editor_writer);
+        // A command lease can return typeahead, including bytes already in the
+        // editor pipe. Deliver EOF only after both places have drained.
+        int drain_editor = 0;
+        if (relay->input_eof && !relay->command && !relay->editor_queue.length &&
+            relay->editor_writer >= 0) {
+            struct pollfd pending = {.fd = relay->editor_reader, .events = POLLIN};
+            int available = poll(&pending, 1, 0);
+            if (available < 0 && errno != EINTR) { relay->error = errno; break; }
+            if (pending.revents & (POLLERR | POLLNVAL)) { relay->error = EIO; break; }
+            if (!available) close_input_writer(&relay->editor_writer);
+            else drain_editor = 1;
+        }
         // Backpressure bounds queued input. Each pipe also has its kernel
         // buffer; transition queues have room to drain that existing typeahead.
         int can_read = !relay->input_eof && relay->editor_queue.length < 61440 &&
@@ -208,7 +230,8 @@ static void *relay_input(void *cookie) {
              .events = POLLOUT}
         };
         pthread_mutex_unlock(&relay->mutex);
-        int result = poll(fds, 4, -1);
+        // Pipe readers do not wake this relay when they drain its final bytes.
+        int result = poll(fds, 4, drain_editor ? 100 : -1);
         int poll_error = errno;
         pthread_mutex_lock(&relay->mutex);
         if (result < 0) {
@@ -318,7 +341,6 @@ static int prepare_input_relay(pane_job *job) {
     relay->editor_writer = input[1];
     relay->wake[0] = wake[0]; relay->wake[1] = wake[1];
     relay->editor_events = kqueue();
-    relay->interactive = dlsym(RTLD_DEFAULT, "storeInteractive");
     int error = relay->socket < 0 || relay->editor_reader < 0 || relay->editor_events < 0 ? errno : 0;
     if (!error && setvbuf(reader, NULL, _IONBF, 0)) error = EIO;
     int descriptors[] = {relay->socket, input[0], input[1], relay->editor_reader, wake[0], wake[1], relay->editor_events};
@@ -567,6 +589,7 @@ static void *run_pane(void *cookie) {
         job->completion_error = error;
         job->initialized = 1;
         job->usage_available = getrusage(RUSAGE_SELF, &job->usage) == 0;
+        atomic_store(&job->foreground_command_pid, 0);
         job->done = 1;
         NSLog(@"Shell pane lifecycle: exit key=%s status=%d error=%d", job->key, job->status, error);
         // Close the retained peer before announcing exit so output EOF is observable.
@@ -614,6 +637,7 @@ int ashell_pane_spawn_ex(const char *command, const char *cwd, unsigned cols, un
         int error = ENOMEM, peer = -1, child = -1, err_child = -1;
         pane_job *job = calloc(1, sizeof(*job));
         if (!job) { atomic_store(&pane_in_flight, 0); return ENOMEM; }
+        atomic_init(&job->interactive, 0);
         job->peer_control = -1;
         error = pthread_mutex_init(&job->mutex, NULL);
         if (error) { free(job); atomic_store(&pane_in_flight, 0); return error; }
@@ -816,27 +840,29 @@ int ashell_pane_interrupt(void *handle) {
     pthread_mutex_lock(&job->mutex);
     int error = job->done ? ESRCH : 0;
     pthread_t foreground = 0;
+    int pid = 0;
     struct termios settings;
     if (!error && job->is_pty) {
         if (tcgetattr(job->peer_control, &settings)) error = errno;
         // Raw readers (libedit, Codex, Helix) own their Ctrl-C binding.
         else if (!(settings.c_lflag & ICANON)) error = ENOTSUP;
     }
+    if (!error && !job->is_pty && job->input_relay) {
+        if (atomic_load(&job->interactive)) error = ENOTSUP;
+    }
     if (!error) {
-        ios_switchSession(job->key);
-        const char *name = ios_progname();
-        if (!name || !strcmp(name, "dash") || !strcmp(name, "sh")) error = ENOTSUP;
-        else {
-            int pid = atomic_load(&foreground_command_pid);
-            foreground = pid > 0 ? ios_getThreadId(pid) : NULL;
-            if (!foreground || foreground == (pthread_t)-1) error = ESRCH;
-        }
+        // Scoped Dash publication uses negative PIDs for shell waiters.
+        // Inspect the target without changing the caller's session or cwd.
+        pid = atomic_load(&job->foreground_command_pid);
+        foreground = pid > 0 ? ios_getThreadId(pid) : NULL;
+        if (!foreground || foreground == (pthread_t)-1) error = ESRCH;
     }
     pthread_mutex_unlock(&job->mutex);
     if (error) return error;
     // Never cancel a shell waiter: cancellation of pthread_cond_wait can leave
     // the stock completion mutex locked. Raw TUIs already use the ETX path.
-    return pthread_equal(foreground, pthread_self()) ? ESRCH : pthread_cancel(foreground);
+    // The runtime records SIGINT for worker proxies before cancelling them.
+    return pthread_equal(foreground, pthread_self()) ? ESRCH : ios_interruptpid(pid);
 }
 
 int ashell_pane_cancel(void *handle) {
