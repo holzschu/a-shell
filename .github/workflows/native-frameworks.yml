@@ -1,8 +1,23 @@
 name: App native frameworks
 on:
   pull_request:
-    paths-ignore:
-      - '**.md'
+    paths:
+      - '.github/workflows/native-frameworks.yml'
+      - 'ci/native-frameworks.sh'
+      - 'ci/audit-artifact.py'
+      - 'codex/**'
+      - 'fd/**'
+      - 'fzf/**'
+      - 'gitoxide/**'
+      - 'helix/**'
+      - 'Herdr/**'
+      - 'navi/**'
+      - 'node/**'
+      - 'rg/**'
+      - 'ruff/**'
+      - 'Resources/npm/**'
+      - 'Resources/node-fetch/**'
+      - '!**/*.md'
   workflow_dispatch:
     inputs:
       embedded_only:
