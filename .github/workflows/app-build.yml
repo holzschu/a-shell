@@ -57,3 +57,28 @@ jobs:
           name: app-build-${{ matrix.scheme }}-${{ matrix.platform }}-summary
           path: ${{ runner.temp }}/app-build-summary.md
           if-no-files-found: error
+      - name: Sign and zip Simulator app
+        if: github.event_name == 'pull_request' && matrix.platform == 'simulator'
+        shell: bash
+        env:
+          SCHEME: ${{ matrix.scheme }}
+        run: |
+          product=".build/app/$SCHEME-simulator/Build/Products/Debug-iphonesimulator/$SCHEME.app"
+          app="$RUNNER_TEMP/$SCHEME.app"
+          ditto --arch arm64 "$product" "$app"
+          # Startup needs the shared container even on Simulator.
+          group=$(plutil -extract AppGroupIdentifier raw -o - "$app/Info.plist")
+          entitlements="$RUNNER_TEMP/simulator-app-entitlements.plist"
+          /usr/libexec/PlistBuddy -c 'Add :com.apple.security.application-groups array' \
+            -c "Add :com.apple.security.application-groups:0 string $group" "$entitlements"
+          codesign --force --sign - --entitlements "$entitlements" "$app"
+          codesign --verify --deep "$app"
+          ditto -c -k --sequesterRsrc --keepParent "$app" "$RUNNER_TEMP/$SCHEME-simulator.zip"
+      - name: Upload Simulator app
+        if: github.event_name == 'pull_request' && matrix.platform == 'simulator'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          path: ${{ runner.temp }}/${{ matrix.scheme }}-simulator.zip
+          archive: false
+          retention-days: 3
+          if-no-files-found: error
