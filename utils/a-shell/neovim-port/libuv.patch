@@ -1,0 +1,85 @@
+--- a/src/unix/process.c
++++ b/src/unix/process.c
+@@ -266,6 +266,7 @@
+ }
+
+
++#if !(defined(__APPLE__) && TARGET_OS_IOS)
+ static void uv__write_int(int fd, int val) {
+   ssize_t n;
+
+@@ -963,10 +964,18 @@
+ }
+ #endif /* ISN'T TARGET_OS_TV || TARGET_OS_WATCH */
+
++#endif
++
++#if defined(__APPLE__) && TARGET_OS_IOS
++#include "worker-process.c"
++#endif
++
+ int uv_spawn(uv_loop_t* loop,
+              uv_process_t* process,
+              const uv_process_options_t* options) {
+-#if defined(__APPLE__) && (TARGET_OS_TV || TARGET_OS_WATCH)
++#if defined(__APPLE__) && TARGET_OS_IOS
++  return uv__ios_spawn(loop, process, options);
++#elif defined(__APPLE__) && (TARGET_OS_TV || TARGET_OS_WATCH)
+   /* fork is marked __WATCHOS_PROHIBITED __TVOS_PROHIBITED. */
+   return UV_ENOSYS;
+ #else
+@@ -1095,11 +1104,21 @@
+
+
+ int uv_process_kill(uv_process_t* process, int signum) {
++#if defined(__APPLE__) && TARGET_OS_IOS
++  int error = ios_killpid(process->pid, signum);
++  return error ? UV__ERR(error) : 0;
++#else
+   return uv_kill(process->pid, signum);
++#endif
+ }
+
+
+ int uv_kill(int pid, int signum) {
++#if defined(__APPLE__) && TARGET_OS_IOS
++  // Negative IDs denote the worker job tree, never a kernel process group.
++  int error = ios_killpid(pid < 0 ? -pid : pid, signum);
++  return error ? UV__ERR(error) : 0;
++#else
+   if (kill(pid, signum)) {
+ #if defined(__MVS__)
+     /* EPERM is returned if the process is a zombie. */
+@@ -1111,10 +1130,22 @@
+     return UV__ERR(errno);
+   } else
+     return 0;
++#endif
+ }
+
+
+ void uv__process_close(uv_process_t* handle) {
++#if defined(__APPLE__) && TARGET_OS_IOS
++  uv__ios_worker *worker = handle->ios_worker;
++  if (worker != NULL) {
++    worker->process = NULL;
++    handle->ios_worker = NULL;
++    // Attached workers do not survive handle close on iOS.
++    ios_killpid(worker->pid, SIGKILL);
++    // Drain the admitted child before the private image can be unloaded.
++    uv_ref((uv_handle_t *)&worker->completed);
++  }
++#endif
+   uv__queue_remove(&handle->queue);
+   uv__handle_stop(handle);
+ #ifdef UV_USE_SIGCHLD
+--- a/include/uv/unix.h
++++ b/include/uv/unix.h
+@@ -357,6 +357,7 @@
+ #define UV_PROCESS_PRIVATE_FIELDS                                             \
+   struct uv__queue queue;                                                     \
+   int status;                                                                 \
++  void* ios_worker;                                                           \
+
+ #define UV_FS_PRIVATE_FIELDS                                                  \
+   const char *new_path;                                                       \

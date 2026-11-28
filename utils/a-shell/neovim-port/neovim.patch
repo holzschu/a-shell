@@ -1,0 +1,133 @@
+--- a/src/nvim/os/lang.c
++++ b/src/nvim/os/lang.c
+@@ -1 +1,2 @@
+-#if defined(__APPLE__) && !defined(ZIG_BUILD)
++#include <TargetConditionals.h>
++#if defined(__APPLE__) && !TARGET_OS_IPHONE && !defined(ZIG_BUILD)
+@@ -341 +342 @@
+-#if defined(__APPLE__) && !defined(ZIG_BUILD)
++#if defined(__APPLE__) && !TARGET_OS_IPHONE && !defined(ZIG_BUILD)
+--- a/src/nvim/os/env.c
++++ b/src/nvim/os/env.c
+@@ -70,0 +71 @@
++  if (strcmp(name, "VIMRUNTIME") == 0) { return xstrdup(nvim_port_runtime()); }
+@@ -143,0 +145 @@
++  if (strcmp(name, "VIMRUNTIME") == 0) { return nvim_port_runtime(); }
+--- a/src/nvim/os/pty_proc_unix.c
++++ b/src/nvim/os/pty_proc_unix.c
+@@ -175,59 +175,2 @@
+-  if (!termios_default.c_cflag) {
+-    init_termios(&termios_default);
+-  }
+-
+-  int status = 0;  // zero or negative error code (libuv convention)
+-  Proc *proc = (Proc *)ptyproc;
+-  assert(proc->err.s.closed);
+-  uv_signal_start(&proc->loop->children_watcher, chld_handler, SIGCHLD);
+-  ptyproc->winsize = (struct winsize){ ptyproc->height, ptyproc->width, 0, 0 };
+-  uv_disable_stdio_inheritance();
+-  int master;
+-  int pid = forkpty(&master, NULL, &termios_default, &ptyproc->winsize);
+-
+-  if (pid < 0) {
+-    status = -errno;
+-    ELOG("forkpty failed: %s", strerror(errno));
+-    return status;
+-  } else if (pid == 0) {
+-    init_child(ptyproc);  // never returns
+-  }
+-
+-  // make sure the master file descriptor is non blocking
+-  int master_status_flags = fcntl(master, F_GETFL);
+-  if (master_status_flags == -1) {
+-    status = -errno;
+-    ELOG("Failed to get master descriptor status flags: %s", strerror(errno));
+-    goto error;
+-  }
+-  if (fcntl(master, F_SETFL, master_status_flags | O_NONBLOCK) == -1) {
+-    status = -errno;
+-    ELOG("Failed to make master descriptor non-blocking: %s", strerror(errno));
+-    goto error;
+-  }
+-
+-  // Other jobs and providers should not get a copy of this file descriptor.
+-  if (os_set_cloexec(master) == -1) {
+-    status = -errno;
+-    ELOG("Failed to set CLOEXEC on ptmx file descriptor");
+-    goto error;
+-  }
+-
+-  if (!proc->in.closed
+-      && (status = set_duplicating_descriptor(master, &proc->in.uv.pipe))) {
+-    goto error;
+-  }
+-  if (!proc->out.s.closed
+-      && (status = set_duplicating_descriptor(master, &proc->out.s.uv.pipe))) {
+-    goto error;
+-  }
+-
+-  ptyproc->tty_fd = master;
+-  proc->pid = pid;
+-  return 0;
+-
+-error:
+-  close(master);
+-  kill(pid, SIGKILL);
+-  waitpid(pid, NULL, 0);
+-  return status;
++  return UV_ENOSYS;  // iOS has no native child processes.
++
+@@ -296,35 +238,0 @@
+-static void init_child(PtyProc *ptyproc)
+-  FUNC_ATTR_NONNULL_ALL FUNC_ATTR_NORETURN
+-{
+-#if defined(HAVE__NSGETENVIRON)
+-# define environ (*_NSGetEnviron())
+-#else
+-  extern char **environ;
+-#endif
+-  // New session/process-group. #6530
+-  setsid();
+-
+-  signal(SIGCHLD, SIG_DFL);
+-  signal(SIGHUP, SIG_DFL);
+-  signal(SIGINT, SIG_DFL);
+-  signal(SIGQUIT, SIG_DFL);
+-  signal(SIGTERM, SIG_DFL);
+-  signal(SIGALRM, SIG_DFL);
+-
+-  Proc *proc = (Proc *)ptyproc;
+-  int err = 0;
+-  // Don't use os_chdir() as that may buffer UI events unnecessarily.
+-  if (proc->cwd && (err = uv_chdir(proc->cwd)) != 0) {
+-    ELOG("chdir(%s) failed: %s", proc->cwd, uv_strerror(err));
+-    _exit(122);
+-  }
+-
+-  const char *prog = proc_get_exepath(proc);
+-
+-  assert(proc->env);
+-  environ = tv_dict_to_env(proc->env);
+-  execvp(prog, proc->argv);
+-  ELOG("execvp(%s) failed: %s", prog, strerror(errno));
+-
+-  _exit(122);  // 122 is EXEC_FAILED in the Vim source.
+-}
+--- a/src/nvim/event/stream.c
++++ b/src/nvim/event/stream.c
+@@ -35 +35 @@
+-  uv_pipe_open(&stream, fd);
++  uv_pipe_open(&stream, dup(fd));
+@@ -74 +74 @@
+-      uv_pipe_open(&stream->uv.pipe, fd);
++      uv_pipe_open(&stream->uv.pipe, (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO) ? dup(fd) : fd);
+--- a/src/nvim/tui/tui.c
++++ b/src/nvim/tui/tui.c
+@@ -521 +521 @@
+-    ret = uv_pipe_open(&tui->output_handle.pipe, tui->out_fd);
++    ret = uv_pipe_open(&tui->output_handle.pipe, dup(tui->out_fd));
+--- a/src/nvim/CMakeLists.txt
++++ b/src/nvim/CMakeLists.txt
+@@ -872 +872 @@
+-target_compile_definitions(libnvim PRIVATE MAKE_LIB)
++target_compile_definitions(libnvim PRIVATE MAKE_LIB EXITFREE)

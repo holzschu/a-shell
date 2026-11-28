@@ -27,6 +27,8 @@ let package = Package(
         .binaryTarget(name: "task", url: "https://github.com/holzschu/taskwarrior/releases/download/1.0/task.xcframework.zip", checksum: "ac6589d1e90ed5eb2a969d50a618f9c92da2a74305ef9f6caa2d8b4d36837b70"),
         .binaryTarget(name: "lex", url: "https://github.com/holzschu/taskwarrior/releases/download/1.0/lex.xcframework.zip", checksum: "08916648891bd2070e61c0c202dcd6eed1840981ffd6dc38ffd940b03e31939b"),
         .binaryTarget(name: "calc", url: "https://github.com/holzschu/taskwarrior/releases/download/1.0/calc.xcframework.zip", checksum: "4732b1eaad5f9060faaea73b33e43fb5d59af884b3eff678df27e2abb9b98cf0"),
+        .binaryTarget(name: "Nvim", url: "https://github.com/demrom/a-shell/releases/download/neovim-v0.12.6-ios/Nvim.xcframework.zip", checksum: "7626f6010296de833e79d95edaebce0dd0a6802dafe88788309701fb4bf0812a"),
+        .binaryTarget(name: "NvimCommand", url: "https://github.com/demrom/a-shell/releases/download/neovim-v0.12.6-ios/NvimCommand.xcframework.zip", checksum: "13c2a395b151549477b7a7d15174c8174d7100fae6db4c07948b2af93386124b"),
         .binaryTarget(name: "vim", url: "https://github.com/holzschu/vim/releases/download/ios_1.0/vim.xcframework.zip", checksum: "02acb74bec3e6b4ba9c120873a19a770773e3c3e2d141365808a9342ddf41fe7"),
         .binaryTarget(name: "xxd", url: "https://github.com/holzschu/vim/releases/download/ios_1.0/xxd.xcframework.zip", checksum: "1c48b9f77310b71499a7bd76a16882405c8a81b55f56c7c7577ae2a0ce347ba6"),
         .binaryTarget(name: "ar", url: "https://github.com/holzschu/llvm-project/releases/download/14.0.0/ar.xcframework.zip", checksum: "69727d7f851ad5b0a77732e7cff70112a0cf8ec12d8e8fc869f6470a1880c1c5"),

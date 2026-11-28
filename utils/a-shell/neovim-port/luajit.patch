@@ -1,0 +1,9 @@
+--- a/src/lib_os.c
++++ b/src/lib_os.c
+@@ -40,5 +40,6 @@
+ LJLIB_CF(os_execute)
+ {
++  return luaL_error(L, "os.execute is unsupported on iOS: native child processes are unavailable");
+ #if LJ_NO_SYSTEM
+ #if LJ_52
+   errno = ENOSYS;

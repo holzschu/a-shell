@@ -138,7 +138,7 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
-			<string>Restart vim/dash/codex after closing a-Shell</string>
+			<string>Restart vim/nvim/dash/codex after closing a-Shell</string>
 			<key>Key</key>
 			<string>restart_vim</string>
 			<key>DefaultValue</key>

@@ -674,6 +674,13 @@
 		<string></string>
 		<string>no</string>
 	</array>
+	<key>nvim</key>
+	<array>
+		<string>NvimCommand.framework/NvimCommand</string>
+		<string>nvim_ios_main</string>
+		<string></string>
+		<string></string>
+	</array>
 	<key>vim</key>
 	<array>
 		<string>vim.framework/vim</string>

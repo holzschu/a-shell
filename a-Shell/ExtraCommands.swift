@@ -1700,11 +1700,12 @@ public func deactivate(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoin
 }
 
 // tries to change the directory, returns false if path is a file:
-public func changeDirectory(path: String) -> Bool {
+public func changeDirectory(path: String, decodePath: Bool = true) -> Bool {
     NSLog("calling changeDirectory with \(path)")
     var fileURL = URL(fileURLWithPath: path)
     let originalFileURL = URL(fileURLWithPath: path)
-    let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "cd".toCString()!), UnsafeMutablePointer(mutating: path.removingPercentEncoding!.toCString()!)]
+    let directory = decodePath ? path.removingPercentEncoding! : path
+    let argv: [UnsafeMutablePointer<Int8>?] = [UnsafeMutablePointer(mutating: "cd".toCString()!), UnsafeMutablePointer(mutating: directory.toCString()!)]
     // temporarily redirect stderr
     let old_thread_stderr = thread_stderr
     thread_stderr = fopen("/dev/null", "w")
@@ -1779,7 +1780,7 @@ public func changeDirectory(path: String) -> Bool {
                 if (!targetURL.sameFileLocation(path: path)) {
                     fclose(thread_stderr)
                     thread_stderr = old_thread_stderr
-                    return changeDirectory(path: targetURL.path)
+                    return changeDirectory(path: targetURL.path, decodePath: decodePath)
                 }
                 stale = false
             }

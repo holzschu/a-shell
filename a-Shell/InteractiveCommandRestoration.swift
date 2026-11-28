@@ -58,12 +58,13 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
             .appendingPathComponent(name + ".plist")
     }
 
-    func save(to file: URL, runningCommand: String) {
+    func save(to file: URL, runningCommand: String, workingDirectory: String? = nil) {
+        guard UserDefaults.standard.bool(forKey: "restart_vim") else {
+            Self.discard(at: file)
+            return
+        }
         let arguments = runningCommand.split(whereSeparator: \.isWhitespace)
-        guard UserDefaults.standard.bool(forKey: "restart_vim"),
-              let command = arguments.first.map(String.init),
-              let rule = Self.rules[command], rule.accepts(Array(arguments.dropFirst())),
-              let checkpoint = lock.withLock({ checkpoint }), checkpoint["command"] == command else {
+        guard let checkpoint = resumeCheckpoint(for: runningCommand, arguments: arguments, workingDirectory: workingDirectory) else {
             Self.discard(at: file)
             return
         }
@@ -76,7 +77,19 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
         }
     }
 
-    static func consume(from file: URL) -> String? {
+    private func resumeCheckpoint(for commandLine: String, arguments: [Substring], workingDirectory: String?) -> [String: String]? {
+#if NVIM_EMBEDDED
+        if let command = Self.neovimInvocation(commandLine), let workingDirectory, workingDirectory.hasPrefix("/") {
+            return ["command": "nvim", "token": command, "cwd": workingDirectory]
+        }
+#endif
+        guard let command = arguments.first.map(String.init),
+              let rule = Self.rules[command], rule.accepts(Array(arguments.dropFirst())),
+              let native = lock.withLock({ checkpoint }), native["command"] == command else { return nil }
+        return native
+    }
+
+    static func consume(from file: URL, restoreWorkingDirectory: (String) -> Bool = { _ in false }) -> String? {
         guard UserDefaults.standard.bool(forKey: "restart_vim") else {
             discard(at: file)
             return nil
@@ -84,8 +97,35 @@ final class InteractiveCommandRestoration: @unchecked Sendable {
         guard let data = try? Data(contentsOf: file), discard(at: file),
               let checkpoint = try? PropertyListDecoder().decode([String: String].self, from: data),
               let command = checkpoint["command"], let token = checkpoint["token"] else { return nil }
+#if NVIM_EMBEDDED
+        if command == "nvim" {
+            // UIKit's restoration activity may be stale after a forced kill.
+            guard let invocation = neovimInvocation(token), let directory = checkpoint["cwd"],
+                  directory.hasPrefix("/"), !directory.utf8.contains(0), restoreWorkingDirectory(directory) else { return nil }
+            return invocation
+        }
+#endif
         return rules[command]?.resume(token)
     }
+
+#if NVIM_EMBEDDED
+    // Only reopen plain file operands. A session file can source commands and
+    // may have changed since the user explicitly opened it.
+    private static func neovimInvocation(_ text: String) -> String? {
+        let words = text.split(separator: " ")
+        guard words.first == "nvim" else { return nil }
+        guard words.dropFirst().allSatisfy({ file in
+            let path = file.hasPrefix("~/") ? file.dropFirst(2) : file
+            return !path.isEmpty && file.first != "-" && path.utf8.allSatisfy {
+                switch $0 {
+                case 45, 46, 47, 48...57, 65...90, 95, 97...122: true
+                default: false
+                }
+            }
+        }) else { return nil }
+        return words.joined(separator: " ")
+    }
+#endif
 
     // The previous UIKit restoration snapshot can survive SIGKILL even after command exit.
     // Keep this one-shot checkpoint separate so completion can remove it before showing the prompt.

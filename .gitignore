@@ -83,6 +83,7 @@ Configuration.xcconfig
 # Locally built Codex and Herdr XCFrameworks
 /codex/codex.xcframework/
 /Herdr/Herdr.xcframework/
+/Neovim/*.xcframework/
 # Locally built native ripgrep framework
 /rg/rg.xcframework/
 helix/helix.xcframework/

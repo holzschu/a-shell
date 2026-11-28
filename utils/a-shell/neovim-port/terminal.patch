@@ -1,0 +1,36 @@
+--- a/src/nvim/main.c
++++ b/src/nvim/main.c
+@@ -352,6 +352,7 @@
+   bool remote_ui = (ui_client_channel_id != 0);
+
+   if (use_builtin_ui && !remote_ui) {
++    nvim_port_start_terminal();
+     ui_client_forward_stdin = !stdin_isatty;
+     uint64_t rv = ui_client_start_server(get_vim_var_str(VV_PROGPATH),
+                                          (size_t)params.argc, params.argv);
+@@ -1602,9 +1603,9 @@
+
+ static void check_and_set_isatty(mparm_T *paramp)
+ {
+-  stdin_isatty = os_isatty(STDIN_FILENO);
+-  stdout_isatty = os_isatty(STDOUT_FILENO);
+-  stderr_isatty = os_isatty(STDERR_FILENO);
++  stdin_isatty = nvim_port_isatty(0);
++  stdout_isatty = nvim_port_isatty(1);
++  stderr_isatty = nvim_port_isatty(2);
+   TIME_MSG("window checked");
+ }
+
+--- a/src/nvim/tui/tui.c
++++ b/src/nvim/tui/tui.c
+@@ -1884,6 +1884,10 @@
+   int height = 0;
+   char *lines = NULL;
+   char *columns = NULL;
++
++  if (nvim_port_dimensions(&width, &height)) {
++    goto end;
++  }
+
+   // 1 - try from a system call (ioctl/TIOCGWINSZ on unix)
+   if (tui->out_isatty

@@ -74,6 +74,7 @@ touch Resources_mini/bin/uniq
 touch Resources_mini/bin/unlink
 touch Resources_mini/bin/unsetenv
 touch Resources_mini/bin/uptime
+touch Resources_mini/bin/nvim
 touch Resources_mini/bin/vim
 touch Resources_mini/bin/wc
 touch Resources_mini/bin/whoami

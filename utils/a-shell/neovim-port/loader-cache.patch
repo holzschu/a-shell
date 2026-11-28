@@ -1,0 +1,28 @@
+--- a/runtime/lua/vim/loader.lua
++++ b/runtime/lua/vim/loader.lua
+@@ -123,8 +123,13 @@
+     name = name:match('(/usr/.*)') or name
+   end
+
+-  local ret = ('%s/%s'):format(M.path, uri_encode(name, 'rfc2396'))
+-  return ret:sub(-4) == '.lua' and (ret .. 'c') or (ret .. '.luac')
++  local filename = uri_encode(name, 'rfc2396')
++  filename = filename:sub(-4) == '.lua' and (filename .. 'c') or (filename .. '.luac')
++  -- eCryptfs limits filename components to 143 bytes (#29372).
++  if #filename > 143 then
++    filename = '=sha256-' .. vim.fn.sha256(name) .. '.luac'
++  end
++  return M.path .. '/' .. filename
+ end
+
+ --- Saves the cache entry for a given module or file
+--- a/src/nvim/eval.lua
++++ b/src/nvim/eval.lua
+@@ -10471,6 +10471,7 @@
+       {expr} is a String or a Blob.
+
+     ]=],
++    fast = true,
+     name = 'sha256',
+     params = { { 'expr', 'string' } },
+     returns = 'string',

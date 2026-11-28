@@ -1,0 +1,72 @@
+--- a/cmake.deps/cmake/TreesitterParserCMakeLists.txt
++++ b/cmake.deps/cmake/TreesitterParserCMakeLists.txt
+@@ -8,4 +8,4 @@
+ add_library(parser
+-  MODULE
++  STATIC
+   ${source_files}
+ )
+@@ -18,5 +18,5 @@
+ 
+ include_directories(src)
+ 
+-install(TARGETS parser LIBRARY DESTINATION lib/nvim/parser)
++install(TARGETS parser ARCHIVE DESTINATION lib/nvim/parser)
+ 
+--- a/cmake.deps/cmake/MarkdownParserCMakeLists.txt
++++ b/cmake.deps/cmake/MarkdownParserCMakeLists.txt
+@@ -3,14 +3,14 @@
+ 
+ add_compile_options(-w)
+ 
+-add_library(markdown MODULE
++add_library(markdown STATIC
+ tree-sitter-markdown/src/parser.c
+ tree-sitter-markdown/src/scanner.c)
+ target_include_directories(markdown
+   PRIVATE
+   tree-sitter-markdown/src)
+ 
+-add_library(markdown_inline MODULE
++add_library(markdown_inline STATIC
+ tree-sitter-markdown-inline/src/parser.c
+ tree-sitter-markdown-inline/src/scanner.c)
+ target_include_directories(markdown_inline
+@@ -22,6 +22,6 @@
+   PROPERTIES
+     PREFIX ""
+ )
+ 
+-install(TARGETS markdown markdown_inline LIBRARY DESTINATION lib/nvim/parser)
++install(TARGETS markdown markdown_inline ARCHIVE DESTINATION lib/nvim/parser)
+ 
+--- a/src/nvim/lua/treesitter.c
++++ b/src/nvim/lua/treesitter.c
+@@ -227,6 +227,14 @@
+   const TSLanguage *lang = is_wasm
+                            ? load_language_from_wasm(L, path, lang_name)
+-                           : load_language_from_object(L, path, lang_name, symbol_name);
++                           : NULL;
++  if (!is_wasm) {
++    extern const TSLanguage *nvim_port_builtin_parser(const char *name);
++    lang = *path ? load_language_from_object(L, path, lang_name, symbol_name)
++                 : nvim_port_builtin_parser(symbol_name);
++    if (lang == NULL) {
++      return 0;
++    }
++  }
+ 
+   uint32_t lang_version = ts_language_abi_version(lang);
+   if (lang_version < TREE_SITTER_MIN_COMPATIBLE_LANGUAGE_VERSION
+--- a/runtime/lua/vim/treesitter/language.lua
++++ b/runtime/lua/vim/treesitter/language.lua
+@@ -130,6 +130,9 @@
+     local fname = 'parser/' .. lang .. '.*'
+     local paths = api.nvim_get_runtime_file(fname, false)
+     if #paths == 0 then
++      if vim._ts_add_language_from_object('', lang, symbol_name) then
++        return true
++      end
+       return nil, string.format('No parser for language "%s"', lang)
+     end
+     path = paths[1]

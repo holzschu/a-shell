@@ -1,0 +1,15 @@
+--- a/src/nvim/os/fs.c
++++ b/src/nvim/os/fs.c
+@@ -242,6 +242,12 @@
+ bool os_can_exe(const char *name, char **abspath, bool use_path)
+   FUNC_ATTR_NONNULL_ARG(1)
+ {
++  // Embedded a-Shell commands have registry entries, not executable files.
++  extern int ios_executable(const char *);
++  if (use_path && gettail_dir(name) == name && ios_executable(name)) {
++    if (abspath != NULL) *abspath = xstrdup(name);
++    return true;
++  }
+   if (!use_path || gettail_dir(name) != name) {
+ #ifdef MSWIN
+     return is_executable_ext(name, abspath);
